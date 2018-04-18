@@ -207,13 +207,6 @@ module.exports = function(localeCode) {
         'nav-user-new': 'Новый пользователь',
         'nav-users': 'Пользователи',
 
-        'project-list-$title-with-$name': (title, name) => {
-            if (title) {
-                return `${title} (${name})`;
-            } else {
-                return name;
-            }
-        },
         'project-list-add': 'Добавить проект',
         'project-list-cancel': 'Отмена',
         'project-list-confirm-archive-$count': (count) => {
@@ -553,6 +546,7 @@ module.exports = function(localeCode) {
         'table-heading-title': 'Название',
         'table-heading-to-date': 'До сих пор',
         'table-heading-type': 'Тип',
+        'table-heading-username': 'Имя пользователя',
         'table-heading-users': 'Пользователи',
 
         'task-$seconds': (seconds) => {
@@ -746,17 +740,6 @@ module.exports = function(localeCode) {
             return `Загрузка ${files}, оставшихся ${size}`;
         },
 
-        'user-list-$name-with-$username': (name, username) => {
-            if (name) {
-                if (username) {
-                    return `${name} (${username})`;
-                } else {
-                    return name;
-                }
-            } else {
-                return username;
-            }
-        },
         'user-list-add': 'Добавить пользователя',
         'user-list-approve-all': 'Утвердить все запросы',
         'user-list-cancel': 'Отмена',

@@ -158,13 +158,6 @@ var traditionalPhrases = {
     'nav-user-new': '新用戶',
     'nav-users': '用戶',
 
-    'project-list-$title-with-$name': (title, name) => {
-        if (title) {
-            return `${title} (${name})`;
-        } else {
-            return name;
-        }
-    },
     'project-list-add': '添加項目',
     'project-list-cancel': '取消',
     'project-list-confirm-archive-$count': (count) => {
@@ -439,6 +432,7 @@ var traditionalPhrases = {
     'table-heading-title': '名稱',
     'table-heading-to-date': '至今',
     'table-heading-type': '類型',
+    'table-heading-username': '用戶名',
     'table-heading-users': '用戶',
 
     'task-$seconds': (seconds) => {
@@ -515,17 +509,6 @@ var traditionalPhrases = {
         return `上傳${num}個文件，剩下${size}`;
     },
 
-    'user-list-$name-with-$username': (name, username) => {
-        if (name) {
-            if (username) {
-                return `${name} (${username})`;
-            } else {
-                return name;
-            }
-        } else {
-            return username;
-        }
-    },
     'user-list-add': '添加用戶',
     'user-list-approve-all': '批准所有請求',
     'user-list-cancel': '取消',
@@ -744,13 +727,6 @@ var simplifiedPhrases = {
     'nav-user-new': '新用户',
     'nav-users': '用户',
 
-    'project-list-$title-with-$name': (title, name) => {
-        if (title) {
-            return `${title} (${name})`;
-        } else {
-            return name;
-        }
-    },
     'project-list-add': '添加项目',
     'project-list-cancel': '取消',
     'project-list-confirm-archive-$count': (count) => {
@@ -1025,6 +1001,7 @@ var simplifiedPhrases = {
     'table-heading-title': '名称',
     'table-heading-to-date': '至今',
     'table-heading-type': '类型',
+    'table-heading-username': '用户名',
     'table-heading-users': '用户',
 
     'task-$seconds': (seconds) => {
@@ -1101,17 +1078,6 @@ var simplifiedPhrases = {
         return `上传${num}个文件，剩下${size}`;
     },
 
-    'user-list-$name-with-$username': (name, username) => {
-        if (name) {
-            if (username) {
-                return `${name} (${username})`;
-            } else {
-                return name;
-            }
-        } else {
-            return username;
-        }
-    },
     'user-list-add': '添加用户',
     'user-list-approve-all': '批准所有请求',
     'user-list-cancel': '取消',

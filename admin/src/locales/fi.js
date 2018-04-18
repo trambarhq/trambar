@@ -129,13 +129,6 @@ module.exports = function(localeCode) {
         'nav-user-new': 'Uusi käyttäjä',
         'nav-users': 'Käyttäjät',
 
-        'project-list-$title-with-$name': (title, name) => {
-            if (title) {
-                return `${title} (${name})`;
-            } else {
-                return name;
-            }
-        },
         'project-list-add': 'Lisää uusi projekti',
         'project-list-cancel': 'Peruutta',
         'project-list-confirm-archive-$count': (count) => {
@@ -408,6 +401,7 @@ module.exports = function(localeCode) {
         'table-heading-title': 'Nimi',
         'table-heading-to-date': 'Tähän mennessä',
         'table-heading-type': 'Tyyppi',
+        'table-heading-username': 'Käyttäjätunnus',
         'table-heading-users': 'Käyttäjät',
 
         'task-$seconds': (seconds) => {
@@ -497,17 +491,6 @@ module.exports = function(localeCode) {
             return `Lataaminen ${files}, ${size} jäljellä`;
         },
 
-        'user-list-$name-with-$username': (name, username) => {
-            if (name) {
-                if (username) {
-                    return `${name} (${username})`;
-                } else {
-                    return name;
-                }
-            } else {
-                return username;
-            }
-        },
         'user-list-add': 'Lisää uusi käyttäjä',
         'user-list-approve-all': 'Hyväksy kaikki pyynnöt',
         'user-list-cancel': 'Peruutta',

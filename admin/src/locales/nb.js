@@ -129,13 +129,6 @@ module.exports = function(localeCode) {
         'nav-user-new': 'Ny bruker',
         'nav-users': 'Brukere',
 
-        'project-list-$title-with-$name': (title, name) => {
-            if (title) {
-                return `${title} (${name})`;
-            } else {
-                return name;
-            }
-        },
         'project-list-add': 'Legg til nytt prosjekt',
         'project-list-cancel': 'Avbryt',
         'project-list-confirm-archive-$count': (count) => {
@@ -408,6 +401,7 @@ module.exports = function(localeCode) {
         'table-heading-title': 'Navn',
         'table-heading-to-date': 'Til dags dato',
         'table-heading-type': 'Type',
+        'table-heading-username': 'Brukernavn',
         'table-heading-users': 'Brukere',
 
         'task-$seconds': (seconds) => {
@@ -497,17 +491,6 @@ module.exports = function(localeCode) {
             return `Laster opp ${files}, ${size} gjenværende`;
         },
 
-        'user-list-$name-with-$username': (name, username) => {
-            if (name) {
-                if (username) {
-                    return `${name} (${username})`;
-                } else {
-                    return name;
-                }
-            } else {
-                return username;
-            }
-        },
         'user-list-add': 'Legg til ny bruker',
         'user-list-approve-all': 'Godkjenn alle forespørsler',
         'user-list-cancel': 'Avbryt',

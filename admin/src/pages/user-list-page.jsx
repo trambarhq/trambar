@@ -284,6 +284,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         return (
             <tr>
                 {this.renderNameColumn()}
+                {this.renderUsernameColumn()}
                 {this.renderTypeColumn()}
                 {this.renderRolesColumn()}
                 {this.renderProjectsColumn()}
@@ -353,6 +354,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
         return (
             <tr key={user.id} {...props}>
                 {this.renderNameColumn(user)}
+                {this.renderUsernameColumn(user)}
                 {this.renderTypeColumn(user)}
                 {this.renderRolesColumn(user)}
                 {this.renderProjectsColumn(user)}
@@ -376,7 +378,6 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             return <TH id="name">{t('table-heading-name')}</TH>;
         } else {
             var name = p(user.details.name);
-            var username = user.username;
             var url, badge;
             if (this.state.renderingFullList) {
                 // add a badge next to the name if we're approving, restoring or
@@ -403,11 +404,32 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 url = route.find(require('pages/user-summary-page'), params);
             }
             var image = <ProfileImage user={user} theme={this.props.theme} />;
-            var text = t('user-list-$name-with-$username', name, username);
             return (
                 <td>
-                    <a href={url}>{image} {text}</a>{badge}
+                    <a href={url}>{image} {name}</a>{badge}
                 </td>
+            );
+        }
+    },
+
+    /**
+     * Render username column, either the heading or a data cell
+     *
+     * @param  {Object|null} user
+     *
+     * @return {ReactElement}
+     */
+    renderUsernameColumn: function(user) {
+        if (this.props.theme.isBelowMode('narrow')) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        if (!user) {
+            return <TH id="username">{t('table-heading-username')}</TH>;
+        } else {
+            var username = user.username;
+            return (
+                <td>{user.username}</td>
             );
         }
     },
@@ -420,7 +442,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderTypeColumn: function(user) {
-        if (this.props.theme.isBelowMode('narrow')) {
+        if (this.props.theme.isBelowMode('standard')) {
             return null;
         }
         var t = this.props.locale.translate;
@@ -466,7 +488,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderRolesColumn: function(user) {
-        if (this.props.theme.isBelowMode('standard')) {
+        if (this.props.theme.isBelowMode('wide')) {
             return null;
         }
         var t = this.props.locale.translate;
@@ -543,6 +565,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleSort: function(evt) {
+        console.log(evt.columns)
         this.setState({
             sortColumns: evt.columns,
             sortDirections: evt.directions
@@ -659,6 +682,10 @@ var sortUsers = Memoize(function(users, roles, projects, locale, columns, direct
             case 'name':
                 return (user) => {
                     return p(user.details.name);
+                };
+            case 'username':
+                return (user) => {
+                    return _.toLower(user.username);
                 };
             case 'type':
                 return (user) => {

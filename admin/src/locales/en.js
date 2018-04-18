@@ -133,13 +133,6 @@ module.exports = function(localeCode) {
         'nav-user-new': 'New user',
         'nav-users': 'Users',
 
-        'project-list-$title-with-$name': (title, name) => {
-            if (title) {
-                return `${title} (${name})`;
-            } else {
-                return name;
-            }
-        },
         'project-list-add': 'Add new project',
         'project-list-cancel': 'Cancel',
         'project-list-confirm-archive-$count': (count) => {
@@ -412,6 +405,7 @@ module.exports = function(localeCode) {
         'table-heading-title': 'Name',
         'table-heading-to-date': 'To date',
         'table-heading-type': 'Type',
+        'table-heading-username': 'User name',
         'table-heading-users': 'Users',
 
         'task-$seconds': (seconds) => {
@@ -501,17 +495,6 @@ module.exports = function(localeCode) {
             return `Uploading ${files}, ${size} remaining`;
         },
 
-        'user-list-$name-with-$username': (name, username) => {
-            if (name) {
-                if (username) {
-                    return `${name} (${username})`;
-                } else {
-                    return name;
-                }
-            } else {
-                return username;
-            }
-        },
         'user-list-add': 'Add new user',
         'user-list-approve-all': 'Approve all requests',
         'user-list-cancel': 'Cancel',

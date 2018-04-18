@@ -400,7 +400,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             return <TH id="title">{t('table-heading-name')}</TH>;
         } else {
             var p = this.props.locale.pick;
-            var title = p(project.details.title);
+            var title = p(project.details.title) || project.name;
             var url, badge;
             if (this.state.renderingFullList) {
                 // add a badge next to the name if we're archiving or
@@ -426,10 +426,9 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 var params = { project: project.id };
                 url = route.find(require('pages/project-summary-page'), params);
             }
-            var text = t('project-list-$title-with-$name', title, project.name);
             return (
                 <td>
-                    <a href={url}>{text}</a>{badge}
+                    <a href={url}>{title}</a>{badge}
                 </td>
             );
         }
