@@ -240,6 +240,17 @@ module.exports = _.create(ExternalData, {
     },
 
     /**
+     * Return SQL expression that yield searchable text
+     *
+     * @param  {String} languageCode
+     *
+     * @return {String}
+     */
+    getSearchableText: function(languageCode) {
+        return `"extractStoryText"(type, details, external, '${languageCode}')`;
+    },
+
+    /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
      *

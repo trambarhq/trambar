@@ -6,7 +6,9 @@ module.exports = {
     updatePayload,
     checkAuthorization,
     extendAuthorization,
-    externalIdStrings: require('./runtime').externalIdStrings
+    externalIdStrings: require('./runtime').externalIdStrings,
+    extractText,
+    extractStoryText,
 };
 
 /**
@@ -165,3 +167,90 @@ var externalIdStrings = module.exports.externalIdStrings;
 externalIdStrings.args = 'external jsonb[], type text, names text[]';
 externalIdStrings.ret = 'text[]';
 externalIdStrings.flags = 'IMMUTABLE';
+
+/**
+ * Extract text from details column
+ *
+ * @param  {Object} details
+ * @param  {String} lang
+ *
+ * @return {String}
+ */
+function extractText(details, lang) {
+    var list = [];
+    if (details.text && details.text[lang]) {
+        list.push(details.text[lang]);
+    }
+    return list.join(' ');
+}
+extractText.args = 'details jsonb, lang text';
+extractText.ret = 'text';
+extractText.flags = 'IMMUTABLE';
+
+/**
+ * Extract text from story
+ *
+ * @param  {String} type
+ * @param  {Object} details
+ * @param  {Array<Object>} external
+ * @param  {String} lang
+ *
+ * @return {String}
+ */
+function extractStoryText(type, details, external, lang) {
+    var list = [];
+    if (details.text && details.text[lang]) {
+        list.push(details.text[lang]);
+    }
+    if (details.title) {
+        list.push(details.title);
+    }
+    switch (type) {
+        case 'issue':
+            if (details.milestone) {
+                list.push(details.milestone);
+            }
+            if (external instanceof Array) {
+                external.forEach((link) => {
+                    if (link.issue && link.issue.number) {
+                        list.push(link.issue.number);
+                    }
+                });
+            }
+            break;
+        case 'merge-request':
+            if (details.milestone) {
+                list.push(details.milestone);
+            }
+            if (details.branch) {
+                list.push(details.branch);
+            }
+            if (details.source_branch) {
+                list.push(details.source_branch);
+            }
+            break;
+        case 'push':
+        case 'merge':
+        case 'branch':
+            if (details.branch) {
+                list.push(details.branch);
+            }
+            if (details.from_branches instanceof Array) {
+                details.from_branches.forEach((branch) => {
+                    list.push(branch);
+                });
+            }
+            if (details.components instanceof Array) {
+                details.components.forEach((component) => {
+                    if (component && component.text && component.text[lang]) {
+                        list.push(component.text[lang]);
+                    }
+                });
+            }
+            break;
+    }
+    return list.join(' ');
+}
+extractStoryText.args = 'type text, details jsonb, external jsonb[], lang text';
+extractStoryText.ret = 'text';
+extractStoryText.flags = 'IMMUTABLE';
