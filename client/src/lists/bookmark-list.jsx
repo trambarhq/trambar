@@ -311,7 +311,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
             };
         }
         if (editing) {
-            var authors = findAuthors(this.props.draftAuthors, story);
+            var authors = findAuthors(this.props.authors, story);
             var recommendations = findRecommendations(this.props.recommendations, story);
             var recipients = findRecipients(this.props.recipients, recommendations);
             if (!story) {
