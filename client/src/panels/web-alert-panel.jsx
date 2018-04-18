@@ -114,12 +114,13 @@ module.exports = React.createClass({
      */
     handleOptionClick: function(evt) {
         var optionName = evt.currentTarget.id;
+        var optionPath = `web_alert.${optionName}`;
         var settings = _.clone(_.get(this.props.currentUser, 'settings', {}));
-        var alertEnabled = !!_.get(settings, `web_alert.${optionName}`);
-        if (alertEnabled) {
-            _.unset(settings, `web_alert.${optionName}`);
+        var enabled = !!_.get(settings, optionPath);
+        if (enabled) {
+            _.unset(settings, optionPath);
         } else {
-            _.set(settings, `web_alert.${optionName}`, true);
+            _.set(settings, optionPath, true);
         }
         this.setUserProperty('settings', settings);
     },

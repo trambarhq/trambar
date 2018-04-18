@@ -107,17 +107,24 @@ module.exports = React.createClass({
      */
     handleOptionClick: function(evt) {
         var optionName = evt.currentTarget.id;
+        var optionPaths = [
+            `notification.${optionName}`,
+            `web_alert.${optionName}`,
+            `mobile_alert.${optionName}`,
+        ];
         var settings = _.clone(_.get(this.props.currentUser, 'settings', {}));
-        var enabled = !!_.get(settings, `notification.${optionName}`);
-        if (enabled) {
-            _.unset(settings, `notification.${optionName}`);
-            _.unset(settings, `web_alert.${optionName}`);
-            _.unset(settings, `mobile_alert.${optionName}`);
-        } else {
-            _.set(settings, `notification.${optionName}`, (optionName === 'merge') ? 'master' : true);
-            _.set(settings, `web_alert.${optionName}`, true);
-            _.set(settings, `mobile_alert.${optionName}`, true);
-        }
+        var enabled = !!_.get(settings, optionPaths[0]);
+        _.each(optionPaths, (optionPath, index) => {
+            if (enabled) {
+                _.unset(settings, optionPath);
+            } else {
+                if (index === 0 && optionName === 'merge') {
+                    _.set(settings, optionPath, 'master');
+                } else {
+                    _.set(settings, optionPath, true);
+                }
+            }
+        });
         this.setUserProperty('settings', settings);
     },
 });
