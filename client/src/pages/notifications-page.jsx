@@ -79,7 +79,7 @@ module.exports = Relaks.createClass({
             var statistics = {
                 type: 'daily-notifications',
                 schema: params.schema,
-                // user_id will default to current user
+                user_id: 'current'
             };
             return {
                 calendar: { route, statistics },

@@ -45,7 +45,10 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<CalendarBarSync {...props} />, 1000);
         return db.start().then((userId) => {
-            var params = _.assign({ user_id: userId }, this.props.settings.statistics);
+            var params = _.clone(this.props.settings.statistics);
+            if (params.user_id === 'current') {
+                params.user_id = userId;
+            }
             return StatisticsFinder.find(db, params);
         }).then((statistics) => {
             props.dailyActivities = statistics;
