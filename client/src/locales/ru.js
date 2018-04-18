@@ -106,6 +106,9 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Отмена',
         'confirmation-confirm': 'Подтвердить',
 
+        'development-show-diagnostics': 'Показать диагностику',
+        'development-show-panel': 'Показать эту панель',
+
         'device-selector-camera-$number': (number) => {
             return `Камера ${number}`;
         },
@@ -114,9 +117,6 @@ module.exports = function(localeCode) {
         'device-selector-mic-$number': (number) => {
             return `Микрофон ${number}`;
         },
-
-        'diagnostics-show': 'Показать диагностику',
-        'diagnostics-show-panel': 'Показать эту панель',
 
         'empty-currently-offline': 'Вы не подключены к Интернету',
 
@@ -403,9 +403,9 @@ module.exports = function(localeCode) {
         'server-type-google': 'Google',
         'server-type-windows': 'Windows Live',
 
+        'settings-development': 'Параметры разработчика',
         'settings-device': 'Мобильное устройство',
         'settings-devices': 'Мобильные устройства',
-        'settings-diagnostics': 'Диагностика',
         'settings-language': 'Язык',
         'settings-mobile-alert': 'Мобильное предупреждение',
         'settings-notification': 'Уведомление',

@@ -74,6 +74,9 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Peruutta',
         'confirmation-confirm': 'Vahvista',
 
+        'development-show-diagnostics': 'Näytä diagnostiikka',
+        'development-show-panel': 'Näytä tämä paneeli',
+
         'device-selector-camera-$number': (number) => {
             return `Kamera ${number}`;
         },
@@ -82,9 +85,6 @@ module.exports = function(localeCode) {
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
-
-        'diagnostics-show': 'Näytä diagnostiikka',
-        'diagnostics-show-panel': 'Näytä tämä paneeli',
 
         'empty-currently-offline': 'Olet offline-tilassa',
 
@@ -345,9 +345,9 @@ module.exports = function(localeCode) {
         'server-type-google': 'Google',
         'server-type-windows': 'Windows Live',
 
+        'settings-development': 'Kehittäjän asetukset',
         'settings-device': 'Mobiililaite',
         'settings-devices': 'Mobiililaitteet',
-        'settings-diagnostics': 'Diagnostiikka',
         'settings-language': 'Kieli',
         'settings-mobile-alert': 'Mobiilihälytys',
         'settings-notification': 'Ilmoitukset',

@@ -110,6 +110,9 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Anuluj',
         'confirmation-confirm': 'Potwierdź',
 
+        'development-show-diagnostics': 'Show diagnostics',
+        'development-show-panel': 'Display this panel',
+
         'device-selector-camera-$number': (number) => {
             return `Kamera ${number}`;
         },
@@ -417,9 +420,9 @@ module.exports = function(localeCode) {
         'server-type-google': 'Google',
         'server-type-windows': 'Windows Live',
 
+        'settings-development': 'Opcje programistyczne',
         'settings-device': 'Urządzenie mobilne',
         'settings-devices': 'Urządzenis mobilne',
-        'settings-diagnostics': 'Diagnostyka',
         'settings-language': 'Język',
         'settings-mobile-alert': 'Alert mobilny',
         'settings-notification': 'Powiadomienie',

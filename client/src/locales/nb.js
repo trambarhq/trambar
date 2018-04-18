@@ -74,6 +74,9 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Avbryt',
         'confirmation-confirm': 'Bekrefte',
 
+        'development-show-diagnostics': 'Show diagnostics',
+        'development-show-panel': 'Display this panel',
+
         'device-selector-camera-$number': (number) => {
             return `Kamera ${number}`;
         },
@@ -344,9 +347,9 @@ module.exports = function(localeCode) {
         'server-type-google': 'Google',
         'server-type-windows': 'Windows Live',
 
+        'settings-development': 'Utviklermuligheter',
         'settings-device': 'Mobil enhet',
         'settings-devices': 'Mobile enheter',
-        'settings-diagnostics': 'Diagnostikk',
         'settings-language': 'Språk',
         'settings-mobile-alert': 'Mobilvarsel',
         'settings-notification': 'Melding',

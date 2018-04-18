@@ -16,7 +16,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
-var DiagnosticsPanel = require('panels/diagnostics-panel');
+var DevelopmentPanel = require('panels/development-panel');
 var ProjectPanel = require('panels/project-panel');
 var DevicePanel = require('panels/device-panel');
 var UserInfoPanel = require('panels/user-info-panel');
@@ -26,7 +26,7 @@ var WebAlertPanel = require('panels/web-alert-panel');
 var MobileAlertPanel = require('panels/mobile-alert-panel');
 var SocialNetworkPanel = require('panels/social-network-panel');
 var LanguagePanel = require('panels/language-panel');
-var DiagnoisticDataPanel = require('panels/diagnostic-data-panel');
+var DiagnoisticsPanel = require('panels/diagnostics-panel');
 
 require('./settings-page.scss');
 
@@ -231,7 +231,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="settings-page">
                 <div className="panels">
-                    {this.renderDiagnosticsPanel()}
+                    {this.renderDevelopmentPanel()}
                     {this.renderProjectPanel()}
                     {this.renderDevicePanel()}
                     {this.renderUserInfoPanel()}
@@ -255,17 +255,17 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="settings-page">
                 <div className="panels diagnostics">
-                    <DiagnoisticDataPanel type="connectivity-monitor" title="Network" />
-                    <DiagnoisticDataPanel type="websocket-notifier" title="Web Socket" />
-                    <DiagnoisticDataPanel type="push-notifier" title="Push Notification" />
-                    <DiagnoisticDataPanel type="subscription-manager" title="Data Subscription" />
-                    <DiagnoisticDataPanel type="session-manager" title="Sessions" />
-                    <DiagnoisticDataPanel type="link-manager" title="Project Links" />
-                    <DiagnoisticDataPanel type="locale-manager" title="Locale Manager" />
-                    <DiagnoisticDataPanel type="indexed-db-cache" title="IndexedDB Cache" />
-                    <DiagnoisticDataPanel type="sqlite-cache" title="SQLite Cache" />
-                    <DiagnoisticDataPanel type="remote-data-source" title="Remote Data Source" />
-                    <DiagnoisticDataPanel type="payload-manager" title="Payload Manager" />
+                    <DiagnoisticsPanel type="connectivity-monitor" title="Network" />
+                    <DiagnoisticsPanel type="websocket-notifier" title="Web Socket" />
+                    <DiagnoisticsPanel type="push-notifier" title="Push Notification" />
+                    <DiagnoisticsPanel type="subscription-manager" title="Data Subscription" />
+                    <DiagnoisticsPanel type="session-manager" title="Sessions" />
+                    <DiagnoisticsPanel type="link-manager" title="Project Links" />
+                    <DiagnoisticsPanel type="locale-manager" title="Locale Manager" />
+                    <DiagnoisticsPanel type="indexed-db-cache" title="IndexedDB Cache" />
+                    <DiagnoisticsPanel type="sqlite-cache" title="SQLite Cache" />
+                    <DiagnoisticsPanel type="remote-data-source" title="Remote Data Source" />
+                    <DiagnoisticsPanel type="payload-manager" title="Payload Manager" />
                 </div>
             </div>
         );
@@ -276,9 +276,9 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderDiagnosticsPanel: function() {
+    renderDevelopmentPanel: function() {
         var user = this.getUser();
-        var enabled = _.get(user, 'settings.diagnostics.show_panel');
+        var enabled = _.get(user, 'settings.development.show_panel');
         if (!enabled) {
             return null;
         }
@@ -288,7 +288,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             onChange: this.handleChange,
         };
-        return <DiagnosticsPanel {...panelProps} />;
+        return <DevelopmentPanel {...panelProps} />;
     },
 
     /**
@@ -503,7 +503,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleKonamiCode: function(evt) {
-        var user = _.decoupleSet(this.getUser(), 'settings.diagnostics.show_panel', true);
+        var user = _.decoupleSet(this.getUser(), 'settings.development.show_panel', true);
         this.setState({ user }, () => {
             this.saveUser(user, true);
         });

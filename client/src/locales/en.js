@@ -78,6 +78,12 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Cancel',
         'confirmation-confirm': 'Confirm',
 
+        'development-code-push-$deployment': (deployment) => {
+            return `Pull code updates from "${deployment}"`;
+        },
+        'development-show-diagnostics': 'Show diagnostics',
+        'development-show-panel': 'Display this panel',
+
         'device-selector-camera-$number': (number) => {
             return `Camera ${number}`;
         },
@@ -86,9 +92,6 @@ module.exports = function(localeCode) {
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
-
-        'diagnostics-show': 'Show diagnostics',
-        'diagnostics-show-panel': 'Display this panel',
 
         'empty-currently-offline': 'You are currently offline',
 
@@ -347,9 +350,9 @@ module.exports = function(localeCode) {
         'server-type-google': 'Google',
         'server-type-windows': 'Windows Live',
 
+        'settings-development': 'Developer Options',
         'settings-device': 'Mobile Device',
         'settings-devices': 'Mobile Devices',
-        'settings-diagnostics': 'Diagnostics',
         'settings-language': 'Language',
         'settings-mobile-alert': 'Mobile Alert',
         'settings-notification': 'Notification',

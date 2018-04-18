@@ -74,17 +74,17 @@ module.exports = function(localeCode) {
         'confirmation-cancel': "Annulla",
         'confirmation-confirm': "Conferma",
 
+        'development-show-diagnostics': "Mostra diagnostica",
+        'development-show-panel': "Mostra questo pannello",
+
         'device-selector-camera-$number': (number) => {
             return `Camera ${number}`;
         },
-        'device-selector-camera-back': 'Posteriore',
-        'device-selector-camera-front': 'Frontale',
+        'device-selector-camera-back': "Posteriore",
+        'device-selector-camera-front': "Frontale",
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
-
-        'diagnostics-show': "Mostra diagnostica",
-        'diagnostics-show-panel': "Mostra questo pannello",
 
         'empty-currently-offline': "Al momento sei offline",
 
@@ -113,12 +113,12 @@ module.exports = function(localeCode) {
         'membership-request-$you-are-member': "Sei un membro di questo progetto",
         'membership-request-$you-are-now-member': "Ora sei un membro di questo progetto",
         'membership-request-$you-have-requested-membership': "Hai richiesto l'iscrizione a questo progetto",
-        'membership-request-browse': 'Sfoglia',
+        'membership-request-browse': "Sfoglia",
         'membership-request-cancel': "Annulla",
         'membership-request-join': "Partecipa",
         'membership-request-ok': "OK",
         'membership-request-proceed': "Procedi",
-        'membership-request-withdraw': 'Ritira',
+        'membership-request-withdraw': "Ritira",
 
         'mobile-device-revoke': "revoca",
         'mobile-device-revoke-are-you-sure': "Sei sicuro di voler revocare l'autorizzazione a questo dispositivo?",
@@ -249,9 +249,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': "Mostra media allegati",
         'option-show-text-preview': "Mostra anteprima di testo",
-        'option-statistics-biweekly': 'Mostra le attività degli ultimi 14 giorni',
-        'option-statistics-monthly': 'Mostra attività mensili',
-        'option-statistics-to-date': 'Mostra le attività fino ad oggi',
+        'option-statistics-biweekly': "Mostra le attività degli ultimi 14 giorni",
+        'option-statistics-monthly': "Mostra attività mensili",
+        'option-statistics-to-date': "Mostra le attività fino ad oggi",
 
         'people-no-stories-found': "Nessuna storia corrispondente trovata",
         'people-no-stories-on-date': "Nessuna attività in quella data",
@@ -272,13 +272,13 @@ module.exports = function(localeCode) {
         'project-management-add': "Aggiungi",
         'project-management-cancel': "Annulla",
         'project-management-description': "descrizione del progetto",
-        'project-management-join-project': 'partecipa al progetto',
+        'project-management-join-project': "partecipa al progetto",
         'project-management-manage': "Gestisci lista",
         'project-management-mobile-set-up': "impostazioni del dispositivo mobile",
         'project-management-remove': "Rimuovi",
         'project-management-sign-out': "disconnettersi",
         'project-management-sign-out-are-you-sure': "Sei sicuro di voler uscire da questo server?",
-        'project-management-withdraw-request': 'ritira la richiesta di adesione',
+        'project-management-withdraw-request': "ritira la richiesta di adesione",
 
         'qr-scanner-cancel': "Annulla",
         'qr-scanner-invalid-qr-code': "Codice QR non valido",
@@ -344,9 +344,9 @@ module.exports = function(localeCode) {
         'server-type-google': "Google",
         'server-type-windows': "Windows Live",
 
+        'settings-development': "Opzioni dello sviluppatore",
         'settings-device': "Dispositivo mobile",
         'settings-devices': "Dispositivi mobili",
-        'settings-diagnostics': "Diagnostica",
         'settings-language': "Lingua",
         'settings-mobile-alert': "Avviso mobile",
         'settings-notification': "Notificazione",
@@ -616,12 +616,12 @@ module.exports = function(localeCode) {
             return `Ha pubblicato ${videos}`;
         },
         'user-activity-$name-pushed-code': "Ha inviato il codice nel repository",
-        'user-activity-$name-reported-issue': 'Ha segnalato un problema',
+        'user-activity-$name-reported-issue': "Ha segnalato un problema",
         'user-activity-$name-started-survey': "Ha iniziato un sondaggio",
         'user-activity-$name-started-task-list': "Ha iniziato un elenco di attività",
-        'user-activity-$name-was-assigned-issue': 'È stato assegnato a un problema',
+        'user-activity-$name-was-assigned-issue': "È stato assegnato a un problema",
         'user-activity-$name-wrote-post': "Ha scritto un post",
-        'user-activity-back': 'Indietro',
+        'user-activity-back': "Indietro",
         'user-activity-more': "Altre",
 
         'user-image-remove': "Rimuovi",
@@ -694,6 +694,6 @@ module.exports = function(localeCode) {
         'video-capture-start': "Comincia",
         'video-capture-stop': "Termina",
 
-        'warning-no-connection': 'Nessun aggiornamento istantaneo',
+        'warning-no-connection': "Nessun aggiornamento istantaneo",
     };
 };

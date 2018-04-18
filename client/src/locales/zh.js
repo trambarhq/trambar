@@ -116,6 +116,9 @@ var traditionalPhrases = {
     'confirmation-cancel': '取消',
     'confirmation-confirm': '肯定',
 
+    'development-show-diagnostics': '顯示診斷',
+    'development-show-panel': '顯示這個面板',
+
     'device-selector-camera-$number': (number) => {
         return `攝影機${number}`;
     },
@@ -124,9 +127,6 @@ var traditionalPhrases = {
     'device-selector-mic-$number': (number) => {
         return `麥克風${number}`;
     },
-
-    'diagnostics-show': '顯示診斷',
-    'diagnostics-show-panel': '顯示此面板',
 
     'empty-currently-offline': '你目前離線',
 
@@ -389,9 +389,9 @@ var traditionalPhrases = {
     'server-type-google': 'Google',
     'server-type-windows': 'Windows Live',
 
+    'settings-development': '開發人員選項',
     'settings-device': '行動裝置',
     'settings-devices': '行動裝置',
-    'settings-diagnostics': '診斷',
     'settings-language': '語言',
     'settings-mobile-alert': '行動裝置警報',
     'settings-notification': '通知',
@@ -799,6 +799,9 @@ var simplifiedPhrases = {
     'confirmation-cancel': '取消',
     'confirmation-confirm': '肯定',
 
+    'development-show-diagnostics': '显示诊断',
+    'development-show-panel': '显示这个面板',
+
     'device-selector-camera-$number': (number) => {
         return `摄影机${number}`;
     },
@@ -807,9 +810,6 @@ var simplifiedPhrases = {
     'device-selector-mic-$number': (number) => {
         return `麦克风${number}`;
     },
-
-    'diagnostics-show': '显示诊断',
-    'diagnostics-show-panel': '显示此面板',
 
     'empty-currently-offline': '你目前离线',
 
@@ -1072,9 +1072,9 @@ var simplifiedPhrases = {
     'server-type-google': 'Google',
     'server-type-windows': 'Windows Live',
 
+    'settings-development': '开发人员选项',
     'settings-device': '行动装置',
     'settings-devices': '行动装置',
-    'settings-diagnostics': '诊断',
     'settings-language': '语言',
     'settings-mobile-alert': '行动装置警报',
     'settings-notification': '通知',
