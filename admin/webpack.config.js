@@ -166,7 +166,7 @@ module.exports = {
         }),
         new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
         new BundleAnalyzerPlugin({
-            analyzerMode: (event === 'build') ? 'static' : 'disabled'
+            analyzerMode: (event === 'build') ? 'static' : 'disabled',
             reportFilename: `../report_admin.html`,
         }),
     ],
