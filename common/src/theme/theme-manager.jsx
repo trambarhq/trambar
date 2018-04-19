@@ -535,6 +535,20 @@ module.exports = React.createClass({
         var onscreenKeyboard = this.detectOnscreenKeyboard();
         if (this.state.onscreenKeyboard !== onscreenKeyboard) {
             nextState.onscreenKeyboard = onscreenKeyboard;
+
+            if (onscreenKeyboard) {
+                if (/Android/.test(navigator.userAgent)) {
+                    var activeElement = document.activeElement;
+                    if (activeElement) {
+                        setTimeout(() => {
+                            activeElement.scrollIntoViewIfNeeded({
+                                behavior: 'smooth',
+                                block: 'center',
+                            });
+                        }, 100);
+                    }
+                }
+            }
         }
 
         if (this.state.devicePixelRatio !== window.devicePixelRatio) {
