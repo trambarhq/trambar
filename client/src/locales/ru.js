@@ -487,7 +487,7 @@ module.exports = function(localeCode) {
         'story-$name-created-$repo': (name, repo) => {
             var e = pastTenseEnding(name);
             var text = `Создал репозиторий`;
-            if (name) {
+            if (repo) {
                 text += ` «${repo}»`;
             }
             return text;

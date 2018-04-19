@@ -418,7 +418,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-created-$repo': (name, repo) => {
             var text = `Ha creato il repository `;
-            if (name) {
+            if (repo) {
                 text += ` «${repo}»`;
             }
             return text;
