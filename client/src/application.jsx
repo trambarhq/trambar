@@ -417,6 +417,11 @@ module.exports = React.createClass({
         if (process.env.PLATFORM === 'cordova') {
             document.addEventListener('pause', this.handlePause, false);
             document.addEventListener('resume', this.handleResume, false);
+
+            var CodePush = require('code-push');
+            CodePush.sync().then((status) => {
+                this.setState({ codePushSyncResult });
+            });
         }
         if (process.env.NODE_ENV !== 'production') {
             window.addEventListener('keydown', this.handleDebugKeydown);

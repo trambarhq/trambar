@@ -4,6 +4,7 @@ var CordovaFile = require('transport/cordova-file');
 var BlobReader = require('transport/blob-reader');
 
 modules.exports = {
+    run,
     getDeploymentNames,
     loadDeploymentName,
     saveDeploymentName,
@@ -24,13 +25,37 @@ var deploymentKeys = {
 };
 var defaultDeploymentName = 'Production';
 
-loadDeploymentName.then((deployment) => {
-    var platform = cordova.platformId;
-    var deploymentKey = _.get(deploymentKeys, [ platform, deployment ]);
-    if (deploymentKey) {
-        codePush.sync(null, { deploymentKey });
-    }
-});
+/**
+ * Run code synchronization
+ *
+ * @return {Promise<Boolean>}
+ */
+function sync() {
+    return loadDeploymentName.then((deployment) => {
+        var platform = cordova.platformId;
+        var deploymentKey = _.get(deploymentKeys, [ platform, deployment ]);
+        if (deploymentKey) {
+            return new Promise((resolve, reject) => {
+                var callback = (status) => {
+                    switch (status) {
+                        case SyncStatus.UPDATE_INSTALLED:
+                            resolve('UPDATE_INSTALLED');
+                            break;
+                        case SyncStatus.UP_TO_DATE:
+                            resolve('UP_TO_DATE');
+                            break;
+                        case SyncStatus.ERROR:
+                            resolve('ERROR');
+                            break;
+                    }
+                };
+                codePush.sync(callback, { deploymentKey });
+            });
+        } else {
+            return 'NO_DEPLOYMENT_KEY';
+        }
+    });
+}
 
 /**
  * Return available deployment names

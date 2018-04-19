@@ -304,7 +304,7 @@ var NewNotificationsBadge = Relaks.createClass({
         if (!params.schema) {
             return null;
         }
-        if (!params.hasAccess) {
+        if (!this.props.hasAccess) {
             return null;
         }
         var db = this.props.database.use({ schema: params.schema, by: this });
@@ -312,7 +312,9 @@ var NewNotificationsBadge = Relaks.createClass({
             return UserFinder.findUser(db, currentUserId).then((user) => {
                 return NotificationFinder.findNotificationsUnseenByUser(db, user).then((notifications) => {
                     var count = notifications.length;
-                    this.changeFavIcon(count);
+                    if (process.env.PLATFORM === 'browser') {
+                        changeFavIcon(count);
+                    }
                     if (!count) {
                         return null;
                     }
@@ -325,13 +327,29 @@ var NewNotificationsBadge = Relaks.createClass({
             });
         });
     },
+});
+
+if (process.env.PLATFORM === 'browser') {
+    var favIcons;
 
     /**
      * Use favicon with a badge if there are unread notifications
      *
      * @param  {Number} count
      */
-    changeFavIcon: function(count) {
+    var changeFavIcon = function(count) {
+        if (!favIcons) {
+            // get the post-WebPack filenames of the favicons
+            var paths = require.context('favicon-notification', true, /\.png$/).keys();
+            favIcons = _.map(paths, (path) => {
+                // make the file extension part of the expression passed to require()
+                // so WebPack will filter out other files
+                var name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
+                var withoutBadge = require(`favicon/${name}.png`);
+                var withBadge = require(`favicon-notification/${name}.png`);
+                return { withoutBadge, withBadge };
+            });
+        }
         var links = _.filter(document.head.getElementsByTagName('LINK'), (link) => {
             if (link.rel === 'icon' || link.rel === 'apple-touch-icon-precomposed') {
                 return true;
@@ -352,15 +370,4 @@ var NewNotificationsBadge = Relaks.createClass({
             }
         });
     }
-});
-
-// get the post-WebPack filenames of the favicons
-var paths = require.context('favicon-notification', true, /\.png$/).keys();
-var favIcons = _.map(paths, (path) => {
-    // make the file extension part of the expression passed to require()
-    // so WebPack will filter out other files
-    var name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
-    var withoutBadge = require(`favicon/${name}.png`);
-    var withBadge = require(`favicon-notification/${name}.png`);
-    return { withoutBadge, withBadge };
-});
+}

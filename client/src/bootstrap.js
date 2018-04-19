@@ -41,18 +41,16 @@ function initialize(evt) {
             }
             progressBarFilled.style.width = Math.round(loaded / total * 100) + '%';
         };
-    } else if (process.env.PLATFORM === 'cordova') {
-        require('code-push');
     }
 
     // load application code and support libraries
     var BootstrapLoader = require('utils/bootstrap-loader');
-    var app = () => import('application' /* webpackChunkName: "app" */);
-    var importFuncs = { app };
+    var importFuncs = {};
     var libraries = require('libraries');
     for (var key in libraries) {
         importFuncs[key] = libraries[key];
     }
+    importFuncs['app'] = () => import('application' /* webpackChunkName: "app" */);
     BootstrapLoader.load(importFuncs, progress).then((modules) => {
         var Application = modules['app'];
         var React = modules['react'];

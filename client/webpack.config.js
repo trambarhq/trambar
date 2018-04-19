@@ -132,15 +132,7 @@ module.exports = {
                 ]
             },
             {
-                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader',
-                query: {
-                    limit: 100000,
-                    mimetype: 'application/font-woff',
-                }
-            },
-            {
-                test: /fonts.*\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                test: /fonts.*\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                 loader: 'file-loader',
             },
             {
@@ -163,6 +155,10 @@ module.exports = {
                 test: /\.(jpeg|jpg|png|gif)$/,
                 loader: 'file-loader',
             },
+            {
+                test: /fonts.*\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'ignore-loader',
+            }
         ]
     },
     plugins: [
@@ -184,7 +180,8 @@ module.exports = {
         }),
         new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
         new BundleAnalyzerPlugin({
-            analyzerMode: (event === 'build') ? 'static' : 'disabled'
+            analyzerMode: (event === 'build') ? 'static' : 'disabled',
+            reportFilename: `../report_${platform}.html`,
         }),
     ],
     devServer: {
