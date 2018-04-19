@@ -106,16 +106,6 @@ function readTextFile(filename) {
                 }, (err) => {
                     reject(new FileError(err));
                 });
-
-                fileEntry.createWriter((fileWriter) => {
-                    fileWriter.onwriteend = function() {
-                        resolve();
-                    };
-                    fileWriter.onerror = function(err) {
-                        reject(err);
-                    };
-                    fileWriter.write(blob);
-                });
             }, (err) => {
                 reject(new FileError(err));
             });

@@ -105,6 +105,7 @@ module.exports = React.createClass({
      */
     renderDeploymentOptions: function() {
         if (process.env.PLATFORM !== 'cordova') return null;
+        var names = CodePush.getDeploymentNames();
         return _.map(names, this.renderDeploymentOption);
     },
 
