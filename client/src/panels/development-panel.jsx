@@ -105,7 +105,6 @@ module.exports = React.createClass({
      */
     renderDeploymentOptions: function() {
         if (process.env.PLATFORM !== 'cordova') return null;
-        var names = [ 'Production', 'Staging' ];
         return _.map(names, this.renderDeploymentOption);
     },
 

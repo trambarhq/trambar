@@ -1,10 +1,9 @@
 var _ = require('lodash');
-var Promise = require('promise');
-var CordovaFile = require('transport/cordova-file');
-var BlobReader = require('transport/blob-reader');
+var Promise = require('bluebird');
+var FileError = require('errors/file-error');
 
-modules.exports = {
-    run,
+module.exports = {
+    sync,
     getDeploymentNames,
     loadDeploymentName,
     saveDeploymentName,
@@ -31,7 +30,7 @@ var defaultDeploymentName = 'Production';
  * @return {Promise<Boolean>}
  */
 function sync() {
-    return loadDeploymentName.then((deployment) => {
+    return loadDeploymentName().then((deployment) => {
         var platform = cordova.platformId;
         var deploymentKey = _.get(deploymentKeys, [ platform, deployment ]);
         if (deploymentKey) {
@@ -72,16 +71,11 @@ function getDeploymentNames() {
  * @return {Promise<String>}
  */
 function loadDeploymentName() {
-    return Promise.try(() => {
-        var configPath = getConfigPath();
-        var configFile = new Cordova(configPath);
-        return BlobReader.loadText(configFile).then((text) => {
-            text = _.trim(text);
-            if (!_.include(deploymentNames, text)) {
-                throw new Error(`Unknown deployment type: ${text}`);
-            }
-            return text;
-        });
+    return readTextFile('codepush').then((name) => {
+        if (!_.includes(deploymentNames, name)) {
+            throw new Error(`Unrecognized deployment name: ${name}`);
+        }
+        return name;
     }).catch((err) => {
         return defaultDeploymentName;
     });
@@ -90,29 +84,66 @@ function loadDeploymentName() {
 /**
  * Write the desired deployment name to a file stored on device
  *
- * @return {Promise<String>}
+ * @return {Promise}
  */
 function saveDeploymentName(type) {
-    return Promise.try(() => {
-        var configPath = getConfigPath();
-        var configFile = new Cordova(configPath);
-        return configFile.getFileEntry().then((fileEntry) => {
-            fileEntry.createWriter((fileWriter) => {
-                return new Promise((resolve, reject) => {
+    return writeTextFile('codepush', type);
+}
+
+function readTextFile(filename) {
+    return new Promise((resolve, reject) => {
+        requestFileSystem(LocalFileSystem.PERSISTENT, 0, (fs) => {
+            fs.root.getFile(filename, { create: false, exclusive: false }, (fileEntry) => {
+                fileEntry.file((file) => {
+                    var reader = new FileReader;
+                    reader.onload = (evt) => {
+                        resolve(reader.result);
+                    };
+                    reader.onerror = (evt) => {
+                        reject(new FileError(3));
+                    };
+                    reader.readAsText(file);
+                }, (err) => {
+                    reject(new FileError(err));
+                });
+
+                fileEntry.createWriter((fileWriter) => {
                     fileWriter.onwriteend = function() {
                         resolve();
                     };
                     fileWriter.onerror = function(err) {
                         reject(err);
                     };
-                    var blob = new Blob([ type ], { type: 'text/plain' })
                     fileWriter.write(blob);
                 });
+            }, (err) => {
+                reject(new FileError(err));
             });
+        }, (err) => {
+            reject(new FileError(err));
         });
-    })
+    });
 }
 
-function getConfigPath() {
-    return `${cordova.file.dataDirectory}/codepush`;
+function writeTextFile(filename, text) {
+    return new Promise((resolve, reject) => {
+        var blob = new Blob([ text ], { type: 'text/plain' })
+        requestFileSystem(LocalFileSystem.PERSISTENT, 0, (fs) => {
+            fs.root.getFile('codepush', { create: true, exclusive: false }, (fileEntry) => {
+                fileEntry.createWriter((fileWriter) => {
+                    fileWriter.onwriteend = function() {
+                        resolve();
+                    };
+                    fileWriter.onerror = function(err) {
+                        reject(err);
+                    };
+                    fileWriter.write(blob);
+                });
+            }, (err) => {
+                reject(new FileError(err));
+            });
+        }, (err) => {
+            reject(new FileError(err));
+        });
+    });
 }

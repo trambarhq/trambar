@@ -419,8 +419,8 @@ module.exports = React.createClass({
             document.addEventListener('resume', this.handleResume, false);
 
             var CodePush = require('code-push');
-            CodePush.sync().then((status) => {
-                this.setState({ codePushSyncResult });
+            CodePush.sync().then((result) => {
+                this.setState({ codePushSyncResult: result });
             });
         }
         if (process.env.NODE_ENV !== 'production') {
