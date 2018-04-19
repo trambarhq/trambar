@@ -62,6 +62,10 @@ function loadImage(blob) {
  * @return {Promise<HTMLVideoElement}
  */
 function loadVideo(blob) {
+    if (/iPhone/i.test(navigator.userAgent)) {
+        // iPhone doesn't allow loading of video programmatically
+        return Promise.reject('Cannot load video on iPhone');
+    }
     var url;
     if (typeof(blob) === 'string') {
         url = blob;
