@@ -136,6 +136,13 @@ module.exports = {
                 loader: 'file-loader',
             },
             {
+                test: /fonts.*\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'file-loader',
+                query: {
+                    emitFile: false,
+                }
+            },
+            {
                 test: /\.svg$/,
                 loader: 'svg-react-loader',
                 exclude: /fonts/,
@@ -155,10 +162,6 @@ module.exports = {
                 test: /\.(jpeg|jpg|png|gif)$/,
                 loader: 'file-loader',
             },
-            {
-                test: /fonts.*\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'ignore-loader',
-            }
         ]
     },
     plugins: [
