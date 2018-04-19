@@ -217,7 +217,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Return the n
+     * Return the number of files and bytes remaining
      *
      * @return {Object|null}
      */
@@ -225,8 +225,10 @@ module.exports = React.createClass({
         var bytes = 0;
         var files = 0;
         _.each(this.payloads, (payload) => {
-            files += payload.getRemainingFiles();
-            bytes += payload.getRemainingBytes();
+            if (!payload.failed && !payload.sent) {
+                files += payload.getRemainingFiles();
+                bytes += payload.getRemainingBytes();
+            }
         });
         return (files > 0) ? { files, bytes } : null;
     },
