@@ -262,6 +262,9 @@ function sendToPushRelays(db, messages) {
                         subscription.deleted = true;
                         return Subscription.updateOne(db, 'global', subscription);
                     });
+                }).catch((err) => {
+                    console.log('Error encountered posting messages at relay');
+                    console.error(err);
                 });
             });
         });
