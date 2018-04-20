@@ -83,8 +83,15 @@ var notificationGeneratingFunctions = [
  */
 function generateCoauthoringNotifications(db, event) {
     return Promise.try(() => {
+        if (!isModifying(event, 'story')) {
+            return [];
+        }
         // don't notify when we're just creating the editable copy
         if (event.diff.published_version_id) {
+            return [];
+        }
+        // don't notify when user is assigned to issue or merge request
+        if (event.current.type === 'issue' || event.current.type === 'merge-request') {
             return [];
         }
         var newCoauthorIds = getNewCoauthorIds(event);
