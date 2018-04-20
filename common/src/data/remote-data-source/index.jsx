@@ -1143,6 +1143,8 @@ module.exports = React.createClass({
         var criteria = search.criteria;
         search.start();
         return this.discoverRemoteObjects(location, criteria).then((discovery) => {
+            return this.searchLocalCache(search, discovery).return(discovery);
+        }).then((discovery) => {
             // use the list of ids and gns (generation number) to determine
             // which objects have changed and which have gone missing
             var ids = discovery.ids;
@@ -1457,23 +1459,45 @@ module.exports = React.createClass({
      * Search local cache
      *
      * @param  {Search} search
+     * @param  {Object|undefined} discovery
      *
      * @return {Promise<Boolean>}
      */
-    searchLocalCache: function(search) {
+    searchLocalCache: function(search, discovery) {
         return Promise.try(() => {
             var cache = this.props.cache;
-            if (search.remote) {
-                // don't scan cache if query is designed as remote
-                return true;
-            }
-            var query = search.getQuery();
-            return this.validateCache(query.address, query.schema).then(() => {
-                return cache.find(query).then((objects) => {
-                    search.results = objects;
-                    return true;
+            if (!discovery) {
+                // pre-discovery search of cache
+                if (search.remote) {
+                    // don't scan cache initially if we must perform the search
+                    // on the remote server (i.e. the criteria is too complex)
+                    return false;
+                }
+                var query = search.getQuery();
+                return this.validateCache(query.address, query.schema).then(() => {
+                    return cache.find(query).then((objects) => {
+                        search.results = objects;
+                        return true;
+                    });
                 });
-            });
+            } else {
+                // post discovery loading of cached objects, needed only when
+                // we can't search locally
+                if (!search.remote) {
+                    return false;
+                }
+                var ids = getFetchList(discovery.ids, search.results);
+                if (_.isEmpty(ids)) {
+                    return false;
+                }
+                var query = _.assign({ criteria: { id: ids } }, search.getLocation());
+                return this.validateCache(query.address, query.schema).then(() => {
+                    return cache.find(query).then((objects) => {
+                        search.results = insertObjects(search.results, objects);
+                        return true;
+                    });
+                });
+            }
         }).catch((err) => {
             console.error(err);
             return false;
@@ -1926,6 +1950,26 @@ module.exports = React.createClass({
 });
 
 var authCache = {};
+
+/**
+ * Given a list of ids, return the ids that are missing from the list of objects
+ *
+ * @param  {Array<Number>} ids
+ * @param  {Array<Object>} objects
+ *
+ * @return {Array<Number>}
+ */
+function getFetchList(ids, objects) {
+    var updated = [];
+    _.each(ids, (id, i) => {
+        var index = _.sortedIndexBy(objects, { id }, 'id');
+        var object = (objects) ? objects[index] : null;
+        if (!object || object.id !== id) {
+            updated.push(id);
+        }
+    });
+    return updated;
+}
 
 /**
  * Given lists of ids and gns (generation numbers), return the ids that
