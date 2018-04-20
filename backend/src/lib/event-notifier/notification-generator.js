@@ -207,8 +207,10 @@ function generateReactionPublicationNotifications(db, event) {
             var details;
             switch (notificationType) {
                 // like and comment requires the story type since they're applicable to all stories
+                // note may also apply to multiple story types
                 case 'like':
                 case 'comment':
+                case 'note':
                     details = {
                         story_type: story.type
                     };
