@@ -223,7 +223,6 @@ module.exports = Relaks.createClass({
                 }
             });
         }).then(() => {
-            meanwhile.show(<PeoplePageSync {...props} />);
             return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, props.members).then((statistics) => {
                 props.dailyActivities = statistics;
                 if (!props.visibleUsers) {
