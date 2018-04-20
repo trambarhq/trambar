@@ -292,8 +292,8 @@ function filterPushMessages(messages) {
                 return false;
             }
             var hasWebSession = _.some(messages, (m) => {
-                if (m.type === 'websocket') {
-                    if (m.user.id === user.id) {
+                if (m.listener.type === 'websocket') {
+                    if (m.listener.user.id === user.id) {
                         return true;
                     }
                 }
