@@ -418,8 +418,10 @@ function isPublishing(event, table) {
         // published can become false again when user edit a comment
         // ptime, on the other hand, will only be set when the comment is first published
         if (event.diff.ptime || event.diff.ready) {
-            if (event.current.published && event.current.ready) {
-                return true;
+            if (!event.previous.ptime) {
+                if (event.current.published && event.current.ready) {
+                    return true;
+                }
             }
         }
     }
