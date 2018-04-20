@@ -577,9 +577,24 @@ function probeMediaFile(srcPath) {
                 var videoStream = _.find(dump.streams, { codec_type: 'video' });
                 var audioStream = _.find(dump.streams, { codec_type: 'audio' });
                 if (videoStream) {
+                    var rotation = 0;
+                    _.each(videoStream.side_data_list, (item) => {
+                        if (typeof(item.rotation) === 'number') {
+                            rotation = (item.rotation + 360) % 360;
+                        }
+                    });
+                    switch (rotation) {
+                        case 90:
+                        case 270:
+                            info.width = videoStream.height;
+                            info.height = videoStream.width;
+                            break;
+                        default:
+                            info.width = videoStream.height;
+                            info.height = videoStream.width;
+                            break;
+                    }
                     info.duration = videoStream.duration * 1000;
-                    info.width = videoStream.width;
-                    info.height = videoStream.height;
                 } else if (audioStream) {
                     info.duration = audioStream.duration * 1000;
                 }
