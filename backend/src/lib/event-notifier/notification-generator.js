@@ -277,11 +277,21 @@ function generateBookmarkNotifications(db, event) {
  */
 function generateUserMentionNotifications(db, event) {
     return Promise.try(() => {
-        var newTags = getNewTags(event);
-        var newUserTags = _.filter(newTags, (tag) => {
+        if (!isModifying(event, 'story') && !isModifying(event, 'reaction')) {
+            return [];
+        }
+        var relevantTags;
+        if (isPublishing(event, 'story') || isPublishing(event, 'reaction')) {
+            // consider all the tags
+            relevantTags = event.current.tags;
+        } else if (event.current.published) {
+            // consider only the ones that were added
+            relevantTags = getNewTags(event);
+        }
+        var relevantUserTags = _.filter(relevantTags, (tag) => {
             return (tag.charAt(0) === '@');
         });
-        if (_.isEmpty(newUserTags)) {
+        if (_.isEmpty(relevantUserTags)) {
             return [];
         }
         var schema = event.schema;
@@ -304,7 +314,7 @@ function generateUserMentionNotifications(db, event) {
         var criteria = { deleted: false, disabled: false };
         return User.findCached(db, 'global', criteria, '*').then((users) => {
             var mentionedUsers = _.filter(users, (user) => {
-                return _.includes(newUserTags, `@${user.username}`);
+                return _.includes(relevantUserTags, `@${_.toLower(user.username)}`);
             });
             return _.map(mentionedUsers, (user) => {
                 return {
@@ -451,14 +461,10 @@ function getNewBookmarkSenderIds(event) {
  * @return {Array<String>}
  */
 function getNewTags(event) {
-    if (isModifying(event, 'story') || isModifying(event, 'reaction')) {
-        if (event.current.published && event.current.ready) {
-            if (event.diff.tags) {
-                var tagsBefore = event.previous.tags;
-                var tagsAfter = event.current.tags;
-                return _.difference(tagsAfter, tagsBefore);
-            }
-        }
+    if (event.diff.tags) {
+        var tagsBefore = event.previous.tags;
+        var tagsAfter = event.current.tags;
+        return _.difference(tagsAfter, tagsBefore);
     }
     return [];
 }
