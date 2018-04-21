@@ -30,6 +30,9 @@ var defaultDeploymentName = 'Production';
  * @return {Promise<Boolean>}
  */
 function sync() {
+    if (process.env.NODE_ENV !== 'production') {
+        return Promise.resolve(false);
+    }
     return loadDeploymentName().then((deployment) => {
         if (!window.cordova) {
             return 'NOT_CORDOVA';
