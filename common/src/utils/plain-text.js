@@ -71,10 +71,14 @@ function renderSurveyResults(text, voteCounts) {
                 var count = _.get(tally, [ 'answers', item.key ], 0);
                 var percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
                 var color = `color-${item.key % 12}`;
+                var className = 'vote-count';
+                if (count === total) {
+                    className += ' unanimous';
+                }
                 return (
                     <span>
                         {item.before}
-                        <span className="vote-count">
+                        <span className={className}>
                             <span className="label">{renderEmoji(item.label)}</span>
                             <span className="bar">
                                 <span className={`filled ${color}`} style={{ width: percent }} />

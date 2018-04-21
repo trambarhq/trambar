@@ -147,6 +147,13 @@
                         }
                     }
                 }
+
+                &.unanimous {
+                    .count {
+                        // use darker color when bar extends all the way to the end
+                        color: #333333;
+                    }
+                }
             }
         }
 

@@ -161,8 +161,12 @@ function renderSurveyResults(text, voteCounts, onReference) {
                 var count = _.get(tally, [ 'answers', item.key ], 0);
                 var percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
                 var color = `color-${item.key % 12}`;
+                var className = 'vote-count';
+                if (count === total) {
+                    className += ' unanimous';
+                }
                 return (
-                    <div className="vote-count" key={key}>
+                    <div className={className} key={key}>
                         <div className="label">{label}</div>
                         <div className="bar">
                             <span className={`filled ${color}`} style={{ width: percent }} />
