@@ -416,32 +416,21 @@ var StartPageSync = module.exports.Sync = React.createClass({
                         </div>
                     );
                 } else {
-                    //
                     return (
                         <div className={className} />
                     );
                 }
             } else {
-                if (this.state.addingServer) {
-                    // render project list, followed by activation instructions
-                    return (
-                        <div className={className}>
-                            {this.renderTitle()}
-                            {this.renderProjectButtons()}
-                            {this.renderEmptyMessage()}
-                            {this.renderActivationControls()}
-                        </div>
-                    );
-                } else {
-                    return (
-                        <div className={className}>
-                            {this.renderTitle()}
-                            {this.renderProjectButtons()}
-                            {this.renderEmptyMessage()}
-                            {this.renderActivationSelector()}
-                        </div>
-                    );
-                }
+                // render project list, followed by activation instructions
+                return (
+                    <div className={className}>
+                        {this.renderTitle()}
+                        {this.renderProjectButtons()}
+                        {this.renderEmptyMessage()}
+                        {this.renderActivationSelector()}
+                        {this.renderProjectDialog()}
+                    </div>
+                );
             }
         }
     },
@@ -607,19 +596,24 @@ var StartPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderActivationSelector: function() {
-        if (process.env.PLATFORM !== 'cordova') return;
-        var t = this.props.locale.translate;
-        var addProps = {
-            label: t('start-activation-add-server'),
-            onClick: this.handleAddClick,
-        };
-        return (
-            <div className="activation-buttons">
-                <div className="right">
-                    <PushButton {...addProps} />
+        if (!this.state.addingServer) {
+            if (process.env.PLATFORM !== 'cordova') return;
+            var t = this.props.locale.translate;
+            var addProps = {
+                label: t('start-activation-add-server'),
+                onClick: this.handleAddClick,
+            };
+            return (
+                <div className="activation-buttons">
+                    <div className="right">
+                        <PushButton {...addProps} />
+                    </div>
                 </div>
-            </div>
-        );
+            );
+        }  else {
+            // render the controls once the button is clicked
+            return this.renderActivationControls();
+        }
     },
 
     /**
@@ -811,6 +805,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
         };
         var skipDialog = false;
         var params = this.props.route.parameters;
+        // always show dialog box when adding
         if (!params.add) {
             skipDialog = _.some(this.props.projectLinks, {
                 address: params.address,

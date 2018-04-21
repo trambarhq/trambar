@@ -31,6 +31,9 @@ var defaultDeploymentName = 'Production';
  */
 function sync() {
     return loadDeploymentName().then((deployment) => {
+        if (!window.cordova) {
+            return 'NOT_CORDOVA';
+        }
         var platform = cordova.platformId;
         var deploymentKey = _.get(deploymentKeys, [ platform, deployment ]);
         if (deploymentKey) {

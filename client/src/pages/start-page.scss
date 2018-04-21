@@ -335,6 +335,10 @@
 
         .projects {
             margin-bottom: 2em;
+
+            .project-button {
+                background-color: #362a2a;
+            }
         }
 
         &.transition-out-fast {
