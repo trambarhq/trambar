@@ -692,7 +692,7 @@ function findUserByName(username) {
 }
 
 /**
- * Remove devices specified session handle(s)
+ * Remove devices connected with specified session handle(s)
  *
  * @param  {String|Array<String>} handles
  *

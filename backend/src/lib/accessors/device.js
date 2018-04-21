@@ -24,6 +24,7 @@ module.exports = _.create(Data, {
         type: String,
         uuid: String,
         user_id: Number,
+        session_handle: String,
     },
 
     /**
