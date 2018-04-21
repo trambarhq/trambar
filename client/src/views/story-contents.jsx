@@ -738,6 +738,7 @@ module.exports = React.createClass({
         if (_.isEmpty(components)) {
             return null;
         }
+        components = sortComponents(components, this.props.locale);
         return (
             <div className="impact">
                 <p className="message">{t('story-push-components-changed')}</p>
@@ -1095,3 +1096,10 @@ var getZoomableResources = Memoize(function(resources) {
 function chooseAudioVersion(res) {
     return _.first(_.keys(res.versions)) || null;
 }
+
+var sortComponents = Memoize(function(components, locale) {
+    var p = locale.pick;
+    return _.sortBy(components, (component) => {
+        return _.toLower(p(component.text));
+    });
+});
