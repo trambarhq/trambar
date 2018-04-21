@@ -460,7 +460,22 @@ module.exports = React.createClass({
             var byComponent = _.get(query, 'by.constructor.displayName');
             var required = query.required;
             var committed = query.committed;
-            var blocking = query.blocking;
+            var blocking;
+            if (query.blocking === true) {
+                blocking = 'incomplete';
+            } else if (query.blocking === false) {
+                blocking = 'never';
+            } else if (query.blocking == undefined) {
+                blocking = 'insufficient'
+            } else {
+                blocking = query.blocking;
+            }
+            if (required) {
+                // if results are required, block when they're incomplete
+                if (blocking === 'never') {
+                    blocking = 'incomplete'
+                }
+            }
             var search;
             var existingSearch = this.findExistingSearch(newSearch);
             if (existingSearch) {
@@ -475,16 +490,14 @@ module.exports = React.createClass({
                     if (!existingSearch.isFresh()) {
                         // search is perhaps out-of-date--indicate that the data
                         // is speculative and check with the server
-                        if (this.props.online) {
-                            this.searchRemoteDatabase(existingSearch).then((changed) => {
-                                if (changed) {
-                                    // data returned earlier wasn't entirely correct
-                                    // trigger a new search through a onChange event
-                                    this.triggerChangeEvent();
-                                    return null;
-                                }
-                            });
-                        }
+                        this.searchRemoteDatabase(existingSearch).then((changed) => {
+                            if (changed) {
+                                // data returned earlier wasn't entirely correct
+                                // trigger a new search through a onChange event
+                                this.triggerChangeEvent();
+                                return null;
+                            }
+                        });
                     }
                 } else if (existingSearch.promise.isRejected()) {
                     // search didn't succeed--try again
@@ -502,16 +515,30 @@ module.exports = React.createClass({
 
                 // look for records in cache first
                 newSearch.promise = this.searchLocalCache(newSearch).then(() => {
-                    // if we have the right number of objects and they were
-                    // retrieved recently, then don't perform server check
+                    // see what's the status is after scanning the local cache
+                    var status;
                     if (newSearch.isMeetingExpectation()) {
+                        // local search yield the expected number of objects
                         if (newSearch.isSufficientlyRecent(this.props.refreshInterval)) {
-                            return newSearch.results;
+                            // we got everything we need
+                            status = 'complete';
+                        } else {
+                            // these objects might not be up to date
+                            status = 'stale';
+                        }
+                    } else {
+                        if (newSearch.isSufficientlyCached()) {
+                            // we don't have everything, but the number meets
+                            // or exceeds the minimum specified
+                            status = 'incomplete';
+                        } else {
+                            // no minimum was specified or we're below it
+                            status = 'insufficient';
                         }
                     }
 
-                    // don't search remotely when there's no connection
-                    if (!this.props.online) {
+                    if (status === 'complete') {
+                        // no need to search remotely
                         return newSearch.results;
                     }
 
@@ -519,39 +546,47 @@ module.exports = React.createClass({
                     var remoteSearchPromise = this.searchRemoteDatabase(newSearch).then((changed) => {
                         if (changed) {
                             this.triggerChangeEvent();
-                            return null;
-                        }
+                        };
+                        return null;
                     });
+                    var waitForRemoteSearch = true;
 
-                    if (search.remote) {
-                        // remote only search always block
-                        blocking = true;
-                    } else if (blocking === undefined) {
-                        // if blocking is not specified, then we don't block
-                        // when there're certain number of cached records
-                        // (i.e. the minimum is met--see constructor of Search)
-                        blocking = !newSearch.isSufficientlyCached();
+                    // see if we should wait for the remote search to complete
+                    // that depends on what we have from the cache
+                    //
+                    // generally, if the result set is complete but stale, we
+                    // don't block
+                    if (status === 'stale') {
+                        if (blocking !== 'stale') {
+                            waitForRemoteSearch = false;
+                        }
+                    } else if (status === 'incomplete') {
+                        if (blocking !== 'stale' && blocking !== 'incomplete') {
+                            waitForRemoteSearch = false;
+                        }
+                    } else if (status === 'insufficient') {
+                        if (blocking !== 'stale' && blocking !== 'incomplete' && blocking !== 'insufficient') {
+                            waitForRemoteSearch = false;
+                        }
                     }
-
-                    if (!blocking) {
+                    if (!waitForRemoteSearch) {
                         // return cached results immediately, without waiting for
                         // the remote search to finish
                         //
                         // if the remote search yield new data, an onChange event will
                         // trigger a new search
                         return newSearch.results;
-                    } else {
-                        // wait for remote search to finish
-                        return remoteSearchPromise.then(() => {
-                            if (required && query.expected) {
-                                if (newSearch.results.length < query.expected) {
-                                    this.triggerStupefactionEvent(query, newSearch.results);
-                                    throw new HTTPError(404);
-                                }
-                            }
-                            return newSearch.results;
-                        });
                     }
+
+                    return remoteSearchPromise.then((changed) => {
+                        if (required) {
+                            if (!newSearch.isMeetingExpectation()) {
+                                this.triggerStupefactionEvent(query, newSearch.results);
+                                throw new HTTPError(404);
+                            }
+                        }
+                        return newSearch.results;
+                    });
                 });
                 search = newSearch;
             }
@@ -1128,6 +1163,11 @@ module.exports = React.createClass({
         if (search.isLocal()) {
             return Promise.resolve(false);
         }
+        if (!this.props.online) {
+            // don't search remotely when there's no connection
+            return Promise.resolve(false);
+        }
+
         var wasUpdating = search.updating;
         search.updating = true;
         if (!this.searching) {

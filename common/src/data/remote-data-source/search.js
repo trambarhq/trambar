@@ -7,7 +7,7 @@ module.exports = Search;
 
 function Search(query) {
     Operation.call(this, query);
-    this.criteria = query.criteria;
+    this.criteria = query.criteria || {};
     this.remote = query.remote || false;
     this.dirty = false;
     this.updating = false;
@@ -19,24 +19,13 @@ function Search(query) {
     this.expected = query.expected;
     this.prefetch = query.prefetch;
 
-    if (typeof(query.expected) === 'number') {
-        this.expected = query.expected;
-    } else {
+    if (typeof(this.expected) !== 'number') {
         // if expected object count isn't specified, try inferring it from
         // the search criteria
         this.expected = countCriteria(this.criteria, 'id')
                      || countCriteria(this.criteria, 'name')
                      || countCriteria(this.criteria, 'filters')
                      || undefined;
-    }
-    if (typeof(query.minimum) === 'number') {
-        this.minimum = query.minimum;
-    } else {
-        if (this.expected !== undefined) {
-            this.minimum = this.expected;
-        } else {
-            this.minimum = 1;
-        }
     }
 
     // filter out bad values
@@ -171,6 +160,9 @@ Search.prototype.isFresh = function(refreshInterval) {
  */
 Search.prototype.isSufficientlyCached = function() {
     var count = this.results.length;
+    if (this.minimum == undefined) {
+        return false;
+    }
     if (count < this.minimum) {
         return false;
     }
