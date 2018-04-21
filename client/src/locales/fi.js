@@ -387,7 +387,7 @@ module.exports = function(localeCode) {
                 ui.mobileSetup,
             ];
         },
-        'start-activation-manual': 'Manuaalinen syöttö',
+        'start-activation-manual': 'Manuaalisesti',
         'start-activation-scan-code': 'Skannaa QR-koodi',
         'start-error-access-denied': 'Hakuhakemus hylättiin',
         'start-error-account-disabled': 'Tili on tällä hetkellä poissa käytöstä',

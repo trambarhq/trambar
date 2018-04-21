@@ -386,7 +386,7 @@ module.exports = function(localeCode) {
                 ui.mobileSetup,
             ];
         },
-        'start-activation-manual': "Entrata manuale",
+        'start-activation-manual': "Manualmente",
         'start-activation-scan-code': "Scansiona il codice QR",
         'start-error-access-denied': "Richiesta di accesso rifiutata",
         'start-error-account-disabled': "L'account è attualmente disabilitato",

@@ -424,12 +424,7 @@ var traditionalPhrases = {
         ];
     },
     'start-activation-instructions-short': (ui) => {
-        return [
-            'Sign in using a web browser then scan the QR code shown in ',
-            ui.settings,
-            ' > ',
-            ui.mobileSetup,
-        ];
+        return '請先使用網絡瀏覽器登錄電車吧服務器，然後掃描ＱＲ碼。';
     },
     'start-activation-manual': '鍵盤輸入',
     'start-activation-scan-code': '掃描ＱＲ碼',
@@ -1107,12 +1102,7 @@ var simplifiedPhrases = {
         ];
     },
     'start-activation-instructions-short': (ui) => {
-        return [
-            'Sign in using a web browser then scan the QR code shown in ',
-            ui.settings,
-            ' > ',
-            ui.mobileSetup,
-        ];
+        return '请先使用网络浏览器登录电车吧服务器，然后扫描QR码。';
     },
     'start-activation-manual': '键盘输入',
     'start-activation-scan-code': '扫描ＱＲ码',

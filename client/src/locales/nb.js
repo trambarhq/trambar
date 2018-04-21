@@ -389,7 +389,7 @@ module.exports = function(localeCode) {
                 ui.mobileSetup,
             ];
         },
-        'start-activation-manual': 'Manuell oppføring',
+        'start-activation-manual': 'Manuelt',
         'start-activation-scan-code': 'Skann QR kode',
         'start-error-access-denied': 'Forespørsel om tilgang avvist',
         'start-error-account-disabled': 'Kontoen er for øyeblikket deaktivert',

@@ -462,7 +462,7 @@ module.exports = function(localeCode) {
                 ui.mobileSetup,
             ];
         },
-        'start-activation-manual': 'Ręczne wprowadzanie',
+        'start-activation-manual': 'Ręcznie',
         'start-activation-scan-code': 'Zeskanuj kod QR',
         'start-error-access-denied': 'Wniosek o dostęp odrzucono',
         'start-error-account-disabled': 'Konto jest obecnie wyłączone',
