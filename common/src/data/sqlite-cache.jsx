@@ -435,6 +435,18 @@ module.exports = React.createClass({
     },
 
     /**
+     * Clear objects cached in memory
+     *
+     * @param  {String|undefined} address
+     * @param  {String|undefined} schema
+     *
+     */
+    reset: function(address, schema) {
+        var path = (schema === 'local') ? [ 'local' ] : _.filter([ 'remote', address, schema ]);
+        _.unset(this.tables, path);
+    },
+
+    /**
      * Return name of object key
      *
      * @param  {String} schema

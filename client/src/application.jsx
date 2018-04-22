@@ -636,12 +636,16 @@ module.exports = React.createClass({
             database = new Database(dataSource, { address }, this.state.online);
         }
 
-        // clear recent searches when we switch to a different project
         if (this.state.route) {
-            var schemaBefore = this.state.route.parameters.schema;
-            var schemaAfter = route.parameters.schema;
-            if (address != database.context.address || schemaBefore !== schemaAfter) {
-                dataSource.clear(address, schemaBefore);
+            if (address != database.context.address) {
+                // indicate that we're no longer interested in
+                dataSource.abandon(address);
+            } else {
+                var schemaBefore = this.state.route.parameters.schema;
+                var schemaAfter = route.parameters.schema;
+                if (schemaBefore !== schemaAfter) {
+                    dataSource.abandon(address, schemaBefore);
+                }
             }
         }
 

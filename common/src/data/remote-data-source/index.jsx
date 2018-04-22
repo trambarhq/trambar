@@ -717,33 +717,28 @@ module.exports = React.createClass({
     },
 
     /**
-     * Remove recent searches on schema
+     * Indicate that we're not longer using data from specific location
      *
-     * @param  {String|undefined} address
+     * @param  {String} address
      * @param  {String|undefined} schema
      */
-    clear: function(address, schema) {
+    abandon: function(address, schema) {
         this.updateList('recentSearchResults', (before) => {
-            var after;
-            if (address && schema) {
-                after = _.filter(before, (search) => {
-                    if (_.isMatch(search, { address, schema })) {
-                        return false;
+            var after = _.slice(before);
+            _.each(after, (search) => {
+                if (!search.isLocal()) {
+                    if (search.address === address) {
+                        if (!schema || search.schema === schema) {
+                            search.dirty = true;
+                        }
                     }
-                    return true;
-                });
-            } else if (address) {
-                after = _.filter(before, (search) => {
-                    if (_.isMatch(search, { address })) {
-                        return false;
-                    }
-                    return true;
-                });
-            } else {
-                after = [];
-            }
+                }
+            });
             return after;
         });
+        if (this.props.cache) {
+            this.props.cache.reset(address, schema);
+        }
     },
 
     /**
@@ -1104,7 +1099,7 @@ module.exports = React.createClass({
         this.updateList('recentSearchResults', (before) => {
             var after = _.slice(before);
             after.unshift(newSearch);
-            while (after.length > 256) {
+            while (after.length > 1024) {
                 after.pop();
             }
             return after;
