@@ -142,6 +142,16 @@ module.exports = React.createClass({
     },
 
     /**
+     * Set scrollbox after it's created
+     *
+     * @param  {HTMLDivElement} node
+     */
+    setScrollBox: function(node) {
+        this.scrollBoxNode = node;
+        node.focus();
+    },
+
+    /**
      * Render the application
      *
      * @return {ReactElement}
@@ -197,7 +207,7 @@ module.exports = React.createClass({
             <div className={className} id="application">
                 <TopNavigation {...topNavProps} />
                 <section className="page-view-port" id="page-view-port">
-                    <div className="scroll-box" id="scroll-box">
+                    <div className="scroll-box" id="scroll-box" tabIndex={0} ref={this.setScrollBox}>
                         <div className="contents">
                             {this.renderCurrentPage()}
                         </div>
@@ -410,6 +420,7 @@ module.exports = React.createClass({
      * Attach event handlers
      */
     componentDidMount: function() {
+        document.addEventListener('focusout', this.handleFocusOut);
         if (process.env.PLATFORM === 'browser') {
             window.addEventListener('beforeunload', this.handleBeforeUnload);
             document.addEventListener('visibilitychange', this.handleVisibilityChange);
@@ -444,6 +455,7 @@ module.exports = React.createClass({
      * Remove event handlers
      */
     componentWillUnmount: function() {
+        document.removeEventListener('focusout', this.handleFocusOut);
         if (process.env.PLATFORM === 'browser') {
             window.removeEventListener('beforeunload', this.handleBeforeUnload);
             document.removeEventListener('visibilitychange', this.handleVisibilityChange);
@@ -771,8 +783,7 @@ module.exports = React.createClass({
                     this.state.route.change(url).then(() => {
                         // scroll back to the top when clicking on link with no hash
                         if (!this.state.route.hash) {
-                            var scrollBoxNode = document.getElementById('scroll-box');
-                            scrollBoxNode.scrollTop = 0;
+                            this.scrollBoxNode.scrollTop = 0;
                         }
                     });
                     evt.preventDefault();
@@ -943,20 +954,33 @@ module.exports = React.createClass({
     },
 
     /**
+     * Put focus on scroll box if nothing has focus
+     *
+     * @param  {Event} evt
+     */
+    handleFocusOut: function(evt) {
+        if (!evt.relatedTarget) {
+            this.scrollBoxNode.focus();
+        }
+    },
+
+    /**
      * Called when user press a key in dev environment
      *
      * @param  {Event} evt
      */
     handleDebugKeydown: function(evt) {
-        if (evt.keyCode === 68 && evt.ctrlKey) {    // ctrl-D
-            var params = this.state.route.parameters;
-            if (params.schema) {
-                this.state.route.push(require('pages/settings-page'), {
-                    diagnostics: true,
-                    schema: params.schema
-                });
+        if (process.env.NODE_ENV !== 'production') {
+            if (evt.keyCode === 68 && evt.ctrlKey) {    // ctrl-D
+                var params = this.state.route.parameters;
+                if (params.schema) {
+                    this.state.route.push(require('pages/settings-page'), {
+                        diagnostics: true,
+                        schema: params.schema
+                    });
+                }
+                evt.preventDefault();
             }
-            evt.preventDefault();
         }
     },
 
