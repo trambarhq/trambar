@@ -202,7 +202,6 @@ module.exports = React.createClass({
         var manageProps = {
             label: t('project-management-manage'),
             onClick: this.handleManageClick,
-            disabled: _.size(this.props.projectLinks) < 2,
         };
         return (
             <div className="buttons">
@@ -454,7 +453,6 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleCancelJoinClick: function(evt) {
-        console.log('cancel')
         var userAfter = _.cloneDeep(this.props.currentUser);
         _.remove(userAfter.requested_project_ids, this.props.currentProject.id);
         if (this.props.onChange) {
@@ -497,12 +495,17 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleProjectDelete: function(evt) {
-        var links = _.map(evt.selection, (key) => {
-            return { key };
-        });
+        this.handleDialogClose();
+
+        // redirect to start page if the current project was removed
+        var params = this.props.route.parameters;
+        var removingCurrent = _.includes(evt.selection, `${params.address}/${params.schema}`);
+        var links = _.map(evt.selection, (key) => { return { key } });
         var db = this.props.database.use({ by: this });
         db.remove({ schema: 'local', table: 'project_link' }, links).then(() => {
-            this.handleDialogClose();
+            if (removingCurrent) {
+                return this.props.route.replace(require('pages/start-page'));
+            }
         });
     },
 
@@ -517,19 +520,8 @@ module.exports = React.createClass({
         db.endSession().then(() => {
             // delete links of all projects on server
             var serverLinks = _.filter(this.props.projectLinks, { address: params.address });
-            var otherLinks = _.difference(this.props.projectLinks, serverLinks);
             return db.remove({ schema: 'local', table: 'project_link' }, serverLinks).then(() => {
-                if (_.isEmpty(otherLinks)) {
-                    // go to start page if there aren't other projects
-                    return this.props.route.replace(require('pages/start-page'));
-                } else {
-                    // go to one of the other projects
-                    var lastVisited = _.last(_.sortBy(otherLinks, 'atime'));
-                    return this.props.route.replace(require('pages/settings-page'), {
-                        address: lastVisited.address,
-                        schema: lastVisited.schema,
-                    });
-                }
+                return this.props.route.replace(require('pages/start-page'));
             });
         });
     },
