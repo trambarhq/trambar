@@ -409,7 +409,6 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             return <TH id="name">{t('table-heading-name')}</TH>;
         } else {
             var name = p(user.details.name);
-            var username = user.username;
             var url, badge;
             if (this.state.renderingFullList) {
                 // compare against original list if the member will be added or removed
@@ -436,10 +435,9 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 });
             }
             var image = <ProfileImage user={user} theme={this.props.theme} />;
-            var text = t('user-list-$name-with-$username', name, username);
             return (
                 <td>
-                    <a href={url}>{image} {text}</a>{badge}
+                    <a href={url}>{image} {name}</a>{badge}
                 </td>
             );
         }
