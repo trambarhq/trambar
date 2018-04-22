@@ -74,6 +74,9 @@ module.exports = function(localeCode) {
         'confirmation-cancel': "Annulla",
         'confirmation-confirm': "Conferma",
 
+        'development-code-push-$deployment': (deployment) => {
+            return `Ottieni aggiornamenti del codice da «${deployment}»`;
+        },
         'development-show-diagnostics': "Mostra diagnostica",
         'development-show-panel': "Mostra questo pannello",
 
@@ -624,9 +627,12 @@ module.exports = function(localeCode) {
         'user-activity-back': "Indietro",
         'user-activity-more': "Altre",
 
-        'user-image-remove': "Rimuovi",
-        'user-image-select': "Seleziona",
-        'user-image-snap': "Snap",
+        'user-image-adjust': 'Regola',
+        'user-image-cancel': 'Annulla',
+        'user-image-replace': 'Sostituisci',
+        'user-image-save': 'Salva',
+        'user-image-select': 'Seleziona',
+        'user-image-snap': 'Scatta',
 
         'user-info-email': "Indirizzo e-mail",
         'user-info-gender': "Genere",

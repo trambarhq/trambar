@@ -25,17 +25,6 @@
     .buttons {
         overflow: hidden;
         padding-bottom: 0.15em;
-
-        .left {
-            float: left;
-
-            .push-button {
-                margin-left: 0;
-            }
-        }
-
-        .right {
-            float: right;
-        }
+        text-align: right;
     }
 }

@@ -106,6 +106,9 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Отмена',
         'confirmation-confirm': 'Подтвердить',
 
+        'development-code-push-$deployment': (deployment) => {
+            return `Получите обновления кода с "${deployment}"`;
+        },
         'development-show-diagnostics': 'Показать диагностику',
         'development-show-panel': 'Показать эту панель',
 
@@ -821,7 +824,10 @@ module.exports = function(localeCode) {
         'user-activity-back': 'Назад',
         'user-activity-more': 'Более',
 
-        'user-image-remove': 'Удалить',
+        'user-image-adjust': 'Настроить',
+        'user-image-cancel': 'Отмена',
+        'user-image-replace': 'Заменить',
+        'user-image-save': 'Сохранить',
         'user-image-select': 'Выбрать',
         'user-image-snap': 'Камера',
 

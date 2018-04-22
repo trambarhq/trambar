@@ -74,8 +74,11 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Avbryt',
         'confirmation-confirm': 'Bekrefte',
 
-        'development-show-diagnostics': 'Show diagnostics',
-        'development-show-panel': 'Display this panel',
+        'development-code-push-$deployment': (deployment) => {
+            return `Hent kodeoppdateringer fra "${deployment}"`;
+        },
+        'development-show-diagnostics': 'Vis diagnostikk',
+        'development-show-panel': 'Vis dette panelet',
 
         'device-selector-camera-$number': (number) => {
             return `Kamera ${number}`;
@@ -85,9 +88,6 @@ module.exports = function(localeCode) {
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
-
-        'diagnostics-show': 'Vis diagnostikk',
-        'diagnostics-show-panel': 'Vis dette panelet',
 
         'empty-currently-offline': 'Du er frakoblet',
 
@@ -600,7 +600,10 @@ module.exports = function(localeCode) {
         'user-activity-back': 'Tilbake',
         'user-activity-more': 'Flere',
 
-        'user-image-remove': 'Fjerne',
+        'user-image-adjust': 'Juster',
+        'user-image-cancel': 'Avbryt',
+        'user-image-replace': 'Erstatt',
+        'user-image-save': 'Lagre',
         'user-image-select': 'Velge',
         'user-image-snap': 'Ta',
 

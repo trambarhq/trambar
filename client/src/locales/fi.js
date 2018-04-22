@@ -74,6 +74,9 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Peruutta',
         'confirmation-confirm': 'Vahvista',
 
+        'development-code-push-$deployment': (deployment) => {
+            return `Hanki koodipäivitykset arkistosta "${deployment}"`;
+        },
         'development-show-diagnostics': 'Näytä diagnostiikka',
         'development-show-panel': 'Näytä tämä paneeli',
 
@@ -601,8 +604,11 @@ module.exports = function(localeCode) {
         'user-activity-back': 'Palataa',
         'user-activity-more': 'Lisää',
 
-        'user-image-remove': 'Poista',
-        'user-image-select': 'Select',
+        'user-image-adjust': 'Säädä',
+        'user-image-cancel': 'Peruutta',
+        'user-image-replace': 'Vaihda',
+        'user-image-save': 'Tallenna',
+        'user-image-select': 'Valitse',
         'user-image-snap': 'Ota',
 
         'user-info-email': 'Sähköpostiosoite',

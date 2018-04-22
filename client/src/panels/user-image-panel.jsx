@@ -43,6 +43,8 @@ module.exports = React.createClass({
             importer: MediaImporter
         })
         return {
+            action: null,
+            image: null,
             hasCamera: DeviceManager.hasDevice('videoinput'),
         };
     },
@@ -56,6 +58,20 @@ module.exports = React.createClass({
      */
     getUserProperty: function(path) {
         return _.get(this.props.currentUser, path);
+    },
+
+    /**
+     * Return either the pending image or existing
+     *
+     * @return {[type]}
+     */
+    getImage: function() {
+        if (this.state.image) {
+            return this.state.image;
+        } else {
+            var resources = this.getUserProperty('details.resources');
+            return _.find(resources, { type: 'image' });
+        }
     },
 
     /**
@@ -73,7 +89,8 @@ module.exports = React.createClass({
             this.props.onChange({
                 type: 'change',
                 target: this,
-                user: userAfter
+                user: userAfter,
+                immediate: true
             });
         }
     },
@@ -107,9 +124,8 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderProfilePicture: function() {
-        var resources = this.getUserProperty('details.resources');
-        var image = _.find(resources, { type: 'image' });
         var contents;
+        var image = this.getImage();
         if (image) {
             var props = {
                 resource: image,
@@ -117,6 +133,7 @@ module.exports = React.createClass({
                 theme: this.props.theme,
                 previewWidth: 256,
                 previewHeight: 256,
+                disabled: (this.state.action !== 'adjust'),
                 onChange: this.handleImageChange,
             };
             contents = <ImageEditor {...props} />;
@@ -138,7 +155,12 @@ module.exports = React.createClass({
      */
     renderMediaImporter: function() {
         var setters = this.components.setters;
-        var resources = _.get(this.props.currentUser, 'details.resources', []);
+        var resources;
+        if (this.state.image) {
+            resources = [ this.state.image ];
+        } else {
+            resources = _.get(this.props.currentUser, 'details.resources', []);
+        }
         var props = {
             ref: setters.importer,
             types: [ 'image' ],
@@ -161,35 +183,78 @@ module.exports = React.createClass({
      */
     renderButtons: function() {
         var t = this.props.locale.translate;
-        var resources = this.getUserProperty('details.resources');
-        var hasPicture = _.some(resources, { type: 'image' });
-        var removeProps = {
-            label: t('user-image-remove'),
-            hidden: !hasPicture,
-            onClick: this.handleRemoveClick,
-        };
-        var takeProps = {
-            label: t('user-image-snap'),
-            hidden: !this.state.hasCamera,
-            onClick: this.handleTakeClick,
-        };
-        var selectProps = {
-            label: t('user-image-select'),
-            highlighted: !hasPicture,
-            accept: 'image/*',
-            onChange: this.handleFileChange,
-        };
-        return (
-            <div className="buttons">
-                <div className="left">
-                    <PushButton {...removeProps} />
+        var hasPicture = !!this.getImage();
+        if (this.state.action === 'adjust' && hasPicture) {
+            var cancelProps = {
+                label: t('user-image-cancel'),
+                onClick: this.handleCancelClick,
+            };
+            var saveProps = {
+                label: t('user-image-save'),
+                emphasized: true,
+                onClick: this.handleSaveClick,
+            }
+            return (
+                <div key="adjust" className="buttons">
+                    <PushButton {...cancelProps} />
+                    <PushButton {...saveProps} />
                 </div>
-                <div className="right">
+            );
+        } else if (this.state.action === 'replace' && hasPicture) {
+            var cancelProps = {
+                label: t('user-image-cancel'),
+                onClick: this.handleCancelClick,
+            };
+            var takeProps = {
+                label: t('user-image-snap'),
+                hidden: !this.state.hasCamera,
+                onClick: this.handleTakeClick,
+            };
+            var selectProps = {
+                label: t('user-image-select'),
+                accept: 'image/*',
+                onChange: this.handleFileChange,
+            };
+            return (
+                <div key="replace" className="buttons">
+                    <PushButton {...cancelProps} />
                     <PushButton {...takeProps} />
                     <PushButton.File {...selectProps} />
                 </div>
-            </div>
-        );
+            );
+        } else if (hasPicture) {
+            var adjustProps = {
+                label: t('user-image-adjust'),
+                onClick: this.handleAdjustClick,
+            };
+            var replaceProps = {
+                label: t('user-image-replace'),
+                onClick: this.handleReplaceClick,
+            };
+            return (
+                <div key="action" className="buttons">
+                    <PushButton {...adjustProps} />
+                    <PushButton {...replaceProps} />
+                </div>
+            );
+        } else {
+            var takeProps = {
+                label: t('user-image-snap'),
+                hidden: !this.state.hasCamera,
+                onClick: this.handleTakeClick,
+            };
+            var selectProps = {
+                label: t('user-image-select'),
+                accept: 'image/*',
+                onChange: this.handleFileChange,
+            };
+            return (
+                <div key="add" className="buttons">
+                    <PushButton {...takeProps} />
+                    <PushButton.File {...selectProps} />
+                </div>
+            );
+        }
     },
 
     /**
@@ -207,16 +272,30 @@ module.exports = React.createClass({
     },
 
     /**
-     * Called when user clicks remove button
+     * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleRemoveClick: function(evt) {
-        var resources = this.getUserProperty('details.resources');
-        var index = _.findIndex(resources, { type: 'image' });
-        var resourcesAfter = _.slice(resources);
-        resourcesAfter.splice(index, 1);
-        this.setUserProperty('details.resources', resourcesAfter);
+    handleCancelClick: function(evt) {
+        this.setState({ action: null, image: null })
+    },
+
+    /**
+     * Called when user clicks adjust button
+     *
+     * @param  {Event} evt
+     */
+    handleAdjustClick: function(evt) {
+        this.setState({ action: 'adjust' });
+    },
+
+    /**
+     * Called when user clicks adjust button
+     *
+     * @param  {Event} evt
+     */
+    handleReplaceClick: function(evt) {
+        this.setState({ action: 'replace' });
     },
 
     /**
@@ -239,31 +318,33 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when user clicks save button
+     *
+     * @param  {Event} evt
+     */
+    handleSaveClick: function(evt) {
+        this.setUserProperty('details.resources', [ this.state.image ]);
+        this.setState({ action: null, image: null });
+    },
+
+    /**
      * Called when cropping rectangle changes
      *
      * @param  {Object} evt
      */
     handleImageChange: function(evt) {
-        var resources = this.getUserProperty('details.resources');
-        var resourcesAfter = _.slice(resources);
-        var index = _.findIndex(resourcesAfter, { type: 'image' });
-        if (index !== -1) {
-            resourcesAfter[index] = evt.resource;
-        } else {
-            resourcesAfter.push(evt.resource);
-        }
-        this.setUserProperty('details.resources', resourcesAfter);
+        this.setState({ image: evt.resource });
     },
 
     /**
-     * Called when MediaImporter has imported an image
+     * Called when MediaImporter has imported or captured an image
      *
      * @param  {Object} evt
      *
      * @return {Promise}
      */
     handleChange: function(evt) {
-        this.setUserProperty('details.resources', evt.resources);
+        this.setState({ image: evt.resources[0], action: 'adjust' });
         return Promise.resolve();
     },
 

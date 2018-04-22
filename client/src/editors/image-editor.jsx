@@ -27,6 +27,7 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
         previewWidth: PropTypes.number,
         previewHeight: PropTypes.number,
+        disabled: PropTypes.bool,
         onChange: PropTypes.func,
     },
 
@@ -39,6 +40,7 @@ module.exports = React.createClass({
         return {
             previewWidth: 512,
             previewHeight: 512,
+            disabled: false,
         };
     },
 
@@ -61,7 +63,7 @@ module.exports = React.createClass({
      * Prepare the image on mount
      */
     componentWillMount: function() {
-        this.prepareImage(this.props.resource);
+        this.prepareImage(this.props.resource, this.props.disabled);
     },
 
     /**
@@ -70,8 +72,8 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (this.props.resource !== nextProps.resource) {
-            this.prepareImage(nextProps.resource);
+        if (this.props.resource !== nextProps.resource || this.props.disabled !== nextProps.disabled) {
+            this.prepareImage(nextProps.resource, nextProps.disabled);
         }
     },
 
@@ -79,34 +81,34 @@ module.exports = React.createClass({
      * Load the image if it isn't available locally
      *
      * @param  {Object} res
+     * @param  {Boolean} disabled
      */
-    prepareImage: function(res) {
-        var fullImageURL = this.props.theme.getImageURL(res, { original: true });
-        var hasBlob = false;
-        if (isJSONEncoded(fullImageURL)) {
+    prepareImage: function(res, disabled) {
+        var fullImageURL = null;
+        var previewImageURL = null;
+        var fullImageRemoteURL = this.props.theme.getImageURL(res, { original: true });
+        if (isJSONEncoded(fullImageRemoteURL)) {
             // a blob that hasn't been uploaded yet
-            var image = parseJSONEncodedURL(fullImageURL)
+            var image = parseJSONEncodedURL(fullImageRemoteURL)
             fullImageURL = image.url;
-            hasBlob = true;
         } else {
             // the remote URL might point to a file we had uploaded
-            var blob = BlobManager.find(fullImageURL);
+            var blob = BlobManager.find(fullImageRemoteURL);
             if (blob) {
                 fullImageURL = BlobManager.url(blob);
-                hasBlob = true;
             }
         }
-        var previewImageURL = null;
-        if (!hasBlob) {
+        if (!fullImageURL) {
             // we don't have a blob--show a preview image (clipped) while the
             // full image is retrieved
             previewImageURL = this.props.theme.getImageURL(res, {
                 width: this.props.previewWidth,
                 height: this.props.previewHeight
             });
-            if (this.state.fullImageURL !== fullImageURL) {
-                // load it
-                BlobManager.fetch(fullImageURL).then((blob) => {
+
+            // load it, unless control is disabled
+            if (!disabled) {
+                BlobManager.fetch(fullImageRemoteURL).then((blob) => {
                     this.setState({
                         fullImageURL: BlobManager.url(blob),
                         previewImageURL: null
@@ -127,35 +129,57 @@ module.exports = React.createClass({
     render: function() {
         return (
             <div className="image-editor">
-                {this.renderPlaceholder()}
-                {this.renderImageCropper()}
-                {this.renderPreview()}
+                {this.renderImage()}
                 {this.props.children}
             </div>
         );
     },
 
     /**
-     * Render preview image while actual image is loading
+     * Render image cropper if full image is available; otherwise render
+     * preview image
      *
-     * @return {ReactElement|null}
+     * @return {ReactElement}
      */
-    renderPreview: function() {
-        if (!this.state.previewImageURL) {
-            return null;
+    renderImage: function() {
+        if (!this.state.fullImageURL) {
+            return this.renderPreviewImage();
+        } else {
+            return this.renderImageCropper();
         }
-        return <img className="preview" src={this.state.previewImageURL} />;
+    },
+
+    /**
+     * Render preview image when we don't have the full image yet
+     *
+     * @return {ReactElement}
+     */
+    renderPreviewImage: function() {
+        var className = 'preview';
+        var overlay;
+        if (this.props.disabled) {
+            className += ' disabled';
+        } else {
+            overlay = (
+                <div className="spinner">
+                    <i className="fa fa-refresh fa-spin fa-fw" />
+                </div>
+            );
+        }
+        return (
+            <div className={className}>
+                <img src={this.state.previewImageURL} />
+                {overlay}
+            </div>
+        );
     },
 
     /**
      * Render image with cropping handling
      *
-     * @return {ReactElement|null}
+     * @return {ReactElement}
      */
     renderImageCropper: function() {
-        if (!this.state.fullImageURL || this.state.previewImageURL) {
-            return null;
-        }
         var setters = this.components.setters;
         var res = this.props.resource;
         var props = {
@@ -163,6 +187,7 @@ module.exports = React.createClass({
             url: this.state.fullImageURL,
             clippingRect: res.clip || ImageCropping.default(res.width, res.height),
             vector: (res.format === 'svg'),
+            disabled: this.props.disabled,
             onChange: this.handleClipRectChange,
         };
         return <ImageCropper {...props} />;

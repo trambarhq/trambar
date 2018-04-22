@@ -493,7 +493,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     handleChange: function(evt) {
         var user = evt.user;
         this.setState({ user }, () => {
-            this.saveUser(user, false);
+            this.saveUser(user, evt.immediate || false);
         });
     },
 

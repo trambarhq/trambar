@@ -110,8 +110,11 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Anuluj',
         'confirmation-confirm': 'Potwierdź',
 
-        'development-show-diagnostics': 'Show diagnostics',
-        'development-show-panel': 'Display this panel',
+        'development-code-push-$deployment': (deployment) => {
+            return `Uzyskaj aktualizacje kodu z „${deployment}”`;
+        },
+        'development-show-diagnostics': 'Pokaż diagnostykę',
+        'development-show-panel': 'Wyświetl ten panel',
 
         'device-selector-camera-$number': (number) => {
             return `Kamera ${number}`;
@@ -121,9 +124,6 @@ module.exports = function(localeCode) {
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
-
-        'diagnostics-show': 'Pokaż diagnostykę',
-        'diagnostics-show-panel': 'Wyświetl ten panel',
 
         'empty-currently-offline': 'Jesteś odłączony od sieci',
 
@@ -827,7 +827,10 @@ module.exports = function(localeCode) {
         'user-activity-back': 'Powrót',
         'user-activity-more': 'Więcej',
 
-        'user-image-remove': 'Usuń',
+        'user-image-adjust': 'Dostosuj',
+        'user-image-cancel': 'Anuluj',
+        'user-image-replace': 'Zmień',
+        'user-image-save': 'Zapisz',
         'user-image-select': 'Wybierz',
         'user-image-snap': 'Zrób',
 

@@ -16,6 +16,7 @@ module.exports = React.createClass({
         url: PropTypes.string.isRequired,
         clippingRect: PropTypes.object,
         vector: PropTypes.bool,
+        disabled: PropTypes.bool,
         onChange: PropTypes.func,
         onLoad: PropTypes.func,
     },
@@ -80,13 +81,21 @@ module.exports = React.createClass({
         var containerProps = {
             ref: setters.container,
             className: 'image-cropper',
-            tabIndex: 0,
-            onMouseDown: this.handleMouseDown,
-            onFocus: this.handleFocus,
-            onBlur: this.handleBlur,
-            onWheel: (this.state.hasFocus) ? this.handleMouseWheel : null,
-            onKeyDown: (this.state.hasFocus) ? this.handleKeyDown : null,
         };
+        if (!this.props.disabled) {
+            _.assign(containerProps, {
+                tabIndex: 0,
+                onMouseDown: this.handleMouseDown,
+                onFocus: this.handleFocus,
+                onBlur: this.handleBlur,
+            });
+            if (this.state.hasFocus) {
+                _.assign(containerProps, {
+                    onWheel: this.handleMouseWheel,
+                    onKeyDown: this.handleKeyDown,
+                });
+            }
+        }
         var imageProps = {
             ref: setters.image,
             url: this.props.url,

@@ -607,7 +607,10 @@ module.exports = function(localeCode) {
         'user-activity-back': 'Back',
         'user-activity-more': 'More',
 
-        'user-image-remove': 'Remove',
+        'user-image-adjust': 'Adjust',
+        'user-image-cancel': 'Cancel',
+        'user-image-replace': 'Replace',
+        'user-image-save': 'Save',
         'user-image-select': 'Select',
         'user-image-snap': 'Snap',
 

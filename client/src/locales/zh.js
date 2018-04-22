@@ -116,6 +116,9 @@ var traditionalPhrases = {
     'confirmation-cancel': '取消',
     'confirmation-confirm': '肯定',
 
+    'development-code-push-$deployment': (deployment) => {
+        return `從《${deployment}》獲取代碼更新`;
+    },
     'development-show-diagnostics': '顯示診斷',
     'development-show-panel': '顯示這個面板',
 
@@ -643,7 +646,10 @@ var traditionalPhrases = {
     'user-activity-back': '返回',
     'user-activity-more': '更多',
 
-    'user-image-remove': '刪除',
+    'user-image-adjust': '調整',
+    'user-image-cancel': '取消',
+    'user-image-replace': '替換',
+    'user-image-save': '保存',
     'user-image-select': '選擇',
     'user-image-snap': '拍照',
 
@@ -794,6 +800,9 @@ var simplifiedPhrases = {
     'confirmation-cancel': '取消',
     'confirmation-confirm': '肯定',
 
+    'development-code-push-$deployment': (deployment) => {
+        return `从《${deployment}》获取代码更新`;
+    },
     'development-show-diagnostics': '显示诊断',
     'development-show-panel': '显示这个面板',
 
@@ -1321,7 +1330,10 @@ var simplifiedPhrases = {
     'user-activity-back': '返回',
     'user-activity-more': '更多',
 
-    'user-image-remove': '删除',
+    'user-image-adjust': '调整',
+    'user-image-cancel': '取消',
+    'user-image-replace': '替换',
+    'user-image-save': '保存',
     'user-image-select': '选择',
     'user-image-snap': '拍照',
 
