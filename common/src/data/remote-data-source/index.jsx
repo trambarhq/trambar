@@ -1687,10 +1687,10 @@ module.exports = React.createClass({
                 return cache.save(location, op.results).then(() => {
                     return cache.remove(location, op.missingResults);
                 });
-            } else if (op instanceof Storage) {
-                return cache.save(location, op.results);
             } else if (op instanceof Removal) {
                 return cache.remove(location, op.results);
+            } else if (op instanceof Storage) {
+                return cache.save(location, op.results);
             }
         }).then(() => {
             return true;
@@ -1768,7 +1768,15 @@ module.exports = React.createClass({
                 var index = _.sortedIndexBy(resultsAfter, object, 'id');
                 var target = resultsAfter[index];
                 var present = (target && target.id === object.id);
-                if (op instanceof Storage) {
+                // note: Removal is a subclass of Storage
+                if (op instanceof Removal) {
+                    if (present) {
+                        if (resultsAfter === resultsBefore) {
+                            resultsAfter = _.slice(resultsAfter);
+                        }
+                        resultsAfter.splice(index, 1);
+                    }
+                } else if (op instanceof Storage) {
                     var match = LocalSearch.match(search.table, object, search.criteria);
                     if (match || present) {
                         if (resultsAfter === resultsBefore) {
@@ -1787,13 +1795,6 @@ module.exports = React.createClass({
                             // meets the criteria
                             resultsAfter.splice(index, 1);
                         }
-                    }
-                } else if (op instanceof Removal) {
-                    if (present) {
-                        if (resultsAfter === resultsBefore) {
-                            resultsAfter = _.slice(resultsAfter);
-                        }
-                        resultsAfter.splice(index, 1);
                     }
                 }
             });

@@ -125,11 +125,10 @@ module.exports = React.createClass({
 
                     var input = document.createElement('INPUT');
                     input.type = 'text';
-                    input.value = localStorage.testActivationURL || '';
+                    input.value = '';
                     input.addEventListener('keydown', (evt) => {
                         if (evt.keyCode === 0x0d) {
                             var url = evt.target.value;
-                            localStorage.testActivationURL = url;
                             if (this.props.onResult) {
                                 this.props.onResult({
                                     type: 'result',
