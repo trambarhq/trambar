@@ -263,6 +263,9 @@ function copyRepoDetails(repo, server, members, glRepo, glLabels) {
         value: _.map(glLabels, 'color'),
         overwrite: 'always',
     });
+    if (repoAfter.deleted) {
+        repoAfter.deleted = false;
+    }
     if (_.isEqual(repoAfter, repo)) {
         return repo;
     }
