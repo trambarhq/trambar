@@ -492,10 +492,14 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (process.env.PLATFORM !== 'cordova') return;
         var t = this.props.locale.translate;
         var n = this.props.locale.name;
-        var name = '\u00a0';
         var user = this.props.currentUser;
+        var name;
+        var className = 'welcome';
         if (user) {
             name = n(user.details.name, user.details.gender);
+            className += ' user';
+        } else {
+            name = '\u00a0';
         }
         var imageProps = {
             user: user,
@@ -503,10 +507,10 @@ var StartPageSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
         };
         return (
-            <div className="welcome">
+            <div className={className}>
                 <h3>{t('start-welcome-again')}</h3>
                 <ProfileImage {...imageProps} />
-                <h4>{name}</h4>
+                <h4 className="name">{name}</h4>
             </div>
         );
     },

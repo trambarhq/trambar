@@ -307,6 +307,17 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+
+            .profile-image, .name {
+                opacity: 0;
+                transition: opacity 0.5s;
+            }
+
+            &.user {
+                .profile-image, .name {
+                    opacity: 1;
+                }
+            }
         }
 
         .activation-instructions {
