@@ -5,6 +5,7 @@
     padding: 0.4em 0.4em 0.3em 0.4em;
     color: #666666;
     cursor: pointer;
+    transition: color 1s;
 
     .event {
         float: left;
@@ -23,6 +24,7 @@
         float: right;
         margin: 0.1em 0 0 2em;
         color: #666666;
+        transition: color 1s;
 
         .time {
             vertical-align: middle;
