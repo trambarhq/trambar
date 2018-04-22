@@ -8,8 +8,8 @@
     transition: color 1s;
 
     .event {
-        float: left;
         user-select: text;
+        display: inline;
 
         .profile-image {
             margin: 0 0.4em 0 0;
@@ -33,6 +33,10 @@
         .fa {
             margin-left: 0.4em;
         }
+    }
+
+    &:link, &:visited {
+        text-decoration: none;
     }
 
     &.unread {
