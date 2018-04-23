@@ -1,0 +1,14 @@
+body {
+    -webkit-overflow-scrolling: touch;
+}
+
+.page-view-port {
+    .scroll-box {
+        .contents {
+            // force scroll bar by making contents 1px larger to prevent
+            // rendering webkit-overflow-scrolling bug when contents are
+            // dynamically added
+            min-height: calc(100% + 1px);
+        }
+    }
+}

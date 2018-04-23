@@ -1,17 +1,13 @@
 .settings-page {
     .panels {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        margin: auto;
-
-        .single-col & {
-            padding: 0.5em 0.5em 0.5em 0.5em;
-        }
-
         .double-col &,
         .triple-col & {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            margin: auto;
+
             padding: 1em 1em 1em 1em;
             column-fill: balance;
             column-width: 25em;
