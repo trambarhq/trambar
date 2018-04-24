@@ -24,7 +24,8 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             mode: this.selectMode(),
-            onscreenKeyboard: this.detectOnscreenKeyboard(),
+            onscreenKeyboard: detectOnscreenKeyboard(),
+            touchInterface: detectTouchInterface(),
             devicePixelRatio: window.devicePixelRatio,
             webpSupport: isWebpSupported(),
             details: null,
@@ -77,6 +78,15 @@ module.exports = React.createClass({
      */
     hasKeyboard: function() {
         return this.state.onscreenKeyboard;
+    },
+
+    /**
+     * Return true if touch is supported and a mouse isn't being used
+     *
+     * @return {Boolean}
+     */
+    hasTouchInterface: function() {
+        return this.state.touchInterface;
     },
 
     /**
@@ -424,23 +434,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Check if on-screen keyboard is open
-     *
-     * @return {Boolean}
-     */
-    detectOnscreenKeyboard: function() {
-        // this is known to work in Chrome only
-        var viewPortHeight = document.body.offsetHeight;
-        var screenHeight = screen.height;
-        var offLimit = screenHeight - viewPortHeight;
-        if (offLimit > 200) {
-            return true;
-        } else {
-            return false;
-        }
-    },
-
-    /**
      * Change certain details about the UI (not used currently)
      *
      * @param  {Object} details
@@ -619,4 +612,39 @@ function isWebpSupported() {
         }
     }
     return false;
+}
+
+/**
+ * Check if on-screen keyboard is open (Android only)
+ *
+ * @return {Boolean}
+ */
+function detectOnscreenKeyboard() {
+    // this is known to work in Chrome only
+    var viewPortHeight = document.body.offsetHeight;
+    var screenHeight = screen.height;
+    var offLimit = screenHeight - viewPortHeight;
+    if (offLimit > 200) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * Check if touch screen is present
+ *
+ * @return {Boolean}
+ */
+function detectTouchInterface() {
+    var ua = navigator.userAgent;
+    if (/iPhone|iPad|iPod/.test(ua)) {
+        return true;
+    } else if (/Android/.test(ua)) {
+        return true;
+    } else if (/Windows Phone/.test(ua)) {
+        return true;
+    } else {
+        return false;
+    }
 }

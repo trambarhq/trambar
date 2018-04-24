@@ -47,7 +47,14 @@
             color: #ee3333;
         }
 
-        &:hover {
+        .no-touch & {
+            &:hover {
+                background-color: #fca326;
+                color: #000000;
+            }
+        }
+
+        &:active {
             background-color: #fca326;
             color: #000000;
         }
@@ -152,9 +159,11 @@
             color: #cccccc;
         }
 
-        &:hover {
-            background-color: #fca326;
-            color: #000000;
+        .no-touch & {
+            &:hover {
+                background-color: #fca326;
+                color: #000000;
+            }
         }
 
         .single-col & {

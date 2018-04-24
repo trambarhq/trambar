@@ -29,8 +29,10 @@
             text-decoration: none;
         }
 
-        &:hover, &:hover .label {
-            color: #eeeeee;
+        .no-touch & {
+            &:hover, &:hover .label {
+                color: #eeeeee;
+            }
         }
 
         &.active, &.active .label {

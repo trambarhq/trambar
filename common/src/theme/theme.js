@@ -7,6 +7,7 @@ function Theme(themeManager) {
     this.mode = this.themeManager.getMode();
     this.modes = this.themeManager.getModes();
     this.keyboard = this.themeManager.hasKeyboard();
+    this.touch = this.themeManager.hasTouchInterface();
     this.details = this.themeManager.getDetails();
 }
 

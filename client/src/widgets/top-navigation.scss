@@ -27,8 +27,10 @@
         color: #888888;
         touch-action: manipulation;
 
-        &:hover {
-            color: #cccccc;
+        .no-touch & {
+            &:hover {
+                color: #cccccc;
+            }
         }
 
         &.active {
