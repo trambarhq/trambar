@@ -101,7 +101,7 @@ function findDraftStories(db, user) {
             published: false,
             user_ids: [ user.id ],
         },
-        prefetch: false
+        prefetch: false,
     });
 }
 
@@ -178,10 +178,11 @@ function findStoriesMatchingText(db, text, locale, currentUser, perUserLimit) {
  * @param  {Array<String>} tags
  * @param  {User} currentUser
  * @param  {Number} perUserLimit
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesWithTags(db, tags, currentUser, perUserLimit) {
+function findStoriesWithTags(db, tags, currentUser, perUserLimit, minimum) {
     return db.find({
         table: 'story',
         criteria: {
@@ -192,7 +193,7 @@ function findStoriesWithTags(db, tags, currentUser, perUserLimit) {
             limit: (!perUserLimit) ? 500 : undefined,
             per_user_limit: perUserLimit,
         },
-        minimum: 5,
+        minimum
     });
 }
 
@@ -203,10 +204,11 @@ function findStoriesWithTags(db, tags, currentUser, perUserLimit) {
  * @param  {String} date
  * @param  {User} currentUser
  * @param  {Number} perUserLimit
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesOnDate(db, date, currentUser, perUserLimit) {
+function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
     return db.find({
         table: 'story',
         criteria: {
@@ -218,7 +220,7 @@ function findStoriesOnDate(db, date, currentUser, perUserLimit) {
             per_user_limit: perUserLimit,
         },
         prefetch: (date >= DateTracker.today),
-        minimum: 5,
+        minimum
     });
 }
 
@@ -302,10 +304,11 @@ function findStoriesByUserMatchingText(db, user, text, locale, currentUser) {
  * @param  {User} user
  * @param  {Array<String>} tags
  * @param  {User} currentUser
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesByUserWithTags(db, user, tags, currentUser) {
+function findStoriesByUserWithTags(db, user, tags, currentUser, minimum) {
     return db.find({
         table: 'story',
         criteria: {
@@ -316,7 +319,7 @@ function findStoriesByUserWithTags(db, user, tags, currentUser) {
             public: publicOnly(currentUser),
             limit: 500,
         },
-        minimum: 5,
+        minimum
     });
 }
 
@@ -327,10 +330,11 @@ function findStoriesByUserWithTags(db, user, tags, currentUser) {
  * @param  {User} user
  * @param  {String} date
  * @param  {User} currentUser
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesByUserOnDate(db, user, date, currentUser) {
+function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
     return db.find({
         table: 'story',
         criteria: {
@@ -342,7 +346,7 @@ function findStoriesByUserOnDate(db, user, date, currentUser) {
             limit: 500,
         },
         prefetch: (date >= DateTracker.today),
-        minimum: 5,
+        minimum
     });
 }
 

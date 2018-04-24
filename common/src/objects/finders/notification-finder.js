@@ -15,10 +15,11 @@ module.exports = {
  *
  * @param  {Database} db
  * @param  {User} user
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Notification>>}
  */
-function findNotificationsForUser(db, user) {
+function findNotificationsForUser(db, user, minimum) {
     if (!user) {
         return Promise.resolve(Empty.array)
     }
@@ -28,6 +29,7 @@ function findNotificationsForUser(db, user) {
             target_user_id: user.id,
             limit: 500,
         },
+        minimum
     });
 }
 
@@ -37,10 +39,11 @@ function findNotificationsForUser(db, user) {
  * @param  {Database} db
  * @param  {User} user
  * @param  {String} date
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Notification>>}
  */
-function findNotificationsForUserOnDate(db, user, date) {
+function findNotificationsForUserOnDate(db, user, date, minimum) {
     if (!user) {
         return Promise.resolve(Empty.array)
     }
@@ -50,7 +53,9 @@ function findNotificationsForUserOnDate(db, user, date) {
             target_user_id: user.id,
             time_range: DateUtils.getDayRange(date),
         },
+        // disable prefetch if we're looking at the past (which shouldn't change)
         prefetch: (date >= DateTracker.today),
+        minimum,
     })
 }
 
@@ -59,10 +64,11 @@ function findNotificationsForUserOnDate(db, user, date) {
  *
  * @param  {Database} db
  * @param  {User} user
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Notification>>}
  */
-function findNotificationsUnseenByUser(db, user) {
+function findNotificationsUnseenByUser(db, user, minimum) {
     if (!user) {
         return Promise.resolve(Empty.array)
     }
@@ -73,5 +79,6 @@ function findNotificationsUnseenByUser(db, user) {
             seen: false,
             limit: 100,
         },
+        minimum
     });
 }

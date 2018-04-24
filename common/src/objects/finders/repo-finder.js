@@ -30,14 +30,16 @@ function findRepo(db, id) {
  * Find all repos
  *
  * @param  {Database} db
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Repo>>}
  */
-function findAllRepos(db) {
+function findAllRepos(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'repo',
-        criteria: {}
+        criteria: {},
+        minimum
     });
 }
 
@@ -45,16 +47,18 @@ function findAllRepos(db) {
  * Find repo that haven't been deleted
  *
  * @param  {Database} db
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Repo>>}
  */
-function findExistingRepos(db) {
+function findExistingRepos(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'repo',
         criteria: {
             deleted: false
-        }
+        },
+        minimum
     });
 }
 

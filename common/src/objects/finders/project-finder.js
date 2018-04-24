@@ -32,13 +32,15 @@ function findProject(db, id) {
  * Find all projects
  *
  * @param  {Database} db
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Project>>}
  */
-function findAllProjects(db) {
+function findAllProjects(db, minimum) {
     return db.find({
         table: 'project',
         criteria: {},
+        minimum
     });
 }
 
@@ -62,10 +64,11 @@ function findCurrentProject(db) {
  * Find projects that aren't deleted or archived
  *
  * @param  {Database} db
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Project>>}
  */
-function findActiveProjects(db) {
+function findActiveProjects(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'project',
@@ -73,6 +76,7 @@ function findActiveProjects(db) {
             achived: false,
             deleted: false,
         },
+        minimum
     });
 }
 
@@ -81,10 +85,11 @@ function findActiveProjects(db) {
  *
  * @param  {Database} db
  * @param  {Array<User>} users
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Project>>}
  */
-function findProjectsWithMembers(db, users) {
+function findProjectsWithMembers(db, users, minimum) {
     var ids = _.map(users, 'id');
     if (_.isEmpty(ids)) {
         return Promise.resolve(Empty.array);
@@ -94,6 +99,7 @@ function findProjectsWithMembers(db, users) {
         schema: 'global',
         table: 'project',
         criteria: { user_ids: ids },
+        minimum
     });
 }
 

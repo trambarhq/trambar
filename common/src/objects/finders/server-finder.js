@@ -30,14 +30,16 @@ function findServer(db, id) {
  * Find server by ID
  *
  * @param  {Database} db
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Server>>}
  */
-function findAllServers(db) {
+function findAllServers(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'server',
-        criteria: {}
+        criteria: {},
+        minimum
     });
 }
 

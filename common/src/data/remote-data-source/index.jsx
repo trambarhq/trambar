@@ -462,7 +462,7 @@ module.exports = React.createClass({
             var committed = query.committed;
             var blocking;
             if (query.blocking === true) {
-                blocking = 'incomplete';
+                blocking = 'insufficient';
             } else if (query.blocking === false) {
                 blocking = 'never';
             } else if (query.blocking == undefined) {

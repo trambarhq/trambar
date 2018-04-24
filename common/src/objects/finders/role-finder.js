@@ -30,14 +30,16 @@ function findRole(db, id) {
  * Find all roles
  *
  * @param  {Database} db
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Role>>}
  */
-function findAllRoles(db) {
+function findAllRoles(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'role',
         criteria: {},
+        minimum
     });
 }
 
@@ -45,10 +47,11 @@ function findAllRoles(db) {
  * Find roles that aren't deleted or disabled
  *
  * @param  {Database} db
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Role>>}
  */
-function findActiveRoles(db) {
+function findActiveRoles(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'role',
@@ -56,6 +59,7 @@ function findActiveRoles(db) {
             deleted: false,
             disabled: false,
         },
+        minimum
     });
 }
 

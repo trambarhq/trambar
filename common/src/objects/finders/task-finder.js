@@ -12,10 +12,11 @@ module.exports = {
  *
  * @param  {Database} db
  * @param  {String} startTime
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Task>>}
  */
-function findActiveTasks(db, startTime) {
+function findActiveTasks(db, startTime, minimum) {
     return db.find({
         schema: 'global',
         table: 'task',
@@ -25,7 +26,8 @@ function findActiveTasks(db, startTime) {
             newer_than: startTime,
             limit: 10,
             user_id: null,
-        }
+        },
+        minimum
     });
 }
 
@@ -34,10 +36,11 @@ function findActiveTasks(db, startTime) {
  *
  * @param  {Database} db
  * @param  {Server} server
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Task>>}
  */
-function findServerTasks(db, server) {
+function findServerTasks(db, server, minimum) {
     if (!server) {
         return Promise.resolve(Empty.array);
     }
@@ -51,6 +54,7 @@ function findServerTasks(db, server) {
             deleted: false,
             limit: 1000,
         },
-        prefetch: false
+        prefetch: false,
+        minimum
     });
 }

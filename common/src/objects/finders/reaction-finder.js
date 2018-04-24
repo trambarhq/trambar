@@ -12,10 +12,11 @@ module.exports = {
  * @param  {Database} db
  * @param  {Array<Story>} stories
  * @param  {User} currentUser
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Reaction>>}
  */
-function findReactionsToStories(db, stories, currentUser) {
+function findReactionsToStories(db, stories, currentUser, minimum) {
     var storyIds = _.filter(_.uniq(_.map(stories, 'id')), (id) => {
         return (id >= 1);
     });
@@ -28,5 +29,6 @@ function findReactionsToStories(db, stories, currentUser) {
             story_id: storyIds,
             public: (currentUser.type === 'guest') ? true : undefined
         },
+        minimum
     });
 }

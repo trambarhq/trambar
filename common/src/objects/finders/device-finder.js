@@ -11,10 +11,11 @@ module.exports = {
  *
  * @param  {Database} db
  * @param  {User} user
+ * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Object>>}
  */
-function findUserDevices(db, user) {
+function findUserDevices(db, user, minimum) {
     if (!user) {
         return Promise.resolve(Empty.array);
     }
@@ -23,6 +24,7 @@ function findUserDevices(db, user) {
         table: 'device',
         criteria: {
             user_id: user.id
-        }
+        },
+        minimum
     });
 }
