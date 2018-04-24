@@ -340,6 +340,7 @@ module.exports = React.createClass({
      */
     handlePopState: function(evt) {
         if (process.env.PLATFORM === 'browser') {
+            evt.preventDefault();
             var url = getLocationURL(window.location);
             var route = this.parse(url);
             if (route) {
