@@ -58,7 +58,7 @@ module.exports = React.createClass({
             }
         } else if (prevProps.children !== this.props.children) {
             if (this.props.show) {
-                this.redraw();
+                this.redraw(this.shown);
             }
         }
     },
@@ -85,27 +85,25 @@ module.exports = React.createClass({
                 this.containerRemovalTimeout = 0;
             }
         }
-        var props = {
-            show: false,
-            onClick: this.handleClick,
-            children: this.props.children
-        };
-        ReactDOM.render(<Overlay {...props} />, this.containerNode);
+        this.redraw(false);
         this.shown = false;
         setTimeout(() => {
             this.shown = true;
-            this.redraw();
+            this.redraw(this.shown);
         }, 10);
         this.constructor.active = true;
     },
 
     /**
      * Redraw overlay element
+     *
+     * @param  {Boolean} shown
      */
-    redraw: function() {
+    redraw: function(shown) {
         var props = {
-            show: this.shown,
+            show: shown,
             onClick: this.handleClick,
+            onTouchMove: this.handleTouchMove,
             children: this.props.children
         };
         ReactDOM.render(<Overlay {...props} />, this.containerNode);
@@ -129,7 +127,7 @@ module.exports = React.createClass({
             }, 1000);
         }
         this.shown = false;
-        this.redraw();
+        this.redraw(this.shown);
         this.constructor.active = false;
     },
 
@@ -151,6 +149,29 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when user moves finger across touch screen
+     *
+     * @param  {Event} evt
+     */
+    handleTouchMove: function(evt) {
+        // prevent scrolling of contents underneath
+        var targetNode = evt.target;
+        var scrollableNode = null;
+        for (var p = targetNode; p && p !== this.containerNode; p = p.parentNode) {
+            var style = getComputedStyle(p);
+            if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+                if (p.scrollHeight > p.clientHeight) {
+                    scrollableNode = p;
+                }
+                break;
+            }
+        }
+        if (!scrollableNode) {
+            evt.preventDefault();
+        }
+    },
+
+    /**
      * Called when user hits a key on the keyboard
      *
      * @param  {Event} evt
@@ -165,13 +186,19 @@ module.exports = React.createClass({
 });
 
 function Overlay(props) {
-    var classNames = [ 'overlay', props.show ? 'show' : 'hide' ];
+    var containerProps = _.omit(props, 'className', 'children', 'show');
+    containerProps.className = 'overlay';
+    if (props.show) {
+        containerProps.className += ' show';
+    } else {
+        containerProps.className += ' hide';
+    }
     if (props.className) {
-        classNames.push(props.className);
+        containerProps.className += ' ' + props.className;
     }
     return (
-        <div className={classNames.join(' ')} onClick={props.onClick}>
-            <div className="background"/>
+        <div {...containerProps}>
+            <div className="background" />
             <div className="foreground">{props.children}</div>
         </div>
     );

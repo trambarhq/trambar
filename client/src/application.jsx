@@ -206,7 +206,6 @@ module.exports = React.createClass({
         if (!this.state.theme.touch) {
             className += ' no-touch';
         }
-        console.log(className);
         return (
             <div className={className} id="application">
                 <TopNavigation {...topNavProps} />

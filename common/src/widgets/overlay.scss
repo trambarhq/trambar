@@ -6,6 +6,8 @@
     bottom: 0;
     overflow: hidden;
     z-index: 5000;
+    overscroll-behavior: contain;
+    -ms-scroll-chaining: none;
 
     .background {
         position: absolute;
