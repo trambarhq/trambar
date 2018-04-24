@@ -6,6 +6,8 @@ var Webpack = require('webpack');
 // plugins
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var CommonsChunkPlugin = Webpack.optimize.CommonsChunkPlugin;
+var NamedChunksPlugin = Webpack.NamedChunksPlugin;
+var NamedModulesPlugin = Webpack.NamedModulesPlugin;
 var ContextReplacementPlugin = Webpack.ContextReplacementPlugin;
 var DefinePlugin = Webpack.DefinePlugin;
 var SourceMapDevToolPlugin = Webpack.SourceMapDevToolPlugin;
@@ -177,9 +179,10 @@ module.exports = {
                 chunks: [ 'app', lib ],
             });
         }),
+        new NamedChunksPlugin,
+        new NamedModulesPlugin,
         new SourceMapDevToolPlugin({
             filename: '[file].map',
-            exclude: ["vendor.js"]
         }),
         new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
         new BundleAnalyzerPlugin({
