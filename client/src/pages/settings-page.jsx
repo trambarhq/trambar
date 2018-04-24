@@ -136,7 +136,7 @@ module.exports = Relaks.createClass({
             });
         }).then(() => {
             meanwhile.show(<SettingsPageSync {...props} />);
-            return DeviceFinder.findUserDevices(db, props.currentUser).then((devices) => {
+            return DeviceFinder.findUserDevices(db, props.currentUser, 1).then((devices) => {
                 props.devices = devices;
             });
         }).then(() => {

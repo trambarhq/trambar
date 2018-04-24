@@ -207,7 +207,7 @@ var StartPage = module.exports = Relaks.createClass({
                 });
             }).then(() => {
                 meanwhile.show(<StartPageSync {...props} />);
-                return ProjectFinder.findActiveProjects(db).then((projects) => {
+                return ProjectFinder.findActiveProjects(db, 1).then((projects) => {
                     props.projects = projects;
                 });
             }).then(() => {
