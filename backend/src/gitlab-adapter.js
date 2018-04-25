@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Moment = require('moment');
 var Express = require('express');
 var BodyParser = require('body-parser');
 var DNSCache = require('dnscache');
@@ -23,6 +24,7 @@ var Repo = require('accessors/repo');
 var Server = require('accessors/server');
 var Story = require('accessors/story');
 var System = require('accessors/system');
+var Task = require('accessors/task');
 var User = require('accessors/user');
 
 const USER_SCAN_INTERVAL = 10;
@@ -63,10 +65,10 @@ function start() {
             // listen for database change events
             var tables = [
                 'project',
-                'reaction',
                 'server',
                 'story',
                 'system',
+                'task',
             ];
             return db.listen(tables, 'change', handleDatabaseChanges, 100);
         }).then(() => {
@@ -130,8 +132,8 @@ function handleDatabaseChanges(events) {
             case 'server': return handleServerChangeEvent(db, event);
             case 'project': return handleProjectChangeEvent(db, event);
             case 'story': return handleStoryChangeEvent(db, event);
-            case 'reaction': return handleReactionChangeEvent(db, event);
             case 'system': return handleSystemChangeEvent(db, event);
+            case 'task': return handleTaskChangeEvent(db, event);
         }
     });
 }
@@ -299,41 +301,72 @@ function handleStoryChangeEvent(db, event) {
     if (event.current.mtime === event.current.etime) {
         // change is caused by a prior export
         return;
-    }
-    if (event.current.mtime === event.current.itime) {
+    } else if (event.current.mtime === event.current.itime) {
         // change is caused by an import
         return;
-    }
-    if (event.current.deleted) {
+    } else if (event.current.deleted) {
+        return;
+    } else if (event.current.type !== 'issue') {
+        return;
+    } else if (!event.diff.details) {
         return;
     }
-    var exporting = false;
-    if (event.current.type === 'issue') {
-        if (event.diff.details) {
-            // title or labels might have changed
-            exporting = true;
-        } else if (event.diff.external) {
-            // issue might have been moved or deleted
-            exporting = true;
-        }
-    } else if (_.includes(StoryTypes.trackable, event.current.type)) {
-        if (event.current.published && event.current.ready) {
-            var issueLink = ExternalDataUtils.findLinkByServerType(event.current, 'gitlab');
-            if (issueLink) {
-                // a story that with a unrealized issue link (id = 0)
-                exporting = true;
+    // look for the export task and run it again
+    var schema = event.schema;
+    return Story.findOne(db, schema, { id: event.id }, '*').then((story) => {
+        var criteria = {
+            type: 'export-issue',
+            completion: 100,
+            failed: false,
+            options: {
+                story_id: story.id,
+            },
+            deleted: false,
+        };
+        return Task.findOne(db, schema, criteria, 'id, user_id').then((task) => {
+            if (task) {
+                // reexport only if the exporting user is among the author
+                if (_.includes(event.current.user_ids, task.user_id)) {
+                    task.completion = 50;
+                    return Task.saveOne(db, schema, task)
+                }
             }
+        });
+    }).then((task) => {
+        if (task) {
+            return exportStory(db, schema, task.id).then((task) => {
+                if (task.failed) {
+                    queueExportRetry(schema, taskId);
+                }
+            });
         }
+    });
+}
+
+/**
+ * copy contents from story to issue tracker
+ *
+ * @param  {Database} db
+ * @param  {Object} event
+ *
+ * @return {Promise|undefined}
+ */
+function handleTaskChangeEvent(db, event) {
+    if (event.current.action !== 'export-issue') {
+        return;
     }
-    if (!exporting) {
+    if (!event.diff.options) {
         return;
     }
     var schema = event.schema;
-    var storyId = event.id;
-    return exportStory(db, schema, storyId).catch((err) => {
-        queueExportRetry(schema, storyId);
-        console.error(err);
-        return null;
+    if (schema === 'global') {
+        return;
+    }
+    var taskId = event.id;
+    return exportStory(db, schema, taskId).then((task) => {
+        if (task.failed) {
+            queueExportRetry(schema, taskId);
+        }
     });
 }
 
@@ -344,17 +377,31 @@ var exportPromises = [];
  *
  * @param  {Database} db
  * @param  {String} schema
- * @param  {Number} storyId
+ * @param  {Number} taskId
  *
- * @return {Promise<Story>}
+ * @return {Promise<Task>}
  */
-function exportStory(db, schema, storyId) {
-    var promise = Story.findOne(db, schema, { id: storyId }, '*').then((story) => {
+function exportStory(db, schema, taskId) {
+    var promise = Task.findOne(db, schema, { id: taskId }, '*').then((task) => {
         return Project.findOne(db, 'global', { name: schema }, '*').then((project) => {
             return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
-                console.log(`Exporting story ${story.id}`);
-                return IssueExporter.exportStory(db, system, project, story);
+                return IssueExporter.exportStory(db, system, project, task);
             });
+        }).then((story) => {
+            task.completion = 100;
+            task.failed = false;
+            task.etime = new String('NOW()');
+            delete task.details.error;
+            if (story) {
+                var issueLink = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
+                _.assign(task.details, _.pick(issueLink, 'repo', 'issue'));
+            }
+            return Task.saveOne(db, schema, task);
+        }).catch((err) => {
+            console.error(err);
+            task.details.error = _.pick(err, 'message', 'statusCode');
+            task.failed = true;
+            return Task.saveOne(db, schema, task);
         });
     }).finally(() => {
         _.pull(exportPromises, promise);
@@ -371,18 +418,22 @@ var exportRetryQueue = [];
  * @param  {String} schema
  * @param  {Number} storyId
  * @param  {Number|undefined} delay
+ * @param  {Number|undefined} attempts
  */
-function queueExportRetry(schema, storyId, delay) {
+function queueExportRetry(schema, taskId, delay, attempts) {
     var time = new Date;
     if (!delay) {
         delay = 30 * 1000;
     }
-    var existing = _.find(exportRetryQueue, { schema, storyId });
+    if (!attempts) {
+        attempts = 1;
+    }
+    var existing = _.find(exportRetryQueue, { schema, taskId });
     if (existing) {
         // obviously, it has just failed again
         existing.time = time;
     } else {
-        exportRetryQueue.push({ schema, storyId, delay, time })
+        exportRetryQueue.push({ schema, taskId, delay, attempts, time })
     }
 }
 
@@ -396,21 +447,18 @@ function startPeriodicExportRetry() {
 
     // look for story they have failed and put them into the queue
     var db = database;
-    return RepoAssociation.find(db).each((a) => {
-        var { server, repo, project } = a;
+    return RepoAssociation.find(db).then((list) => {
+        return _.uniq(_.map(list, 'project'));
+    }).each((project) => {
+        // load export tasks that failed and try them again
         var schema = project.name;
-        // this will pick up issues that need to be created or moved
-        // it'll miss those that need to be deleted
         var criteria = {
-            external_object: ExternalDataUtils.extendLink(server, repo, {
-                issue: { id: 0 }
-            }),
-            deleted: false,
-            published: true,
-            ready: true,
+            action: 'export-issue',
+            complete: false,
+            newer_than: Moment().startOf('day').subtract(3, 'day'),
         };
-        return Story.find(db, schema, criteria, 'id').each((row) => {
-            queueExportRetry(schema, row.id, 15 * 1000);
+        return Task.find(db, schema, criteria, 'id').each((row) => {
+            queueExportRetry(schema, row.id, 1 * 1000);
         });
     });
 }
@@ -433,12 +481,15 @@ function retryFailedExports() {
         return (elapsed > entry.delay);
     });
     _.each(ready, (entry) => {
-        var { schema, storyId, delay } = entry;
-        taskQueue.schedule(`retry_story_export:${storyId}`, () => {
-            return exportStory(db, schema, storyId).catch((err) => {
-                // double the delay when it fails again
-                delay = Math.min(10 * 60 * 1000, delay * 2);
-                queueExportRetry(schema, storyId, delay);
+        var { schema, taskId, delay, attempts } = entry;
+        taskQueue.schedule(`retry_story_export:${taskId}`, () => {
+            return exportStory(db, schema, taskId).catch((err) => {
+                if (attempts < 10) {
+                    // double the delay when it fails again
+                    delay = Math.min(10 * 60 * 1000, delay * 2);
+                    attempts++;
+                    queueExportRetry(schema, taskId, delay, attempts);
+                }
             });
         });
     });
@@ -451,17 +502,6 @@ function retryFailedExports() {
  */
 function waitForExports() {
     return Promise.all(exportPromises);
-}
-
-/**
- * Import comment to issue tracker
- *
- * @param  {Database} db
- * @param  {Object} event
- *
- * @return {Promise|undefined}
- */
-function handleReactionChangeEvent(db, event) {
 }
 
 /**

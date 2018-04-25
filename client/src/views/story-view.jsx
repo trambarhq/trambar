@@ -7,6 +7,7 @@ var FocusManager = require('utils/focus-manager');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 var IssueUtils = require('objects/utils/issue-utils');
 var StoryUtils = require('objects/utils/story-utils');
+var RandomToken = require('utils/random-token');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -170,7 +171,7 @@ module.exports = React.createClass({
         var options = nextState.options = _.clone(nextState.options);
         options.hideStory = !nextProps.story.public;
         options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
-        options.issueDetails = IssueUtils.extract(nextProps.story, nextProps.repos);
+        options.issueDetails = IssueUtils.extractIssueDetails(nextProps.story, nextProps.repos);
         options.keepBookmark = (nextProps.bookmark) ? true : undefined;
     },
 
@@ -738,6 +739,28 @@ module.exports = React.createClass({
     },
 
     /**
+     * Create a task in the backend
+     *
+     * @param  {String} action
+     * @param  {Object} options
+     *
+     * @return {Promise<Task>}
+     */
+    sendTask: function(action, options) {
+        var task = {
+            action,
+            options,
+            user_id: this.props.currentUser.id,
+            token: RandomToken.generate(),
+        };
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
+        return db.start().then(() => {
+            return db.saveOne({ table: 'task' }, task);
+        });
+    },
+
+    /**
      * Change options concerning a story
      *
      * @param  {Object} options
@@ -785,9 +808,9 @@ module.exports = React.createClass({
                 }
             }
             if (!_.isEqual(options.issueDetails, before.issueDetails)) {
-                var storyAfter = _.cloneDeep(story);
-                IssueUtils.attach(storyAfter, options.issueDetails, this.props.currentUser, this.props.repos);
-                this.saveStory(storyAfter);
+                var params = _.clone(options.issueDetails) || {};
+                params.story_id = story.id;
+                this.sendTask('export-issue', params);
             }
             if (!_.isEqual(options.bookmarkRecipients, before.bookmarkRecipients)) {
                 if (StoryUtils.isSaved(story)) {

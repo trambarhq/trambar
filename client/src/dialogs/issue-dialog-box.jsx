@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var ComponentRefs = require('utils/component-refs');
+var TagScanner = require('utils/tag-scanner');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -22,7 +23,7 @@ module.exports = React.createClass({
     propTypes: {
         show: PropTypes.bool,
         allowDeletion: PropTypes.bool.isRequired,
-        currentUser: PropTypes.object,
+        story: PropTypes.object.isRequired,
         repos: PropTypes.arrayOf(PropTypes.object),
         issue: PropTypes.object,
 
@@ -43,7 +44,7 @@ module.exports = React.createClass({
             textField: TextField
         });
         return {
-            issue: null,
+            issue: this.props.issue ? null : this.getDefaultIssue(),
         };
     },
 
@@ -68,10 +69,42 @@ module.exports = React.createClass({
     setIssueProperty: function(path, value) {
         var issue = this.state.issue || this.props.issue || {};
         issue = _.decoupleSet(issue, path, value);
-        if (path === 'repoId') {
+        if (path === 'repo_id') {
             lastSelectedRepoId = value;
         }
         this.setState({ issue });
+    },
+
+    /**
+     * Derive issue details from story
+     *
+     * @return {Object|null}
+     */
+    getDefaultIssue: function() {
+        // look for a title in the text
+        var t = this.props.locale.translate;
+        var text = t(this.props.story.details.text);
+        var paragraphs = _.split(_.trim(text), /[\r\n]+/);
+        var first = TagScanner.removeTags(paragraphs[0]);
+        // use first paragraph as title only if it isn't very long
+        var title = '';
+        if (first.length < 100) {
+            title = first;
+        }
+
+        // look for tags that match labels
+        var allLabels = _.uniq(_.flatten(_.map(this.props.repos, 'details.labels')));
+        console.log(allLabels);
+        console.log(this.props.story.tags);
+        var labels = _.filter(allLabels, (label) => {
+            var tag = `#${_.replace(label, /\s+/g, '-')}`;
+            return _.includes(this.props.story.tags, tag);
+        });
+
+        if (!title && _.isEmpty(labels)) {
+            return null;
+        }
+        return { title, labels };
     },
 
     /**
@@ -80,14 +113,14 @@ module.exports = React.createClass({
      * @return {Repo}
      */
     getSelectedRepo: function() {
-        var repoId = this.getIssueProperty('repoId');
+        var repoId = this.getIssueProperty('repo_id');
         var repos = this.getAvailableRepos();
         var repo = _.find(this.props.repos, { id: repoId });
         if (!repo) {
             repo = _.find(this.props.repos, { id: lastSelectedRepoId });
         }
         if (!repo) {
-            // find one with labels--if a repo has not labels, then its
+            // find one with labels--if a repo has no labels, then its
             // issue tracker probably isn't being used
             repo = _.find(this.props.repos, (repo) => {
                 return !_.isEmpty(repo.details.labels);
@@ -124,7 +157,11 @@ module.exports = React.createClass({
     componentWillReceiveProps: function(nextProps) {
         if (this.props.show !== nextProps.show) {
             if (nextProps.show) {
-                this.setState({ issue: null });
+                var issue;
+                if (!nextProps.issue) {
+                    issue = this.getDefaultIssue();
+                }
+                this.setState({ issue });
             }
         }
     },
@@ -256,17 +293,24 @@ module.exports = React.createClass({
         var repo = this.getSelectedRepo();
         var text = this.getIssueProperty('title');
         var changed = !!_.trim(text);
+        var canDelete = false;
         if (this.props.issue) {
             if (this.state.issue) {
                 changed = !_.isEqual(this.state.issue, this.props.issue);
             } else {
                 changed = false;
             }
+            if (this.props.issue && this.props.issue.id) {
+                canDelete = true;
+            }
+        }
+        if (!this.props.allowDeletion) {
+            canDelete = false;
         }
         var deleteProps = {
             label: t('issue-delete'),
             emphasized: false,
-            hidden: !this.props.allowDeletion,
+            hidden: !canDelete,
             onClick: this.handleDeleteClick,
         };
         var cancelProps = {
@@ -338,11 +382,12 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleOKClick: function(evt) {
+        var story = this.props.story;
         var issue = _.clone(this.state.issue);
         var repo = this.getSelectedRepo();
         // make sure id is set
-        issue.repoId = repo.id;
-        // make use the selected labels exist in the selected repo
+        issue.repo_id = repo.id;
+        // make use the selected labels exist in the selected repo only
         issue.labels = _.intersection(issue.labels, repo.details.labels);
         if (this.props.onConfirm) {
             this.props.onConfirm({
@@ -370,7 +415,7 @@ module.exports = React.createClass({
      */
     handleRepoChange: function(evt) {
         var repoId = parseInt(evt.target.value);
-        this.setIssueProperty('repoId', repoId);
+        this.setIssueProperty('repo_id', repoId);
     },
 
     /**

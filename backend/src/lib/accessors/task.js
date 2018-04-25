@@ -36,6 +36,7 @@ module.exports = _.create(Data, {
 
         newer_than: String,
         older_than: String,
+        complete: Boolean,
     },
 
     /**
@@ -98,6 +99,7 @@ module.exports = _.create(Data, {
             'options',
             'newer_than',
             'older_than',
+            'complete',
         ];
         Data.apply.call(this, _.omit(criteria, special), query);
 
@@ -111,6 +113,13 @@ module.exports = _.create(Data, {
         }
         if (criteria.older_than !== undefined) {
             conds.push(`ctime < $${params.push(criteria.older_than)}`);
+        }
+        if (criteria.complete !== undefined) {
+            if (criteria.complete) {
+                conds.push(`completion = 100`);
+            } else {
+                conds.push(`completion <> 100`);
+            }
         }
     },
 

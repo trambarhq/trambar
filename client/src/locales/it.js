@@ -600,7 +600,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-joined-repo': "Si è unito a un progetto git",
         'user-activity-$name-left-repo': "Ha lasciato un progetto git",
         'user-activity-$name-merged-code': "Ha eseguito un merge",
-        'user-activity-$name-opened-issue': "Ha aperto un problema",
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios = (count === 1) ? `un audioclip` : `${count} audioclip`;
             return `Ha pubblicato ${audios}`;
@@ -622,7 +621,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-reported-issue': "Ha segnalato un problema",
         'user-activity-$name-started-survey': "Ha iniziato un sondaggio",
         'user-activity-$name-started-task-list': "Ha iniziato un elenco di attività",
-        'user-activity-$name-was-assigned-issue': "È stato assegnato a un problema",
         'user-activity-$name-wrote-post': "Ha scritto un post",
         'user-activity-back': "Indietro",
         'user-activity-more': "Altre",

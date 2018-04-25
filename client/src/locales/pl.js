@@ -753,10 +753,6 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name, 3);
             return `Wykonał${e} scalenie zmian`;
         },
-        'user-activity-$name-opened-issue': (name) => {
-            var e = pastTenseEnding(name, 3);
-            return `Napisał${e} zgłoszenie błędu`;
-        },
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios;
             if (singular(count)) {
@@ -814,11 +810,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-task-list': (name) => {
             var e = pastTenseEnding(name, 3);
             return `Stworzył${e} listę zadań`;
-        },
-        'user-activity-$name-was-assigned-issue': (name) => {
-            var ve = pastTenseEnding(name, 3);
-            var ae = (ve === 'a') ? 'a' : 'y';
-            return `Został${ve} przydzielon${ae} do problemu`;
         },
         'user-activity-$name-wrote-post': (name) => {
             var e = pastTenseEnding(name, 3);

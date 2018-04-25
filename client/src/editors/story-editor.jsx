@@ -11,6 +11,7 @@ var ComponentRefs = require('utils/component-refs');
 var StoryUtils = require('objects/utils/story-utils');
 var IssueUtils = require('objects/utils/issue-utils');
 var TemporaryId = require('data/remote-data-source/temporary-id');
+var RandomToken = require('utils/random-token');
 
 var Database = require('data/database');
 var Payloads = require('transport/payloads');
@@ -150,6 +151,9 @@ module.exports = React.createClass({
         if (this.props.recommendations !== nextProps.recommendations) {
             this.updateBookmarkRecipients(nextState, nextProps);
         }
+        if (this.props.repos !== nextProps.repos) {
+            this.updateOptions(nextState, nextProps);
+        }
         var changes = _.shallowDiff(nextState, this.state);
         if (!_.isEmpty(changes)) {
             this.setState(changes);
@@ -203,10 +207,7 @@ module.exports = React.createClass({
         } else {
             nextState.options = _.clone(nextState.options);
             nextState.options.hidePost = !nextState.draft.public;
-            if (nextState.draft.ptime) {
-                console.log(nextState.options.issueDetails, IssueUtils.extract(nextState.draft, nextProps.repos));
-                nextState.options.issueDetails = IssueUtils.extract(nextState.draft, nextProps.repos);
-            }
+            nextState.options.issueDetails = IssueUtils.extractIssueDetails(nextState.draft, nextProps.repos);
             if (!nextState.options.preview) {
                 nextState.options.preview = this.choosePreview(nextState.draft);
             }
@@ -1016,6 +1017,28 @@ module.exports = React.createClass({
     },
 
     /**
+     * Create a task in the backend
+     *
+     * @param  {String} action
+     * @param  {Object} options
+     *
+     * @return {Promise<Task>}
+     */
+    sendTask: function(action, options) {
+        var task = {
+            action,
+            options,
+            user_id: this.props.currentUser.id,
+            token: RandomToken.generate(),
+        };
+        var params = this.props.route.parameters;
+        var db = this.props.database.use({ schema: params.schema, by: this });
+        return db.start().then(() => {
+            return db.saveOne({ table: 'task' }, task);
+        });
+    },
+
+    /**
      * Publish the story
      *
      * @return {[type]}
@@ -1030,17 +1053,20 @@ module.exports = React.createClass({
             var roleIds = _.map(this.props.authors, 'role_ids');
             draft.role_ids = _.uniq(_.flatten(roleIds));
         }
-        if (IssueUtils.attach(draft, options.issueDetails, this.props.currentUser, this.props.repos)) {
-            // add issue labels as tags
-            var issueTags = _.map(draft.details.labels, (label) => {
-                return `#${label}`;
-            });
-            draft.tags = _.union(draft.tags, issueTags);
-        }
         draft.published = true;
 
         return this.saveDraft(draft, true).then((story) => {
-            return this.sendBookmarks(story, options.bookmarkRecipients);
+            return this.sendBookmarks(story, options.bookmarkRecipients).then(() => {
+                var issueDetailsBefore = IssueUtils.extractIssueDetails(this.state.draft, this.props.repos);
+                var issueDetailsAfter = this.state.options.issueDetails;
+                if (!_.isEqual(issueDetailsAfter, issueDetailsBefore)) {
+                    if (issueDetailsAfter) {
+                        var params = _.clone(issueDetailsAfter);
+                        params.story_id = story.id;
+                        return this.sendTask('export-issue', params);
+                    }
+                }
+            });
         });
     },
 

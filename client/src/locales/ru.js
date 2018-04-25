@@ -745,10 +745,6 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `Выполнил${e} слияние`;
         },
-        'user-activity-$name-opened-issue': (name) => {
-            var e = pastTenseEnding(name);
-            return `Написал${e} отчёт об ошибке`;
-        },
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios;
             if (singularN(count)) {
@@ -811,11 +807,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-started-task-list': (name) => {
             var e = pastTenseEnding(name);
             return `Начал${e} список задач`;
-        },
-        'user-activity-$name-was-assigned-issue': (name) => {
-            var ve = pastTenseEnding(name);
-            var ae = ve;
-            return `Был${ve} назначен${ae} на отчёт об ошибке`;
         },
         'user-activity-$name-wrote-post': (name) => {
             var e = pastTenseEnding(name);

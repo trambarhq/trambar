@@ -620,7 +620,6 @@ var traditionalPhrases = {
     'user-activity-$name-joined-repo': '加入了數據庫',
     'user-activity-$name-left-repo': '離開了數據庫',
     'user-activity-$name-merged-code': '合併了代碼',
-    'user-activity-$name-opened-issue': '開了一個問題',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         var num = cardinalT(count);
         return `新增了${num}個音頻剪輯`;
@@ -641,7 +640,6 @@ var traditionalPhrases = {
     'user-activity-$name-reported-issue': '報告了一個問題',
     'user-activity-$name-started-survey': '發布了一個調查',
     'user-activity-$name-started-task-list': '發布了一個任務列表',
-    'user-activity-$name-was-assigned-issue': '被分配到一個問題',
     'user-activity-$name-wrote-post': '寫了一個貼文',
     'user-activity-back': '返回',
     'user-activity-more': '更多',
@@ -1304,7 +1302,6 @@ var simplifiedPhrases = {
     'user-activity-$name-joined-repo': '加入了数据库',
     'user-activity-$name-left-repo': '离开了数据库',
     'user-activity-$name-merged-code': '合并了代码',
-    'user-activity-$name-opened-issue': '开了一个问题',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         var num = cardinalS(count);
         return `新增了${num}个音频剪辑`;
@@ -1325,7 +1322,6 @@ var simplifiedPhrases = {
     'user-activity-$name-reported-issue': '报告了一个问题',
     'user-activity-$name-started-survey': '发布了一个调查',
     'user-activity-$name-started-task-list': '发布了一个任务列表',
-    'user-activity-$name-was-assigned-issue': '被分配到一个问题',
     'user-activity-$name-wrote-post': '写了一个贴文',
     'user-activity-back': '返回',
     'user-activity-more': '更多',
@@ -1741,7 +1737,6 @@ var cantonesePhrases = {
     'user-activity-$name-joined-repo': '加入咗數據庫',
     'user-activity-$name-left-repo': '離開咗數據庫',
     'user-activity-$name-merged-code': '合併咗一啲代碼',
-    'user-activity-$name-opened-issue': '開咗一個問題',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         var num = cardinalT(count);
         return `新增咗${num}個音頻剪輯`;

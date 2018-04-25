@@ -148,7 +148,11 @@ var RoleFilterBarSync = module.exports.Sync = React.createClass({
 });
 
 var findUsers = Memoize(function(users, role) {
-    return _.filter(users, (user) => {
+    var list = _.filter(users, (user) => {
         return _.includes(user.role_ids, role.id);
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
+    return list;
 });

@@ -580,7 +580,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-joined-repo': 'Joined a git project',
         'user-activity-$name-left-repo': 'Left a git project',
         'user-activity-$name-merged-code': 'Performed a code merge',
-        'user-activity-$name-opened-issue': 'Opened an issue',
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios = (count === 1) ? `a audio clip` : `${count} audio clips`;
             return `Posted ${audios}`;
@@ -602,7 +601,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-reported-issue': 'Reported an issue',
         'user-activity-$name-started-survey': 'Started a survey',
         'user-activity-$name-started-task-list': 'Started a task list',
-        'user-activity-$name-was-assigned-issue': 'Was assigned to an issue',
         'user-activity-$name-wrote-post': 'Wrote a post',
         'user-activity-back': 'Back',
         'user-activity-more': 'More',

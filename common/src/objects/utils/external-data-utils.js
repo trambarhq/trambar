@@ -60,13 +60,12 @@ function extendLink(server, parent, props) {
  * @param {ExternalObject} object
  * @param {Server} server
  * @param {Object} props
- * @param {Object|undefined} options
  *
  * @return {Object}
  */
-function addLink(object, server, props, options) {
+function addLink(object, server, props) {
     var link = createLink(server, props);
-    return attachLink(object, link, options);
+    return attachLink(object, link);
 }
 
 /**
@@ -75,13 +74,12 @@ function addLink(object, server, props, options) {
  * @param {ExternalObject} object
  * @param {Server} server
  * @param {Object|undefined} props
- * @param {Object|undefined} options
  *
  * @return {Object}
  */
-function inheritLink(object, server, parent, props, options) {
+function inheritLink(object, server, parent, props) {
     var link = extendLink(server, parent, props);
-    return attachLink(object, link, options);
+    return attachLink(object, link);
 }
 
 /**
@@ -89,29 +87,12 @@ function inheritLink(object, server, parent, props, options) {
  *
  * @param  {ExternalObject} object
  * @param  {Object} link
- * @param {Object|undefined} options
  *
  * @return {Object}
  */
-function attachLink(object, link, options) {
-    var identicalLink = _.find(object.external, link);
-    if (identicalLink) {
-        return identicalLink;
-    }
+function attachLink(object, link) {
     if (object.external) {
-        var existingLink = _.find(object.external, { server_id: link.server_id });
-        if (existingLink) {
-            var duplicate = _.get(options, 'duplicate', 'overwrite');
-            if (duplicate === 'overwrite') {
-                // normally, an object would link to only one external object
-                // on a given server
-                _.assign(existingLink, link);
-                return existingLink;
-            } else if (duplicate === 'ignore') {
-                // when we want to move an external object, then two links
-                // pointing to the same server might exists simultaneously
-            }
-        }
+        _.remove(object.external, { server_id: link.server_id });
     } else {
         object.external = [];
     }

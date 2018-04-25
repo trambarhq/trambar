@@ -152,19 +152,6 @@ function copyIssueProperties(story, server, repo, author, assignments, glIssue) 
     });
     var tags = _.union(descriptionTags, labelTags);
 
-    // author is either the person who wrote the issue or the one who wrote
-    // the post that was exported to issue-tracker
-    var authorIds = _.get(story, 'details.authors', [ author.id ]);
-    var exporterIds = _.get(story, 'details.exporters');
-    var assigneeIds = [];
-    var roleIds = _.get(story, 'role_ids', author.role_ids);
-
-    // add ids of any new assignees
-    _.each(assignments, (assignment) => {
-        assigneeIds = _.union(assigneeIds, [ assignment.user.id ]);
-        roleIds = _.union(roleIds, assignment.user.role_ids);
-    });
-
     var storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         issue: {
@@ -182,22 +169,16 @@ function copyIssueProperties(story, server, repo, author, assignments, glIssue) 
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
-        value: _.union(authorIds, exporterIds, assigneeIds),
+        value: [ author.id ],
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
-        value: roleIds,
+        value: author.role_ids,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.assignees', {
-        value: assigneeIds,
-        overwrite: 'always',
-    });
-    // title is imported only if issue isn't confidential
     ExternalDataUtils.importProperty(storyAfter, server, 'details.title', {
-        value: (glIssue.confidential) ? undefined : glIssue.title,
+        value: glIssue.title,
         overwrite: 'match-previous:title',
-        ignore: exported && glIssue.confidential,
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.labels', {
         value: glIssue.labels,

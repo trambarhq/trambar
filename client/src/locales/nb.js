@@ -573,7 +573,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-joined-repo': 'Ble med i et git-prosjekt',
         'user-activity-$name-left-repo': 'Dro et git-prosjek',
         'user-activity-$name-merged-code': 'Utført en kodefusjon',
-        'user-activity-$name-opened-issue': 'Åpnet et problem',
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios = (count === 1) ? `et audioklipp` : `${count} audioklipp`;
             return `Skrevet ${audios}`;
@@ -595,7 +594,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-reported-issue': 'Rapporterte et problem',
         'user-activity-$name-started-survey': 'Startet en undersøkelse',
         'user-activity-$name-started-task-list': 'Startet en oppgaveliste',
-        'user-activity-$name-was-assigned-issue': 'Ble tildelt et problem',
         'user-activity-$name-wrote-post': 'Skrev et innlegg',
         'user-activity-back': 'Tilbake',
         'user-activity-more': 'Flere',

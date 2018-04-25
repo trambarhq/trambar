@@ -578,7 +578,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-joined-repo': 'Liittyi git-projektiin',
         'user-activity-$name-left-repo': 'Jätti git-projektin',
         'user-activity-$name-merged-code': 'Teki koodin yhdistämisen',
-        'user-activity-$name-opened-issue': 'Avasi asian',
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios = (count === 1) ? `äänileikkeen` : `${count} äänileikkeitä`;
             return `Lähetti ${audios}`;
@@ -599,7 +598,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-reported-issue': 'Ilmoitti asiasta',
         'user-activity-$name-started-survey': 'Aloitti kyselyn',
         'user-activity-$name-started-task-list': 'Aloitti tehtäväluettelon',
-        'user-activity-$name-was-assigned-issue': 'Oli määrätty asiaan',
         'user-activity-$name-wrote-post': 'Kirjoitti viestin',
         'user-activity-back': 'Palataa',
         'user-activity-more': 'Lisää',

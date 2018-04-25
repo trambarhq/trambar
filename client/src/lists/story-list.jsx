@@ -349,9 +349,9 @@ var StoryListSync = module.exports.Sync = React.createClass({
             return <StoryEditor {...editorProps}/>
         } else {
             if (evt.needed) {
-                var reactions = findReactions(this.props.reactions, null);
+                var reactions = findReactions(this.props.reactions, story);
                 var authors = findAuthors(this.props.authors, story);
-                var respondents = findRespondents(Empty.array, reactions);
+                var respondents = findRespondents(this.props.respondents, reactions);
                 var recommendations = findRecommendations(this.props.recommendations, story);
                 var recipients = findRecipients(this.props.recipients, recommendations);
                 var pending = !_.includes(this.props.stories, story);

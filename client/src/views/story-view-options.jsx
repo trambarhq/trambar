@@ -197,6 +197,7 @@ module.exports = React.createClass({
         var props = {
             show: this.state.enteringIssueDetails,
             allowDeletion: !_.some(this.props.reactions, { type: 'assignment '}),
+            story: this.props.story,
             issue: this.props.options.issueDetails,
             repos: this.props.repos,
 
