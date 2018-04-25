@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
+var Empty = require('data/empty');
 var Merger = require('data/merger');
 var UserFinder = require('objects/finders/user-finder');
 var StoryFinder = require('objects/finders/story-finder');
@@ -433,43 +434,57 @@ var findStory = Memoize(function(stories, bookmark) {
 
 var findReactions = Memoize(function(reactions, story) {
     if (story) {
-        return _.filter(reactions, { story_id: story.id });
-    } else {
-        return [];
+        var list = _.filter(reactions, { story_id: story.id });
+        if (!_.isEmpty(list)) {
+            return list;
+        }
     }
+    return Empty.array;
 });
 
 var findAuthors = Memoize(function(users, story) {
     if (story) {
-        return _.filter(_.map(story.user_ids, (userId) => {
+        var list = _.filter(_.map(story.user_ids, (userId) => {
            return _.find(users, { id: userId });
         }));
-    } else {
-        return [];
+        if (!_.isEmpty(list)) {
+            return list;
+        }
     }
+    return Empty.array;
 });
 var findSenders = findAuthors;
 
 var findRespondents = Memoize(function(users, reactions) {
     var respondentIds = _.uniq(_.map(reactions, 'user_id'));
-    return _.filter(_.map(respondentIds, (userId) => {
+    var list = _.filter(_.map(respondentIds, (userId) => {
         return _.find(users, { id: userId });
     }));
+    if (!_.isEmpty(list)) {
+        return list;
+    }
+    return Empty.array;
 })
 
 var findRecommendations = Memoize(function(recommendations, story) {
     if (story) {
         var storyId = story.published_version_id || story.id;
-        return _.filter(recommendations, { story_id: storyId });
-    } else {
-        return [];
+        var list = _.filter(recommendations, { story_id: storyId });
+        if (!_.isEmpty(list)) {
+            return list;
+        }
     }
+    return Empty.array;
 });
 
 var findRecipients = Memoize(function(recipients, recommendations) {
-    return _.filter(recipients, (recipient) => {
+    var list = _.filter(recipients, (recipient) => {
         return _.some(recommendations, { target_user_id: recipient.id });
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
+    return Empty.array;
 });
 
 function getAuthorIds(stories, currentUser) {

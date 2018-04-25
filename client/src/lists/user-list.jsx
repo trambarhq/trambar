@@ -3,6 +3,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Moment = require('moment');
 var Memoize = require('utils/memoize');
+var Empty = require('data/empty');
 var DateTracker = require('utils/date-tracker');
 var DateUtils = require('utils/date-utils');
 
@@ -200,12 +201,14 @@ var sortUsers = Memoize(function(users, locale) {
 
 var findRoles = Memoize(function(roles, user) {
     if (user) {
-        return _.filter(_.map(user.role_ids, (roleId) => {
+        var list = _.filter(_.map(user.role_ids, (roleId) => {
             return _.find(roles, { id: roleId });
         }));
-    } else {
-        return [];
+        if (!_.isEmpty(list)) {
+            return list;
+        }
     }
+    return Empty.array;
 });
 
 var findListing = Memoize(function(listings, user) {
@@ -223,16 +226,22 @@ var findListing = Memoize(function(listings, user) {
 var findListingStories = Memoize(function(stories, listing) {
     if (listing) {
         var hash = _.keyBy(stories, 'id');
-        return _.filter(_.map(listing.story_ids, (id) => {
+        var list = _.filter(_.map(listing.story_ids, (id) => {
             return hash[id];
         }));
-    } else {
-        return [];
+        if (!_.isEmpty(list)) {
+            return list;
+        }
     }
+    return Empty.array;
 });
 
 var findUserStories = Memoize(function(stories, user) {
-    return _.filter(stories, (story) => {
+    var list = _.filter(stories, (story) => {
         return _.includes(story.user_ids, user.id);
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
+    return Empty.array;
 });

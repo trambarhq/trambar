@@ -4,6 +4,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Moment = require('moment');
 var Memoize = require('utils/memoize');
+var Empty = require('data/empty');
 var DateTracker = require('utils/date-tracker');
 var ProjectFinder = require('objects/finders/project-finder');
 var ProjectSettings = require('objects/settings/project-settings');
@@ -562,19 +563,27 @@ var findUsersWithRoles = Memoize(function(users, roleIds) {
             return _.includes(roleIds, roleId);
         });
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
+    return Empty.array;
 });
 
 var findUsersWithActivitiesOnDate = Memoize(function(users, statistics, date) {
-    return _.filter(users, (user) => {
+    var list = _.filter(users, (user) => {
         var userStats = statistics[user.id];
         if (userStats) {
             return userStats.daily[date];
         }
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
+    return list;
 });
 
 var findUsersWithStoriesWithTags = Memoize(function(users, statistics, tags) {
-    return _.filter(users, (user) => {
+    var list = _.filter(users, (user) => {
         var userStats = statistics[user.id];
         if (userStats) {
             return _.some(userStats.daily, (counts, date) => {
@@ -584,12 +593,20 @@ var findUsersWithStoriesWithTags = Memoize(function(users, statistics, tags) {
             });
         }
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
+    return list;
 });
 
 var findUsersWithStories = Memoize(function(users, stories) {
-    return _.filter(users, (user) => {
+    var list = _.filter(users, (user) => {
         return _.some(stories, (story) => {
             return _.includes(story.user_ids, user.id);
         });
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
+    return list;
 });
