@@ -525,7 +525,7 @@ module.exports = React.createClass({
         if (this.state.mode !== mode) {
             nextState.mode = mode;
         }
-        var onscreenKeyboard = this.detectOnscreenKeyboard();
+        var onscreenKeyboard = detectOnscreenKeyboard();
         if (this.state.onscreenKeyboard !== onscreenKeyboard) {
             nextState.onscreenKeyboard = onscreenKeyboard;
 
