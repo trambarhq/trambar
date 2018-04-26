@@ -823,11 +823,11 @@ module.exports = React.createClass({
      */
     handleDisconnection: function(evt) {
         // set it to false so we know a connection was lost
-        this.setState({ connection: false });
-
-        // invalidate search results when connection is lost
-        var dataSource = this.components.remoteDataSource;
-        dataSource.invalidate();
+        this.setState({ connection: false }, () => {
+            // invalidate search results when connection is lost
+            var dataSource = this.components.remoteDataSource;
+            dataSource.invalidate();
+        });
     },
 
     /**
@@ -840,9 +840,11 @@ module.exports = React.createClass({
         var dataSource = this.components.remoteDataSource;
         dataSource.invalidate(evt.address, evt.changes);
 
-        _.forIn(evt.changes, (idList, name) => {
-             console.log('Change notification: ', name, idList);
-        });
+        if (process.env.NODE_ENV !== 'production') {
+            _.forIn(evt.changes, (idList, name) => {
+                 console.log('Change notification: ', name, idList);
+            });
+        }
     },
 
     /**
