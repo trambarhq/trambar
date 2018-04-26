@@ -819,15 +819,17 @@ module.exports = React.createClass({
                 });
             }
             if (changed) {
-                // tell data consuming components to rerun their queries
-                // initially, they'd all get the data they had before
-                // another change event will occur if new objects are
-                // actually retrieved from the remote server
-                this.triggerChangeEvent();
+                if (this.props.online && this.props.connected) {
+                    // tell data consuming components to rerun their queries
+                    // initially, they'd all get the data they had before
+                    // another change event will occur if new objects are
+                    // actually retrieved from the remote server
+                    this.triggerChangeEvent();
+                }
 
-                // update recent searches that aren't being used currently
-                if (this.props.prefetching) {
-                    if (this.props.inForeground && this.props.online && this.props.connected) {
+                if (this.props.inForeground && this.props.online && this.props.connected) {
+                    // update recent searches that aren't being used currently
+                    if (this.props.prefetching) {
                         this.schedulePrefetch(address);
                     }
                 }
@@ -1940,7 +1942,6 @@ module.exports = React.createClass({
                 if (similar) {
                     return false;
                 }
-                console.log('Prefetching', search.getQuery());
                 return this.searchRemoteDatabase(search, true).then(() => {
                     _.each(search.by, (component) => {
                         fetched.push({ component, shape });
