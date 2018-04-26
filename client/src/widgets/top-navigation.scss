@@ -41,6 +41,9 @@
         &.disabled {
             color: #333333;
             cursor: not-allowed;
+            &:hover {
+                color: #333333;
+            }
         }
 
         &.calendar-btn, &.filter-btn {
