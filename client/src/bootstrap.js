@@ -1,14 +1,6 @@
 if (process.env.PLATFORM === 'cordova') {
     if (window.cordova) {
         document.addEventListener('deviceready', initialize);
-        window.addEventListener("unhandledrejection", function(evt) {
-            console.error(evt);
-            evt.preventDefault();
-        });
-        window.addEventListener("error", function(evt) {
-            console.error(evt.error || evt.message);
-            evt.preventDefault();
-        });
     } else {
         // for testing in browser
         window.addEventListener('load', initialize);
@@ -62,3 +54,40 @@ function initialize(evt) {
     // install shims
     require('shims/iphone-overflow-scrolling');
 }
+
+window.addEventListener("unhandledrejection", function(evt) {
+    var msg;
+    if (evt.detail && evt.detail.reason) {
+        var err = evt.detail.reason;
+        if (process.env.NODE_ENV === 'production') {
+            // don't display HTTP errors, since the browser automatically
+            // dump that into the console
+            if (!err.statusCode) {
+                msg = err.message;
+            }
+        } else {
+            // dump the error object during development
+            msg = err;
+        }
+    }
+    if (msg) {
+        console.error(msg);
+    }
+    evt.preventDefault();
+});
+window.addEventListener("error", function(evt) {
+    var msg;
+    if (evt.error) {
+        if (process.env.NODE_ENV === 'production') {
+            msg = evt.error.message;
+        } else {
+            msg = evt.error;
+        }
+    } else {
+        msg = evt.message;
+    }
+    if (msg) {
+        console.error(msg);
+    }
+    evt.preventDefault();
+});
