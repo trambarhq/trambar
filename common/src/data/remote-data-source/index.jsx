@@ -1595,20 +1595,21 @@ module.exports = React.createClass({
     clearCachedSchemas: function(address) {
         // remove all validation results for address
         _.unset(this.cacheValidation, [ address ]);
-        // remove the signatures
-        var cache = this.props.cache;
-        var location = {
-            schema: 'local',
-            table: 'remote_schema',
-        };
-        var prefix = `${address}/`;
-        return cache.find(location).filter((row) => {
-            return _.startsWith(row.key, prefix);
-        }).then((rows) => {
-            return cache.remove(location, rows);
-        }).then(() => {
-            // clear the objects
-            return this.clearCachedObjects(address, '*');
+
+        // clear the objects first
+        return this.clearCachedObjects(address, '*').then(() => {
+            // remove the signatures
+            var cache = this.props.cache;
+            var location = {
+                schema: 'local',
+                table: 'remote_schema',
+            };
+            var prefix = `${address}/`;
+            return cache.find(location).filter((row) => {
+                return _.startsWith(row.key, prefix);
+            }).then((rows) => {
+                return cache.remove(location, rows);
+            })
         });
     },
 
