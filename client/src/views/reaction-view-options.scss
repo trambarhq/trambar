@@ -1,15 +1,22 @@
 .reaction-view-options {
     .button {
         color: #666666;
-        padding-left: 0.5em;
-        padding-right: 0.25em;
         opacity: 0.2;
+        padding: 0 8px 0 8px;
+        margin: 0 -8px 0 -4px;
+
+        .single-col & {
+            padding: 4px 12px 4px 12px;
+            margin: -4px -12px -4px -8px;
+        }
 
         &.active {
             opacity: 1;
 
-            &:hover {
-                color: #eeeeee;
+            .no-touch & {
+                &:hover {
+                    color: #eeeeee;
+                }
             }
         }
     }
