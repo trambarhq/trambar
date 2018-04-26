@@ -234,13 +234,13 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     {this.renderDevelopmentPanel()}
                     {this.renderProjectPanel()}
                     {this.renderDevicePanel()}
+                    {this.renderNotificationPanel()}
+                    {this.renderWebAlertPanel()}
+                    {this.renderMobileAlertPanel()}
                     {this.renderUserInfoPanel()}
                     {this.renderUserImagePanel()}
                     {this.renderSocialNetworkPanel()}
                     {this.renderLanguagePanel()}
-                    {this.renderNotificationPanel()}
-                    {this.renderWebAlertPanel()}
-                    {this.renderMobileAlertPanel()}
                 </div>
             </div>
         );
