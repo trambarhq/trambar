@@ -817,6 +817,13 @@ module.exports = React.createClass({
                     });
                     return after;
                 });
+
+                // force cache revalidation
+                if (address) {
+                    _.unset(this.cacheValidation, [ address ]);
+                } else {
+                    this.cacheValidation = {};
+                }
             }
             if (changed) {
                 if (this.props.online && this.props.connected) {
