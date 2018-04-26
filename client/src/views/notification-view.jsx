@@ -10,7 +10,6 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var Link = require('widgets/link');
 var Time = require('widgets/time');
 var ProfileImage = require('widgets/profile-image');
 
@@ -39,7 +38,7 @@ module.exports = React.createClass({
     render: function() {
         var props = {
             className: `notification-view ${this.props.theme.mode}`,
-            url: this.getNotificationURL(),
+            href: this.getNotificationURL(),
             target: this.getNotificationTarget(),
             onClick: this.handleClick,
         };
@@ -47,7 +46,7 @@ module.exports = React.createClass({
             props.className += ' unread';
         }
         return (
-            <Link {...props}>
+            <a {...props}>
                 <div className="event">
                     {this.renderProfileImage()}
                     {this.renderText()}
@@ -56,7 +55,7 @@ module.exports = React.createClass({
                     {this.renderTime()}
                     {this.renderIcon()}
                 </div>
-            </Link>
+            </a>
         );
     },
 

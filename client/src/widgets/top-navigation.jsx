@@ -318,7 +318,7 @@ function Button(props) {
         clickHandler = null;
     }
     return (
-        <Link className={className} href={props.url} onClick={clickHandler}>
+        <Link className={className} url={props.url} onClick={clickHandler}>
             <i className={`fa fa-${props.icon}`} />
         </Link>
     );

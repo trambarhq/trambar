@@ -13,7 +13,6 @@ var UpdateCheck = require('mixins/update-check');
 // widgets
 var ProfileImage = require('widgets/profile-image');
 var Time = require('widgets/time');
-var Link = require('widgets/link');
 
 require('./user-activity-list.scss');
 
@@ -66,15 +65,17 @@ module.exports = React.createClass({
         params.story = story.id;
         var url = route.find(require('pages/people-page'), params);
         var text = this.renderText(story);
-        var linkClass;
+        var labelClass = 'label';
         var time = story.btime || story.ptime;
         if (time >= DateTracker.todayISO || time >= DateTracker.yesterdayISO) {
-            linkClass = 'recent';
+            labelClass += ' recent';
         }
         return (
             <div key={story.id} className="activity">
                 <Time time={story.ptime} locale={this.props.locale} compact={true} />
-                <Link className={linkClass} url={url}>{text}</Link>
+                <div className={labelClass}>
+                    <a href={url}>{text}</a>
+                </div>
             </div>
         );
     },

@@ -102,13 +102,6 @@ module.exports = React.createClass({
                 hidden: !details.phone,
                 onClick: this.handleLinkClick,
             };
-            var slackProps = {
-                label: t('action-contact-by-slack'),
-                icon: 'slack',
-                url: `slack://user?team=${details.slack_team_id}&id=${details.slack_user_id}`,
-                hidden: !details.slack_user_id,
-                onClick: this.handleLinkClick,
-            };
             var ichatProps = {
                 label: t('action-contact-by-ichat'),
                 icon: 'apple',
@@ -118,7 +111,7 @@ module.exports = React.createClass({
             };
             var twitterProps = {
                 label: t('action-contact-by-twitter'),
-                icon: 'apple',
+                icon: 'twitter',
                 url: `https://twitter.com/${details.twitter_username}`,
                 target: '_blank',
                 hidden: !details.twitter_username,
@@ -161,9 +154,8 @@ module.exports = React.createClass({
                     <OptionButton {...phoneProps} />
                     <OptionButton {...emailProps} />
                     <OptionButton {...skypeProps} />
-                    <OptionButton {...slackProps} />
                     <OptionButton {...ichatProps} />
-                    <OptionButton {...twitterProps} text/>
+                    <OptionButton {...twitterProps}/>
                     <OptionButton {...gitlabProps} />
                     <OptionButton {...githubProps} />
                     <OptionButton {...linkedInProps} />

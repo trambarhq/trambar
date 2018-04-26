@@ -19,7 +19,6 @@ var UserActivityList = require('lists/user-activity-list');
 var UserStatistics = require('views/user-statistics');
 var UserViewOptions = require('views/user-view-options');
 var CornerPopUp = require('widgets/corner-pop-up');
-var Link = require('widgets/link');
 
 require('./user-view.scss');
 
@@ -134,6 +133,36 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return URL to user page when we're showing all users
+     *
+     * @return {String|null}
+     */
+    getUserPageURL: function() {
+        if (this.props.link !== 'user') {
+            return null;
+        }
+        var route = this.props.route;
+        var params = _.pick(route.parameters, 'schema', 'date', 'search');
+        params.user = this.props.user.id;
+        return route.find(require('pages/people-page'), params);
+    },
+
+    /**
+     * Return URL to team page when we're showing one user
+     *
+     * @return {String|null}
+     */
+    getTeamPageURL: function() {
+        if (this.props.link !== 'team') {
+            return null;
+        }
+        var route = this.props.route;
+        var params = _.pick(route.parameters, 'schema', 'date', 'search');
+        params.previousUser = this.props.user.id;
+        return route.find(require('pages/people-page'), params);
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -168,8 +197,8 @@ module.exports = React.createClass({
                     <div className="column-1 padded">
                         {this.renderName()}
                         {this.renderTag()}
+                        {this.renderBackLink()}
                         {this.renderRecentActivities()}
-                        {this.renderLink()}
                     </div>
                 </div>
                 <div className="header">
@@ -210,8 +239,8 @@ module.exports = React.createClass({
                     <div className="column-1 padded">
                         {this.renderName()}
                         {this.renderTag()}
+                        {this.renderBackLink()}
                         {this.renderRecentActivities()}
-                        {this.renderLink()}
                     </div>
                     <div className="column-2">
                         {this.renderStatistics()}
@@ -246,8 +275,8 @@ module.exports = React.createClass({
                     <div className="column-1 padded">
                         {this.renderName()}
                         {this.renderTag()}
+                        {this.renderBackLink()}
                         {this.renderRecentActivities()}
-                        {this.renderLink()}
                     </div>
                     <div className="column-2">
                         {this.renderStatistics()}
@@ -271,7 +300,12 @@ module.exports = React.createClass({
             theme: this.props.theme,
             size: 'large',
         };
-        return <ProfileImage {...props} />;
+        var url = this.getUserPageURL();
+        return (
+            <a href={url}>
+                <ProfileImage {...props} />
+            </a>
+        );
     },
 
     /**
@@ -314,7 +348,12 @@ module.exports = React.createClass({
         var user = this.props.user;
         var p = this.props.locale.pick;
         var name = (user) ? p(user.details.name) : '\u00a0';
-        return <h2 className="name">{name}</h2>;
+        var url = this.getUserPageURL();
+        return (
+            <h2 className="name">
+                <a href={url}>{name}</a>
+            </h2>
+        );
     },
 
     /**
@@ -361,40 +400,24 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render a "more..." link if there are stories
+     * Render return to list link when showing one user
      *
      * @return {ReactElement|null}
      */
-    renderLink: function() {
-        var t = this.props.locale.translate;
-        var route = this.props.route;
-        var params = _.pick(route.parameters, 'schema', 'date', 'search');
-        var label;
-        if (this.props.link === 'user') {
-            params.user = this.props.user.id;
-            if (!_.isEmpty(this.props.stories)) {
-                label = t('user-activity-more');
-            } else if (!this.props.stories) {
-                // stories have not been loaded yet
-                if (this.getStoryCountEstimate() > 0) {
-                    // reserve space for link
-                    label = '\u00a0';
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        } else if (this.props.link === 'team') {
-            params.previousUser = this.props.user.id;
-            label = t('user-activity-back');
-        } else {
+    renderBackLink: function() {
+        var url = this.getTeamPageURL();
+        if (!url) {
             return null;
         }
-        var url = route.find(require('pages/people-page'), params);
+        var t = this.props.locale.translate;
+        var route = this.props.route;
         return (
-            <div className="link">
-                <Link url={url}>{label}</Link>
+            <div className="back-link">
+                <a href={url}>
+                    <i className="fa fa-chevron-left" />
+                    {' '}
+                    {t('user-activity-back')}
+                </a>
             </div>
         );
     },
