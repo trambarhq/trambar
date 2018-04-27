@@ -7,6 +7,7 @@ var HTTPRequest = require('transport/http-request');
 var HTTPError = require('errors/http-error');
 var FileError = require('errors/file-error');
 var RandomToken = require('utils/random-token');
+var Async = require('async-do-while');
 
 if (process.env.PLATFORM === 'cordova') {
     var CordovaFile = require('transport/cordova-file');
@@ -30,6 +31,7 @@ function Payload(address, schema, type, token) {
     this.started = !!token;
     this.sent = false;
     this.failed = false;
+    this.canceled = false;
     this.completed = false;
     this.uploadStartTime = null;
     this.uploadEndTime = null;
@@ -185,7 +187,29 @@ Payload.prototype.send = function() {
     this.started = true;
     this.uploadStartTime = Moment().toISOString();
     Promise.each(this.parts, (part) => {
-        return this.sendPart(part);
+        var sent = false;
+        var attempts = 1;
+        var delay = 1000;
+        Async.do(() => {
+            return this.sendPart(part).then(() => {
+                sent = true;
+            }).catch((err) => {
+                if (err.statusCode >= 400 && err.statusCode <= 499) {
+                    throw err;
+                }
+                // wait a bit then try again
+                delay = Math.min(delay * 2, 10 * 1000);
+                return Promise.delay(delay).then(() => {
+                    if (!this.canceled) {
+                        attempts++;
+                    }
+                });
+            });
+        });
+        Async.while(() => {
+            return !sent && !this.canceled;
+        });
+        return Async.end();
     }).then(() => {
         this.sent = true;
         this.uploadEndTime = Moment().toISOString();
@@ -240,6 +264,7 @@ Payload.prototype.sendBlob = function(part) {
             this.updateProgress(part, evt.loaded / evt.total)
         },
     };
+    part.uploaded = 0;
     return HTTPRequest.fetch('POST', url, formData, options).then((res) => {
         this.associateRemoteURL(res.url, blob);
         return res;
@@ -275,6 +300,7 @@ Payload.prototype.sendCordovaFile = function(part) {
             params: part.options,
             mimeType: file.type,
         });
+        part.uploaded = 0;
         fileTransfer.upload(file.fullPath, encodedURL, successCB, errorCB, fileUploadOptions);
     }).then((res) => {
         this.associateRemoteURL(res.url, file);
