@@ -115,7 +115,7 @@ function findExistingUsers(db, minimum) {
  *
  * @return {Promise<User>}
  */
-function findActiveUsers(db) {
+function findActiveUsers(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'user',
@@ -136,7 +136,7 @@ function findActiveUsers(db) {
  *
  * @return {Promise<User>}
  */
-function findUsersWithRoles(db, roles) {
+function findUsersWithRoles(db, roles, minimum) {
     var ids = _.map(roles, 'id');
     ids = _.sortBy(_.uniq(ids));
     return db.find({
