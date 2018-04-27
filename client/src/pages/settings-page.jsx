@@ -225,9 +225,12 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
     /**
      * Render settings panels
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderSettings: function() {
+        if (!this.props.currentUser) {
+            return null;
+        }
         return (
             <div className="settings-page">
                 <div className="panels">
