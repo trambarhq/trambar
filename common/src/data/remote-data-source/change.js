@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Async = require('async-do-while');
 
 var LocalSearch = require('data/local-search');
 var TemporaryID = require('data/remote-data-source/temporary-id');
@@ -26,6 +27,7 @@ function Change(location, objects, options) {
     this.delayed = false;
     this.dispatching = false;
     this.committed = false;
+    this.canceled = false;
     this.timeout = 0;
     this.promise = new Promise((resolve, reject) => {
         this.resolvePromise = resolve;
@@ -48,6 +50,9 @@ function Change(location, objects, options) {
         }
         this.onConflict = options.onConflict;
     }
+    this.onDispatch = null;
+    this.onCancel = null;
+    this.onCompletion = null;
 }
 
 /**
@@ -64,25 +69,45 @@ Change.prototype.dispatch = function() {
         this.dispatching = true;
         return;
     }
-    this.dispatched = true;
     Promise.all(this.dependentPromises).then(() => {
-        return this.onDispatch(this).then((objects) => {
-            this.committed = true;
-            this.received = objects;
-            if (!this.canceled) {
-                this.resolvePromise(objects);
-            } else {
-                // ignore the results
-                this.resolvePromise([]);
-            }
+        var attempt = 1;
+        var delay = 1000;
+        Async.while(() => {
+            return !this.committed && !this.canceled && !this.dispatched;
         });
-    }).catch((err) => {
-        if (!this.canceled) {
-            this.rejectPromise(err);
-        } else {
-            // ignore the error
-            this.resolvePromise([]);
-        }
+        Async.do(() => {
+            this.dispatched = true;
+            return this.onDispatch(this).then((objects) => {
+                this.committed = true;
+                this.received = objects;
+                return this.onCompletion(this).then(() => {
+                    if (!this.canceled) {
+                        this.resolvePromise(objects);
+                    } else {
+                        // ignore the results
+                        this.resolvePromise([]);
+                    }
+                });
+            }).catch((err) => {
+                if (err.statusCode >= 400 && err.statusCode <= 499) {
+                    this.rejectPromise(err);
+                }
+                if (this.comitted) {
+                    this.rejectPromise(err);
+                }
+                this.dispatched = false;
+                // wait a bit then try again
+                delay = Math.min(delay * 2, 10 * 1000);
+                return Promise.delay(delay).then(() => {
+                    if (!this.canceled) {
+                        attempt++;
+                    } else {
+                        this.resolvePromise([]);
+                    }
+                });
+            });
+        });
+        return Async.end();
     });
 };
 
@@ -94,11 +119,11 @@ Change.prototype.cancel = function() {
         // already canceled
         return;
     }
+    this.canceled = true;
     if (this.dispatched) {
         // the change was already sent
         return;
     }
-    this.canceled = true;
     if (this.timeout) {
         clearTimeout(this.timeout);
     }
@@ -123,7 +148,7 @@ Change.prototype.merge = function(earlierOp) {
     _.each(this.objects, (object, i) => {
         var index = _.findIndex(earlierOp.objects, { id: object.id });
         if (index !== -1 && !earlierOp.removed[index]) {
-            if (!earlierOp.dispatched) {
+            if (!earlierOp.dispatched || object.id >= 1) {
                 var earlierObject = earlierOp.objects[index];
                 // merge in missing properties from earlier op
                 _.forIn(earlierObject, (value, key) => {
@@ -137,9 +162,7 @@ Change.prototype.merge = function(earlierOp) {
                 // the prior operation has already been sent; if it's going
                 // to yield a permanent database id, then this operation
                 // needs to wait for it to resolve first
-                if (object.id < 1) {
-                    dependent = true;
-                }
+                dependent = true;
             }
         }
     });

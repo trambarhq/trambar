@@ -947,11 +947,16 @@ module.exports = React.createClass({
                 return null;
             }
             if (!change.onConflict) {
-                // can't deconflict--remove the affect objects from change queue
-                for (var i = 0; i < change.removed.length; i++) {
-                    change.removed[i] = true;
+                // can't deconflict--remove the affected objects from change queue
+                for (var i = 0; i < change.objects.length; i++) {
+                    var object = change.objects[i];
+                    if (_.includes(affectedIds, object.id)) {
+                        change.removed[i] = true;
+                    }
                 }
-                change.cancel();
+                if (_.every(change.removed)) {
+                    change.cancel();
+                }
                 return null;
             }
             // load the (possibly) new objects
@@ -1298,9 +1303,8 @@ module.exports = React.createClass({
             change.merge(earlierOp);
         });
         if (change.noop()) {
-            storage.results = storage.objects;
-            storage.setFinishTime();
-            return Promise.resolve([]);
+            storage.finish(storage.objects);
+            return Promise.resolve();
         }
         change.onDispatch = (change) => {
             var objects = change.deliverables();
@@ -1309,11 +1313,9 @@ module.exports = React.createClass({
             return this.performRemoteAction(location, 'storage', { objects }).then((objects) => {
                 this.saveIDMapping(location, change.objects, objects);
                 return objects;
-            }).finally(() => {
-                this.removeChange(change);
             });
         };
-        change.onCancel = (change) => {
+        change.onCompletion = change.onCancel = (change) => {
             this.removeChange(change);
             return Promise.resolve();
         };
@@ -1890,7 +1892,9 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        if (!this.props.online && nextProps.online) {
+        var onlineNow = !this.props.online && nextProps.online;
+        var connectedNow = !this.props.connected && nextProps.connected;
+        if (onlineNow || connectedNow) {
             // reconcile changes and invalidate all searches
             this.invalidate().then(() => {
                 // send pending changes
