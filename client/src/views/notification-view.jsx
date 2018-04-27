@@ -187,8 +187,8 @@ module.exports = React.createClass({
             case 'task-completion': return 'star';
             case 'note': return 'sticky-note';
             case 'assignment': return 'hand-o-right';
-            case 'push': 'cubes';
-            case 'merge': 'cubes';
+            case 'push': return 'cubes';
+            case 'merge': return 'cubes';
             case 'coauthor': return 'handshake-o';
             case 'survey': return 'list-url';
             case 'bookmark': return 'bookmark';
