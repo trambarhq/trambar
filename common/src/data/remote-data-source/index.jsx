@@ -826,18 +826,22 @@ module.exports = React.createClass({
                 }
             }
             if (changed) {
+                console.log('Online: ', this.props.online);
+                console.log('Connected: ', this.props.connected);
+                console.log('Foreground: ', this.props.inForeground);
                 if (this.props.online && this.props.connected) {
                     // tell data consuming components to rerun their queries
                     // initially, they'd all get the data they had before
                     // another change event will occur if new objects are
                     // actually retrieved from the remote server
                     this.triggerChangeEvent();
-                }
 
-                if (this.props.inForeground && this.props.online && this.props.connected) {
-                    // update recent searches that aren't being used currently
-                    if (this.props.prefetching) {
-                        this.schedulePrefetch(address);
+                    // prefetch in background in Cordova version
+                    if (this.props.inForeground || process.env.PLATFORM === 'cordova') {
+                        // update recent searches that aren't being used currently
+                        if (this.props.prefetching) {
+                            this.schedulePrefetch(address);
+                        }
                     }
                 }
             }
@@ -1164,11 +1168,10 @@ module.exports = React.createClass({
      * Perform a search on the server sude
      *
      * @param  {Search} search
-     * @param  {Boolean} background
      *
      * @return {Promise<Boolean>}
      */
-    searchRemoteDatabase: function(search, background) {
+    searchRemoteDatabase: function(search) {
         if (search.isLocal()) {
             return Promise.resolve(false);
         }
@@ -1180,10 +1183,8 @@ module.exports = React.createClass({
         var wasUpdating = search.updating;
         search.updating = true;
         if (!this.searching) {
-            if (!background) {
-                this.searching = true;
-                this.triggerSearchEvent(true);
-            }
+            this.searching = true;
+            this.triggerSearchEvent(true);
         }
         if (wasUpdating) {
             return Promise.resolve(false);
@@ -1202,7 +1203,7 @@ module.exports = React.createClass({
             var idsRemoved = getRemovalList(ids, gns, search.results);
             if (!_.isEmpty(idsUpdated)) {
                 // retrieve the updated (or new) objects from server
-                return this.retrieveRemoteObjects(location, idsUpdated, background).then((retrieval) => {
+                return this.retrieveRemoteObjects(location, idsUpdated).then((retrieval) => {
                     // then add them to the list and remove missing ones
                     var newObjects = retrieval;
                     var newResults = insertObjects(search.results, newObjects);
@@ -1249,13 +1250,11 @@ module.exports = React.createClass({
         }).finally(() => {
             search.updating = false;
 
+            // trigger onSearch event to indicate searching is finished after
+            // some time, if no further search is done
             setTimeout(() => {
                 if (this.searching) {
-                    var stillActive = _.some(this.recentSearchResults, {
-                        updating: true,
-                        background: false,
-                    });
-                    if (!stillActive) {
+                    if (!_.some(this.recentSearchResults, { updating: true })) {
                         this.searching = false;
                         this.triggerSearchEvent(false);
                     }
@@ -1282,12 +1281,11 @@ module.exports = React.createClass({
      *
      * @param  {Object} location
      * @param  {Array<Number>} ids
-     * @param  {Boolean} background
      *
      * @return {Promise<Array<Object>>}
      */
-    retrieveRemoteObjects: function(location, ids, background) {
-        return this.performRemoteAction(location, 'retrieval', { ids, background });
+    retrieveRemoteObjects: function(location, ids) {
+        return this.performRemoteAction(location, 'retrieval', { ids });
     },
 
     /**

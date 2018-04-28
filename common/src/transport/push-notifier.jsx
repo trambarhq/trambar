@@ -64,20 +64,16 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     waitForSearchIdling: function(limit) {
+        if (this.searchIdlingPromise) {
+            return this.searchIdlingPromise;
+        }
         return new Promise((resolve, reject) => {
-            var timeout;
-            var onSearchIdling = () => {
-                resolve();
-                this.onSearchIdling = null;
-                clearTimeout(timeout);
-            };
-            // ensure it's trigger within a given amount of time
-            timeout = setTimeout(onSearchIdling, limit);
-            if (this.onSearchIdling) {
-                // call the previous handler
-                this.onSearchIdling();
-            }
-            this.onSearchIdling = onSearchIdling;
+            this.onSearchIdling = resolve;
+        }).timeout(limit).catch((err) => {
+            return null;
+        }).finally(() => {
+            this.onSearchIdling = null;
+            this.searchIdlingPromise = null
         });
     },
 
@@ -369,24 +365,25 @@ module.exports = React.createClass({
      * @param  {Object} data
      */
     handleGCMNotification: function(data) {
-        var additionalData = data.additionalData;
-        var address = additionalData.address;
-        var changes = additionalData.changes;
-        if (changes) {
-            this.triggerNotifyEvent(address, changes);
-
-            this.waitForSearchIdling(10 * 1000).then(() => {
-                signalBackgroundProcessCompletion(data.notId);
-            });
-        } else if (data.message) {
-            // if notification was received in the background, the event is
-            // triggered when the user clicks on the notification
-            if (!additionalData.foreground) {
-                var alert = recreateAlert(additionalData);
-                this.triggerAlertClickEvent(address, alert);
-                signalBackgroundProcessCompletion(data.notId);
+        Promise.try(() => {
+            var additionalData = data.additionalData;
+            var address = additionalData.address;
+            var changes = additionalData.changes;
+            if (changes) {
+                this.triggerNotifyEvent(address, changes);
+                return this.waitForSearchIdling(5 * 1000);
+            } else if (data.message) {
+                // if notification was received in the background, the event is
+                // triggered when the user clicks on the notification
+                if (!additionalData.foreground) {
+                    var alert = recreateAlert(additionalData);
+                    this.triggerAlertClickEvent(address, alert);
+                }
             }
-        }
+        }).finally(() => {
+            console.log('background retrieval complete');
+            signalBackgroundProcessCompletion(data.notId);
+        });
     },
 
     /**
@@ -507,7 +504,9 @@ function recreateAlert(additionalData) {
 function signalBackgroundProcessCompletion(notId) {
     if (pushNotification && notId) {
         if (cordova.platformId === 'ios') {
-            pushNotification.finish(notId);
+            var success = () => {};
+            var failure = () => {};
+            pushNotification.finish(success, failure, notId);
         }
     }
 }
