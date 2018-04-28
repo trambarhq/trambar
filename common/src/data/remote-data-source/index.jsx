@@ -838,9 +838,6 @@ module.exports = React.createClass({
                 }
             }
             if (changed) {
-                console.log('Online: ', this.props.online);
-                console.log('Connected: ', this.props.connected);
-                console.log('Foreground: ', this.props.inForeground);
                 if (this.props.online && this.props.connected) {
                     // tell data consuming components to rerun their queries
                     // initially, they'd all get the data they had before
@@ -1191,15 +1188,14 @@ module.exports = React.createClass({
             // don't search remotely when there's no connection
             return Promise.resolve(false);
         }
-
-        var wasUpdating = search.updating;
+        if (search.updating) {
+            return Promise.resolve(false);
+        }
         search.updating = true;
+        search.scheduled = false;
         if (!this.searching) {
             this.searching = true;
             this.triggerSearchEvent(true);
-        }
-        if (wasUpdating) {
-            return Promise.resolve(false);
         }
         var location = search.getLocation();
         var criteria = search.criteria;
@@ -1264,14 +1260,21 @@ module.exports = React.createClass({
 
             // trigger onSearch event to indicate searching is finished after
             // some time, if no further search is done
-            setTimeout(() => {
-                if (this.searching) {
-                    if (!_.some(this.recentSearchResults, { updating: true })) {
+            if (this.searchingEndTimeout) {
+                clearTimeout(this.searchingEndTimeout);
+            }
+            this.searchingEndTimeout = setTimeout(() => {
+                var nextPrefetch = _.find(this.recentSearchResults, { scheduled: true });
+                if (nextPrefetch) {
+                    this.searchRemoteDatabase(nextPrefetch);
+                } else {
+                    if (this.searching) {
                         this.searching = false;
                         this.triggerSearchEvent(false);
                     }
                 }
-            }, 50);
+                this.searchingEndTimeout = 0;
+            }, 250);
         });
     },
 
@@ -1928,56 +1931,55 @@ module.exports = React.createClass({
     schedulePrefetch: function(address) {
         this.stopPrefetch();
 
-        var prefetchTimeout = this.prefetchTimeout = setTimeout(() => {
-            var dirtySearches = _.filter(this.recentSearchResults, (search) => {
-                if (!address || search.address === address) {
-                    if (search.dirty) {
+        var dirtySearches = _.filter(this.recentSearchResults, (search) => {
+            if (!address || search.address === address) {
+                if (search.dirty && search.prefetching) {
+                    return true;
+                }
+            }
+        });
+        var selected = [];
+        _.each(dirtySearches, (search) => {
+            // don't prefetch a search if the same component has done a
+            // search with the same shape more recently
+            var shape = search.getCriteriaShape();
+            var similar = _.some(selected, (f) => {
+                if (_.includes(search.by, f.component)) {
+                    if (_.isEqual(shape, f.shape)) {
                         return true;
                     }
                 }
             });
-            var fetched = [];
-            Promise.map(dirtySearches, (search) => {
-                // prefetching was cancelled
-                if (this.prefetchTimeout !== prefetchTimeout) {
+            if (!similar) {
+                selected.push(search);
+                if (!search.updating) {
+                    search.scheduled = true;
+                }
+                if (selected.length > 16) {
                     return false;
                 }
-                if (!search.dirty) {
-                    return false;
+            }
+        });
+
+        setTimeout(() => {
+            if (!this.searching) {
+                var search = _.find(this.recentSearchResults, { scheduled: true, updating: false });
+                if (search) {
+                    this.searchRemoteDatabase(search);
                 }
-                if (!search.prefetching) {
-                    return false;
-                }
-                // don't prefetch a search if the same component has done a
-                // search with the same shape more recently
-                var shape = search.getCriteriaShape();
-                var similar = _.find(fetched, (f) => {
-                    if (_.includes(search.by, f.component)) {
-                        if (_.isEqual(shape, f.shape)) {
-                            return true;
-                        }
-                    }
-                });
-                if (similar) {
-                    return false;
-                }
-                return this.searchRemoteDatabase(search, true).then(() => {
-                    _.each(search.by, (component) => {
-                        fetched.push({ component, shape });
-                    });
-                });
-            }, { concurrency: 4 });
-        }, 200);
+            }
+        }, 50);
     },
 
     /**
      * Stop updating recent searches
      */
     stopPrefetch: function() {
-        if (this.prefetchTimeout) {
-            clearTimeout(this.prefetchTimeout);
-            this.prefetchTimeout = null;
-        }
+        _.each(this.recentSearchResults, (search) => {
+            if (search.scheduled) {
+                search.scheduled = false;
+            }
+        });
     },
 
     /**

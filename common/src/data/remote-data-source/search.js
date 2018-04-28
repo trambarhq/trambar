@@ -11,7 +11,7 @@ function Search(query) {
     this.remote = query.remote || false;
     this.dirty = false;
     this.updating = false;
-    this.background = false;
+    this.scheduled = false;
     this.lastRetrieved = 0;
     this.missingResults = [];
 
