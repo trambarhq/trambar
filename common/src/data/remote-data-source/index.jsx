@@ -32,6 +32,7 @@ module.exports = React.createClass({
         inForeground: PropTypes.bool,
         prefetching: PropTypes.bool,
         cache: PropTypes.object,
+        cacheValidation: PropTypes.bool,
         refreshInterval: PropTypes.number,
         sessionRetryInterval: PropTypes.number,
 
@@ -57,6 +58,7 @@ module.exports = React.createClass({
             connected: false,
             inForeground: true,
             prefetching: true,
+            cacheValidation: true,
             refreshInterval: 15 * 60,   // 15 minutes
             sessionRetryInterval: 5000,
         };
@@ -479,6 +481,12 @@ module.exports = React.createClass({
             var search;
             var existingSearch = this.findExistingSearch(newSearch);
             if (existingSearch) {
+                // don't reuse search if it has failed
+                if (existingSearch.promise.isRejected()) {
+                    existingSearch = null;
+                }
+            }
+            if (existingSearch) {
                 if (byComponent) {
                     // add the component to the "by" array so we can figure out
                     // who requested the data
@@ -486,28 +494,35 @@ module.exports = React.createClass({
                         existingSearch.by.push(byComponent);
                     }
                 }
+                var status;
                 if (existingSearch.promise.isFulfilled()) {
-                    if (!existingSearch.isFresh()) {
-                        // search is perhaps out-of-date--indicate that the data
-                        // is speculative and check with the server
-                        this.searchRemoteDatabase(existingSearch).then((changed) => {
-                            if (changed) {
-                                // data returned earlier wasn't entirely correct
-                                // trigger a new search through a onChange event
-                                this.triggerChangeEvent();
-                                return null;
-                            }
-                        });
+                    if (existingSearch.isFresh()) {
+                        status = 'complete';
+                    } else {
+                        status = 'stale';
                     }
-                } else if (existingSearch.promise.isRejected()) {
-                    // search didn't succeed--try again
-                    existingSearch.promise = this.searchRemoteDatabase(existingSearch).then((changed) => {
+                } else {
+                    status = 'running';
+                }
+                if (status === 'stale') {
+                    // search is perhaps out-of-date--check with the server
+                    var remoteSearchPromise = this.searchRemoteDatabase(existingSearch).then((changed) => {
                         if (changed) {
+                            // data returned earlier wasn't entirely correct
+                            // trigger a new search through a onChange event
                             this.triggerChangeEvent();
-                            return null;
                         }
                         return existingSearch.results;
                     });
+                    var waitForRemoteSearch = true;
+                    if (status === 'stale') {
+                        if (blocking !== 'stale') {
+                            waitForRemoteSearch = false;
+                        }
+                    }
+                    if (waitForRemoteSearch) {
+                        existingSearch.promise = remoteSearchPromise;
+                    }
                 }
                 search = existingSearch;
             } else {
@@ -547,7 +562,7 @@ module.exports = React.createClass({
                         if (changed) {
                             this.triggerChangeEvent();
                         };
-                        return null;
+                        return search.results;
                     });
                     var waitForRemoteSearch = true;
 
@@ -577,16 +592,7 @@ module.exports = React.createClass({
                         // trigger a new search
                         return newSearch.results;
                     }
-
-                    return remoteSearchPromise.then((changed) => {
-                        if (required) {
-                            if (!newSearch.isMeetingExpectation()) {
-                                this.triggerStupefactionEvent(query, newSearch.results);
-                                throw new HTTPError(404);
-                            }
-                        }
-                        return newSearch.results;
-                    });
+                    return remoteSearchPromise;
                 });
                 search = newSearch;
             }
@@ -595,6 +601,12 @@ module.exports = React.createClass({
                 if (includeUncommitted && committed !== true) {
                     // apply changes that haven't been saved yet
                     search = this.applyUncommittedChanges(search);
+                }
+                if (required) {
+                    if (!search.isMeetingExpectation()) {
+                        this.triggerStupefactionEvent(query, newSearch.results);
+                        throw new HTTPError(404);
+                    }
                 }
                 return search.results;
             });
@@ -1558,10 +1570,7 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     validateCache: function(address, schema) {
-        if (schema === 'local') {
-            return Promise.resolve();
-        }
-        if (!this.props.online) {
+        if (schema === 'local' || !this.props.online || !this.props.cacheValidation) {
             return Promise.resolve();
         }
         var cache = this.props.cache;

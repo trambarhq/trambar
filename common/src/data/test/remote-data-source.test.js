@@ -31,6 +31,7 @@ describe('RemoteDataSource', function() {
         prefetching: false,
         sessionRetryInterval: 100,
         cache: cache,
+        cacheValidation: false,
 
         onChange: null,
         onSearch: null,
@@ -656,7 +657,8 @@ describe('RemoteDataSource', function() {
                     address: location.address,
                     schema: 'global',
                     table: 'user',
-                    criteria: {}
+                    criteria: {},
+                    blocking: 'never',
                 };
                 var discovery = 0;
                 var retrieval = 0;
@@ -707,7 +709,8 @@ describe('RemoteDataSource', function() {
                     address: location.address,
                     schema: 'global',
                     table: 'user',
-                    criteria: {}
+                    criteria: {},
+                    blocking: 'never'
                 };
                 var discovery = 0;
                 var retrieval = 0;
@@ -1186,8 +1189,8 @@ describe('RemoteDataSource', function() {
             });
         })
     })
-    describe('#clear()', function() {
-        it('should remove recent searches at a given server', function() {
+    describe('#abandon()', function() {
+        it('should make searches at a given server dirty', function() {
             var location = { address: 'http://toilet.helms-deep.me', schema: 'global', table: 'project' };
             var objects = [ { id: 1, gn: 2, name: 'fart' } ];
             var discovery = 0, retrieval = 0;
@@ -1207,7 +1210,7 @@ describe('RemoteDataSource', function() {
                     });
                 });
             };
-            var query = _.extend(location, { blocking: true, criteria: {} });
+            var query = _.extend(location, { blocking: 'stale', criteria: {} });
             return dataSource.find(query).then((found) => {
                 expect(found).to.have.lengthOf(1);
                 expect(discovery).to.equal(1);
@@ -1220,7 +1223,7 @@ describe('RemoteDataSource', function() {
                     });
                 });
             }).then(() => {
-                dataSource.clear(location.address, location.schema);
+                dataSource.abandon(location.address, location.schema);
             }).then(() => {
                 return dataSource.find(query).then((found) => {
                     expect(found).to.have.lengthOf(1);
@@ -1297,7 +1300,6 @@ describe('RemoteDataSource', function() {
                     }
                 });
             };
-            dataSource.clear();
             var queries = [
                 { address: 'http://mirkwood.me', schema: 'global', table: 'project', criteria: {}, blocking: true },
                 { address: 'http://mirkwood.me', schema: 'global', table: 'user', criteria: {}, blocking: true },
@@ -1329,7 +1331,6 @@ describe('RemoteDataSource', function() {
                     }
                 });
             };
-            dataSource.clear();
             var queries = [
                 { address: 'http://mirkwood.me', schema: 'global', table: 'project', criteria: {}, blocking: true },
                 { address: 'http://mirkwood.me', schema: 'global', table: 'user', criteria: {}, blocking: true },
