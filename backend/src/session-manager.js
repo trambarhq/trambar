@@ -241,6 +241,7 @@ function handleSessionRetrieval(req, res) {
         }
         if (session.token) {
             session.activated = true;
+            session.etime = getFutureTime(SESSION_LIFETIME_CLIENT);
             return saveSession(session).then((session) => {
                 return {
                     session: _.pick(session, 'token', 'user_id', 'etime')
