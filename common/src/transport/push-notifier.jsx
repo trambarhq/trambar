@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Async = require('async-do-while');
 var HTTPRequest = require('transport/http-request');
@@ -64,15 +65,18 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     waitForSearchStart: function(limit) {
-        if (this.searchStartPromise) {
-            return this.searchStartPromise;
+        if (this.props.searching) {
+            return Promise.resolve();
         }
-        return new Promise((resolve, reject) => {
-            this.onSearchStart = resolve;
-        }).timeout(limit).finally(() => {
-            this.onSearchStart = null;
-            this.searchStartPromise = null;
-        });
+        if (!this.searchStartPromise) {
+            this.searchStartPromise = new Promise((resolve, reject) => {
+                this.onSearchStart = resolve;
+            }).timeout(limit).finally(() => {
+                this.onSearchStart = null;
+                this.searchStartPromise = null;
+            });
+        }
+        return this.searchStartPromise;
     },
 
     /**
@@ -83,15 +87,18 @@ module.exports = React.createClass({
      * @return {Promise}
      */
     waitForSearchEnd: function(limit) {
-        if (this.searchEndPromise) {
-            return this.searchEndPromise;
+        if (!this.props.searching) {
+            return Promise.resolve();
         }
-        return new Promise((resolve, reject) => {
-            this.onSearchEnd = resolve;
-        }).timeout(limit).finally(() => {
-            this.onSearchEnd = null;
-            this.searchEndPromise = null;
-        });
+        if (!this.searchEndPromise) {
+            this.searchEndPromise = new Promise((resolve, reject) => {
+                this.onSearchEnd = resolve;
+            }).timeout(limit).finally(() => {
+                this.onSearchEnd = null;
+                this.searchEndPromise = null;
+            });
+        }
+        return this.searchEndPromise;
     },
 
     /**
@@ -102,19 +109,18 @@ module.exports = React.createClass({
     waitForConnectivity: function() {
         if (this.props.online) {
             return Promise.resolve();
-        } else {
-            if (!this.connectivityPromise) {
-                this.connectivityPromise = new Promise((resolve, reject) => {
-                    // call function in componentWillReceiveProps
-                    this.onConnectivity = () => {
-                        this.connectivityPromise = null;
-                        this.onConnectivity = null;
-                        resolve();
-                    };
-                });
-            }
-            return this.connectivityPromise;
         }
+        if (!this.connectivityPromise) {
+            this.connectivityPromise = new Promise((resolve, reject) => {
+                // call function in componentWillReceiveProps
+                this.onConnectivity = () => {
+                    this.connectivityPromise = null;
+                    this.onConnectivity = null;
+                    resolve();
+                };
+            });
+        }
+        return this.connectivityPromise;
     },
 
     /**
@@ -395,14 +401,12 @@ module.exports = React.createClass({
             if (changes) {
                 this.triggerNotifyEvent(address, changes);
 
-                if (!data.additionalData.foreground) {
-                    // wait for any database queries to finish
-                    return this.waitForSearchStart(250).then(() => {
-                        return this.waitForSearchEnd(5000);
-                    }).catch((err) => {
-                        // timeout
-                    });
-                }
+                // wait for any database queries to finish
+                return this.waitForSearchStart(250).then(() => {
+                    return this.waitForSearchEnd(5000);
+                }).catch((err) => {
+                    // timeout
+                });
             } else if (data.message) {
                 // if notification was received in the background, the event is
                 // triggered when the user clicks on the notification
@@ -412,10 +416,7 @@ module.exports = React.createClass({
                 }
             }
         }).finally(() => {
-            if (!additionalData.foreground) {
-                console.log('background retrieval complete');
-                signalBackgroundProcessCompletion(data.notId);
-            }
+            signalBackgroundProcessCompletion(additionalData.notId);
         });
     },
 
