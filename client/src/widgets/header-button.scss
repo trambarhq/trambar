@@ -5,8 +5,10 @@
     touch-action: manipulation;
     cursor: pointer;
 
-    &:hover {
-        color: #eeeeee;
+    .no-touch & {
+        &:hover {
+            color: #eeeeee;
+        }
     }
 
     &.disabled {

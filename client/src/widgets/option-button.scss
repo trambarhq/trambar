@@ -28,11 +28,25 @@
         }
     }
 
-    &.selected, &:hover {
+    &.selected {
         color: #eeeeee;
 
         .pop-up-menu & {
             color: #000000;
+        }
+    }
+
+    .no-touch & {
+        &:hover {
+            color: #eeeeee;
+        }
+    }
+
+    .pop-up-menu & {
+        .no-touch & {
+            &:hover {
+                color: #000000;
+            }
         }
     }
 

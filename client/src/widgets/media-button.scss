@@ -7,8 +7,10 @@
     cursor: pointer;
     touch-action: manipulation;
 
-    &:hover {
-        color: #eeeeee;
+    .no-touch & {
+        &:hover {
+            color: #eeeeee;
+        }
     }
 
     &.disabled {
