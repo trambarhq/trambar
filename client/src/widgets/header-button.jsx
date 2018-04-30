@@ -30,71 +30,34 @@ function FileButton(props) {
     if (props.hidden) {
         return null;
     }
-    if (process.env.PLATFORM === 'cordova') {
-        var buttonProps = _.omit(props, 'onChange');
-        var onClick = () => {
-            var camera = navigator.camera;
-            if (camera) {
-                var options = {
-                    destinationType: Camera.DestinationType.FILE_URI,
-                    sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
-                    mediaType: Camera.MediaType.ALLMEDIA,
-                };
-                var handleSuccess = (url) => {
-                    var CordovaFile = require('transport/cordova-file');
-                    var file = new CordovaFile(url);
-                    return file.obtainMetadata().then(() => {
-                        var evt = {
-                            target: {
-                                files: [ file ]
-                            },
-                        };
-                        if (props.onChange) {
-                            props.onChange(evt);
-                        }
-                    });
-                };
-                var handleFailure = () => {
-                };
-                camera.getPicture(handleSuccess, handleFailure, options);
-            }
-        };
+    var inputProps = {
+        type: 'file',
+        value: '',
+        disabled: props.disabled,
+        multiple: props.multiple,
+        onChange: props.onChange,
+    };
+    if (edgeBug) {
+        // deal with bug in Edge:
+        // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/8282613/
+        inputProps.id = `file-input-${edgeInputId++}`;
         return (
-            <label className={buttonClasses(props)} onClick={!props.disabled ? onClick : null}>
-                <i className={iconClasses(props)}/>
-                <span className="label">{props.label}</span>
-            </label>
-        );
-    } else {
-        var inputProps = {
-            type: 'file',
-            value: '',
-            disabled: props.disabled,
-            multiple: props.multiple,
-            onChange: props.onChange,
-        };
-        if (edgeBug) {
-            // deal with bug in Edge:
-            // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/8282613/
-            inputProps.id = `file-input-${edgeInputId++}`;
-            return (
-                <span className={buttonClasses(props)}>
-                    <label htmlFor={inputProps.id}>
-                        <i className={iconClasses(props)}/>
-                        <span className="label">{props.label}</span>
-                    </label>
-                    <input {...inputProps} />
-                </span>
-            );
-        }
-        return (
-            <label className={buttonClasses(props)}>
-                <i className={iconClasses(props)}/>
-                <span className="label">{props.label}</span>
+            <span className={buttonClasses(props)}>
+                <label htmlFor={inputProps.id}>
+                    <i className={iconClasses(props)}/>
+                    <span className="label">{props.label}</span>
+                </label>
                 <input {...inputProps} />
-            </label>
+            </span>
         );
     }
+    return (
+        <label className={buttonClasses(props)}>
+            <i className={iconClasses(props)}/>
+            <span className="label">{props.label}</span>
+            <input {...inputProps} />
+        </label>
+    );
 }
 
 var edgeBug = /Edge/.test(navigator.userAgent);
