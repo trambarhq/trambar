@@ -26,7 +26,6 @@ module.exports = {
 
 var server;
 var sockets = [];
-var heartbeatInterval;
 
 /**
  * Start listening for incoming Web Socket connection
@@ -63,7 +62,6 @@ function listen() {
                 return Crypto.randomBytesAsync(16).then((buffer) => {
                     socket.token = buffer.toString('hex');
                     socket.write(JSON.stringify({ socket: socket.token }));
-                    socket.lastInteractionTime = new Date;
                 });
             }
         });
@@ -71,8 +69,6 @@ function listen() {
         server = HTTP.createServer(app);
         sockJS.installHandlers(server, { prefix: '/srv/socket' });
         server.listen(80, '0.0.0.0');
-
-        heartbeatInterval = setInterval(sendWebsocketHeartbeat, 10 * 1000);
     });
 }
 
@@ -82,7 +78,6 @@ function listen() {
  * @return {Promise}
  */
 function shutdown() {
-    clearInterval(heartbeatInterval);
     _.each(sockets, (socket) => {
         // for some reason socket is undefined sometimes during shutdown
         if (socket) {
@@ -153,7 +148,6 @@ function sendToWebsockets(db, messages) {
             var messageType = _.first(_.keys(message.body));
             console.log(`Sending message (${messageType}) to socket ${socket.token} (${listener.user.username})`);
             socket.write(JSON.stringify(message.body));
-            socket.lastInteractionTime = new Date;
         } else {
             subscription.deleted = true;
             return Subscription.updateOne(db, 'global', subscription);
@@ -183,20 +177,6 @@ function filterWebsocketMessages(messages) {
             }
         }
         return true;
-    });
-}
-
-/**
- * Send an empty message to indicate the connection is still alive
- */
-function sendWebsocketHeartbeat() {
-    var now = new Date;
-    _.each(sockets, (socket) => {
-        var elapsed = now - socket.lastInteractionTime;
-        if (elapsed > 25 * 1000) {
-            socket.write('{}');
-            socket.lastInteractionTime = new Date;
-        }
     });
 }
 
