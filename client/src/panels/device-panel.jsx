@@ -86,13 +86,14 @@ module.exports = React.createClass({
      */
     renderDevice: function(device) {
         var t = this.props.locale.translate;
+        var deviceName = formatDeviceName(device);
         return (
             <div key={device.id} className="device-option-button selected">
                 <div className="icon">
                     <DeviceIcon type={device.type} />
                 </div>
                 <div className="text">
-                    <span className="name">{device.details.name}</span>
+                    <span className="name">{deviceName}</span>
                     <div data-device-id={device.id} className="revoke" onClick={this.handleRevokeClick}>
                         <i className="fa fa-ban" />
                         {' '}
@@ -182,4 +183,13 @@ function DeviceIcon(props) {
             <i className={`fa fa-${icon} icon-overlay`} />
         </div>
     );
+}
+
+function formatDeviceName(device) {
+    var manufacturer = device.details.manufacturer;
+    var name = device.details.display_name || device.details.name;
+    if (!_.includes(_.toLower(name), _.toLower(manufacturer))) {
+        name = `${manufacturer} ${name}`;
+    }
+    return name;
 }
