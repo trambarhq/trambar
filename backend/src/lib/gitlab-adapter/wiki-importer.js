@@ -105,7 +105,7 @@ function copyEventProperties(story, server, repo, author, glHookEvent) {
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'ptime', {
-        value: Moment(glMilestone.created_at).toISOString(),
+        value: Moment().toISOString(),
         overwrite: 'always',
     });
     return storyAfter;

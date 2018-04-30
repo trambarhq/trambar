@@ -4,7 +4,7 @@ module.exports = {
     'branch': 0,
     'issue': 30,
     'milestone': 0,
-    'wiki': 0,
+    'wiki': 40,
     'member': 0,
     'repo': 0,
     'story': 10,
