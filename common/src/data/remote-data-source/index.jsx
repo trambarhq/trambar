@@ -71,6 +71,7 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         this.searching = false;
+        this.disconnected = false;
         this.idMappings = {};
         this.cacheValidation = {};
         this.cacheClearing = {};
@@ -1585,13 +1586,15 @@ module.exports = React.createClass({
                     if (cacheSignature) {
                         if (cacheSignature !== remoteSignature) {
                             return this.clearCachedObjects(address, schema).then(() => {
-                                return this.setCacheSignature(address, schema, remoteSignature);
+                                this.setCacheSignature(address, schema, remoteSignature);
+                                return null;
                             });
                         }
                     } else {
                         // wait for any cache clearing operation to complete
                         return this.waitForCacheClearing(address, schema).then(() => {
-                            return this.setCacheSignature(address, schema, remoteSignature);
+                            this.setCacheSignature(address, schema, remoteSignature);
+                            return null;
                         });
                     }
                 });
@@ -1905,13 +1908,23 @@ module.exports = React.createClass({
         var onlineNow = !this.props.online && nextProps.online;
         var connectedNow = !this.props.connected && nextProps.connected;
         if (onlineNow || connectedNow) {
-            // reconcile changes and invalidate all searches
-            this.invalidate().then(() => {
-                // send pending changes
-                _.each(this.changeQueue, (change) => {
-                    change.dispatch();
+            if (this.disconnected) {
+                // reconcile changes and invalidate all searches
+                // if connection was lost
+                this.invalidate().then(() => {
+                    // send pending changes
+                    _.each(this.changeQueue, (change) => {
+                        change.dispatch();
+                    });
                 });
-            });
+                this.disconnected = false;
+            }
+        } else {
+            var offlineNow = this.props.online && !nextProps.online;
+            var disconnectedNow = this.props.connected && !nextProps.connected;
+            if (offlineNow || disconnectedNow) {
+                this.disconnected = true;
+            }
         }
     },
 

@@ -128,7 +128,7 @@ function handleSignature(req, res) {
             throw new HTTPError(404);
         }
         var table = `"${schema}"."meta"`;
-        var sql = `SELECT signature FROM ${table}`;
+        var sql = `SELECT signature FROM ${table} LIMIT 1`;
         return db.query(sql).then((rows) => {
             if (_.isEmpty(rows)) {
                 throw new HTTPError(404);
