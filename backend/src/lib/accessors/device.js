@@ -199,8 +199,10 @@ function getDeviceDisplayName(device) {
     var model = _.get(device, 'details.name');
     if (type === 'ios') {
         return getAppleDeviceDisplayName(model);
-    } else if(type === 'android') {
+    } else if (type === 'android') {
         return getAndroidDeviceDisplayName(manufacturer, model);
+    } else if (type === 'windows') {
+        return getWindowsDeviceDisplayName(model);
     } else {
         return Promise.resolve();
     }
@@ -214,7 +216,31 @@ function getDeviceDisplayName(device) {
  * @return {Promise<String|undefined>}
  */
 function getAppleDeviceDisplayName(model) {
-    var name = appleModelNames[model];
+    var name;
+    _.each(appleModelNumbers, (regExp, key) => {
+        if (regExp.test(model)) {
+            name = key;
+            return false;
+        }
+    });
+    return Promise.resolve(name);
+}
+
+/**
+ * Return marketing name of a Windows device
+ *
+ * @param  {String} model
+ *
+ * @return {Promise<String|undefined>}
+ */
+function getWindowsDeviceDisplayName(model) {
+    var name;
+    _.each(wpModelNumbers, (regExp, key) => {
+        if (regExp.test(model)) {
+            name = key;
+            return false;
+        }
+    });
     return Promise.resolve(name);
 }
 
@@ -332,94 +358,63 @@ function findClosest(hash, key) {
     }
 }
 
-setTimeout(updateAndroidDeviceDatabase, 1000);
-setInterval(updateAndroidDeviceDatabase, 7 * 24 * 60 * 60 * 1000);
+if (process.env.POSTGRES_USER !== 'admin_role') {
+    setTimeout(updateAndroidDeviceDatabase, 1000);
+    setInterval(updateAndroidDeviceDatabase, 7 * 24 * 60 * 60 * 1000);
+}
 
-var appleModelNames = {
-    'iPhone1,1': 'iPhone',
+var appleModelNumbers = {
+    'iPhone': /iPhone1,1/,
+    'iPhone 3G': /iPhone1,2/,
+    'iPhone 3GS': /iPhone2,1/,
+    'iPhone 4': /iPhone3,[123]/,
+    'iPhone 4S': /iPhone4,1/,
+    'iPhone 5': /iPhone5,[12]/,
+    'iPhone 5C': /iPhone5,[34]/,
+    'iPhone 5S': /iPhone6,[12]/,
+    'iPhone 6': /iPhone7,2/,
+    'iPhone 6 Plus': /iPhone7,1/,
+    'iPhone 6S': /iPhone8,1/,
+    'iPhone 6S Plus': /iPhone8,2/,
+    'iPhone 6SE': /iPhone8,4/,
+    'iPhone 7': /iPhone9,[13]/,
+    'iPhone 7 Plus': /iPhone9,[24]/,
+    'iPhone 8': /iPhone10,[14]/,
+    'iPhone 8 Plus': /iPhone10,[25]/,
+    'iPhone X': /iPhone10,[36]/,
 
-    'iPhone1,2': 'iPhone 3G',
-    'iPhone2,1': 'iPhone 3GS',
+    'iPad': /iPad1,1/,
+    'iPad 2': /iPad2,[1234]/,
+    'iPad mini': /iPad2,[567]/,
+    'iPad (3rd generation)': /iPad3,[123]/,
+    'iPad (4th generation)': /iPad3,[456]/,
+    'iPad Air': /iPad4,[123]/,
+    'iPad mini 2': /iPad4,[456]/,
+    'iPad mini 3': /iPad4,[789]/,
+    'iPad mini 4': /iPad5,[12]/,
+    'iPad Air 2': /iPad5,[34]/,
+    'iPad Pro': /iPad6,[3478]/,
+    'iPad (5th generation)': /iPad6,1[12]/,
+    'iPad Pro (2nd generation)': /iPad7,[1234]/,
+    'iPad (6th generation)': /iPad7,[56]/,
+};
 
-    'iPhone3,1': 'iPhone 4',
-    'iPhone3,2': 'iPhone 4',
-    'iPhone3,3': 'iPhone 4',
-    'iPhone4,1': 'iPhone 4S',
-
-    'iPhone5,1': 'iPhone 5',
-    'iPhone5,2': 'iPhone 5',
-    'iPhone5,3': 'iPhone 5C',
-    'iPhone5,4': 'iPhone 5C',
-    'iPhone6,1': 'iPhone 5S',
-    'iPhone6,2': 'iPhone 5S',
-
-    'iPhone7,1': 'iPhone 6 Plus',
-    'iPhone7,2': 'iPhone 6',
-    'iPhone8,1': 'iPhone 6S',
-    'iPhone8,2': 'iPhone 6S Plus',
-    'iPhone8,4': 'iPhone 6SE',
-
-    'iPhone9,1': 'iPhone 7',
-    'iPhone9,2': 'iPhone 7 Plus',
-    'iPhone9,3': 'iPhone 7',
-    'iPhone9,4': 'iPhone 7 Plus',
-
-    'iPhone10,1': 'iPhone 8',
-    'iPhone10,2': 'iPhone 8 Plus',
-    'iPhone10,3': 'iPhone X',
-    'iPhone10,4': 'iPhone 8',
-    'iPhone10,5': 'iPhone 8 Plus',
-    'iPhone10,6': 'iPhone X',
-
-    'iPad1,1': 'iPad',
-    'iPad2,1': 'iPad 2',
-    'iPad2,2': 'iPad 2',
-    'iPad2,3': 'iPad 2',
-    'iPad2,4': 'iPad 2',
-
-    'iPad2,5': 'iPad mini',
-    'iPad2,6': 'iPad mini',
-    'iPad2,7': 'iPad mini',
-
-    'iPad3,1': 'iPad (3rd generation)',
-    'iPad3,2': 'iPad (3rd generation)',
-    'iPad3,3': 'iPad (3rd generation)',
-
-    'iPad3,4': 'iPad (4th generation)',
-    'iPad3,5': 'iPad (4th generation)',
-    'iPad3,6': 'iPad (4th generation)',
-
-    'iPad4,1': 'iPad Air',
-    'iPad4,2': 'iPad Air',
-    'iPad4,3': 'iPad Air',
-
-    'iPad4,4': 'iPad mini 2',
-    'iPad4,5': 'iPad mini 2',
-    'iPad4,6': 'iPad mini 2',
-
-    'iPad4,7': 'iPad mini 3',
-    'iPad4,8': 'iPad mini 3',
-    'iPad4,9': 'iPad mini 3',
-
-    'iPad5,1': 'iPad mini 4',
-    'iPad5,2': 'iPad mini 4',
-
-    'iPad5,3': 'iPad Air 2',
-    'iPad5,4': 'iPad Air 2',
-
-    'iPad6,3': 'iPad Pro',
-    'iPad6,4': 'iPad Pro',
-    'iPad6,7': 'iPad Pro',
-    'iPad6,8': 'iPad Pro',
-
-    'iPad6,11': 'iPad (5th generation)',
-    'iPad6,12': 'iPad (5th generation)',
-
-    'iPad7,1': 'iPad Pro (2nd generation)',
-    'iPad7,2': 'iPad Pro (2nd generation)',
-    'iPad7,3': 'iPad Pro (2nd generation)',
-    'iPad7,4': 'iPad Pro (2nd generation)',
-
-    'iPad7,5': 'iPad (6th generation)',
-    'iPad7,6': 'iPad (6th generation)',
+var wpModelNumbers = {
+    'Lumia 532': /RM\-(1032|1034|1115)/,
+    'Lumia 535': /RM\-(1089|1090|1091|1092)/,
+    'Lumia 550': /RM\-(1127|1128|1129)/,
+    'Lumia 630': /RM\-(976|977|978|979)/,
+    'Lumia 635': /RM\-(975)/,
+    'Lumia 636': /RM\-(1027)/,
+    'Lumia 638': /RM\-(1010)/,
+    'Lumia 640': /RM\-(1072|1073|1074|1075|1076|1077|1113)/,
+    'Lumia 640XL': /RM\-(1062|1063|1064|1065|1066|1067|1096)/,
+    'Lumia 650': /RM\-(1150|1152|1153|1154)/,
+    'Lumia 730': /RM\-(1040)/,
+    'Lumia 735': /RM\-(1039)/,
+    'Lumia 830': /RM\-(983|984|985|1049)/,
+    'Lumia 1520': /RM\-(937|939|938|940)/,
+    'Lumia 950': /RM\-(1104|1105|1118)/,
+    'Lumia 950XL': /RM\-(1085|1116)/,
+    'Lumia Icon': /RM\-(927)/,
 };
