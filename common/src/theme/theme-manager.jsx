@@ -620,8 +620,10 @@ function isWebpSupported() {
  * @return {Boolean}
  */
 function detectOnscreenKeyboard() {
-    // this is known to work in Chrome only
-    var viewPortHeight = document.body.offsetHeight;
+    if (!/Android/.test(navigator.userAgent)) {
+        return false;
+    }
+    var viewPortHeight = window.innerHeight;
     var screenHeight = screen.height;
     var offLimit = screenHeight - viewPortHeight;
     if (offLimit > 200) {
