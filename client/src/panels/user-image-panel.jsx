@@ -192,6 +192,7 @@ module.exports = React.createClass({
             var saveProps = {
                 label: t('user-image-save'),
                 emphasized: true,
+                disabled: !this.state.image,
                 onClick: this.handleSaveClick,
             }
             return (
@@ -323,8 +324,10 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
-        this.setUserProperty('details.resources', [ this.state.image ]);
-        this.setState({ action: null, image: null });
+        if (this.state.image) {
+            this.setUserProperty('details.resources', [ this.state.image ]);
+            this.setState({ action: null, image: null });
+        }
     },
 
     /**
