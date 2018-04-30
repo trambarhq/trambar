@@ -64,7 +64,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Render issue form
+     * Render form
      *
      * @return {ReactElement}
      */
@@ -229,7 +229,7 @@ module.exports = React.createClass({
      */
     handleSchemaChange: function(evt) {
         var schema = evt.target.value;
-        schema = _.replace(schema, /\W+/g, '');
+        schema = _.replace(schema, /[^\w\-]/g, '');
         this.setState({ schema });
     },
 });
