@@ -166,9 +166,14 @@ module.exports = React.createClass({
                 </div>
             );
         }
+        var imageProps = {            
+            src: this.state.previewImageURL,
+            width: this.props.previewWidth,
+            height: this.props.previewHeight
+        };
         return (
             <div className={className}>
-                <img src={this.state.previewImageURL} />
+                <img {...imageProps} />
                 {overlay}
             </div>
         );

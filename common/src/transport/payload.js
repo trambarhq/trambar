@@ -288,8 +288,16 @@ Payload.prototype.sendCordovaFile = function(part) {
         fileTransfer.onprogress = (evt) => {
             this.updateProgress(part, evt.loaded / evt.total)
         };
-        var successCB = (res) => {
-            resolve(res);
+        var successCB = (r) => {
+            if (r.responseCode >= 400) {
+                reject(new HTTPError(r.responseCode));
+            }
+            try {
+                var res = JSON.parse(r.response);
+                resolve(res);
+            } catch(err) {
+                reject(err);
+            }
         };
         var errorCB = (err) => {
             reject(new FileError(err))
