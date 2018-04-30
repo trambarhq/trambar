@@ -423,7 +423,6 @@ module.exports = React.createClass({
      * Attach event handlers
      */
     componentDidMount: function() {
-        document.addEventListener('focusout', this.handleFocusOut);
         if (process.env.PLATFORM === 'browser') {
             window.addEventListener('beforeunload', this.handleBeforeUnload);
             document.addEventListener('visibilitychange', this.handleVisibilityChange);
@@ -458,7 +457,6 @@ module.exports = React.createClass({
      * Remove event handlers
      */
     componentWillUnmount: function() {
-        document.removeEventListener('focusout', this.handleFocusOut);
         if (process.env.PLATFORM === 'browser') {
             window.removeEventListener('beforeunload', this.handleBeforeUnload);
             document.removeEventListener('visibilitychange', this.handleVisibilityChange);
@@ -678,6 +676,9 @@ module.exports = React.createClass({
                     if (Notifier === PushNotifier) {
                         this.discoverPushRelay();
                     }
+                }
+                if (this.scrollBoxNode) {
+                    this.scrollBoxNode.focus();
                 }
             });
         };
@@ -956,17 +957,6 @@ module.exports = React.createClass({
             nextState.database = new Database(database.remoteDataSource, database.context, evt.online);
         }
         this.setState(nextState);
-    },
-
-    /**
-     * Put focus on scroll box if nothing has focus
-     *
-     * @param  {Event} evt
-     */
-    handleFocusOut: function(evt) {
-        if (!evt.relatedTarget) {
-            this.scrollBoxNode.focus();
-        }
     },
 
     /**

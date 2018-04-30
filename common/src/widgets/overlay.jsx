@@ -79,6 +79,14 @@ module.exports = React.createClass({
             this.containerNode = document.createElement('DIV');
             app.appendChild(this.containerNode);
             app.addEventListener('keydown', this.handleKeyDown);
+
+            var el = document.activeElement;
+            if (el && el !== document.body) {
+                this.originalFocusElement = el;
+                el.blur();
+            } else {
+                this.originalFocusElement = null;
+            }
         } else {
             if (this.containerRemovalTimeout) {
                 clearTimeout(this.containerRemovalTimeout);
@@ -124,7 +132,12 @@ module.exports = React.createClass({
                 app.removeEventListener('keydown', this.handleKeyDown);
                 this.containerNode = null;
                 this.containerRemovalTimeout = 0;
-            }, 1000);
+            }, 500);
+
+            if (this.originalFocusElement) {
+                this.originalFocusElement.focus();
+                this.originalFocusElement = null;
+            }
         }
         this.shown = false;
         this.redraw(this.shown);

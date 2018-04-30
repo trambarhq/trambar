@@ -222,6 +222,8 @@
                     }
 
                     &.description {
+                        user-select: text;
+                        
                         .scrollable {
                             white-space: pre-line;
                         }
