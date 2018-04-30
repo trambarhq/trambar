@@ -1250,7 +1250,7 @@ if (process.env.PLATFORM === 'cordova') {
     var getDeviceType = function() {
         var device = window.device;
         if (device) {
-            switch (device.type) {
+            switch (device.platform) {
                 case 'Android': return 'android';
                 case 'iOS': return 'ios';
                 case 'WinCE':
