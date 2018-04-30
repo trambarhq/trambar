@@ -85,6 +85,22 @@ CordovaFile.prototype.getArrayBuffer = function() {
 CordovaFile.prototype.obtainMetadata = function() {
     return this.getFile().then((file) => {
         this.size = file.size;
-        this.type = file.type;
+        this.type = decodeFileType(file.type);
     });
 };
+
+function decodeFileType(type) {
+    // on Windows we'll get a file extension instead of a mime type
+    if (type && type.charAt(0) === '.') {
+        switch (_.toLower(type)) {
+            case '.jpg':
+            case '.jpeg': return 'image/jpeg';
+            case '.png': return 'image/png';
+            case '.gif': return 'image/gif';
+            case '.mp4': return 'video/mp4';
+            case '.mp3': return 'audio/mp3';
+            default: return 'application/octet-stream';
+        }
+    }
+    return type;
+}

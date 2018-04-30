@@ -39,7 +39,11 @@ module.exports = React.createClass({
         if (!this.props.show && nextProps.show) {
             var capture = navigator.device.capture;
             if (capture) {
-                capture.captureAudio(this.handleCaptureSuccess, this.handleCaptureFailure);
+                var options = {
+                    duration: 15 * 60 * 60,
+                    limit: 1,
+                };
+                capture.captureAudio(this.handleCaptureSuccess, this.handleCaptureFailure, options);
             }
         }
     },
@@ -90,6 +94,7 @@ module.exports = React.createClass({
         var mediaFile = mediaFiles[0];
         if (mediaFile) {
             MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
+                debugger;
                 var file = new CordovaFile(mediaFile.fullPath);
                 var [ type, format ] = _.split(mediaFile.type, '/');
                 var payload = this.props.payloads.add('audio');

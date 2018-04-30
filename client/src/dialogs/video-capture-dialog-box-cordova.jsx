@@ -39,7 +39,11 @@ module.exports = React.createClass({
         if (!this.props.show && nextProps.show) {
             var capture = navigator.device.capture;
             if (capture) {
-                capture.captureVideo(this.handleCaptureSuccess, this.handleCaptureFailure);
+                var options = {
+                    duration: 5 * 60 * 60,
+                    limit: 1,
+                };
+                capture.captureVideo(this.handleCaptureSuccess, this.handleCaptureFailure, options);
             }
         }
     },
