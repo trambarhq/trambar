@@ -36,6 +36,26 @@ module.exports = React.createClass({
     },
 
     /**
+     * Save caret position when we receive new text
+     *
+     * @param  {Object}
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.value !== nextProps.value) {
+            var el = this.components.actual;
+            if (el && el === document.activeElement) {
+                if (el.value !== nextProps.value) {
+                    this.caretPosition = {
+                        selectionStart: el.selectionStart,
+                        selectionEnd: el.selectionEnd,
+                        text: el.value,
+                    };
+                }
+            }
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -56,8 +76,6 @@ module.exports = React.createClass({
 
     /**
      * Add resize handler and update height
-     *
-     * @return {[type]}
      */
     componentDidMount: function() {
         window.removeEventListener('resize', this.handleDocumentResize);
@@ -71,6 +89,45 @@ module.exports = React.createClass({
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
+        if (this.caretPosition) {
+            // restore cursor position, using text in front of and after the
+            // cursor as anchors
+            var el = this.components.actual;
+            var startBefore = this.caretPosition.selectionStart;
+            var endBefore = this.caretPosition.selectionEnd;
+            var textBefore = this.caretPosition.text;
+            var textAfter = this.props.value;
+            var textPrecedingCaretBefore = textBefore.substring(0, startBefore);
+            var textFollowingCaretBefore = textBefore.substring(endBefore);
+            var textSelectedBefore = textBefore.substring(startBefore, endBefore);
+            var startAfter, endAfter;
+            if (_.startsWith(textAfter, textPrecedingCaretBefore)) {
+                startAfter = startBefore;
+            }
+            if (_.endsWith(textAfter, textFollowingCaretBefore)) {
+                endAfter = textAfter.length - textFollowingCaretBefore.length;
+            }
+            if (startAfter !== undefined && endAfter === undefined) {
+                endAfter = startAfter + textSelectedBefore.length;
+                if (endAfter > textAfter.length) {
+                    endAfter = textAfter.length;
+                }
+            } else if (startAfter === undefined && endAfter !== undefined) {
+                startAfter = endAfter - textSelectedBefore.length;
+                if (startAfter < 0) {
+                    startAfter = 0;
+                }
+            }
+            if (startAfter !== undefined && endAfter !== undefined) {
+                if (!textSelectedBefore) {
+                    // don't select text when none was selected before
+                    startAfter = endAfter;
+                }
+                el.selectionStart = startAfter;
+                el.selectionEnd = endAfter;
+            }
+            this.caretPosition = null;
+        }
         if (prevProps.value !== this.props.value) {
             this.updateSize();
         }
