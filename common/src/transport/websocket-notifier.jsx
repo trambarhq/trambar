@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var SockJS = require('sockjs-client');
 var Async = require('async-do-while');
+var NotificationUnpacker = require('transport/notification-unpacker');
 
 var Locale = require('locale/locale');
 
@@ -57,7 +58,6 @@ module.exports = React.createClass({
         return {
             socket: null,
             notificationPermitted: false,
-            serverResponse: null,
             reconnectionCount: 0,
             recentMessages: [],
         };
@@ -162,27 +162,19 @@ module.exports = React.createClass({
                 if (attempt === this.connectionAttempt) {
                     socket.onmessage = (evt) => {
                         if (this.state.socket === socket) {
-                            var object = parseJSON(evt.data);
-                            if (object.changes) {
-                                this.triggerNotifyEvent(serverAddress, object.changes);
-                            } else if (object.alert) {
-                                this.showAlert(serverAddress, object.alert);
-                            } else if (object.socket) {
-                                var connection = {
-                                    method: 'websocket',
-                                    relay: null,
-                                    token: object.socket,
-                                    address: serverAddress,
-                                    details: {
-                                        user_agent: navigator.userAgent
-                                    },
-                                };
-                                this.setState({ serverResponse: object });
-                                this.triggerConnectEvent(connection);
+                            var msg = parseJSON(evt.data);
+                            var payload = _.assign({ address: serverAddress }, msg);
+                            var notification = NotificationUnpacker.unpack(payload);
+                            if (notification.type === 'change') {
+                                this.triggerNotifyEvent(notification.changes);
+                            } else if (notification.type === 'alert') {
+                                this.showAlert(notification.alert);
+                            } else if (notification.type === 'connection') {
+                                socket.id = notification.connection.token;
+                                this.triggerConnectEvent(notification.connection);
                             }
-
                             var recentMessages = _.slice(this.state.recentMessages);
-                            recentMessages.unshift(object);
+                            recentMessages.unshift(msg);
                             if (recentMessages.length > 10) {
                                recentMessages.splice(10);
                             }
@@ -193,7 +185,7 @@ module.exports = React.createClass({
                         if (this.state.socket === socket) {
                             // we're still supposed to be connected
                             // try to reestablish connection
-                            this.setState({ socket: null, serverResponse: null }, () => {
+                            this.setState({ socket: null }, () => {
                                 this.connect(serverAddress).then((connected) => {
                                     if (connected) {
                                         var reconnectionCount = this.state.reconnectionCount + 1;
@@ -242,7 +234,7 @@ module.exports = React.createClass({
         var socket = this.state.socket;
         if (socket) {
             // set state.socket to null first, to stop reconnection attempt
-            this.setState({ socket: null, serverResponse: null, reconnectionCount: 0 }, () => {
+            this.setState({ socket: null, reconnectionCount: 0 }, () => {
                 socket.close();
             });
         }
@@ -288,14 +280,13 @@ module.exports = React.createClass({
      * Notify parent component that a change event was received
      *
      * @param  {String} address
-     * @param  {Object} changes
+     * @param  {Array<Object>} changes
      */
-    triggerNotifyEvent: function(address, changes) {
+    triggerNotifyEvent: function(changes) {
         if (this.props.onNotify) {
             this.props.onNotify({
                 type: 'notify',
                 target: this,
-                address,
                 changes,
             });
         }
@@ -331,15 +322,13 @@ module.exports = React.createClass({
     /**
      * Inform parent component that an alert was clicked
      *
-     * @param  {String} address
      * @param  {Object} alert
      */
-    triggerAlertClickEvent: function(address, alert) {
+    triggerAlertClickEvent: function(alert) {
         if (this.props.onAlertClick) {
             this.props.onAlertClick({
                 type: 'alertclick',
                 target: this,
-                address,
                 alert,
             })
         }
@@ -348,14 +337,13 @@ module.exports = React.createClass({
     /**
      * Display an alert popup
      *
-     * @param  {String} serverAddress
      * @param  {Object} alert
      */
-    showAlert: function(serverAddress, alert) {
+    showAlert: function(alert) {
         if (this.state.notificationPermitted) {
             var options = {};
             if (alert.profile_image) {
-                options.icon = `${serverAddress}${alert.profile_image}`;
+                options.icon = alert.profile_image;
             } else {
                 options.icon = this.props.defaultProfileImage;
             }
@@ -363,12 +351,12 @@ module.exports = React.createClass({
                 options.body = alert.message;
             } else if (alert.attached_image) {
                 // show attach image only if there's no text
-                options.image = `${serverAddress}${alert.attached_image}`;
+                options.image = alert.attached_image;
             }
             options.lang = _.get(this.props.locale, 'languageCode');
             var notification = new Notification(alert.title, options);
             notification.addEventListener('click', () => {
-                this.triggerAlertClickEvent(serverAddress, alert);
+                this.triggerAlertClickEvent(alert);
                 notification.close();
             });
         }
@@ -380,7 +368,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     render: function() {
-        var id = _.get(this.state.serverResponse, 'socket');
+        var id = _.get(this.state.socket, 'id');
         return (
             <Diagnostics type="websocket-notifier">
                 <DiagnosticsSection label="Connection">
@@ -397,13 +385,6 @@ module.exports = React.createClass({
     },
 });
 
-function parseJSON(text) {
-    try {
-        return JSON.parse(text);
-    } catch (err) {
-    }
-}
-
 function requestNotificationPermission() {
     return new Promise((resolve, reject) => {
         Notification.requestPermission((status) => {
@@ -418,4 +399,12 @@ function requestNotificationPermission() {
 
 function renderJSON(object, i) {
     return <pre key={i}>{JSON.stringify(object, undefined, 4)}</pre>;
+}
+
+function parseJSON(text) {
+    try {
+        return JSON.parse(text);
+    } catch (err) {
+        return {};
+    }
 }

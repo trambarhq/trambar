@@ -841,14 +841,14 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleChangeNotification: function(evt) {
-        var dataSource = this.components.remoteDataSource;
-        dataSource.invalidate(evt.address, evt.changes);
-
         if (process.env.NODE_ENV !== 'production') {
-            _.forIn(evt.changes, (idList, name) => {
-                 console.log('Change notification: ', name, idList);
+            _.each(evt.changes, (change) => {
+                console.log(`Change notification: ${change.schema}.${change.table} ${change.id}`);
             });
         }
+
+        var dataSource = this.components.remoteDataSource;
+        dataSource.invalidate(evt.changes);
     },
 
     /**
@@ -924,14 +924,6 @@ module.exports = React.createClass({
     handleResume: function(evt) {
         if (process.env.PLATFORM !== 'cordova') return;
         this.setState({ inForeground: true });
-
-        // while we still receive push notification while the app is in
-        // background, it's always possible that some of the messages are
-        // missed due to lack of Internet access
-        //
-        // invalidate all queries just in case
-        var dataSource = this.components.remoteDataSource;
-        dataSource.invalidate();
     },
 
     /**

@@ -36,6 +36,8 @@ function Change(location, objects, options) {
     this.dependentPromises = [];
     this.delivered = null;
     this.received = null;
+    this.error = null;
+    this.time = null;
 
     if (options) {
         if (options.delay) {
@@ -52,7 +54,6 @@ function Change(location, objects, options) {
     }
     this.onDispatch = null;
     this.onCancel = null;
-    this.onCompletion = null;
 }
 
 /**
@@ -80,19 +81,16 @@ Change.prototype.dispatch = function() {
             return this.onDispatch(this).then((objects) => {
                 this.committed = true;
                 this.received = objects;
-                return this.onCompletion(this).then(() => {
-                    if (!this.canceled) {
-                        this.resolvePromise(objects);
-                    } else {
-                        // ignore the results
-                        this.resolvePromise([]);
-                    }
-                });
+                this.time = new Date;
+                if (!this.canceled) {
+                    this.resolvePromise(objects);
+                } else {
+                    // ignore the results
+                    this.resolvePromise([]);
+                }
             }).catch((err) => {
                 if (err.statusCode >= 400 && err.statusCode <= 499) {
-                    this.rejectPromise(err);
-                }
-                if (this.comitted) {
+                    this.error = error;
                     this.rejectPromise(err);
                 }
                 this.dispatched = false;
@@ -127,12 +125,6 @@ Change.prototype.cancel = function() {
     if (this.timeout) {
         clearTimeout(this.timeout);
     }
-    this.onCancel(this).then(() => {
-        // return empty array
-        this.resolvePromise([]);
-    }).catch((err) => {
-        this.rejectPromise(err);
-    });
 };
 
 /**
@@ -302,10 +294,19 @@ Change.prototype.noop = function() {
 /**
  * Return true if location matches
  *
- * @param  {Object} location
+ * @param  {Object} other
  *
  * @return {Boolean}
  */
-Change.prototype.matchLocation = function(location) {
-    return _.isEqual(this.location, location);
+Change.prototype.matchLocation = function(other) {
+    if (this.location.address !== other.address) {
+        return false;
+    }
+    if (this.location.schema !== other.schema) {
+        return false;
+    }
+    if (this.location.table !== other.table) {
+        return false;
+    }
+    return true;
 }

@@ -4,6 +4,7 @@ var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var Async = require('async-do-while');
 var HTTPRequest = require('transport/http-request');
+var NotificationUnpacker = require('transport/notification-unpacker');
 
 // widgets
 var Diagnostics = require('widgets/diagnostics');
@@ -302,15 +303,13 @@ module.exports = React.createClass({
     /**
      * Notify parent component that a change event was received
      *
-     * @param  {String} address
      * @param  {Object} changes
      */
-    triggerNotifyEvent: function(address, changes) {
+    triggerNotifyEvent: function(changes) {
         if (this.props.onNotify) {
             this.props.onNotify({
                 type: 'notify',
                 target: this,
-                address,
                 changes,
             });
         }
@@ -334,15 +333,13 @@ module.exports = React.createClass({
     /**
      * Inform parent component that an alert was clicked
      *
-     * @param  {String} address
      * @param  {Object} alert
      */
-    triggerAlertClickEvent: function(address, alert) {
+    triggerAlertClickEvent: function(alert) {
         if (this.props.onAlertClick) {
             this.props.onAlertClick({
                 type: 'alertclick',
                 target: this,
-                address,
                 alert,
             })
         }
@@ -394,29 +391,29 @@ module.exports = React.createClass({
      * @param  {Object} data
      */
     handleGCMNotification: function(data) {
-        var additionalData = data.additionalData;
+        var payload = data.additionalData;
         Promise.try(() => {
-            var address = additionalData.address;
-            var changes = additionalData.changes;
-            if (changes) {
-                this.triggerNotifyEvent(address, changes);
+            var notification = NotificationUnpacker.unpack(payload)
+            if (notification) {
+                if (notification.type === 'change') {
+                    this.triggerNotifyEvent(notification.changes);
 
-                // wait for any database queries to finish
-                return this.waitForSearchStart(250).then(() => {
-                    return this.waitForSearchEnd(5000);
-                }).catch((err) => {
-                    // timeout
-                });
-            } else if (data.message) {
-                // if notification was received in the background, the event is
-                // triggered when the user clicks on the notification
-                if (!additionalData.foreground) {
-                    var alert = recreateAlert(additionalData);
-                    this.triggerAlertClickEvent(address, alert);
+                    // wait for any database queries to finish
+                    return this.waitForSearchStart(250).then(() => {
+                        return this.waitForSearchEnd(5000);
+                    }).catch((err) => {
+                        // timeout
+                    });
+                } else if (notification.type === 'alert') {
+                    // if notification was received in the background, the event is
+                    // triggered when the user clicks on the notification
+                    if (!notification.alert.foreground) {
+                        this.triggerAlertClickEvent(notification.alert);
+                    }
                 }
             }
         }).finally(() => {
-            signalBackgroundProcessCompletion(additionalData.notId);
+            signalBackgroundProcessCompletion(payload.notId);
         });
     },
 
@@ -426,22 +423,25 @@ module.exports = React.createClass({
      * @param  {Object} data
      */
     handleWNSNotification: function(data) {
+        var notification;
         if (data.launchArgs) {
             // notification is clicked while app isn't running
-            var additionalData = JSON.parse(data.launchArgs);
-            var address = additionalData.address;
-            var alert = recreateAlert(additionalData);
-            this.triggerAlertClickEvent(address, alert);
+            var payload = parseJSON(data.launchArgs);
+            notification = NotificationUnpacker.unpack(payload);
         } else {
+            // payload is stored as raw data
             var eventArgs = data.additionalData.pushNotificationReceivedEventArgs;
             if (eventArgs.notificationType === 3) { // raw
                 var raw = eventArgs.rawNotification;
-                var additionalData = JSON.parse(raw.content);
-                var address = additionalData.address;
-                var changes = additionalData.changes;
-                if (changes) {
-                    this.triggerNotifyEvent(address, changes);
-                }
+                var payload = parseJSON(raw.content);
+                notification = NotificationUnpacker.unpack(payload);
+            }
+        }
+        if (notification) {
+            if (notification.type === 'change') {
+                this.triggerNotifyEvent(notification.changes);
+            } else if (notification.type === 'alert') {
+                this.triggerAlertClickEvent(notification.alert);
             }
         }
     },
@@ -454,10 +454,13 @@ module.exports = React.createClass({
     handleActivation: function(context) {
         var launchArgs = context.args;
         if (launchArgs) {
-            var additionalData = JSON.parse(launchArgs);
-            var address = additionalData.address;
-            var alert = recreateAlert(additionalData);
-            this.triggerAlertClickEvent(address, alert);
+            var payload = JSON.parse(launchArgs);
+            var notification = NotificationUnpacker.unpack(payload);
+            if (notification) {
+                if (notification.type === 'alert') {
+                    this.triggerAlertClickEvent(notification.alert);
+                }
+            }
         }
     },
 
@@ -522,17 +525,12 @@ function renderJSON(object, i) {
     return <pre key={i}>{JSON.stringify(object, undefined, 4)}</pre>;
 }
 
-function recreateAlert(additionalData) {
-    return {
-        title: '',
-        message: '',
-        type: additionalData.type,
-        schema: additionalData.schema,
-        notification_id: parseInt(additionalData.notification_id),
-        reaction_id: parseInt(additionalData.reaction_id),
-        story_id: parseInt(additionalData.story_id),
-        user_id: parseInt(additionalData.user_id),
-    };
+function parseJSON(text) {
+    try {
+        return JSON.parse(text);
+    } catch (err) {
+        return {};
+    }
 }
 
 function signalBackgroundProcessCompletion(notId) {

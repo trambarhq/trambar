@@ -82,6 +82,13 @@ Operation.prototype.finish = function(results) {
 };
 
 /**
+ * Mark the operation as canceled
+ */
+Operation.prototype.cancel = function() {
+    this.canceled = true;
+};
+
+/**
  * Return the number of seconds since the operation finished
  *
  * @return {Number}
