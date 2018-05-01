@@ -99,33 +99,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Use an interval function to monitor web-socket connection
-     */
-    componentDidMount: function() {
-        this.heartbeatInterval = setInterval(this.checkHeartbeat, 5 * 1000);
-    },
-
-    /**
-     * Remove interval function on unmount
-     */
-    componentWillUnmount: function() {
-        clearInterval(this.heartbeatInterval);
-    },
-
-    /**
-     * Close the socket if it's been quiet for too long
-     */
-    checkHeartbeat: function() {
-        if (this.state.socket) {
-            var now = new Date;
-            var elapsed = now - this.lastInteractionTime;
-            if (elapsed > 40 * 1000) {
-                this.state.socket.close();
-            }
-        }
-    },
-
-    /**
      * Update the connection to reflect new props
      *
      * @param  {Object} nextProps
@@ -187,7 +160,6 @@ module.exports = React.createClass({
         Async.do(() => {
             return this.createSocket(serverAddress).then((socket) => {
                 if (attempt === this.connectionAttempt) {
-                    this.lastInteractionTime = new Date;
                     socket.onmessage = (evt) => {
                         if (this.state.socket === socket) {
                             var object = parseJSON(evt.data);
@@ -208,7 +180,6 @@ module.exports = React.createClass({
                                 this.setState({ serverResponse: object });
                                 this.triggerConnectEvent(connection);
                             }
-                            this.lastInteractionTime = new Date;
 
                             var recentMessages = _.slice(this.state.recentMessages);
                             recentMessages.unshift(object);
