@@ -678,7 +678,10 @@ module.exports = React.createClass({
                     }
                 }
                 if (this.scrollBoxNode) {
-                    this.scrollBoxNode.focus();
+                    var focusedElement = document.activeElement;
+                    if (!focusedElement || focusedElement === document.body) {
+                        this.scrollBoxNode.focus();
+                    }
                 }
             });
         };

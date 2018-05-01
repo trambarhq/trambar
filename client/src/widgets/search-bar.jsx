@@ -128,6 +128,7 @@ var SearchBarSync = module.exports.Sync = React.createClass({
             placeholder: t('search-bar-keywords'),
             onChange: this.handleTextChange,
             onKeyDown: this.handleKeyDown,
+            onFocus: this.handleFocus,
         };
         return (
             <div className="text-input">
@@ -265,6 +266,17 @@ var SearchBarSync = module.exports.Sync = React.createClass({
         if (evt.keyCode === 13) {
             this.performSearch();
         }
+    },
+
+    /**
+     * Called when input field received focus
+     *
+     * @param  {Event} evt
+     */
+    handleFocus: function(evt) {
+        var target = evt.target;
+        target.selectionStart = 0;
+        target.selectionEnd = target.value.length;
     },
 
     /**
