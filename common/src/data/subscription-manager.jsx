@@ -55,7 +55,7 @@ module.exports = React.createClass({
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
-        if (!this.props.connection || !this.props.database) {
+        if (!this.props.connection || !this.props.database || !this.props.locale) {
             return;
         }
         var db = this.props.database.use({ schema: 'global', by: this });
