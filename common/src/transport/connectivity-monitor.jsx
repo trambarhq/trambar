@@ -85,6 +85,7 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
+        console.log(nextProps.inForeground);
         if (this.props.inForeground !== nextProps.inForeground) {
             if (/Android/.test(navigator.userAgent)) {
                 // on Android, we can lose connectivity after running in the
@@ -108,6 +109,16 @@ module.exports = React.createClass({
                             }
                         }
                     }, 30 * 1000);
+                }
+            }
+
+            if (nextProps.inForeground) {
+                // check connectivity on resume
+                var online = this.isOnline();
+                if (this.state.online !== online) {
+                    this.setState({ online }, () => {
+                        this.triggerChangeEvent(true, type);
+                    });
                 }
             }
         }
