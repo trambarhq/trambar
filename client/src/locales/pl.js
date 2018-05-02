@@ -463,6 +463,9 @@ module.exports = function(localeCode) {
             ];
         },
         'start-activation-manual': 'Ręcznie',
+        'start-activation-new-server': 'Nowy serwer',
+        'start-activation-others-servers': 'Dostępne serwery',
+        'start-activation-return': 'Powrót',
         'start-activation-scan-code': 'Zeskanuj kod QR',
         'start-error-access-denied': 'Wniosek o dostęp odrzucono',
         'start-error-account-disabled': 'Konto jest obecnie wyłączone',

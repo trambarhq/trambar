@@ -391,6 +391,9 @@ module.exports = function(localeCode) {
             ];
         },
         'start-activation-manual': 'Manuaalisesti',
+        'start-activation-new-server': 'Uusi palvelin',
+        'start-activation-others-servers': 'Käytettävissä olevat palvelimet',
+        'start-activation-return': 'Palata',
         'start-activation-scan-code': 'Skannaa QR-koodi',
         'start-error-access-denied': 'Hakuhakemus hylättiin',
         'start-error-account-disabled': 'Tili on tällä hetkellä poissa käytöstä',

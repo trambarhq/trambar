@@ -393,6 +393,9 @@ module.exports = function(localeCode) {
             ];
         },
         'start-activation-manual': 'Manual entry',
+        'start-activation-new-server': 'New server',
+        'start-activation-others-servers': 'Available servers',
+        'start-activation-return': 'Return',
         'start-activation-scan-code': 'Scan QR code',
         'start-error-access-denied': 'Request for access rejected',
         'start-error-account-disabled': 'Account is currently disabled',

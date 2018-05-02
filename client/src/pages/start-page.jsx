@@ -183,7 +183,10 @@ var StartPage = module.exports = Relaks.createClass({
                         return <StartPageSync {...props} />;
                     });
                 } else {
-                    return <StartPageSync {...props} />;
+                    return ProjectFinder.findProjectLinks(db).then((links) => {
+                        props.projectLinks = links;
+                        return <StartPageSync {...props} />;
+                    });
                 }
             }
         } else {
@@ -309,7 +312,9 @@ var StartPageSync = module.exports.Sync = React.createClass({
                          // we have gain access--redirect to news page if schema
                          // was supplied or to this page again
                          params = _.omit(params, 'activationCode');
-                         if (params.schema) {
+                         if (this.state.addingServer) {
+                             route.replace(require('pages/settings-page'), params);
+                         } else if (params.schema) {
                              route.replace(require('pages/news-page'), params);
                          } else {
                              route.replace(require('pages/start-page'), params);
@@ -335,6 +340,11 @@ var StartPageSync = module.exports.Sync = React.createClass({
                 receivedCorrectQRCode: false,
                 receivedInvalidQRCode: false,
             });
+        }
+        if (this.state.addingServer) {
+            if (this.props.route !== nextProps.route) {
+                this.setState({ addingServer: false });
+            }
         }
     },
 
@@ -397,41 +407,39 @@ var StartPageSync = module.exports.Sync = React.createClass({
         var className = 'start-page cordova';
         if (this.state.transition) {
             className += ` ${this.state.transition}`;
+            if (this.state.transition === 'transition-out-slow') {
+                // render a greeting during long transition
+                return (
+                    <div className={className}>
+                        {this.renderMobileGreeting()}
+                    </div>
+                );
+            } else {
+                return (
+                    <div className={className} />
+                );
+            }
         }
-        if (!this.props.canAccessServer) {
+        if (!this.props.canAccessServer || this.state.addingServer) {
             // render only instructions for gaining access
             return (
                 <div className={className}>
                     {this.renderTitle()}
                     {this.renderActivationControls()}
+                    {this.renderAvailableServers()}
                 </div>
             );
         } else {
-            if (this.state.transition) {
-                if (this.state.transition === 'transition-out-slow') {
-                    // render a greeting during long transition
-                    return (
-                        <div className={className}>
-                            {this.renderMobileGreeting()}
-                        </div>
-                    );
-                } else {
-                    return (
-                        <div className={className} />
-                    );
-                }
-            } else {
-                // render project list, followed by activation instructions
-                return (
-                    <div className={className}>
-                        {this.renderTitle()}
-                        {this.renderProjectButtons()}
-                        {this.renderEmptyMessage()}
-                        {this.renderActivationSelector()}
-                        {this.renderProjectDialog()}
-                    </div>
-                );
-            }
+            // render project list, followed by activation instructions
+            return (
+                <div className={className}>
+                    {this.renderTitle()}
+                    {this.renderProjectButtons()}
+                    {this.renderEmptyMessage()}
+                    {this.renderActivationSelector()}
+                    {this.renderProjectDialog()}
+                </div>
+            );
         }
     },
 
@@ -470,12 +478,17 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (process.env.PLATFORM !== 'cordova') return;
         var t = this.props.locale.translate;
         var title;
-        if (this.props.canAccessServer) {
+        if (this.state.addingServer) {
+            title = t('start-activation-new-server');
+        } else if (this.props.canAccessServer) {
             // show the name of the
             var p = this.props.locale.pick;
             var system = this.props.system;
             if (system) {
-                title = p(system.details.title) || t('start-system-title-default');
+                title = p(system.details.title);
+            }
+            if (!title) {
+                title = t('start-system-title-default');
             }
         } else {
             title = t('app-name');
@@ -600,24 +613,19 @@ var StartPageSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     renderActivationSelector: function() {
-        if (!this.state.addingServer) {
-            if (process.env.PLATFORM !== 'cordova') return;
-            var t = this.props.locale.translate;
-            var addProps = {
-                label: t('start-activation-add-server'),
-                onClick: this.handleAddClick,
-            };
-            return (
-                <div className="activation-buttons">
-                    <div className="right">
-                        <PushButton {...addProps} />
-                    </div>
+        if (process.env.PLATFORM !== 'cordova') return;
+        var t = this.props.locale.translate;
+        var addProps = {
+            label: t('start-activation-add-server'),
+            onClick: this.handleAddClick,
+        };
+        return (
+            <div className="activation-buttons">
+                <div className="right">
+                    <PushButton {...addProps} />
                 </div>
-            );
-        }  else {
-            // render the controls once the button is clicked
-            return this.renderActivationControls();
-        }
+            </div>
+        );
     },
 
     /**
@@ -844,6 +852,61 @@ var StartPageSync = module.exports.Sync = React.createClass({
                     </div>
                 </div>
             </a>
+        );
+    },
+
+    /**
+     * Render available servers if there are any
+     *
+     * @return {ReactElement|null}
+     */
+    renderAvailableServers: function() {
+        var t = this.props.locale.translate;
+        var servers = _.uniq(_.map(this.props.projectLinks, 'address')).sort();
+        if (_.isEmpty(servers)) {
+            return null;
+        }
+        var returnProps = {
+            label: t('start-activation-return'),
+            hidden: !this.props.canAccessServer,
+            onClick: this.handleReturnClick,
+        };
+        return (
+            <div className="other-servers">
+                <h2 className="title">{t('start-activation-others-servers')}</h2>
+                <ul>
+                    {_.map(servers, this.renderServerLink)}
+                </ul>
+                <div className="activation-buttons">
+                    <div className="right">
+                        <PushButton {...returnProps} />
+                    </div>
+                </div>
+            </div>
+        );
+    },
+
+    /**
+     * Render server link
+     *
+     * @param  {String} server
+     * @param  {Number} key
+     *
+     * @return {ReactElement}
+     */
+    renderServerLink: function(server, key) {
+        var route = this.props.route;
+        var params = {
+            address: server,
+            add: route.parameters.add
+        };
+        var url = route.find(require('pages/start-page'), params);
+        return (
+            <li key={key}>
+                <a href={url}>
+                    <i className="fa fa-home" /> {server}
+                </a>
+            </li>
         );
     },
 
@@ -1158,6 +1221,15 @@ var StartPageSync = module.exports.Sync = React.createClass({
      */
     handleAddClick: function(evt) {
         this.setState({ addingServer: true });
+    },
+
+    /**
+     * Called when user clicks return button
+     *
+     * @param  {Event} evt
+     */
+    handleReturnClick: function(evt) {
+        this.setState({ addingServer: false });
     },
 
     /**

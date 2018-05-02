@@ -390,6 +390,9 @@ module.exports = function(localeCode) {
             ];
         },
         'start-activation-manual': "Manualmente",
+        'start-activation-new-server': 'Nuovo server',
+        'start-activation-others-servers': 'Server disponibili',
+        'start-activation-return': 'Ritorno',
         'start-activation-scan-code': "Scansiona il codice QR",
         'start-error-access-denied': "Richiesta di accesso rifiutata",
         'start-error-account-disabled': "L'account è attualmente disabilitato",

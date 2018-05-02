@@ -223,7 +223,7 @@
 
                     &.description {
                         user-select: text;
-                        
+
                         .scrollable {
                             white-space: pre-line;
                         }
@@ -360,6 +360,13 @@
 
             .project-button {
                 background-color: #362a2a;
+
+                .no-touch & {
+                    &:hover {
+                        background-color: #fca326;
+                        color: #000000;
+                    }
+                }
             }
         }
 
@@ -396,5 +403,30 @@
 
     .empty-message {
         height: 3.5em;
+    }
+
+    .other-servers {
+        clear: both;
+        overflow: hidden;
+        margin-top: 2em;
+
+        UL {
+            list-style-type: none;
+            padding-left: 1em;
+            font-size: 1.2em;
+
+            A {
+                &:link, &:visited {
+                    text-decoration: none;
+                    color: #cccccc;
+                    
+                    .no-touch & {
+                        &:hover {
+                            color: #eeeeee;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -430,6 +430,9 @@ var traditionalPhrases = {
         return '請先使用網絡瀏覽器登錄電車吧服務器，然後掃描ＱＲ碼。';
     },
     'start-activation-manual': '鍵盤輸入',
+    'start-activation-new-server': '新服務器',
+    'start-activation-others-servers': '可用服務器',
+    'start-activation-return': '返回',
     'start-activation-scan-code': '掃描ＱＲ碼',
     'start-error-access-denied': '請求被拒絕',
     'start-error-account-disabled': '帳戶目前被禁用',
@@ -1112,6 +1115,9 @@ var simplifiedPhrases = {
         return '请先使用网络浏览器登录电车吧服务器，然后扫描QR码。';
     },
     'start-activation-manual': '键盘输入',
+    'start-activation-new-server': '新服务器',
+    'start-activation-others-servers': '可用服务器',
+    'start-activation-return': '返回',
     'start-activation-scan-code': '扫描ＱＲ码',
     'start-error-access-denied': '请求被拒绝',
     'start-error-account-disabled': '帐户目前被禁用',

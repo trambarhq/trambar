@@ -390,6 +390,9 @@ module.exports = function(localeCode) {
             ];
         },
         'start-activation-manual': 'Manuelt',
+        'start-activation-new-server': 'Ny server',
+        'start-activation-others-servers': 'Tilgjengelige servere',
+        'start-activation-return': 'Tilbake',
         'start-activation-scan-code': 'Skann QR kode',
         'start-error-access-denied': 'Forespørsel om tilgang avvist',
         'start-error-account-disabled': 'Kontoen er for øyeblikket deaktivert',

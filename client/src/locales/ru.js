@@ -449,6 +449,9 @@ module.exports = function(localeCode) {
             ];
         },
         'start-activation-manual': 'Ввод вручную',
+        'start-activation-new-server': 'Новый сервер',
+        'start-activation-others-servers': 'Доступные серверы',
+        'start-activation-return': 'Вернуть',
         'start-activation-scan-code': 'Сканировать QR-код',
         'start-error-access-denied': 'Запрос отклонен',
         'start-error-account-disabled': 'В настоящее время отключена учетная запись',
