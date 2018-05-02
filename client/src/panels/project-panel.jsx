@@ -454,7 +454,7 @@ module.exports = React.createClass({
      */
     handleCancelJoinClick: function(evt) {
         var userAfter = _.cloneDeep(this.props.currentUser);
-        _.remove(userAfter.requested_project_ids, this.props.currentProject.id);
+        _.pull(userAfter.requested_project_ids, this.props.currentProject.id);
         if (this.props.onChange) {
             this.props.onChange({
                 type: 'change',
