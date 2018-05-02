@@ -500,6 +500,7 @@ module.exports = React.createClass({
             lang: loc,
             onChange: this.handleTextChange,
             onBeforeInput: this.handleBeforeInput,
+            onKeyDown: this.handleKeyDown,
             onKeyUp: this.handleKeyUp,
             onPaste: this.handlePaste,
         };
@@ -1133,6 +1134,15 @@ module.exports = React.createClass({
 
     /**
      * Called when user press a key
+     *
+     * @param  {Event} evt
+     */
+    handleKeyDown: function(evt) {
+        this.lastInput = null;
+    },
+
+    /**
+     * Called when keystrokes generate text input
      *
      * @param  {Event} evt
      */
