@@ -21,25 +21,26 @@
             height: auto;
         }
 
-        .spinner {
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            margin: auto;
-
-            font-size: 8em;
-            width: 1.5em;
-            height: 1.2em;
-            text-align: center;
-            color: #000000;
-            opacity: 0.25;
-        }
-
         &.disabled {
             cursor: not-allowed;
         }
+    }
+
+    .spinner {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+        pointer-events: none;
+
+        font-size: 8em;
+        width: 1.5em;
+        height: 1.2em;
+        text-align: center;
+        color: #000000;
+        opacity: 0.25;
     }
 
     .placeholder {

@@ -130,6 +130,7 @@ module.exports = React.createClass({
         return (
             <div className="image-editor">
                 {this.renderImage()}
+                {this.renderSpinner()}
                 {this.props.children}
             </div>
         );
@@ -156,17 +157,10 @@ module.exports = React.createClass({
      */
     renderPreviewImage: function() {
         var className = 'preview';
-        var overlay;
         if (this.props.disabled) {
             className += ' disabled';
-        } else {
-            overlay = (
-                <div className="spinner">
-                    <i className="fa fa-refresh fa-spin fa-fw" />
-                </div>
-            );
         }
-        var imageProps = {            
+        var imageProps = {
             src: this.state.previewImageURL,
             width: this.props.previewWidth,
             height: this.props.previewHeight
@@ -174,7 +168,17 @@ module.exports = React.createClass({
         return (
             <div className={className}>
                 <img {...imageProps} />
-                {overlay}
+            </div>
+        );
+    },
+
+    renderSpinner: function() {
+        if (this.state.fullImageURL) {
+            return null;
+        }
+        return (
+            <div className="spinner">
+                <i className="fa fa-refresh fa-spin fa-fw" />
             </div>
         );
     },

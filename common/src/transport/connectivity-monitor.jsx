@@ -85,7 +85,6 @@ module.exports = React.createClass({
      * @param  {Object} nextProps
      */
     componentWillReceiveProps: function(nextProps) {
-        console.log(nextProps.inForeground);
         if (this.props.inForeground !== nextProps.inForeground) {
             if (/Android/.test(navigator.userAgent)) {
                 // on Android, we can lose connectivity after running in the
