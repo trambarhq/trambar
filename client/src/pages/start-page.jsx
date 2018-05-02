@@ -1248,20 +1248,7 @@ if (process.env.PLATFORM === 'cordova') {
      * @return {String}
      */
     var getDeviceType = function() {
-        var device = window.device;
-        if (device) {
-            switch (device.platform) {
-                case 'Android': return 'android';
-                case 'iOS': return 'ios';
-                case 'WinCE':
-                case 'Win32NT': return 'windows';
-                case 'Mac OS X': return 'osx';
-            }
-        }
-        if (process.env.NODE_ENV !== 'production') {
-            return 'android';
-        }
-        return 'unknown';
+        return cordova.platformId;
     }
 
     /**
@@ -1288,10 +1275,12 @@ if (process.env.PLATFORM === 'cordova') {
     var getDeviceDetails = function() {
         var device = window.device;
         if (device) {
-            return {
-                manufacturer: _.capitalize(device.manufacturer),
-                name: device.model,
-            };
+            var manufacturer = device.manufacturer;
+            var name = device.model;
+            if (manufacturer === 'MicrosoftMDG') {
+                manufacturer = 'MicrosoftMDG';
+            }
+            return { manufacturer, name };
         }
         if (process.env.NODE_ENV !== 'production') {
             return {
