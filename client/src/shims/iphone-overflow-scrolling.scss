@@ -8,7 +8,10 @@ body {
             // force scroll bar by making contents 1px larger to prevent
             // rendering webkit-overflow-scrolling bug when contents are
             // dynamically added
-            min-height: calc(100% + 1px);
+            //
+            // adding 4px just to be on the same side, as it was failing
+            // with 1px
+            min-height: calc(100% + 4px);
         }
     }
 }
