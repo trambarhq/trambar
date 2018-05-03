@@ -160,6 +160,7 @@ module.exports = React.createClass({
                     <OptionButton {...githubProps} />
                     <OptionButton {...linkedInProps} />
                     <OptionButton {...stackOverflowProps} />
+                    {this.renderPhoneDialog()}
                 </div>
             );
         } else {
@@ -192,10 +193,10 @@ module.exports = React.createClass({
     /**
      * Render dialog box showing telephone number
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderPhoneDialog: function() {
-        if (process.env.PLATFORM !== 'browser') return;
+        if (process.env.PLATFORM !== 'browser') return null;
 
         if (!this.state.renderingPhoneDialog) {
             return null;
