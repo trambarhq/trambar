@@ -590,8 +590,8 @@ function probeMediaFile(srcPath) {
                             info.height = videoStream.width;
                             break;
                         default:
-                            info.width = videoStream.height;
-                            info.height = videoStream.width;
+                            info.width = videoStream.width;
+                            info.height = videoStream.height;
                             break;
                     }
                     info.duration = videoStream.duration * 1000;
