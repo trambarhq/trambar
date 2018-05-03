@@ -487,13 +487,10 @@ module.exports = React.createClass({
                     }
                 }
             } else if (slot.unseen) {
-                if (slot.rendering) {
-                    // if we're rendering the item and it's ahead of the anchor
-                    // consider it seen
-                    if (index >= anchorSlotIndex) {
-                        slot.unseen = false;
-                        changed = true;
-                    }
+                // if it's ahead of the anchor consider it seen
+                if (index >= anchorSlotIndex) {
+                    slot.unseen = false;
+                    changed = true;
                 }
             }
         });
