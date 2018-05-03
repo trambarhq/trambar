@@ -94,25 +94,37 @@ module.exports = React.createClass({
         var mediaFile = mediaFiles[0];
         if (mediaFile) {
             MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
+                var file = new CordovaFile(mediaFile.fullPath, mediaFile.type, mediaFile.size);
+                var payload = this.props.payloads.add('video');
+                payload.attachFile(file);
                 return createThumbnail(mediaFile).then((thumbnailURL) => {
-                    var file = new CordovaFile(mediaFile.fullPath, mediaFile.type, mediaFile.size);
                     var posterFile = new CordovaFile(thumbnailURL);
-                    return posterFile.obtainMetadata().then(() => {
-                        var payload = this.props.payloads.add('video');
-                        payload.attachFile(file);
+                    return MediaLoader.getImageMetadata(posterFile).then((poster) => {
+                        // use the poster's width and height, as they're
+                        // corrected for camera orientation
                         payload.attachFile(posterFile, 'poster');
                         var res = {
                             type: 'video',
                             payload_token: payload.token,
                             format: MediaLoader.extractFileFormat(mediaFile.type),
-                            width: mediaFileData.width,
-                            height: mediaFileData.height,
+                            width: poster.width,
+                            height: poster.height,
                             filename: mediaFile.name,
                             duration: mediaFileData.duration * 1000,
                         };
                         this.triggerCaptureEvent(res);
                         return null;
                     });
+                }).catch((err) => {
+                    // can't generate thumbnail--let the server do it
+                    payload.attachStep('main', 'poster')
+                    return {
+                        type: 'video',
+                        payload_token: payload.token,
+                        format: MediaLoader.extractFileFormat(mediaFile.type),
+                        filename: mediaFile.name,
+                        duration: mediaFileData.duration * 1000,
+                    };
                 });
             }).catch((err) => {
                 this.triggerCancelEvent();

@@ -309,7 +309,7 @@ module.exports = React.createClass({
                             // running into cross-site restrictions is quite likely here
                             console.log(`Unable to load image: ${url}`);
                         });
-                    } else if (type === 'webiste') {
+                    } else if (type === 'website') {
                         var payload = this.props.payloads.add('website').attachURL(url, 'poster');
                         return {
                             type: 'website',

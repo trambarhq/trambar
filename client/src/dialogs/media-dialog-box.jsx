@@ -370,7 +370,7 @@ module.exports = React.createClass({
             var url;
             switch (res.type) {
                 case 'image': url = theme.getImageURL(res, { original: true }); break;
-                case 'video': url = theme.getVideoURL(res); break;
+                case 'video': url = theme.getVideoURL(res, { original: true }); break;
             }
             link.href = url;
             link.download = res.filename || true;   // only works when it's same origin

@@ -50,6 +50,8 @@ CordovaFile.prototype.getFile = function() {
         return new Promise((resolve, reject) => {
             fileEntry.file((file) => {
                 this.file = file;
+                this.size = file.size;
+                this.type = decodeFileType(file.type);
                 resolve(file);
             }, (err) => {
                 reject(new FileError(err));
@@ -83,10 +85,7 @@ CordovaFile.prototype.getArrayBuffer = function() {
  * @return {Promise}
  */
 CordovaFile.prototype.obtainMetadata = function() {
-    return this.getFile().then((file) => {
-        this.size = file.size;
-        this.type = decodeFileType(file.type);
-    });
+    return this.getFile().return();
 };
 
 function decodeFileType(type) {
