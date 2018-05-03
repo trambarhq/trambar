@@ -141,9 +141,8 @@ function handleDatabaseChanges(events) {
                                 if (listener.user.id === notification.target_user_id) {
                                     var user = _.find(users, { id: notification.user_id });
                                     if (user) {
-                                        var locale = listener.subscription.locale || process.env.LANG || 'en-US';
-                                        var lang = locale.substr(0, 2);
-                                        var alert = AlertComposer.format(system, schema, user, notification, lang);
+                                        var locale = listener.subscription.locale || 'en-us';
+                                        var alert = AlertComposer.format(system, schema, user, notification, locale);
                                         messages.push(new Message('alert', listener, { alert }, address));
                                     }
                                 }

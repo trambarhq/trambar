@@ -5,15 +5,15 @@ module.exports = {
     format,
 };
 
-function format(system, schema, user, notification, lang) {
-    var title = _.get(system, [ 'details', 'title', lang ]);
+function format(system, schema, user, notification, locale) {
+    var title = chooseLocalizedVersion(locale, system.details.title);
     if (!title) {
-        title = getLocalizedText('app-name', lang);
+        title = getLocalizedText('app-name', locale);
     }
     return {
         schema: schema,
         title: title,
-        message: getNotificationText(user, notification, lang),
+        message: getNotificationText(user, notification, locale),
         profile_image: getProfileImageURL(user),
         type: notification.type,
         notification_id: notification.id,
@@ -23,13 +23,13 @@ function format(system, schema, user, notification, lang) {
     };
 }
 
-function getNotificationText(user, notification, lang) {
+function getNotificationText(user, notification, locale) {
     var t = function() {
-        var args = _.concat(lang, arguments);
+        var args = _.concat(locale, arguments);
         return getLocalizedText.apply(null, args);
     };
     var n = function() {
-        var args = _.concat(lang, arguments);
+        var args = _.concat(locale, arguments);
         return getLocalizedName.apply(null, args);
     };
     var name = n(user);
@@ -73,24 +73,27 @@ function getNotificationText(user, notification, lang) {
     }
 }
 
-function getLocalizedName(lang, user) {
-    var name = new String(pick(user.details.name, lang));
-    name.gender = user.details.gender;
-    return name;
+function getLocalizedName(locale, user) {
+    var lang = getLanguageCode(locale);
+    var name = chooseLocalizedVersion(locale, user.details.name);
+    var strObject = new String(name);
+    strObject.gender = user.details.gender;
+    return strObject;
 }
 
 var phraseTables = {};
 
-function getLocalizedText(lang, phrase, ...args) {
-    var table = phraseTables[lang];
+function getLocalizedText(locale, phrase, ...args) {
+    var table = phraseTables[locale];
     if (!table) {
+        var lang = locale.substr(0, 2);
         var module;
         try {
             module = require(`locales/${lang}`);
         } catch(err) {
             module = require('locales/en');
         }
-        table = phraseTables[lang] = module(lang);
+        table = phraseTables[lang] = module(locale);
     }
     var f = table[phrase];
     if (f instanceof Function) {
@@ -100,9 +103,10 @@ function getLocalizedText(lang, phrase, ...args) {
     }
 }
 
-function pick(versions, lang) {
+function chooseLocalizedVersion(locale, versions) {
     var s;
     if (typeof(versions) === 'object') {
+        var lang = getLanguageCode(locale);
         s = versions[lang];
         if (!s) {
             s = _.first(versions);
@@ -111,6 +115,17 @@ function pick(versions, lang) {
         s = String(versions);
     }
     return s;
+}
+
+function getLanguageCode(locale) {
+    var lang;
+    if (typeof(locale) === 'string') {
+        lang = locale.substr(0, 2);
+    }
+    if (!lang) {
+        lang = 'en';
+    }
+    return lang;
 }
 
 /**
