@@ -24,16 +24,16 @@
     &:first-child {
         margin-left: 0;
     }
+}
+
+LABEL.push-button {
+    display: inline-block;
+    position: relative;
 
     INPUT[type="file"] {
         position: absolute;
         z-index: -50000;
         width: 1px;
         height: 1px;
-        top: -1000px;
     }
-}
-
-LABEL.push-button {
-    display: inline-block;
 }
