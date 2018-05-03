@@ -78,7 +78,6 @@ module.exports = React.createClass({
             this.setState({ subscription });
             if (subscriptionId) {
                 // update the subscription instead of creating a new one
-                subscription = _.clone(subscription);
                 subscription.id = subscriptionId;
             }
             return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
