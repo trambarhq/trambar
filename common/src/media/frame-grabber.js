@@ -30,23 +30,27 @@ function capture(video, options) {
             if (live) {
                 onSuccess(blob);
             } else {
-                // check compression ratio to see if image is mostly blank
-                var uncompressedSize = width * height * 3;
-                var compressedSize = blob.size;
-                var compressionRatio = compressedSize / uncompressedSize;
-                if (compressionRatio > 1 / 50) {
-                    onSuccess(blob);
-                } else {
-                    if (!biggest || biggest.size < blob.size) {
-                        biggest = blob;
-                    }
-                    if (attempts > 10) {
-                        onSuccess(biggest);
+                if (blob) {
+                    // check compression ratio to see if image is mostly blank
+                    var uncompressedSize = width * height * 3;
+                    var compressedSize = blob.size;
+                    var compressionRatio = compressedSize / uncompressedSize;
+                    if (compressionRatio > 1 / 50) {
+                        onSuccess(blob);
                     } else {
-                        // move the playhead by a second
-                        video.currentTime += 1000;
-                        attempts++;
+                        if (!biggest || biggest.size < blob.size) {
+                            biggest = blob;
+                        }
+                        if (attempts > 10) {
+                            onSuccess(biggest);
+                        } else {
+                            // move the playhead by a second
+                            video.currentTime += 1000;
+                            attempts++;
+                        }
                     }
+                } else {
+                    onFailure(new Error('Unable to obtain a frame'));
                 }
             }
         }
