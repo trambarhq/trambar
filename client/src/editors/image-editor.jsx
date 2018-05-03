@@ -88,33 +88,35 @@ module.exports = React.createClass({
         var fullImageURL = null;
         var previewImageURL = null;
         var fullImageRemoteURL = this.props.theme.getImageURL(res, { original: true });
-        if (isJSONEncoded(fullImageRemoteURL)) {
-            // a blob that hasn't been uploaded yet
-            var image = parseJSONEncodedURL(fullImageRemoteURL)
-            fullImageURL = image.url;
-        } else {
-            // the remote URL might point to a file we had uploaded
-            var blob = BlobManager.find(fullImageRemoteURL);
-            if (blob) {
-                fullImageURL = BlobManager.url(blob);
+        if (fullImageRemoteURL) {
+            if (isJSONEncoded(fullImageRemoteURL)) {
+                // a blob that hasn't been uploaded yet
+                var image = parseJSONEncodedURL(fullImageRemoteURL)
+                fullImageURL = image.url;
+            } else {
+                // the remote URL might point to a file we had uploaded
+                var blob = BlobManager.find(fullImageRemoteURL);
+                if (blob) {
+                    fullImageURL = BlobManager.url(blob);
+                }
             }
-        }
-        if (!fullImageURL) {
-            // we don't have a blob--show a preview image (clipped) while the
-            // full image is retrieved
-            previewImageURL = this.props.theme.getImageURL(res, {
-                width: this.props.previewWidth,
-                height: this.props.previewHeight
-            });
-
-            // load it, unless control is disabled
-            if (!disabled) {
-                BlobManager.fetch(fullImageRemoteURL).then((blob) => {
-                    this.setState({
-                        fullImageURL: BlobManager.url(blob),
-                        previewImageURL: null
-                    });
+            if (!fullImageURL) {
+                // we don't have a blob--show a preview image (clipped) while the
+                // full image is retrieved
+                previewImageURL = this.props.theme.getImageURL(res, {
+                    width: this.props.previewWidth,
+                    height: this.props.previewHeight
                 });
+
+                // load it, unless control is disabled
+                if (!disabled) {
+                    BlobManager.fetch(fullImageRemoteURL).then((blob) => {
+                        this.setState({
+                            fullImageURL: BlobManager.url(blob),
+                            previewImageURL: null
+                        });
+                    });
+                }
             }
         }
         if (this.state.fullImageURL !== fullImageURL || this.state.previewImageURL !== previewImageURL) {

@@ -51,6 +51,9 @@ function manage(blob) {
  * @return {Blob|CordovaFile|null}
  */
 function find(url) {
+    if (!url) {
+        return null;
+    }
     var entry = _.find(list, (entry) => {
         return _.includes(entry.urls, url);
     });
@@ -68,6 +71,9 @@ function find(url) {
  * @param  {String} url
  */
 function associate(target, url) {
+    if (!target || !url) {
+        return;
+    }
     var entry = _.find(list, { blob: target });
     if (!entry) {
         manage(target);
@@ -84,6 +90,9 @@ function associate(target, url) {
  * @return {Promise<Blob>}
  */
 function fetch(remoteURL) {
+    if (!remoteURL) {
+        throw Promise.reject(new Error('Invalid argument'));
+    }
     var blob = find(remoteURL);
     if (blob) {
         // we downloaded the file before (or we had uploaded it earlier)
