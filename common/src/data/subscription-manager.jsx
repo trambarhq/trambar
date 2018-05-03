@@ -31,7 +31,8 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            subscription: null
+            subscription: null,
+            serverAddress: null
         };
     },
 
@@ -60,6 +61,8 @@ module.exports = React.createClass({
         }
         var db = this.props.database.use({ schema: 'global', by: this });
         db.start().then((userId) => {
+            var existingSubscription = this.state.subscription;
+            var serverAddress = db.context.address;
             var subscription = {
                 user_id: userId,
                 schema: this.props.schema,
@@ -70,27 +73,26 @@ module.exports = React.createClass({
                 relay: this.props.connection.relay,
                 details: this.props.connection.details,
             };
-            if (_.isMatch(this.state.subscription, subscription)) {
-                // subscription is being created or has been created
-                return;
-            }
-            var subscriptionId = _.get(this.state.subscription, 'id');
-            this.setState({ subscription });
-            if (subscriptionId) {
-                // update the subscription instead of creating a new one
-                subscription.id = subscriptionId;
+            if (existingSubscription && this.state.serverAddress === serverAddress) {
+                if (_.isMatch(existingSubscription, subscription)) {
+                    // subscription is being created or has been created
+                    return;
+                } else {
+                    // update the subscription instead of creating a new one
+                    _.assign(existingSubscription, subscription);
+                    subscription = existingSubscription;
+                }
+            } else {
+                // replace the subscription, letting the old one expire on its own
+                this.setState({ subscription, serverAddress });
             }
             return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
                 this.setState({ subscription });
                 return null;
-            }).catch((err) => {
-                return Promise.delay(5000).then(() => {
-                    this.setState({ subscription: null });
-                });
             });
         }).catch((err) => {
             if (err.statusCode === 401) {
-                // not access to server
+                // no access to server
             } else {
                 throw err;
             }
