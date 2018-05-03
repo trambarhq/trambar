@@ -47,6 +47,8 @@ module.exports = function(localeCode) {
             }
         },
 
+        'app-component-close': 'Закрыть',
+
         'app-name': 'Трамбар',
 
         'audio-capture-accept': 'Принять',

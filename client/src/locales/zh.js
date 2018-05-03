@@ -69,6 +69,8 @@ var traditionalPhrases = {
         return `${num}個新故事`;
     },
 
+    'app-component-close': '關閉',
+
     'app-name': '電車吧',
 
     'audio-capture-accept': '接受',
@@ -753,6 +755,8 @@ var simplifiedPhrases = {
         var num = cardinalS(count);
         return `${num}个新故事`;
     },
+
+    'app-component-close': '关闭',
 
     'app-name': '电车吧',
 

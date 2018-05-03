@@ -47,6 +47,8 @@ module.exports = function(localeCode) {
             }
         },
 
+        'app-component-close': 'Zamknij',
+
         'app-name': 'Trambar',
 
         'audio-capture-accept': 'Przyjmij',

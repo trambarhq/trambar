@@ -75,6 +75,7 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var closeButtonProps = {
             label: t('project-description-close'),
+            emphasized: true,
             onClick: this.handleCloseClick,
         };
         return (

@@ -171,6 +171,7 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var closeButtonProps = {
             label: t('mobile-setup-close'),
+            emphasized: true,
             onClick: this.props.onClose,
         };
         return (

@@ -29,6 +29,8 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 ny historie` : `${count} nye historier`;
         },
 
+        'app-component-close': 'Lukk',
+
         'app-name': 'Trambar',
 
         'audio-capture-accept': 'Aksepter',

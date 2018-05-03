@@ -65,6 +65,7 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var closeButtonProps = {
             label: t('telephone-dialog-close'),
+            emphasized: true,
             onClick: this.props.onClose,
         };
         return (

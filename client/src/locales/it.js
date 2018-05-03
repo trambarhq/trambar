@@ -29,6 +29,8 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 nuova storia` : `${count} nuove storie`;
         },
 
+        'app-component-close': 'Chiudi',
+
         'app-name': "Trambar",
 
         'audio-capture-accept': "Accetta",

@@ -99,8 +99,10 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderButtons: function() {
+        var t = this.props.locale.translate;
         var closeButtonProps = {
-            label: 'OK',
+            label: t('app-component-close'),
+            emphasized: true,
             onClick: this.props.onClose,
         };
         return (

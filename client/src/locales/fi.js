@@ -29,6 +29,8 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 uusi tarina` : `${count} uutta tarinoita`;
         },
 
+        'app-component-close': 'Sulje',
+
         'app-name': 'Trambar',
 
         'audio-capture-accept': 'Hyväksy',
