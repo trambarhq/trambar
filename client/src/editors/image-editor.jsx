@@ -55,6 +55,7 @@ module.exports = React.createClass({
         });
         return {
             fullImageURL: null,
+            loadedImageURL: null,
             previewImageURL: null,
         };
     },
@@ -143,10 +144,12 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderImage: function() {
-        if (!this.state.fullImageURL) {
+        if (this.state.fullImageURL) {
+            return this.renderImageCropper();
+        } else if (this.state.previewImageURL) {
             return this.renderPreviewImage();
         } else {
-            return this.renderImageCropper();
+            return this.renderPlaceholder();
         }
     },
 
@@ -172,8 +175,17 @@ module.exports = React.createClass({
         );
     },
 
+    /**
+     * Render a spinner until full image is loaded
+     *
+     * @return {ReactElement|null}
+     */
     renderSpinner: function() {
-        if (this.state.fullImageURL) {
+        if (!this.state.fullImageURL && !this.state.previewImageURL) {
+            // rendering placeholder
+            return null;
+        } else if (this.state.fullImageURL === this.state.loadedImageURL) {
+            // image is loaded
             return null;
         }
         return (
@@ -198,6 +210,7 @@ module.exports = React.createClass({
             vector: (res.format === 'svg'),
             disabled: this.props.disabled,
             onChange: this.handleClipRectChange,
+            onLoad: this.handleFullImageLoad,
         };
         return <ImageCropper {...props} />;
     },
@@ -287,6 +300,16 @@ module.exports = React.createClass({
         var res = _.clone(this.props.resource);
         res.clip = evt.rect;
         return this.triggerChangeEvent(res);
+    },
+
+    /**
+     * Called when ImageView has loaded the full image
+     *
+     * @param  {Object} evt
+     */
+    handleFullImageLoad: function(evt) {
+        var url = evt.target.props.url;
+        this.setState({ loadedImageURL: url });
     },
 });
 
