@@ -202,6 +202,10 @@ module.exports = React.createClass({
     render: function() {
         return (
             <Diagnostics type="code-push">
+                <DiagnosticsSection label="Update check">
+                    <div>Last check: {this.state.lastSyncTime}</div>
+                    <div>Result: {this.state.lastSyncStatus}</div>
+                </DiagnosticsSection>
                 <CodePushPackageDiagnostics label="Current package" package={this.state.currentPackage} />
                 <CodePushPackageDiagnostics label="Pending package" package={this.state.pendingPackage} />
             </Diagnostics>
