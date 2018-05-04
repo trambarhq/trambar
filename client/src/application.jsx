@@ -433,7 +433,10 @@ module.exports = React.createClass({
 
             var CodePush = require('code-push');
             CodePush.sync().then((result) => {
-                this.setState({ codePushSyncResult: result });
+                this.setState({
+                    codePushSyncResult: result,
+                    codePushSyncTime: Moment().toISOString(),
+                });
             });
         }
         if (process.env.NODE_ENV !== 'production') {
@@ -924,6 +927,19 @@ module.exports = React.createClass({
     handleResume: function(evt) {
         if (process.env.PLATFORM !== 'cordova') return;
         this.setState({ inForeground: true });
+
+        var hoursAgo = Moment().subtract(4, 'hour').toISOString();
+        if (hoursAgo >= this.state.codePushSyncTime) {
+            if (this.state.codePushSyncResult !== 'UPDATE_INSTALLED') {
+                var CodePush = require('code-push');
+                CodePush.sync().then((result) => {
+                    this.setState({
+                        codePushSyncResult: result,
+                        codePushSyncTime: Moment().toISOString(),
+                    });
+                });
+            }
+        }
     },
 
     /**
