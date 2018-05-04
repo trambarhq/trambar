@@ -269,6 +269,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     <DiagnoisticsPanel type="sqlite-cache" title="SQLite Cache" />
                     <DiagnoisticsPanel type="remote-data-source" title="Remote Data Source" />
                     <DiagnoisticsPanel type="payload-manager" title="Payload Manager" />
+                    <DiagnoisticsPanel type="code-push" title="CodePush" />
                 </div>
             </div>
         );

@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 if (process.env.PLATFORM === 'cordova') {
-    var CodePush = require('code-push');
+    var CodePush = require('transport/code-push');
 }
 
 var Route = require('routing/route');
@@ -64,9 +64,12 @@ module.exports = React.createClass({
      */
     componentWillMount: function() {
         if (process.env.PLATFORM === 'cordova') {
-            CodePush.loadDeploymentName().then((selectedDeploymentName) => {
-                this.setState({ selectedDeploymentName });
-            });
+            var codePush = CodePush.instance;
+            if (codePush) {
+                codePush.loadDeploymentName().then((selectedDeploymentName) => {
+                    this.setState({ selectedDeploymentName });
+                });
+            }
         }
     },
 
@@ -105,7 +108,11 @@ module.exports = React.createClass({
      */
     renderDeploymentOptions: function() {
         if (process.env.PLATFORM !== 'cordova') return null;
-        var names = CodePush.getDeploymentNames();
+        var codePush = CodePush.instance;
+        var names;
+        if (codePush) {
+            names = codePush.getDeploymentNames();
+        }
         return _.map(names, this.renderDeploymentOption);
     },
 
@@ -206,7 +213,8 @@ module.exports = React.createClass({
         if (process.env.PLATFORM !== 'cordova') return null;
         var selectedDeploymentName = evt.currentTarget.id;
         this.setState({ selectedDeploymentName }, () => {
-            CodePush.saveDeploymentName(selectedDeploymentName);
+            var codePush = CodePush.instance;
+            codePush.saveDeploymentName(selectedDeploymentName);
         });
     },
 

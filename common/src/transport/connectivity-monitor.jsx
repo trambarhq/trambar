@@ -2,12 +2,16 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
 // widgets
 var Diagnostics = require('widgets/diagnostics');
 var DiagnosticsSection = require('widgets/diagnostics-section');
 
 module.exports = React.createClass({
     displayName: 'ConnectivityMonitor',
+    mixins: [ UpdateCheck ],
     propTypes: {
         inForeground: PropTypes.bool,
         onChange: PropTypes.func,

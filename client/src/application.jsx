@@ -21,6 +21,7 @@ var Theme = require('theme/theme');
 var SubscriptionManager = require('data/subscription-manager');
 var SessionManager = require('data/session-manager');
 var LinkManager = require('routing/link-manager');
+var CodePush = (process.env.PLATFORM === 'cordova') ? require('transport/code-push') : null;
 
 // pages
 var StartPage = require('pages/start-page');
@@ -54,6 +55,8 @@ if (IndexedDBCache.isAvailable()) {
 var WebsocketNotifier = (process.env.PLATFORM === 'browser') ? require('transport/websocket-notifier') : null;
 var PushNotifier = (process.env.PLATFORM === 'cordova') ? require('transport/push-notifier') : null;
 var Notifier = WebsocketNotifier || PushNotifier;
+
+var Keys = require('keys');
 
 var pageClasses = [
     StartPage,
@@ -386,6 +389,10 @@ module.exports = React.createClass({
             database: this.state.database,
             route: this.state.route,
         };
+        var codePushProps = {
+            inForeground: this.state.inForeground,
+            keys: Keys.codePushDeployment,
+        };
         return (
             <div>
                 <LocalCache {...cacheProps} />
@@ -399,6 +406,7 @@ module.exports = React.createClass({
                 <SessionManager {...sessionManagerProps} />
                 <LinkManager {...linkManagerProps} />
                 <ConnectivityMonitor {...connectivityMonitorProps} />
+                {CodePush ? <CodePush {...codePushProps} /> : null}
             </div>
         );
     },
@@ -430,14 +438,6 @@ module.exports = React.createClass({
         if (process.env.PLATFORM === 'cordova') {
             document.addEventListener('pause', this.handlePause, false);
             document.addEventListener('resume', this.handleResume, false);
-
-            var CodePush = require('code-push');
-            CodePush.sync().then((result) => {
-                this.setState({
-                    codePushSyncResult: result,
-                    codePushSyncTime: Moment().toISOString(),
-                });
-            });
         }
         if (process.env.NODE_ENV !== 'production') {
             window.addEventListener('keydown', this.handleDebugKeydown);
@@ -927,19 +927,6 @@ module.exports = React.createClass({
     handleResume: function(evt) {
         if (process.env.PLATFORM !== 'cordova') return;
         this.setState({ inForeground: true });
-
-        var hoursAgo = Moment().subtract(4, 'hour').toISOString();
-        if (hoursAgo >= this.state.codePushSyncTime) {
-            if (this.state.codePushSyncResult !== 'UPDATE_INSTALLED') {
-                var CodePush = require('code-push');
-                CodePush.sync().then((result) => {
-                    this.setState({
-                        codePushSyncResult: result,
-                        codePushSyncTime: Moment().toISOString(),
-                    });
-                });
-            }
-        }
     },
 
     /**
