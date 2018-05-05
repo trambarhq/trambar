@@ -94,10 +94,16 @@ module.exports = React.createClass({
         var mediaFile = mediaFiles[0];
         if (mediaFile) {
             MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
-                var file = new CordovaFile(mediaFile.fullPath, mediaFile.type, mediaFile.size);
+                var fullPath;
+                if (cordova.platformId === 'windows') {
+                    fullPath = mediaFile.localURL;
+                } else {
+                    fullPath = mediaFile.fullPath;
+                }
+                var file = new CordovaFile(fullPath, mediaFile.type, mediaFile.size);
                 var payload = this.props.payloads.add('video');
                 payload.attachFile(file);
-                return createThumbnail(mediaFile).then((thumbnailURL) => {
+                return createThumbnail(file).then((thumbnailURL) => {
                     var posterFile = new CordovaFile(thumbnailURL);
                     return MediaLoader.getImageMetadata(posterFile).then((poster) => {
                         // use the poster's width and height, as they're
@@ -143,20 +149,31 @@ module.exports = React.createClass({
     },
 });
 
-function createThumbnail(mediaFile) {
+function createThumbnail(file) {
     return new Promise((resolve, reject) => {
         var successCB = (path) => {
-            var url = 'file://' + encodeURI(path);
-            resolve(url);
+            if (cordova.platformId === 'windows') {
+                // need to use ms-appdata: URL instead of win32 path
+                var backSlashIndex = _.lastIndexOf(path, '\\');
+                if (backSlashIndex !== -1) {
+                    var filename = path.substr(backSlashIndex + 1);
+                    path = cordova.file.dataDirectory + filename;
+                }
+            }
+            resolve(path);
         };
         var errorCB = (err) => {
             reject(new Error(err));
         };
         var options = {
-            fileUri: mediaFile.fullPath,
-            outputFileName: mediaFile.name,
+            fileUri: file.fullPath,
+            outputFileName: file.name,
             quality: 70
         };
+        if (cordova.platformId === 'windows') {
+            // on Windows the plugin doesn't automatically add an extension
+            options.outputFileName += '.jpg';
+        }
         VideoEditor.createThumbnail(successCB, errorCB, options);
     });
 }

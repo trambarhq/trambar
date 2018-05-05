@@ -26,7 +26,8 @@ module.exports = React.createClass({
          * @return {Boolean}
          */
         isAvailable: function() {
-            return true;
+            // the plugin doesn't provide a UI on windows
+            return cordova.platformId !== 'windows';
         },
     },
 
@@ -94,7 +95,6 @@ module.exports = React.createClass({
         var mediaFile = mediaFiles[0];
         if (mediaFile) {
             MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
-                debugger;
                 var file = new CordovaFile(mediaFile.fullPath);
                 var [ type, format ] = _.split(mediaFile.type, '/');
                 var payload = this.props.payloads.add('audio');
