@@ -455,7 +455,7 @@ var sortStories = Memoize(function(stories, pendingStories) {
 var attachDrafts = Memoize(function(stories, drafts, currentUser) {
     // add new drafts (drafts includes published stories being edited)
     var newDrafts = _.filter(drafts, (story) => {
-        return !story.published_version_id;
+        return !story.published_version_id && !story.published;
     });
 
     // current user's own drafts are listed first
