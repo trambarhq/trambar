@@ -139,7 +139,6 @@ module.exports = _.create(Data, {
             if (object.user_id && object.user_id !== credentials.user.id) {
                 throw new HTTPError(403);
             }
-            console.log(object);
             if (!object.deleted && !object.id) {
                 // look for an existing record with the same UUID
                 if (object.user_id && object.uuid) {
@@ -152,11 +151,9 @@ module.exports = _.create(Data, {
                         if (row) {
                             object.id = row.id;
                         }
-                        return getDeviceDisplayName(object).then((displayName) => {
-                            if (displayName) {
-                                _.set(object, 'details.display_name', displayName);
-                            }
-                        });
+                        if (object.type && object.details) {
+                            return fixDeviceDetails(object);
+                        }
                     });
                 }
             }
@@ -187,16 +184,48 @@ module.exports = _.create(Data, {
 });
 
 /**
- * Return marketing name of a device
+ * Attach marketing name to device details if found and fix manufacturer name
  *
  * @param  {Device} device
  *
+ * @return {Promise}
+ */
+function fixDeviceDetails(device) {
+    var type = device.type;
+    var manufacturer = device.details.manufacturer;
+    var model = device.details.name;
+    return getDeviceDisplayName(type, manufacturer, model).then((displayName) => {
+        device.details.display_name = displayName;
+        device.details.manufacturer = getManufactureName(manufacturer);
+    });
+}
+
+/**
+ * Return proper name of manufacturer (if different from what the phone reports)
+ *
+ * @param  {String} manufacturer
+ *
+ * @return {String}
+ */
+function getManufactureName(manufacturer) {
+    switch (manufacturer) {
+        case 'MicrosoftMDG':
+            return 'Microsoft';
+        default:
+            return manufacturer;
+    }
+}
+
+/**
+ * Return marketing name of a device
+ *
+ * @param  {String} type
+ * @param  {String} manufacturer
+ * @param  {String} model
+ *
  * @return {Promise<String|undefined>}
  */
-function getDeviceDisplayName(device) {
-    var type = _.get(device, 'type');
-    var manufacturer = _.get(device, 'details.manufacturer');
-    var model = _.get(device, 'details.name');
+function getDeviceDisplayName(type, manufacturer, model) {
     if (type === 'ios') {
         return getAppleDeviceDisplayName(model);
     } else if (type === 'android') {
@@ -216,12 +245,8 @@ function getDeviceDisplayName(device) {
  * @return {Promise<String|undefined>}
  */
 function getAppleDeviceDisplayName(model) {
-    var name;
-    _.each(appleModelNumbers, (regExp, key) => {
-        if (regExp.test(model)) {
-            name = key;
-            return false;
-        }
+    var name = _.findKey(appleModelNumbers, (regExp) => {
+        return regExp.test(model);
     });
     return Promise.resolve(name);
 }
@@ -234,12 +259,8 @@ function getAppleDeviceDisplayName(model) {
  * @return {Promise<String|undefined>}
  */
 function getWindowsDeviceDisplayName(model) {
-    var name;
-    _.each(wpModelNumbers, (regExp, key) => {
-        if (regExp.test(model)) {
-            name = key;
-            return false;
-        }
+    var name = _.findKey(wpModelNumbers, (regExp) => {
+        return regExp.test(model);
     });
     return Promise.resolve(name);
 }
