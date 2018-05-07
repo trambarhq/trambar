@@ -170,7 +170,7 @@ var emojiStyle = {
 
 function renderEmojiImage(parentKey, code, string, characterKey) {
     var key = (parentKey !== undefined) ? `${parentKey}.${characterKey}` : characterKey;
-    var src = `//twemoji.maxcdn.com/2/72x72/${code}.png`;
+    var src = `https://twemoji.maxcdn.com/2/72x72/${code}.png`;
     return <img key={key} alt={string} draggable={false} src={src} style={emojiStyle} />;
 }
 

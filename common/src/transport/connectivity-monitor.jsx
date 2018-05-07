@@ -90,7 +90,7 @@ module.exports = React.createClass({
      */
     componentWillReceiveProps: function(nextProps) {
         if (this.props.inForeground !== nextProps.inForeground) {
-            if (/Android/.test(navigator.userAgent)) {
+            if (isActuallyAndroid()) {
                 // on Android, we can lose connectivity after running in the
                 // background for a while when the device is in battery saving
                 // mode
@@ -240,4 +240,14 @@ module.exports = React.createClass({
 
 function getNetworkAPI() {
     return navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+}
+
+function isActuallyAndroid() {
+    var ua = navigator.userAgent;
+    if (/Android/.test(ua)) {
+        if (!/Edge/.test(ua)) {
+            return true;
+        }
+    }
+    return false;
 }

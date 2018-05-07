@@ -530,7 +530,7 @@ module.exports = React.createClass({
             nextState.onscreenKeyboard = onscreenKeyboard;
 
             if (onscreenKeyboard) {
-                if (/Android/.test(navigator.userAgent)) {
+                if (isActuallyAndroid()) {
                     var activeElement = document.activeElement;
                     if (activeElement) {
                         setTimeout(() => {
@@ -614,13 +614,23 @@ function isWebpSupported() {
     return false;
 }
 
+function isActuallyAndroid() {
+    var ua = navigator.userAgent;
+    if (/Android/.test(ua)) {
+        if (!/Edge/.test(ua)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /**
  * Check if on-screen keyboard is open (Android only)
  *
  * @return {Boolean}
  */
 function detectOnscreenKeyboard() {
-    if (!/Android/.test(navigator.userAgent)) {
+    if (!isActuallyAndroid()) {
         return false;
     }
     var viewPortHeight = window.innerHeight;
