@@ -36,8 +36,8 @@ CordovaFile.prototype.getFileEntry = function() {
         resolveLocalFileSystemURL(this.fullPath, (fileEntry) => {
             this.fileEntry = fileEntry;
             resolve(fileEntry);
-        }, (err) => {
-            reject(new FileError(err));
+        }, (errNo) => {
+            reject(new FileError(errNo));
         });
     });
 };
@@ -53,8 +53,8 @@ CordovaFile.prototype.getFile = function() {
                 this.size = file.size;
                 this.type = decodeFileType(file.type);
                 resolve(file);
-            }, (err) => {
-                reject(new FileError(err));
+            }, (errNo) => {
+                reject(new FileError(errNo));
             });
         });
     });
@@ -86,6 +86,23 @@ CordovaFile.prototype.getArrayBuffer = function() {
  */
 CordovaFile.prototype.obtainMetadata = function() {
     return this.getFile().return();
+};
+
+/**
+ * Remove the file
+ *
+ * @return {Promise}
+ */
+CordovaFile.prototype.remove = function() {
+    return this.getFileEntry().then((fileEntry) => {
+        return new Promise((resolve, reject) => {
+            fileEntry.remove(() => {
+                resolve();
+            }, (errNo) => {
+                reject(new FileError(errNo));
+            });
+        });
+    })
 };
 
 function decodeFileType(type) {

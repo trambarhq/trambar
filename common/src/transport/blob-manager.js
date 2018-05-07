@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Moment = require('moment');
 var HTTPRequest = require('transport/http-request');
 if (process.env.PLATFORM === 'cordova') {
     var CordovaFile = require('transport/cordova-file');
@@ -109,34 +110,48 @@ function fetch(remoteURL) {
 /**
  * Release a blob
  *
- * @param  {Blob} blob
+ * @param  {Blob|CordovaFile} blob
  */
 function release(blob) {
     var index = _.findIndex(list, { blob });
     if (index !== -1) {
         var entry = list[index];
         list.splice(index, 1);
-        URL.revokeObjectURL(entry.localURL);
+        releaseEntry(entry);
     }
 }
+
+function releaseEntry(entry) {
+    if (entry.blob instanceof Blob) {
+        URL.revokeObjectURL(entry.localURL);
+    }
+    if (process.env.PLATFORM === 'cordova') {
+        if (entry.blob instanceof CordovaFile) {
+            entry.blob.remove();
+        }
+    }
+};
 
 /**
  * Clearing blob that have not been touched for some time
  */
 function clearBlobs() {
     var now = new Date;
-    _.remove(list, (entry) => {
+    var removed = _.remove(list, (entry) => {
         // see if we can retrieve the file from the server if need arises
         var hasRemote = _.some(entry.urls, (url) => {
             return /https?:/.test(url);
         });
         if (hasRemote) {
             var elapsed = now - entry.atime;
-            if (elapsed > 5 * 60 * 1000) {
+            if (elapsed > 3 * 60 * 1000) {
                 // after five minutes, the blob probably won't be used again
                 return true;
             }
         }
+    });
+    _.each(removed, (entry) => {
+        releaseEntry(entry);
     });
 }
 

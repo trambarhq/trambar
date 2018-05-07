@@ -415,21 +415,24 @@ function handleMediaUpload(req, res, type) {
                 if (!mediaPath) {
                     throw new HTTPError(400);
                 }
+                var url = getFileURL(mediaPath);
                 // create the transcoding job, checking if it exists already on
                 // the off-chance the same file is uploaded twice at the same time
                 var jobId = Path.basename(mediaPath);
-                if (!VideoManager.findTranscodingJob(jobId)) {
-                    return VideoManager.startTranscodingJob(mediaPath, type, jobId).then((job) => {
-                        if (req.body.generate_poster) {
-                            return VideoManager.requestPosterGeneration(job).then(() => {
-                                monitorTranscodingJob(schema, taskId, job);
-                            });
-                        } else {
-                            monitorTranscodingJob(schema, taskId, job);
-                        }
-                        return {};
-                    });
+                if (VideoManager.findTranscodingJob(jobId)) {
+                    return { url };
                 }
+                return VideoManager.startTranscodingJob(mediaPath, type, jobId).then((job) => {
+                    if (req.body.generate_poster) {
+                        return VideoManager.requestPosterGeneration(job).then(() => {
+                            monitorTranscodingJob(schema, taskId, job);
+                            return { url };
+                        });
+                    } else {
+                        monitorTranscodingJob(schema, taskId, job);
+                        return { url };
+                    }
+                });
             });
         }
     }).then((results) => {
