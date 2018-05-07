@@ -18,6 +18,7 @@ module.exports = {
 
 /**
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -27,15 +28,15 @@ module.exports = {
  *
  * @return {Promise<Story|null>}
  */
-function importEvent(db, server, repo, project, author, glEvent, glHookEvent) {
+function importEvent(db, system, server, repo, project, author, glEvent, glHookEvent) {
     switch (_.toLower(glEvent.note.noteable_type)) {
         case 'issue':
-            return importIssueNote(db, server, repo, project, author, glEvent);
+            return importIssueNote(db, system, server, repo, project, author, glEvent);
         case 'mergerequest':
         case 'merge_request':
-            return importMergeRequestNote(db, server, repo, project, author, glEvent);
+            return importMergeRequestNote(db, system, server, repo, project, author, glEvent);
         case 'commit':
-            return importCommitNote(db, server, repo, project, author, glEvent, glHookEvent);
+            return importCommitNote(db, system, server, repo, project, author, glEvent, glHookEvent);
         default:
             return Promise.resolve(null);
     }
@@ -45,6 +46,7 @@ function importEvent(db, server, repo, project, author, glEvent, glHookEvent) {
  * Add note to an issue story
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -53,7 +55,7 @@ function importEvent(db, server, repo, project, author, glEvent, glHookEvent) {
  *
  * @return {Promise<Story|null>}
  */
-function importIssueNote(db, server, repo, project, author, glEvent) {
+function importIssueNote(db, system, server, repo, project, author, glEvent) {
     var schema = project.name;
     var criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
@@ -76,6 +78,7 @@ function importIssueNote(db, server, repo, project, author, glEvent) {
  * Add note to an merge-request story
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -84,7 +87,7 @@ function importIssueNote(db, server, repo, project, author, glEvent) {
  *
  * @return {Promise<Story|null>}
  */
-function importMergeRequestNote(db, server, repo, project, author, glEvent) {
+function importMergeRequestNote(db, system, server, repo, project, author, glEvent) {
     var schema = project.name;
     var criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
@@ -95,7 +98,7 @@ function importMergeRequestNote(db, server, repo, project, author, glEvent) {
         if (!story) {
             throw new Error('Story not found');
         }
-        var reactioNew = copyEventProperties(null, server, story, author, glEvent);
+        var reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
         return Reaction.insertOne(db, schema, reactioNew).return(story);
     }).catch((err) => {
         console.error(err);
@@ -107,6 +110,7 @@ function importMergeRequestNote(db, server, repo, project, author, glEvent) {
  * Add note to a push story
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -115,7 +119,7 @@ function importMergeRequestNote(db, server, repo, project, author, glEvent) {
  *
  * @return {Promise<Story|null>}
  */
-function importCommitNote(db, server, repo, project, author, glEvent, glHookEvent) {
+function importCommitNote(db, system, server, repo, project, author, glEvent, glHookEvent) {
     // need to find the commit id first, since Gitlab doesn't include it
     // in the activity log entry
     return findCommitId(db, server, repo, glEvent, glHookEvent).then((commitId) => {
@@ -132,7 +136,7 @@ function importCommitNote(db, server, repo, project, author, glEvent, glHookEven
             if (!story) {
                 throw new Error('Story not found');
             }
-            var reactioNew = copyEventProperties(null, server, story, author, glEvent);
+            var reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
             return Reaction.insertOne(db, schema, reactioNew).return(story);
         });
     }).catch((err) => {
@@ -199,6 +203,7 @@ function findCommitId(db, server, repo, glEvent, glHookEvent) {
  * @return {Reaction}
  */
 function copyEventProperties(reaction, server, story, author, glNote) {
+    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
     var reactionAfter = _.cloneDeep(reaction) || {};
     ExternalDataUtils.inheritLink(reactionAfter, server, story, {
         note: { id: _.get(glNote, 'note.id') }

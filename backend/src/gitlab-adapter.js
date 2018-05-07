@@ -90,7 +90,9 @@ function start() {
             return RepoAssociation.find(db).each((a) => {
                 var { server, repo, project } = a;
                 return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
-                    return EventImporter.importEvents(db, server, repo, project);
+                    return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
+                        return EventImporter.importEvents(db, system, server, repo, project);
+                    });
                 });
             });
         }).then(() => {
@@ -245,7 +247,9 @@ function connectRepositories(db, project, repoIds) {
                 taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
                     // make sure the project-specific schema exists
                     return db.need(project.name).then(() => {
-                        return EventImporter.importEvents(db, server, repo, project);
+                        return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
+                            return EventImporter.importEvents(db, system, server, repo, project);
+                        });
                     });
                 });
                 // install hook on repo
@@ -574,13 +578,15 @@ function handleProjectHookCallback(req, res) {
     return RepoAssociation.findOne(db, criteria).then((a) => {
         var { server, repo, project } = a;
         return waitForExports().then(() => {
-            return EventImporter.importHookEvent(db, server, repo, project, glHookEvent).then((story) => {
-                if (story === false) {
-                    // hook event wasn't handled--scan activity log
-                    return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
-                        return EventImporter.importEvents(db, server, repo, project, glHookEvent);
-                    });
-                }
+            return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
+                return EventImporter.importHookEvent(db, system, server, repo, project, glHookEvent).then((story) => {
+                    if (story === false) {
+                        // hook event wasn't handled--scan activity log
+                        return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
+                            return EventImporter.importEvents(db, system, server, repo, project, glHookEvent);
+                        });
+                    }
+                });
             });
         });
     }).catch((err) => {

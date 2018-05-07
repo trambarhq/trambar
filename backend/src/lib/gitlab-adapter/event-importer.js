@@ -26,6 +26,7 @@ module.exports = {
  * Retrieve activity log entries from Gitlab server and turn them into stories
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -33,7 +34,7 @@ module.exports = {
  *
  * @return {Promise}
  */
-function importEvents(db, server, repo, project, glHookEvent) {
+function importEvents(db, system, server, repo, project, glHookEvent) {
     var options = {
         server_id: server.id,
         repo_id: repo.id,
@@ -68,7 +69,7 @@ function importEvents(db, server, repo, project, glHookEvent) {
                     return;
                 }
             }
-            return importEvent(db, server, repo, project, glEvent, glHookEvent).then((story) => {
+            return importEvent(db, system, server, repo, project, glEvent, glHookEvent).then((story) => {
                 if (story) {
                     added.push(glEvent.action_name);
                 }
@@ -99,6 +100,7 @@ function importEvents(db, server, repo, project, glHookEvent) {
  * Import an activity log entry, creating a story or updating an existing one
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -107,7 +109,7 @@ function importEvents(db, server, repo, project, glHookEvent) {
  *
  * @return {Promise<Story|null>}
  */
-function importEvent(db, server, repo, project, glEvent, glHookEvent) {
+function importEvent(db, system, server, repo, project, glEvent, glHookEvent) {
     var importer = getEventImporter(glEvent);
     if (!importer) {
         return Promise.resolve(null);
@@ -116,7 +118,7 @@ function importEvent(db, server, repo, project, glEvent, glHookEvent) {
         if (!author) {
             return null;
         }
-        return importer.importEvent(db, server, repo, project, author, glEvent, glHookEvent);
+        return importer.importEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
     });
 }
 
@@ -125,6 +127,7 @@ function importEvent(db, server, repo, project, glEvent, glHookEvent) {
  * if the event wouldn't have an entry in the activity log
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -132,7 +135,7 @@ function importEvent(db, server, repo, project, glEvent, glHookEvent) {
  *
  * @return {Promise<Story|false|null>}
  */
-function importHookEvent(db, server, repo, project, glHookEvent) {
+function importHookEvent(db, system, server, repo, project, glHookEvent) {
     var importer = getHookEventImporter(glHookEvent);
     if (!importer) {
         // not handled
@@ -142,7 +145,7 @@ function importHookEvent(db, server, repo, project, glHookEvent) {
         if (!author) {
             return null;
         }
-        return importer.importHookEvent(db, server, repo, project, author, glHookEvent);
+        return importer.importHookEvent(db, system, server, repo, project, author, glHookEvent);
     });
 }
 

@@ -15,6 +15,7 @@ module.exports = {
  * Import a wiki related event
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -23,7 +24,7 @@ module.exports = {
  *
  * @return {Promise<Story|null>}
  */
-function importHookEvent(db, server, repo, project, author, glHookEvent) {
+function importHookEvent(db, system, server, repo, project, author, glHookEvent) {
     var schema = project.name;
     // see if there's story about this page recently
     var criteria = {
@@ -46,7 +47,7 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
                 return null;
             }
         } else {
-            var storyNew = copyEventProperties(null, server, repo, author, glHookEvent);
+            var storyNew = copyEventProperties(null, system, server, repo, author, glHookEvent);
             return Story.saveOne(db, schema, storyNew);
         }
     });
@@ -56,6 +57,7 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
  * Copy properties of event into story
  *
  * @param  {Story|null} story
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {User} author
@@ -63,13 +65,19 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
  *
  * @return {Object|null}
 */
-function copyEventProperties(story, server, repo, author, glHookEvent) {
+function copyEventProperties(story, system, server, repo, author, glHookEvent) {
+    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+
     var storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         wiki: { id: glHookEvent.object_attributes.slug }
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: 'wiki',
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'language_codes', {
+        value: [ defLangCode ],
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {

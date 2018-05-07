@@ -30,6 +30,7 @@ module.exports = {
  * Import an activity log entry about someone joining or leaving the project
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -38,9 +39,9 @@ module.exports = {
  *
  * @return {Promise<Story>}
  */
-function importEvent(db, server, repo, project, author, glEvent) {
+function importEvent(db, system, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var storyNew = copyEventProperties(null, server, repo, author, glEvent);
+    var storyNew = copyEventProperties(null, system, server, repo, author, glEvent);
     return Story.insertOne(db, schema, storyNew).then((story) => {
         if (glEvent.action_name === 'joined') {
             if (!_.includes(project.user_ids, author.id)) {
@@ -59,6 +60,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * Copy properties of event
  *
  * @param  {Story|null} story
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {User} author
@@ -66,13 +68,19 @@ function importEvent(db, server, repo, project, author, glEvent) {
  *
  * @return {Story}
  */
-function copyEventProperties(story, server, repo, author, glEvent) {
+function copyEventProperties(story, system, server, repo, author, glEvent) {
+    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+
     var storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         user: { id: glEvent.author_id }
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: 'member',
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'language_codes', {
+        value: [ defLangCode ],
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {

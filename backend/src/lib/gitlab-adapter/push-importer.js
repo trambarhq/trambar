@@ -19,6 +19,7 @@ module.exports = {
  * Import an activity log entry about a push
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -27,7 +28,7 @@ module.exports = {
  *
  * @return {Promise<Story>}
  */
-function importEvent(db, server, repo, project, author, glEvent) {
+function importEvent(db, system, server, repo, project, author, glEvent) {
     var schema = project.name;
     var branch, headId, tailId, count;
     if (glEvent.push_data) {
@@ -52,7 +53,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
         // look for component descriptions
         return getDefaultLanguage(db).then((languageCode) => {
             return PushDecorator.retrieveDescriptions(server, repo, push, languageCode).then((components) => {
-                var storyNew = copyPushProperties(null, server, repo, author, push, components, glEvent);
+                var storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
                 return Story.insertOne(db, schema, storyNew);
             });
         });
@@ -63,6 +64,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * Copy properties of push
  *
  * @param  {Story|null} story
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {User} author
@@ -72,7 +74,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
  *
  * @return {Story}
  */
-function copyPushProperties(story, server, repo, author, push, components, glEvent) {
+function copyPushProperties(story, system, server, repo, author, push, components, glEvent) {
     var storyType;
     if (push.forkId) {
         storyType = 'branch';
@@ -81,6 +83,7 @@ function copyPushProperties(story, server, repo, author, push, components, glEve
     } else {
         storyType = 'push';
     }
+    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
 
     var storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
@@ -88,6 +91,10 @@ function copyPushProperties(story, server, repo, author, push, components, glEve
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: storyType,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'language_codes', {
+        value: [ defLangCode ],
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {

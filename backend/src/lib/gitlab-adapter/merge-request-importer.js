@@ -20,6 +20,7 @@ module.exports = {
  * Import an activity log entry about an merge request
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -28,7 +29,7 @@ module.exports = {
  *
  * @return {Promise<Story>}
  */
-function importEvent(db, server, repo, project, author, glEvent) {
+function importEvent(db, system, server, repo, project, author, glEvent) {
     var schema = project.name;
     var repoLink = ExternalDataUtils.findLink(repo, server);
     return fetchMergeRequest(server, repoLink.project.id, glEvent.target_id).then((glMergeRequest) => {
@@ -40,7 +41,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
             return AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest).then((assignments) => {
-                var storyAfter = copyMergeRequestProperties(story, server, repo, author, assignments, glMergeRequest);
+                var storyAfter = copyMergeRequestProperties(story, system, server, repo, author, assignments, glMergeRequest);
                 if (storyAfter === story) {
                     return story;
                 }
@@ -58,6 +59,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * Handle a Gitlab hook event concerning an merge request
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -66,7 +68,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
  *
  * @return {Promise<Story|false>}
  */
-function importHookEvent(db, server, repo, project, author, glHookEvent) {
+function importHookEvent(db, system, server, repo, project, author, glHookEvent) {
     if (glHookEvent.object_attributes.action === 'update') {
         // construct a glMergeRequest object from data in hook event
         var repoLink = ExternalDataUtils.findLink(repo, server);
@@ -90,7 +92,7 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
                 throw new Error('Story not found')
             }
             return AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest).then((assignments) => {
-                var storyAfter = copyMergeRequestProperties(story, server, repo, author, assignments, glMergeRequest);
+                var storyAfter = copyMergeRequestProperties(story, system, server, repo, author, assignments, glMergeRequest);
                 if (storyAfter === story) {
                     return story;
                 }
@@ -117,6 +119,7 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
  *   iid - is uniq only in scope of single project
  *
  * @param  {Story|null} story
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {User} author
@@ -125,12 +128,13 @@ function importHookEvent(db, server, repo, project, author, glHookEvent) {
  *
  * @return {Story}
  */
-function copyMergeRequestProperties(story, server, repo, author, assignments, glMergeRequest) {
+function copyMergeRequestProperties(story, system, server, repo, author, assignments, glMergeRequest) {
     var descriptionTags = TagScanner.findTags(glMergeRequest.description);
     var labelTags = _.map(glMergeRequest.labels, (label) => {
         return `#${_.replace(label, /\s+/g, '-')}`;
     });
     var tags = _.union(descriptionTags, labelTags);
+    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
 
     var authorIds = [ author.id ];
     var assigneeIds = [];
@@ -155,6 +159,10 @@ function copyMergeRequestProperties(story, server, repo, author, assignments, gl
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'tags', {
         value: tags,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'language_codes', {
+        value: [ defLangCode ],
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {

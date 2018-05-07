@@ -17,6 +17,7 @@ module.exports = {
  * Import an activity log entry about an issue
  *
  * @param  {Database} db
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Project} project
@@ -25,12 +26,12 @@ module.exports = {
  *
  * @return {Promise<Story>}
  */
-function importEvent(db, server, repo, project, author, glEvent) {
+function importEvent(db, system, server, repo, project, author, glEvent) {
     var schema = project.name;
     var repoLink = ExternalDataUtils.findLink(repo, server);
     return fetchMilestone(server, repoLink.project.id, glEvent.target_id).then((glMilestone) => {
         // the story is linked to both the issue and the repo
-        var storyNew = copyMilestoneProperties(null, server, repo, author, glMilestone);
+        var storyNew = copyMilestoneProperties(null, system, server, repo, author, glMilestone);
         return Story.insertOne(db, schema, storyNew);
     });
 }
@@ -39,6 +40,7 @@ function importEvent(db, server, repo, project, author, glEvent) {
  * Copy properties of milestone
  *
  * @param  {Story|null} story
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {User} author
@@ -46,8 +48,9 @@ function importEvent(db, server, repo, project, author, glEvent) {
  *
  * @return {Story}
  */
-function copyMilestoneProperties(story, server, repo, author, glMilestone) {
+function copyMilestoneProperties(story, system, server, repo, author, glMilestone) {
     var descriptionTags = TagScanner.findTags(glMilestone.description);
+    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
 
     var storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
@@ -59,6 +62,10 @@ function copyMilestoneProperties(story, server, repo, author, glMilestone) {
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'tags', {
         value: descriptionTags,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(storyAfter, server, 'language_codes', {
+        value: [ defLangCode ],
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
