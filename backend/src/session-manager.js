@@ -408,7 +408,7 @@ function handleLegalDocumentRequest(req, res) {
         return System.findOne(db, 'global', { deleted: false }, 'details').then((system) => {
             var name = req.params.name;
             var path = `${__dirname}/templates/${name}.ejs`;
-            var company = _.get(system, 'details.company_name', 'Company');
+            var company = _.get(system, 'details.company_name', 'Our company');
             FS.readFileAsync(path, 'utf-8').then((text) => {
                 var fn = _.template(text);
                 var html = fn({ company });

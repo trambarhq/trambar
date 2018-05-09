@@ -1,5 +1,7 @@
 **Site name** - The name of the web site appears in the *Start* page.
 
+**Company name** - The name of your company. It appears in the terms and conditions.
+
 **Description** - The site description appears in the *Start* page. If it is
 long, a scroll bar will appear.
 

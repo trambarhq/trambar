@@ -474,6 +474,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderSiteURL()}
                 {this.renderOAuthCallbackURL()}
                 {this.renderPrivacyPolicyURL()}
+                {this.renderTermsAndConditionsURL()}
                 {this.renderGitlabURLInput()}
                 {this.renderOAuthClientIdInput()}
                 {this.renderOAuthClientSecretInput()}
@@ -830,9 +831,9 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Render read-only input for OAuth callback URL
+     * Render read-only input for generic privacy policy URL
      *
-     * @return {[type]}
+     * @return {ReactElement|null}
      */
     renderPrivacyPolicyURL: function() {
         var t = this.props.locale.translate;
@@ -858,6 +859,40 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <TextField {...props}>
                 {t('server-summary-privacy-policy-url')}
+                <InputError type="warning">{warning}</InputError>
+            </TextField>
+        );
+    },
+
+    /**
+     * Render read-only input for terms and conditions URL
+     *
+     * @return {ReactElement|null}
+     */
+    renderTermsAndConditionsURL: function() {
+        var t = this.props.locale.translate;
+        var serverType = this.getServerProperty('type');
+        var needed = [ 'facebook', 'google', 'windows' ];
+        if (!_.includes(needed, serverType)) {
+            return null;
+        }
+        var warning;
+        var address = _.get(this.props.system, 'settings.address');
+        var warning;
+        if (!address) {
+            warning = t('server-summary-system-address-missing');
+            address = window.location.origin;
+        }
+        var url = `${address}/srv/session/terms/`;
+        var props = {
+            id: 'oauth_terms',
+            value: url,
+            locale: this.props.locale,
+            readOnly: true,
+        };
+        return (
+            <TextField {...props}>
+                {t('server-summary-terms-and-conditions-url')}
                 <InputError type="warning">{warning}</InputError>
             </TextField>
         );

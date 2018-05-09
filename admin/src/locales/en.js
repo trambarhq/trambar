@@ -337,6 +337,7 @@ module.exports = function(localeCode) {
         'server-summary-roles': 'Role assignment',
         'server-summary-save': 'Save server',
         'server-summary-system-address-missing': 'System address has not been set',
+        'server-summary-terms-and-conditions-url': 'Terms and conditions URL',
         'server-summary-test-oauth': 'Test OAuth integration',
         'server-summary-title': 'Name',
         'server-summary-type': 'Server type',

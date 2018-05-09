@@ -33,7 +33,11 @@ copy and paste this URL into the box under *Authorized redirect URIs*.
 Note: Google will not accept a non-public URL.
 
 **Privacy policy URL** - Google requires a privacy policy URL. You may
-link to your company's own policy page or use this boilerplate. It is entered
+link to your company's own page or use this boilerplate. It is entered
+in *OAuth consent screen*.
+
+**Terms and condition URL** - Google requires a terms and conditions URL. You may
+link to your company's own page or use this boilerplate. It is entered
 in *OAuth consent screen*.
 
 **Client ID** - Copy the client ID from Google Developer Console.

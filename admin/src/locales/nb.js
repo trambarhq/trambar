@@ -333,6 +333,7 @@ module.exports = function(localeCode) {
         'server-summary-roles': 'Rolleoppgave',
         'server-summary-save': 'Lagre serveren',
         'server-summary-system-address-missing': 'Systemadressen er ikke angitt',
+        'server-summary-terms-and-conditions-url': 'Vilkår og betingelser URL',
         'server-summary-test-oauth': 'Test OAuth-integrasjon',
         'server-summary-title': 'Navn',
         'server-summary-type': 'Server type',

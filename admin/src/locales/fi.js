@@ -333,6 +333,7 @@ module.exports = function(localeCode) {
         'server-summary-roles': 'Roolin osoittaminen',
         'server-summary-save': 'Tallenna palvelin',
         'server-summary-system-address-missing': 'Järjestelmän osoite ei ole asetettu',
+        'server-summary-terms-and-conditions-url': 'Käyttöehdot URL',
         'server-summary-test-oauth': 'Testa OAuth-integraatio',
         'server-summary-title': 'Nimi',
         'server-summary-type': 'Palvelintyyppi',

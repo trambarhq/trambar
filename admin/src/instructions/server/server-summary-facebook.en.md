@@ -27,7 +27,11 @@ the app. Select *WWW* as the platform. Copy this URL into the box under
 URIs*.
 
 **Privacy policy URL** - Facebook requires a privacy policy URL. You may
-link to your company's own policy page or use this boilerplate. It is entered
+link to your company's own page or use this boilerplate. It is entered
+in *Settings* > *Basic*.
+
+**Terms and conditions URL** - Facebook requires a terms and conditions URL.
+You may link to your company's own page or use this boilerplate. It is entered
 in *Settings* > *Basic*.
 
 **App key** - Copy the app key from Facebook App Dashboard. It can be found in

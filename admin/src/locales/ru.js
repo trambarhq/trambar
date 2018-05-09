@@ -478,6 +478,7 @@ module.exports = function(localeCode) {
         'server-summary-roles': 'Назначение ролей',
         'server-summary-save': 'Сохранить сервер',
         'server-summary-system-address-missing': 'Адрес системы не был установлен',
+        'server-summary-terms-and-conditions-url': 'Условия использования URL',
         'server-summary-test-oauth': 'Протестировать интеграцию OAuth',
         'server-summary-title': 'Название',
         'server-summary-type': 'Тип сервера',
