@@ -500,6 +500,7 @@ module.exports = function(localeCode) {
 
         'settings-background-image': 'Изображение на заднем плане',
         'settings-cancel': 'Отмена',
+        'settings-company-name': 'Название компании',
         'settings-edit': 'Редактировать настройки',
         'settings-input-languages': 'Языки ввода',
         'settings-push-relay': 'Реле сообщений push',

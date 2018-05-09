@@ -355,6 +355,7 @@ module.exports = function(localeCode) {
 
         'settings-background-image': "Immagine di sfondo",
         'settings-cancel': "Annulla",
+        'settings-company-name': "Nome della ditta",
         'settings-edit': "Modifica settings",
         'settings-input-languages': "Lingue di input",
         'settings-push-relay': "Relè di notifica push",

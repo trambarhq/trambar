@@ -11,7 +11,6 @@ var Theme = require('theme/theme');
 var Payloads = require('transport/payloads');
 
 // widgets
-// widgets
 var PushButton = require('widgets/push-button');
 var InstructionBlock = require('widgets/instruction-block');
 var TextField = require('widgets/text-field');
@@ -279,6 +278,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         return (
             <div className="form">
                 {this.renderTitleInput()}
+                {this.renderCompanyNameInput()}
                 {this.renderDescriptionInput()}
                 {this.renderSiteAddressInput()}
                 {this.renderPushRelayInput()}
@@ -307,6 +307,27 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             <MultilingualTextField {...props}>
                 {t('settings-site-title')}
             </MultilingualTextField>
+        );
+    },
+
+    /**
+     * Render company name input
+     *
+     * @return {ReactElement}
+     */
+    renderCompanyNameInput: function() {
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'company_name',
+            value: this.getSystemProperty('details.company_name'),
+            locale: this.props.locale,
+            onChange: this.handleCompanyNameChange,
+            readOnly: !this.isEditing(),
+        };
+        return (
+            <TextField {...props}>
+                {t('settings-company-name')}
+            </TextField>
         );
     },
 
@@ -508,6 +529,15 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     handleTitleChange: function(evt) {
         this.setSystemProperty(`details.title`, evt.target.value);
+    },
+
+    /**
+     * Called when user changes the title
+     *
+     * @param  {Event} evt
+     */
+    handleCompanyNameChange: function(evt) {
+        this.setSystemProperty(`details.company_name`, evt.target.value);
     },
 
     /**

@@ -51,8 +51,8 @@ function start() {
         .post(handleSessionStart)
         .get(handleSessionRetrieval)
         .delete(handleSessionTermination);
-    app.route('/srv/session/privacy/?')
-        .get(handlePrivacyRequest);
+    app.route('/srv/session/:name(terms|privacy)/?')
+        .get(handleLegalDocumentRequest);
     app.route('/srv/session/htpasswd/?')
         .post(handleHTPasswdRequest);
     app.route('/srv/session/:provider/:callback?/?')
@@ -398,17 +398,23 @@ function handleOAuthActivationRequest(req, res, done) {
 }
 
 /**
- * Handle privacy policy
+ * Handle requests for legal documents
  *
  * @param  {Request}   req
  * @param  {Response}  res
  */
-function handlePrivacyRequest(req, res) {
-    var path = `${__dirname}/templates/privacy.ejs`;
-    FS.readFileAsync(path, 'utf-8').then((text) => {
-        var fn = _.template(text);
-        var html = fn({});
-        res.type('html').send(html);
+function handleLegalDocumentRequest(req, res) {
+    return Database.open().then((db) => {
+        return System.findOne(db, 'global', { deleted: false }, 'details').then((system) => {
+            var name = req.params.name;
+            var path = `${__dirname}/templates/${name}.ejs`;
+            var company = _.get(system, 'details.company_name', 'Company');
+            FS.readFileAsync(path, 'utf-8').then((text) => {
+                var fn = _.template(text);
+                var html = fn({ company });
+                res.type('html').send(html);
+            });
+        });
     });
 }
 

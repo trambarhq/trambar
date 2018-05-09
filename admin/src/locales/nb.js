@@ -355,6 +355,7 @@ module.exports = function(localeCode) {
 
         'settings-background-image': 'Bakgrunnsbilde',
         'settings-cancel': 'Avbryt',
+        'settings-company-name': 'Selskapsnavn',
         'settings-edit': 'Rediger innstillinger',
         'settings-input-languages': 'Inndataspråk',
         'settings-push-relay': 'Push notification relé',

@@ -359,6 +359,7 @@ module.exports = function(localeCode) {
 
         'settings-background-image': 'Background image',
         'settings-cancel': 'Cancel',
+        'settings-company-name': 'Company name',
         'settings-edit': 'Edit settings',
         'settings-input-languages': 'Input languages',
         'settings-push-relay': 'Push relay',

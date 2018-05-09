@@ -355,6 +355,7 @@ module.exports = function(localeCode) {
 
         'settings-background-image': 'Taustakuva',
         'settings-cancel': 'Peruutta',
+        'settings-company-name': 'Yrityksen nimi',
         'settings-edit': 'Muokkaa asetuksia',
         'settings-input-languages': 'Tulkkauskielet',
         'settings-push-relay': 'Push-viestirele',

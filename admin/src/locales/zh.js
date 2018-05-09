@@ -386,6 +386,7 @@ var traditionalPhrases = {
 
     'settings-background-image': '背景圖',
     'settings-cancel': '取消',
+    'settings-company-name': '公司名',
     'settings-edit': '編輯設置',
     'settings-input-languages': '輸入語言',
     'settings-push-relay': 'Push通知中繼網址',
@@ -955,6 +956,7 @@ var simplifiedPhrases = {
 
     'settings-background-image': '背景图',
     'settings-cancel': '取消',
+    'settings-company-name': '公司名',
     'settings-edit': '编辑设置',
     'settings-input-languages': '输入语言',
     'settings-push-relay': 'Push通知中继网址',
