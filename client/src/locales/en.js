@@ -135,6 +135,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Server address',
         'mobile-setup-close': 'Close',
         'mobile-setup-code': 'Authorization code',
+        'mobile-setup-project': 'Project',
 
         'news-no-stories-by-role': 'No stories by someone with that role',
         'news-no-stories-found': 'No matching stories found',

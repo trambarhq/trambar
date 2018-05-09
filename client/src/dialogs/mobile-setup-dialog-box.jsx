@@ -157,6 +157,8 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
                     <div className="value">{address}</div>
                     <div className="label">{t('mobile-setup-code')}</div>
                     <div className="value">{insertSpacers(activationCode)}</div>
+                    <div className="label">{t('mobile-setup-project')}</div>
+                    <div className="value">{schema}</div>
                 </div>
             </div>
         );

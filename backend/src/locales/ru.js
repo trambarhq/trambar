@@ -47,6 +47,8 @@ module.exports = function(localeCode) {
             }
         },
 
+        'app-component-close': 'Закрыть',
+
         'app-name': 'Трамбар',
 
         'audio-capture-accept': 'Принять',
@@ -106,6 +108,12 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Отмена',
         'confirmation-confirm': 'Подтвердить',
 
+        'development-code-push-$deployment': (deployment) => {
+            return `Получите обновления кода с "${deployment}"`;
+        },
+        'development-show-diagnostics': 'Показать диагностику',
+        'development-show-panel': 'Показать эту панель',
+
         'device-selector-camera-$number': (number) => {
             return `Камера ${number}`;
         },
@@ -114,9 +122,6 @@ module.exports = function(localeCode) {
         'device-selector-mic-$number': (number) => {
             return `Микрофон ${number}`;
         },
-
-        'diagnostics-show': 'Показать диагностику',
-        'diagnostics-show-panel': 'Показать эту панель',
 
         'empty-currently-offline': 'Вы не подключены к Интернету',
 
@@ -158,6 +163,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Адрес сервера',
         'mobile-setup-close': 'Закрыть',
         'mobile-setup-code': 'Код авторизации',
+        'mobile-setup-project': 'Проект',
 
         'news-no-stories-by-role': 'Никаких рассказов кем-то с этой ролью',
         'news-no-stories-found': 'Не найдено совпадающих рассказов',
@@ -265,7 +271,7 @@ module.exports = function(localeCode) {
         'notification-option-join-request': 'Когда кто-то хочет присоединиться к проекту',
         'notification-option-like': 'Когда кому-то нравится ваш рассказ',
         'notification-option-mention': 'Когда кто-то упоминает вас в истории или комментарии',
-        'notification-option-merge': 'Когда кто-то сливает код в ветку «${branch}»',
+        'notification-option-merge': 'Когда кто-то сливает код в ветку «master»',
         'notification-option-note': 'Когда кто-то публикует заметку о коммите или отчёте об ошибке',
         'notification-option-push': 'Когда кто-то отправляет код в репозиторий git',
         'notification-option-survey': 'Когда кто-то публикует опрос',
@@ -403,9 +409,9 @@ module.exports = function(localeCode) {
         'server-type-google': 'Google',
         'server-type-windows': 'Windows Live',
 
+        'settings-development': 'Параметры разработчика',
         'settings-device': 'Мобильное устройство',
         'settings-devices': 'Мобильные устройства',
-        'settings-diagnostics': 'Диагностика',
         'settings-language': 'Язык',
         'settings-mobile-alert': 'Мобильное предупреждение',
         'settings-notification': 'Уведомление',
@@ -446,6 +452,9 @@ module.exports = function(localeCode) {
             ];
         },
         'start-activation-manual': 'Ввод вручную',
+        'start-activation-new-server': 'Новый сервер',
+        'start-activation-others-servers': 'Доступные серверы',
+        'start-activation-return': 'Вернуть',
         'start-activation-scan-code': 'Сканировать QR-код',
         'start-error-access-denied': 'Запрос отклонен',
         'start-error-account-disabled': 'В настоящее время отключена учетная запись',
@@ -487,7 +496,7 @@ module.exports = function(localeCode) {
         'story-$name-created-$repo': (name, repo) => {
             var e = pastTenseEnding(name);
             var text = `Создал репозиторий`;
-            if (name) {
+            if (repo) {
                 text += ` «${repo}»`;
             }
             return text;
@@ -742,10 +751,6 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `Выполнил${e} слияние`;
         },
-        'user-activity-$name-opened-issue': (name) => {
-            var e = pastTenseEnding(name);
-            return `Написал${e} отчёт об ошибке`;
-        },
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios;
             if (singularN(count)) {
@@ -809,11 +814,6 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `Начал${e} список задач`;
         },
-        'user-activity-$name-was-assigned-issue': (name) => {
-            var ve = pastTenseEnding(name);
-            var ae = ve;
-            return `Был${ve} назначен${ae} на отчёт об ошибке`;
-        },
         'user-activity-$name-wrote-post': (name) => {
             var e = pastTenseEnding(name);
             return `Написал${e} сообщение`;
@@ -821,7 +821,10 @@ module.exports = function(localeCode) {
         'user-activity-back': 'Назад',
         'user-activity-more': 'Более',
 
-        'user-image-remove': 'Удалить',
+        'user-image-adjust': 'Настроить',
+        'user-image-cancel': 'Отмена',
+        'user-image-replace': 'Заменить',
+        'user-image-save': 'Сохранить',
         'user-image-select': 'Выбрать',
         'user-image-snap': 'Камера',
 
@@ -962,6 +965,8 @@ module.exports = function(localeCode) {
         'video-capture-retake': 'Пересдавать',
         'video-capture-start': 'Начать',
         'video-capture-stop': 'Прекратить',
+
+        'warning-no-connection': 'Нет мгновенного обновления',
     };
 };
 

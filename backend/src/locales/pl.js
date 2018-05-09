@@ -47,6 +47,8 @@ module.exports = function(localeCode) {
             }
         },
 
+        'app-component-close': 'Zamknij',
+
         'app-name': 'Trambar',
 
         'audio-capture-accept': 'Przyjmij',
@@ -110,6 +112,12 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Anuluj',
         'confirmation-confirm': 'Potwierdź',
 
+        'development-code-push-$deployment': (deployment) => {
+            return `Uzyskaj aktualizacje kodu z „${deployment}”`;
+        },
+        'development-show-diagnostics': 'Pokaż diagnostykę',
+        'development-show-panel': 'Wyświetl ten panel',
+
         'device-selector-camera-$number': (number) => {
             return `Kamera ${number}`;
         },
@@ -118,9 +126,6 @@ module.exports = function(localeCode) {
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
-
-        'diagnostics-show': 'Pokaż diagnostykę',
-        'diagnostics-show-panel': 'Wyświetl ten panel',
 
         'empty-currently-offline': 'Jesteś odłączony od sieci',
 
@@ -172,6 +177,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Adres serwera',
         'mobile-setup-close': 'Zamknij',
         'mobile-setup-code': 'Kod autoryzacyjny',
+        'mobile-setup-project': 'Projekt',
 
         'news-no-stories-by-role': 'Żadnych wiadomości od kogoś z tą rolą',
         'news-no-stories-found': 'Nie znaleziono pasujących wiadomości',
@@ -417,9 +423,9 @@ module.exports = function(localeCode) {
         'server-type-google': 'Google',
         'server-type-windows': 'Windows Live',
 
+        'settings-development': 'Opcje programistyczne',
         'settings-device': 'Urządzenie mobilne',
         'settings-devices': 'Urządzenis mobilne',
-        'settings-diagnostics': 'Diagnostyka',
         'settings-language': 'Język',
         'settings-mobile-alert': 'Alert mobilny',
         'settings-notification': 'Powiadomienie',
@@ -459,7 +465,10 @@ module.exports = function(localeCode) {
                 ui.mobileSetup,
             ];
         },
-        'start-activation-manual': 'Ręczne wprowadzanie',
+        'start-activation-manual': 'Ręcznie',
+        'start-activation-new-server': 'Nowy serwer',
+        'start-activation-others-servers': 'Dostępne serwery',
+        'start-activation-return': 'Powrót',
         'start-activation-scan-code': 'Zeskanuj kod QR',
         'start-error-access-denied': 'Wniosek o dostęp odrzucono',
         'start-error-account-disabled': 'Konto jest obecnie wyłączone',
@@ -750,10 +759,6 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name, 3);
             return `Wykonał${e} scalenie zmian`;
         },
-        'user-activity-$name-opened-issue': (name) => {
-            var e = pastTenseEnding(name, 3);
-            return `Napisał${e} zgłoszenie błędu`;
-        },
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios;
             if (singular(count)) {
@@ -812,11 +817,6 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name, 3);
             return `Stworzył${e} listę zadań`;
         },
-        'user-activity-$name-was-assigned-issue': (name) => {
-            var ve = pastTenseEnding(name, 3);
-            var ae = (ve === 'a') ? 'a' : 'y';
-            return `Został${ve} przydzielon${ae} do problemu`;
-        },
         'user-activity-$name-wrote-post': (name) => {
             var e = pastTenseEnding(name, 3);
             return `Napisał${e} post`;
@@ -824,7 +824,10 @@ module.exports = function(localeCode) {
         'user-activity-back': 'Powrót',
         'user-activity-more': 'Więcej',
 
-        'user-image-remove': 'Usuń',
+        'user-image-adjust': 'Dostosuj',
+        'user-image-cancel': 'Anuluj',
+        'user-image-replace': 'Zmień',
+        'user-image-save': 'Zapisz',
         'user-image-select': 'Wybierz',
         'user-image-snap': 'Zrób',
 
@@ -965,6 +968,8 @@ module.exports = function(localeCode) {
         'video-capture-retake': 'Przerób',
         'video-capture-start': 'Rozpocznij',
         'video-capture-stop': 'Zatrzymaj',
+
+        'warning-no-connection': 'Brak natychmiastowej aktualizacji',
     };
 };
 

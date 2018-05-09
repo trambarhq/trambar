@@ -33,6 +33,8 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 new story` : `${count} new stories`;
         },
 
+        'app-component-close': 'Close',
+
         'app-name': 'Trambar',
 
         'audio-capture-accept': 'Accept',
@@ -78,6 +80,12 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Cancel',
         'confirmation-confirm': 'Confirm',
 
+        'development-code-push-$deployment': (deployment) => {
+            return `Pull code updates from "${deployment}"`;
+        },
+        'development-show-diagnostics': 'Show diagnostics',
+        'development-show-panel': 'Display this panel',
+
         'device-selector-camera-$number': (number) => {
             return `Camera ${number}`;
         },
@@ -86,9 +94,6 @@ module.exports = function(localeCode) {
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
-
-        'diagnostics-show': 'Show diagnostics',
-        'diagnostics-show-panel': 'Display this panel',
 
         'empty-currently-offline': 'You are currently offline',
 
@@ -130,6 +135,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Server address',
         'mobile-setup-close': 'Close',
         'mobile-setup-code': 'Authorization code',
+        'mobile-setup-project': 'Project',
 
         'news-no-stories-by-role': 'No stories by someone with that role',
         'news-no-stories-found': 'No matching stories found',
@@ -347,9 +353,9 @@ module.exports = function(localeCode) {
         'server-type-google': 'Google',
         'server-type-windows': 'Windows Live',
 
+        'settings-development': 'Developer Options',
         'settings-device': 'Mobile Device',
         'settings-devices': 'Mobile Devices',
-        'settings-diagnostics': 'Diagnostics',
         'settings-language': 'Language',
         'settings-mobile-alert': 'Mobile Alert',
         'settings-notification': 'Notification',
@@ -390,6 +396,9 @@ module.exports = function(localeCode) {
             ];
         },
         'start-activation-manual': 'Manual entry',
+        'start-activation-new-server': 'New server',
+        'start-activation-others-servers': 'Available servers',
+        'start-activation-return': 'Return',
         'start-activation-scan-code': 'Scan QR code',
         'start-error-access-denied': 'Request for access rejected',
         'start-error-account-disabled': 'Account is currently disabled',
@@ -421,7 +430,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-created-$repo': (name, repo) => {
             var text = `Created project`;
-            if (name) {
+            if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
@@ -577,7 +586,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-joined-repo': 'Joined a git project',
         'user-activity-$name-left-repo': 'Left a git project',
         'user-activity-$name-merged-code': 'Performed a code merge',
-        'user-activity-$name-opened-issue': 'Opened an issue',
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios = (count === 1) ? `a audio clip` : `${count} audio clips`;
             return `Posted ${audios}`;
@@ -599,12 +607,14 @@ module.exports = function(localeCode) {
         'user-activity-$name-reported-issue': 'Reported an issue',
         'user-activity-$name-started-survey': 'Started a survey',
         'user-activity-$name-started-task-list': 'Started a task list',
-        'user-activity-$name-was-assigned-issue': 'Was assigned to an issue',
         'user-activity-$name-wrote-post': 'Wrote a post',
         'user-activity-back': 'Back',
         'user-activity-more': 'More',
 
-        'user-image-remove': 'Remove',
+        'user-image-adjust': 'Adjust',
+        'user-image-cancel': 'Cancel',
+        'user-image-replace': 'Replace',
+        'user-image-save': 'Save',
         'user-image-select': 'Select',
         'user-image-snap': 'Snap',
 
@@ -673,5 +683,7 @@ module.exports = function(localeCode) {
         'video-capture-retake': 'Retake',
         'video-capture-start': 'Start',
         'video-capture-stop': 'Stop',
+
+        'warning-no-connection': 'No instant update',
     };
 };

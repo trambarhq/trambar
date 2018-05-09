@@ -131,6 +131,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Palvelimen osoite',
         'mobile-setup-close': 'Sulje',
         'mobile-setup-code': 'Lupakoodi',
+        'mobile-setup-project': 'Projekti',
 
         'news-no-stories-by-role': 'Ei juttuja, joilla on rooli',
         'news-no-stories-found': 'Vastaavia tarinoita ei löytynyt',

@@ -177,6 +177,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Adres serwera',
         'mobile-setup-close': 'Zamknij',
         'mobile-setup-code': 'Kod autoryzacyjny',
+        'mobile-setup-project': 'Projekt',
 
         'news-no-stories-by-role': 'Żadnych wiadomości od kogoś z tą rolą',
         'news-no-stories-found': 'Nie znaleziono pasujących wiadomości',

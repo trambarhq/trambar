@@ -29,6 +29,8 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 ny historie` : `${count} nye historier`;
         },
 
+        'app-component-close': 'Lukk',
+
         'app-name': 'Trambar',
 
         'audio-capture-accept': 'Aksepter',
@@ -74,6 +76,12 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Avbryt',
         'confirmation-confirm': 'Bekrefte',
 
+        'development-code-push-$deployment': (deployment) => {
+            return `Hent kodeoppdateringer fra "${deployment}"`;
+        },
+        'development-show-diagnostics': 'Vis diagnostikk',
+        'development-show-panel': 'Vis dette panelet',
+
         'device-selector-camera-$number': (number) => {
             return `Kamera ${number}`;
         },
@@ -82,9 +90,6 @@ module.exports = function(localeCode) {
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
-
-        'diagnostics-show': 'Vis diagnostikk',
-        'diagnostics-show-panel': 'Vis dette panelet',
 
         'empty-currently-offline': 'Du er frakoblet',
 
@@ -126,6 +131,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Server adresse',
         'mobile-setup-close': 'Lukk',
         'mobile-setup-code': 'Autorisasjonskode',
+        'mobile-setup-project': 'Prosjekt',
 
         'news-no-stories-by-role': 'Ingen historier av noen med den rollen',
         'news-no-stories-found': 'Ingen matchende historier funnet',
@@ -344,9 +350,9 @@ module.exports = function(localeCode) {
         'server-type-google': 'Google',
         'server-type-windows': 'Windows Live',
 
+        'settings-development': 'Utviklermuligheter',
         'settings-device': 'Mobil enhet',
         'settings-devices': 'Mobile enheter',
-        'settings-diagnostics': 'Diagnostikk',
         'settings-language': 'Språk',
         'settings-mobile-alert': 'Mobilvarsel',
         'settings-notification': 'Melding',
@@ -386,7 +392,10 @@ module.exports = function(localeCode) {
                 ui.mobileSetup,
             ];
         },
-        'start-activation-manual': 'Manuell oppføring',
+        'start-activation-manual': 'Manuelt',
+        'start-activation-new-server': 'Ny server',
+        'start-activation-others-servers': 'Tilgjengelige servere',
+        'start-activation-return': 'Tilbake',
         'start-activation-scan-code': 'Skann QR kode',
         'start-error-access-denied': 'Forespørsel om tilgang avvist',
         'start-error-account-disabled': 'Kontoen er for øyeblikket deaktivert',
@@ -570,7 +579,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-joined-repo': 'Ble med i et git-prosjekt',
         'user-activity-$name-left-repo': 'Dro et git-prosjek',
         'user-activity-$name-merged-code': 'Utført en kodefusjon',
-        'user-activity-$name-opened-issue': 'Åpnet et problem',
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios = (count === 1) ? `et audioklipp` : `${count} audioklipp`;
             return `Skrevet ${audios}`;
@@ -592,12 +600,14 @@ module.exports = function(localeCode) {
         'user-activity-$name-reported-issue': 'Rapporterte et problem',
         'user-activity-$name-started-survey': 'Startet en undersøkelse',
         'user-activity-$name-started-task-list': 'Startet en oppgaveliste',
-        'user-activity-$name-was-assigned-issue': 'Ble tildelt et problem',
         'user-activity-$name-wrote-post': 'Skrev et innlegg',
         'user-activity-back': 'Tilbake',
         'user-activity-more': 'Flere',
 
-        'user-image-remove': 'Fjerne',
+        'user-image-adjust': 'Juster',
+        'user-image-cancel': 'Avbryt',
+        'user-image-replace': 'Erstatt',
+        'user-image-save': 'Lagre',
         'user-image-select': 'Velge',
         'user-image-snap': 'Ta',
 
@@ -666,5 +676,7 @@ module.exports = function(localeCode) {
         'video-capture-retake': 'Ta om igjen',
         'video-capture-start': 'Start',
         'video-capture-stop': 'Stopp',
+
+        'warning-no-connection': 'Ingen umiddelbar oppdatering',
     };
 };

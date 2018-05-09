@@ -163,6 +163,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Адрес сервера',
         'mobile-setup-close': 'Закрыть',
         'mobile-setup-code': 'Код авторизации',
+        'mobile-setup-project': 'Проект',
 
         'news-no-stories-by-role': 'Никаких рассказов кем-то с этой ролью',
         'news-no-stories-found': 'Не найдено совпадающих рассказов',

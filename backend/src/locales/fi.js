@@ -29,6 +29,8 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 uusi tarina` : `${count} uutta tarinoita`;
         },
 
+        'app-component-close': 'Sulje',
+
         'app-name': 'Trambar',
 
         'audio-capture-accept': 'Hyväksy',
@@ -74,6 +76,12 @@ module.exports = function(localeCode) {
         'confirmation-cancel': 'Peruutta',
         'confirmation-confirm': 'Vahvista',
 
+        'development-code-push-$deployment': (deployment) => {
+            return `Hanki koodipäivitykset arkistosta "${deployment}"`;
+        },
+        'development-show-diagnostics': 'Näytä diagnostiikka',
+        'development-show-panel': 'Näytä tämä paneeli',
+
         'device-selector-camera-$number': (number) => {
             return `Kamera ${number}`;
         },
@@ -82,9 +90,6 @@ module.exports = function(localeCode) {
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
-
-        'diagnostics-show': 'Näytä diagnostiikka',
-        'diagnostics-show-panel': 'Näytä tämä paneeli',
 
         'empty-currently-offline': 'Olet offline-tilassa',
 
@@ -126,6 +131,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Palvelimen osoite',
         'mobile-setup-close': 'Sulje',
         'mobile-setup-code': 'Lupakoodi',
+        'mobile-setup-project': 'Projekti',
 
         'news-no-stories-by-role': 'Ei juttuja, joilla on rooli',
         'news-no-stories-found': 'Vastaavia tarinoita ei löytynyt',
@@ -345,9 +351,9 @@ module.exports = function(localeCode) {
         'server-type-google': 'Google',
         'server-type-windows': 'Windows Live',
 
+        'settings-development': 'Kehittäjän asetukset',
         'settings-device': 'Mobiililaite',
         'settings-devices': 'Mobiililaitteet',
-        'settings-diagnostics': 'Diagnostiikka',
         'settings-language': 'Kieli',
         'settings-mobile-alert': 'Mobiilihälytys',
         'settings-notification': 'Ilmoitukset',
@@ -387,7 +393,10 @@ module.exports = function(localeCode) {
                 ui.mobileSetup,
             ];
         },
-        'start-activation-manual': 'Manuaalinen syöttö',
+        'start-activation-manual': 'Manuaalisesti',
+        'start-activation-new-server': 'Uusi palvelin',
+        'start-activation-others-servers': 'Käytettävissä olevat palvelimet',
+        'start-activation-return': 'Palata',
         'start-activation-scan-code': 'Skannaa QR-koodi',
         'start-error-access-denied': 'Hakuhakemus hylättiin',
         'start-error-account-disabled': 'Tili on tällä hetkellä poissa käytöstä',
@@ -419,7 +428,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-created-$repo': (name, repo) => {
             var text = `Loi projektin`;
-            if (name) {
+            if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
@@ -575,7 +584,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-joined-repo': 'Liittyi git-projektiin',
         'user-activity-$name-left-repo': 'Jätti git-projektin',
         'user-activity-$name-merged-code': 'Teki koodin yhdistämisen',
-        'user-activity-$name-opened-issue': 'Avasi asian',
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios = (count === 1) ? `äänileikkeen` : `${count} äänileikkeitä`;
             return `Lähetti ${audios}`;
@@ -596,13 +604,15 @@ module.exports = function(localeCode) {
         'user-activity-$name-reported-issue': 'Ilmoitti asiasta',
         'user-activity-$name-started-survey': 'Aloitti kyselyn',
         'user-activity-$name-started-task-list': 'Aloitti tehtäväluettelon',
-        'user-activity-$name-was-assigned-issue': 'Oli määrätty asiaan',
         'user-activity-$name-wrote-post': 'Kirjoitti viestin',
         'user-activity-back': 'Palataa',
         'user-activity-more': 'Lisää',
 
-        'user-image-remove': 'Poista',
-        'user-image-select': 'Select',
+        'user-image-adjust': 'Säädä',
+        'user-image-cancel': 'Peruutta',
+        'user-image-replace': 'Vaihda',
+        'user-image-save': 'Tallenna',
+        'user-image-select': 'Valitse',
         'user-image-snap': 'Ota',
 
         'user-info-email': 'Sähköpostiosoite',
@@ -670,5 +680,7 @@ module.exports = function(localeCode) {
         'video-capture-retake': 'Nauhoita uudelleen',
         'video-capture-start': 'Ala',
         'video-capture-stop': 'Lopeta',
+
+        'warning-no-connection': 'Ei välitöntä päivitystä',
     };
 };

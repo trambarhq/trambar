@@ -69,6 +69,8 @@ var traditionalPhrases = {
         return `${num}個新故事`;
     },
 
+    'app-component-close': '關閉',
+
     'app-name': '電車吧',
 
     'audio-capture-accept': '接受',
@@ -116,6 +118,12 @@ var traditionalPhrases = {
     'confirmation-cancel': '取消',
     'confirmation-confirm': '肯定',
 
+    'development-code-push-$deployment': (deployment) => {
+        return `從《${deployment}》獲取代碼更新`;
+    },
+    'development-show-diagnostics': '顯示診斷',
+    'development-show-panel': '顯示這個面板',
+
     'device-selector-camera-$number': (number) => {
         return `攝影機${number}`;
     },
@@ -124,9 +132,6 @@ var traditionalPhrases = {
     'device-selector-mic-$number': (number) => {
         return `麥克風${number}`;
     },
-
-    'diagnostics-show': '顯示診斷',
-    'diagnostics-show-panel': '顯示此面板',
 
     'empty-currently-offline': '你目前離線',
 
@@ -169,6 +174,7 @@ var traditionalPhrases = {
     'mobile-setup-address': '服務器地址',
     'mobile-setup-close': '關閉',
     'mobile-setup-code': '授權碼',
+    'mobile-setup-project': '項目',
 
     'news-no-stories-by-role': '沒有這個角色的人的故事',
     'news-no-stories-found': '沒有找到匹配的故事',
@@ -389,9 +395,9 @@ var traditionalPhrases = {
     'server-type-google': 'Google',
     'server-type-windows': 'Windows Live',
 
+    'settings-development': '開發人員選項',
     'settings-device': '行動裝置',
     'settings-devices': '行動裝置',
-    'settings-diagnostics': '診斷',
     'settings-language': '語言',
     'settings-mobile-alert': '行動裝置警報',
     'settings-notification': '通知',
@@ -424,14 +430,12 @@ var traditionalPhrases = {
         ];
     },
     'start-activation-instructions-short': (ui) => {
-        return [
-            'Sign in using a web browser then scan the QR code shown in ',
-            ui.settings,
-            ' > ',
-            ui.mobileSetup,
-        ];
+        return '請先使用網絡瀏覽器登錄電車吧服務器，然後掃描ＱＲ碼。';
     },
     'start-activation-manual': '鍵盤輸入',
+    'start-activation-new-server': '新服務器',
+    'start-activation-others-servers': '可用服務器',
+    'start-activation-return': '返回',
     'start-activation-scan-code': '掃描ＱＲ碼',
     'start-error-access-denied': '請求被拒絕',
     'start-error-account-disabled': '帳戶目前被禁用',
@@ -622,7 +626,6 @@ var traditionalPhrases = {
     'user-activity-$name-joined-repo': '加入了數據庫',
     'user-activity-$name-left-repo': '離開了數據庫',
     'user-activity-$name-merged-code': '合併了代碼',
-    'user-activity-$name-opened-issue': '開了一個問題',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         var num = cardinalT(count);
         return `新增了${num}個音頻剪輯`;
@@ -643,12 +646,14 @@ var traditionalPhrases = {
     'user-activity-$name-reported-issue': '報告了一個問題',
     'user-activity-$name-started-survey': '發布了一個調查',
     'user-activity-$name-started-task-list': '發布了一個任務列表',
-    'user-activity-$name-was-assigned-issue': '被分配到一個問題',
     'user-activity-$name-wrote-post': '寫了一個貼文',
     'user-activity-back': '返回',
     'user-activity-more': '更多',
 
-    'user-image-remove': '刪除',
+    'user-image-adjust': '調整',
+    'user-image-cancel': '取消',
+    'user-image-replace': '替換',
+    'user-image-save': '保存',
     'user-image-select': '選擇',
     'user-image-snap': '拍照',
 
@@ -717,6 +722,8 @@ var traditionalPhrases = {
     'video-capture-retake': '重新錄製',
     'video-capture-start': '開始',
     'video-capture-stop': '停止',
+
+    'warning-no-connection': '無法即時更新',
 };
 
 var simplifiedPhrases = {
@@ -749,6 +756,8 @@ var simplifiedPhrases = {
         var num = cardinalS(count);
         return `${num}个新故事`;
     },
+
+    'app-component-close': '关闭',
 
     'app-name': '电车吧',
 
@@ -797,6 +806,12 @@ var simplifiedPhrases = {
     'confirmation-cancel': '取消',
     'confirmation-confirm': '肯定',
 
+    'development-code-push-$deployment': (deployment) => {
+        return `从《${deployment}》获取代码更新`;
+    },
+    'development-show-diagnostics': '显示诊断',
+    'development-show-panel': '显示这个面板',
+
     'device-selector-camera-$number': (number) => {
         return `摄影机${number}`;
     },
@@ -805,9 +820,6 @@ var simplifiedPhrases = {
     'device-selector-mic-$number': (number) => {
         return `麦克风${number}`;
     },
-
-    'diagnostics-show': '显示诊断',
-    'diagnostics-show-panel': '显示此面板',
 
     'empty-currently-offline': '你目前离线',
 
@@ -850,6 +862,7 @@ var simplifiedPhrases = {
     'mobile-setup-address': '服务器地址',
     'mobile-setup-close': '关闭',
     'mobile-setup-code': '授权码',
+    'mobile-setup-project': '项目',
 
     'news-no-stories-by-role': '没有这个角色的人的故事',
     'news-no-stories-found': '没有找到匹配的故事',
@@ -1070,9 +1083,9 @@ var simplifiedPhrases = {
     'server-type-google': 'Google',
     'server-type-windows': 'Windows Live',
 
+    'settings-development': '开发人员选项',
     'settings-device': '行动装置',
     'settings-devices': '行动装置',
-    'settings-diagnostics': '诊断',
     'settings-language': '语言',
     'settings-mobile-alert': '行动装置警报',
     'settings-notification': '通知',
@@ -1105,14 +1118,12 @@ var simplifiedPhrases = {
         ];
     },
     'start-activation-instructions-short': (ui) => {
-        return [
-            'Sign in using a web browser then scan the QR code shown in ',
-            ui.settings,
-            ' > ',
-            ui.mobileSetup,
-        ];
+        return '请先使用网络浏览器登录电车吧服务器，然后扫描QR码。';
     },
     'start-activation-manual': '键盘输入',
+    'start-activation-new-server': '新服务器',
+    'start-activation-others-servers': '可用服务器',
+    'start-activation-return': '返回',
     'start-activation-scan-code': '扫描ＱＲ码',
     'start-error-access-denied': '请求被拒绝',
     'start-error-account-disabled': '帐户目前被禁用',
@@ -1303,7 +1314,6 @@ var simplifiedPhrases = {
     'user-activity-$name-joined-repo': '加入了数据库',
     'user-activity-$name-left-repo': '离开了数据库',
     'user-activity-$name-merged-code': '合并了代码',
-    'user-activity-$name-opened-issue': '开了一个问题',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         var num = cardinalS(count);
         return `新增了${num}个音频剪辑`;
@@ -1324,12 +1334,14 @@ var simplifiedPhrases = {
     'user-activity-$name-reported-issue': '报告了一个问题',
     'user-activity-$name-started-survey': '发布了一个调查',
     'user-activity-$name-started-task-list': '发布了一个任务列表',
-    'user-activity-$name-was-assigned-issue': '被分配到一个问题',
     'user-activity-$name-wrote-post': '写了一个贴文',
     'user-activity-back': '返回',
     'user-activity-more': '更多',
 
-    'user-image-remove': '删除',
+    'user-image-adjust': '调整',
+    'user-image-cancel': '取消',
+    'user-image-replace': '替换',
+    'user-image-save': '保存',
     'user-image-select': '选择',
     'user-image-snap': '拍照',
 
@@ -1398,6 +1410,8 @@ var simplifiedPhrases = {
     'video-capture-retake': '重新录制',
     'video-capture-start': '开始',
     'video-capture-stop': '停止',
+
+    'warning-no-connection': '无法即时更新',
 };
 
 var cantonesePhrases = {
@@ -1735,7 +1749,6 @@ var cantonesePhrases = {
     'user-activity-$name-joined-repo': '加入咗數據庫',
     'user-activity-$name-left-repo': '離開咗數據庫',
     'user-activity-$name-merged-code': '合併咗一啲代碼',
-    'user-activity-$name-opened-issue': '開咗一個問題',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         var num = cardinalT(count);
         return `新增咗${num}個音頻剪輯`;
@@ -1762,6 +1775,8 @@ var cantonesePhrases = {
     'user-statistics-tooltip-$count-post': (count) => {
         return `${count}個帖子`;
     },
+
+    'warning-no-connection': '唔可以即時更新',
 };
 
 var chineseNumbers = [ '〇', '一', '二', '三', '四', '五', '六', '七', '八', '九' ];

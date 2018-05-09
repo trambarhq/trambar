@@ -174,6 +174,7 @@ var traditionalPhrases = {
     'mobile-setup-address': '服務器地址',
     'mobile-setup-close': '關閉',
     'mobile-setup-code': '授權碼',
+    'mobile-setup-project': '項目',
 
     'news-no-stories-by-role': '沒有這個角色的人的故事',
     'news-no-stories-found': '沒有找到匹配的故事',
@@ -861,6 +862,7 @@ var simplifiedPhrases = {
     'mobile-setup-address': '服务器地址',
     'mobile-setup-close': '关闭',
     'mobile-setup-code': '授权码',
+    'mobile-setup-project': '项目',
 
     'news-no-stories-by-role': '没有这个角色的人的故事',
     'news-no-stories-found': '没有找到匹配的故事',

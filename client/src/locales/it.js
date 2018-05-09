@@ -131,6 +131,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': "Indirizzo del server",
         'mobile-setup-close': "Chiudi",
         'mobile-setup-code': "Codice di autorizzazione",
+        'mobile-setup-project': 'Progetto',
 
         'news-no-stories-by-role': "Nessuna storia di qualcuno con quel ruolo",
         'news-no-stories-found': "Nessuna storia corrispondente trovata",

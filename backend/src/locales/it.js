@@ -29,6 +29,8 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 nuova storia` : `${count} nuove storie`;
         },
 
+        'app-component-close': 'Chiudi',
+
         'app-name': "Trambar",
 
         'audio-capture-accept': "Accetta",
@@ -74,17 +76,20 @@ module.exports = function(localeCode) {
         'confirmation-cancel': "Annulla",
         'confirmation-confirm': "Conferma",
 
+        'development-code-push-$deployment': (deployment) => {
+            return `Ottieni aggiornamenti del codice da «${deployment}»`;
+        },
+        'development-show-diagnostics': "Mostra diagnostica",
+        'development-show-panel': "Mostra questo pannello",
+
         'device-selector-camera-$number': (number) => {
             return `Camera ${number}`;
         },
-        'device-selector-camera-back': 'Posteriore',
-        'device-selector-camera-front': 'Frontale',
+        'device-selector-camera-back': "Posteriore",
+        'device-selector-camera-front': "Frontale",
         'device-selector-mic-$number': (number) => {
             return `Mic ${number}`;
         },
-
-        'diagnostics-show': "Mostra diagnostica",
-        'diagnostics-show-panel': "Mostra questo pannello",
 
         'empty-currently-offline': "Al momento sei offline",
 
@@ -113,12 +118,12 @@ module.exports = function(localeCode) {
         'membership-request-$you-are-member': "Sei un membro di questo progetto",
         'membership-request-$you-are-now-member': "Ora sei un membro di questo progetto",
         'membership-request-$you-have-requested-membership': "Hai richiesto l'iscrizione a questo progetto",
-        'membership-request-browse': 'Sfoglia',
+        'membership-request-browse': "Sfoglia",
         'membership-request-cancel': "Annulla",
         'membership-request-join': "Partecipa",
         'membership-request-ok': "OK",
         'membership-request-proceed': "Procedi",
-        'membership-request-withdraw': 'Ritira',
+        'membership-request-withdraw': "Ritira",
 
         'mobile-device-revoke': "revoca",
         'mobile-device-revoke-are-you-sure': "Sei sicuro di voler revocare l'autorizzazione a questo dispositivo?",
@@ -126,6 +131,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': "Indirizzo del server",
         'mobile-setup-close': "Chiudi",
         'mobile-setup-code': "Codice di autorizzazione",
+        'mobile-setup-project': 'Progetto',
 
         'news-no-stories-by-role': "Nessuna storia di qualcuno con quel ruolo",
         'news-no-stories-found': "Nessuna storia corrispondente trovata",
@@ -249,9 +255,9 @@ module.exports = function(localeCode) {
         },
         'option-show-media-preview': "Mostra media allegati",
         'option-show-text-preview': "Mostra anteprima di testo",
-        'option-statistics-biweekly': 'Mostra le attività degli ultimi 14 giorni',
-        'option-statistics-monthly': 'Mostra attività mensili',
-        'option-statistics-to-date': 'Mostra le attività fino ad oggi',
+        'option-statistics-biweekly': "Mostra le attività degli ultimi 14 giorni",
+        'option-statistics-monthly': "Mostra attività mensili",
+        'option-statistics-to-date': "Mostra le attività fino ad oggi",
 
         'people-no-stories-found': "Nessuna storia corrispondente trovata",
         'people-no-stories-on-date': "Nessuna attività in quella data",
@@ -272,13 +278,13 @@ module.exports = function(localeCode) {
         'project-management-add': "Aggiungi",
         'project-management-cancel': "Annulla",
         'project-management-description': "descrizione del progetto",
-        'project-management-join-project': 'partecipa al progetto',
+        'project-management-join-project': "partecipa al progetto",
         'project-management-manage': "Gestisci lista",
         'project-management-mobile-set-up': "impostazioni del dispositivo mobile",
         'project-management-remove': "Rimuovi",
         'project-management-sign-out': "disconnettersi",
         'project-management-sign-out-are-you-sure': "Sei sicuro di voler uscire da questo server?",
-        'project-management-withdraw-request': 'ritira la richiesta di adesione',
+        'project-management-withdraw-request': "ritira la richiesta di adesione",
 
         'qr-scanner-cancel': "Annulla",
         'qr-scanner-invalid-qr-code': "Codice QR non valido",
@@ -344,9 +350,9 @@ module.exports = function(localeCode) {
         'server-type-google': "Google",
         'server-type-windows': "Windows Live",
 
+        'settings-development': "Opzioni dello sviluppatore",
         'settings-device': "Dispositivo mobile",
         'settings-devices': "Dispositivi mobili",
-        'settings-diagnostics': "Diagnostica",
         'settings-language': "Lingua",
         'settings-mobile-alert': "Avviso mobile",
         'settings-notification': "Notificazione",
@@ -386,7 +392,10 @@ module.exports = function(localeCode) {
                 ui.mobileSetup,
             ];
         },
-        'start-activation-manual': "Entrata manuale",
+        'start-activation-manual': "Manualmente",
+        'start-activation-new-server': 'Nuovo server',
+        'start-activation-others-servers': 'Server disponibili',
+        'start-activation-return': 'Ritorno',
         'start-activation-scan-code': "Scansiona il codice QR",
         'start-error-access-denied': "Richiesta di accesso rifiutata",
         'start-error-account-disabled': "L'account è attualmente disabilitato",
@@ -418,7 +427,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-created-$repo': (name, repo) => {
             var text = `Ha creato il repository `;
-            if (name) {
+            if (repo) {
                 text += ` «${repo}»`;
             }
             return text;
@@ -597,7 +606,6 @@ module.exports = function(localeCode) {
         'user-activity-$name-joined-repo': "Si è unito a un progetto git",
         'user-activity-$name-left-repo': "Ha lasciato un progetto git",
         'user-activity-$name-merged-code': "Ha eseguito un merge",
-        'user-activity-$name-opened-issue': "Ha aperto un problema",
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios = (count === 1) ? `un audioclip` : `${count} audioclip`;
             return `Ha pubblicato ${audios}`;
@@ -616,17 +624,19 @@ module.exports = function(localeCode) {
             return `Ha pubblicato ${videos}`;
         },
         'user-activity-$name-pushed-code': "Ha inviato il codice nel repository",
-        'user-activity-$name-reported-issue': 'Ha segnalato un problema',
+        'user-activity-$name-reported-issue': "Ha segnalato un problema",
         'user-activity-$name-started-survey': "Ha iniziato un sondaggio",
         'user-activity-$name-started-task-list': "Ha iniziato un elenco di attività",
-        'user-activity-$name-was-assigned-issue': 'È stato assegnato a un problema',
         'user-activity-$name-wrote-post': "Ha scritto un post",
-        'user-activity-back': 'Indietro',
+        'user-activity-back': "Indietro",
         'user-activity-more': "Altre",
 
-        'user-image-remove': "Rimuovi",
-        'user-image-select': "Seleziona",
-        'user-image-snap': "Snap",
+        'user-image-adjust': 'Regola',
+        'user-image-cancel': 'Annulla',
+        'user-image-replace': 'Sostituisci',
+        'user-image-save': 'Salva',
+        'user-image-select': 'Seleziona',
+        'user-image-snap': 'Scatta',
 
         'user-info-email': "Indirizzo e-mail",
         'user-info-gender': "Genere",
@@ -693,5 +703,7 @@ module.exports = function(localeCode) {
         'video-capture-retake': "Ricomincia",
         'video-capture-start': "Comincia",
         'video-capture-stop': "Termina",
+
+        'warning-no-connection': "Nessun aggiornamento istantaneo",
     };
 };

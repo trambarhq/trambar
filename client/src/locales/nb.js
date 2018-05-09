@@ -131,6 +131,7 @@ module.exports = function(localeCode) {
         'mobile-setup-address': 'Server adresse',
         'mobile-setup-close': 'Lukk',
         'mobile-setup-code': 'Autorisasjonskode',
+        'mobile-setup-project': 'Prosjekt',
 
         'news-no-stories-by-role': 'Ingen historier av noen med den rollen',
         'news-no-stories-found': 'Ingen matchende historier funnet',
