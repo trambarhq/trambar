@@ -371,9 +371,11 @@ function updateListing(schema, id) {
             if (!listing) {
                 return null;
             }
+            var limit = _.get(listing.filters, 'limit', 100);
             var retrievedStories = _.get(listing.details, 'stories', []);
             var lastRetrievedStory = _.maxBy(retrievedStories, 'rtime');
             var lastRetrievalTime = (lastRetrievedStory) ? lastRetrievedStory.rtime : null;
+            var gap = Math.max(0, limit - _.size(retrievedStories));
 
             var filterCriteria = _.pick(listing.filters, _.keys(Story.criteria));
             var criteria = _.extend({}, filterCriteria, {
@@ -387,18 +389,23 @@ function updateListing(schema, id) {
             var columns = _.flatten(_.map(StoryRaters, 'columns'));
             columns = _.concat(columns, [ 'id', 'COALESCE(ptime, btime) AS btime' ]);
             columns = _.uniq(columns);
-            return Story.findCached(db, schema, criteria, columns.join(', ')).filter((row) => {
-                // include only if it's newer (or recently bumped) than those
-                // already retrieved
-                if (lastRetrievalTime) {
-                    return (row.btime > lastRetrievalTime);
-                } else {
-                    return true;
+            return Story.findCached(db, schema, criteria, columns.join(', ')).then((rows) => {
+                if (gap === 0) {
+                    // include only if it's newer (or recently bumped) than those
+                    // already retrieved
+                    rows = _.filter(rows, (row) => {
+                        if (lastRetrievalTime) {
+                            return (row.btime > lastRetrievalTime);
+                        } else {
+                            return true;
+                        }
+                    });
                 }
-            }).then((rows) => {
+
                 // asynchronously retrieve data needed to rate the candidates
                 return prepareStoryRaterContexts(db, schema, rows, listing).then((contexts) => {
                     var candidates = [];
+                    var backfillCandidates = [];
                     // calculate the rating of each candidate story
                     _.each(rows, (row) => {
                         var candidate = {
@@ -406,14 +413,27 @@ function updateListing(schema, id) {
                             btime: row.btime,
                             rating: calculateStoryRating(contexts, row),
                         };
-                        var index = _.sortedIndexBy(candidates, candidate, 'btime');
-                        candidates.splice(index, 0, candidate);
+                        if (gap === 0 || !lastRetrievalTime || row.btime > lastRetrievalTime) {
+                            var index = _.sortedIndexBy(candidates, candidate, 'btime');
+                            candidates.splice(index, 0, candidate);
+                        } else {
+                            // add story to candidate list used to backfill gap
+                            // created when stories are deleted
+                            var index = _.sortedIndexBy(backfillCandidates, candidate, 'btime');
+                            backfillCandidates.splice(index, 0, candidate);
+                        }
                     });
+                    if (_.isEmpty(backfillCandidates)) {
+                        backfillCandidates = undefined;
+                    }
 
                     // save the new candidate list
-                    var details = _.assign({}, listing.details, { candidates });
+                    var details = _.assign({}, listing.details, {
+                        candidates: candidates,
+                        backfill_candidates: backfillCandidates
+                    });
                     var finalized;
-                    if (!_.isEmpty(candidates)) {
+                    if (!_.isEmpty(candidates) || !_.isEmpty(backfillCandidates)) {
                         // there're story candidates--listing needs to be
                         // finalized when the user retrieves it
                         finalized = false;

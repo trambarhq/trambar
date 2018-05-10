@@ -276,6 +276,7 @@ function chooseStories(row) {
     var retention = _.get(row.filters, 'retention', 24 * HOUR);
     var newStories = _.get(row.details, 'candidates', []);
     var oldStories = _.get(row.details, 'stories', []);
+    var backfillingStories = _.get(row.details, 'backfill_candidates', []);
 
     // we want to show as many new stories as possible
     var newStoryCount = newStories.length;
@@ -343,8 +344,29 @@ function chooseStories(row) {
                 rtime: rtime,
             };
         });
-        row.details.stories = _.concat(oldStories, newStories);
+        var stories = _.concat(oldStories, newStories);
+        var gap = limit - _.size(stories);
+        if (gap > 0) {
+            // apply retrieval time rating adjustments
+            var context = ByRetrievalTime.createContext(backfillingStories, row);
+            _.eachRight(backfillingStories, (story) => {
+                story.rating += ByRetrievalTime.calculateRating(context, story);
+            });
+
+            // remove lowly rate stories
+            backfillingStories = _.orderBy(backfillingStories, [ 'rating', 'btime' ], [ 'asc', 'asc' ]);
+            backfillingStories = _.slice(backfillingStories, gap);
+
+            // fill the gap
+            _.each(backfillingStories, (story) => {
+                var index = _.sortedIndexBy(stories, story, 'btime');
+                stories.splice(index, 0, story);
+            });
+        }
+
+        row.details.stories = stories;
         row.details.candidates = [];
+        row.details.backfill_candidates = undefined;
         // the object is going to be sent prior to being saved
         // bump up the generation number manually
         row.gn += 1;
