@@ -107,6 +107,7 @@ module.exports = _.create(ExternalData, {
             CREATE INDEX ON ${table} USING gin(("payloadTokens"(details))) WHERE "payloadTokens"(details) IS NOT NULL;
             CREATE INDEX ON ${table} ((COALESCE(ptime, btime))) WHERE published = true AND ready = true;
             CREATE INDEX ON ${table} (id) WHERE unfinished_tasks > 0 AND published = true AND deleted = false;
+            CREATE INDEX ON ${table} (id) WHERE published = true AND deleted = true AND published_version_id IS NULL;
         `;
         //
         return db.execute(sql);
@@ -585,5 +586,31 @@ module.exports = _.create(ExternalData, {
             }
         });
         return Promise.props(promises);
+    },
+
+    /**
+     * Clear cache in response to change events
+     *
+     * @param  {Array<Object>} events
+     */
+    clearCache: function(events) {
+        this.cachedSearches = _.filter(this.cachedSearches, (search) => {
+            return !_.some(events, (event) => {
+                if (search.schema === event.schema) {
+                    if (search.criteria.published && search.criteria.ready) {
+                        if (event.diff.published || event.diff.ready) {
+                            if (event.current.published && event.current.ready) {
+                                return true;
+                            }
+                        }
+                    }
+                    if (search.criteria.deleted !== undefined) {
+                        if (event.diff.deleted) {
+                            return true;
+                        }
+                    }
+                }
+            });
+        });
     },
 });
