@@ -180,7 +180,17 @@ function coalesceResources(OLD, NEW, TG_OP, TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_A
     // set ready column when all resources are ready
     var readyColumn = TG_ARGV[0];
     if (readyColumn) {
+        if (all)
         NEW[readyColumn] = allReady;
+    }
+    // update the publication time
+    var ptimeColumn = TG_ARGV[1];
+    if (ptimeColumn && OLD) {
+        if (NEW[readyColumn] && !OLD[readyColumn]) {
+            if (NEW[ptimeColumn]) {
+                NEW[ptimeColumn] = new Date;
+            }
+        }
     }
     return NEW;
 }

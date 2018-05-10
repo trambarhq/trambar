@@ -107,7 +107,7 @@ module.exports = _.create(ExternalData, {
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 // merge changes to details->resources to avoid race between
                 // client-side changes and server-side changes
-                return this.createResourceCoalescenceTrigger(db, schema, [ 'ready' ]).then(() => {
+                return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'ptime' ]).then(() => {
                     // completion of tasks will automatically update
                     // details->resources and ready
                     var Task = require('accessors/task');
