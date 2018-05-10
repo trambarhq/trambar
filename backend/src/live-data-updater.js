@@ -108,6 +108,7 @@ function handleDatabaseChanges(events) {
             }
         });
     });
+    /*
     // invalidate story cache
     var publishedStoryEvents = _.filter(events, (evt) => {
         if (evt.table === 'story') {
@@ -116,6 +117,7 @@ function handleDatabaseChanges(events) {
             }
         }
     });
+    */
     if (!_.isEmpty(publishedStoryEvents)) {
         Story.clearCache(publishedStoryEvents);
     }
@@ -373,9 +375,6 @@ function updateListing(schema, id) {
             }
             var limit = _.get(listing.filters, 'limit', 100);
             var retrievedStories = _.get(listing.details, 'stories', []);
-            var lastRetrievedStory = _.maxBy(retrievedStories, 'rtime');
-            var lastRetrievalTime = (lastRetrievedStory) ? lastRetrievedStory.rtime : null;
-            var gap = Math.max(0, limit - _.size(retrievedStories));
 
             var filterCriteria = _.pick(listing.filters, _.keys(Story.criteria));
             var criteria = _.extend({}, filterCriteria, {
@@ -390,6 +389,23 @@ function updateListing(schema, id) {
             columns = _.concat(columns, [ 'id', 'COALESCE(ptime, btime) AS btime' ]);
             columns = _.uniq(columns);
             return Story.findCached(db, schema, criteria, columns.join(', ')).then((rows) => {
+                // take out stories that were published, then subsequently removed
+                var criteria = {
+                    published: true,
+                    deleted: true,
+                    published_version_id: null,
+                };
+                return Story.findCached(db, schema, criteria, 'id').then((deletedRows) => {
+                    var hash = _.keyBy(deletedRows, 'id');
+                    var deletedStories = _.remove(retrievedStories, (story) => {
+                        return !!hash[story.id];
+                    });
+                    return rows;
+                });
+            }).then((rows) => {
+                var lastRetrievedStory = _.maxBy(retrievedStories, 'rtime');
+                var lastRetrievalTime = (lastRetrievedStory) ? lastRetrievedStory.rtime : null;
+                var gap = Math.max(0, limit - _.size(retrievedStories));
                 if (gap === 0) {
                     // include only if it's newer (or recently bumped) than those
                     // already retrieved
@@ -429,6 +445,7 @@ function updateListing(schema, id) {
 
                     // save the new candidate list
                     var details = _.assign({}, listing.details, {
+                        stories: retrievedStories,
                         candidates: candidates,
                         backfill_candidates: backfillCandidates
                     });
