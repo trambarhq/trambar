@@ -109,19 +109,29 @@ function handleDatabaseChanges(events) {
             }
         });
     });
-    /*
     // invalidate story cache
-    var publishedStoryEvents = _.filter(events, (evt) => {
-        if (evt.table === 'story') {
-            if (evt.current.published && evt.current.ready && !evt.current.deleted) {
-                return true;
-            }
-        }
-    });
-    */
     var storyEvents = _.filter(events, { table: 'story' });
     if (!_.isEmpty(storyEvents)) {
-        Story.clearCache(storyEvents);
+        Story.clearCache((search) => {
+            return !_.some(storyEvents, (event) => {
+                if (search.schema === event.schema) {
+                    if (search.criteria.published && search.criteria.ready) {
+                        if (event.diff.published || event.diff.ready) {
+                            if (event.current.published && event.current.ready) {
+                                console.log('Clearing', search.criteria)
+                                return true;
+                            }
+                        }
+                    }
+                    if (search.criteria.deleted !== undefined) {
+                        if (event.diff.deleted && event.previous.deleted !== undefined) {
+                            console.log('Clearing (deleted)', search.criteria)
+                            return true;
+                        }
+                    }
+                }
+            });
+        });
     }
 }
 
@@ -376,6 +386,8 @@ function updateListing(schema, id) {
                 return null;
             }
             var limit = _.get(listing.filters, 'limit', 100);
+            var latestStoryTime = _.get(listing.details, 'latest');
+            var earliestStoryTime = _.get(listing.details, 'earliest');
             var retrievedStories = _.get(listing.details, 'stories', []);
             var retainingStories;
 
@@ -406,14 +418,11 @@ function updateListing(schema, id) {
                     return rows;
                 });
             }).then((rows) => {
-                // get unretrieved rows that are newer than the latest story
-                // currently on the list
-                var latestStory = _.maxBy(retrievedStories, 'btime');
-                var latestStoryTime = (latestStory) ? latestStory.btime : null;
+                // get unretrieved rows that are newer than the last story considered
                 var retrievedStoriesHash = _.keyBy(retrievedStories);
                 var newRows = _.filter(rows, (row) => {
                     if (!retrievedStoriesHash[row.id]) {
-                        if (!latestStoryTime || row.btime >= latestStoryTime) {
+                        if (!latestStoryTime || row.btime > latestStoryTime) {
                             return true;
                         }
                     }
@@ -424,9 +433,8 @@ function updateListing(schema, id) {
                 if (gap > 0) {
                     // need to backfill the list--look for rows with btime
                     // earlier than stories already retrieved
-                    var earliestStory = _.minBy(retrievedStories, 'btime');
-                    var earliestStoryTime = (earliestStory) ? earliestStory.btime : null;
-                    // find rows that were rejected
+                    //
+                    // first, find rows that were rejected earlier
                     var ignoredRows = _.filter(rows, (row) => {
                         if (!retrievedStoriesHash[row.id]) {
                             if (earliestStoryTime && row.btime <= earliestStoryTime) {
@@ -443,7 +451,7 @@ function updateListing(schema, id) {
 
                     if (_.size(oldRows) < gap) {
                         // not enough--just take whatever
-                        oldRows = _.slice(oldIgnoredRows, gap);
+                        oldRows = _.slice(ignoredRows, 0, gap);
                     }
                 }
                 var selectedRows = _.concat(newRows, oldRows);

@@ -1033,12 +1033,12 @@ module.exports = {
     },
 
     /**
-     * Clear cache in response to change events
+     * Clear cached searching
      *
-     * @param  {Array<Object>} events
+     * @param  {Function|undefined} cb
      */
-    clearCache: function(events) {
-        this.cachedSearches = null;
+    clearCache: function(cb) {
+        this.cachedSearches = _.filter(this.cachedSearches, cb || false);
     },
 };
 

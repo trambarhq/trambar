@@ -587,30 +587,4 @@ module.exports = _.create(ExternalData, {
         });
         return Promise.props(promises);
     },
-
-    /**
-     * Clear cache in response to change events
-     *
-     * @param  {Array<Object>} events
-     */
-    clearCache: function(events) {
-        this.cachedSearches = _.filter(this.cachedSearches, (search) => {
-            return !_.some(events, (event) => {
-                if (search.schema === event.schema) {
-                    if (search.criteria.published && search.criteria.ready) {
-                        if (event.diff.published || event.diff.ready) {
-                            if (event.current.published && event.current.ready) {
-                                return true;
-                            }
-                        }
-                    }
-                    if (search.criteria.deleted !== undefined) {
-                        if (event.diff.deleted) {
-                            return true;
-                        }
-                    }
-                }
-            });
-        });
-    },
 });
