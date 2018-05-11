@@ -118,14 +118,12 @@ function handleDatabaseChanges(events) {
                     if (search.criteria.published && search.criteria.ready) {
                         if (event.diff.published || event.diff.ready) {
                             if (event.current.published && event.current.ready) {
-                                console.log('Clearing', search.criteria)
                                 return true;
                             }
                         }
                     }
                     if (search.criteria.deleted !== undefined) {
                         if (event.diff.deleted && event.previous.deleted !== undefined) {
-                            console.log('Clearing (deleted)', search.criteria)
                             return true;
                         }
                     }
