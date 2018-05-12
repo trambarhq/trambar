@@ -44,6 +44,16 @@ function initialize(evt) {
     }
     importFuncs['app'] = () => import('application' /* webpackChunkName: "app" */);
     BootstrapLoader.load(importFuncs, progress).then((modules) => {
+        if (process.env.NODE_ENV === 'production') {
+            var Promise = modules['bluebird'];
+            Promise.config({
+                warnings: false,
+                longStackTraces: false,
+                cancellation: false,
+                monitoring: false
+            });
+        }
+
         var Application = modules['app'];
         var React = modules['react'];
         var ReactDOM = modules['react-dom'];

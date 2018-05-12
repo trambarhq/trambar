@@ -317,11 +317,14 @@ function chooseStories(row) {
             }
         }
     }
-    if (oldStoryCount !== oldStories.length || newStories.length > 0) {
+    if (oldStoryCount !== oldStories.length || newStories.length > 0 || backfillingStories.length > 0) {
         if (oldStoryCount !== oldStories.length) {
             // remove older stories
             oldStories = _.slice(oldStories, oldStories.length - oldStoryCount);
         }
+        // remember the latest story that was considered (not necessarily going
+        // to be included in the list)
+        var latestStory = _.maxBy(newStories, 'btime');
         if (newStoryCount !== newStories.length) {
             // apply retrieval time rating adjustments
             var context = ByRetrievalTime.createContext(newStories, row);
@@ -329,7 +332,7 @@ function chooseStories(row) {
                 story.rating += ByRetrievalTime.calculateRating(context, story);
             });
 
-            // remove lowly rate stories
+            // remove lowly rated stories
             newStories = _.orderBy(newStories, [ 'rating', 'btime' ], [ 'asc', 'asc' ]);
             newStories = _.slice(newStories, newStories.length - newStoryCount);
             newStories = _.orderBy(newStories, [ 'btime' ], [ 'asc' ]);
@@ -353,9 +356,9 @@ function chooseStories(row) {
                 story.rating += ByRetrievalTime.calculateRating(context, story);
             });
 
-            // remove lowly rate stories
+            // remove lowly rated stories
             backfillingStories = _.orderBy(backfillingStories, [ 'rating', 'btime' ], [ 'asc', 'asc' ]);
-            backfillingStories = _.slice(backfillingStories, gap);
+            backfillingStories = _.slice(backfillingStories, 0, gap);
 
             // fill the gap
             _.each(backfillingStories, (story) => {
@@ -363,7 +366,14 @@ function chooseStories(row) {
                 stories.splice(index, 0, story);
             });
         }
+        var earliestStory = _.minBy(stories, 'btime');
 
+        if (latestStory) {
+            row.details.latest = latestStory.btime;
+        }
+        if (earliestStory) {
+            row.details.earliest = earliestStory.btime;
+        }
         row.details.stories = stories;
         row.details.candidates = [];
         row.details.backfill_candidates = undefined;
