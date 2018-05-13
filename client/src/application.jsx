@@ -145,16 +145,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Set scrollbox after it's created
-     *
-     * @param  {HTMLDivElement} node
-     */
-    setScrollBox: function(node) {
-        this.scrollBoxNode = node;
-        node.focus();
-    },
-
-    /**
      * Render the application
      *
      * @return {ReactElement}
@@ -212,12 +202,8 @@ module.exports = React.createClass({
         return (
             <div className={className} id="application">
                 <TopNavigation {...topNavProps} />
-                <section className="page-view-port" id="page-view-port">
-                    <div className="scroll-box" id="scroll-box" tabIndex={0} ref={this.setScrollBox}>
-                        <div className="contents">
-                            {this.renderCurrentPage()}
-                        </div>
-                    </div>
+                <section className="page-view-port">
+                    {this.renderCurrentPage()}
                 </section>
                 <BottomNavigation {...bottomNavProps} />
                 {this.renderStartPage()}
@@ -790,12 +776,7 @@ module.exports = React.createClass({
                 var url = anchor.getAttribute('href') || anchor.getAttribute('data-url');
                 if (url && url.indexOf(':') === -1) {
                     // relative links are handled by RouteManager
-                    this.state.route.change(url).then(() => {
-                        // scroll back to the top when clicking on link with no hash
-                        if (!this.state.route.hash) {
-                            this.scrollBoxNode.scrollTop = 0;
-                        }
-                    });
+                    this.state.route.change(url);
                     evt.preventDefault();
                     // clear focus on change
                     anchor.blur();

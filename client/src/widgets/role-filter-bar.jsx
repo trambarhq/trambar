@@ -50,7 +50,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             theme: this.props.theme,
         };
-        meanwhile.show(<RoleFilterBarSync {...props} />, 250);
+        meanwhile.show(<RoleFilterBarSync {...props} />);
         return db.start().then((userId) => {
             return ProjectFinder.findCurrentProject(db).then((project) => {
                 props.project = project;

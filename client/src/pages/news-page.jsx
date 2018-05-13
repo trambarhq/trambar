@@ -19,6 +19,7 @@ var Theme = require('theme/theme');
 var UpdateCheck = require('mixins/update-check');
 
 // widgets
+var PageContainer = require('widgets/page-container');
 var StoryList = require('lists/story-list');
 var LoadingAnimation = require('widgets/loading-animation');
 var EmptyMessage = require('widgets/empty-message');
@@ -41,11 +42,10 @@ module.exports = Relaks.createClass({
          *
          * @param  {String} path
          * @param  {Object} query
-         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseURL: function(path, query, hash) {
+        parseURL: function(path, query) {
             return Route.match(path, [
                 '/:schema/news/?',
             ], (params) => {
@@ -54,8 +54,6 @@ module.exports = Relaks.createClass({
                     roles: Route.parseIdList(query.roles),
                     search: query.search,
                     date: Route.parseDate(query.date),
-                    story: Route.parseId(hash, /S(\d+)/i),
-                    reaction: Route.parseId(hash, /R(\d+)/i),
                 };
             });
         },
@@ -68,7 +66,7 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getURL: function(params) {
-            var path = `/${params.schema}/news/`, query = {}, hash;
+            var path = `/${params.schema}/news/`, query = {};
             if (params.date != undefined) {
                 query.date = params.date;
             }
@@ -78,13 +76,7 @@ module.exports = Relaks.createClass({
             if (params.search != undefined) {
                 query.search = params.search;
             }
-            if (params.story != undefined) {
-                hash = `S${params.story}`;
-                if (params.reaction != undefined) {
-                    hash += `R${params.reaction}`;
-                }
-            }
-            return { path, query, hash };
+            return { path, query };
         },
 
         /**
@@ -120,10 +112,8 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        // don't wait for remote data unless the route changes
-        var freshRoute = this.props.route.isFresh(meanwhile.prior.props.route);
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
+        var db = this.props.database.use({ schema: params.schema, by: this });
         var tags;
         if (params.search && !TagScanner.removeTags(params.search)) {
             tags = TagScanner.findTags(params.search);
@@ -136,14 +126,13 @@ module.exports = Relaks.createClass({
             currentUser: null,
 
             acceptNewStory: (!params.date && _.isEmpty(params.roles) && !params.search),
-            freshRoute: freshRoute,
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<NewsPageSync {...props} />, 250);
+        meanwhile.show(<NewsPageSync {...props} />);
         return db.start().then((userId) => {
             return UserFinder.findUser(db, userId).then((user) => {
                 props.currentUser = user;
@@ -185,17 +174,6 @@ module.exports = Relaks.createClass({
                 });
             }
         }).then(() => {
-            // when we're focusing on one story, we need to make sure the
-            // story is actually there
-            if (params.story && !params.date) {
-                var allStories = _.concat(props.stories, props.draftStories, props.pendingStories);
-                if (!_.find(allStories, { id: params.story })) {
-                    return StoryFinder.findStory(db, params.story).then((story) => {
-                        return this.redirectToStory(params.schema, story);
-                    }).catch((err) => {
-                    });
-                }
-            }
             return <NewsPageSync {...props} />;
         });
     },
@@ -232,7 +210,6 @@ var NewsPageSync = module.exports.Sync = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         acceptNewStory: PropTypes.bool,
-        freshRoute: PropTypes.bool,
         listing: PropTypes.object,
         stories: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
@@ -264,10 +241,10 @@ var NewsPageSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         return (
-            <div className="news-page">
+            <PageContainer className="news-page">
                 {this.renderList()}
                 {this.renderEmptyMessage()}
-            </div>
+            </PageContainer>
         );
     },
 
@@ -286,22 +263,17 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         var listProps = {
             access: access,
             acceptNewStory: this.props.acceptNewStory && access === 'read-write',
-            refreshList: this.props.freshRoute,
             stories: this.props.stories,
             draftStories: this.props.draftStories,
             pendingStories: this.props.pendingStories,
             currentUser: this.props.currentUser,
             project: this.props.project,
-            selectedStoryId: params.story,
-            selectedReactionId: params.reaction,
 
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-
-            onSelectionClear: this.handleSelectionClear,
         };
         return <StoryList {...listProps} />
     },
@@ -338,12 +310,5 @@ var NewsPageSync = module.exports.Sync = React.createClass({
             };
             return <EmptyMessage {...props} />;
         }
-    },
-
-    /**
-     * Called when user has scrolled away from selected story
-     */
-    handleSelectionClear: function() {
-        this.props.route.unanchor();
     },
 });

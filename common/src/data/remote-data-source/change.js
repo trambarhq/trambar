@@ -90,7 +90,7 @@ Change.prototype.dispatch = function() {
                 }
             }).catch((err) => {
                 if (err.statusCode >= 400 && err.statusCode <= 499) {
-                    this.error = error;
+                    this.error = err;
                     this.rejectPromise(err);
                 }
                 this.dispatched = false;

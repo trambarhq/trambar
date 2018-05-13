@@ -30,7 +30,6 @@ module.exports = React.createClass({
         respondents: PropTypes.arrayOf(PropTypes.object),
         repo: PropTypes.object,
         currentUser: PropTypes.object,
-        selectedReactionId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -40,6 +39,43 @@ module.exports = React.createClass({
 
         onFinish: PropTypes.func,
         onSelectionClear: PropTypes.func,
+    },
+
+    statics: {
+        /**
+         * Extract id from URL hash
+         *
+         * @param  {String} hash
+         *
+         * @return {Object}
+         */
+        parseHash: function(hash) {
+            var reaction, highlighting;
+            if (reaction = Route.parseId(hash, /R(\d+)/)) {
+                highlighting = true;
+            } else if (reaction = Route.parseId(hash, /r(\d+)/)) {
+                highlighting = false;
+            }
+            return { reaction, highlighting };
+        },
+
+        /**
+         * Get URL hash based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {String}
+         */
+        getHash: function(params) {
+            if (params.reaction != undefined) {
+                if (params.highlighting) {
+                    return `R${params.reaction}`;
+                } else {
+                    return `r${params.reaction}`;
+                }
+            }
+            return '';
+        },
     },
 
     /**
@@ -60,12 +96,16 @@ module.exports = React.createClass({
      */
     render: function() {
         var reactions = sortReactions(this.props.reactions, this.props.currentUser);
-        var anchorId = this.props.selectedReactionId;
+        var anchor;
+        var hashParams = module.exports.parseHash(this.props.route.hash);
+        if (hashParams.reaction) {
+            anchor = `reaction-${hashParams.reaction}`;
+        }
         var props = {
             items: reactions,
             behind: 5,
             ahead: 10,
-            anchor: (anchorId) ? `reaction-${anchorId}` : undefined,
+            anchor: anchor,
             offset: 4,
             inverted: true,
             fresh: false,
@@ -73,7 +113,6 @@ module.exports = React.createClass({
             onIdentity: this.handleReactionIdentity,
             onTransition: this.handleReactionTransition,
             onRender: this.handleReactionRender,
-            onAnchorChange: this.handleReactionAnchorChange,
             onBeforeAnchor: this.handleReactionBeforeAnchor,
         }
         return (
@@ -142,14 +181,9 @@ module.exports = React.createClass({
                     }
                 }
             }
-            if (reaction.id === this.props.selectedReactionId) {
-                // highlight it only once
-                if (reaction.id !== this.highlightedReactionId) {
-                    highlighting = true;
-                    setTimeout(() => {
-                        this.highlightedReactionId = reaction.id;
-                    }, 5000);
-                }
+            var hashParams = module.exports.parseHash(this.props.route.hash);
+            if (reaction.id === hashParams.reaction) {
+                highlighting = hashParams.highlighting;
             }
         }
         if (isUserDraft) {
@@ -185,23 +219,6 @@ module.exports = React.createClass({
                 theme: this.props.theme,
             };
             return <ReactionView key={reaction.id} {...props} />
-        }
-    },
-
-    /**
-     * Called when a different story is positioned at the top of the viewport
-     *
-     * @param  {Object} evt
-     */
-    handleReactionAnchorChange: function(evt) {
-        var reactionId = _.get(evt.item, 'id');
-        if (this.props.selectedReactionId && reactionId !== this.props.selectedReactionId) {
-            if (this.props.onSelectionClear) {
-                this.props.onSelectionClear({
-                    type: 'selectionclear',
-                    target: this,
-                });
-            }
         }
     },
 

@@ -16,6 +16,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
+var PageContainer = require('widgets/page-container');
 var DevelopmentPanel = require('panels/development-panel');
 var ProjectPanel = require('panels/project-panel');
 var DevicePanel = require('panels/device-panel');
@@ -48,11 +49,10 @@ module.exports = Relaks.createClass({
          *
          * @param  {String} path
          * @param  {Object} query
-         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseURL: function(path, query, url) {
+        parseURL: function(path, query) {
             return Route.match(path, [
                 '/global/settings/?',
                 '/:schema/settings/?',
@@ -72,11 +72,11 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getURL: function(params) {
-            var path = `/${params.schema || 'global'}/settings/`, query = {}, hash;
+            var path = `/${params.schema || 'global'}/settings/`, query = {};
             if (params.diagnostics) {
                 query.diagnostics = 1;
             }
-            return { path, query, hash };
+            return { path, query };
         },
 
         /**
@@ -121,7 +121,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<SettingsPageSync {...props} />, 250);
+        meanwhile.show(<SettingsPageSync {...props} />);
         return db.start().then((currentUserId) => {
             return UserFinder.findUser(db, currentUserId).then((user) => {
                 props.currentUser = user;
@@ -232,7 +232,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             return null;
         }
         return (
-            <div className="settings-page">
+            <PageContainer className="settings-page">
                 <div className="panels">
                     {this.renderDevelopmentPanel()}
                     {this.renderProjectPanel()}
@@ -245,7 +245,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     {this.renderSocialNetworkPanel()}
                     {this.renderLanguagePanel()}
                 </div>
-            </div>
+            </PageContainer>
         );
     },
 
@@ -256,7 +256,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      */
     renderDiagnostics: function() {
         return (
-            <div className="settings-page">
+            <PageContainer className="settings-page">
                 <div className="panels diagnostics">
                     <DiagnoisticsPanel type="connectivity-monitor" title="Network" />
                     <DiagnoisticsPanel type="websocket-notifier" title="Web Socket" />
@@ -271,7 +271,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     <DiagnoisticsPanel type="payload-manager" title="Payload Manager" />
                     <DiagnoisticsPanel type="code-push" title="CodePush" />
                 </div>
-            </div>
+            </PageContainer>
         );
     },
 

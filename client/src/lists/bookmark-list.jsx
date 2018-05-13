@@ -33,7 +33,6 @@ module.exports = Relaks.createClass({
     displayName: 'BookmarkList',
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        refreshList: PropTypes.bool,
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         project: PropTypes.object,
@@ -44,8 +43,43 @@ module.exports = Relaks.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
 
-        onSelectionClear: PropTypes.func,
+    statics: {
+        /**
+         * Extract id from URL hash
+         *
+         * @param  {String} hash
+         *
+         * @return {Object}
+         */
+        parseHash: function(hash) {
+            var story, highlighting;
+            if (story = Route.parseId(hash, /S(\d+)/)) {
+                highlighting = true;
+            } else if (story = Route.parseId(hash, /s(\d+)/)) {
+                highlighting = false;
+            }
+            return { story, highlighting };
+        },
+
+        /**
+         * Get URL hash based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {String}
+         */
+        getHash: function(params) {
+            if (params.story) {
+                if (params.highlighting) {
+                    return `S${params.story}`;
+                } else {
+                    return `s${params.story}`;
+                }
+            }
+            return '';
+        },
     },
 
     /**
@@ -69,7 +103,6 @@ module.exports = Relaks.createClass({
             recipients: null,
             repos: null,
 
-            selectedStoryId: this.props.selectedStoryId,
             access: this.props.access,
             bookmarks: this.props.bookmarks,
             currentUser: this.props.currentUser,
@@ -79,12 +112,8 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            refreshList: this.props.refreshList,
-
-            onSelectionClear: this.props.onSelectionClear,
-
         };
-        meanwhile.show(<BookmarkListSync {...props} />, 250);
+        meanwhile.show(<BookmarkListSync {...props} />);
         return db.start().then((userId) => {
             return RepoFinder.findProjectRepos(db, props.project).then((repos) => {
                 props.repos = repos;
@@ -140,7 +169,6 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        refreshList: PropTypes.bool,
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         senders: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
@@ -154,15 +182,12 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
         currentUser: PropTypes.object,
         project: PropTypes.object,
         repos: PropTypes.arrayOf(PropTypes.object),
-        selectedStoryId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onSelectionClear: PropTypes.func,
     },
 
     /**
@@ -173,20 +198,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     getInitialState: function() {
         return {
             hiddenStoryIds: [],
-            selectedStoryId: this.props.selectedStoryId || 0,
         };
-    },
-
-    /**
-     * Update state on prop changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.selectedStoryId !== nextProps.selectedStoryId) {
-            this.setState({ selectedStoryId: nextProps.selectedStoryId });
-            this.selectionCleared = false;
-        }
     },
 
     /**
@@ -197,8 +209,9 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     render: function() {
         var bookmarks = sortBookmark(this.props.bookmarks);
         var anchor;
-        if (this.state.selectedStoryId) {
-            anchor = `story-${this.state.selectedStoryId}`;
+        var hashParams = module.exports.parseHash(this.props.route.hash);
+        if (hashParams.story) {
+            anchor = `story-${hashParams.story}`;
         }
         var smartListProps = {
             items: bookmarks,
@@ -206,7 +219,6 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
             ahead: 8,
             anchor: anchor,
             offset: 20,
-            fresh: this.props.refreshList,
 
             onIdentity: this.handleBookmarkIdentity,
             onRender: this.handleBookmarkRender,
@@ -229,15 +241,12 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
     renderNewStoryAlert: function() {
         var t = this.props.locale.translate;
         var count = _.size(this.state.hiddenStoryIds);
-        var show = (count > 0);
-        if (count) {
-            this.previousHiddenStoryCount = count;
-        } else {
-            // show the previous count as the alert transitions out
-            count = this.previousHiddenStoryCount || 0;
-        }
+        var params = {
+            story: _.first(this.state.hiddenStoryIds)
+        };
         var props = {
-            show: show,
+            hash: module.exports.getHash(params),
+            route: this.props.route,
             onClick: this.handleNewBookmarkAlertClick,
         };
         return (
@@ -378,18 +387,11 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleBookmarkAnchorChange: function(evt) {
-        var storyId = _.get(evt.item, 'story_id');
-        if (this.props.selectedStoryId && storyId !== this.props.selectedStoryId) {
-            if (!this.selectionClear) {
-                if (this.props.onSelectionClear) {
-                    this.props.onSelectionClear({
-                        type: 'selectionclear',
-                        target: this,
-                    });
-                }
-                this.selectionClear = false;
-            }
-        }
+        var params = {
+            story: _.get(evt.item, 'story_id')
+        };
+        var hash = module.exports.getHash(params);
+        this.props.route.reanchor(hash);
     },
 
     /**
@@ -408,11 +410,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNewBookmarkAlertClick: function(evt) {
-        var firstStoryId = _.first(this.state.hiddenStoryIds);
-        this.setState({
-            hiddenStoryIds: [],
-            selectedStoryId: firstStoryId,
-        });
+        this.setState({ hiddenStoryIds: [] });
     },
 });
 

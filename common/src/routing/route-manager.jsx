@@ -104,11 +104,23 @@ module.exports = React.createClass({
         return this.change(url, replacing);
     },
 
+
     /**
-     * Get URL to a page
+     * Find the URL of a page component
      *
+     * @param  {ReactComponent|Array<ReactComponent>} components
+     * @param  {Object|undefined} parameters
+     *
+     * @return {String}
      */
-    find: function(page, params) {
+    find: function(components, params) {
+        var page, subcomponents;
+        if (components instanceof Array) {
+            page = components[0];
+            subcomponents = _.slice(components, 1);
+        } else {
+            page = components;
+        }
         params = _.clone(params) || {};
         var urlParts = page.getURL(params);
         var basePath = this.state.basePath;
@@ -127,8 +139,12 @@ module.exports = React.createClass({
             });
             url += qs;
         }
-        if (urlParts.hash) {
-            url += '#' + urlParts.hash;
+        var hashParts = _.map(subcomponents, (subcomponent) => {
+            return subcomponent.getHash(params);
+        });
+        var hash = _.join(hashParts, '');
+        if (hash) {
+            url += '#' + hash;
         }
         return url;
     },
@@ -162,12 +178,15 @@ module.exports = React.createClass({
                     var pageName = _.get(page, 'displayName', 'Page')
                     throw new Error(`${pageName} does not implement the static function parseURL()`);
                 }
-                var params = page.parseURL(urlParts.path, urlParts.query, urlParts.hash);
+                var params = page.parseURL(urlParts.path, urlParts.query);
                 if (params) {
                     // use the one with the longest match
                     if (params.match.length > matchLength) {
                         var routeParams = _.assign(_.omit(params, 'match'), rewriteParams);
                         var canonicalURL = this.find(page, routeParams);
+                        if (urlParts.hash) {
+                            canonicalURL += '#' + urlParts.hash;
+                        }
                         route = {
                             url: canonicalURL,
                             component: page,
@@ -226,16 +245,24 @@ module.exports = React.createClass({
     },
 
     /**
-     * Remove hash from current URL
+     * Change the URL hash, without emitting a change event
+     *
+     * @param  {String} hash
      */
-    unanchor: function() {
+    reanchor: function(hash) {
         if (process.env.PLATFORM === 'browser') {
             var currentURL = window.location.href;
             var hashIndex = currentURL.indexOf('#');
-            if (hashIndex !== -1) {
-                var newURL = currentURL.substr(0, hashIndex);
+            var newURL = (hashIndex !== -1) ? currentURL.substr(0, hashIndex) : currentURL;
+            if (hash) {
+                newURL += '#' + hash;
+            }
+            if (currentURL !== newURL) {
                 window.history.replaceState({}, '', newURL);
             }
+        }
+        if (this.state.hash !== hash) {
+            this.setState({ hash });
         }
     },
 

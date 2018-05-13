@@ -25,14 +25,12 @@ module.exports = React.createClass({
     displayName: 'UserList',
     mixins: [ UpdateCheck ],
     propTypes: {
-        refreshList: PropTypes.bool,
         users: PropTypes.arrayOf(PropTypes.object),
         roles: PropTypes.arrayOf(PropTypes.object),
         dailyActivities: PropTypes.object,
         listings: PropTypes.arrayOf(PropTypes.object),
         stories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
-        selectedUserId: PropTypes.number,
         selectedDate: PropTypes.string,
         today: PropTypes.string,
         link: PropTypes.oneOf([ 'user', 'team' ]),
@@ -42,8 +40,43 @@ module.exports = React.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
         loading: PropTypes.bool,
+    },
 
-        onSelectionClear: PropTypes.func,
+    statics: {
+        /**
+         * Extract id from URL hash
+         *
+         * @param  {String} hash
+         *
+         * @return {Object}
+         */
+        parseHash: function(hash) {
+            var user, highlighting;
+            if (user = Route.parseId(hash, /U(\d+)/)) {
+                highlighting = true;
+            } else if (user = Route.parseId(hash, /u(\d+)/)) {
+                highlighting = false;
+            }
+            return { user, highlighting };
+        },
+
+        /**
+         * Get URL hash based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {String}
+         */
+        getHash: function(params) {
+            if (params.user) {
+                if (params.highlighting) {
+                    return `U${params.user}`;
+                } else {
+                    return `u${params.user}`;
+                }
+            }
+            return '';
+        },
     },
 
     /**
@@ -54,20 +87,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         return {
             viewOptions: {},
-            selectedUserId: this.props.selectedUserId || 0,
         };
-    },
-
-    /**
-     * Update state on prop changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.selectedUserId !== nextProps.selectedUserId) {
-            this.setState({ selectedUserId: nextProps.selectedUserId });
-            this.selectionCleared = false;
-        }
     },
 
     /**
@@ -78,8 +98,9 @@ module.exports = React.createClass({
     render: function() {
         var users = sortUsers(this.props.users, this.props.locale);
         var anchor;
-        if (this.state.selectedUserId) {
-            anchor = `user-${this.state.selectedUserId}`;
+        var hashParams = module.exports.parseHash(this.props.route.hash);
+        if (hashParams.user) {
+            anchor = `user-${hashParams.user}`;
         }
         var smartListProps = {
             items: users,
@@ -87,7 +108,6 @@ module.exports = React.createClass({
             behind: 4,
             ahead: 8,
             anchor: anchor,
-            fresh: this.props.refreshList,
 
             onIdentity: this.handleUserIdentity,
             onRender: this.handleUserRender,
@@ -163,18 +183,11 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleUserAnchorChange: function(evt) {
-        var storyId = _.get(evt.item, 'id');
-        if (this.props.selectedUserId && storyId !== this.props.selectedUserId) {
-            if (!this.selectionCleared) {
-                if (this.props.onSelectionClear) {
-                    this.props.onSelectionClear({
-                        type: 'selectionclear',
-                        target: this,
-                    });
-                }
-                this.selectionCleared = true;
-            }
-        }
+        var params = {
+            user: _.get(evt.item, 'id')
+        };
+        var hash = module.exports.getHash(params);
+        this.props.route.reanchor(hash);
     },
 
     /**

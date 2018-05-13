@@ -232,12 +232,23 @@ function getNotificationURL(notification, route) {
         case 'survey':
         case 'issue':
         case 'mention':
+            var components = [
+                require('pages/news-page'),
+                require('lists/story-list'),
+                require('lists/reaction-list'),
+            ];
             params.story = notification.story_id;
             params.reaction = notification.reaction_id || undefined;
-            return route.find(require('pages/news-page'), params);
+            params.highlighting = true;
+            return route.find(components, params);
         case 'bookmark':
+            var components = [
+                require('pages/bookmarks-page'),
+                require('lists/story-list'),
+            ];
             params.story = notification.story_id;
-            return route.find(require('pages/bookmarks-page'), params);
+            params.highlighting = true;
+            return route.find(components, params);
         case 'join-request':
             var projectId = _.get(notification, 'details.project_id');
             return `/admin/projects/${projectId}/members/`;

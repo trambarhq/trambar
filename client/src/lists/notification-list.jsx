@@ -24,7 +24,6 @@ require('./notification-list.scss');
 module.exports = Relaks.createClass({
     displayName: 'NotificationList',
     propTypes: {
-        refreshList: PropTypes.bool,
         notifications: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         selectedNotificationId: PropTypes.number,
@@ -33,8 +32,43 @@ module.exports = Relaks.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+    },
 
-        onSelectionClear: PropTypes.func,
+    statics: {
+        /**
+         * Extract id from URL hash
+         *
+         * @param  {String} hash
+         *
+         * @return {Object}
+         */
+        parseHash: function(hash) {
+            var notification, highlighting;
+            if (notification = Route.parseId(hash, /N(\d+)/)) {
+                highlighting = true;
+            } else if (notification = Route.parseId(hash, /n(\d+)/)) {
+                highlighting = false;
+            }
+            return { notification, highlighting };
+        },
+
+        /**
+         * Get URL hash based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {String}
+         */
+        getHash: function(params) {
+            if (params.notification != undefined) {
+                if (params.highlighting) {
+                    return `N${params.notification}`;
+                } else {
+                    return `n${params.notification}`;
+                }
+            }
+            return '';
+        },
     },
 
     /**
@@ -57,11 +91,8 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-            refreshList: this.props.refreshList,
-
-            onSelectionClear: this.props.onSelectionClear,
         };
-        meanwhile.show(<NotificationListSync {...props} />, 250);
+        meanwhile.show(<NotificationListSync {...props} />);
         return db.start().then((userId) => {
             return UserFinder.findNotificationTriggerers(db, props.notifications).then((users) => {
                 props.users = users;
@@ -101,7 +132,6 @@ var NotificationListSync = module.exports.Sync = React.createClass({
     getInitialState: function() {
         return {
             hiddenNotificationIds: [],
-            selectedNotificationId: null,
         };
     },
 
@@ -112,14 +142,17 @@ var NotificationListSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         var notifications = sortNotifications(this.props.notifications);
-        var selectedNotificationId = this.state.selectedNotificationId || this.props.selectedNotificationId;
+        var anchor;
+        var hashParams = module.exports.parseHash(this.props.route.hash);
+        if (hashParams.notification) {
+            anchor = `notification-${hashParams.notification}`;
+        }
         var smartListProps = {
             items: notifications,
             behind: 20,
             ahead: 40,
-            anchor: (selectedNotificationId) ? `notification-${selectedNotificationId}` : undefined,
+            anchor: anchor,
             offset: 10,
-            fresh: this.props.refreshList,
 
             onIdentity: this.handleNotificationIdentity,
             onRender: this.handleNotificationRender,
@@ -142,15 +175,12 @@ var NotificationListSync = module.exports.Sync = React.createClass({
     renderNewNotificationAlert: function() {
         var t = this.props.locale.translate;
         var count = _.size(this.state.hiddenNotificationIds);
-        var show = (count > 0);
-        if (count) {
-            this.previousHiddenNotificationCount = count;
-        } else {
-            // show the previous count as the alert transitions out
-            count = this.previousHiddenNotificationCount || 0;
-        }
+        var params = {
+            notification: _.first(this.state.hiddenNotificationIds)
+        };
         var props = {
-            show: show,
+            hash: module.exports.getHash(params),
+            route: this.props.route,
             onClick: this.handleNewNotificationAlertClick,
         };
         return (
@@ -182,7 +212,7 @@ var NotificationListSync = module.exports.Sync = React.createClass({
                     var delay = unread.length;
                     if (delay > 5) {
                         delay = 5;
-                    } else if (delay > 2) {
+                    } else if (delay < 2) {
                         delay = 2;
                     }
                     clearTimeout(this.markAsSeenTimeout);
@@ -271,18 +301,11 @@ var NotificationListSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     handleNotificationAnchorChange: function(evt) {
-        var notificationId = _.get(evt.item, 'id');
-        if (!notificationId || _.includes(this.state.hiddenNotificationIds, notificationId)) {
-            this.setState({ hiddenNotificationIds: [] });
-        }
-        if (this.props.selectedNotificationId && notificationId !== this.props.selectedNotificationId) {
-            if (this.props.onSelectionClear) {
-                this.props.onSelectionClear({
-                    type: 'selectionclear',
-                    target: this,
-                });
-            }
-        }
+        var params = {
+            notification: _.get(evt.item, 'id')
+        };
+        var hash = module.exports.getHash(params);
+        this.props.route.reanchor(hash);
     },
 
     /**
@@ -291,8 +314,8 @@ var NotificationListSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleNotificationBeforeAnchor: function(evt) {
-        var notificationIds = _.map(evt.items, 'id');
-        var hiddenNotificationIds = _.union(notificationIds, this.state.hiddenNotificationIds);
+        console.log(hiddenNotificationIds);
+        var hiddenNotificationIds = _.map(evt.items, 'id');
         this.setState({ hiddenNotificationIds });
     },
 
@@ -302,10 +325,7 @@ var NotificationListSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNewNotificationAlertClick: function(evt) {
-        this.setState({
-            hiddenNotificationIds: [],
-            selectedNotificationId: _.first(this.state.hiddenNotificationIds),
-        });
+        this.setState({ hiddenNotificationIds: [] });
     },
 });
 

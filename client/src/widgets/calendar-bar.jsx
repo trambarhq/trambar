@@ -43,7 +43,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
         };
-        meanwhile.show(<CalendarBarSync {...props} />, 1000);
+        meanwhile.show(<CalendarBarSync {...props} />);
         return db.start().then((userId) => {
             var params = _.clone(this.props.settings.statistics);
             if (params.user_id === 'current') {

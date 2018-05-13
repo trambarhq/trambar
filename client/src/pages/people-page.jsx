@@ -20,6 +20,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
+var PageContainer = require('widgets/page-container');
 var UserList = require('lists/user-list');
 var StoryList = require('lists/story-list');
 var LoadingAnimation = require('widgets/loading-animation');
@@ -43,11 +44,10 @@ module.exports = Relaks.createClass({
          *
          * @param  {String} path
          * @param  {Object} query
-         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseURL: function(path, query, hash) {
+        parseURL: function(path, query) {
             return Route.match(path, [
                 '/:schema/people/:user/?',
                 '/:schema/people/?',
@@ -58,9 +58,6 @@ module.exports = Relaks.createClass({
                     user: Route.parseId(params.user),
                     date: Route.parseDate(query.date),
                     roles: Route.parseIdList(query.roles),
-                    story: Route.parseId(hash, /S(\d+)/i),
-                    reaction: Route.parseId(hash, /R(\d+)/i),
-                    previousUser: Route.parseId(hash, /U(\d+)/i),
                 };
             });
         },
@@ -73,7 +70,7 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getURL: function(params) {
-            var path = `/${params.schema}/people/`, query = {}, hash;
+            var path = `/${params.schema}/people/`, query = {};
             if (params.user) {
                 path += `${params.user}/`;
             }
@@ -86,16 +83,7 @@ module.exports = Relaks.createClass({
             if (params.search != undefined) {
                 query.search = params.search;
             }
-            if (params.story) {
-                hash = `S${params.story}`;
-                if (params.reaction) {
-                    hash += `R${params.reaction}`;
-                }
-            }
-            if (params.previousUser) {
-                hash = `U${params.previousUser}`;
-            }
-            return { path, query, hash };
+            return { path, query };
         },
 
         /**
@@ -156,10 +144,8 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        // don't wait for remote data unless the route changes
-        var freshRoute = this.props.route.isFresh(meanwhile.prior.props.route);
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, blocking: freshRoute, by: this });
+        var db = this.props.database.use({ schema: params.schema, by: this });
         var tags;
         if (params.search && !TagScanner.removeTags(params.search)) {
             tags = TagScanner.findTags(params.search);
@@ -177,14 +163,13 @@ module.exports = Relaks.createClass({
 
             selectedDate: params.date,
             today: this.state.today,
-            freshRoute: freshRoute,
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<PeoplePageSync {...props} />, 250);
+        meanwhile.show(<PeoplePageSync {...props} />);
         return db.start().then((currentUserId) => {
             return UserFinder.findUser(db, currentUserId).then((user) => {
                 props.currentUser = user;
@@ -387,7 +372,6 @@ module.exports = Relaks.createClass({
 var PeoplePageSync = module.exports.Sync = React.createClass({
     displayName: 'PeoplePageSync',
     propTypes: {
-        freshRoute: PropTypes.bool,
         project: PropTypes.object,
         members: PropTypes.arrayOf(PropTypes.object),
         selectedUser: PropTypes.object,
@@ -443,11 +427,11 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         return (
-            <div className="people-page">
+            <PageContainer className="people-page">
                 {this.renderUserList()}
                 {this.renderSelectedUserStoryList()}
                 {this.renderEmptyMessage()}
-            </div>
+            </PageContainer>
         );
     },
 
@@ -459,7 +443,6 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
     renderUserList: function() {
         var params = this.props.route.parameters;
         var listProps = {
-            refreshList: this.props.freshRoute,
             users: this.props.visibleUsers,
             dailyActivities: this.props.dailyActivities,
             listings: this.props.listings,
@@ -467,15 +450,12 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             currentUser: this.props.currentUser,
             selectedDate: this.props.selectedDate,
             today: this.props.today,
-            selectedUserId: params.previousUser,
             link: (this.props.selectedUser) ? 'team' : 'user',
 
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-
-            onSelectionClear: this.handleSelectionClear,
         };
         return <UserList {...listProps} />
     },
@@ -491,21 +471,16 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
         }
         var params = this.props.route.parameters;
         var listProps = {
-            refreshList: this.props.freshRoute,
             access: this.getAccessLevel(),
             stories: this.props.selectedUserStories,
             currentUser: this.props.currentUser,
             project: this.props.project,
-            selectedStoryId: params.story,
-            selectedReactionId: params.reaction,
 
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-
-            onSelectionClear: this.handleSelectionClear,
         };
         return <StoryList {...listProps} />
     },
@@ -547,13 +522,6 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             };
             return <EmptyMessage {...props} />;
         }
-    },
-
-    /**
-     * Called when user has scrolled away from selected user
-     */
-    handleSelectionClear: function() {
-        this.props.route.unanchor();
     },
 });
 

@@ -50,11 +50,10 @@ var StartPage = module.exports = Relaks.createClass({
          *
          * @param  {String} path
          * @param  {Object} query
-         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseURL: function(path, query, hash) {
+        parseURL: function(path, query) {
             return Route.match(path, [
                 '/:extra?'
             ], (params) => {
@@ -78,7 +77,7 @@ var StartPage = module.exports = Relaks.createClass({
          * @return {Object}
          */
         getURL: function(params) {
-            var path = `/`, query = {}, hash;
+            var path = `/`, query = {};
             if (params) {
                 if (params.add) {
                     query.add = 1;
@@ -90,7 +89,7 @@ var StartPage = module.exports = Relaks.createClass({
                     query.p = params.schema;
                 }
             }
-            return { path, query, hash };
+            return { path, query };
         },
 
         /**
@@ -122,7 +121,7 @@ var StartPage = module.exports = Relaks.createClass({
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             currentUser: null,
-            system: null,
+            system: this.sessionStartSystem || null,
             servers: null,
             projects: null,
             projectLinks: null,
@@ -142,8 +141,16 @@ var StartPage = module.exports = Relaks.createClass({
             if (process.env.PLATFORM === 'browser') {
                 // start authorization process--will receive system description
                 // and list of OAuth providers along with links
-                meanwhile.show(<StartPageSync {...props} />, 250);
+                meanwhile.show(<StartPageSync {...props} />);
                 return db.beginSession('client').then((info) => {
+                    // we'll load the system object again, through the regular
+                    // data retrieval mechanism, once we have gain access
+                    //
+                    // save a copy so that we can keep displaying the
+                    // background image and project description while loading
+                    // occurs
+                    this.sessionStartSystem = info.system;
+
                     props.system = info.system;
                     props.servers = info.servers;
                     return <StartPageSync {...props} />;
@@ -153,7 +160,6 @@ var StartPage = module.exports = Relaks.createClass({
                 if (params.address && params.activationCode) {
                     meanwhile.show(<StartPageSync {...props} />);
                     return db.acquireMobileSession(params.activationCode).then((userId) => {
-                        console.log('acquired');
                         // create entry in device table
                         var device = {
                             type: getDeviceType(),
@@ -191,14 +197,19 @@ var StartPage = module.exports = Relaks.createClass({
             }
         } else {
             // handle things normally after we've gained authorization
-            //
-            // in cordova version, render immediately so user knows the code
-            // has been accepted
-            //
-            // in browser version, keep showing what was there before until
-            // everything has been retrieved
-            var delay = (process.env.PLATFORM === 'cordova') ? 0 : undefined;
-            meanwhile.show(<StartPageSync {...props} />, delay);
+            if (!params.add) {
+                // need to adjust the progressive rendering delay since Relaks
+                // by default disables it once a page has fully rendered
+                if (process.env.PLATFORM === 'cordova') {
+                    // render immediately so user knows the code has been accepted
+                    meanwhile.delay(undefined, 0);
+                } else if (process.env.PLATFORM === 'browser') {
+                    // give it a bit of time to load the project list, before
+                    // we show the loading animation
+                    meanwhile.delay(undefined, 300);
+                }
+            }
+            meanwhile.show(<StartPageSync {...props} />);
             return db.start().then((currentUserId) => {
                 return UserFinder.findUser(db, currentUserId).then((user) => {
                     props.currentUser = user;

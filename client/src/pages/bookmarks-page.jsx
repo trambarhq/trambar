@@ -14,6 +14,7 @@ var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
 // widgets
+var PageContainer = require('widgets/page-container');
 var BookmarkList = require('lists/bookmark-list');
 var LoadingAnimation = require('widgets/loading-animation');
 var EmptyMessage = require('widgets/empty-message');
@@ -36,17 +37,15 @@ module.exports = Relaks.createClass({
          *
          * @param  {String} path
          * @param  {Object} query
-         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseURL: function(path, query, hash) {
+        parseURL: function(path, query) {
             return Route.match(path, [
                 '/:schema/bookmarks/?',
             ], (params) => {
                 return {
                     schema: params.schema,
-                    story: Route.parseId(hash, /S(\d+)/i),
                 };
             });
         },
@@ -59,11 +58,8 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getURL: function(params) {
-            var path = `/${params.schema}/bookmarks/`, query, hash;
-            if (params.story) {
-                hash = `S${params.story}`;
-            }
-            return { path, query, hash };
+            var path = `/${params.schema}/bookmarks/`, query;
+            return { path, query };
         },
 
         /**
@@ -105,7 +101,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<BookmarksPageSync {...props} />, 250);
+        meanwhile.show(<BookmarksPageSync {...props} />);
         return db.start().then((currentUserId) => {
             return UserFinder.findUser(db, currentUserId).then((user) => {
                 props.currentUser = user;
@@ -154,10 +150,10 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
      */
     render: function() {
         return (
-            <div className="bookmarks-page">
+            <PageContainer className="bookmarks-page">
                 {this.renderList()}
                 {this.renderEmptyMessage()}
-            </div>
+            </PageContainer>
         );
     },
 
@@ -173,15 +169,12 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
             bookmarks: this.props.bookmarks,
             currentUser: this.props.currentUser,
             project: this.props.project,
-            selectedStoryId: params.story,
 
             database: this.props.database,
             payloads: this.props.payloads,
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-
-            onSelectionClear: this.handleSelectionClear,
         };
         return <BookmarkList {...listProps} />
     },
@@ -207,12 +200,5 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
             };
             return <EmptyMessage {...props} />;
         }
-    },
-
-    /**
-     * Called when user has scrolled away from selected story
-     */
-    handleSelectionClear: function() {
-        this.props.route.unanchor();
     },
 });

@@ -2,24 +2,17 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
 
+
+var Route = require('routing/route');
+
 require('./new-items-alert.scss');
 
 module.exports = React.createClass({
     displayName: 'NewItemsAlertProxy',
     propTypes: {
-        show: PropTypes.bool,
+        hash: PropTypes.string,
+        route: PropTypes.instanceOf(Route).isRequired,
         onClick: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            show: false
-        };
     },
 
     /**
@@ -33,30 +26,26 @@ module.exports = React.createClass({
 
     /**
      * Draw the alert if component is show on mount
-     *
-     * @return {[type]}
      */
     componentDidMount: function() {
-        if (this.props.show) {
-            this.show();
+        if (this.props.hash) {
+            this.show(this.props);
         }
     },
 
     /**
      * Show or hide the actual element when props.show changes
      *
-     * @param  {Object} prevProps
+     * @param  {Object} nextProps
      */
-    componentDidUpdate: function(prevProps) {
-        if (prevProps.show !== this.props.show) {
-            if (this.props.show) {
-                this.show();
-            } else {
-                this.hide();
-            }
-        } else if (prevProps.children !== this.props.children) {
-            if (this.props.show) {
-                this.redraw();
+    componentWillReceiveProps: function(nextProps) {
+        if (!this.props.hash && nextProps.hash) {
+            this.show(nextProps);
+        } else if (this.props.hash && !nextProps.hash) {
+            this.hide(this.props);
+        } else if (this.props.children !== nextProps.children || this.props.hash !== nextProps.hash) {
+            if (nextProps.hash) {
+                this.redraw(nextProps, true);
             }
         }
     },
@@ -65,77 +54,75 @@ module.exports = React.createClass({
      * Remove the alert on unmount
      */
     componentWillUnmount: function() {
-        this.hide();
+        this.hide(this.props);
     },
 
     /**
      * Render the actual component into the viewport element
+     *
+     * @param  {Object} props
      */
-    show: function() {
+    show: function(props) {
         if (!this.containerNode) {
             this.containerNode = document.createElement('DIV');
-            var viewport = document.getElementById('page-view-port');
-            viewport.appendChild(this.containerNode);
+            this.viewport = document.getElementsByClassName('page-view-port')[0];
+            this.viewport.appendChild(this.containerNode);
         } else {
             if (this.containerRemovalTimeout) {
                 clearTimeout(this.containerRemovalTimeout);
                 this.containerRemovalTimeout = 0;
             }
         }
-        var props = {
-            show: false,
-            onClick: this.props.onClick,
-            children: this.props.children
-        };
-        ReactDOM.render(<NewItemsAlert {...props} />, this.containerNode);
+        this.redraw(props, false);
         setTimeout(() => {
-            props.show = true;
-            ReactDOM.render(<NewItemsAlert {...props} />, this.containerNode);
+            this.redraw(props, true);
         }, 10);
     },
 
     /**
      * Redraw the actual component
+     *
+     * @param  {Object} props
+     * @param  {Boolean} show
      */
-    redraw: function() {
-        var props = {
-            show: true,
-            onClick: this.props.onClick,
-            children: this.props.children
-        };
-        ReactDOM.render(<NewItemsAlert {...props} />, this.containerNode);
+    redraw: function(props, show) {
+        var route = this.props.route;
+        ReactDOM.render(<NewItemsAlert {...props} show={show} />, this.containerNode);
     },
 
     /**
      * Remove the actual component from the viewport element
+     *
+     * @param  {Object} props
      */
-    hide: function() {
+    hide: function(props) {
         if (!this.containerNode) {
             return;
         }
         if (!this.containerRemovalTimeout) {
             this.containerRemovalTimeout = setTimeout(() => {
                 ReactDOM.unmountComponentAtNode(this.containerNode);
-                var viewport = document.getElementById('page-view-port');
-                viewport.removeChild(this.containerNode);
+                this.viewport.removeChild(this.containerNode);
+                this.viewport = null;
                 this.containerNode = null;
                 this.containerRemovalTimeout = 0;
             }, 500);
         }
-        var props = {
-            show: false,
-            children: this.props.children
-        };
-        ReactDOM.render(<NewItemsAlert {...props} />, this.containerNode);
+        this.redraw(props, false);
     },
 });
 
 function NewItemsAlert(props) {
-    var classNames = [ 'new-items-alert', props.show ? 'show' : 'hide' ];
+    var url = _.replace(props.route.url, /#(.*)/, '');
+    var anchorProps = {
+        className: `new-items-alert ${props.show ? 'show' : 'hide'}`,
+        href: url + '#' + props.hash,
+        onClick: props.onClick,
+    };
     return (
-        <div className={classNames.join(' ')} onClick={props.onClick}>
+        <a {...anchorProps}>
             <i className="fa fa-arrow-up" />
             {props.children}
-        </div>
+        </a>
     );
 }

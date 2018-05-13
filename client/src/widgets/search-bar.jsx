@@ -42,7 +42,7 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
         };
-        meanwhile.show(<SearchBarSync {...props} />, 1000);
+        meanwhile.show(<SearchBarSync {...props} />);
         return db.start().then((userId) => {
             var params = _.clone(this.props.settings.statistics);
             if (params.user_id === 'current') {
@@ -58,6 +58,7 @@ module.exports = Relaks.createClass({
 
 var SearchBarSync = module.exports.Sync = React.createClass({
     displayName: 'SearchBar.Sync',
+    mixins: [ UpdateCheck ],
     propTypes: {
         settings: PropTypes.object.isRequired,
         dailyActivities: PropTypes.object,
@@ -78,7 +79,7 @@ var SearchBarSync = module.exports.Sync = React.createClass({
         var keywords = route.query.search || '';
         return {
             keywords: keywords,
-            hashTags: [],
+            hashTags: extractTags(this.props.dailyActivities),
             selectedHashTags: findTags(keywords),
         };
     },

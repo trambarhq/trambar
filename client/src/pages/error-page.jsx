@@ -6,6 +6,9 @@ var Route = require('routing/route');
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
 
+// widgets
+var PageContainer = require('widgets/page-container');
+
 require('./error-page.scss');
 
 module.exports = React.createClass({
@@ -89,15 +92,13 @@ module.exports = React.createClass({
             message = `The application is behaving in ways its maker never intended.`;
         }
         return (
-            <div className="error-page">
-                <div>
-                    <div className="graphic"><Unicorn /></div>
-                    <div className="text">
-                        <h1 className="title">{error.statusCode} {error.message}</h1>
-                        <p>{message}</p>
-                    </div>
+            <PageContainer className="error-page">
+                <div className="graphic"><Unicorn /></div>
+                <div className="text">
+                    <h1 className="title">{error.statusCode} {error.message}</h1>
+                    <p>{message}</p>
                 </div>
-            </div>
+            </PageContainer>
         );
     }
 });

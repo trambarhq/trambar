@@ -1,31 +1,34 @@
 .error-page {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 20vh;
-    color: #ffffff;
+    .contents {
+        flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
 
-    .text {
-        max-width: 25em;
-        line-height: 135%;
-        margin-left: 1em;
-        margin-right: 1em;
+        .text {
+            max-width: 25em;
+            line-height: 135%;
+            margin-left: 1em;
+            margin-right: 1em;
 
-        h1 {
-            text-align: center;
+            h1 {
+                text-align: center;
+            }
         }
-    }
 
-    .graphic {
-        margin-left: 3em;
-        margin-right: 1em;
+        .graphic {
+            margin-left: 3em;
+            margin-right: 1em;
 
-        svg {
-            width: 100%;
-            max-width: 20em;
+            svg {
+                width: 100%;
+                max-width: 20em;
 
-            polygon {
-                fill: #ffffff;
+                polygon {
+                    fill: #ffffff;
+                }
             }
         }
     }

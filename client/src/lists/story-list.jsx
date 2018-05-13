@@ -32,14 +32,11 @@ module.exports = Relaks.createClass({
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         acceptNewStory: PropTypes.bool,
-        refreshList: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
         pendingStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         project: PropTypes.object,
-        selectedStoryId: PropTypes.number,
-        selectedReactionId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -48,6 +45,44 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
 
         onSelectionClear: PropTypes.func,
+        onSelectionMissing: PropTypes.func,
+    },
+
+    statics: {
+        /**
+         * Extract id from URL hash
+         *
+         * @param  {String} hash
+         *
+         * @return {Object}
+         */
+        parseHash: function(hash) {
+            var story, highlighting;
+            if (story = Route.parseId(hash, /S(\d+)/)) {
+                highlighting = true;
+            } else if (story = Route.parseId(hash, /s(\d+)/)) {
+                highlighting = false;
+            }
+            return { story, highlighting };
+        },
+
+        /**
+         * Get URL hash based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {String}
+         */
+        getHash: function(params) {
+            if (params.story) {
+                if (params.highlighting) {
+                    return `S${params.story}`;
+                } else {
+                    return `s${params.story}`;
+                }
+            }
+            return '';
+        },
     },
 
     /**
@@ -80,11 +115,8 @@ module.exports = Relaks.createClass({
             recipients: null,
             repos: null,
 
-            selectedStoryId: this.props.selectedStoryId,
-            selectedReactionId: this.props.selectedReactionId,
             access: this.props.access,
             acceptNewStory: this.props.acceptNewStory,
-            refreshList: this.props.refreshList,
             stories: this.props.stories,
             draftStories: this.props.draftStories,
             pendingStories: this.props.pendingStories,
@@ -96,9 +128,9 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
 
-            onSelectionClear: this.props.onSelectionClear,
+            onStoryMissing: this.props.onStoryMissing,
         };
-        meanwhile.show(<StoryListSync {...props} />, 250);
+        meanwhile.show(<StoryListSync {...props} />);
         return db.start().then((currentUserId) => {
             // load repos first, so "add to issue tracker" option doesn't pop in
             // suddenly in triple-column mode
@@ -145,7 +177,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
     propTypes: {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         acceptNewStory: PropTypes.bool,
-        refreshList: PropTypes.bool,
         stories: PropTypes.arrayOf(PropTypes.object),
         authors: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
@@ -157,8 +188,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
         currentUser: PropTypes.object,
         project: PropTypes.object,
         repos: PropTypes.arrayOf(PropTypes.object),
-        selectedStoryId: PropTypes.number,
-        selectedReactionId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -166,7 +195,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
 
-        onSelectionClear: PropTypes.func,
+        onStoryMissing: PropTypes.func,
     },
 
     /**
@@ -180,20 +209,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
         });
         return {
             hiddenStoryIds: [],
-            selectedStoryId: this.props.selectedStoryId || 0,
         };
-    },
-
-    /**
-     * Update state on prop changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.selectedStoryId !== nextProps.selectedStoryId) {
-            this.setState({ selectedStoryId: nextProps.selectedStoryId });
-            this.selectionCleared = false;
-        }
     },
 
     /**
@@ -208,8 +224,9 @@ var StoryListSync = module.exports.Sync = React.createClass({
             stories = attachDrafts(stories, this.props.draftStories, this.props.currentUser);
         }
         var anchor;
-        if (this.state.selectedStoryId) {
-            anchor = `story-${this.state.selectedStoryId}`;
+        var hashParams = module.exports.parseHash(this.props.route.hash);
+        if (hashParams.story) {
+            anchor = `story-${hashParams.story}`;
         }
         var smartListProps = {
             ref: setters.list,
@@ -218,7 +235,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
             behind: 4,
             ahead: 8,
             anchor: anchor,
-            fresh: this.props.refreshList,
 
             onIdentity: this.handleStoryIdentity,
             onRender: this.handleStoryRender,
@@ -242,15 +258,12 @@ var StoryListSync = module.exports.Sync = React.createClass({
     renderNewStoryAlert: function() {
         var t = this.props.locale.translate;
         var count = _.size(this.state.hiddenStoryIds);
-        var show = (count > 0);
-        if (count) {
-            this.previousHiddenStoryCount = count;
-        } else {
-            // show the previous count as the alert transitions out
-            count = this.previousHiddenStoryCount || 0;
-        }
+        var params = {
+            story: _.first(this.state.hiddenStoryIds)
+        };
         var props = {
-            show: show,
+            hash: module.exports.getHash(params),
+            route: this.props.route,
             onClick: this.handleNewStoryAlertClick,
         };
         return (
@@ -313,13 +326,10 @@ var StoryListSync = module.exports.Sync = React.createClass({
                     }
                 }
             }
-            if (story.id === this.state.selectedStoryId) {
-                if (story.id !== this.highlightedStoryId) {
-                    highlighting = true;
-                    setTimeout(() => {
-                        this.highlightedStoryId = story.id;
-                    }, 5000);
-                }
+
+            var hashParams = module.exports.parseHash(this.props.route.hash);
+            if (story.id === hashParams.story) {
+                highlighting = hashParams.highlighting;
             }
         } else {
             isDraft = true;
@@ -365,7 +375,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
                     respondents,
                     recommendations,
                     recipients,
-                    selectedReactionId: (highlighting) ? this.props.selectedReactionId : undefined,
                     repos: this.props.repos,
                     currentUser: this.props.currentUser,
                     database: this.props.database,
@@ -389,18 +398,11 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleStoryAnchorChange: function(evt) {
-        var storyId = _.get(evt.item, 'id');
-        if (this.props.selectedStoryId && storyId !== this.state.selectedStoryId) {
-            if (!this.selectionCleared) {
-                if (this.props.onSelectionClear) {
-                    this.props.onSelectionClear({
-                        type: 'selectionclear',
-                        target: this,
-                    });
-                }
-                this.selectionCleared = true;
-            }
-        }
+        var params = {
+            story: _.get(evt.item, 'id')
+        };
+        var hash = module.exports.getHash(params);
+        this.props.route.reanchor(hash);
     },
 
     /**
@@ -419,11 +421,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleNewStoryAlertClick: function(evt) {
-        var firstStoryId = _.first(this.state.hiddenStoryIds);
-        this.setState({
-            hiddenStoryIds: [],
-            selectedStoryId: firstStoryId,
-        });
+        this.setState({ hiddenStoryIds: [] });
     },
 
     /**

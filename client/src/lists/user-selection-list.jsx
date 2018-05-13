@@ -48,7 +48,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
             onSelect: this.props.onSelect,
         };
-        meanwhile.show(<UserSelectionListSync {...props} />, 250);
+        meanwhile.show(<UserSelectionListSync {...props} />);
         return db.start().then((currentUserId) => {
             return ProjectFinder.findCurrentProject(db).then((project) => {
                 return UserFinder.findProjectMembers(db, project).then((users) => {

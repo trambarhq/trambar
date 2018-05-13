@@ -39,13 +39,13 @@ Route.prototype.change = function(url, replacing, displayURL) {
 /**
  * Find the URL of a page component
  *
- * @param  {ReactComponent} component
+ * @param  {ReactComponent|Array<ReactComponent>} components
  * @param  {Object|undefined} parameters
  *
  * @return {String}
  */
-Route.prototype.find = function(component, parameters) {
-    return this.routeManager.find(component, parameters);
+Route.prototype.find = function(components, parameters) {
+    return this.routeManager.find(components, parameters);
 };
 
 /**
@@ -75,10 +75,13 @@ Route.prototype.replace = function(component, parameters) {
 };
 
 /**
- * Remove hash from current URL
+ * Set the page anchor
+ *
+ * @param  {String} hash
  */
-Route.prototype.unanchor = function() {
-    this.routeManager.unanchor();
+Route.prototype.reanchor = function(hash) {
+    this.routeManager.reanchor(hash);
+    this.hash = hash || '';
 };
 
 /**
