@@ -135,23 +135,38 @@ Route.prototype.free = function(callback) {
     _.pull(this.callbacks, callback);
 };
 
-Route.prototype.isFresh = function(prevRoute) {
-    if (this !== prevRoute) {
-        if (!prevRoute) {
-            return true;
-        } else if (this.component !== prevRoute.component) {
-            return true;
-        } else if (this.path !== prevRoute.path) {
-            return true;
-        } else if (!_.isEqual(this.query, prevRoute.query)) {
-            return true;
-        }
-    }
-    return false;
-};
-
 Route.prototype.toString = function() {
     return this.url;
+};
+
+Route.compare = function(a, b) {
+    if (!a || !b) {
+        return false;
+    } else if (a.component !== b.component) {
+        return false;
+    } else {
+        var paramsA = a.parameters;
+        var paramsB = b.parameters;
+        var keys = _.union(_.keys(paramsA), _.keys(paramsB));
+        return _.every(keys, (key) => {
+            var valueA = paramsA[key];
+            var valueB = paramsB[key];
+            if (!_.isEqual(valueA, valueB)) {
+                // consider empty arrays as falsy
+                if (valueA instanceof Array && valueA.length === 0) {
+                    valueA = null;
+                }
+                if (valueB instanceof Array && valueB.length === 0) {
+                    valueB = null;
+                }
+                // ignore the different if both values are falsy
+                if (valueA || valueB) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }
 };
 
 Route.match = function(url, patterns, f) {
@@ -180,7 +195,8 @@ Route.match = function(url, patterns, f) {
 };
 
 /**
- * Obtain a list of numeric ids from a string, using '+' as the delimiter
+ * Obtain a list of numeric ids from a string, using '+' as the delimiter.
+ * Return null if string is empty, and undefined if it's undefined.
  *
  * @param  {String} s
  *
@@ -194,9 +210,11 @@ Route.parseIdList = function(s) {
         var tokens = _.split(s, '+');
         return _.map(tokens, _.strictParseInt);
     } else {
-        return [];
+        return emptyArray;
     }
 }
+
+var emptyArray = [];
 
 /**
  * Obtain an id from a string. If a regexp is provided, use that to search for

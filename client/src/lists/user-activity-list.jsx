@@ -60,10 +60,15 @@ module.exports = React.createClass({
      */
     renderActivity: function(story) {
         var route = this.props.route;
+        var components = [
+            require('pages/people-page'),
+            require('lists/story-list')
+        ];
         var params = _.pick(route.parameters, 'schema', 'date', 'search');
         params.user = this.props.user.id;
         params.story = story.id;
-        var url = route.find(require('pages/people-page'), params);
+        params.highlighting = true;
+        var url = route.find(components, params);
         var text = this.renderText(story);
         var labelClass = 'label';
         var time = story.btime || story.ptime;

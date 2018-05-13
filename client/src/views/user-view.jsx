@@ -158,8 +158,11 @@ module.exports = React.createClass({
         }
         var route = this.props.route;
         var params = _.pick(route.parameters, 'schema', 'date', 'search');
-        params.previousUser = this.props.user.id;
-        return route.find(require('pages/people-page'), params);
+        var url = route.find(require('pages/people-page'), params);
+        var hash = require('lists/user-list').getHash({
+            user: this.props.user.id
+        });
+        return url + '#' + hash;
     },
 
     /**

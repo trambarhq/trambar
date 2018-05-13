@@ -209,6 +209,11 @@ module.exports = Relaks.createClass({
                 }
             });
         }).then(() => {
+            if (this.props.theme.mode !== 'single-col') {
+                // don't render without stats in single-column mode, since
+                // that affects the height of the view
+                meanwhile.show(<PeoplePageSync {...props} />);
+            }
             return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, props.members).then((statistics) => {
                 props.dailyActivities = statistics;
                 if (!props.visibleUsers) {
@@ -238,7 +243,8 @@ module.exports = Relaks.createClass({
                 }
             });
         }).then(() => {
-            meanwhile.show(<PeoplePageSync {...props} />);
+            // force progress update to avoid flicking
+            meanwhile.show(<PeoplePageSync {...props} />, true);
             if (params.search) {
                 if (tags) {
                     return StoryFinder.findStoriesWithTags(db, tags, 5).then((stories) => {

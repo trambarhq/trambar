@@ -155,7 +155,7 @@ module.exports = Relaks.createClass({
                 return StoryFinder.findStoriesOnDate(db, params.date, props.currentUser).then((stories) => {
                     props.stories = stories;
                 });
-            } else if (params.roles) {
+            } else if (!_.isEmpty(params.roles)) {
                 return StoryFinder.findStoriesWithRolesInListing(db, params.roles, props.currentUser).then((stories) => {
                     props.stories = stories;
                 });

@@ -297,12 +297,16 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
                     }
                 }
             }
-            if (story.id === this.state.selectedStoryId) {
-                if (story.id !== this.highlightedStoryId) {
+
+            var hash = this.props.route.hash;
+            var hashParams = module.exports.parseHash(hash);
+            if (story.id === hashParams.story) {
+                if (hashParams.highlighting) {
                     highlighting = true;
+                    // suppress highlighting after a second
                     setTimeout(() => {
-                        this.highlightedStoryId = story.id;
-                    }, 5000);
+                        this.props.route.reanchor(_.toLower(hash));
+                    }, 1000);
                 }
             }
         }

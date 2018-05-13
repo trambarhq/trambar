@@ -327,9 +327,16 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 }
             }
 
-            var hashParams = module.exports.parseHash(this.props.route.hash);
+            var hash = this.props.route.hash;
+            var hashParams = module.exports.parseHash(hash);
             if (story.id === hashParams.story) {
-                highlighting = hashParams.highlighting;
+                if (hashParams.highlighting) {
+                    highlighting = true;
+                    // suppress highlighting after a second
+                    setTimeout(() => {
+                        this.props.route.reanchor(_.toLower(hash));
+                    }, 1000);
+                }
             }
         } else {
             isDraft = true;

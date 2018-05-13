@@ -105,6 +105,7 @@ module.exports = React.createClass({
             connection: null,
             searching: false,
             inForeground: true,
+            pageKey: 0,
             pushRelay: null,
             renderingStartPage: false,
             showingUploadProgress: false,
@@ -232,7 +233,7 @@ module.exports = React.createClass({
             locale: this.state.locale,
             theme: this.state.theme,
         };
-        return <CurrentPage {...pageProps} />
+        return <CurrentPage key={this.state.pageKey} {...pageProps} />
     },
 
     /**
@@ -629,6 +630,13 @@ module.exports = React.createClass({
     handleRouteChange: function(evt) {
         var route = new Route(evt.target);
         var dataSource = this.components.remoteDataSource;
+        var previousRoute = this.state.route;
+        var pageKey = this.state.pageKey;
+
+        if (!Route.compare(previousRoute, route)) {
+            // force mounting of new page component when route is different
+            pageKey++;
+        }
 
         // add server location to database context so we don't need to
         // specify it everywhere
@@ -656,6 +664,7 @@ module.exports = React.createClass({
             this.setState({
                 route,
                 database,
+                pageKey,
                 canAccessServer: accessible,
                 canAccessSchema: accessible,
             }, () => {
