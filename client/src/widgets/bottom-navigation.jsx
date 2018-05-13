@@ -314,6 +314,7 @@ var NewNotificationsBadge = Relaks.createClass({
                     var count = notifications.length;
                     if (process.env.PLATFORM === 'browser') {
                         changeFavIcon(count);
+                        changeDocumentTitle(count);
                     }
                     if (!count) {
                         return null;
@@ -369,5 +370,13 @@ if (process.env.PLATFORM === 'browser') {
                 }
             }
         });
+    }
+
+    var changeDocumentTitle = function(count) {
+        var title = _.replace(document.title, /^\(\d+\)\s*/, '');
+        if (count > 0) {
+            title = `(${count}) ${title}`;
+        }
+        document.title = title;
     }
 }
