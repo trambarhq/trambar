@@ -61,14 +61,18 @@
         .video, .audio {
             .overlay {
                 color: #111111;
-                opacity: 0;
+                opacity: 0.5;
 
-                &:hover {
-                    opacity: 0.6;
+                .no-touch & {
+                    opacity: 0;
 
-                    .duration {
-                        color: #eeeeee;
-                        background-color: #111111;
+                    &:hover {
+                        opacity: 0.6;
+
+                        .duration {
+                            color: #eeeeee;
+                            background-color: #111111;
+                        }
                     }
                 }
             }
@@ -82,12 +86,14 @@
                     color: #eeeeee;
                     opacity: 0.5;
 
-                    &:hover {
-                        opacity: 1;
+                    .no-touch & {
+                        &:hover {
+                            opacity: 1;
 
-                        .duration {
-                            color: #eeeeee;
-                            background-color: transparent;
+                            .duration {
+                                color: #eeeeee;
+                                background-color: transparent;
+                            }
                         }
                     }
                 }
