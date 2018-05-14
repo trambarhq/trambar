@@ -170,7 +170,9 @@ function importUsers(db, server) {
                     }
                 });
             }).tap(() => {
-                taskLog.report(index + 1, count, { added, disabled, modified });
+                if (!_.isEmpty(added) || !_.isEmpty(disabled) || !_.isEmpty(modified)) {
+                    taskLog.report(index + 1, count, { added, disabled, modified });
+                }
             });
         });
     }).tap(() => {

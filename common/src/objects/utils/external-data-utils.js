@@ -250,10 +250,6 @@ function importProperty(object, server, path, prop) {
                 _.unset(object, path);
                 _.unset(previous, exchangeKey);
             }
-        } else {
-            console.log('Import conflict');
-            console.log('Expected: ', previousValue);
-            console.log('Actual: ', currentValue);
         }
     } else {
         throw new Error('Unknown option: ' + overwrite);
@@ -315,10 +311,6 @@ function importResource(object, server, prop) {
                     previousResources.splice(previousIndex, 1);
                 }
             }
-        } else {
-            console.log('Import conflict');
-            console.log('Expected: ', previousValue);
-            console.log('Actual: ', currentValue);
         }
         if (_.isEmpty(previousResources)) {
             _.unset(previous, exchangeKey);
@@ -368,10 +360,6 @@ function exportProperty(object, server, path, dest, prop) {
         if (_.isEqual(currentValue, previousValue)) {
             _.set(dest, path, prop.value);
             _.set(previous, exchangeKey, prop.value);
-        } else {
-            console.log('Export conflict');
-            console.log('Expected: ', previousValue);
-            console.log('Actual: ', currentValue);
         }
     } else {
         throw new Error('Unknown option: ' + overwrite);

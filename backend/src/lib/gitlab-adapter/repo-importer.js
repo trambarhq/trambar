@@ -161,7 +161,9 @@ function importRepositories(db, server) {
                     });
                 });
             }).tap(() => {
-                taskLog.report(index + 1, count, { added, deleted, modified });
+                if (!_.isEmpty(added) || !_.isEmpty(deleted) || !_.isEmpty(modified)) {
+                    taskLog.report(index + 1, count, { added, deleted, modified });
+                }
             });
         });
     }).tap(() => {

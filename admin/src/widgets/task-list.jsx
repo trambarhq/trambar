@@ -277,6 +277,9 @@ var TaskListSync = module.exports.Sync = React.createClass({
     renderMessage: function(task) {
         var message = this.getMessage(task);
         var badge;
+        if (!message) {
+            message = task.action + ' (noop)';
+        }
         if (task.failed) {
             badge = <i className="fa fa-exclamation-triangle" />;
         }
