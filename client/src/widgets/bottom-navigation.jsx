@@ -159,7 +159,7 @@ module.exports = React.createClass({
             active: (section === 'news'),
             stacking: this.state.stacking,
             url: this.getPageURL(NewsPage),
-            onClick: this.handleButtonClick,
+            onClick: (section === 'news') ? this.handleActiveButtonClick : null,
         };
         var notificationsProps = {
             label: t('bottom-nav-notifications'),
@@ -167,7 +167,7 @@ module.exports = React.createClass({
             active: (section === 'notifications'),
             stacking: this.state.stacking,
             url: this.getPageURL(NotificationsPage),
-            onClick: this.handleButtonClick,
+            onClick: (section === 'notifications') ? this.handleActiveButtonClick : null,
         };
         var bookmarksProps = {
             label: t('bottom-nav-bookmarks'),
@@ -175,7 +175,7 @@ module.exports = React.createClass({
             active: (section === 'bookmarks'),
             stacking: this.state.stacking,
             url: this.getPageURL(BookmarksPage),
-            onClick: this.handleButtonClick,
+            onClick: (section === 'bookmarks') ? this.handleActiveButtonClick : null,
         };
         var peopleProps = {
             label: t('bottom-nav-people'),
@@ -183,7 +183,7 @@ module.exports = React.createClass({
             active: (section === 'people'),
             stacking: this.state.stacking,
             url: this.getPageURL(PeoplePage),
-            onClick: this.handleButtonClick,
+            onClick: (section === 'people') ? this.handleActiveButtonClick : null,
         };
         var settingsProps = {
             label: t('bottom-nav-settings'),
@@ -191,7 +191,7 @@ module.exports = React.createClass({
             active: (section === 'settings'),
             stacking: this.state.stacking,
             url: this.getPageURL(SettingsPage),
-            onClick: this.handleButtonClick,
+            onClick: (section === 'settings') ? this.handleActiveButtonClick : null,
         };
         var newNotificationProps = {
             hasAccess: this.props.hasAccess,
@@ -249,6 +249,18 @@ module.exports = React.createClass({
     handleWindowResize: function(evt) {
         this.detectStacking();
     },
+
+    /**
+     * Called when user clicks a button that's already active
+     *
+     * @param  {Event} evt
+     */
+    handleActiveButtonClick: function(evt) {
+        var page = document.getElementsByClassName('page-container')[0];
+        if (page) {
+            page.scrollTop = 0;
+        }
+    },
 });
 
 function Button(props) {
@@ -264,7 +276,7 @@ function Button(props) {
     }
     if (props.stacking) {
         return (
-            <Link className={className} url={props.url}>
+            <Link className={className} url={props.url} onClick={props.onClick}>
                 <i className={`fa fa-${props.icon}`} />
                     {props.children}
                     {' '}
@@ -273,7 +285,7 @@ function Button(props) {
         );
     } else {
         return (
-            <Link className={className} url={props.url}>
+            <Link className={className} url={props.url} onClick={props.onClick}>
                 <i className={`fa fa-${props.icon}`} />
                 {' '}
                 <span className="label">{props.label}</span>
