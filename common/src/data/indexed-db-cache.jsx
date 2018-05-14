@@ -200,7 +200,7 @@ module.exports = React.createClass({
                 var storeName = this.getObjectStoreName('remote');
                 var transaction = db.transaction(storeName, 'readwrite');
                 var objectStore = transaction.objectStore(storeName);
-                if (criteria.address !== undefined) {
+                if (criteria.address != undefined) {
                     var prefix = null;
                     if (criteria.schema) {
                         if (criteria.schema !== '*') {
@@ -208,57 +208,77 @@ module.exports = React.createClass({
                         }
                     }
                     var index = objectStore.index('address');
-                    var req = index.openCursor(criteria.address || '');
+                    var req = index.openCursor(criteria.address);
                     var records = [];
+                    var primaryKeys = [];
                     req.onsuccess = (evt) => {
+                        var done = true;
                         var cursor = evt.target.result;
                         if(cursor) {
                             var record = cursor.value;
+                            var primaryKey = cursor.primaryKey;
                             if (!prefix || _.startsWith(record.location, prefix)) {
                                 records.push(record);
-                                cursor.delete();
+                                primaryKeys.push(primaryKey);
                             }
                             cursor.continue();
-                        } else {
+                            done = false;
+                        }
+                        if (done) {
+                            _.each(primaryKeys, (key) => {
+                                objectStore.delete(key);
+                            });
                             resolve(records);
                         }
                     };
-                } else if (criteria.count !== undefined) {
+                } else if (criteria.count != undefined) {
                     var index = objectStore.index('rtime');
                     var req = index.openCursor();
                     var records = [];
+                    var primaryKeys = [];
                     req.onsuccess = (evt) => {
+                        var done = true;
                         var cursor = evt.target.result;
                         if(cursor) {
                             var record = cursor.value;
+                            var primaryKey = cursor.primaryKey;
                             records.push(record);
-                            cursor.delete();
+                            primaryKeys.push(primaryKey);
                             if (records.length < criteria.count) {
                                 cursor.continue();
-                            } else {
-                                resolve(records);
+                                done = false;
                             }
-                        } else {
+                        }
+                        if (done) {
+                            _.each(primaryKeys, (key) => {
+                                objectStore.delete(key);
+                            });
                             resolve(records);
                         }
                     };
-                } else if (criteria.before !== undefined) {
+                } else if (criteria.before != undefined) {
                     var index = objectStore.index('rtime');
                     var req = index.openCursor();
                     var records = [];
+                    var primaryKeys = [];
                     req.onsuccess = (evt) => {
+                        var done = true;
                         var cursor = evt.target.result;
                         if(cursor) {
                             var record = cursor.value;
+                            var primaryKey = cursor.primaryKey;
                             var object = record.data;
                             if (object.rtime < criteria.before) {
                                 records.push(record);
-                                cursor.delete();
+                                primaryKeys.push(primaryKey);
                                 cursor.continue();
-                            } else {
-                                resolve(records);
+                                done = false;
                             }
-                        } else {
+                        }
+                        if (done) {
+                            _.each(primaryKeys, (key) => {
+                                objectStore.delete(key);
+                            });
                             resolve(records);
                         }
                     };
@@ -293,6 +313,8 @@ module.exports = React.createClass({
                 });
             }
             return count;
+        }).catch((err) => {
+            return this.destroy();
         });
     },
 
@@ -328,6 +350,23 @@ module.exports = React.createClass({
             });
         }
         return this.databasePromise;
+    },
+
+    /**
+     * Destroy the IndexedDB database complete
+     *
+     * @return {Promise<Boolean>}
+     */
+    destroy: function() {
+        return new Promise((resolve, reject) => {
+            var deleteRequest = window.indexedDB.deleteDatabase(this.props.databaseName);
+            deleteRequest.onsuccess = (evt) => {
+                resolve(true);
+            };
+            deleteRequest.onerror = (evt) => {
+                resolve(false);
+            };
+        });
     },
 
     /**
