@@ -32,7 +32,7 @@ LABEL.push-button {
 
     INPUT[type="file"] {
         position: absolute;
-        z-index: -50000;
+        visibility: hidden;
         width: 1px;
         height: 1px;
     }
