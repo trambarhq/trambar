@@ -153,6 +153,7 @@ module.exports = React.createClass({
         }
         if (this.props.repos !== nextProps.repos) {
             this.updateOptions(nextState, nextProps);
+            this.updateLocaleCode(nextState, nextProps);
         }
         var changes = _.shallowDiff(nextState, this.state);
         if (!_.isEmpty(changes)) {
@@ -1089,6 +1090,12 @@ module.exports = React.createClass({
         var langText = evt.currentTarget.value;
         var loc = this.state.options.localeCode;
         var lang = loc.substr(0, 2);
+        if (loc) {
+            lang = loc.substr(0, 2);
+        } else {
+            // locale isn't set--use current locale
+            lang = this.props.locale.languageCode;
+        }
         var path = `details.text.${lang}`;
         var draft = _.decoupleSet(this.state.draft, path, langText);
 
