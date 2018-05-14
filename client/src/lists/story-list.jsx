@@ -43,9 +43,6 @@ module.exports = Relaks.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onSelectionClear: PropTypes.func,
-        onSelectionMissing: PropTypes.func,
     },
 
     statics: {
@@ -127,8 +124,6 @@ module.exports = Relaks.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
-
-            onStoryMissing: this.props.onStoryMissing,
         };
         meanwhile.show(<StoryListSync {...props} />);
         return db.start().then((currentUserId) => {
@@ -194,8 +189,6 @@ var StoryListSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onStoryMissing: PropTypes.func,
     },
 
     /**

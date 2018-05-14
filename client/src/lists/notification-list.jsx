@@ -120,8 +120,6 @@ var NotificationListSync = module.exports.Sync = React.createClass({
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onSelectionClear: PropTypes.func,
     },
 
     /**

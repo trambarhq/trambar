@@ -320,17 +320,20 @@ module.exports = Relaks.createClass({
                 }
             }
         }).then(() => {
-            // when a user is selected, the URL can point to a specific
-            // story; we need to make sure the story is there
-            if (params.story && !params.date) {
-                var allStories = props.selectedUserStories;
-                if (!_.find(allStories, { id: params.story })) {
-                    return StoryFinder.findStory(db, params.story).then((story) => {
-                        return this.redirectToStory(params.schema, story);
-                    }).catch((err) => {
-                    });
+            // when we're highlighting a story, make sure the story is actually there
+            if (!params.date) {
+                var hashParams = StoryList.parseHash(this.props.route.hash);
+                if (hashParams.story && hashParams.highlighting) {
+                    var allStories = props.selectedUserStories;
+                    if (!_.find(allStories, { id: params.story })) {
+                        return StoryFinder.findStory(db, hashParams.story).then((story) => {
+                            return this.redirectToStory(params.schema, story);
+                        }).catch((err) => {
+                        });
+                    }
                 }
             }
+        }).then(() => {
             return <PeoplePageSync {...props} />;
         });
     },
@@ -343,13 +346,29 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise}
      */
-    redirectToStory: function(story) {
-        return this.props.route.replace(require('pages/people-page'), {
-            schema: schema,
-            date: Moment(story.ptime).format('YYYY-MM-DD'),
-            user: story.user_id,
-            story: story.id,
-        });
+    redirectToStory: function(schema, story) {
+        var redirect = true;
+        if (story.ptime && story.published && story.ready !== false) {
+            // don't redirect if the story is very recent
+            var elapsed = Moment() - Moment(story.ptime);
+            if (elapsed < 60 * 1000) {
+                return;
+            }
+        }
+        if (redirect) {
+            var components = [
+                require('pages/people-page'),
+                require('lists/story-list'),
+            ];
+            var params = {
+                schema: schema,
+                date: Moment(story.ptime).format('YYYY-MM-DD'),
+                user: story.user_ids[0],
+                story: story.id,
+                highlighting: true,
+            };
+            return this.props.route.replace(components, params);
+        }
     },
 
     /**

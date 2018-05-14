@@ -246,7 +246,8 @@ function findStoriesInListing(db, type, currentUser) {
             filters: {
                 public: publicOnly(currentUser)
             },
-        }
+        },
+        blocking: 'stale',
     };
     return db.findOne(query).then((listing) => {
         if (!listing) {
@@ -373,7 +374,8 @@ function findStoriesByUserInListing(db, type, user, currentUser) {
                 user_ids: [ user.id ],
                 public: publicOnly(currentUser)
             },
-        }
+        },
+        blocking: 'stale',
     }).then((listing) => {
         if (!listing) {
             return null;
@@ -415,7 +417,8 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
                     public: publicOnly(currentUser)
                 }
             }),
-        }
+        },
+        blocking: 'stale',
     }).then((listings) => {
         var storyIds = _.flatten(_.map(listings, (listing) => {
             return _.slice(listing.story_ids, - perUserLimit);

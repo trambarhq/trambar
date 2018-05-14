@@ -38,7 +38,6 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
 
         onFinish: PropTypes.func,
-        onSelectionClear: PropTypes.func,
     },
 
     statics: {

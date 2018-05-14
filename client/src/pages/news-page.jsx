@@ -174,6 +174,20 @@ module.exports = Relaks.createClass({
                 });
             }
         }).then(() => {
+            // when we're highlighting a story, make sure the story is actually there
+            if (!params.date) {
+                var hashParams = StoryList.parseHash(this.props.route.hash);
+                if (hashParams.story && hashParams.highlighting) {
+                    var allStories = _.concat(props.stories, props.draftStories, props.pendingStories);
+                    if (!_.find(allStories, { id: params.story })) {
+                        return StoryFinder.findStory(db, hashParams.story).then((story) => {
+                            return this.redirectToStory(params.schema, story);
+                        }).catch((err) => {
+                        });
+                    }
+                }
+            }
+        }).then(() => {
             return <NewsPageSync {...props} />;
         });
     },
@@ -196,11 +210,17 @@ module.exports = Relaks.createClass({
             }
         }
         if (redirect) {
-            return this.props.route.replace(require('pages/news-page'), {
+            var components = [
+                require('pages/news-page'),
+                require('lists/story-list'),
+            ];
+            var params = {
                 schema: schema,
                 date: Moment(story.ptime).format('YYYY-MM-DD'),
                 story: story.id,
-            });
+                highlighting: true,
+            };
+            return this.props.route.replace(components, params);
         }
     }
 });
@@ -274,6 +294,8 @@ var NewsPageSync = module.exports.Sync = React.createClass({
             route: this.props.route,
             locale: this.props.locale,
             theme: this.props.theme,
+
+            onMissingStory: this.handleMissingStory,
         };
         return <StoryList {...listProps} />
     },
@@ -310,5 +332,9 @@ var NewsPageSync = module.exports.Sync = React.createClass({
             };
             return <EmptyMessage {...props} />;
         }
+    },
+
+    handleMissingStory: function(evt) {
+
     },
 });
