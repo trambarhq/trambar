@@ -90,10 +90,8 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        // don't wait for remote data unless the route changes
-        var freshRoute = (meanwhile.prior.props.route !== this.props.route);
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', blocking: freshRoute, by: this });
+        var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             system: null,
             server: null,
@@ -104,7 +102,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ServerSummaryPageSync {...props} />, 250);
+        meanwhile.show(<ServerSummaryPageSync {...props} />);
         return db.start().then((userId) => {
             return SystemFinder.findSystem(db).then((system) => {
                 props.system = system || undefined;
@@ -116,7 +114,7 @@ module.exports = Relaks.createClass({
                 });
             }
         }).then(() => {
-            meanwhile.show(<ServerSummaryPageSync {...props} />, 250);
+            meanwhile.show(<ServerSummaryPageSync {...props} />);
             return RoleFinder.findActiveRoles(db).then((roles) => {
                 props.roles = roles;
             });

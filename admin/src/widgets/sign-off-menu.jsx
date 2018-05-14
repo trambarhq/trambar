@@ -32,7 +32,7 @@ module.exports = Relaks.createClass({
      */
     renderAsync: function(meanwhile) {
         var db = this.props.database.use({ schema: 'global', by: this });
-        meanwhile.show(<div className="sign-off-menu" />, 100);
+        meanwhile.show(<div className="sign-off-menu" />);
         return db.start().then((currentUserId) => {
             return UserFinder.findUser(db, currentUserId).then((user) => {
                 var t = this.props.locale.translate;

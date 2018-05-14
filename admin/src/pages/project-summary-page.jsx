@@ -84,10 +84,8 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        // don't wait for remote data unless the route changes
-        var freshRoute = (meanwhile.prior.props.route !== this.props.route);
         var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', blocking: freshRoute, by: this });
+        var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             system: null,
             project: null,
@@ -99,7 +97,7 @@ module.exports = Relaks.createClass({
             theme: this.props.theme,
             payloads: this.props.payloads,
         };
-        meanwhile.show(<ProjectSummaryPageSync {...props} />, 250);
+        meanwhile.show(<ProjectSummaryPageSync {...props} />);
         return db.start().then((currentUserId) => {
             return SystemFinder.findSystem(db).then((system) => {
                 props.system = system;

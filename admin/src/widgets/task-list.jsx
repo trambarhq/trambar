@@ -236,10 +236,6 @@ var TaskListSync = module.exports.Sync = React.createClass({
      * @return {ReactElement|null}
      */
     renderTask: function(task) {
-        var message = this.getMessage(task);
-        if (!message) {
-            return null;
-        }
         var className = 'task';
         if (task.failed) {
             className += ' failure';
@@ -367,6 +363,7 @@ var TaskListSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     handleTaskRender: function(evt) {
+        console.log('Item ' + evt.item.id + ' => ' + evt.needed);
         if (evt.needed) {
             return this.renderTask(evt.item);
         } else {

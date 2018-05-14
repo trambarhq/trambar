@@ -77,8 +77,6 @@ module.exports = Relaks.createClass({
      * @return {Promise<ReactElement>}
      */
     renderAsync: function(meanwhile) {
-        // don't wait for remote data unless the route changes
-        var freshRoute = (meanwhile.prior.props.route !== this.props.route);
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             servers: null,
@@ -89,7 +87,7 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
-        meanwhile.show(<ServerListPageSync {...props} />, 250);
+        meanwhile.show(<ServerListPageSync {...props} />);
         return db.start().then((currentUserId) => {
             return ServerFinder.findAllServers(db).then((servers) => {
                 props.servers = servers;
