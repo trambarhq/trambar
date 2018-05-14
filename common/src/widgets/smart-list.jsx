@@ -82,14 +82,9 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      */
     updateAnchor: function(nextProps, nextState) {
-        nextState.currentAnchor = nextProps.anchor;
-        this.anchorOffset = nextProps.offset;
-        if (this.state) {
-            if (this.state.currentAnchor && !nextState.currentAnchor) {
-                if (this.scrollContainer) {
-                    this.scrollContainer.scrollTop = 0;
-                }
-            }
+        if (nextState.currentAnchor !== nextProps.anchor) {
+            nextState.currentAnchor = nextProps.anchor;
+            this.anchorOffset = nextProps.offset;
         }
     },
 
@@ -450,7 +445,7 @@ module.exports = React.createClass({
                 var avg = _.sum(heights) / heights.length;
                 var estimatedHeight = Math.round(avg);
                 if (estimatedHeight !== 0) {
-                    //this.setState({ estimatedHeight })
+                    this.setState({ estimatedHeight })
                 }
             }
         }
