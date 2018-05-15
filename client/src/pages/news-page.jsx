@@ -179,7 +179,7 @@ module.exports = Relaks.createClass({
                 var hashParams = StoryList.parseHash(this.props.route.hash);
                 if (hashParams.story && hashParams.highlighting) {
                     var allStories = _.concat(props.stories, props.draftStories, props.pendingStories);
-                    if (!_.find(allStories, { id: params.story })) {
+                    if (!_.find(allStories, { id: hashParams.story })) {
                         return StoryFinder.findStory(db, hashParams.story).then((story) => {
                             return this.redirectToStory(params.schema, story);
                         }).catch((err) => {
