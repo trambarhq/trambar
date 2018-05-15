@@ -230,11 +230,11 @@ function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
  * @param  {Database} db
  * @param  {String} type
  * @param  {User} currentUser
- * @param  {Number|undefined} recursion
+ * @param  {Boolean|undefined} blockIfStale
  *
  * @return {Promise<Array<Story>|null>}
  */
-function findStoriesInListing(db, type, currentUser) {
+function findStoriesInListing(db, type, currentUser, blockIfStale) {
     if (!currentUser) {
         return Promise.resolve(Empty.array);
     }
@@ -247,8 +247,10 @@ function findStoriesInListing(db, type, currentUser) {
                 public: publicOnly(currentUser)
             },
         },
-        blocking: 'stale',
     };
+    if (blockIfStale) {
+        query.blocking = 'stale';
+    }
     return db.findOne(query).then((listing) => {
         if (!listing) {
             // shouldn't happen, since listings are created on demand
@@ -358,14 +360,15 @@ function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
  * @param  {String} type
  * @param  {User} user
  * @param  {User} currentUser
+ * @param  {Boolean|undefined} blockIfStale
  *
  * @return {Promise<Array<Story>|null>}
  */
-function findStoriesByUserInListing(db, type, user, currentUser) {
+function findStoriesByUserInListing(db, type, user, currentUser, blockIfStale) {
     if (!currentUser) {
         return Promise.resolve(Empty.array);
     }
-    return db.findOne({
+    var query = {
         table: 'listing',
         criteria: {
             type: type,
@@ -375,8 +378,11 @@ function findStoriesByUserInListing(db, type, user, currentUser) {
                 public: publicOnly(currentUser)
             },
         },
-        blocking: 'stale',
-    }).then((listing) => {
+    };
+    if (blockIfStale) {
+        query.blocking = 'stale';
+    }
+    return db.findOne(query).then((listing) => {
         if (!listing) {
             return null;
         }
@@ -402,11 +408,12 @@ function findStoriesByUserInListing(db, type, user, currentUser) {
  * @param  {User} user
  * @param  {User} currentUser
  * @param  {Number} perUserLimit
+ * @param  {Boolean|undefined} blockIfStale
  *
  * @return {Promise<Array<Story>|null>}
  */
-function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit) {
-    return db.find({
+function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit, blockIfStale) {
+    var query = {
         table: 'listing',
         criteria: {
             type: type,
@@ -417,9 +424,12 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
                     public: publicOnly(currentUser)
                 }
             }),
-        },
-        blocking: 'stale',
-    }).then((listings) => {
+        }
+    };
+    if (blockIfStale) {
+        query.blocking = 'stale';
+    }
+    return db.find(query).then((listings) => {
         var storyIds = _.flatten(_.map(listings, (listing) => {
             return _.slice(listing.story_ids, - perUserLimit);
         }));
@@ -439,14 +449,15 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
  * @param  {String} type
  * @param  {Array<Number>} roleIds
  * @param  {User} currentUser
+ * @param  {Boolean|undefined} blockIfStale
  *
  * @return {Promise<Array<Story>|null>}
  */
-function findStoriesWithRolesInListing(db, type, roleIds, currentUser) {
+function findStoriesWithRolesInListing(db, type, roleIds, currentUser, blockIfStale) {
     if (!currentUser) {
         return Promise.resolve(Empty.array);
     }
-    return db.findOne({
+    var query = {
         table: 'listing',
         criteria: {
             type: type,
@@ -456,7 +467,11 @@ function findStoriesWithRolesInListing(db, type, roleIds, currentUser) {
                 public: publicOnly(currentUser)
             },
         }
-    }).then((listing) => {
+    };
+    if (blockIfStale) {
+        query.blocking = 'stale';
+    }
+    return db.findOne(query).then((listing) => {
         if (!listing) {
             return null;
         }

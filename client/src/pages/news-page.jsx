@@ -132,6 +132,8 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
+        // wait for retrieval of fresh story listing on initial render
+        var freshListing = meanwhile.revising() ? false : true;
         meanwhile.show(<NewsPageSync {...props} />);
         return db.start().then((userId) => {
             return UserFinder.findUser(db, userId).then((user) => {
@@ -156,11 +158,11 @@ module.exports = Relaks.createClass({
                     props.stories = stories;
                 });
             } else if (!_.isEmpty(params.roles)) {
-                return StoryFinder.findStoriesWithRolesInListing(db, params.roles, props.currentUser).then((stories) => {
+                return StoryFinder.findStoriesWithRolesInListing(db, params.roles, props.currentUser, freshListing).then((stories) => {
                     props.stories = stories;
                 });
             } else {
-                return StoryFinder.findStoriesInListing(db, 'news', props.currentUser).then((stories) => {
+                return StoryFinder.findStoriesInListing(db, 'news', props.currentUser, freshListing).then((stories) => {
                     props.stories = stories;
                 }).then(() => {
                     meanwhile.show(<NewsPageSync {...props} />);

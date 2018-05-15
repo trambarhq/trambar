@@ -169,6 +169,8 @@ module.exports = Relaks.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
         };
+        // wait for retrieval of fresh story listing on initial render
+        var freshListing = meanwhile.revising() ? false : true;
         meanwhile.show(<PeoplePageSync {...props} />);
         return db.start().then((currentUserId) => {
             return UserFinder.findUser(db, currentUserId).then((user) => {
@@ -243,8 +245,10 @@ module.exports = Relaks.createClass({
                 }
             });
         }).then(() => {
-            // force progress update to avoid flicking
-            meanwhile.show(<PeoplePageSync {...props} />, true);
+            if (!meanwhile.revising()) {
+                // force progress update to avoid flicking
+                meanwhile.show(<PeoplePageSync {...props} />, true);
+            }
             if (params.search) {
                 if (tags) {
                     return StoryFinder.findStoriesWithTags(db, tags, 5).then((stories) => {
@@ -274,7 +278,7 @@ module.exports = Relaks.createClass({
                     }
                 })
             } else {
-                return StoryFinder.findStoriesByUsersInListings(db, 'news', props.visibleUsers, props.currentUser, 5).then((stories) => {
+                return StoryFinder.findStoriesByUsersInListings(db, 'news', props.visibleUsers, props.currentUser, 5, freshListing).then((stories) => {
                     props.stories = stories;
                 });
             }
@@ -297,7 +301,7 @@ module.exports = Relaks.createClass({
                         props.selectedUserStories = stories;
                     });
                 } else {
-                    return StoryFinder.findStoriesByUserInListing(db, 'news', props.selectedUser, props.currentUser).then((stories) => {
+                    return StoryFinder.findStoriesByUserInListing(db, 'news', props.selectedUser, props.currentUser, freshListing).then((stories) => {
                         props.selectedUserStories = stories;
                     });
                 }
