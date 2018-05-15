@@ -201,21 +201,23 @@ module.exports = _.create(ExternalData, {
                 reactionReceived.suppressed = true;
             }
 
-            if (!reactionReceived.id && reactionReceived.type === 'like') {
-                // see if there's an existing like
-                var criteria = {
-                    type: 'like',
-                    story_id: reactionReceived.story_id,
-                    user_id: reactionReceived.user_id,
-                };
-                return this.findOne(db, schema, criteria, '*').then((row) => {
-                    if (row) {
-                        // reuse the row--to avoid triggering new notification
-                        reactionReceived.id = row.id;
-                        reactionReceived.deleted = false;
-                    }
-                    return reactionReceived;
-                });
+            if (!reactionReceived.id) {
+                if (reactionReceived.type === 'like' || reactionReceived.type === 'vote') {
+                    // see if there's an existing like or vote
+                    var criteria = {
+                        type: reactionReceived.type,
+                        story_id: reactionReceived.story_id,
+                        user_id: reactionReceived.user_id,
+                    };
+                    return this.findOne(db, schema, criteria, '*').then((row) => {
+                        if (row) {
+                            // reuse the row--to avoid triggering new notification
+                            reactionReceived.id = row.id;
+                            reactionReceived.deleted = false;
+                        }
+                        return reactionReceived;
+                    });
+                }
             }
             return reactionReceived;
         });

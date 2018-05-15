@@ -157,6 +157,22 @@ module.exports = React.createClass({
     },
 
     /**
+     * Clear state.voteSubmitted once vote has been recorded
+     *
+     * @param  {Object} nextProps
+     */
+    componentDidUpdate: function(nextProps) {
+        if (this.props.reactions !== nextProps.reactions) {
+            if (this.state.voteSubmitted) {
+                var vote = getUserVote(nextProps.reactions, nextProps.currentUser);
+                if (vote) {
+                    this.setState({ voteSubmitted: false });
+                }
+            }
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
