@@ -46,6 +46,10 @@
             .scrollable {
                 max-height: 24em;
 
+                .single-col & {
+                    max-height: 12em;
+                }
+
                 &.abs {
                     position: absolute;
                     left: 0;
