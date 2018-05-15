@@ -21,7 +21,7 @@ var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
 var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
 var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
 
-var USE_STREAM = false;
+var USE_STREAM = true;
 
 require('./media-editor.scss');
 

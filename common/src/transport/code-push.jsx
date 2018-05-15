@@ -119,7 +119,7 @@ module.exports = React.createClass({
     checkForUpdate: function() {
         this.loadDeploymentName().then((deployment) => {
             if (process.env.NODE_ENV !== 'production') {
-                //return 'NOT_PRODUCTION';
+                return 'NOT_PRODUCTION';
             }
             if (!window.cordova) {
                 return 'NOT_CORDOVA';

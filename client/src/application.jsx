@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Moment = require('moment');
 var React = require('react'), PropTypes = React.PropTypes;
 var ComponentRefs = require('utils/component-refs');
 var HTTPError = require('errors/http-error');
