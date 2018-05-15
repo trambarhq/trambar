@@ -257,8 +257,15 @@ module.exports = React.createClass({
      */
     handleActiveButtonClick: function(evt) {
         var page = document.getElementsByClassName('page-container')[0];
-        if (page) {
-            page.scrollTop = 0;
+        if (page && page.scrollTop > 0) {
+            if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                // stop momentum scrolling
+                page.style.overflowY = 'hidden';
+                page.scrollTop = 0;
+                page.style.overflowY = 'scroll';
+            } else {
+                page.scrollTop = 0;
+            }
         }
     },
 });
