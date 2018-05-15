@@ -105,6 +105,7 @@ module.exports = React.createClass({
             connection: null,
             searching: false,
             inForeground: true,
+            sleepTime: null,
             pageKey: 0,
             pushRelay: null,
             renderingStartPage: false,
@@ -906,7 +907,10 @@ module.exports = React.createClass({
      */
     handlePause: function(evt) {
         if (process.env.PLATFORM !== 'cordova') return;
-        this.setState({ inForeground: false });
+        this.setState({
+            inForeground: false,
+            sleepTime: Moment().toISOString(),
+        });
     },
 
     /**
@@ -916,7 +920,15 @@ module.exports = React.createClass({
      */
     handleResume: function(evt) {
         if (process.env.PLATFORM !== 'cordova') return;
-        this.setState({ inForeground: true });
+        this.setState({ inForeground: true }, () => {
+            var momentAgo = Moment().subtract(30, 'second').toISOString();
+            if (this.state.sleepTime < momentAgo) {
+                // force server check as background push notification
+                // isn't 100% reliable
+                var dataSource = this.components.remoteDataSource;
+                dataSource.invalidate();
+            }
+        });
     },
 
     /**
