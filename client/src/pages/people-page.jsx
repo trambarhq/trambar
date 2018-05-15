@@ -245,10 +245,8 @@ module.exports = Relaks.createClass({
                 }
             });
         }).then(() => {
-            if (!meanwhile.revising()) {
-                // force progress update to avoid flicking
-                meanwhile.show(<PeoplePageSync {...props} />, true);
-            }
+            // force progress update initially to avoid flicking
+            meanwhile.show(<PeoplePageSync {...props} />, 'initial');
             if (params.search) {
                 if (tags) {
                     return StoryFinder.findStoriesWithTags(db, tags, 5).then((stories) => {
