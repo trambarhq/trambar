@@ -347,8 +347,14 @@ module.exports = React.createClass({
             _.assign(notifierProps, {
                 locale: this.state.locale,
                 defaultProfileImage: require('profile-image-placeholder.png'),
-            })
+            });
         } else if (Notifier === PushNotifier) {
+            _.assign(notifierProps, {
+                android: {
+                    icon: 'push',
+                    iconColor: '#fca326',
+                }
+            });
             if (this.state.pushRelay) {
                 _.assign(notifierProps, {
                     relayAddress: this.state.pushRelay.url,

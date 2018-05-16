@@ -15,6 +15,9 @@ module.exports = React.createClass({
     propTypes: {
         serverAddress: PropTypes.string,
         relayAddress: PropTypes.string,
+        android: PropTypes.object.isRequired,
+        ios: PropTypes.object.isRequired,
+        windows: PropTypes.object.isRequired,
         initialReconnectionDelay: PropTypes.number,
         maximumReconnectionDelay: PropTypes.number,
         searching: PropTypes.bool,
@@ -41,6 +44,13 @@ module.exports = React.createClass({
         return {
             initialReconnectionDelay: 500,
             maximumReconnectionDelay: 30000,
+            android: {},
+            ios: {
+                alert: true,
+                badge: true,
+                sound: true,
+            },
+            windows: {},
         };
     },
 
@@ -158,13 +168,9 @@ module.exports = React.createClass({
                 return;
             }
             var params = {
-                android: {},
-                ios: {
-                    alert: true,
-                    badge: true,
-                    sound: true,
-                },
-                windows: {},
+                android: this.props.android,
+                ios: this.props.ios,
+                windows: this.props.windows,
             };
             pushNotification = PushNotification.init(params);
         }
