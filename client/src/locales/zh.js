@@ -288,8 +288,8 @@ var traditionalPhrases = {
     'option-bump-story': '推動故事',
     'option-edit-comment': '編輯回應',
     'option-edit-post': '編輯貼文',
-    'option-hide-comment': '非成員看不到',
-    'option-hide-story': '非成員看不到',
+    'option-hide-comment': '訪客用戶看不到',
+    'option-hide-story': '訪客用戶看不到',
     'option-keep-bookmark': '保留書籤',
     'option-remove-comment': '刪除回應',
     'option-remove-story': '刪除故事',
@@ -976,8 +976,8 @@ var simplifiedPhrases = {
     'option-bump-story': '推动故事',
     'option-edit-comment': '编辑回应',
     'option-edit-post': '编辑贴文',
-    'option-hide-comment': '非成员看不到',
-    'option-hide-story': '非成员看不到',
+    'option-hide-comment': '访客用户看不到',
+    'option-hide-story': '访客用户看不到',
     'option-keep-bookmark': '保留书签',
     'option-remove-comment': '删除回应',
     'option-remove-story': '删除故事',
@@ -1547,8 +1547,8 @@ var cantonesePhrases = {
     'notifications-no-notifications-yet': '重未有通知',
 
     'option-edit-post': '編輯帖子',
-    'option-hide-comment': '非成員睇唔到',
-    'option-hide-story': '非成員睇唔到',
+    'option-hide-comment': '訪客用戶睇唔到',
+    'option-hide-story': '訪客用戶睇唔到',
     'option-send-bookmarks': '發送書籤俾其他人',
     'option-send-bookmarks-to-$count-users': (count) => {
         var num = cardinalT(count);

@@ -243,6 +243,7 @@ module.exports = function(localeCode) {
             return `${name} опубликовал${e} опрос`;
         },
         'notification-$name-pushed-code-to-$branch': (name, branch) => {
+            var e = pastTenseEnding(name);
             return `${name} отправил${e} изменения в ветку «${branch}»`;
         },
         'notification-$name-requested-to-join': (name) => {
@@ -804,6 +805,7 @@ module.exports = function(localeCode) {
             return `Отправил${e} код в репозиторий`;
         },
         'user-activity-$name-reported-issue': (name ) => {
+            var e = pastTenseEnding(name);
             return `Сообщил${e} о проблеме`;
         },
         'user-activity-$name-started-survey': (name) => {

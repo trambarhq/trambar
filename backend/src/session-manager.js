@@ -924,15 +924,9 @@ function copyUserProperties(user, server, image, profile) {
         var email = _.first(_.map(profile.emails, 'value'));
         var username = profile.username || proposeUsername(profile);
         var userType = _.get(server, 'settings.user.type');
-        var overwriteUserType = 'never';
         var userAfter;
         if (user) {
             userAfter = _.cloneDeep(user);
-
-            // overwrite user type if new type has more privileges
-            if (UserTypes.indexOf(userType) > UserTypes.indexOf(user.type)) {
-                overwriteUserType = 'always';
-            }
         } else {
             userAfter = {
                 role_ids: _.get(server, 'settings.user.role_ids', []),
@@ -948,7 +942,7 @@ function copyUserProperties(user, server, image, profile) {
         });
         ExternalDataUtils.importProperty(userAfter, server, 'type', {
             value: userType,
-            overwrite: overwriteUserType,
+            overwrite: 'match-previous:type',
         });
         ExternalDataUtils.importProperty(userAfter, server, 'username', {
             value: username,

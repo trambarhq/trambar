@@ -342,14 +342,6 @@ function copyUserProperties(user, server, image, glUser) {
     } else {
         userType = mapping.user;
     }
-    var overwriteUserType = 'never';
-    if (user) {
-        // overwrite user type if new type has more privileges
-        if (UserTypes.indexOf(userType) > UserTypes.indexOf(user.type)) {
-            overwriteUserType = 'always';
-        }
-    }
-
     var userAfter = _.cloneDeep(user);
     if (!userAfter) {
         userAfter = {
@@ -365,7 +357,7 @@ function copyUserProperties(user, server, image, glUser) {
     });
     ExternalDataUtils.importProperty(userAfter, server, 'type', {
         value: userType,
-        overwrite: overwriteUserType,
+        overwrite: 'match-previous:type',
     });
     ExternalDataUtils.importProperty(userAfter, server, 'username', {
         value: glUser.username,
