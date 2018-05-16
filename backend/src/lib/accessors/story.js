@@ -107,7 +107,6 @@ module.exports = _.create(ExternalData, {
             CREATE INDEX ON ${table} USING gin(("payloadTokens"(details))) WHERE "payloadTokens"(details) IS NOT NULL;
             CREATE INDEX ON ${table} ((COALESCE(ptime, btime))) WHERE published = true AND ready = true;
             CREATE INDEX ON ${table} (id) WHERE unfinished_tasks > 0 AND published = true AND deleted = false;
-            CREATE INDEX ON ${table} (id) WHERE published = true AND deleted = true AND published_version_id IS NULL;
         `;
         //
         return db.execute(sql);
