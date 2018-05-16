@@ -131,6 +131,7 @@ module.exports = React.createClass({
                 this.naturalWidth = width;
                 this.naturalHeight = height;
                 this.setViewBox(this.props.clippingRect);
+                this.triggerLoadEvent();
             }).catch((err) => {
                 this.triggerErrorEvent(err);
             });
