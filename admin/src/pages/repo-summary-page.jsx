@@ -104,7 +104,7 @@ module.exports = Relaks.createClass({
             });
         }).then(() => {
             meanwhile.show(<RepoSummaryPageSync {...props} />);
-            return ProjectFinder.findProject(db).then((project) => {
+            return ProjectFinder.findProject(db, params.project).then((project) => {
                 props.project = project;
             });
         }).then(() => {
