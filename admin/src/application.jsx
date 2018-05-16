@@ -568,12 +568,14 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleChangeNotification: function(evt) {
+        if (process.env.NODE_ENV !== 'production') {
+            _.each(evt.changes, (change) => {
+                console.log(`Change notification: ${change.schema}.${change.table} ${change.id}`);
+            });
+        }
+
         var dataSource = this.components.remoteDataSource;
         dataSource.invalidate(evt.address, evt.changes);
-
-        _.forIn(evt.changes, (idList, name) => {
-             console.log('Change notification: ', name, idList);
-        });
     },
 
     /**

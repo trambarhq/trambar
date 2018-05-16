@@ -312,7 +312,6 @@ var NotificationListSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleNotificationBeforeAnchor: function(evt) {
-        console.log(hiddenNotificationIds);
         var hiddenNotificationIds = _.map(evt.items, 'id');
         this.setState({ hiddenNotificationIds });
     },

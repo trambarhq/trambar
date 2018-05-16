@@ -94,8 +94,6 @@ module.exports = React.createClass({
 
         // look for tags that match labels
         var allLabels = _.uniq(_.flatten(_.map(this.props.repos, 'details.labels')));
-        console.log(allLabels);
-        console.log(this.props.story.tags);
         var labels = _.filter(allLabels, (label) => {
             var tag = `#${_.replace(label, /\s+/g, '-')}`;
             return _.includes(this.props.story.tags, tag);
