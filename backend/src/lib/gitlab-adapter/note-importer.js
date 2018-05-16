@@ -66,7 +66,7 @@ function importIssueNote(db, system, server, repo, project, author, glEvent) {
         if (!story) {
             throw new Error('Story not found');
         }
-        var reactioNew = copyEventProperties(null, server, story, author, glEvent);
+        var reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
         return Reaction.insertOne(db, schema, reactioNew).return(story);
     }).catch((err) => {
         console.error(err);
@@ -194,6 +194,7 @@ function findCommitId(db, server, repo, glEvent, glHookEvent) {
  * Copy certain properties of event into reaction
  *
  * @param  {Reaction|null} reaction
+ * @param  {System} system
  * @param  {Server} server
  * @param  {Story} story
  * @param  {User} author
@@ -202,7 +203,7 @@ function findCommitId(db, server, repo, glEvent, glHookEvent) {
  *
  * @return {Reaction}
  */
-function copyEventProperties(reaction, server, story, author, glNote) {
+function copyEventProperties(reaction, system, server, story, author, glNote) {
     var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
     var reactionAfter = _.cloneDeep(reaction) || {};
     ExternalDataUtils.inheritLink(reactionAfter, server, story, {
