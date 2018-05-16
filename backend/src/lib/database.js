@@ -53,18 +53,33 @@ var config = {
 };
 
 var pool = new PgPool(config);
+pool.on('error', (err) => {
+});
 
 function Database(client) {
     this.client = client;
+    this.reconnectionPromise = null;
+    this.listeners = [];
+
+    if (client !== pool) {
+        client.on('error', (err) => {
+            console.error(err.message);
+            this.reconnect().then(() => {
+                // reattach listeners
+                return Promise.each(this.listeners, (listener) => {
+                    return this.attachListener(listener);
+                });
+            }).then(() => {
+                console.log('Reconnected');
+            });
+        });
+    }
 }
 
 Database.open = function(exclusive) {
     if (exclusive) {
         var db;
-        var attempt;
-        Async.begin(() => {
-            attempt = 1;
-        });
+        var attempt = 1;
         Async.while(() => {
             return Promise.resolve(pool.connect()).then((client) => {
                 // done--break out of loop
@@ -77,7 +92,7 @@ Database.open = function(exclusive) {
                 } else {
                     throw err;
                 }
-            })
+            });
         });
         Async.do(() => {
             // wait a second
@@ -92,6 +107,34 @@ Database.open = function(exclusive) {
         var db = new Database(pool);
         return Promise.resolve(db);
     }
+};
+
+Database.prototype.reconnect = function() {
+    if (this.client === pool) {
+        return Promise.resolve();
+    }
+    this.close();
+    if (!this.reconnectionPromise) {
+        Async.do(() => {
+            // wait a second
+            return Promise.delay(1000);
+        });
+        Async.while(() => {
+            return Promise.resolve(pool.connect()).then((client) => {
+                // done--break out of loop
+                this.client = client;
+                return false;
+            }).catch((err) => {
+                // try again
+                return true;
+            });
+        });
+        Async.return(() => {
+            this.reconnectionPromise = null;
+        });
+        this.reconnectionPromise = Async.end();
+    }
+    return this.reconnectionPromise;
 };
 
 Database.prototype.close = function() {
@@ -115,6 +158,11 @@ var programmingErrors = {
 
 Database.prototype.execute = function(sql, parameters) {
     if (!this.client) {
+        if (this.reconnectionPromise) {
+            return this.reconnectionPromise.then(() => {
+                return this.execute(sql, parameters);
+            });
+        }
         return Promise.reject(new Error('Connection was closed: ' + sql.substr(0, 20) + '...'));
     }
     // convert promise to Bluebird variety
@@ -159,23 +207,27 @@ Database.prototype.listen = function(tables, event, callback, delay) {
     if (this.client === pool) {
         throw new Error('Cannot listen to a non-exclusive connection');
     }
-    var cxt = {
+    var listener = {
         queue: [],
         timeout: 0,
+        event: event,
+        tables: tables,
         callback: callback,
         channels: [],
-        delay: delay,
+        delay: delay || 50,
         database: this,
     };
-    if (delay === undefined) {
-        delay = 50;
-    }
+    this.listeners.push(listener);
+    return this.attachListener(listener);
+};
+
+Database.prototype.attachListener = function(listener) {
     this.client.on('notification', (msg) => {
-        processNotification(cxt, msg);
+        processNotification(listener, msg);
     });
-    return Promise.each(tables, (table) => {
-        var channel = `${table}_${event}`;
-        cxt.channels.push(channel);
+    return Promise.each(listener.tables, (table) => {
+        var channel = `${table}_${listener.event}`;
+        listener.channels.push(channel);
         return this.execute(`LISTEN ${channel}`);
     });
 };
