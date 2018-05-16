@@ -298,10 +298,12 @@ function chooseStories(row) {
         }
         if (extra > 0) {
             // still got too many
-            // toss out at most half of the new ones
-            var removeNew = Math.min(extra, Math.floor(newStoryCount * 0.5));
-            newStoryCount -= removeNew;
-            extra -= removeNew;
+            // toss out at most half of the new ones, when there are lots of them
+            if (newStoryCount > limit * 0.5) {
+                var removeNew = Math.min(extra, Math.floor(newStoryCount * 0.5));
+                newStoryCount -= removeNew;
+                extra -= removeNew;
+            }
 
             if (extra > 0) {
                 // remove additional old stories
