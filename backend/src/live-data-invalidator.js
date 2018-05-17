@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var FS = require('fs');
 var Database = require('database');
 var Shutdown = require('shutdown');
 
@@ -8,23 +9,30 @@ var Statistics = require('accessors/statistics');
 var Listing = require('accessors/listing');
 var Story = require('accessors/story');
 
-// analysers
-var DailyActivities = require('analysers/daily-activities');
-var DailyNotifications = require('analysers/daily-notifications');
-var ProjectDateRange = require('analysers/story-date-range');
-var StoryPopularity = require('analysers/story-popularity');
-
 module.exports = {
     start,
     stop,
 };
 
-var analysers = [
-    DailyActivities,
-    DailyNotifications,
-    ProjectDateRange,
-    StoryPopularity,
-];
+// load available analysers
+var Analysers = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/analysers`), (filename) => {
+    if (/\.js$/.test(filename)) {
+        var module = require(`analysers/${filename}`);
+        return module;
+    }
+}));
+// load available story raters
+var StoryRaters = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/story-raters`), (filename) => {
+    if (/\.js$/.test(filename)) {
+        var module = require(`story-raters/${filename}`);
+        // certain ratings cannot be applied until the listing is being retrieved
+        // (e.g. by retrieval time)
+        if (module.calculation !== 'deferred') {
+            return module;
+        }
+    }
+}));
+
 var database;
 
 function start() {
@@ -33,7 +41,7 @@ function start() {
         return db.need('global').then(() => {
             // get list of tables that the analyers make use of and listen
             // for changes in them
-            var tables = _.uniq(_.flatten(_.map(analysers, 'sourceTables')));
+            var tables = _.uniq(_.flatten(_.map(Analysers, 'sourceTables')));
             return db.listen(tables, 'change', handleDatabaseChangesAffectingStatistics).then(() => {
                 // listings, meanwhile, are derived from story and statistics
                 var tables = [ 'story', 'statistics' ];
@@ -86,19 +94,21 @@ function handleDatabaseChangesAffectingListings(events) {
 }
 
 function invalidateStatistics(db, schema, events) {
-    return Promise.each(analysers, (analyser) => {
+    return Promise.each(Analysers, (analyser) => {
         // process events for each source table
         return Promise.map(analyser.sourceTables, (table) => {
-            var filteredColumns = analyser.filteredColumns[table];
+            var filteredColumnMappings = analyser.filteredColumns[table];
+            var filteredColumns = _.values(filteredColumnMappings);
             var depedentColumns = analyser.depedentColumns[table];
-            var fixedFilters = analyser.fixedFilters[table];
+            var fixedFilterValues = analyser.fixedFilters[table];
 
             // filter out events that won't cause a change in the stats
             var relevantEvents = _.filter(events, (event) => {
                 if (event.table !== table) {
                     return false;
                 }
-                for (var column in event.diff) {
+                var changedColumns = _.keys(event.diff);
+                return _.some(changedColumns, (column) => {
                     if (_.includes(filteredColumns, column)) {
                         // the change could affect whether the object is included or not
                         return true;
@@ -107,43 +117,46 @@ function invalidateStatistics(db, schema, events) {
                         // the change could affect the results
                         return true;
                     }
-                    if (fixedFilters) {
-                        var requiredValue = fixedFilters[column];
-                        if (requiredValue !== undefined) {
-                            // see if there's a change in whether the object meets the
-                            // fixed filter's condition
-                            var valueBefore = event.previous[column];
-                            var valueAfter = event.current[column];
-                            if (valueBefore === undefined || valueAfter === undefined) {
-                                // column isn't included in the change object
-                                // assume the change can lead to stats change
-                                return true;
-                            }
-                            var conditionMetBefore = (valueBefore === requiredValue);
-                            var conditionMetAfter = (valueAfter === requiredValue);
-                            if (conditionMetBefore !== conditionMetAfter) {
-                                return true;
-                            }
+                    if (!fixedFilterValues) {
+                        return true;
+                    }
+                    var requiredValue = fixedFilterValues[column];
+                    if (requiredValue !== undefined) {
+                        // see if there's a change in whether the object meets the
+                        // fixed filter's condition
+                        var valueBefore = event.previous[column];
+                        var valueAfter = event.current[column];
+                        var conditionMetBefore = (valueBefore === requiredValue);
+                        var conditionMetAfter = (valueAfter === requiredValue);
+                        if (conditionMetBefore !== conditionMetAfter) {
+                            return true;
                         }
                     }
-                }
-                return false;
+                });
             });
-            if (_.isEmpty(relevantEvents)) {
-                return;
-            }
 
-            return loadObjectsForFilters(db, schema, table, filteredColumns, fixedFilters, relevantEvents).then((rows) => {
-                if (_.isEmpty(rows)) {
-                    return [];
-                }
-                // find statistics rows that cover these objects
-                var statsCriteria = {
-                    match_any: rows,
-                    dirty: false,
-                };
-                return Statistics.find(db, schema, statsCriteria, 'id, sample_count');
-            }).then((rows) => {
+            // extract the before and after values of the rows
+            var sourceRowsBefore = extractPreviousValues(relevantEvents, filteredColumns);
+            var sourceRowsAfter = extractCurrentValues(relevantEvents, filteredColumns);
+            var sourceRows = _.concat(sourceRowsBefore, sourceRowsAfter);
+            if (_.isEmpty(sourceRows)) {
+                return [];
+            }
+            // stored the value under the filter name, as required by the
+            // stored proc matchAny()
+            var matchingObjects = _.map(sourceRows, (row) => {
+                return _.mapValues(filteredColumnMappings, (column, filter) => {
+                    return row[column];
+                });
+            });
+
+            // find statistics rows that cover these objects
+            var criteria = {
+                type: analyser.type,
+                match_any: matchingObjects,
+                dirty: false,
+            };
+            return Statistics.find(db, schema, criteria, 'id, sample_count').then((rows) => {
                 // invalidate those stats with fewer data points first
                 var orderedRows = _.orderBy(rows, [ 'sample_count', 'atime' ], [ 'asc', 'desc' ]);
                 var ids = _.map(orderedRows, 'id');
@@ -160,74 +173,14 @@ function invalidateStatistics(db, schema, events) {
 }
 
 /**
- * Extract column values from change event objects if possible,
- * otherwise load the changed rows from database
+ * Mark listings impacted by database changes as dirty
  *
  * @param  {Database} db
  * @param  {String} schema
- * @param  {String} table
- * @param  {Object} filteredColumns
- * @param  {Object} fixedFilters
  * @param  {Array<Object>} events
  *
- * @return {Array<Object>}
+ * @return {Promise}
  */
-function loadObjectsForFilters(db, schema, table, filteredColumns, fixedFilters, events) {
-    // first, see if the necessary properties are in the change event objects
-    return Promise.try(() => {
-        var objects = _.map(events, (event, index) => {
-            var current = event.current;
-            if (index === 0) {
-                // make sure all the properties are there
-                // only need to do this for the first event
-                _.each(fixedFilters, (value, column) => {
-                    if (!current.hasOwnProperty(column)) {
-                        throw new Error(`Missing column in event object for ${table}: ${column}`);
-                    }
-                });
-                _.each(filteredColumns, (column) => {
-                    if (column !== 'id') {
-                        if (!current.hasOwnProperty(column)) {
-                            throw new Error(`Missing column in event object for ${table}: ${column}`);
-                        }
-                    }
-                });
-            }
-
-            // all required fields are there in the change object already
-            // see if the properties match the fixed filters (e.g. deleted, published, etc.)
-            if (_.isMatch(current, fixedFilters)) {
-                var object = {};
-                _.each(filteredColumns, (column, filter) => {
-                    // stored the value under the filter name, as required by the
-                    // stored proc matchAny()
-                    object[filter] = (column === 'id') ? event.id : current[column];
-                });
-                return object;
-            } else {
-                return null;
-            }
-        });
-        return _.filter(objects);
-    }).catch((err) => {
-        console.warn(err.message);
-        // need to actually load the objects
-        var accessor = require(`accessors/${table}`);
-        var ids = _.map(events, 'id');
-        var objectCriteria = _.extend({ id: ids }, fixedFilters);
-        var columns = [];
-        _.each(filteredColumns, (column, filter) => {
-            // use the filter name for the column as required by matchAny()
-            if (column !== filter) {
-                columns.push(`${column} AS ${filter}`);
-            } else {
-                columns.push(column);
-            }
-        });
-        return accessor.find(db, schema, objectCriteria, columns.join(', '));
-    });
-}
-
 function invalidateListings(db, schema, events) {
     return Promise.all([
         findListingsImpactedByStoryChanges(db, schema, events),
@@ -244,25 +197,64 @@ function invalidateListings(db, schema, events) {
     });
 }
 
+/**
+ * Mark listings impacted by story changes as dirty
+ *
+ * @param  {Database} db
+ * @param  {String} schema
+ * @param  {Array<Object>} events
+ *
+ * @return {Promise}
+ */
 function findListingsImpactedByStoryChanges(db, schema, events) {
+    // these columns determines whether a story is included in a listing or not
+    var filteredColumnMappings = {
+        published: 'published',
+        ready: 'ready',
+        public: 'public',
+        deleted: 'deleted',
+        user_ids: 'user_ids',
+        role_ids: 'role_ids',
+    };
+    var filteredColumns = _.values(filteredColumnMappings);
+    // columns that affects rating
+    var ratingColumns = _.uniq(_.flatten(_.map(StoryRaters, 'columns')));
+    // columns that affects order (hence whether it'd be excluded by the LIMIT clause)
+    var orderingColumns = [ 'btime' ];
     var relevantEvents = _.filter(events, (event) => {
         if (event.table === 'story') {
-            if (event.current.published && event.current.ready) {
-                return true;
+            // only stories that are published (or have just been unpublished)
+            // can impact listings
+            if (event.current.published || event.diff.pubished) {
+                var changedColumns = _.keys(event.diff);
+                return _.some(changedColumns, (column) => {
+                    if (_.includes(filteredColumns, column)) {
+                        return true;
+                    } else if (_.includes(ratingColumns, column)) {
+                        return true;
+                    } else if (_.includes(orderingColumns, column)) {
+                        return true;
+                    }
+                });
             }
         }
     });
-    // the change object for Story happens to have the properties
-    // that Listing filters operate on
-    var stories = _.map(relevantEvents, (event) => {
-        return event.current;
-    });
+    // a listing gets updated if a changed row matches its criteria currently
+    // or previously
+    var storiesBefore = extractPreviousValues(relevantEvents, filteredColumns);
+    var storiesAfter = extractCurrentValues(relevantEvents, filteredColumns);
+    var stories = _.concat(storiesBefore, storiesAfter);
     if (_.isEmpty(stories)) {
         return [];
     }
+    var matchingObjects = _.map(stories, (row) => {
+        return _.mapValues(filteredColumnMappings, (column, filter) => {
+            return row[column];
+        });
+    });
     // find listing rows that cover these stories
     var listingCriteria = {
-        match_any: stories,
+        match_any: matchingObjects,
         dirty: false,
     };
     return Listing.find(db, schema, listingCriteria, 'id').then((rows) => {
@@ -270,6 +262,15 @@ function findListingsImpactedByStoryChanges(db, schema, events) {
     });
 }
 
+/**
+ * Mark listings impacted by statistic changes as dirty
+ *
+ * @param  {Database} db
+ * @param  {String} schema
+ * @param  {Array<Object>} events
+ *
+ * @return {Promise}
+ */
 function findListingsImpactedByStatisticsChange(db, schema, events) {
     // only story-popularity is used
     var relevantEvents = _.filter(events, (event) => {
@@ -297,6 +298,49 @@ function findListingsImpactedByStatisticsChange(db, schema, events) {
 
 if (process.argv[1] === __filename) {
     start();
+}
+
+/**
+ * Extract the values of columns prior to a change from database change events.
+ * Only columns provided to createNotificationTriggers() when the database
+ * table was created would be available.
+ *
+ * @param  {Array<Object>} events
+ * @param  {Array<String>} columns
+ *
+ * @return {Array<Object>}
+ */
+function extractCurrentValues(events, columns) {
+    return _.filter(_.map(events, (event) => {
+        if (event.op !== 'DELETE') {
+            var row = event.current;
+            return _.pick(row, columns);
+        }
+    }));
+}
+
+/**
+ * Extract the values of columns prior to a change from database change events
+ *
+ * @param  {Array<Object>} events
+ *
+ * @return {Array<Object>}
+ */
+function extractPreviousValues(events, columns) {
+    return _.filter(_.map(events, (event) => {
+        if (event.op !== 'INSERT') {
+            // include row only when the request columns have changed
+            var changed = _.some(columns, (column) => {
+                return event.diff[column];
+            });
+            if (changed) {
+                // event.previous only contains properties that differ from the
+                // current values--reconstruct the row
+                var row = _.assign({}, event.current, event.previous);
+                return _.pick(row, columns);
+            }
+        }
+    }));
 }
 
 Shutdown.on(stop);

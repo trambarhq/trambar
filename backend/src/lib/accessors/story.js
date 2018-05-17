@@ -122,7 +122,7 @@ module.exports = _.create(ExternalData, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'type', 'tags', 'unfinished_tasks', 'language_codes', 'user_ids', 'role_ids', 'published', 'ready', 'public', 'ptime', 'external', 'mtime', 'itime', 'etime' ];
+            var propNames = [ 'deleted', 'type', 'tags', 'unfinished_tasks', 'language_codes', 'user_ids', 'role_ids', 'published', 'ready', 'public', 'external', 'ptime', 'btime', 'mtime', 'itime', 'etime' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'ptime' ]).then(() => {
                     var Task = require('accessors/task');
