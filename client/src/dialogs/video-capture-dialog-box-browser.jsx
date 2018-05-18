@@ -26,7 +26,9 @@ module.exports = React.createClass({
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
 
-        onCancel: PropTypes.func,
+        onClose: PropTypes.func,
+        onCapturePending: PropTypes.func,
+        onCaptureError: PropTypes.func,
         onCapture: PropTypes.func,
     },
 
@@ -551,6 +553,18 @@ module.exports = React.createClass({
     },
 
     /**
+     * Inform parent component that dialog box should be closed
+     */
+    triggerCloseEvent: function() {
+        if (this.props.onClose) {
+            this.props.onClose({
+                type: 'close',
+                target: this,
+            });
+        }
+    },
+
+    /**
      * Called when user clicks start button
      *
      * @param  {Event} evt
@@ -657,6 +671,7 @@ module.exports = React.createClass({
                 video: capturedVideo.videoBitsPerSecond,
             }
         }
+        this.triggerCloseEvent();
         this.triggerCaptureEvent(res);
     },
 
@@ -666,12 +681,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
-        if (this.props.onCancel) {
-            this.props.onCancel({
-                type: 'cancel',
-                target: this,
-            });
-        }
+        this.triggerCloseEvent();
     },
 
     /**

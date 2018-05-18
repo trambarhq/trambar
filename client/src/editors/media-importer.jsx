@@ -374,8 +374,11 @@ module.exports = React.createClass({
             cameraDirection: this.props.cameraDirection,
             payloads: this.props.payloads,
             locale: this.props.locale,
+            onLoadStart: this.handleLoadStart,
+            onClose: this.handleClose,
+            onCapturePending: this.handleCapturePending,
+            onCaptureError: this.handleCaptureError,
             onCapture: this.handleCapture,
-            onCancel: this.handleCaptureCancel,
         };
         return <PhotoCaptureDialogBox {...props} />
     },
@@ -391,8 +394,11 @@ module.exports = React.createClass({
             cameraDirection: this.props.cameraDirection,
             payloads: this.props.payloads,
             locale: this.props.locale,
+            onLoadStart: this.handleLoadStart,
+            onClose: this.handleClose,
+            onCapturePending: this.handleCapturePending,
+            onCaptureError: this.handleCaptureError,
             onCapture: this.handleCapture,
-            onCancel: this.handleCaptureCancel,
         };
         return <VideoCaptureDialogBox {...props} />
     },
@@ -407,12 +413,17 @@ module.exports = React.createClass({
             show: (this.state.capturing === 'audio'),
             payloads: this.props.payloads,
             locale: this.props.locale,
+            onClose: this.handleClose,
+            onCapturePending: this.handleCapturePending,
+            onCaptureError: this.handleCaptureError,
             onCapture: this.handleCapture,
-            onCancel: this.handleCaptureCancel,
         };
         return <AudioCaptureDialogBox {...props} />
     },
 
+    /**
+     * Send end event if component is unmounted in the middle of capturing
+     */
     componentWillUnmount: function() {
         if (this.state.capturing) {
             this.triggerCaptureEndEvent();
@@ -542,35 +553,58 @@ module.exports = React.createClass({
     },
 
     /**
+     * Called when user clicks x or outside a capture dialog
+     *
+     * @param  {Event} evt
+     */
+    handleClose: function(evt) {
+        this.setState({ capturing: null });
+        this.triggerCaptureEndEvent();
+    },
+
+    /**
+     * Called before a media file is being loaded
+     *
+     * @param  {Object} evt
+     */
+    handleCapturePending: function(evt) {
+        this.resourcePlaceholder = {
+            type: evt.resourceType,
+            pending: `capture-${++captureCount}`
+        };
+        this.addResources([ this.resourcePlaceholder ]);
+    },
+
+    /**
+     * Called when an error occurs while capturing or loading an image or video
+     *
+     * @param  {Object} evt
+     */
+    handleCaptureError: function(evt) {
+        if (this.resourcePlaceholder) {
+            this.removeResource(this.resourcePlaceholder);
+        }
+    },
+
+    /**
      * Called after user has taken a photo, video, or audio
      *
      * @param  {Object} evt
      */
     handleCapture: function(evt) {
         var res = _.clone(evt.resource);
-        if (res.type === 'image') {
-            res.filename = getFilenameFromTime('.jpg');
+        var ext = (res.format === 'jpeg') ? 'jpg' : res.format;
+        res.filename = getFilenameFromTime('.' + ext);
+        if (this.resourcePlaceholder) {
+            this.updateResource(this.resourcePlaceholder, res);
         } else {
-            res.filename = getFilenameFromTime('.' + res.format) ;
+            this.addResources([ res ]);
         }
-        this.addResources([ res ]).then(() => {
-            this.setState({ capturing: null });
-            this.triggerCaptureEndEvent(res);
-        });
-    },
-
-    /**
-     * Called when user clicks x or outside a capture dialog
-     *
-     * @param  {Event} evt
-     */
-    handleCaptureCancel: function(evt) {
-        this.setState({ capturing: null });
-        this.triggerCaptureEndEvent();
     },
 });
 
 var importCount = 0;
+var captureCount = 0;
 
 /**
  * Retrieve the text in a DataTransferItem

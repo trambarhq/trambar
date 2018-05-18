@@ -26,7 +26,9 @@ module.exports = React.createClass({
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
 
-        onCancel: PropTypes.func,
+        onClose: PropTypes.func,
+        onCapturePending: PropTypes.func,
+        onCaptureError: PropTypes.func,
         onCapture: PropTypes.func,
     },
 
@@ -410,12 +412,12 @@ module.exports = React.createClass({
     },
 
     /**
-     * Inform parent component that operation was cancelled
+     * Inform parent component that dialog box should be closed
      */
-    triggerCancelEvent: function() {
-        if (this.props.onCancel) {
-            this.props.onCancel({
-                type: 'cancel',
+    triggerCloseEvent: function() {
+        if (this.props.onClose) {
+            this.props.onClose({
+                type: 'close',
                 target: this,
             });
         }
@@ -460,7 +462,8 @@ module.exports = React.createClass({
             width: capturedImage.width,
             height: capturedImage.height,
             format: 'jpeg'
-        }
+        };
+        this.triggerCloseEvent(true);
         this.triggerCaptureEvent(res);
     },
 
@@ -470,13 +473,7 @@ module.exports = React.createClass({
      * @param  {Event} evt
      */
     handleCancelClick: function(evt) {
-        this.triggerCancelEvent();
-        if (this.props.onCancel) {
-            this.props.onCancel({
-                type: 'cancel',
-                target: this,
-            });
-        }
+        this.triggerCloseEvent(false);
     },
 
     /**

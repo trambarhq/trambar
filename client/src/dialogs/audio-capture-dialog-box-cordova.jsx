@@ -59,8 +59,19 @@ module.exports = React.createClass({
     },
 
     /**
-     * Report back to parent component that an image has been captured and
-     * accepted by user
+     * Inform parent component that dialog box should be closed
+     */
+    triggerCloseEvent: function() {
+        if (this.props.onClose) {
+            this.props.onClose({
+                type: 'close',
+                target: this,
+            });
+        }
+    },
+
+    /**
+     * Report back to parent component that an image is ready
      *
      * @param  {Object} resource
      */
@@ -75,13 +86,30 @@ module.exports = React.createClass({
     },
 
     /**
-     * Inform parent component that operation was cancelled
+     * Report back to parent component that an image is being loaded
+     *
      */
-    triggerCancelEvent: function() {
-        if (this.props.onCancel) {
-            this.props.onCancel({
-                type: 'cancel',
+    triggerCapturePendingEvent: function() {
+        if (this.props.onCapturePending) {
+            this.props.onCapturePending({
+                type: 'capturepending',
                 target: this,
+                resourceType: 'audio'
+            });
+        }
+    },
+
+    /**
+     * Report back to parent component that loading has failed
+     *
+     * @param  {Error} err
+     */
+    triggerCaptureErrorEvent: function(err) {
+        if (this.props.onCaptureError) {
+            this.props.onCaptureError({
+                type: 'capturefailure',
+                target: this,
+                error: err
             });
         }
     },
@@ -92,8 +120,10 @@ module.exports = React.createClass({
      * @param  {Array<MediaFiles>} mediaFiles
      */
     handleCaptureSuccess: function(mediaFiles) {
+        this.triggerCloseEvent();
         var mediaFile = mediaFiles[0];
         if (mediaFile) {
+            this.triggerCapturePendingEvent();
             MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
                 var file = new CordovaFile(mediaFile.fullPath);
                 var [ type, format ] = _.split(mediaFile.type, '/');
@@ -111,18 +141,17 @@ module.exports = React.createClass({
                 this.triggerCaptureEvent(res);
                 return null;
             }).catch((err) => {
-                this.triggerCancelEvent();
+                this.triggerCaptureErrorEvent(err);
                 return null;
             });
-        } else {
-            this.triggerCancelEvent();
         }
     },
 
     /**
-     * Called when user cancels the action
+     * Called when the operation failed for some reason
      */
     handleCaptureFailure: function(err) {
-        this.triggerCancelEvent();
+        this.triggerCloseEvent();
+        this.triggerCaptureErrorEvent(err);
     },
 });

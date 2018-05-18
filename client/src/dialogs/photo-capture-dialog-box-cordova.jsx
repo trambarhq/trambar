@@ -15,7 +15,9 @@ module.exports = React.createClass({
 
         locale: PropTypes.instanceOf(Locale).isRequired,
 
-        onCancel: PropTypes.func,
+        onClose: PropTypes.func,
+        onCapturePending: PropTypes.func,
+        onCaptureError: PropTypes.func,
         onCapture: PropTypes.func,
     },
 
@@ -69,8 +71,19 @@ module.exports = React.createClass({
     },
 
     /**
-     * Report back to parent component that an image has been captured and
-     * accepted by user
+     * Inform parent component that dialog box should be closed
+     */
+    triggerCloseEvent: function() {
+        if (this.props.onClose) {
+            this.props.onClose({
+                type: 'close',
+                target: this,
+            });
+        }
+    },
+
+    /**
+     * Report back to parent component that an image is ready
      *
      * @param  {Object} resource
      */
@@ -85,13 +98,30 @@ module.exports = React.createClass({
     },
 
     /**
-     * Inform parent component that operation was cancelled
+     * Report back to parent component that an image is being loaded
+     *
      */
-    triggerCancelEvent: function() {
-        if (this.props.onCancel) {
-            this.props.onCancel({
-                type: 'cancel',
+    triggerCapturePendingEvent: function() {
+        if (this.props.onCapturePending) {
+            this.props.onCapturePending({
+                type: 'capturepending',
                 target: this,
+                resourceType: 'image'
+            });
+        }
+    },
+
+    /**
+     * Report back to parent component that loading has failed
+     *
+     * @param  {Error} err
+     */
+    triggerCaptureErrorEvent: function(err) {
+        if (this.props.onCaptureError) {
+            this.props.onCaptureError({
+                type: 'capturefailure',
+                target: this,
+                error: err
             });
         }
     },
@@ -103,6 +133,8 @@ module.exports = React.createClass({
      */
     handleCaptureSuccess: function(imageURL) {
         var file = new CordovaFile(imageURL);
+        this.triggerCloseEvent();
+        this.triggerCapturePendingEvent();
         file.obtainMetadata().then(() => {
             return MediaLoader.getImageMetadata(file).then((meta) => {
                 var payload = this.props.payloads.add('image').attachFile(file);
@@ -117,7 +149,7 @@ module.exports = React.createClass({
                 return null;
             });
         }).catch((err) => {
-            this.triggerCancelEvent();
+            this.triggerCaptureErrorEvent(err);
             return null;
         });
     },
@@ -126,6 +158,6 @@ module.exports = React.createClass({
      * Called when user cancels the action
      */
     handleCaptureFailure: function(message) {
-        this.triggerCancelEvent();
+        this.triggerCloseEvent();
     },
 });
