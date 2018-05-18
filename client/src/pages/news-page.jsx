@@ -94,6 +94,7 @@ module.exports = Relaks.createClass({
             var statistics = {
                 type: 'daily-activities',
                 schema: params.schema,
+                public: 'guest',
             };
             return {
                 calendar: { route, statistics },

@@ -25,7 +25,7 @@ module.exports = {
  * @return {Promise<Object>}
  */
 function find(db, params) {
-    var type, user, project;
+    var type, user, project, publicOnly = false;
     if (params) {
         type = params.type;
         if (params.user) {
@@ -41,13 +41,14 @@ function find(db, params) {
         } else if (params.project_name) {
             project = { name: params.project_name };
         }
+        publicOnly = params.public;
     }
 
     if (type === 'daily-activities') {
         if (user && project) {
-            return findDailyActivitiesOfUser(db, project, user);
+            return findDailyActivitiesOfUser(db, project, user, publicOnly);
         } else if (project) {
-            return findDailyActivitiesOfProject(db, project, user);
+            return findDailyActivitiesOfProject(db, project, user, publicOnly);
         }
     } else if (type === 'daily-notifications') {
         if (user && project) {
@@ -65,10 +66,11 @@ function find(db, params) {
  *
  * @param  {Database} db
  * @param  {Project} project
+ * @param  {Boolean} publicOnly
  *
  * @return {Promise<Object>}
  */
-function findDailyActivitiesOfProject(db, project) {
+function findDailyActivitiesOfProject(db, project, publicOnly) {
     if (!project || project.deleted) {
         return null;
     }
@@ -76,7 +78,9 @@ function findDailyActivitiesOfProject(db, project) {
     // load story-date-range statistics
     var criteria = {
         type: 'story-date-range',
-        filters: {},
+        filters: {
+            public: publicOnly || undefined,
+        },
     };
     // don't stall rendering
     var minimum = 0;
@@ -90,6 +94,7 @@ function findDailyActivitiesOfProject(db, project) {
             return {
                 time_range: timeRange,
                 tz_offset: tzOffset,
+                public: publicOnly || undefined,
             };
         });
         var criteria = { type: 'daily-activities', filters };
@@ -121,14 +126,15 @@ function findDailyActivitiesOfProjects(db, projects) {
  *
  * @param  {Database} db
  * @param  {Project} project
+ * @param  {Boolean} publicOnly
  *
  * @return {Promise<Object>}
  */
-function findDailyActivitiesOfUser(db, project, user) {
+function findDailyActivitiesOfUser(db, project, user, publicOnly) {
     if (!user) {
         return null;
     }
-    return findDailyActivitiesOfUsers(db, project, [ user ]).then((hash) => {
+    return findDailyActivitiesOfUsers(db, project, [ user ], publicOnly).then((hash) => {
         return _.get(hash, user.id, null);
     });
 }
@@ -139,10 +145,11 @@ function findDailyActivitiesOfUser(db, project, user) {
  * @param  {Database} db
  * @param  {Project} project
  * @param  {Array<User>} users
+ * @param  {Boolean} publicOnly
  *
  * @return {Promise<Object>}
  */
-function findDailyActivitiesOfUsers(db, project, users) {
+function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
     if (!project) {
         return Promise.resolve(null);
     }
@@ -155,7 +162,8 @@ function findDailyActivitiesOfUsers(db, project, users) {
         type: 'story-date-range',
         filters: _.map(currentUsers, (user) => {
             return {
-                user_ids: [ user.id ]
+                user_ids: [ user.id ],
+                public: publicOnly || undefined,
             };
         }),
     };
@@ -170,6 +178,7 @@ function findDailyActivitiesOfUsers(db, project, users) {
                     user_ids: dateRange.filters.user_ids,
                     time_range: timeRange,
                     tz_offset: tzOffset,
+                    public: publicOnly || undefined,
                 };
             });
         });
@@ -195,6 +204,7 @@ function findDailyActivitiesOfUsers(db, project, users) {
  *
  * @param  {Database} db
  * @param  {Project} project
+ * @param  {User} user
  *
  * @return {Promise<Object>}
  */

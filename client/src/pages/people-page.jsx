@@ -216,7 +216,8 @@ module.exports = Relaks.createClass({
                 // that affects the height of the view
                 meanwhile.show(<PeoplePageSync {...props} />);
             }
-            return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, props.members).then((statistics) => {
+            var publicOnly = (props.currentUser.type === 'guest');
+            return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, props.members, publicOnly).then((statistics) => {
                 props.dailyActivities = statistics;
                 if (!props.visibleUsers) {
                     // find users with stories using stats
@@ -238,7 +239,7 @@ module.exports = Relaks.createClass({
                 } else if (props.selectedUser) {
                     // load statistics of selected user if he's not a member
                     if (!_.some(props.members, { id: props.selectedUser })) {
-                        return StatisticsFinder.findDailyActivitiesOfUser(db, props.project, props.selectedUser).then((selectedUserStats) => {
+                        return StatisticsFinder.findDailyActivitiesOfUser(db, props.project, props.selectedUser, publicOnly).then((selectedUserStats) => {
                             _.set(props.dailyActivities, props.selectedUser.id, selectedUserStats);
                         });
                     }
@@ -309,12 +310,13 @@ module.exports = Relaks.createClass({
                 var authorIds = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
                 var memberIds = _.map(props.members, 'id');
                 var nonMemberUserIds = _.difference(authorIds, memberIds);
+                var publicOnly = (props.currentUser.type === 'guest');
                 if (!_.isEmpty(nonMemberUserIds)) {
                     return UserFinder.findUsers(db, nonMemberUserIds).then((users) => {
                         // add non-members
                         props.visibleUsers = _.concat(props.visibleUsers, users);
                         meanwhile.show(<PeoplePageSync {...props} />);
-                        return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, users).then((stats) => {
+                        return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, users, publicOnly).then((stats) => {
                             // add their stats
                             props.dailyActivities = _.assign({}, props.dailyActivities, stats);
                         });

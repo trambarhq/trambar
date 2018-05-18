@@ -3,6 +3,7 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Relaks = require('relaks');
 var Moment = require('moment');
 var StatisticsFinder = require('objects/finders/statistics-finder');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -45,9 +46,14 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<CalendarBarSync {...props} />);
         return db.start().then((userId) => {
+            return UserFinder.findOne(db, userId);
+        }).then((user) => {
             var params = _.clone(this.props.settings.statistics);
             if (params.user_id === 'current') {
-                params.user_id = userId;
+                params.user_id = user.id;
+            }
+            if (params.public === 'guest') {
+                params.public = (user.type === 'guest');
             }
             return StatisticsFinder.find(db, params);
         }).then((statistics) => {

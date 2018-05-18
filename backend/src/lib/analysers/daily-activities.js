@@ -15,6 +15,7 @@ module.exports = {
             role_ids: 'role_ids',
             time_range: 'ptime',
             external_object: 'external',
+            public: 'public',
         },
     },
     // additional criteria that objects must also meet to be included

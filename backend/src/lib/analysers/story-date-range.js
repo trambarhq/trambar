@@ -10,6 +10,7 @@ module.exports = {
             user_ids: 'user_ids',
             role_ids: 'role_ids',
             external_object: 'external',
+            public: 'public',
         },
     },
     depedentColumns: {
