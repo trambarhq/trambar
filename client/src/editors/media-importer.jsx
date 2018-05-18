@@ -78,6 +78,28 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return the resource type given a mime type
+     *
+     * @param  {String} mimeType
+     *
+     * @return {String|undefined}
+     */
+    getResourceType: function(mimeType) {
+        var type = MediaLoader.extractFileCategory(mimeType);
+        if (type === 'application') {
+            switch (MediaLoader.extractFileFormat(mimeType)) {
+                case 'x-mswinurl':
+                case 'x-desktop':
+                    type = 'website';
+                    break;
+            }
+        }
+        if (this.isAcceptable(type)) {
+            return type;
+        }
+    },
+
+    /**
      * Start capturing image/video/audio
      *
      * @param  {String} type
@@ -97,27 +119,43 @@ module.exports = React.createClass({
     importFiles: function(files) {
         // create a copy of the array so it doesn't disappear during
         // asynchronous operation
-        files = _.slice(files);
-        return Promise.map(files, (file, index) => {
-            var type = MediaLoader.extractFileCategory(file.type);
-            if (/application\/(x-mswinurl|x-desktop)/.test(file.type)) {
-                type = 'website';
-            }
-            if (this.isAcceptable(type)) {
-                switch (type) {
-                    case 'image':
-                        return this.importImageFile(file);
-                    case 'video':
-                        return this.importVideoFile(file);
-                    case 'audio':
-                        return this.importAudioFile(file);
-                    case 'website':
-                        return this.importBookmarkFile(file);
-                }
-            }
-        }).then((resources) => {
-            return this.addResources(_.filter(resources));
+        files = _.filter(files, (file) => {
+            return !!this.getResourceType(file.type);
         });
+        // add placeholders first
+        var types = _.map(files, (file) => {
+            return this.getResourceType(file.type);
+        });
+        return this.addResourcePlaceholders(types).then((placeholders) => {
+            return Promise.each(files, (file, index) => {
+                // import the file then replace the placeholder
+                return this.importFile(file).then((res) => {
+                    return this.updateResource(placeholders[index], res);
+                }).catch((err) => {
+                    return this.removeResource(placeholders[index]);
+                });
+            });
+        });
+    },
+
+    /**
+     * Import a media file
+     *
+     * @param  {File} file
+     *
+     * @return {Promise<Object>}
+     */
+    importFile: function(file) {
+        switch (this.getResourceType(file.type)) {
+            case 'image':
+                return this.importImageFile(file);
+            case 'video':
+                return this.importVideoFile(file);
+            case 'audio':
+                return this.importAudioFile(file);
+            case 'website':
+                return this.importBookmarkFile(file);
+        }
     },
 
     /**
@@ -276,18 +314,7 @@ module.exports = React.createClass({
      * @return {Promise<Number>}
      */
     importDataItems: function(items) {
-        var stringItems = _.filter(items, (item) => {
-            if (item.kind === 'string') {
-                return /^text\/(html|uri-list)/.test(item.type);
-            }
-        });
-        // since items are ephemeral, we need to call getAsString() on each
-        // of them at this point (and not in a callback)
-        var stringPromises = {};
-        _.each(stringItems, (item) => {
-            stringPromises[item.type] = retrieveDataItemText(item);
-        });
-        return Promise.props(stringPromises).then((strings) => {
+        return retrieveDataItemTexts(items).then((strings) => {
             var html = strings['text/html'];
             var url = strings['text/uri-list'];
             if (url) {
@@ -295,20 +322,13 @@ module.exports = React.createClass({
                 var type = /<img\b/i.test(html) ? 'image' : 'website';
                 if (this.isAcceptable(type)) {
                     if (type === 'image') {
-                        return MediaLoader.getImageMetadata(url).then((meta) => {
-                            var filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
-                            var payload = this.props.payloads.add('image').attachURL(url);
-                            return {
-                                type: 'image',
-                                payload_token: payload.token,
-                                filename: filename,
-                                width: meta.width,
-                                height: meta.height,
-                            };
-                        }).catch((err) => {
-                            // running into cross-site restrictions is quite likely here
-                            console.log(`Unable to load image: ${url}`);
-                        });
+                        var filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
+                        var payload = this.props.payloads.add('image').attachURL(url);
+                        return {
+                            type: 'image',
+                            payload_token: payload.token,
+                            filename: filename,
+                        };
                     } else if (type === 'website') {
                         var payload = this.props.payloads.add('website').attachURL(url, 'poster');
                         return {
@@ -321,11 +341,10 @@ module.exports = React.createClass({
                 }
             }
         }).then((res) => {
-            if (res) {
-                return this.addResources([ res ]);
-            } else {
+            if (!res) {
                 return 0;
             }
+            return this.addResources([ res ]);
         });
     },
 
@@ -401,11 +420,26 @@ module.exports = React.createClass({
     },
 
     /**
-     * Add new resources
+     * Add new resource placeholders
      *
      * @param  {Array<Object>} newResources
      *
-     * @return {Promise<Number>}
+     * @return {Promise<Array<Object>>}
+     */
+    addResourcePlaceholders: function(types) {
+        var resources = _.map(types, (type) => {
+            return {
+                type: type,
+                pending: `import-${++importCount}`,
+            };
+        });
+        return this.addResources(resources).return(resources);
+    },
+
+    /**
+     * Add new resources
+     *
+     * @param  {Array<Object>} newResources
      */
     addResources: function(newResources) {
         if (_.isEmpty(newResources)) {
@@ -425,16 +459,47 @@ module.exports = React.createClass({
             resources = _.concat(resourcesBefore, newResources);
         }
         var firstIndex = resourcesBefore.length;
-        return this.triggerChangeEvent(resources, firstIndex).then(() => {
-            return newResources.length;
-        });
+        return this.triggerChangeEvent(resources, firstIndex);
+    },
+
+    /**
+     * Update a resource placeholder with actual properties
+     *
+     * @param  {Object} before
+     * @param  {Object} after
+     *
+     * @return {Promise}
+     */
+    updateResource: function(before, after) {
+        var resources = _.slice(this.props.resources);
+        var index = _.findIndex(resources, before);
+        if (index !== -1) {
+            resources[index] = after;
+            return this.triggerChangeEvent(resources);
+        }
+    },
+
+    /**
+     * Remove a resource placeholder when import fails
+     *
+     * @param  {Object} before
+     *
+     * @return {Promise}
+     */
+    removeResource: function(before, after) {
+        var resources = _.slice(this.props.resources);
+        var index = _.findIndex(resources, before);
+        if (index !== -1) {
+            resources.splice(index, 1);
+            return this.triggerChangeEvent(resources);
+        }
     },
 
     /**
      * Call onChange handler
      *
      * @param  {Array<Object>} resources
-     * @param  {Number} selection
+     * @param  {Number|undefined} selection
      *
      * @return {Promise}
      */
@@ -505,17 +570,31 @@ module.exports = React.createClass({
     },
 });
 
+var importCount = 0;
+
 /**
  * Retrieve the text in a DataTransferItem
  *
  * @param  {DataTransferItem} item
  *
- * @return {Promise<String>}
+ * @return {Promise<Object<String>>}
  */
-function retrieveDataItemText(item) {
-    return new Promise((resolve, reject) => {
-        item.getAsString(resolve);
+function retrieveDataItemTexts(items) {
+    var stringItems = _.filter(items, (item) => {
+        if (item.kind === 'string') {
+            return /^text\/(html|uri-list)/.test(item.type);
+        }
     });
+    // since items are ephemeral, we need to call getAsString() on all of them
+    // synchronously and not in a callback (i.e. can't use Promise.map)
+    var stringPromises = {};
+    _.each(stringItems, (item) => {
+        // keyed by mime type
+        stringPromises[item.type] = new Promise((resolve, reject) => {
+            item.getAsString(resolve);
+        });
+    });
+    return Promise.props(stringPromises);
 }
 
 /**

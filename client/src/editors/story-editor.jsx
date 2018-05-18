@@ -1422,9 +1422,17 @@ module.exports = React.createClass({
         var resourcesBefore = this.state.draft.resources;
         var resourcesAfter = evt.resources;
         var selectedResourceIndex = evt.selection;
+        if (selectedResourceIndex === undefined) {
+            selectedResourceIndex = this.state.selectedResourceIndex;
+        }
         if (resourcesBefore !== resourcesAfter) {
             var draft = _.decoupleSet(this.state.draft, 'details.resources', resourcesAfter);
-            var immediate = hasUnsentFiles(resourcesAfter);
+            var immediate = false;
+            if (hasPendingResources(resourcesAfter)) {
+                if (hasUnsentFiles(resourcesAfter)) {
+                    immediate = true;
+                }
+            }
             return this.saveDraft(draft, immediate, selectedResourceIndex);
         } else {
             this.setState({ selectedResourceIndex });
@@ -1564,6 +1572,14 @@ function createBlankStory(currentUser) {
         public: true,
         published: false,
     };
+}
+
+function hasPendingResources(resources) {
+    return _.some(resources, (res) => {
+        if (!res.pending) {
+            return true;
+        }
+    });
 }
 
 function hasUnsentFiles(resources) {

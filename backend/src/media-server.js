@@ -290,7 +290,7 @@ function handleImageUpload(req, res) {
     var schema = req.params.schema;
     var token = req.query.token;
     var file = req.file;
-    var url = req.body.external_url;
+    var url = req.body.url;
     return checkTaskToken(schema, token, 'add-image').then((taskId) => {
         return FileManager.preserveFile(file, url, CacheFolders.image).then((imagePath) => {
             if (!imagePath) {
@@ -325,7 +325,7 @@ function handleImageUpload(req, res) {
  */
 function handleImageImport(req, res) {
     var file = req.file;
-    var url = req.body.external_url;
+    var url = req.body.url;
     return FileManager.preserveFile(file, url, CacheFolders.image).then((imagePath) => {
         if (!imagePath) {
             throw new HTTPError(400);
@@ -398,7 +398,7 @@ function handleMediaUpload(req, res, type) {
     var token = req.query.token;
     var streamId = req.body.stream;
     var file = req.file;
-    var url = req.body.external_url;
+    var url = req.body.url;
     return checkTaskToken(schema, token, `add-${type}`).then((taskId) => {
         if (streamId) {
             // handle streaming upload--transcoding job has been created already
@@ -510,7 +510,7 @@ function handleMediaPoster(req, res, type) {
     var token = req.query.token;
     var streamId = req.body.stream;
     var file = req.file;
-    var url = req.body.external_url;
+    var url = req.body.url;
     return checkTaskToken(schema, token, `add-${type}`).then((taskId) => {
         return FileManager.preserveFile(file, url, CacheFolders.image).then((imagePath) => {
             if (!imagePath) {

@@ -57,6 +57,8 @@ module.exports = React.createClass({
             fullImageURL: null,
             loadedImageURL: null,
             previewImageURL: null,
+            placeholderMessage: null,
+            placeholderIcon: null,
         };
     },
 
@@ -85,25 +87,29 @@ module.exports = React.createClass({
      * @param  {Boolean} disabled
      */
     prepareImage: function(res, disabled) {
-        var fullImageURL = null;
-        var previewImageURL = null;
+        var newState = {
+            fullImageURL: null,
+            previewImageURL: null,
+            placeholderMessage: null,
+            placeholderIcon: null,
+        };
         var fullImageRemoteURL = this.props.theme.getImageURL(res, { original: true });
         if (fullImageRemoteURL) {
             if (isJSONEncoded(fullImageRemoteURL)) {
                 // a blob that hasn't been uploaded yet
                 var image = parseJSONEncodedURL(fullImageRemoteURL)
-                fullImageURL = image.url;
+                newState.fullImageURL = image.url;
             } else {
                 // the remote URL might point to a file we had uploaded
                 var blob = BlobManager.find(fullImageRemoteURL);
                 if (blob) {
-                    fullImageURL = BlobManager.url(blob);
+                    newState.fullImageURL = BlobManager.url(blob);
                 }
             }
-            if (!fullImageURL) {
+            if (!newState.fullImageURL) {
                 // we don't have a blob--show a preview image (clipped) while the
                 // full image is retrieved
-                previewImageURL = this.props.theme.getImageURL(res, {
+                newState.previewImageURL = this.props.theme.getImageURL(res, {
                     width: this.props.previewWidth,
                     height: this.props.previewHeight
                 });
@@ -113,14 +119,36 @@ module.exports = React.createClass({
                     BlobManager.fetch(fullImageRemoteURL).then((blob) => {
                         this.setState({
                             fullImageURL: BlobManager.url(blob),
-                            previewImageURL: null
+                            previewImageURL: null,
+                            placeholderMessage: null,
+                            placeholderIcon: null,
                         });
                     });
                 }
             }
         }
-        if (this.state.fullImageURL !== fullImageURL || this.state.previewImageURL !== previewImageURL) {
-            this.setState({ fullImageURL, previewImageURL });
+        if (!newState.fullImageURL && !newState.previewImageURL) {
+            // image isn't available locally
+            var t = this.props.locale.translate;
+            if (res.width && res.height) {
+                // when the dimensions are known, then the image was available to
+                // the client
+                newState.placeholderMessage = t('image-editor-upload-in-progress');
+                newState.placeholderIcon = 'cloud-upload';
+            } else {
+                if (res.type === 'video') {
+                    // poster is being generated in the backend
+                    newState.placeholderMessage = t('image-editor-poster-extraction-in-progress');
+                    newState.placeholderIcon = 'film';
+                } else if (res.type === 'website') {
+                    // web-site preview is being generated
+                    newState.placeholderMessage = t('image-editor-page-rendering-in-progress');
+                    newState.placeholderIcon = 'file-image-o';
+                }
+            }
+        }
+        if (!_.isMatch(this.state, newState)) {
+            this.setState(newState);
         }
     },
 
@@ -183,12 +211,12 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderSpinner: function() {
-        if (!this.state.fullImageURL && !this.state.previewImageURL) {
-            // rendering placeholder
+        if (this.state.plaeholderMessage || this.state.placeholderIcon) {
             return null;
-        } else if (this.state.fullImageURL === this.state.loadedImageURL) {
-            // image is loaded
-            return null;
+        } else if (this.state.fullImageURL) {
+            if (this.state.fullImageURL === this.state.loadedImageURL) {
+                return null;
+            }
         }
         return (
             <div className="spinner">
@@ -226,31 +254,15 @@ module.exports = React.createClass({
         if (this.state.fullImageURL || this.state.previewImageURL) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var res = this.props.resource;
-        var message, icon;
-        if (res.width && res.height) {
-            // when the dimensions are known, then the image was available to
-            // the client
-            message = t('image-editor-upload-in-progress');
-            icon = 'cloud-upload';
-        } else {
-            if (res.type === 'video') {
-                // poster is being generated in the backend
-                message = t('image-editor-poster-extraction-in-progress');
-                icon = 'film';
-            } else if (res.type === 'website') {
-                // web-site preview is being generated
-                message = t('image-editor-page-rendering-in-progress');
-                icon = 'file-image-o';
-            }
+        if (!this.state.plaeholderMessage && !this.state.placeholderIcon) {
+            return null;
         }
         return (
             <div className="placeholder">
                 <div className="icon">
-                    <i className={`fa fa-${icon}`} />
+                    <i className={`fa fa-${this.state.placeholderIcon}`} />
                 </div>
-                <div className="message">{message}</div>
+                <div className="message">{this.state.placeholderMessage}</div>
             </div>
         );
     },

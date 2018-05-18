@@ -127,6 +127,9 @@ Payload.prototype.attachStream = function(stream, name) {
  * @return {Payload}
  */
 Payload.prototype.attachURL = function(url, name) {
+    if (!name) {
+        name = 'main';
+    }
     this.parts.push({ url, name });
     return this;
 };
