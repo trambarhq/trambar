@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
+var FileError = require('errors/file-error');
 
 // mixins
 var UpdateCheck = require('mixins/update-check');
