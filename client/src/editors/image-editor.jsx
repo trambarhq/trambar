@@ -211,6 +211,9 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderSpinner: function() {
+        if (this.props.disabled) {
+            return null;
+        }
         if (this.state.plaeholderMessage || this.state.placeholderIcon) {
             return null;
         } else if (this.state.fullImageURL) {
