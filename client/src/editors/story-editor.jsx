@@ -1579,7 +1579,7 @@ function createBlankStory(currentUser) {
 
 function hasPendingResources(resources) {
     return _.some(resources, (res) => {
-        if (!res.pending) {
+        if (res.pending) {
             return true;
         }
     });
