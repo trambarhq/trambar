@@ -136,14 +136,17 @@ module.exports = React.createClass({
                 newState.placeholderMessage = t('image-editor-upload-in-progress');
                 newState.placeholderIcon = 'cloud-upload';
             } else {
-                if (res.type === 'video') {
-                    // poster is being generated in the backend
-                    newState.placeholderMessage = t('image-editor-poster-extraction-in-progress');
-                    newState.placeholderIcon = 'film';
-                } else if (res.type === 'website') {
-                    // web-site preview is being generated
-                    newState.placeholderMessage = t('image-editor-page-rendering-in-progress');
-                    newState.placeholderIcon = 'file-image-o';
+                if (!res.pending) {
+                    // not pending locally--we're wait for remote action to complete 
+                    if (res.type === 'video') {
+                        // poster is being generated in the backend
+                        newState.placeholderMessage = t('image-editor-poster-extraction-in-progress');
+                        newState.placeholderIcon = 'film';
+                    } else if (res.type === 'website') {
+                        // web-site preview is being generated
+                        newState.placeholderMessage = t('image-editor-page-rendering-in-progress');
+                        newState.placeholderIcon = 'file-image-o';
+                    }
                 }
             }
         }

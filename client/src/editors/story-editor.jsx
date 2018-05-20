@@ -516,8 +516,11 @@ module.exports = React.createClass({
     renderButtons: function() {
         var t = this.props.locale.translate;
         var draft = this.state.draft;
-        var noText = _.isEmpty(_.get(draft, 'details.text'));
-        var noResources = _.isEmpty(_.get(draft, 'details.resources'));
+        var text = _.get(draft, 'details.text');
+        var resources = _.get(draft, 'details.resources');
+        var noText = _.isEmpty(_.pickBy(text));
+        var noResources = _.isEmpty(resources);
+        var pendingResource = hasPendingResources(resources)
         var publishing = _.get(draft, 'published', false);
         var cancelButtonProps = {
             label: t('story-cancel'),
@@ -528,7 +531,7 @@ module.exports = React.createClass({
             label: t('story-post'),
             onClick: this.handlePublishClick,
             emphasized: true,
-            disabled: (noText && noResources) || publishing,
+            disabled: (noText && noResources) || pendingResource || publishing,
         };
         return (
             <div className="buttons">
