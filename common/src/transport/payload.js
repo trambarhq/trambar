@@ -4,6 +4,7 @@ var Moment = require('moment');
 var BlobStream = require('transport/blob-stream');
 var BlobManager = require('transport/blob-manager');
 var HTTPRequest = require('transport/http-request');
+var BackgroundFileTransfer = require('transport/background-file-transfer');
 var HTTPError = require('errors/http-error');
 var FileError = require('errors/file-error');
 var RandomToken = require('utils/random-token');
@@ -286,35 +287,53 @@ Payload.prototype.sendCordovaFile = function(part) {
     var url = this.getDestinationURL(part.name);
     var file = part.cordovaFile;
     return new Promise((resolve, reject) => {
-        var encodedURL = encodeURI(url);
-        var fileTransfer = new FileTransfer;
-        fileTransfer.onprogress = (evt) => {
-            this.updateProgress(part, evt.loaded / evt.total)
-        };
-        var successCB = (r) => {
-            if (r.responseCode >= 400) {
-                reject(new HTTPError(r.responseCode));
-            }
-            try {
-                var res = JSON.parse(r.response);
-                resolve(res);
-            } catch(err) {
-                reject(err);
-            }
-        };
-        var errorCB = (err) => {
-            reject(new FileError(err))
-        };
-        var fileUploadOptions = _.assign(new FileUploadOptions, {
-            fileKey: 'file',
-            fileName: file.name,
-            params: part.options,
-            mimeType: file.type,
-        });
         part.uploaded = 0;
-        fileTransfer.upload(file.fullPath, encodedURL, successCB, errorCB, fileUploadOptions);
-    }).then((res) => {
-        this.associateRemoteURL(res.url, file);
+        if (BackgroundFileTransfer.isAvailable()) {
+            var index = _.indexOf(this.parts, part);
+            var token = `${this.token}-${index + 1}`;
+            var options ={
+                onSuccess: (upload) => {
+                    resolve(upload.serverResponse);
+                },
+                onError: (err) => {
+                    reject(err);
+                },
+                onProgress: (upload) => {
+                    this.updateProgress(part, upload.progress / 100);
+                },
+            };
+            BackgroundFileTransfer.send(token, file.fullPath, url, options)
+        } else {
+            var encodedURL = encodeURI(url);
+            var fileTransfer = new FileTransfer;
+            fileTransfer.onprogress = (evt) => {
+                this.updateProgress(part, evt.loaded / evt.total)
+            };
+            var successCB = (r) => {
+                if (r.responseCode >= 400) {
+                    reject(new HTTPError(r.responseCode));
+                }
+                resolve(r.response);
+            };
+            var errorCB = (err) => {
+                reject(new FileError(err))
+            };
+            var options = _.assign(new FileUploadOptions, {
+                fileKey: 'file',
+                fileName: file.name,
+                params: part.options,
+                mimeType: file.type,
+            });
+            fileTransfer.upload(file.fullPath, encodedURL, successCB, errorCB, options);
+        }
+    }).then((text) => {
+        var res;
+        try {
+            res = JSON.parse(text);
+            this.associateRemoteURL(res.url, file);
+        } catch(err) {
+            res = {};
+        }
         return res;
     });
 };
