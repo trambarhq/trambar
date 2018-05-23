@@ -287,45 +287,21 @@ Payload.prototype.sendCordovaFile = function(part) {
     var url = this.getDestinationURL(part.name);
     var file = part.cordovaFile;
     return new Promise((resolve, reject) => {
+        var index = _.indexOf(this.parts, part);
+        var token = `${this.token}-${index + 1}`;
+        var options ={
+            onSuccess: (upload) => {
+                resolve(upload.serverResponse);
+            },
+            onError: (err) => {
+                reject(err);
+            },
+            onProgress: (upload) => {
+                this.updateProgress(part, upload.progress / 100);
+            },
+        };
+        BackgroundFileTransfer.send(token, file.fullPath, url, options);
         part.uploaded = 0;
-        if (BackgroundFileTransfer.isAvailable()) {
-            var index = _.indexOf(this.parts, part);
-            var token = `${this.token}-${index + 1}`;
-            var options ={
-                onSuccess: (upload) => {
-                    resolve(upload.serverResponse);
-                },
-                onError: (err) => {
-                    reject(err);
-                },
-                onProgress: (upload) => {
-                    this.updateProgress(part, upload.progress / 100);
-                },
-            };
-            BackgroundFileTransfer.send(token, file.fullPath, url, options)
-        } else {
-            var encodedURL = encodeURI(url);
-            var fileTransfer = new FileTransfer;
-            fileTransfer.onprogress = (evt) => {
-                this.updateProgress(part, evt.loaded / evt.total)
-            };
-            var successCB = (r) => {
-                if (r.responseCode >= 400) {
-                    reject(new HTTPError(r.responseCode));
-                }
-                resolve(r.response);
-            };
-            var errorCB = (err) => {
-                reject(new FileError(err))
-            };
-            var options = _.assign(new FileUploadOptions, {
-                fileKey: 'file',
-                fileName: file.name,
-                params: part.options,
-                mimeType: file.type,
-            });
-            fileTransfer.upload(file.fullPath, encodedURL, successCB, errorCB, options);
-        }
     }).then((text) => {
         var res;
         try {

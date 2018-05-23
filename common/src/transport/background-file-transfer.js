@@ -4,7 +4,6 @@ var FileTransferManager = window.FileTransferManager;
 module.exports = {
     initialize,
     send,
-    isAvailable,
 };
 
 var transfers = [];
@@ -62,13 +61,4 @@ function send(token, path, url, options) {
          onProgress: _.get(options, 'onProgress'),
      };
      transfers.push(transfer);
-}
-
-/**
- * Return true if background uploading is available
- *
- * @return {Boolean}
- */
-function isAvailable() {
-    return !!uploader;
 }
