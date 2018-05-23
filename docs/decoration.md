@@ -7,9 +7,9 @@ Trambar decoration files are special Markdown text files that annotates your app
 
 Trambar decoration files reside in the .trambar folder alongside the targetted files:
 
-![.trambar folder](trambar-folder.png)
+![.trambar folder](img/trambar-folder.png)
 
-It typically starts with a heading, although this is not required.
+It typically starts with a heading although this is not required.
 
 ```markdown
 Foobar
@@ -17,9 +17,9 @@ Foobar
 The area of the app where a user can foo a bar.
 ```
 
-File matching
--------------
-By default, a decoration file is applicable to any files with the same name (excluding extension) in the target folder and its sub-folders. E.g. `foobar.md` matches `foobar.*`. A special code section can be added to specify more sophisticated behavior:
+## File matching
+
+By default, a decoration file is applicable to any files with the same name (excluding extension) in the target folder and its sub-folders. E.g. `foobar.md` matches `foobar.*`. A special code section containing [.gitignore](https://git-scm.com/docs/gitignore) rules can be added to specify more sophisticated behavior:
 
 ```markdown
 Foobar
@@ -49,9 +49,9 @@ foobar.js
 
 This is useful when annotating a component that makes use of code from different parts of the source tree.
 
-Component Icon
---------------
-You may add an icon representing the app component:
+## Component Icon
+
+You can add an icon representing the app component:
 
 ```markdown
 Foobar
@@ -68,6 +68,25 @@ foobar.js
 
 When a filename is provided, it's assumed to be an image file in the .trambar folder. When a fully-qualified URL is given, the image would be pulled from the remote location instead. For this to work, the server when the image resides must allow CORS access.
 
-Trambar also accepts special Font-Awesome URLs:
+Trambar also accepts special Font-Awesome (v.4.7) URLs:
 
 `fa://<class name>/<background color>/<foreground color>`
+
+## Multilingual Descriptions
+
+```markdown
+# en
+Foobar
+------
+The area of the app where a user can foo a bar.
+
+# pl
+Fubar
+-----
+Strona na której użytkownik może karmić aligatora.  
+
+​```​match
+foo_*.js
+bar_*.js
+​```​
+```
