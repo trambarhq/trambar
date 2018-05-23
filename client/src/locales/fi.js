@@ -534,6 +534,10 @@ module.exports = function(localeCode) {
             var files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
             return `${files} muokattu`;
         },
+        'story-push-modified-$count-lines': (count) => {
+            var lines = (count === 1) ? `1 rivi` : `${count} riviä`;
+            return `${lines} muokattu`;
+        },
         'story-push-renamed-$count-files': (count) => {
             var files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
             return `${files} nimettiin uudelleen`;

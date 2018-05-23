@@ -666,6 +666,17 @@ module.exports = function(localeCode) {
             }
             return `${files} zmodyfikowano`;
         },
+        'story-push-modified-$count-lines': (count) => {
+            var lines;
+            if (singular(count)) {
+                lines = `1 linia`;
+            } else if (plural(count)) {
+                lines = `${count} linie`;
+            } else {
+                lines = `${count} liń`
+            }
+            return `${lines} zmodyfikowano`;
+        },
         'story-push-renamed-$count-files': (count) => {
             var files;
             if (singular(count)) {

@@ -117,12 +117,14 @@ function mergeLineChanges(chain) {
     var pl = {
         added: 0,
         deleted: 0,
+        modified: 0,
     };
     _.each(chain, (commit) => {
         var cl = commit.details.lines;
         if (cl) {
             pl.added += cl.added;
             pl.deleted += cl.deleted;
+            pl.modified += cl.modified;
         }
     });
     return pl;

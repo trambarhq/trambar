@@ -553,6 +553,13 @@ module.exports = function(localeCode) {
                 return `${count} file modificati`;
             }
         },
+        'story-push-modified-$count-lines': (count) => {
+            if (count === 1) {
+                return `1 righe modificato`;
+            } else {
+                return `${count} riga modificati`;
+            }
+        },
         'story-push-renamed-$count-files': (count) => {
             if (count === 1) {
                 return `1 file rinominato`;

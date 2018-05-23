@@ -536,6 +536,10 @@ module.exports = function(localeCode) {
             var files = (count === 1) ? `1 file` : `${count} files`;
             return `${files} modified`;
         },
+        'story-push-modified-$count-lines': (count) => {
+            var lines = (count === 1) ? `1 line` : `${count} lines`;
+            return `${lines} modified`;
+        },
         'story-push-renamed-$count-files': (count) => {
             var files = (count === 1) ? `1 file` : `${count} files`;
             return `${files} renamed`;
