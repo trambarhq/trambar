@@ -442,11 +442,18 @@ function retrieveFile(server, repo, commitId, filePath) {
 function getFileContents(file, encoding) {
     var buffer = Buffer.from(file.content, 'base64');
     if (encoding) {
-        return buffer.toString(encoding);
+        var text = buffer.toString(encoding);
+        if (text.indexOf('<<<<<<<') !== -1) {
+            // fix conflicts accidentally checked in
+            text = text.replace(gitConflicts, '$2');
+        }
+        return text;
     } else {
         return buffer;
     }
 }
+
+var gitConflicts = /<{7}\s\w+\r?\n([\s\S]*?\r?\n)={7}\r?\n([\s\S]*?\r?\n)>{7}\s\w+\r?\n/g;
 
 /**
  * Upload file to media server
