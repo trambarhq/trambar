@@ -5,6 +5,7 @@ var ComponentRefs = require('utils/component-refs');
 var DateTracker = require('utils/date-tracker');
 var TagScanner = require('utils/tag-scanner');
 var StatisticsFinder = require('objects/finders/statistics-finder');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
