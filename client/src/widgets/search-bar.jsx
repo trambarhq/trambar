@@ -45,7 +45,7 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<SearchBarSync {...props} />);
         return db.start().then((userId) => {
-            return UserFinder.findOne(db, userId);
+            return UserFinder.findUser(db, userId);
         }).then((user) => {
             var params = _.clone(this.props.settings.statistics);
             if (params.user_id === 'current') {
