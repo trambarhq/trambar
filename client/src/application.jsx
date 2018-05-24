@@ -41,13 +41,10 @@ var NotificationView = require('views/notification-view');
 
 // cache
 var IndexedDBCache = require('data/indexed-db-cache');
-var SQLiteCache = require('data/sqlite-cache');
 var LocalStorageCache = require('data/local-storage-cache');
 var LocalCache;
 if (IndexedDBCache.isAvailable()) {
     LocalCache = IndexedDBCache;
-} else if (SQLiteCache.isAvailable()) {
-    LocalCache = SQLiteCache;
 } else if (LocalStorageCache.isAvailable()) {
     LocalCache = LocalStorageCache;
 }
