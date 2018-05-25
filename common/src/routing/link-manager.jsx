@@ -74,9 +74,26 @@ module.exports = React.createClass({
     },
 
     /**
+     * Remove all links to address
+     *
+     * @param  {String} address
+     *
+     * @return {Promise}
+     */
+    removeLocations: function(address) {
+        var db = this.props.database.use({ by: this });
+        var criteria = {};
+        return db.find({ schema: 'local', table: 'project_link', criteria }).then((links) => {
+            return db.remove({ schema: 'local', table: 'project_link' }, links);
+        });
+    },
+
+    /**
      * Remove links that to projects that no longer exist
      *
      * @param  {String} address
+     *
+     * @return {Promise}
      */
     removeDefunctLocations: function(address) {
         var db = this.props.database.use({ by: this });

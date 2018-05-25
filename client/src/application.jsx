@@ -554,6 +554,7 @@ module.exports = React.createClass({
      */
     handleExpiration: function(evt) {
         this.components.sessionManager.removeFromCache(evt.session);
+        this.components.linkManager.removeLocations(evt.session.address);
 
         var address = this.state.route.parameters.address;
         if (evt.session.address === address) {
