@@ -1038,9 +1038,7 @@ function retrieveProfileImage(profile) {
     var options = {
         json: true,
         url: 'http://media_server/srv/internal/import',
-        body: {
-            external_url: url
-        },
+        body: { url },
     };
     return new Promise((resolve, reject) => {
         Request.post(options, (err, resp, body) => {
