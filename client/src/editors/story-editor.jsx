@@ -735,7 +735,7 @@ module.exports = React.createClass({
     renderMediaImporter: function() {
         var props = {
             ref: this.components.setters.mediaImporter,
-            resources: _.get(this.state.draft, 'details.resources'),
+            resources: _.get(this.state.draft, 'details.resources', []),
             locale: this.props.locale,
             theme: this.props.theme,
             payloads: this.props.payloads,

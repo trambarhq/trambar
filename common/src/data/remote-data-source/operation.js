@@ -94,7 +94,7 @@ Operation.prototype.cancel = function() {
  * @return {Number}
  */
 Operation.prototype.getTimeElapsed = function() {
-    var then = new Date(this.finish);
+    var then = new Date(this.finishTime);
     var now = new Date;
     return (now - then) * (1 / 1000);
 };
