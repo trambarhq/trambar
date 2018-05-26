@@ -29,7 +29,7 @@ module.exports = React.createClass({
     displayName: 'MediaImporter',
     mixins: [ UpdateCheck ],
     propTypes: {
-        resources: PropTypes.arrayOf(PropTypes.object),
+        resources: PropTypes.arrayOf(PropTypes.object).isRequired,
         types: PropTypes.arrayOf(PropTypes.oneOf(ResourceTypes)),
         cameraDirection: PropTypes.oneOf([ 'front', 'back' ]),
         limit: PropTypes.number,

@@ -2,7 +2,7 @@ Trambar
 -------
 
 Trambar is a companion tool to GitLab. It lets you transform your GitLab
-activity log into a Facebook-style newsfeed, making the information more
+activity log into a Facebook-style news feed, making the information more
 accessible to those without a programming background. It provides greater
 transparency to your software development process, with the aim of fostering
 trust between programmers and other stakeholders.

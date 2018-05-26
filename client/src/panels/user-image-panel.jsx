@@ -19,6 +19,7 @@ var SettingsPanel = require('widgets/settings-panel');
 var PushButton = require('widgets/push-button');
 var ImageEditor = require('editors/image-editor');
 var MediaImporter = require('editors/media-importer');
+var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
 
 require('./user-image-panel.scss');
 
@@ -135,6 +136,7 @@ module.exports = React.createClass({
                 previewHeight: 256,
                 disabled: (this.state.action !== 'adjust'),
                 onChange: this.handleImageChange,
+
             };
             contents = <ImageEditor {...props} />;
         } else {
@@ -166,6 +168,7 @@ module.exports = React.createClass({
             types: [ 'image' ],
             limit: 1,
             schema: 'global',
+            resources: resources,
             locale: this.props.locale,
             theme: this.props.theme,
             payloads: this.props.payloads.override({ schema: 'global' }),
@@ -208,7 +211,7 @@ module.exports = React.createClass({
             };
             var takeProps = {
                 label: t('user-image-snap'),
-                hidden: !this.state.hasCamera,
+                hidden: !PhotoCaptureDialogBox.isAvailable() || !this.state.hasCamera,
                 onClick: this.handleTakeClick,
             };
             var selectProps = {
@@ -241,7 +244,7 @@ module.exports = React.createClass({
         } else {
             var takeProps = {
                 label: t('user-image-snap'),
-                hidden: !this.state.hasCamera,
+                hidden: !PhotoCaptureDialogBox.isAvailable() || !this.state.hasCamera,
                 onClick: this.handleTakeClick,
             };
             var selectProps = {
