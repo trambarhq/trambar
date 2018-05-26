@@ -89,6 +89,16 @@ module.exports = React.createClass({
             return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
                 this.setState({ subscription });
                 return null;
+            }).catch((err) => {
+                if (err.statusCode === 404 && subscription.id) {
+                    // somehow we have a non-existing subscription, probably
+                    // because we've reset the database
+                    subscription.id = undefined;
+                    return db.saveOne({ table: 'subscription' }, subscription).then((subscription) => {
+                        this.setState({ subscription });
+                        return null;
+                    });
+                }
             });
         }).catch((err) => {
             if (err.statusCode === 401) {
