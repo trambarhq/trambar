@@ -61,14 +61,17 @@ pool.on('error', (err) => {
     }
 });
 
+function testConnection(client) {
+    var sql = 'SELECT 1';
+    return Promise.resolve(client.query(sql)).return();
+}
+
 function checkConnectionPool() {
     if (!poolCheckPromise) {
         Async.while(() => {
-            var sql = 'SELECT 1';
-            return Promise.resolve(pool.query(sql)).then((row) => {
+            return testConnection(pool).then(() => {
                 return false;
             }).catch((err) => {
-                console.log('Connection pool unavailable');
                 return true;
             });
         });
@@ -147,9 +150,10 @@ Database.prototype.reconnect = function() {
         });
         Async.while(() => {
             return Promise.resolve(pool.connect()).then((client) => {
-                // done--break out of loop
-                this.client = client;
-                return false;
+                return testConnection(pool).then(() => {
+                    this.client = client;
+                    return false;
+                });
             }).catch((err) => {
                 // try again
                 return true;
