@@ -166,10 +166,15 @@ var TaskAlertBarSync = module.exports.Sync = React.createClass({
         var serverId = _.get(task, 'options.server_id');
         if (serverId) {
             var route = this.props.route;
-            url = route.find(require('pages/server-summary-page'), {
+            var components = [
+                require('pages/server-summary-page'),
+                require('widgets/task-list'),
+            ];
+            var params = {
                 server: serverId,
                 task: task.id,
-            });
+            };
+            url = route.find(components, params);
         }
         return url;
     },

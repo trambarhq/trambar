@@ -19,15 +19,41 @@ module.exports = Relaks.createClass({
     displayName: 'TaskList',
     propTypes: {
         server: PropTypes.object,
-        selectedTaskId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onSelectionClear: PropTypes.func,
     },
+
+    statics: {
+        /**
+         * Extract id from URL hash
+         *
+         * @param  {String} hash
+         *
+         * @return {Object}
+         */
+        parseHash: function(hash) {
+            var task = Route.parseId(hash, /t(\d+)/);
+            return { task };
+        },
+
+        /**
+         * Get URL hash based on given parameters
+         *
+         * @param  {Object} params
+         *
+         * @return {String}
+         */
+        getHash: function(params) {
+            if (params.task) {
+                return `t${params.task}`;
+            }
+            return '';
+        },
+    },
+
 
     /**
      * Render the component asynchronously
@@ -40,14 +66,10 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ schema: 'global', by: this });
         var props = {
             tasks: null,
-
-            selectedTaskId: this.props.selectedTaskId,
             server: this.props.server,
             locale: this.props.locale,
             route: this.props.route,
             theme: this.props.theme,
-
-            onSelectionClear: this.props.onSelectionClear,
         };
         meanwhile.show(<TaskListSync {...props} />);
         return db.start().then((userId) => {
@@ -66,13 +88,10 @@ var TaskListSync = module.exports.Sync = React.createClass({
     displayName: 'TaskList.Sync',
     propTypes: {
         tasks: PropTypes.arrayOf(PropTypes.object),
-        selectedTaskId: PropTypes.number,
 
         route: PropTypes.instanceOf(Route).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onSelectionClear: PropTypes.func,
     },
 
     /**
@@ -81,8 +100,9 @@ var TaskListSync = module.exports.Sync = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        var hashParams = module.exports.parseHash(this.props.route.hash);
         return {
-            expandedTaskIds: (this.props.selectedTaskId) ? [ this.props.selectedTaskId ] : [],
+            expandedTaskIds: (hashParams.task) ? [ hashParams.task ] : [],
         };
     },
 
@@ -204,25 +224,38 @@ var TaskListSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Set container node
+     *
+     * @param  {HTMLDivElement} node
+     */
+    setContainerNode: function(node) {
+        this.containerNode = node;
+    },
+
+    /**
      * Render component if it's active
      *
      * @return {ReactElement|null}
      */
     render: function() {
-        var taskId = this.props.selectedTaskId;
+        var anchor;
+        var hashParams = module.exports.parseHash(this.props.route.hash);
+        if (hashParams.task) {
+            anchor = `task-${hashParams.task}`;
+        }
         var smartListProps = {
             items: sortTasks(this.props.tasks),
             offset: 5,
             behind: 20,
             ahead: 20,
-            anchor: (taskId) ? `task-${taskId}` : undefined,
+            anchor: anchor,
 
             onIdentity: this.handleTaskIdentity,
             onRender: this.handleTaskRender,
-            onAnchorChange: this.handleTaskAnchorChange,
+            onAnchorChange: this.handleAnchorChange,
         };
         return (
-            <div className="task-list">
+            <div className="task-list" ref={this.setContainerNode}>
                 <SmartList {...smartListProps} />
             </div>
         );
@@ -348,6 +381,18 @@ var TaskListSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Scroll component into view if a task is specified by a hash
+     */
+    componentDidMount: function() {
+        var hashParams = module.exports.parseHash(this.props.route.hash);
+        if (hashParams.task) {
+            if (this.containerNode) {
+                this.containerNode.scrollIntoView();
+            }
+        }
+    },
+
+    /**
      * Called when SmartList wants an item's id
      *
      * @param  {Object} evt
@@ -366,7 +411,6 @@ var TaskListSync = module.exports.Sync = React.createClass({
      * @return {ReactElement}
      */
     handleTaskRender: function(evt) {
-        console.log('Item ' + evt.item.id + ' => ' + evt.needed);
         if (evt.needed) {
             return this.renderTask(evt.item);
         } else {
@@ -391,20 +435,12 @@ var TaskListSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Called when a different task is positioned at the top of the scroll box
+     * Called when user scrolls to a different item
      *
      * @param  {Object} evt
      */
-    handleTaskAnchorChange: function(evt) {
-        var taskId = _.get(evt.item, 'id');
-        if (this.props.selectedTaskId && taskId !== this.props.selectedTaskId) {
-            if (this.props.onSelectionClear) {
-                this.props.onSelectionClear({
-                    type: 'selectionclear',
-                    target: this,
-                });
-            }
-        }
+    handleAnchorChange: function(evt) {
+        this.props.route.reanchor('');
     },
 });
 
