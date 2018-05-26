@@ -10,10 +10,18 @@
     touch-action: manipulation;
 
     &:not(:disabled) {
-        &.emphasized, &:hover, &:active {
+        &.emphasized, &:active {
             color: #eeeeee;
             background-color: #806666;
             border: 2px solid #806666;
+        }
+
+        .no-touch & {
+            &:hover {
+                color: #eeeeee;
+                background-color: #806666;
+                border: 2px solid #806666;
+            }
         }
 
         &:active {
