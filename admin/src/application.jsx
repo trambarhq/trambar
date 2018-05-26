@@ -222,6 +222,8 @@ module.exports = React.createClass({
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
             basePath: '/srv/admin-data',
+            online: this.state.online,
+            connected: (this.state.connection) ? true : undefined,
             retrievalFlags: {
                 include_ctime: true,
                 include_mtime: true,
@@ -236,6 +238,7 @@ module.exports = React.createClass({
         };
         var payloadManagerProps = {
             ref: setters.payloadManager,
+            online: this.state.online,
             database: this.state.database,
             route: this.state.route,
             onChange: this.handlePayloadsChange,
@@ -275,6 +278,7 @@ module.exports = React.createClass({
         var notifierProps = {
             ref: setters.notifier,
             serverAddress: serverAddress,
+            online: this.state.online,
             locale: this.state.locale,
             onNotify: this.handleChangeNotification,
             onConnect: this.handleConnection,
@@ -283,7 +287,7 @@ module.exports = React.createClass({
         var subscriptionManagerProps = {
             ref: setters.subscriptionManager,
             area: 'admin',
-            connection: this.state.connection,
+            connection: this.state.connection || null,
             schema: '*',
             database: this.state.database,
             locale: this.state.locale,
@@ -575,7 +579,7 @@ module.exports = React.createClass({
         }
 
         var dataSource = this.components.remoteDataSource;
-        dataSource.invalidate(evt.address, evt.changes);
+        dataSource.invalidate(evt.changes);
     },
 
     /**
