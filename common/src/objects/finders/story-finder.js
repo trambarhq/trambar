@@ -492,7 +492,7 @@ function findStoriesWithRolesInListing(db, type, roleIds, currentUser, blockIfSt
  * @return {Promise<Array<Story>>}
  */
 function findStoriesOfNotifications(db, notifications, currentUser) {
-    var ids = _.map(notifications, 'story_id');
+    var ids = _.filter(_.map(notifications, 'story_id'));
     return findViewableStories(db, ids, currentUser);
 }
 
