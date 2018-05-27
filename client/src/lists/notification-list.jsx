@@ -26,7 +26,6 @@ module.exports = Relaks.createClass({
     propTypes: {
         notifications: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
-        selectedNotificationId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -83,8 +82,8 @@ module.exports = Relaks.createClass({
         var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
             users: null,
+            stories: null,
 
-            selectedNotificationId: this.props.selectedNotificationId,
             currentUser: this.props.currentUser,
             notifications: this.props.notifications,
             database: this.props.database,
@@ -113,8 +112,8 @@ var NotificationListSync = module.exports.Sync = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         notifications: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
         users: PropTypes.arrayOf(PropTypes.object),
-        selectedNotificationId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
