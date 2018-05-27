@@ -1017,7 +1017,15 @@ module.exports = {
                 return true;
             }
         });
-        var matchingSearch = _.find(this.cachedSearches, { schema, criteria, columns });
+        var matchingSearch = _.find(this.cachedSearches, (search) => {
+            if (search.schema === schema) {
+                if (_.isEqual(search.criteria, criteria)) {
+                    if (search.columns === search.columns) {
+                        return true;
+                    }
+                }
+            }
+        });
         if (matchingSearch) {
             return Promise.resolve(matchingSearch.results);
         } else {
