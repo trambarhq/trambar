@@ -63,6 +63,7 @@ function initialize(evt) {
 
     // install shims
     require('shims/iphone-overflow-scrolling');
+    require('shims/iphone-image-reload');
 }
 
 window.addEventListener("unhandledrejection", function(evt) {

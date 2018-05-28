@@ -60,56 +60,15 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.currentNotificationId = null;
+        this.searchEndTimeout = null;
+        this.backgroundTaskTimeout = null;
         return {
             registrationId: null,
             registrationType: null,
             pushRelayResponse: null,
             recentMessages: [],
         };
-    },
-
-    /**
-     * Wait for database queries to start
-     *
-     * @param  {Number} limit
-     *
-     * @return {Promise}
-     */
-    waitForSearchStart: function(limit) {
-        if (this.props.searching) {
-            return Promise.resolve();
-        }
-        if (!this.searchStartPromise) {
-            this.searchStartPromise = new Promise((resolve, reject) => {
-                this.onSearchStart = resolve;
-            }).timeout(limit).finally(() => {
-                this.onSearchStart = null;
-                this.searchStartPromise = null;
-            });
-        }
-        return this.searchStartPromise;
-    },
-
-    /**
-     * Wait for database queries to end
-     *
-     * @param  {Number} limit
-     *
-     * @return {Promise}
-     */
-    waitForSearchEnd: function(limit) {
-        if (!this.props.searching) {
-            return Promise.resolve();
-        }
-        if (!this.searchEndPromise) {
-            this.searchEndPromise = new Promise((resolve, reject) => {
-                this.onSearchEnd = resolve;
-            }).timeout(limit).finally(() => {
-                this.onSearchEnd = null;
-                this.searchEndPromise = null;
-            });
-        }
-        return this.searchEndPromise;
     },
 
     /**
@@ -143,13 +102,19 @@ module.exports = React.createClass({
         // check if database queries have finished
         if (this.props.searching !== nextProps.searching) {
             if (nextProps.searching) {
-                if (this.onSearchStart) {
-                    this.onSearchStart();
+                if (this.searchEndTimeout) {
+                    // we've started searching again
+                    clearTimeout(this.searchEndTimeout);
+                    this.searchEndTimeout = null;
                 }
             } else {
-                if (this.onSearchEnd) {
-                    this.onSearchEnd();
-                }
+                // if not search is initiated within 1 second, then stop
+                // background processing
+                this.searchEndTimeout = setTimeout(() => {
+                    this.endBackgroundTask();
+                    this.searchEndTimeout = null;
+                    console.log('Search end');
+                }, 1000);
             }
         }
         if (!this.props.online && nextProps.online) {
@@ -347,8 +312,47 @@ module.exports = React.createClass({
                 type: 'alertclick',
                 target: this,
                 alert,
-            })
+            });
         }
+    },
+
+    /**
+     * Set id of current notification and start a timer limiting amount of
+     * time spent on background retrieval
+     *
+     * @param  {Number} notId
+     */
+    startBackgroundTask: function(notId) {
+        if (this.currentNotificationId) {
+            // clear the current one
+            this.endBackgroundTask();
+            clearTimeout(this.backgroundTaskTimeout);
+        }
+        this.currentNotificationId = notId;
+        this.backgroundTaskTimeout = setTimeout(() => {
+            this.endBackgroundTask();
+            this.backgroundTaskTimeout = null;
+        }, 5000);
+    },
+
+    /**
+     * Signal background task associated with current notification is done or
+     * is being forced to stop
+     */
+    endBackgroundTask: function() {
+        if (this.currentNotificationId) {
+            signalBackgroundTaskCompletion(this.currentNotificationId);
+            this.currentNotificationId = null;
+        }
+    },
+
+    /**
+     * Immediately signal end of background task
+     *
+     * @param  {Number} notId
+     */
+    skipBackgroundTask: function(notId) {
+        signalBackgroundTaskCompletion(notId);
     },
 
     /**
@@ -398,29 +402,21 @@ module.exports = React.createClass({
      */
     handleGCMNotification: function(data) {
         var payload = data.additionalData;
-        Promise.try(() => {
-            var notification = NotificationUnpacker.unpack(payload)
-            if (notification) {
-                if (notification.type === 'change') {
-                    this.triggerNotifyEvent(notification.changes);
-
-                    // wait for any database queries to finish
-                    return this.waitForSearchStart(250).then(() => {
-                        return this.waitForSearchEnd(5000);
-                    }).catch((err) => {
-                        // timeout
-                    });
-                } else if (notification.type === 'alert') {
-                    // if notification was received in the background, the event is
-                    // triggered when the user clicks on the notification
-                    if (!notification.alert.foreground) {
-                        this.triggerAlertClickEvent(notification.alert);
-                    }
+        var notId = payload.notId;
+        var notification = NotificationUnpacker.unpack(payload) || {};
+        if (notification.type === 'change') {
+            this.triggerNotifyEvent(notification.changes);
+            this.startBackgroundTask(notId);
+        } else {
+            if (notification.type === 'alert') {
+                // if notification was received in the background, the event is
+                // triggered when the user clicks on the notification
+                if (!notification.alert.foreground) {
+                    this.triggerAlertClickEvent(notification.alert);
                 }
             }
-        }).finally(() => {
-            signalBackgroundProcessCompletion(payload.notId);
-        });
+            this.skipBackgroundTask(notId);
+        }
     },
 
     /**
@@ -539,8 +535,8 @@ function parseJSON(text) {
     }
 }
 
-function signalBackgroundProcessCompletion(notId) {
-    if (pushNotification && notId) {
+function signalBackgroundTaskCompletion(notId) {
+    if (pushNotification) {
         if (cordova.platformId === 'ios') {
             var success = () => {};
             var failure = () => {};
