@@ -29,7 +29,6 @@ function findBookmarksByUser(db, user, stories, minimum) {
             user_ids: [ user.id ],
             story_ids: storyIds,
         },
-        prefetch: false,
         minimum,
     });
 }
@@ -49,6 +48,7 @@ function findBookmarksForUser(db, user, minimum) {
         criteria: {
             target_user_id: user.id,
         },
+        prefetch: true,
         minimum
     });
 }

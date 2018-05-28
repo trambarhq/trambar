@@ -1073,7 +1073,6 @@ module.exports = React.createClass({
         if (index !== -1) {
             // move the matching search to the top
             var existingSearch = this.recentSearchResults[index];
-            existingSearch.prefetching = true;
             this.updateList('recentSearchResults', (before) => {
                 var after = _.slice(before);
                 after.splice(index, 1);
@@ -1926,7 +1925,7 @@ module.exports = React.createClass({
     schedulePrefetch: function(dirtySearches) {
         var selected = [];
         _.each(dirtySearches, (search) => {
-            if (search.prefetching) {
+            if (!search.prefetch) {
                 return;
             }
             // don't prefetch a search if the same component has done a

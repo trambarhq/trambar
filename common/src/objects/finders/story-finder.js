@@ -101,7 +101,6 @@ function findDraftStories(db, user) {
             published: false,
             user_ids: [ user.id ],
         },
-        prefetch: false,
     });
 }
 
@@ -137,7 +136,6 @@ function findUnlistedStories(db, user, listedStories) {
             newer_than: DateTracker.yesterdayISO,
             published: true,
         },
-        prefetch: false
     });
 }
 
@@ -167,7 +165,6 @@ function findStoriesMatchingText(db, text, locale, currentUser, perUserLimit) {
             per_user_limit: perUserLimit,
         },
         remote: true,
-        prefetch: false,
     });
 }
 
@@ -219,7 +216,6 @@ function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
             limit: (!perUserLimit) ? 500 : undefined,
             per_user_limit: perUserLimit,
         },
-        prefetch: (date >= DateTracker.today),
         minimum
     });
 }
@@ -247,6 +243,7 @@ function findStoriesInListing(db, type, currentUser, blockIfStale) {
                 public: publicOnly(currentUser)
             },
         },
+        prefetch: true,
     };
     if (blockIfStale) {
         query.blocking = 'stale';
@@ -296,7 +293,6 @@ function findStoriesByUserMatchingText(db, user, text, locale, currentUser) {
             limit: 100,
         },
         remote: true,
-        prefetch: false,
     });
 }
 
@@ -348,7 +344,6 @@ function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
             public: publicOnly(currentUser),
             limit: 500,
         },
-        prefetch: (date >= DateTracker.today),
         minimum
     });
 }
@@ -378,6 +373,7 @@ function findStoriesByUserInListing(db, type, user, currentUser, blockIfStale) {
                 public: publicOnly(currentUser)
             },
         },
+        prefetch: true,
     };
     if (blockIfStale) {
         query.blocking = 'stale';
@@ -424,7 +420,8 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
                     public: publicOnly(currentUser)
                 }
             }),
-        }
+        },
+        prefetch: true,
     };
     if (blockIfStale) {
         query.blocking = 'stale';
@@ -466,7 +463,8 @@ function findStoriesWithRolesInListing(db, type, roleIds, currentUser, blockIfSt
                 role_ids: roleIds,
                 public: publicOnly(currentUser)
             },
-        }
+        },
+        prefetch: true,
     };
     if (blockIfStale) {
         query.blocking = 'stale';

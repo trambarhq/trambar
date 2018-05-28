@@ -25,6 +25,7 @@ function findUserDevices(db, user, minimum) {
         criteria: {
             user_id: user.id
         },
+        prefetch: true,
         minimum
     });
 }

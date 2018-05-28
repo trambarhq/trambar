@@ -29,6 +29,7 @@ function findNotificationsForUser(db, user, minimum) {
             target_user_id: user.id,
             limit: 500,
         },
+        prefetch: true,
         minimum
     });
 }
@@ -53,8 +54,6 @@ function findNotificationsForUserOnDate(db, user, date, minimum) {
             target_user_id: user.id,
             time_range: DateUtils.getDayRange(date),
         },
-        // disable prefetch if we're looking at the past (which shouldn't change)
-        prefetch: (date >= DateTracker.today),
         minimum,
     })
 }
@@ -79,6 +78,7 @@ function findNotificationsUnseenByUser(db, user, minimum) {
             seen: false,
             limit: 100,
         },
+        prefetch: true,
         minimum
     });
 }

@@ -54,7 +54,6 @@ function findServerTasks(db, server, minimum) {
             deleted: false,
             limit: 1000,
         },
-        prefetch: false,
         minimum
     });
 }

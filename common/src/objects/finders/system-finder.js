@@ -18,6 +18,7 @@ function findSystem(db) {
         schema: 'global',
         table: 'system',
         criteria: {},
+        prefetch: true,
     }).then((system) => {
         return system || {};
     });

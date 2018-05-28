@@ -74,17 +74,19 @@ function findDailyActivitiesOfProject(db, project, publicOnly) {
     if (!project || project.deleted) {
         return null;
     }
-    var schema = project.name;
     // load story-date-range statistics
-    var criteria = {
-        type: 'story-date-range',
-        filters: {
-            public: publicOnly || undefined,
+    var query = {
+        schema: project.name,
+        table: 'statistics',
+        criteria: {
+            type: 'story-date-range',
+            filters: {
+                public: publicOnly || undefined,
+            },
         },
+        prefetch: true,
     };
-    // don't stall rendering
-    var minimum = 0;
-    return db.findOne({ schema, table: 'statistics', criteria, minimum }).then((dateRange) => {
+    return db.findOne(query).then((dateRange) => {
         if (!isValidRange(dateRange)) {
             return;
         }
@@ -97,8 +99,16 @@ function findDailyActivitiesOfProject(db, project, publicOnly) {
                 public: publicOnly || undefined,
             };
         });
-        var criteria = { type: 'daily-activities', filters };
-        return db.find({ schema, table: 'statistics', criteria, minimum }).then((dailyActivities) => {
+        var query = {
+            schema: project.name,
+            table: 'statistics',
+            criteria: {
+                type: 'daily-activities',
+                filters
+            },
+            prefetch: true,
+        };
+        return db.find(query).then((dailyActivities) => {
             return summarizeStatistics(dailyActivities, dateRange);
         });
     });
@@ -158,16 +168,19 @@ function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
     var currentUsers = _.filter(users, (user) => {
         return !user.deleted;
     });
-    var criteria = {
-        type: 'story-date-range',
-        filters: _.map(currentUsers, (user) => {
-            return {
-                user_ids: [ user.id ],
-                public: publicOnly || undefined,
-            };
-        }),
+    var filters = _.map(currentUsers, (user) => {
+        return {
+            user_ids: [ user.id ],
+            public: publicOnly || undefined,
+        };
+    });
+    var query = {
+        schema: project.name,
+        table: 'statistics',
+        criteria: { type: 'story-date-range', filters },
+        prefetch: true,
     };
-    return db.find({ schema, table: 'statistics', criteria }).then((dateRanges) => {
+    return db.find(query).then((dateRanges) => {
         dateRanges = _.filter(dateRanges, isValidRange);
         // load daily-activities statistics
         var filterLists = _.map(dateRanges, (dateRange) => {
@@ -186,8 +199,13 @@ function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
         if (_.isEmpty(filters)) {
             return {};
         }
-        var criteria = { type: 'daily-activities', filters };
-        return db.find({ schema, table: 'statistics', criteria }).then((dailyActivitiesAllUsers) => {
+        var query = {
+            schema: project.name,
+            table: 'statistics',
+            criteria: { type: 'daily-activities', filters },
+            prefetch: true,
+        };
+        return db.find(query).then((dailyActivitiesAllUsers) => {
             return _.transform(dateRanges, (results, dateRange) => {
                 var userId = dateRange.filters.user_ids[0];
                 var dailyActivities = _.filter(dailyActivitiesAllUsers, (d) => {

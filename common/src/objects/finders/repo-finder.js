@@ -96,7 +96,8 @@ function findProjectRepos(db, projects) {
             criteria: {
                 id: project.repo_ids,
                 deleted: false
-            }
+            },
+            prefetch: true,
         });
     }
 }
