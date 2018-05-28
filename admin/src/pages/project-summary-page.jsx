@@ -189,10 +189,12 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         var project = this.getProject('current');
         var newProject = _.decoupleSet(project, path, value);
         if (path === 'details.title') {
-            var autoNameBefore = SlugGenerator.fromTitle(project.details.title);
-            var autoNameAfter = SlugGenerator.fromTitle(newProject.details.title);
-            if (!project.name || project.name === autoNameBefore) {
-                newProject.name = autoNameAfter;
+            if (!project.id) {
+                var autoNameBefore = SlugGenerator.fromTitle(project.details.title);
+                var autoNameAfter = SlugGenerator.fromTitle(newProject.details.title);
+                if (!project.name || project.name === autoNameBefore) {
+                    newProject.name = autoNameAfter;
+                }
             }
         }
         if(_.size(newProject.name) > 128) {
