@@ -228,9 +228,11 @@ module.exports = React.createClass({
         var bytes = 0;
         var files = 0;
         _.each(this.payloads, (payload) => {
-            if (!payload.failed && !payload.sent) {
-                files += payload.getRemainingFiles();
-                bytes += payload.getRemainingBytes();
+            if (payload.started) {
+                if (!payload.failed && !payload.sent) {
+                    files += payload.getRemainingFiles();
+                    bytes += payload.getRemainingBytes();
+                }
             }
         });
         return (files > 0) ? { files, bytes } : null;
