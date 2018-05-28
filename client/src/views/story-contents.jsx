@@ -545,7 +545,7 @@ module.exports = React.createClass({
                 );
             }
         }, []);
-        var lineChangeTypes = [ 'added', 'deleted' ];
+        var lineChangeTypes = [ 'added', 'deleted', 'modified' ];
         var lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
             var count = lines[type];
             if (count > 0) {

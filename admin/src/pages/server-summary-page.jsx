@@ -47,18 +47,16 @@ module.exports = Relaks.createClass({
          *
          * @param  {String} path
          * @param  {Object} query
-         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseURL: function(path, query, hash) {
+        parseURL: function(path, query) {
             return Route.match(path, [
                 '/servers/:server/?'
             ], (params) => {
                 return {
                     server: (params.server === 'new') ? 'new' : Route.parseId(params.server),
-                    edit: !!query.edit,
-                    task: Route.parseId(hash, /T(\d+)/i),
+                    edit: !!query.edit
                 };
             });
         },
@@ -71,14 +69,11 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getURL: function(params) {
-            var path = `/servers/${params.server}/`, query, hash;
+            var path = `/servers/${params.server}/`, query;
             if (params.edit) {
                 query = { edit: 1 };
             }
-            if (params.task) {
-                hash = `T${params.task}`;
-            }
-            return { path, query, hash };
+            return { path, query };
         },
     },
 
@@ -1078,7 +1073,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var params = this.props.route.parameters;
         var historyProps = {
             server: this.props.server,
-            selectedTaskId: params.task,
             database: this.props.database,
             route: this.props.route,
             locale: this.props.locale,
@@ -1091,16 +1085,6 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 <TaskList {...historyProps} />
             </div>
         );
-    },
-
-    componentDidMount: function() {
-        var params = this.props.route.parameters;
-        if (params.task) {
-            var node = ReactDOM.findDOMNode(this);
-            setTimeout(() => {
-                node.scrollIntoView(false);
-            }, 500);
-        }
     },
 
     /**

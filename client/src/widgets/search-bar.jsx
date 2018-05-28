@@ -5,6 +5,7 @@ var ComponentRefs = require('utils/component-refs');
 var DateTracker = require('utils/date-tracker');
 var TagScanner = require('utils/tag-scanner');
 var StatisticsFinder = require('objects/finders/statistics-finder');
+var UserFinder = require('objects/finders/user-finder');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -44,7 +45,7 @@ module.exports = Relaks.createClass({
         };
         meanwhile.show(<SearchBarSync {...props} />);
         return db.start().then((userId) => {
-            return UserFinder.findOne(db, userId);
+            return UserFinder.findUser(db, userId);
         }).then((user) => {
             var params = _.clone(this.props.settings.statistics);
             if (params.user_id === 'current') {

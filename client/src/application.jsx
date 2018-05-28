@@ -41,13 +41,10 @@ var NotificationView = require('views/notification-view');
 
 // cache
 var IndexedDBCache = require('data/indexed-db-cache');
-var SQLiteCache = require('data/sqlite-cache');
 var LocalStorageCache = require('data/local-storage-cache');
 var LocalCache;
 if (IndexedDBCache.isAvailable()) {
     LocalCache = IndexedDBCache;
-} else if (SQLiteCache.isAvailable()) {
-    LocalCache = SQLiteCache;
 } else if (LocalStorageCache.isAvailable()) {
     LocalCache = LocalStorageCache;
 }
@@ -557,6 +554,7 @@ module.exports = React.createClass({
      */
     handleExpiration: function(evt) {
         this.components.sessionManager.removeFromCache(evt.session);
+        this.components.linkManager.removeLocations(evt.session.address);
 
         var address = this.state.route.parameters.address;
         if (evt.session.address === address) {

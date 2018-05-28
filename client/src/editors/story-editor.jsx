@@ -735,7 +735,7 @@ module.exports = React.createClass({
     renderMediaImporter: function() {
         var props = {
             ref: this.components.setters.mediaImporter,
-            resources: _.get(this.state.draft, 'details.resources'),
+            resources: _.get(this.state.draft, 'details.resources', []),
             locale: this.props.locale,
             theme: this.props.theme,
             payloads: this.props.payloads,
@@ -1579,7 +1579,7 @@ function createBlankStory(currentUser) {
 
 function hasPendingResources(resources) {
     return _.some(resources, (res) => {
-        if (!res.pending) {
+        if (res.pending) {
             return true;
         }
     });

@@ -145,9 +145,6 @@ function sendStaticFile(res, path, cc, filename) {
 function sendError(res, err) {
     var statusCode = err.statusCode;
     var message = err.message;
-    if (process.env.NODE_ENV !== 'production') {
-        console.error('sendError', err);
-    }
     if (!statusCode) {
         // not an expected error
         statusCode = 500;

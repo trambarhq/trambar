@@ -141,7 +141,7 @@ module.exports = React.createClass({
                         // use the poster's width and height, as they're
                         // corrected for camera orientation
                         payload.attachFile(posterFile, 'poster');
-                        var res = {
+                        return {
                             type: 'video',
                             payload_token: payload.token,
                             format: MediaLoader.extractFileFormat(mediaFile.type),

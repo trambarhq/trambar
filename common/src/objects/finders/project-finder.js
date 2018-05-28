@@ -115,5 +115,18 @@ function findProjectLinks(db) {
         schema: 'local',
         table: 'project_link',
         criteria: {},
+    }).filter((link) => {
+        return db.findOne({
+            schema: 'local',
+            table: 'session',
+            criteria: { key: link.address },
+        }).then((record) => {
+            if (record) {
+                var now = (new Date).toISOString();
+                if (now < record.etime) {
+                    return true;
+                }
+            }
+        });
     });
 }

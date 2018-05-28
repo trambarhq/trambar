@@ -497,15 +497,19 @@ module.exports = React.createClass({
                 }
                 var status;
                 if (existingSearch.promise.isFulfilled()) {
-                    if (existingSearch.isFresh()) {
+                    if (existingSearch.isFresh(this.props.refreshInterval)) {
                         status = 'complete';
                     } else {
-                        status = 'stale';
+                        if (existingSearch.updating) {
+                            status = 'updating';
+                        } else {
+                            status = 'expired';
+                        }
                     }
                 } else {
                     status = 'running';
                 }
-                if (status === 'stale') {
+                if (status === 'expired') {
                     // search is perhaps out-of-date--check with the server
                     var remoteSearchPromise = this.searchRemoteDatabase(existingSearch).then((changed) => {
                         if (changed) {
@@ -516,10 +520,8 @@ module.exports = React.createClass({
                         return existingSearch.results;
                     });
                     var waitForRemoteSearch = true;
-                    if (status === 'stale') {
-                        if (blocking !== 'stale') {
-                            waitForRemoteSearch = false;
-                        }
+                    if (blocking !== 'expired') {
+                        waitForRemoteSearch = false;
                     }
                     if (waitForRemoteSearch) {
                         existingSearch.promise = remoteSearchPromise;
@@ -573,15 +575,11 @@ module.exports = React.createClass({
                     // generally, if the result set is complete but stale, we
                     // don't block
                     if (status === 'stale') {
-                        if (blocking !== 'stale') {
+                        if (blocking === 'incomplete' || blocking === 'insufficient') {
                             waitForRemoteSearch = false;
                         }
                     } else if (status === 'incomplete') {
-                        if (blocking !== 'stale' && blocking !== 'incomplete') {
-                            waitForRemoteSearch = false;
-                        }
-                    } else if (status === 'insufficient') {
-                        if (blocking !== 'stale' && blocking !== 'incomplete' && blocking !== 'insufficient') {
+                        if (blocking === 'insufficient') {
                             waitForRemoteSearch = false;
                         }
                     }

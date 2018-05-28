@@ -61,11 +61,7 @@ function importCommit(db, server, repo, glBranch, glCommitId) {
  * @return {Commit}
  */
 function copyCommitProperties(commit, server, repo, glBranch, glCommit, glDiff) {
-    var lineChanges = {
-        added: glCommit.stats.additions,
-        deleted: glCommit.stats.deletions,
-    };
-    var fileChanges = countChanges(glDiff);
+    var changes = countChanges(glDiff);
 
     var commitAfter = _.cloneDeep(commit) || {};
     ExternalDataUtils.inheritLink(commitAfter, server, repo, {
@@ -95,11 +91,11 @@ function copyCommitProperties(commit, server, repo, glBranch, glCommit, glDiff) 
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(commitAfter, server, 'details.lines', {
-        value: lineChanges,
+        value: changes.lines,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(commitAfter, server, 'details.files', {
-        value: fileChanges,
+        value: changes.files,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(commitAfter, server, 'ptime', {
@@ -153,29 +149,71 @@ function countChanges(glDiff) {
         renamed: [],
         modified: [],
     };
-    return _.transform(glDiff, (cf, file) => {
+    var cl = {
+        added: 0,
+        deleted: 0,
+        modified: 0,
+    };
+    _.each(glDiff, (file) => {
         if (file.new_file) {
             cf.added.push(file.new_path);
         } else if (file.deleted_file) {
             cf.deleted.push(file.old_path);
-        } else if (file.renamed_file) {
-            cf.renamed.push({
-                before: file.old_path,
-                after: file.new_path,
-            });
+        } else {
+            var modified = false;
             if (file.diff) {
                 // check if the file was renamed and modified
                 var diff = _.first(ParseDiff(file.diff));
                 if (diff) {
-                    if (diff.additions || diff.deletions) {
-                        cf.modified.push(file.new_path);
+                    if (diff.additions > 0 || diff.deletions > 0) {
+                        modified = true;
+                    }
+                    if (diff.additions > 0 && diff.deletions > 0) {
+                        var changes = _.flatten(_.map(diff.chunks, 'changes'));
+                        var changes = _.flatten(_.map(diff.chunks, 'changes'));
+                        var deleted = 0;
+                        _.each(changes, (change) => {
+                            if (change.type === 'del') {
+                                // remember how many lines were deleted in this run
+                                cl.deleted++;
+                                deleted++;
+                            } else if (change.type === 'add') {
+                                if (deleted > 0) {
+                                    // when an add follows a delete, treat it as modification
+                                    cl.deleted--;
+                                    cl.modified++;
+                                    deleted--;
+                                } else {
+                                    // otherwise it's an add
+                                    cl.added++;
+                                }
+                            } else if (change.type === 'normal') {
+                                // we've reached unchanged code--reset the counter
+                                deleted = 0;
+                            }
+                        });
+                    } else if (diff.additions > 0) {
+                        cl.added += diff.additions;
+                    } else if (diff.deletions > 0) {
+                        cl.deleted += diff.deletions;
                     }
                 }
             }
-        } else {
-            cf.modified.push(file.new_path);
+            if (file.renamed_file) {
+                cf.renamed.push({
+                    before: file.old_path,
+                    after: file.new_path,
+                });
+            }
+            if (modified) {
+                cf.modified.push(file.new_path);
+            }
         }
-    }, cf);
+    });
+    return {
+        files: cf,
+        lines: cl,
+    };
 }
 
 /**

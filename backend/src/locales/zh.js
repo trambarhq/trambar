@@ -574,6 +574,9 @@ var traditionalPhrases = {
     'story-push-modified-$count-files': (count) => {
         return `修改了${count}個文件`;
     },
+    'story-push-modified-$count-lines': (count) => {
+        return `修改了${count}行代碼`;
+    },
     'story-push-renamed-$count-files': (count) => {
         return `改了${count}個文件的名`;
     },
@@ -1262,6 +1265,9 @@ var simplifiedPhrases = {
     'story-push-modified-$count-files': (count) => {
         return `修改了${count}个文件`;
     },
+    'story-push-modified-$count-lines': (count) => {
+        return `修改了${count}行代码`;
+    },
     'story-push-renamed-$count-files': (count) => {
         return `改了${count}个文件的名`;
     },
@@ -1718,6 +1724,9 @@ var cantonesePhrases = {
     },
     'story-push-modified-$count-files': (count) => {
         return `修改咗${count}個文件`;
+    },
+    'story-push-modified-$count-lines': (count) => {
+        return `修改咗${count}行代碼`;
     },
     'story-push-renamed-$count-files': (count) => {
         return `改咗${count}個文件嘅名`;

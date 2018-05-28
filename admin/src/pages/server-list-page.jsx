@@ -39,11 +39,10 @@ module.exports = Relaks.createClass({
          *
          * @param  {String} path
          * @param  {Object} query
-         * @param  {String} hash
          *
          * @return {Object|null}
          */
-        parseURL: function(path, query, hash) {
+        parseURL: function(path, query) {
             return Route.match(path, [
                 '/servers/?'
             ], (params) => {
@@ -61,11 +60,11 @@ module.exports = Relaks.createClass({
          * @return {Object}
          */
         getURL: function(params) {
-            var path = `/servers/`, query, hash;
+            var path = `/servers/`, query;
             if (params.edit) {
                 query = { edit: 1 };
             }
-            return { path, query, hash };
+            return { path, query };
         },
     },
 

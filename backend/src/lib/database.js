@@ -53,8 +53,35 @@ var config = {
 };
 
 var pool = new PgPool(config);
+var poolCheckPromise = null;
 pool.on('error', (err) => {
+    console.error(err.message);
+    if (poolCheckPromise && !poolCheckPromise.isPending()) {
+        poolCheckPromise = null;
+    }
 });
+
+function testConnection(client) {
+    var sql = 'SELECT 1';
+    return Promise.resolve(client.query(sql)).return();
+}
+
+function checkConnectionPool() {
+    if (!poolCheckPromise) {
+        Async.while(() => {
+            return testConnection(pool).then(() => {
+                return false;
+            }).catch((err) => {
+                return true;
+            });
+        });
+        Async.do(() => {
+            return Promise.delay(1000);
+        });
+        poolCheckPromise = Async.end();
+    }
+    return poolCheckPromise;
+}
 
 function Database(client) {
     this.client = client;
@@ -63,7 +90,6 @@ function Database(client) {
 
     if (client !== pool) {
         client.on('error', (err) => {
-            console.error(err.message);
             this.reconnect().then(() => {
                 // reattach listeners
                 return Promise.each(this.listeners, (listener) => {
@@ -104,14 +130,17 @@ Database.open = function(exclusive) {
         return Async.end();
     } else {
         // run database queries through the pool
-        var db = new Database(pool);
-        return Promise.resolve(db);
+        return checkConnectionPool().then(() => {
+            return new Database(pool);
+        });
     }
 };
 
 Database.prototype.reconnect = function() {
     if (this.client === pool) {
-        return Promise.resolve();
+        return Promise.delay(1000).then(() => {
+            return checkConnectionPool();
+        });
     }
     this.close();
     if (!this.reconnectionPromise) {
@@ -121,9 +150,10 @@ Database.prototype.reconnect = function() {
         });
         Async.while(() => {
             return Promise.resolve(pool.connect()).then((client) => {
-                // done--break out of loop
-                this.client = client;
-                return false;
+                return testConnection(pool).then(() => {
+                    this.client = client;
+                    return false;
+                });
             }).catch((err) => {
                 // try again
                 return true;
@@ -180,6 +210,11 @@ Database.prototype.execute = function(sql, parameters) {
                 console.log(parameters);
                 console.log('----------------------------------------');
             }
+        } else if (err.message === 'Connection terminated') {
+            // reconnect and run statement again
+            return this.reconnect().then(() => {
+                return this.execute(sql, parameters);
+            });
         }
         throw err;
     });
@@ -336,7 +371,7 @@ function processNotification(cxt, msg) {
             }
         }
     } catch(err) {
-        console.error(err);
+        console.error(err.message);
     }
 }
 
@@ -361,7 +396,7 @@ function dispatchNotifications(cxt) {
     try {
         cxt.callback.call(cxt.database, events);
     } catch(err) {
-        console.error(err);
+        console.error(err.message);
     }
 }
 

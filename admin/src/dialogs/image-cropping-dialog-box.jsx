@@ -119,6 +119,11 @@ module.exports = React.createClass({
     renderImage: function() {
         var image = this.props.image;
         var imageURL = this.props.theme.getImageURL(image, { clip: null });
+        if (isJSONEncoded(imageURL)) {
+            // a blob that hasn't been uploaded yet
+            var info = parseJSONEncodedURL(imageURL)
+            imageURL = info.url;
+        }
         var props = {
             url: imageURL,
             clippingRect: this.state.clippingRect,
@@ -243,3 +248,12 @@ module.exports = React.createClass({
         this.zoom(1 / 0.9);
     },
 });
+
+function isJSONEncoded(url) {
+    return _.startsWith(url, 'json:');
+}
+
+function parseJSONEncodedURL(url) {
+    var json = url.substr(5);
+    return JSON.parse(json);
+}

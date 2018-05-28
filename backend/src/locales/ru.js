@@ -652,6 +652,17 @@ module.exports = function(localeCode) {
             }
             return `${files} изменено`;
         },
+        'story-push-modified-$count-lines': (count) => {
+            var lines;
+            if (singularN(count)) {
+                lines = `${count} линия`;
+            } else if (singularG(count)) {
+                lines = `${count} линии`;
+            } else {
+                lines = `${count} линий`;
+            }
+            return `${lines} изменено`;
+        },
         'story-push-renamed-$count-files': (count) => {
             var files;
             if (singularN(count)) {

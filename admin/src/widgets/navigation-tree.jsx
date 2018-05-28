@@ -487,7 +487,10 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         if (params.server === 'new') {
             label = <i>{t('nav-server-new')}</i>;
         } else {
-            label = p(server.details.title) || t(`server-type-${server.type}`);
+            label = p(server.details.title);
+            if (!label) {
+                label = (server.type) ? t(`server-type-${server.type}`) : '-';
+            }
             url = route.find(require('pages/server-summary-page'), {
                 server: params.server
             });

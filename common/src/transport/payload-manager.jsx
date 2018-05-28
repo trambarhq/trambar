@@ -4,6 +4,9 @@ var React = require('react'), PropTypes = React.PropTypes;
 var Moment = require('moment');
 var BlobStream = require('transport/blob-stream');
 var Payload = require('transport/payload');
+if (process.env.PLATFORM === 'cordova') {
+    var BackgroundFileTransfer = require('transport/background-file-transfer');
+}
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -274,6 +277,15 @@ module.exports = React.createClass({
                 });
             });
         });
+    },
+
+    /**
+     * Initialize background file transfer plugin on mount
+     */
+    componentDidMount: function() {
+        if (process.env.PLATFORM === 'cordova') {
+            BackgroundFileTransfer.initialize();
+        }
     },
 
     /**
