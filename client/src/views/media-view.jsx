@@ -308,7 +308,7 @@ module.exports = React.createClass({
      * @return {[type]}
      */
     renderImageElement: function(res) {
-        return <ResourceView resource={res} theme={this.props.theme} />;
+        return <ResourceView resource={res} theme={this.props.theme} width={512} height={512} />;
     },
 
     /**

@@ -177,15 +177,15 @@ module.exports = React.createClass({
                     paddingTop: (heightToWidthRatio * 100) + '%'
                 };
                 var mosaic = this.props.resource.mosaic;
-                if (_.size(mosaic) === 16) {
+                if (this.props.clip && _.size(mosaic) === 16) {
                     var scanlines = _.chunk(mosaic, 4);
                     var gradients  = _.map(scanlines, (pixels) => {
-                        var [ c1, c2, c3, c4 ] = pixels;
-                        return `linear-gradient(90deg, #${c1} 0%, #${c1} 25%, #${c2} 25%, #${c2} 50%, #${c3} 50%, #${c3} 75%, #${c4} 75%, #${c4} 100%)`;
+                        var [ c1, c2, c3, c4 ] = _.map(pixels, formatColor);
+                        return `linear-gradient(90deg, ${c1} 0%, ${c1} 25%, ${c2} 25%, ${c2} 50%, ${c3} 50%, ${c3} 75%, ${c4} 75%, ${c4} 100%)`;
                     });
                     var positions = [ `0 0%`, `0 ${100 / 3}%`, `0 ${200 / 3}%`, `0 100%` ];
                     containerProps.style.backgroundRepeat = 'no-repeat';
-                    containerProps.style.backgroundSize = `100% 25.1%`;
+                    containerProps.style.backgroundSize = `100% 25.5%`;
                     containerProps.style.backgroundImage = gradients.join(', ');
                     containerProps.style.backgroundPosition = positions.join(', ');
                 }
@@ -215,4 +215,11 @@ function isJSONEncoded(url) {
 function parseJSONEncodedURL(url) {
     var json = url.substr(5);
     return JSON.parse(json);
+}
+
+function formatColor(color) {
+    if (color.length < 6) {
+        color = '000000'.substr(color.length) + color;
+    }
+    return '#' + color;
 }
