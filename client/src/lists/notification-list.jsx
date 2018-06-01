@@ -188,37 +188,51 @@ var NotificationListSync = module.exports.Sync = React.createClass({
     },
 
     /**
-     * Mark unread notification as seen after some time
+     * Schedule timeout function that marks notifications as read on mount
+     */
+    componentDidMount: function() {
+        this.scheduleNotificationRead();
+    },
+
+    /**
+     * Schedule timeout function that marks notifications as read when list changes
      *
      * @param  {Object} prevProps
      * @param  {Object} prevState
      */
     componentDidUpdate: function(prevProps, prevState) {
         if (prevProps.notifications !== this.props.notifications || prevState.hiddenNotificationIds !== this.state.hiddenNotificationIds) {
-            // need a small delay here, since hiddenNotificationIds isn't updated
-            // until the SmartList's componentDidUpdate() is called
-            setTimeout(() => {
-                var unread = _.filter(this.props.notifications, (notification) => {
-                    if (!notification.seen) {
-                        if (!_.includes(this.state.hiddenNotificationIds, notification.id)) {
-                            return true;
-                        }
-                    }
-                });
-                if (!_.isEmpty(unread)) {
-                    var delay = unread.length;
-                    if (delay > 5) {
-                        delay = 5;
-                    } else if (delay < 2) {
-                        delay = 2;
-                    }
-                    clearTimeout(this.markAsSeenTimeout);
-                    this.markAsSeenTimeout = setTimeout(() => {
-                        this.markAsSeen(unread);
-                    }, delay * 1000);
-                }
-            }, 50);
+            this.scheduleNotificationRead();
         }
+    },
+
+    /**
+     * Mark unread notification as read after some time
+     */
+    scheduleNotificationRead: function() {
+        // need a small delay here, since hiddenNotificationIds isn't updated
+        // until the SmartList's componentDidUpdate() is called
+        setTimeout(() => {
+            var unread = _.filter(this.props.notifications, (notification) => {
+                if (!notification.seen) {
+                    if (!_.includes(this.state.hiddenNotificationIds, notification.id)) {
+                        return true;
+                    }
+                }
+            });
+            if (!_.isEmpty(unread)) {
+                var delay = unread.length;
+                if (delay > 5) {
+                    delay = 5;
+                } else if (delay < 2) {
+                    delay = 2;
+                }
+                clearTimeout(this.markAsSeenTimeout);
+                this.markAsSeenTimeout = setTimeout(() => {
+                    this.markAsSeen(unread);
+                }, delay * 1000);
+            }
+        }, 50);
     },
 
     /**
