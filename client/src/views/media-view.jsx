@@ -105,7 +105,6 @@ module.exports = React.createClass({
     render: function() {
         return (
             <div className="media-view">
-                <div className="spacer" />
                 <div className="container">
                     {this.renderResource()}
                     {this.renderNavigation()}

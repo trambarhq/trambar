@@ -1436,7 +1436,7 @@ module.exports = React.createClass({
                     immediate = true;
                 }
             }
-            return this.saveDraft(draft, immediate, selectedResourceIndex);
+            this.saveDraft(draft, immediate, selectedResourceIndex);
         } else {
             this.setState({ selectedResourceIndex });
         }

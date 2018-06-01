@@ -2,16 +2,8 @@
     position: relative;
     margin-top: 1em;
 
-    .spacer {
-        padding-top: 100%;
-    }
-
     .container {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        right: 0;
+        width: 100%;
 
         IMG, CANVAS {
             display: block;

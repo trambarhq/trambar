@@ -126,14 +126,13 @@ module.exports = React.createClass({
         var types = _.map(files, (file) => {
             return this.getResourceType(file.type);
         });
-        return this.addResourcePlaceholders(types).then((placeholders) => {
-            return Promise.each(files, (file, index) => {
-                // import the file then replace the placeholder
-                return this.importFile(file).then((res) => {
-                    return this.updateResource(placeholders[index], res);
-                }).catch((err) => {
-                    return this.removeResource(placeholders[index]);
-                });
+        var placeholders = this.addResourcePlaceholders(types);
+        return Promise.each(files, (file, index) => {
+            // import the file then replace the placeholder
+            return this.importFile(file).then((res) => {
+                return this.updateResource(placeholders[index], res);
+            }).catch((err) => {
+                return this.removeResource(placeholders[index]);
             });
         });
     },
@@ -435,7 +434,7 @@ module.exports = React.createClass({
      *
      * @param  {Array<Object>} newResources
      *
-     * @return {Promise<Array<Object>>}
+     * @return {Array<Object>}
      */
     addResourcePlaceholders: function(types) {
         var resources = _.map(types, (type) => {
@@ -444,7 +443,8 @@ module.exports = React.createClass({
                 pending: `import-${++importCount}`,
             };
         });
-        return this.addResources(resources).return(resources);
+        this.addResources(resources);
+        return resources;
     },
 
     /**
@@ -470,7 +470,7 @@ module.exports = React.createClass({
             resources = _.concat(resourcesBefore, newResources);
         }
         var firstIndex = resourcesBefore.length;
-        return this.triggerChangeEvent(resources, firstIndex);
+        this.triggerChangeEvent(resources, firstIndex);
     },
 
     /**

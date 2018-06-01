@@ -145,8 +145,6 @@ module.exports = React.createClass({
      *
      * @param  {Array<Object>} resources
      * @param  {Number} selection
-     *
-     * @return {Promise}
      */
     triggerChangeEvent: function(resources, selection) {
         return this.props.onChange({

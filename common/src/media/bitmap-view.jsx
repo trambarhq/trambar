@@ -215,6 +215,37 @@ module.exports = React.createClass({
         context.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);
     },
 
+    extractMosaic: function() {
+        try {
+            var canvas = this.components.canvas;
+            var miniCanvas = document.createElement('CANVAS');
+            miniCanvas.width = 48;
+            miniCanvas.height = 48;
+            var miniContext = miniCanvas.getContext('2d');
+            miniContext.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, miniCanvas.width, miniCanvas.height);
+            var microCanvas = document.createElement('CANVAS');
+            microCanvas.width = 4;
+            microCanvas.height = 4;
+            var microContext = microCanvas.getContext('2d');
+            microContext.drawImage(miniCanvas, 0, 0, miniCanvas.width, miniCanvas.height, 0, 0, microCanvas.width, microCanvas.height);
+            var imageData = microContext.getImageData(0, 0, microCanvas.width, microCanvas.height);
+            var pixels = imageData.data;
+            if (_.size(pixels) >= 64) {
+                var colors = [];
+                for (var i = 0; i < 16; i++) {
+                    var r = pixels[i * 4 + 0];
+                    var g = pixels[i * 4 + 1];
+                    var b = pixels[i * 4 + 2];
+                    var rgb = (r << 16) | (g << 8) | (b << 0);
+                    colors.push(rgb.toString(16));
+                }
+                return colors;
+            }
+        } catch (err) {
+
+        }
+    },
+
     /**
      * Collapsed the canvas
      */

@@ -137,7 +137,7 @@ module.exports = React.createClass({
                 newState.placeholderIcon = 'cloud-upload';
             } else {
                 if (!res.pending) {
-                    // not pending locally--we're wait for remote action to complete 
+                    // not pending locally--we're wait for remote action to complete
                     if (res.type === 'video') {
                         // poster is being generated in the backend
                         newState.placeholderMessage = t('image-editor-poster-extraction-in-progress');
@@ -313,13 +313,12 @@ module.exports = React.createClass({
      * Called after user has made adjustments to an image's clipping rect
      *
      * @param  {Object} evt
-     *
-     * @return {Promise<Story>}
      */
     handleClipRectChange: function(evt) {
         var res = _.clone(this.props.resource);
         res.clip = evt.rect;
-        return this.triggerChangeEvent(res);
+        res.mosaic = evt.target.extractMosaic();
+        this.triggerChangeEvent(res);
     },
 
     /**
@@ -330,6 +329,13 @@ module.exports = React.createClass({
     handleFullImageLoad: function(evt) {
         var url = evt.target.props.url;
         this.setState({ loadedImageURL: url });
+
+        // set mosaic if there isn't one
+        var res = _.clone(this.props.resource);
+        if (!res.mosaic) {
+            res.mosaic = this.components.imageCropper.extractMosaic();
+            this.triggerChangeEvent(res);
+        }
     },
 });
 

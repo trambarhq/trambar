@@ -121,6 +121,18 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return an array containing the colors of a 4x4 mosaic of the image
+     *
+     * @return {Array<String>|undefined}
+     */
+    extractMosaic: function() {
+        var view = this.components.image;
+        if (view instanceof BitmapView) {
+            return view.extractMosaic();
+        }
+    },
+
+    /**
      * Add Hammer.js touch handling to container div
      */
     activateTouchHandling: function() {

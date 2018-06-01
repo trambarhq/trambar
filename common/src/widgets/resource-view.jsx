@@ -8,6 +8,8 @@ var Theme = require('theme/theme');
 var BitmapView = require('media/bitmap-view');
 var VectorView = require('media/vector-view');
 
+require('./resource-view.scss');
+
 module.exports = React.createClass({
     displayName: 'ResourceView',
     propTypes: {
@@ -38,7 +40,8 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            isWaitingForImage: false
+            waitingForRemoteImage: false,
+            remoteImageLoaded: false,
         };
     },
 
@@ -113,10 +116,10 @@ module.exports = React.createClass({
             var urlBefore = this.getURL();
             var urlAfter = this.getURL(nextProps);
             if (isJSONEncoded(urlBefore) && !isJSONEncoded(urlAfter)) {
-                this.setState({ isWaitingForImage: true });
+                this.setState({ waitingForRemoteImage: true });
                 MediaLoader.loadImage(urlAfter).catch((err) => {
                 }).then(() => {
-                    this.setState({ isWaitingForImage: false });
+                    this.setState({ waitingForRemoteImage: false });
                 });
             }
         }
@@ -131,7 +134,7 @@ module.exports = React.createClass({
      * @return {Boolean}
      */
     shouldComponentUpdate: function(nextProps, nextState) {
-        if (nextState.isWaitingForImage) {
+        if (nextState.waitingForRemoteImage) {
             return false;
         }
         return true;
@@ -158,13 +161,51 @@ module.exports = React.createClass({
                 return <BitmapView {...props} />;
             }
         } else {
+            var containerProps = {
+                className: 'resource-view'
+            };
             var dims = this.getDimensions();
             props.src = url;
             props.width = dims.width;
             props.height = dims.height;
-            return <img {...props} />;
+            if (!this.state.remoteImageLoaded) {
+                props.onLoad = this.handleRemoteImageLoad;
+
+                var heightToWidthRatio = props.height / props.width;
+                containerProps.className += ' loading';
+                containerProps.style = {
+                    paddingTop: (heightToWidthRatio * 100) + '%'
+                };
+                var mosaic = this.props.resource.mosaic;
+                if (_.size(mosaic) === 16) {
+                    var scanlines = _.chunk(mosaic, 4);
+                    var gradients  = _.map(scanlines, (pixels) => {
+                        var [ c1, c2, c3, c4 ] = pixels;
+                        return `linear-gradient(90deg, #${c1} 0%, #${c1} 25%, #${c2} 25%, #${c2} 50%, #${c3} 50%, #${c3} 75%, #${c4} 75%, #${c4} 100%)`;
+                    });
+                    var positions = [ `0 0%`, `0 ${100 / 3}%`, `0 ${200 / 3}%`, `0 100%` ];
+                    containerProps.style.backgroundRepeat = 'no-repeat';
+                    containerProps.style.backgroundSize = `100% 25.1%`;
+                    containerProps.style.backgroundImage = gradients.join(', ');
+                    containerProps.style.backgroundPosition = positions.join(', ');
+                }
+            }
+            return (
+                <div {...containerProps}>
+                    <img {...props} />
+                </div>
+            );
         }
     },
+
+    /**
+     * Called when remote image is done loading
+     *
+     * @param  {Event} Evt
+     */
+    handleRemoteImageLoad: function(Evt) {
+        this.setState({ remoteImageLoaded: true });
+    }
 });
 
 function isJSONEncoded(url) {
