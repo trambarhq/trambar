@@ -87,3 +87,9 @@ Trambar makes use of the following open source software. Many thanks to contribu
 * [Async do-while](https://github.com/chung-leong/async-do-while)
 * [Mark-Gor](https://github.com/chung-leong/mark-gor)
 * [Relaks](https://github.com/chung-leong/relaks)
+
+### Name
+
+Trambar is named after [a bar in Krakow, Poland](https://www.google.com/maps/place/TramBar/@50.0604157,19.9370353,736m/data=!3m2!1e3!4b1!4m5!3m4!1s0x47165b126ab82213:0xe6a13d9ea5df9a7b!8m2!3d50.0604123!4d19.939224).
+
+![TramBar](img/trambar.jpg)
