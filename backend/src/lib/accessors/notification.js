@@ -64,6 +64,7 @@ module.exports = _.create(Data, {
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} (target_user_id) WHERE deleted = false;
+            CREATE INDEX ON ${table} (id) WHERE seen = false AND deleted = false;
         `;
         return db.execute(sql);
     },
@@ -78,7 +79,7 @@ module.exports = _.create(Data, {
      */
     watch: function(db, schema) {
         return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'ctime', 'deleted', 'type', 'story_id', 'reaction_id', 'user_id', 'target_user_id' ];
+            var propNames = [ 'ctime', 'deleted', 'type', 'story_id', 'reaction_id', 'user_id', 'target_user_id', 'seen' ];
             return this.createNotificationTriggers(db, schema, propNames);
         });
     },

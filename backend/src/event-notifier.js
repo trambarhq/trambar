@@ -92,75 +92,117 @@ function handleDatabaseChanges(events) {
     });
 
     System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
-        var address = _.trimEnd(_.get(system, 'settings.address', ''), '/');
         // see who's listening
         ListenerManager.find(db).then((listeners) => {
-            if (_.isEmpty(listeners)) {
-                console.log('No listeners');
-            }
-            var messages = [];
             // send change messages (silent) first
-            _.each(listeners, (listener, index) => {
-                var changes = {};
-                _.each(events, (event) => {
-                    var accessor = _.find(accessors, { table: event.table });
-                    if (accessor.isRelevantTo(event, listener.user, listener.subscription)) {
-                        var table = `${event.schema}.${event.table}`;
-                        var lists = changes[table];
-                        if (!lists) {
-                            lists = changes[table] = {
-                                ids: [ event.id ],
-                                gns: [ event.gn ]
-                            };
-                        } else {
-                            if (!_.includes(lists.ids, event.id)) {
-                                lists.ids.push(event.id);
-                                lists.gns.push(event.gn);
-                            }
-                        }
-                    }
-                });
-                if (!_.isEmpty(changes)) {
-                    messages.push(new Message('change', listener, { changes }, address));
-                }
-            });
-            ListenerManager.send(db, messages);
-
-            var eventsBySchema = _.groupBy(events, 'schema');
-            return Promise.each(_.keys(eventsBySchema), (schema) => {
-                // generate new Notification objects
-                return NotificationGenerator.generate(db, eventsBySchema[schema]).then((notifications) => {
-                    if (_.isEmpty(notifications)) {
-                        return;
-                    }
-                    var criteria = { deleted: false, disabled: false };
-                    return User.findCached(db, 'global', criteria, '*').then((users) => {
-                        var messages = [];
-                        _.each(notifications, (notification) => {
-                            _.each(listeners, (listener) => {
-                                if (listener.user.id === notification.target_user_id) {
-                                    var user = _.find(users, { id: notification.user_id });
-                                    if (user) {
-                                        var locale = listener.subscription.locale || 'en-us';
-                                        var alert = AlertComposer.format(system, schema, user, notification, locale);
-                                        messages.push(new Message('alert', listener, { alert }, address));
-                                    }
-                                }
-                            });
-                        });
-                        return ListenerManager.send(db, messages);
-                    });
-                });
+            return sendChangeNotifications(db, events, listeners, system).then(() => {
+                return sendAlerts(db, events, listeners, system);
             })
         });
     });
 }
 
-function Message(type, listener, body, address) {
+/**
+ * Send change notifications
+ *
+ * @param  {Database} db
+ * @param  {Array<Object>} events
+ * @param  {Array<Listener>} listeners
+ * @param  {System} system
+ *
+ * @return {Promise}
+ */
+function sendChangeNotifications(db, events, listeners, system) {
+    var messages = [];
+    return Promise.each(listeners, (listener, index) => {
+        var changes = {};
+        var badge;
+        return Promise.each(events, (event) => {
+            var accessor = _.find(accessors, { table: event.table });
+            if (accessor.isRelevantTo(event, listener.user, listener.subscription)) {
+                var table = `${event.schema}.${event.table}`;
+                var lists = changes[table];
+                if (!lists) {
+                    lists = changes[table] = {
+                        ids: [ event.id ],
+                        gns: [ event.gn ]
+                    };
+                } else {
+                    if (!_.includes(lists.ids, event.id)) {
+                        lists.ids.push(event.id);
+                        lists.gns.push(event.gn);
+                    }
+                }
+
+                if(event.table === 'notification' && event.diff.seen) {
+                    var criteria = {
+                        seen: false,
+                        deleted: false,
+                        target_user_id: listener.user.id,
+                    };
+                    var columns = 'COUNT(id) AS count';
+                    return Notification.findOne(db, event.schema, criteria, columns).then((row) => {
+                        badge = row.count;
+                    });
+                }
+            }
+        }).then(() => {
+            if (!_.isEmpty(changes)) {
+                messages.push(new Message('change', listener, { changes, badge }, system));
+            }
+        });
+    }).then(() => {
+        ListenerManager.send(db, messages);
+        return null;
+    });
+}
+
+/**
+ * Send alert messages
+ *
+ * @param  {Database} db
+ * @param  {Array<Object>} events
+ * @param  {Array<Listener>} listeners
+ * @param  {System} system
+ *
+ * @return {Promise}
+ */
+function sendAlerts(db, events, listeners, system) {
+    var eventsBySchema = _.groupBy(events, 'schema');
+    return Promise.each(_.keys(eventsBySchema), (schema) => {
+        // generate new Notification objects
+        var schemaEvents = eventsBySchema[schema];
+        return NotificationGenerator.generate(db, schemaEvents).then((notifications) => {
+            if (_.isEmpty(notifications)) {
+                return;
+            }
+            var messages = [];
+            var criteria = { deleted: false, disabled: false };
+            return User.findCached(db, 'global', criteria, '*').then((users) => {
+                return Promise.each(notifications, (notification) => {
+                    return Promise.each(listeners, (listener) => {
+                        if (listener.user.id === notification.target_user_id) {
+                            var user = _.find(users, { id: notification.user_id });
+                            if (user) {
+                                var locale = listener.subscription.locale || 'en-us';
+                                var alert = AlertComposer.format(system, schema, user, notification, locale);
+                                messages.push(new Message('alert', listener, { alert }, system));
+                            }
+                        }
+                    });
+                });
+            }).then(() => {
+                return ListenerManager.send(db, messages);
+            });
+        });
+    })
+}
+
+function Message(type, listener, body, system) {
     this.type = type;
     this.listener = listener;
     this.body = body;
-    this.address = address;
+    this.address = _.trimEnd(_.get(system, 'settings.address', ''), '/');
 }
 
 if (process.argv[1] === __filename) {
