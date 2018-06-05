@@ -78,7 +78,7 @@ module.exports = Relaks.createClass({
                 query.date = params.date;
             }
             if (params.roles != undefined) {
-                query.roles = params.roles.join('+');
+                query.roles = params.roles.join(' ');
             }
             if (params.search != undefined) {
                 query.search = params.search;

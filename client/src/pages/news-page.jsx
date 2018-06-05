@@ -71,7 +71,7 @@ module.exports = Relaks.createClass({
                 query.date = params.date;
             }
             if (params.roles != undefined) {
-                query.roles = params.roles.join('+');
+                query.roles = params.roles.join(' ');
             }
             if (params.search != undefined) {
                 query.search = params.search;
@@ -159,7 +159,7 @@ module.exports = Relaks.createClass({
                     props.stories = stories;
                 });
             } else if (!_.isEmpty(params.roles)) {
-                return StoryFinder.findStoriesWithRolesInListing(db, params.roles, props.currentUser, freshListing).then((stories) => {
+                return StoryFinder.findStoriesWithRolesInListing(db, 'news', params.roles, props.currentUser, freshListing).then((stories) => {
                     props.stories = stories;
                 });
             } else {

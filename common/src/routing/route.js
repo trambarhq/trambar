@@ -207,7 +207,7 @@ Route.parseIdList = function(s) {
         return undefined;
     }
     if (s) {
-        var tokens = _.split(s, '+');
+        var tokens = _.split(s, /[\s\+]/);
         return _.map(tokens, _.strictParseInt);
     } else {
         return emptyArray;
