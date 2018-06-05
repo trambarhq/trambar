@@ -269,7 +269,8 @@ Payload.prototype.sendBlob = function(part) {
         },
     };
     part.uploaded = 0;
-    return HTTPRequest.fetch('POST', url, formData, options).then((res) => {
+    part.promise = HTTPRequest.fetch('POST', url, formData, options);
+    return part.promise.then((res) => {
         this.associateRemoteURL(res.url, blob);
         return res;
     });
@@ -300,6 +301,7 @@ Payload.prototype.sendCordovaFile = function(part) {
                 this.updateProgress(part, upload.progress / 100);
             },
         };
+
         BackgroundFileTransfer.send(token, file.fullPath, url, options);
         part.uploaded = 0;
     }).then((text) => {
@@ -351,7 +353,110 @@ Payload.prototype.sendURL = function(part) {
         contentType: 'json',
     };
     var body = _.extend({ url: part.url }, part.options);
-    return HTTPRequest.fetch('POST', url, body, options);
+    part.promise = HTTPRequest.fetch('POST', url, body, options);
+    return part.promise;
+};
+
+/**
+ * Cancel the payload
+ */
+Payload.prototype.cancel = function() {
+    if (this.started) {
+        if (!this.completed) {
+            if (!this.failed && !this.canceled) {
+                this.canceled = true;
+                return Promise.each(this.parts, (part) => {
+                    return this.cancelPart(part);
+                }).then(() => {
+                    return true;
+                });
+            }
+        }
+    }
+    return Promise.resolve(false);
+};
+
+/**
+ * Cancel a part of the payload
+ *
+ * @param  {Object} part
+ *
+ * @return {Promise}
+ */
+Payload.prototype.cancelPart = function(part) {
+    if (part.stream) {
+        return this.cancelStream(part);
+    } else if (part.blob) {
+        return this.cancelBlob(part);
+    } else if (part.cordovaFile && process.env.PLATFORM === 'cordova') {
+        return this.cancelCordovaFile(part);
+    } else if (part.url) {
+        return this.cancelURL(part);
+    } else {
+        return Promise.resolve();
+    }
+};
+
+/**
+ * Cancel stream upload
+ *
+ * @param  {Object} part
+ *
+ * @return {Promise}
+ */
+Payload.prototype.cancelStream = function(part) {
+    return Promise.try(() => {
+        return part.stream.cancel();
+    }).catch((err) => {
+    });
+};
+
+/**
+ * Cancel file upload
+ *
+ * @param  {Object} part
+ *
+ * @return {Promise}
+ */
+Payload.prototype.cancelBlob = function(part) {
+    return Promise.try(() => {
+        if (part.promise && part.promise.isPending()) {
+            return part.promise.cancel();
+        }
+    }).catch((err) => {
+    });
+};
+
+/**
+ * Cancel file upload
+ *
+ * @param  {Object} part
+ *
+ * @return {Promise}
+ */
+Payload.prototype.cancelCordovaFile = function(part) {
+    return Promise.try(() => {
+        var index = _.indexOf(this.parts, part);
+        var token = `${this.token}-${index + 1}`;
+        return BackgroundFileTransfer.cancel(token);
+    }).catch((err) => {
+    });
+};
+
+/**
+ * Cancel sending of URL
+ *
+ * @param  {Object} part
+ *
+ * @return {Promise}
+ */
+Payload.prototype.cancelURL = function(part) {
+    return Promise.try(() => {
+        if (part.promise && part.promise.isPending()) {
+            return part.promise.cancel();
+        }
+    }).catch((err) => {
+    });
 };
 
 /**

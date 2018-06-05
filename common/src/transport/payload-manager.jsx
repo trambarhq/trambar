@@ -130,6 +130,24 @@ module.exports = React.createClass({
     },
 
     /**
+     * Cancel payloads
+     *
+     * @param  {Array<String>} tokens
+     */
+    abandon: function(tokens) {
+        var payloads = _.filter(this.payloads, (payload) => {
+            return _.includes(tokens, payload.token);
+        });
+        if (!_.isEmpty(payloads)) {
+            _.each(payloads, (payload) => {
+                payload.cancel();
+            });
+            _.pullAll(this.payloads, payloads);
+            this.triggerChangeEvent();
+        }
+    },
+
+    /**
      * Obtain progress about a bunch of payloads
      *
      * @param  {Array<String>} tokens

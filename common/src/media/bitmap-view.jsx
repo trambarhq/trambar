@@ -130,10 +130,12 @@ module.exports = React.createClass({
 
                     this.drawImage(this.props.clippingRect);
                     this.triggerLoadEvent();
+                    return null;
                 });
             }).catch((err) => {
                 console.error(err)
                 this.triggerErrorEvent(err);
+                return null;
             });
         } else {
             this.clearCanvas();

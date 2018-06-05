@@ -4,6 +4,7 @@ var FileTransferManager = window.FileTransferManager;
 module.exports = {
     initialize,
     send,
+    cancel,
 };
 
 var transfers = [];
@@ -61,4 +62,23 @@ function send(token, path, url, options) {
          onProgress: _.get(options, 'onProgress'),
      };
      transfers.push(transfer);
+}
+
+/**
+ * Cancel an upload
+ *
+ * @param  {String} token
+ *
+ * @return {Promise}
+ */
+function cancel(token) {
+    return new Promise((resolve, reject) => {
+        var success = (res) => {
+            resolve(res);
+        };
+        var fail = (msg) => {
+            reject(new Error(msg.error));
+        };
+        uploader.removeUpload(token, success, fail);
+    });
 }

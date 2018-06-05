@@ -206,6 +206,26 @@ var StoryListSync = module.exports.Sync = React.createClass({
     },
 
     /**
+     * Cancel payloads of stories that no longer exists
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps: function(nextProps) {
+        if (this.props.stories !== nextProps.stories || this.props.draftStories !== nextProps.draftStories || this.props.pendingStories !== nextProps.pendingStories) {
+            var storiesBefore = _.concat(this.props.draftStories, this.props.pendingStories, this.props.stories);
+            var storiesAfter = _.concat(nextProps.draftStories, nextProps.pendingStories, nextProps.stories);
+            var storiesAfterHash = _.keyBy(storiesAfter, 'id');
+            _.each(storiesBefore, (story) => {
+                if (story) {
+                    if (!storiesAfterHash[story.id]) {
+                        nextProps.payloads.abandon(story);
+                    }
+                }
+            });
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}

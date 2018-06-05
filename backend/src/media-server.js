@@ -467,6 +467,9 @@ function monitorTranscodingJob(schema, taskId, job) {
 
     // wait for transcoding to finish
     VideoManager.awaitTranscodingJob(job).then(() => {
+        if (job.aborted) {
+            return;
+        }
         // save URL and information about available version to task object
         // (doing so transfer these properties into details.resources of
         // object that has the Task object's token as payload_token)
@@ -540,6 +543,7 @@ function handleMediaPoster(req, res, type) {
 function handleStream(req, res) {
     var jobId = req.query.id;
     var file = req.file;
+    var abort = !!req.body.abort;
     var chunk = parseInt(req.body.chunk);
     return Promise.try(() => {
         var job = VideoManager.findTranscodingJob(jobId);
@@ -573,7 +577,7 @@ function handleStream(req, res) {
         if (file) {
             VideoManager.transcodeSegment(job, file);
         } else {
-            VideoManager.endTranscodingJob(job);
+            VideoManager.endTranscodingJob(job, abort);
         }
         return null;
     }).then(() => {

@@ -132,9 +132,11 @@ function startTranscodingJob(srcPath, type, jobId) {
             job.queue = [];
             job.working = false;
             job.closed = false;
+            job.aborted = false;
             job.totalByteCount = 0;
             job.processedByteCount = 0;
             job.lastProgressTime = 0;
+            job.lastSegmentTime = new Date;
 
             // create write stream to save original
             job.inputFile.path = `${job.destination}/${job.id}`;
@@ -246,7 +248,7 @@ function awaitTranscodingJob(job) {
  */
 function awaitPosterGeneration(job) {
     if (!job.posterFile) {
-        throw new Error('Poster generation not request');
+        throw new Error('Poster generation not requested');
     }
     return job.posterFile.promise;
 }
@@ -262,6 +264,7 @@ function transcodeSegment(job, file) {
         var inputStream = FS.createReadStream(file.path);
         job.queue.push(inputStream);
         job.totalByteCount += file.size;
+        job.lastSegmentTime = new Date;
         if (!job.working) {
             processNextStreamSegment(job);
         }
@@ -281,9 +284,11 @@ function transcodeSegment(job, file) {
  * Indicate that there will be no more additional files
  *
  * @param  {Object} job
+ * @param  {Boolean} abort
  */
-function endTranscodingJob(job) {
+function endTranscodingJob(job, abort) {
     job.closed = true;
+    job.aborted = abort;
     calculateProgress(job);
     if (!job.working) {
         processNextStreamSegment(job);
@@ -311,7 +316,7 @@ function endTranscodingJob(job) {
  */
 function processNextStreamSegment(job) {
     var inputStream = job.queue.shift();
-    if (inputStream) {
+    if (inputStream && !job.aborted) {
         job.working = true;
         // save contents of the original file
         inputStream.pipe(job.writeStream, { end: false });
@@ -359,7 +364,7 @@ function processNextStreamSegment(job) {
  */
 function processNextStreamSegmentForPoster(job) {
     var inputStream = job.posterQueue.shift();
-    if (inputStream) {
+    if (inputStream && !job.aborted) {
         job.workingOnPoster = true;
         inputStream.pipe(job.posterFile.ffmpeg.stdin, { end: false });
         inputStream.once('end', () => {
@@ -627,3 +632,16 @@ function waitForExit(childProcess) {
         });
     });
 }
+
+// cancel a stream if nothing is received after a while
+setInterval(() => {
+    _.each(transcodingJobs, (job) => {
+        if (job.streaming && !job.closed) {
+            var now = new Date;
+            var elapsed = now - job.lastSegmentTime;
+            if (elapsed > 60 * 60 * 1000) {
+                endTranscodingJob(job, true);
+            }
+        }
+    });
+}, 30 * 1000);

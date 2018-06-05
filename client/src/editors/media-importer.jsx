@@ -130,9 +130,11 @@ module.exports = React.createClass({
         return Promise.each(files, (file, index) => {
             // import the file then replace the placeholder
             return this.importFile(file).then((res) => {
-                return this.updateResource(placeholders[index], res);
+                this.updateResource(placeholders[index], res);
+                return null;
             }).catch((err) => {
-                return this.removeResource(placeholders[index]);
+                this.removeResource(placeholders[index]);
+                return null;
             });
         });
     },
@@ -343,7 +345,8 @@ module.exports = React.createClass({
             if (!res) {
                 return 0;
             }
-            return this.addResources([ res ]);
+            this.addResources([ res ]);
+            return null;
         });
     },
 
@@ -486,8 +489,9 @@ module.exports = React.createClass({
         var index = _.findIndex(resources, before);
         if (index !== -1) {
             resources[index] = after;
-            return this.triggerChangeEvent(resources);
+            this.triggerChangeEvent(resources);
         }
+        return null;
     },
 
     /**
@@ -502,7 +506,7 @@ module.exports = React.createClass({
         var index = _.findIndex(resources, before);
         if (index !== -1) {
             resources.splice(index, 1);
-            return this.triggerChangeEvent(resources);
+            this.triggerChangeEvent(resources);
         }
     },
 
@@ -511,16 +515,16 @@ module.exports = React.createClass({
      *
      * @param  {Array<Object>} resources
      * @param  {Number|undefined} selection
-     *
-     * @return {Promise}
      */
     triggerChangeEvent: function(resources, selection) {
-        return this.props.onChange({
-            type: 'change',
-            target: this,
-            resources,
-            selection,
-        });
+        if (this.props.onChange) {
+            this.props.onChange({
+                type: 'change',
+                target: this,
+                resources,
+                selection,
+            });
+        }
     },
 
     /**

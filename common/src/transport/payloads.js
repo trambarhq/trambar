@@ -22,6 +22,18 @@ Payloads.prototype.add = function(type) {
 };
 
 /**
+ * Cancel a payload
+ *
+ * @param  {String} token
+ *
+ * @return {Promise}
+ */
+Payloads.prototype.cancel = function(token) {
+    return this.payloadManager.abandon([ token ]);
+};
+
+
+/**
  * Create a new instance of object with a destination overriding that indicated
  * by the current route
  *
@@ -52,6 +64,19 @@ Payloads.prototype.stream = function() {
 Payloads.prototype.dispatch = function(object) {
     var tokens = getPayloadTokens(object);
     return this.payloadManager.dispatch(tokens);
+};
+
+
+/**
+ * Scan an object's resource array and cancel any unfinished uploads
+ *
+ * @param  {Object} object
+ *
+ * @return {Promise}
+ */
+Payloads.prototype.abandon = function(object) {
+    var tokens = getPayloadTokens(object);
+    return this.payloadManager.abandon(tokens);
 };
 
 /**

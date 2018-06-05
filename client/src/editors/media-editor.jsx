@@ -195,12 +195,16 @@ module.exports = React.createClass({
     handleRemoveClick: function(evt) {
         var index = this.props.resourceIndex;
         var resources = _.slice(this.props.resources);
+        var res = resources[index];
         resources.splice(index, 1);
         var newIndex = index;
         if (index >= resources.length) {
             newIndex = resources.length - 1;
         }
         this.triggerChangeEvent(resources, newIndex);
+        if (res && res.payload_token) {
+            this.props.payloads.cancel(res.payload_token);
+        }
     },
 
     /**

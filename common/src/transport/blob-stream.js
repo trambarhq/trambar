@@ -17,11 +17,14 @@ function BlobStream(address, options) {
     this.waitResult = null;
     this.size = 0;
     this.started = false;
+    this.canceled = false;
+    this.finished = false;
     this.online = true;
     this.transferred = 0;
     this.promise = null;
     this.onProgress = null;
     this.onComplete = null;
+    this.onError = null;
 }
 
 /**
@@ -242,7 +245,10 @@ BlobStream.prototype.start = function() {
                     // get the next unsent part and send it
                     return this.waitForConnectivity().then(() => {
                         return this.pull().then((blob) => {
-                            var url = `${this.address}/srv/media/stream/?id=${this.id}`;
+                            if (this.canceled) {
+                                throw new Error('Stream was canceled');
+                            }
+                            var url = this.getURL();
                             var formData = new FormData;
                             if (blob) {
                                 formData.append('file', blob);
@@ -269,7 +275,8 @@ BlobStream.prototype.start = function() {
                                     }
                                 },
                             };
-                            return HTTPRequest.fetch('POST', url, formData, options).then((response) => {
+                            this.chunkPromise = HTTPRequest.fetch('POST', url, formData, options);
+                            return this.chunkPromise.then((response) => {
                                 if (blob) {
                                     this.finalize(blob);
                                     uploadedChunkSize += blob.size;
@@ -279,14 +286,18 @@ BlobStream.prototype.start = function() {
                                     resolve();
                                 }
                                 chunkIndex++;
+                            }).finally(() => {
+                                this.chunkPromise = null;
                             });
                         }).catch((err) => {
-                            // don't immediately fail unless it's a HTTP error
-                            if (!(err.statusCode >= 400 && err.statusCode <= 499 && err.statusCode !== 429)) {
-                                if (++failureCount < attempts) {
-                                    // try again after a delay
-                                    delay = Math.min(delay * 2, 30 * 1000);
-                                    return Promise.delay(delay);
+                            if (!this.canceled) {
+                                // don't immediately fail unless it's a HTTP error
+                                if (!(err.statusCode >= 400 && err.statusCode <= 499 && err.statusCode !== 429)) {
+                                    if (++failureCount < attempts) {
+                                        // try again after a delay
+                                        delay = Math.min(delay * 2, 30 * 1000);
+                                        return Promise.delay(delay);
+                                    }
                                 }
                             }
                             throw err;
@@ -295,6 +306,7 @@ BlobStream.prototype.start = function() {
                 });
                 Async.while(() => { return !done });
                 Async.end().then(() => {
+                    this.finished = true;
                     if (this.onComplete) {
                         this.onComplete({
                             type: 'complete',
@@ -306,12 +318,47 @@ BlobStream.prototype.start = function() {
                     if (chunkIndex === 0) {
                         // didn't manage to initiate a stream at all
                         reject(err);
+                    } else {
+                        // send abort request
+                        var url = this.getURL();
+                        var formData = new FormData;
+                        formData.append('abort', 1);
+                        return HTTPRequest.fetch('POST', url, formData).catch((err) => {
+                            // ignore error
+                        }).finally(() => {
+                            if (this.onError) {
+                                this.onError(err);
+                            }
+                        });
                     }
                 });
             });
         })
     }
     return this.promise;
+};
+
+/**
+ * Cancel a stream
+ */
+BlobStream.prototype.cancel = function() {
+    if (!this.canceled) {
+        if (!this.finished) {
+            this.canceled = true;
+            if (this.chunkPromise && this.chunkPromise.isPending()) {
+                this.chunkPromise.cancel();
+            }
+        }
+    }
+};
+
+/**
+ * Get the destination URL
+ *
+ * @return {String}
+ */
+BlobStream.prototype.getURL = function() {
+    return `${this.address}/srv/media/stream/?id=${this.id}`;
 };
 
 /**
