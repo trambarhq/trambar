@@ -255,10 +255,14 @@ module.exports = _.create(ExternalData, {
      */
     isRelevantTo: function(event, user, subscription) {
         if (ExternalData.isRelevantTo.call(this, event, user, subscription)) {
-            var columns = _.keys(event.diff);
-            var publicColumns = _.without(columns, 'settings');
-            if (!_.isEmpty(publicColumns)) {
+            if (event.id === user.id) {
                 return true;
+            } else {
+                var columns = _.keys(event.diff);
+                var publicColumns = _.without(columns, 'settings');
+                if (!_.isEmpty(publicColumns)) {
+                    return true;
+                }
             }
         }
         return false;
