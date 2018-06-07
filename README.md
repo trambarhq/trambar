@@ -27,7 +27,7 @@ in using either your GitHub or Facebook account. You may also use one of the
 
 ## Getting Started
 
-* [Installation](docs/installation.md)
+* [Getting started](docs/getting-started.md)
 * [User guide](docs/user-guide.md)
 * [User guide - Administrative Console](docs/user-guide-admin.md)
 * [System architecture](docs/architecture.md)
