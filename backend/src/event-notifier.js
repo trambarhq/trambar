@@ -134,7 +134,7 @@ function sendChangeNotifications(db, events, listeners, system) {
                     }
                 }
 
-                if(event.table === 'notification' && event.diff.seen) {
+                if(event.table === 'notification') {
                     var criteria = {
                         seen: false,
                         deleted: false,
