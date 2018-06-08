@@ -28,11 +28,11 @@ GitLab CE. The easiest method is with [Docker Compose](https://docs.gitlab.com/o
 
 2. Install **trambar-cli**:
 
-   ```sudo npm install -g trambar```
+   `sudo npm install -g trambar`
 
 3. Start the installation process:
 
-   ```sudo trambar install```
+   `sudo trambar install`
 
 4. Choose whether you wish to use SSL:
 
@@ -94,21 +94,21 @@ GitLab CE. The easiest method is with [Docker Compose](https://docs.gitlab.com/o
 
 10. Start Trambar server:
 
-    ```sudo trambar start```
+    `sudo trambar start`
 
-Configuration files are stored in ```/etc/trambar/```. The hidden file ```.env```
-contains all parameters. ```docker-compose.yml``` contains the container
-orchestration setup. It makes use of variables defined in ```.env```.
+Configuration files are stored in `/etc/trambar/`. The hidden file `.env`
+contains all parameters. `docker-compose.yml` contains the container
+orchestration setup. It makes use of variables defined in `.env`.
 Depending on choices made during installation, certain lines will be commented
 out.
 
-```.htpasswd``` holds the root account password. The password is needed during
+`.htpasswd` holds the root account password. The password is needed during
 initial system setup. Once a GitLab server is paired with Trambar, you may
 choose to delete this file and sign into the Administrative Console exclusively
 through OAuth.
 
-By default, the database is stored in ```/srv/trambar/postgres/``` while media
-files are stored in ```/srv/trambar/media/```. When deploying to a cloud
+By default, the database is stored in `/srv/trambar/postgres/` while media
+files are stored in `/srv/trambar/media/`. When deploying to a cloud
 server, it's advisable to mount a low-cost magnetic volume at this latter
 location.
 
@@ -127,5 +127,80 @@ configure port-forwarding to make the server reachable from your computer.
 You might also need to increase the amount of memory available to the Docker VM.
 
 ## Setting up server
+
+1. Open a web browser and navigate to the URL of the Trambar Administrative
+   Console: `https://<domain-name>/admin/`.
+
+2. In the sign-in page, enter *root* as the user name and the password you had
+   chosen earlier. Click the **Sign in** button.
+
+   ![Sign in page](img/admin-sign-in.png)
+
+3. You should find yourself in the **Settings** page. If not, click **Settings**
+   in the left navigation pane, then the **Edit settings** button in the
+   upper-right-hand corner.
+
+4. Enter information about your server and ensure that its web address is
+   correct. Then choose a background image. It'll appear in the start page of
+   the web client. Click the **Save settings** button when you're done.
+
+   ![Settings page](img/admin-settings.png)
+
+5. Click **Servers** in the left navigation pane.
+
+6. Click the **Add new server** button in the upper-right-hand corner.
+
+   ![Server list](img/admin-server-list-add.png)
+
+7. In the *Server* page, select *GitLab* as the server type.
+
+   ![Server type](img/admin-server-type-select.png)
+
+8. In a different browser tab, sign into GitLab using an account with
+   administrative privilege.
+
+9. Navigate to the **Admin area**.
+
+   ![GitLab start page](img/gitlab-home.png)
+
+10. Click **Applications** in the left navigation pane.
+
+   ![GitLab admin area](img/gitlab-admin-area.png)
+
+11. Click the **New application** button.
+
+   ![GitLab applications](img/gitlab-applications.png)
+
+12. Enter *Trambar* as the application's name, then copy the **Redirect URI**
+    from Trambar Administrative Console into the corresponding box here.
+    Select **api** and **read_user** as the application's scope.
+
+   ![GitLab new application](img/gitlab-application.png)
+
+13. Copy the **Application id** and **Application secret** from GitLab into the
+    corresponding box in Trambar Administrative Console.
+
+   ![GitLab new application](img/gitlab-application-summary.png)
+
+14. Copy the URL of the GitLab server into the corresponding box in Trambar
+    Adminstrative Console. The URL should contains only the domain name (and
+    possibly a port number).
+
+15. Indicate how you wish to map users from GitLab to Trambar.
+
+    ![User mapping](img/admin-server-new-users.png)
+
+16. Click the **Save server** button.
+
+17. Click the **Acquire API access**.
+
+    ![Acquire API access](img/admin-server-acquire-access.png)
+
+18. A GitLab pop-up window will appear. Click the **Authorize** button, then
+    close the window when it says "OK".
+
+    ![GitLab OAuth window](img/gitlab-oauth.png)
+
+    
 
 ## Creating first project
