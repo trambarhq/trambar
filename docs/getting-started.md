@@ -163,41 +163,41 @@ You might also need to increase the amount of memory available to the Docker VM.
 
    ![GitLab start page](img/gitlab-home.png)
 
-10. Click **Applications** in the left navigation pane.
+10. Click **Applications** in the left navigation pane. 
+    
+    ![GitLab admin area](img/gitlab-admin-area.png)
 
-   ![GitLab admin area](img/gitlab-admin-area.png)
-
-11. Click the **New application** button.
-
-   ![GitLab applications](img/gitlab-applications.png)
+11. Click the **New application** button. 
+ 
+    ![GitLab applications](img/gitlab-applications.png)
 
 12. Enter *Trambar* as the application's name, then copy the **Redirect URI**
     from Trambar Administrative Console into the corresponding box here.
-    Select **api** and **read_user** as the application's scope.
-
-   ![GitLab new application](img/gitlab-application.png)
+    Select **api** and **read_user** as the application's scope. 
+ 
+    ![GitLab new application](img/gitlab-application.png)
 
 13. Copy the **Application id** and **Application secret** from GitLab into the
-    corresponding box in Trambar Administrative Console.
-
-   ![GitLab new application](img/gitlab-application-summary.png)
+    corresponding box in Trambar Administrative Console. 
+ 
+    ![GitLab new application](img/gitlab-application-summary.png)
 
 14. Copy the URL of the GitLab server into the corresponding box in Trambar
     Adminstrative Console. The URL should contains only the domain name (and
     possibly a port number).
 
-15. Indicate how you wish to map users from GitLab to Trambar.
+15. Indicate how you wish to map users from GitLab to Trambar. 
 
     ![User mapping](img/admin-server-new-users.png)
 
 16. Click the **Save server** button.
 
-17. Click the **Acquire API access**.
+17. Click the **Acquire API access**. 
 
     ![Acquire API access](img/admin-server-acquire-access.png)
 
 18. A GitLab pop-up window will appear. Click the **Authorize** button, then
-    close the window when it says "OK".
+    close the window when it says "OK". 
 
     ![GitLab OAuth window](img/gitlab-oauth.png)
 
