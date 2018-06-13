@@ -113,7 +113,6 @@ module.exports = React.createClass({
                 this.searchEndTimeout = setTimeout(() => {
                     this.endBackgroundTask();
                     this.searchEndTimeout = null;
-                    console.log('Search end');
                 }, 1000);
             }
         }
@@ -419,6 +418,9 @@ module.exports = React.createClass({
                 }
             }
         }
+        if (data.count !== undefined) {
+            setApplicationIconBadgeNumber(data.count);
+        }
     },
 
     /**
@@ -442,6 +444,9 @@ module.exports = React.createClass({
                 }
             }
             this.skipBackgroundTask(notId);
+        }
+        if (data.count !== undefined) {
+            setApplicationIconBadgeNumber(data.count);
         }
     },
 
@@ -567,6 +572,16 @@ function signalBackgroundTaskCompletion(notId) {
             var success = () => {};
             var failure = () => {};
             pushNotification.finish(success, failure, notId);
+        }
+    }
+}
+
+function setApplicationIconBadgeNumber(count) {
+    if (pushNotification) {
+        if (cordova.platformId === 'android' || cordova.platformId === 'ios') {
+            var success = () => {};
+            var failure = () => {};
+            pushNotification.setApplicationIconBadgeNumber(success, failure, count);
         }
     }
 }
