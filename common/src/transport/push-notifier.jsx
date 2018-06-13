@@ -326,13 +326,14 @@ module.exports = React.createClass({
         if (this.currentNotificationId) {
             // clear the current one
             this.endBackgroundTask();
-            clearTimeout(this.backgroundTaskTimeout);
         }
         this.currentNotificationId = notId;
-        this.backgroundTaskTimeout = setTimeout(() => {
-            this.endBackgroundTask();
-            this.backgroundTaskTimeout = null;
-        }, 5000);
+        if (!this.backgroundTaskTimeout) {
+            this.backgroundTaskTimeout = setTimeout(() => {
+                this.endBackgroundTask();
+                this.backgroundTaskTimeout = null;
+            }, 5000);
+        }
     },
 
     /**
@@ -378,12 +379,16 @@ module.exports = React.createClass({
      * @param  {Object} data
      */
     handleNotification: function(data) {
-        if (cordova.platformId === 'windows') {
-            // handle WNS response separately
-            this.handleWNSNotification(data);
-        } else {
-            // GCM and APNS responses are sufficiently normalized
-            this.handleGCMNotification(data);
+        switch (cordova.platformId) {
+            case 'android':
+                this.handleGCMNotification(data);
+                break;
+            case 'ios':
+                this.handleAPNSNotification(data);
+                break;
+            case 'windows':
+                this.handleWNSNotification(data);
+                breka;
         }
 
         // store data received in a list for diagnostic purpose
@@ -396,11 +401,32 @@ module.exports = React.createClass({
     },
 
     /**
-     * Handle notification on Android and iOS
+     * Handle notification on Android
      *
      * @param  {Object} data
      */
     handleGCMNotification: function(data) {
+        var payload = data.additionalData;
+        var notification = NotificationUnpacker.unpack(payload) || {};
+        if (notification.type === 'change') {
+            this.triggerNotifyEvent(notification.changes);
+        } else {
+            if (notification.type === 'alert') {
+                // if notification was received in the background, the event is
+                // triggered when the user clicks on the notification
+                if (!notification.alert.foreground) {
+                    this.triggerAlertClickEvent(notification.alert);
+                }
+            }
+        }
+    },
+
+    /**
+     * Handle notification on iOS
+     *
+     * @param  {Object} data
+     */
+    handleAPNSNotification: function(data) {
         var payload = data.additionalData;
         var notId = payload.notId;
         var notification = NotificationUnpacker.unpack(payload) || {};
