@@ -574,13 +574,17 @@ module.exports = React.createClass({
                     //
                     // generally, if the result set is complete but stale, we
                     // don't block
-                    if (status === 'stale') {
-                        if (blocking === 'incomplete' || blocking === 'insufficient') {
-                            waitForRemoteSearch = false;
-                        }
-                    } else if (status === 'incomplete') {
-                        if (blocking === 'insufficient') {
-                            waitForRemoteSearch = false;
+                    if (blocking === 'never') {
+                        waitForRemoteSearch = false;
+                    } else {
+                        if (status === 'stale') {
+                            if (blocking === 'incomplete' || blocking === 'insufficient') {
+                                waitForRemoteSearch = false;
+                            }
+                        } else if (status === 'incomplete') {
+                            if (blocking === 'insufficient') {
+                                waitForRemoteSearch = false;
+                            }
                         }
                     }
                     if (!waitForRemoteSearch) {

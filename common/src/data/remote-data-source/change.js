@@ -53,7 +53,6 @@ function Change(location, objects, options) {
         this.onConflict = options.onConflict;
     }
     this.onDispatch = null;
-    this.onCancel = null;
 }
 
 /**
@@ -110,7 +109,7 @@ Change.prototype.dispatch = function() {
 };
 
 /**
- * Cancel a change, triggering the attached onCancel handler
+ * Cancel a change
  */
 Change.prototype.cancel = function() {
     if (this.canceled) {
@@ -125,6 +124,7 @@ Change.prototype.cancel = function() {
     if (this.timeout) {
         clearTimeout(this.timeout);
     }
+    this.resolvePromise([]);
 };
 
 /**
