@@ -5,6 +5,14 @@ Trambar decoration files are special Markdown text files that annotates your app
 
 [Click here to see the Trambar project's own code decoration.](https://trambar.io/deco-demo/)
 
+* [Decoration basics](#decoration-basics)
+* [File matching](#file-matching)
+* [Component icon](#component-icon)
+* [Multilingual descriptions](#multilingual-descriptions)
+* [Previewing decoration](#previewing-decoration)
+
+## Decoration basics
+
 Trambar decoration files reside in the .trambar folder alongside the targetted files:
 
 ![.trambar folder](img/trambar-folder.png)
@@ -49,7 +57,7 @@ foobar.js
 
 This is useful when annotating a component that makes use of code from different parts of the source tree.
 
-## Component Icon
+## Component icon
 
 You can add an icon representing the app component:
 
@@ -72,7 +80,7 @@ Trambar also accepts special Font-Awesome (v.4.7) URLs:
 
 `fa://<class name>/<background color>/<foreground color>`
 
-## Multilingual Descriptions
+## Multilingual descriptions
 
 ```markdown
 # en

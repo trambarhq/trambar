@@ -1,6 +1,10 @@
 System Architecture
 -------------------
 
+* [Trambar subsystems](#trambar-subsystems)
+* [Backend details](#backend-details)
+* [Frontend details](#frontend-details)
+
 ## Trambar subsystems
 
 Trambar Server is composed of [Nginx](https://www.nginx.com/),
@@ -74,8 +78,6 @@ React components' ```shouldComponentUpdate``` method. So called pure components
 don't perform any work unless they receive new props. When a prop is an object,
 only a shallow comparison is done usually. Creation of new proxy objects is
 designed specifically to trip this detection mechanism.
-
-### Dealing with asynchronicity
 
 Of the five key components described above, four are able to readily provide
 new information. Once a route change has occurred, *RouteManager* knows what

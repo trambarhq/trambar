@@ -31,7 +31,7 @@ in using either your GitHub or Facebook account. You may also use one of the
 * [User guide](docs/user-guide.md)
 * [User guide - Administrative Console](docs/user-guide-admin.md)
 * [System architecture](docs/architecture.md)
-* [Acknowledgments](docs/acknowledgments)
+* [Acknowledgments](docs/acknowledgments.md)
 
 ## License
 

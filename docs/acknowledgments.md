@@ -3,6 +3,12 @@ Acknowledgments
 
 Trambar makes use of the following open source software. Many thanks to contributors of these projects.
 
+* [Applications](#applications)
+* [Build tools](#build-tools)
+* [Test tools](#test-tools)
+* [Libraries](#libraries)
+* [Cordova plug-ins](#cordova-plug-ins)
+
 ### Applications
 
 * [Certbot](https://certbot.eff.org/)
