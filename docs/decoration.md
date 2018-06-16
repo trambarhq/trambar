@@ -74,13 +74,17 @@ foobar.js
 [icon]: foobar.png
 ```
 
-When a filename is provided, it's assumed to be an image file in the .trambar folder. When a fully-qualified URL is given, the image would be pulled from the remote location instead. For this to work, the server when the image resides must allow CORS access.
+When a filename is provided, it's assumed to be an image file in the .trambar folder. When a fully-qualified URL is given, the image would be pulled from the remote location instead.
 
 Trambar also accepts special Font-Awesome (v.4.7) URLs:
 
 `fa://<class name>/<background color>/<foreground color>`
 
 ## Multilingual descriptions
+
+You can provide descriptions in multiple languages. Each description should
+be preceded by a line beginning with `# ` followed by a two-letter
+[ISO language code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes):
 
 ```markdown
 # en
@@ -98,3 +102,5 @@ foo_*.js
 bar_*.js
 ​```​
 ```
+
+## Previewing decoration
