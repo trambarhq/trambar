@@ -109,6 +109,10 @@ asynchronous half retrieves the necessary data then hands that data to its
 synchronous half. A relatively simple example is *NotificationList*. It
 accepts a list of notification objects and displays them:
 
+![Notification list](img/client-notification-list.png)
+
+![Notification list: React inspector](img/client-notification-list-react.png)
+
 A notification object does not have all the necessary information. It lacks,
 for instance, the name of the user who triggered the notification. It only has
 the user ID. The user record must be retrieved so his name and profile picture
