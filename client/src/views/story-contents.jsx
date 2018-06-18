@@ -707,6 +707,7 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             resources,
+            width: Math.min(512, screen.width),
         };
         return <MediaView {...props} />
     },

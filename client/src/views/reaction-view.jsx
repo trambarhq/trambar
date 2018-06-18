@@ -392,6 +392,7 @@ module.exports = React.createClass({
             locale: this.props.locale,
             theme: this.props.theme,
             resources,
+            width: (this.props.theme.mode === 'signle-col') ? 220 : 300
         };
         return <div className="media"><MediaView {...props} /></div>;
     },

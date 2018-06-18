@@ -28,6 +28,7 @@ module.exports = React.createClass({
         resources: PropTypes.arrayOf(PropTypes.object).isRequired,
         locale: PropTypes.instanceOf(Locale).isRequired,
         theme: PropTypes.instanceOf(Theme).isRequired,
+        width: PropTypes.number.isRequired,
     },
 
     /**
@@ -308,7 +309,13 @@ module.exports = React.createClass({
      * @return {[type]}
      */
     renderImageElement: function(res) {
-        return <ResourceView resource={res} theme={this.props.theme} width={512} height={512} />;
+        var props = {
+            resource: res,
+            theme: this.props.theme,
+            width: this.props.width,
+            height: this.props.width,
+        };
+        return <ResourceView {...props} />;
     },
 
     /**

@@ -705,6 +705,7 @@ module.exports = React.createClass({
     renderMediaPreview: function() {
         var editorProps = {
             allowEmbedding: true,
+            allowShifting: true,
             resources: _.get(this.state.draft, 'details.resources'),
             resourceIndex: this.state.selectedResourceIndex,
             locale: this.props.locale,

@@ -31,7 +31,7 @@
 
             .comment {
                 white-space: pre-line;
-                
+
                 &.markdown {
                     IMG, CANVAS {
                         height: 1.5em;
@@ -63,8 +63,12 @@
         }
 
         .media {
-            padding: 0.5em 1em 0.5em 1em;
+            padding: 0em 1em 0.25em 1em;
             max-width: 300px;
+
+            .single-col & {
+                max-width: 220px;
+            }
         }
 
         audio {

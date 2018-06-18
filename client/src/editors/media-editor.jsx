@@ -22,6 +22,7 @@ module.exports = React.createClass({
     mixins: [ UpdateCheck ],
     propTypes: {
         allowEmbedding: PropTypes.bool,
+        allowShifting: PropTypes.bool,
         resources: PropTypes.arrayOf(PropTypes.object),
         resourceIndex: PropTypes.number,
 
@@ -115,7 +116,7 @@ module.exports = React.createClass({
         var shiftProps = {
             label: t('media-editor-shift'),
             icon: 'chevron-left',
-            hidden: !(count > 1),
+            hidden: !this.props.allowShifting || !(count > 1),
             disabled: !(index > 0),
             onClick: this.handleShiftClick,
         };

@@ -238,6 +238,7 @@ module.exports = React.createClass({
         var t = this.props.locale.translate;
         var props = {
             ref: this.components.setters.mediaImporter,
+            allowShifting: (this.props.theme.mode !== 'single-col'),
             resources: _.get(this.state.draft, 'details.resources'),
             resourceIndex: this.state.selectedResourceIndex,
             locale: this.props.locale,
