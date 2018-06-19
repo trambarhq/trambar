@@ -230,6 +230,7 @@ module.exports = React.createClass({
     handleSchemaChange: function(evt) {
         var schema = evt.target.value;
         schema = _.replace(schema, /[^\w\-]/g, '');
+        schema = _.toLower(schema);
         this.setState({ schema });
     },
 });
