@@ -35,9 +35,9 @@ module.exports = React.createClass({
      */
     getInitialState: function() {
         return {
-            address: 'http://localhost',
+            address: '',
             code: '',
-            schema: 'test',
+            schema: '',
         };
     },
 
