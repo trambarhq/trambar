@@ -1,9 +1,11 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Crypto = require('crypto')
 var Database = require('database');
 var TaskLog = require('task-log');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 var Server = require('accessors/server');
+var HTTPError = require('errors/http-error');
 
 var Transport = require('gitlab-adapter/transport');
 var RepoAssociation = require('gitlab-adapter/repo-association');
@@ -17,6 +19,7 @@ module.exports = {
     removeServerHooks,
     removeSystemHook,
     removeProjectHook,
+    verifyHookRequest,
 };
 
 /**
@@ -143,25 +146,12 @@ function installSystemHook(host, server) {
     return fetchSystemHooks(server).then((glHooks) => {
         var url = getSystemHookEndpoint(host, server);
         var hookProps = getSystemHookProps(url);
-        var installed = false;
         _.each(glHooks, (glHook) => {
             if (glHook.url === url) {
-                var remove = true;
-                if (!installed) {
-                    if (_.isMatch(glHook, hookProps)) {
-                        installed = true;
-                        remove = false;
-                    }
-                }
-                if (remove) {
-                    console.log(`Removing existing hook: ${installed.url}`);
-                    destroySystemHook(server, glHook);
-                }
+                console.log(`Removing existing hook: ${glHook.url}`);
+                destroySystemHook(server, glHook);
             }
         });
-        if (installed) {
-            return null;
-        }
         return createSystemHook(server, hookProps);
     });
 }
@@ -184,27 +174,15 @@ function installProjectHook(host, server, repo, project) {
     console.log(`Installing web-hook on repo for project: ${repo.name} -> ${project.name}`);
     var repoLink = ExternalDataUtils.findLink(repo, server);
     return fetchProjectHooks(server, repoLink.project.id).then((glHooks) => {
+        // remove existing hooks
         var url = getProjectHookEndpoint(host, server, repo, project);
         var hookProps = getProjectHookProps(url);
-        var installed = false;
         _.each(glHooks, (glHook) => {
             if (glHook.url === url) {
-                var remove = true;
-                if (!installed) {
-                    if (_.isMatch(glHook, hookProps)) {
-                        installed = true;
-                        remove = false;
-                    }
-                }
-                if (remove) {
-                    console.log(`Removing existing hook: ${installed.url}`);
-                    destroyProjectHook(server, link.project.id, glHook);
-                }
+                console.log(`Removing existing hook: ${glHook.url}`);
+                destroyProjectHook(server, link.project.id, glHook);
             }
         });
-        if (installed) {
-            return null;
-        }
         return createProjectHook(server, repoLink.project.id, hookProps);
     });
 }
@@ -369,6 +347,7 @@ function getProjectHookProps(url) {
         pipeline_events: true,
         wiki_page_events: true,
         enable_ssl_verification: false,
+        token: getSecretToken(),
     };
 }
 
@@ -406,3 +385,32 @@ function hasAccessToken(server) {
     var oauthBaseURL = _.get(server, 'settings.oauth.base_url');
     return (accessToken && oauthBaseURL);
 }
+
+/**
+ * Verify that a request has the secret token used to ensure a webhook
+ * request is really comming from GitLab
+ *
+ * @param  {HTTPRequest} req
+ */
+function verifyHookRequest(req) {
+    var tokenReceived = req.headers['x-gitlab-token'];
+    var tokenRequired = getSecretToken();
+    if (tokenReceived !== tokenRequired) {
+        throw new HTTPError(403);
+    }
+}
+
+/**
+ * Return secret token used to verify requests from GitLab
+ *
+ * @return {String}
+ */
+function getSecretToken() {
+    if (!secretToken) {
+        var buffer = Crypto.randomBytes(16);
+        secretToken = buffer.toString('hex');
+    }
+    return secretToken;
+}
+
+var secretToken;

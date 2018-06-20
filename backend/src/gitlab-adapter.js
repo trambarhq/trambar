@@ -537,6 +537,8 @@ function handleSystemHookCallback(req, res) {
     var db = database;
     var serverId = parseInt(req.params.serverId);
     return Server.findOne(db, 'global', { id: serverId, deleted: false }, '*').then((server) => {
+        HookManager.verifyHookRequest(req);
+
         switch (glHookEvent.event_name) {
             case 'project_create':
             case 'project_destroy':
@@ -576,6 +578,8 @@ function handleProjectHookCallback(req, res) {
         project_id: parseInt(req.params.projectId),
     };
     return RepoAssociation.findOne(db, criteria).then((a) => {
+        HookManager.verifyHookRequest(req);
+
         var { server, repo, project } = a;
         return waitForExports().then(() => {
             return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
