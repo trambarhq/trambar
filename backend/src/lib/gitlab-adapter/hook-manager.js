@@ -325,6 +325,7 @@ function getSystemHookProps(url) {
         tag_push_events: false,
         merge_requests_events: false,
         enable_ssl_verification: false,
+        token: getSecretToken(),
     };
 }
 
