@@ -129,8 +129,9 @@ You might also need to increase the amount of memory available to the Docker VM.
 ## Setting up server
 
 1. Open a web browser and navigate to the URL of the Trambar Administrative
-   Console: `https://<domain-name>/admin/`. Initial loading of the page could
-   take five to ten seconds as nothing is yet cached.
+   Console: `https://<domain-name>/admin/`. Be sure to include the trailing
+   slash. Initial loading of the page could take five to ten seconds as
+   nothing is yet cached.
 
 2. In the sign-in page, enter *root* as the user name and the password you had
    chosen earlier. Click the **Sign in** button.
@@ -207,3 +208,41 @@ acquired*. You should also see entries in the activity log about repositories
 and users imported into the system.
 
 ## Creating first project
+
+1. Click **Projects** in the left navigation pane.
+
+2. Click the **Add new project** button.
+
+3. Enter information name, description, and other information about the project.
+   Select an image as its emblem. Click the **Save project** button when you're
+   done.
+
+4. Click **Repositories** in the left navigation pane.
+
+5. Click the **Edit repository list** button.
+
+6. All repositories imported from GitLab will appear. Click on the ones you wish
+   to associate with the project to select them. Click the **Save repository
+   list** button when you're done.
+
+7. Trambar will begin to import past activities from the chosen repos. The
+   process could take a long time if a repository has a long history. You can
+   monitor its progress in the project summary page. The activity bar chart will
+   update in real time as stories as created.
+
+   You can also monitor import progress from the server summary page.
+   Simply click the status bar at the bottom of the page. The activity log will
+   show what's happening in real time. Click on an entry to expand it.
+
+   Once everything is imported, the status bar will retract.
+
+8. Open a new browser tab and navigate to the URL of the Web Client:
+   `https://<domain-name>`. Click the **GitLab** button.
+
+9. A pop-up window will appear. Sign into GitLab if you have not already done
+   so. Then click the **Authorize** button. If do not see an authorization
+   prompt, close the window and try again.
+
+10. The pop-up window should close automatically once authorization is granted.
+    In the Web Client, you should see the project you have just created. Click
+    on it to enter the project.
