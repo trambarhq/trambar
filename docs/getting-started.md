@@ -213,36 +213,56 @@ and users imported into the system.
 
 2. Click the **Add new project** button.
 
-3. Enter information name, description, and other information about the project.
-   Select an image as its emblem. Click the **Save project** button when you're
-   done.
+   ![Project lists](img/admin-project-list-add.png)
+
+3. Enter project name and description. Select an image as its emblem. Choose
+   whether users can request to join the project and whether non-members can
+   view its contents. Click the **Save project** button when you're done.
+
+   ![Project form](img/admin-project-add.png)
 
 4. Click **Repositories** in the left navigation pane.
 
+   ![Project summary](img/admin-project-summary-repo.png)
+
 5. Click the **Edit repository list** button.
+
+   ![Repository list](img/admin-repo-list-empty.png)
 
 6. All repositories imported from GitLab will appear. Click on the ones you wish
    to associate with the project to select them. Click the **Save repository
    list** button when you're done.
+
+   ![Repository list](img/admin-repo-list-select.png)
 
 7. Trambar will begin to import past activities from the chosen repos. The
    process could take a long time if a repository has a long history. You can
    monitor its progress in the project summary page. The activity bar chart will
    update in real time as stories as created.
 
+   ![Activity chart](img/admin-project-activity-chart.png)
+
    You can also monitor import progress from the server summary page.
    Simply click the status bar at the bottom of the page. The activity log will
    show what's happening in real time. Click on an entry to expand it.
+
+   ![Activity log](img/admin-server-activity-log.png)
 
    Once everything is imported, the status bar will retract.
 
 8. Open a new browser tab and navigate to the URL of the Web Client:
    `https://<domain-name>`. Click the **GitLab** button.
 
+   ![Start page](img/client-start-oauth.png)
+
 9. A pop-up window will appear. Sign into GitLab if you have not already done
-   so. Then click the **Authorize** button. If do not see an authorization
+   so. Then click the **Authorize** button. If you do not see an authorization
    prompt, close the window and try again.
+
+   ![GitLab OAuth window](img/gitlab-oauth.png)
 
 10. The pop-up window should close automatically once authorization is granted.
     In the Web Client, you should see the project you have just created. Click
     on it to enter the project.
+
+    ![Start page](img/client-start-project-selection.png)
