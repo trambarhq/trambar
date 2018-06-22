@@ -63,9 +63,11 @@ the News page. If you have scrolled down, you can return to the top by clicking
 the **News** button.
 
 * [Editor Interface](#editor-interface)
+* [Auto saving](#auto-saving)
 * [Markdown](#markdown)
 * [Task list and survey](#task-list-and-survey)
 * [Tagging](#tagging)
+* [Emojis](#emojis)
 * [Attachments](#attachments)
 * [Embedded media](#embedded-media)
 * [Coauthors](#coauthors)
@@ -89,6 +91,13 @@ On a mobile device (or if you've resized a browser window to a narrow strip),
 the two remaining panels are stacked on top of each other:
 
 ![Story editor - 1 column](img/client-story-editor-col1.png)
+
+#### Auto-saving
+
+Contents entered into the story editor are automatically saved to the remote
+server. This allows you to start a post on a mobile phone (perhaps making use
+of not-so-perfect voice recognition) and finish editing it on a computer once
+you've returned to your desk.
 
 #### Markdown
 
@@ -114,9 +123,43 @@ initiation of list creation on a touch device.
 
 #### Tagging
 
+#### Emojis
+
+Trambar supports the displaying of emojis on desktop web-browsers. Currently
+there's no mechanism for inputing them, however.
+
+![Story editor - emojis](img/client-story-editor-emojis.png)
+
 #### Attachments
 
 #### Embedded media
+
+Media attached to a story can be embedded into Markdown text. The tag
+`![image-1]` or `![picture-1]` refers to the first image attached. `![video-2]`
+meanwhile refers to the second video attached. A tiny thumbnail appears in
+place of the tag:
+
+![Story editor - embedded images](img/client-story-editor-markdown-images.png)
+
+When the thumbnail is clicked, a pop-up windows appears showing the full image
+(or video). Audio can also be embedded.
+
+Task lists and surveys can use Markdown so media can be embedded into them as
+well. Suppose you want your team to choose between four images. You would type
+in the following:
+
+```
+Which picture do you like best:
+
+* [ ] ![image-1]
+* [ ] ![image-2]
+* [ ] ![image-3]
+* [ ] ![image-4]
+```
+
+The result would look like this:
+
+![Story editor - embedded images](img/client-story-editor-survey-images.png)
 
 #### Coauthors
 
