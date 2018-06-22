@@ -17,35 +17,108 @@ Trambar User Guide
 
 ## News
 
-* [Story view](#story-view)
+In the **News** page, you'll find the currently selected project's news feed. Up
+to 100 stories are shown.
+
+![News page](img/client-news-page.png)
+
+* [Story selection](#story-selection)
 * [Story editor](#story-editor)
+* [Story view](#story-view)
 * [Story options](#story-options)
 * [Story types](#story-types)
 * [Reaction types](#reaction-types)
-* [Story selection](#story-selection)
 
-### Story view
+### Story selection
+
+The news feed is individualized. If you visit the site frequently, you'll end up
+seeing every story. If you visit the site only on occasions and the number of
+unread stories exceeds 100, you would only see the top 100. Stories are ranked
+using on a set of heuristic rules:
+
+* Certain types of stories (merge, wiki, issue, survey) have high base scores
+* Stories receive points for each like, comment, and vote
+* Recent stories are given an extra boost
+* A "diversity bonus" is given to stories by users authoring only a few
+* Stories by users with a certain role can have a higher score
+
+Suppose you on a team developing a software for an external client. You've
+invited the client representative to your trambar so she can see the project is
+moving forward. At the end of each week, she fires up Trambar on her phone and
+spends a few minutes flipping through the feed. She'll see what're basically
+the week's highlights. The lead programmer, on the other hand, keeps Trambar
+open in a second monitor. When something occurs, he sees it immediately. The
+scoring system describe above does not come into play at all.
+
+In this scenario, the client representative would have a guest account. She
+would not see stories meant only for internal use. The lead programmer would
+likely have a moderator account, with the power to hide other users' stories
+from guests. He might choose to suppress a post that triggered a long discussion
+over coding techniques, for instance.
 
 ### Story editor
 
-* [Tagging](#tagging)
-* [Coauthors](#coauthors)
-* [Attachments](#attachments)
-* [Task list and survey](#task-list-and-survey)
+Project members are allowed to post stories. The story editor sits at the top of
+the News page. If you have scrolled down, you can return to the top by clicking
+the **News** button.
+
+* [Editor Interface](#editor-interface)
 * [Markdown](#markdown)
-  * [Embedded media](#embedded-media)
+* [Task list and survey](#task-list-and-survey)
+* [Tagging](#tagging)
+* [Attachments](#attachments)
+* [Embedded media](#embedded-media)
+* [Coauthors](#coauthors)
 
-#### Tagging
+#### Editor interface
 
-#### Coauthors
+The story editor adjust its UI to fit the space available. On a wide screen,
+its three parts appear side-by-side:
 
-#### Attachments
+![Story editor - 3 columns](img/client-story-editor-col3.png)
 
-#### Task list and survey
+On the left is the text editor. In the center is the text-preview/media pane.
+On the right are story options that you can toggle.
+
+When the screen is a bit more narrow, the stories options are relocated to
+pop-up menus:
+
+![Story editor - 2 columns](img/client-story-editor-col2.png)
+
+On a mobile device (or if you've resized a browser window to a narrow strip),
+the two remaining panels are stacked on top of each other:
+
+![Story editor - 1 column](img/client-story-editor-col1.png)
 
 #### Markdown
 
-##### Embedded media
+The text editor accepts either plain text or [Markdown](https://guides.github.com/features/mastering-markdown/).
+When you employ Markdown formatting, Trambar will automatically switch to
+Markdown mode and activate the text preview pane:
+
+![Story editor - Markdown](img/client-story-editor-markdown.png)
+
+#### Task list and survey
+
+The editor also permits the creation of task lists and surveys:
+
+![Story editor - task list](img/client-story-editor-task-list.png)
+
+When Trambar sees a list, it assumes you want to create a task list. If you
+want to create a survey instead, you would need to click the Survey button:
+
+![Story editor - survey](img/client-story-editor-survey.png)
+
+The sequence `*[]` is automatically expanded to `* [ ]`. This eases the
+initiation of list creation on a touch device.
+
+#### Tagging
+
+#### Attachments
+
+#### Embedded media
+
+#### Coauthors
 
 ### Story options
 
