@@ -176,7 +176,7 @@ module.exports = React.createClass({
                 containerProps.style = {
                     paddingTop: (heightToWidthRatio * 100) + '%'
                 };
-                var mosaic = this.props.resource.mosaic;
+                var mosaic = _.get(this.props.resource, 'mosaic');
                 if (this.props.clip && _.size(mosaic) === 16) {
                     var scanlines = _.chunk(mosaic, 4);
                     var gradients  = _.map(scanlines, (pixels) => {
@@ -191,9 +191,9 @@ module.exports = React.createClass({
                 }
             }
             return (
-                <div {...containerProps}>
+                <span {...containerProps}>
                     <img {...props} />
-                </div>
+                </span>
             );
         }
     },
