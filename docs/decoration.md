@@ -104,3 +104,6 @@ bar_*.js
 ```
 
 ## Previewing decoration
+
+Use [Trambar-Deco](https://github.com/chung-leong/trambar-deco) to preview
+decoration files as you work on them.
