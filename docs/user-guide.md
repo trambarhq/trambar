@@ -123,6 +123,10 @@ initiation of list creation on a touch device.
 
 #### Tagging
 
+Hash tags can be added to a story to make it easily to find in a search.
+Trambar also supports @ tags, used to indicate that someone is mentioned in a
+post. You can find a user's username in the [People](#people).
+
 #### Emojis
 
 Trambar supports the displaying of emojis on desktop web-browsers. Currently
@@ -131,6 +135,55 @@ there's no mechanism for inputing them, however.
 ![Story editor - emojis](img/client-story-editor-emojis.png)
 
 #### Attachments
+
+You can attach images, video clips, and audio clips to your posts. These can be
+pre-recorded or captured live from your phone or computer's camera.
+
+* [Capturing an image](#capturing-an-image)
+* [Capturing a video or audio](#capturing-a-video-audio)
+* [Adding screenshots](#adding-screenshots)
+
+##### Capturing an image
+
+
+Click the **Photo** button in the media pane to activate the camera:
+
+![Photo button](img/client-story-editor-media-photo.png)
+
+Doing so the first time, you'll be ask to grant permission to use the device.
+The Trambar mobile app utilizes your phone's camera app to take the picture.
+That gives you much more control compared with the web client.
+
+##### Capturing a video or audio
+
+Click either the **Video** or **Audio** button. Again, you'll be ask to grant
+permission to use the device.
+
+![Video button](img/client-story-editor-media-video.png)
+
+With the mobile app, video clips are limited to 5 minutes, while audio clips are
+clipped to 15 minutes. If you wish to make longer recordings, you should
+activate the video/audio recorder by clicking the **File** button instead.
+
+With the web client, video and audio are streamed to the server. They can be as
+long as you like. Hour-long videos have been made in tests without difficulties.
+Such videos take up considerable space, however, up to a gigabyte each. If you
+plan to making long recordings regularly (recording all your meetings, for
+instance), you would need to give your server a generous amount of storage.
+
+Video and audio recording are not available in Edge and Safari.
+
+##### Adding screenshots
+
+On Windows, you can capture the contents of the current window by pressing
+Alt-PrtSrn. The image will be placed in the clipboard. You can then paste it
+into the text editor. On Linux the procedure is similar.
+
+On OSX, pressing Shift-Cmd-4 will cause the mouse pointer become a
+cross-hair. You can then select a region of the screen you wish to capture. Or
+you can press Space at this point, changing the mouse pointer to a camera. You
+can then capture the contents of a window. Afterward, click the **File** button
+then select the image file sitting on your desktop.
 
 #### Embedded media
 
@@ -162,6 +215,8 @@ The result would look like this:
 ![Story editor - embedded images](img/client-story-editor-survey-images.png)
 
 #### Coauthors
+
+Trambar allows multiple people to edit the same story at the same time.
 
 ### Story options
 
@@ -234,26 +289,41 @@ The result would look like this:
 * [Task completion](#task-completion)
 * [Git reactions](#git-reactions)
   * [Note](#note)
-  * [Issue assigment](#issue-assigment)
+  * [Issue assignment](#issue-assignment)
   * [Issue tracking](#issue-tracking)
 
 #### Like
+
+A **like** is the simplest reaction to a story.
 
 #### Comment
 
 #### Vote
 
+A **vote** reaction indicates that someone has answered a survey.
+
 #### Task completion
+
+A **task completion** reaction indicates that a task has been completed. Only
+the author(s) of a task list can trigger it.
 
 #### Git reactions
 
 ##### Note
 
-##### Issue assigment
+A **note** reaction indicates that someone has written a comment in GitLab
+concerning an issue, a merge request, or a push. Most frequently, the subject is
+an issue.
+
+##### Issue assignment
+
+An **issue assignment** reaction indicates that someone has been assigned to
+an issue in the GitLab issue tracker.
 
 ##### Issue tracking
 
-### Story selection
+An **issue tracking** reaction indicates that someone, most likely a programmer,
+has imported a post into GitLab's issue tracker.
 
 ## Notifications
 
