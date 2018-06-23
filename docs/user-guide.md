@@ -1,8 +1,8 @@
 Trambar User Guide
 ------------------
 
-* [Start - web browser](#start-page--web-browser)
-* [Start - mobile app](#start-page--mobile-app)
+* [Start - web browser](#start--web-browser)
+* [Start - mobile app](#start--mobile-app)
 * [News](#news)
 * [Notifications](#notifications)
 * [Bookmarks](#bookmarks)
