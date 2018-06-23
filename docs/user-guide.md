@@ -1,15 +1,15 @@
 Trambar User Guide
 ------------------
 
-* [Start page - web browser](#start-page-web-browser)
-* [Start page - mobile app](#start-page-mobile-app)
+* [Start - web browser](#start-page--web-browser)
+* [Start - mobile app](#start-page--mobile-app)
 * [News](#news)
 * [Notifications](#notifications)
 * [Bookmarks](#bookmarks)
 * [People](#people)
 * [Settings](#settings)
 
-## Start screen - web browser
+## Start - web browser
 
 The **Start** page is the first page that you'll see when you visit a Trambar
 website.
@@ -49,7 +49,7 @@ the project, you might have the option to request membership. You might be able
 to browse the project without gaining membership first, depending on how the
 project was set up by the administrator.
 
-### Start screen - mobile app
+### Start - mobile app
 
 In the mobile app, the **Start** page will appear if you have not yet connected
 the app to a server:
