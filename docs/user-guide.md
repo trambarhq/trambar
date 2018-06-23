@@ -12,10 +12,14 @@ Trambar User Guide
 ## Start screen - web browser
 
 The **Start** page is the first page that you'll see when you visit a Trambar
-website. On the left, you'll see a description of the site. On the right,
-you'll see a list of OAuth authentication provider. GitLab will likely be among
-the choices. If you have an account on the server, that's the button you
-should click. If not, then you will need to use one of the other options.
+website.
+
+![Start page](img/client-start-oauth-multi.png)
+
+On the left is a description of the site. On the right is a list of OAuth
+authentication provider. GitLab will likely be among the choices. If you have an
+account on the server, that's the button you should click. If not, then you will
+need to use one of the other options.
 
 A pop-up window will appear. If you're not signed already, you'll be prompted
 to do so. Once that's done, you might be greeted by a screen asking you to
@@ -36,8 +40,6 @@ e-mail address).
 Social networks are used for authentication purpose only. Trambar will not
 retrieve your friend list or post things to your wall.
 
-![Start page](img/client-start-oauth-multi.png)
-
 Once you have signed in, you will see a list of projects:
 
 ![Start page](img/client-start-projects.png)
@@ -49,12 +51,12 @@ project was set up by the administrator.
 
 ### Start screen - mobile app
 
-In the mobile app, the *Start* page will appear if you have not yet connected
+In the mobile app, the **Start** page will appear if you have not yet connected
 the app to a server:
 
 ![Start page](img/client-start-mobile.png)
 
-To access your account, first sign into the server using a web browser. Select a
+To make that connection, first sign into the server using a web browser. Select a
 project then go to **Settings**. In the Projects panel, click **mobile set up**.
 A QR code will appear on-screen:
 
