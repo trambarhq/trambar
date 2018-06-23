@@ -8,10 +8,15 @@ Trambar User Guide
 * [Notifications](#notifications)
 * [Bookmarks](#bookmarks)
 * [People](#people)
+* [Settings](#settings)
 
 ## Start screen
 
 ### Web browser
+
+![Start page](img/client-start-oauth-multi.png)
+
+![Start page](img/client-start-projects.png)
 
 ### Mobile app
 
@@ -287,7 +292,7 @@ Trambar allows multiple people to edit the same story at the same time.
 * [Comment](#comment)
 * [Vote](#vote)
 * [Task completion](#task-completion)
-* [Git reactions](#git-reactions)
+* Git reactions
   * [Note](#note)
   * [Issue assignment](#issue-assignment)
   * [Issue tracking](#issue-tracking)
@@ -307,8 +312,6 @@ A **vote** reaction indicates that someone has answered a survey.
 A **task completion** reaction indicates that a task has been completed. Only
 the author(s) of a task list can trigger it.
 
-#### Git reactions
-
 ##### Note
 
 A **note** reaction indicates that someone has written a comment in GitLab
@@ -327,9 +330,15 @@ has imported a post into GitLab's issue tracker.
 
 ## Notifications
 
+![Notifications](img/client-notifications.png)
+
 ## Bookmarks
 
+![Bookmarks](img/client-bookmarks.png)
+
 ## People
+
+![People page](img/client-people.png)
 
 * [User view](#user-view)
 * [Recent activities](#recent-activities)
@@ -341,6 +350,12 @@ has imported a post into GitLab's issue tracker.
   * [Contact by Skype](#contact-by-skype)
 
 ### User view
+
+![User view - column 3](img/client-user-view-col3.png)
+
+![User view - column 2](img/client-user-view-col2.png)
+
+![User view - column 1](img/client-user-view-col1.png)
 
 #### Recent activities
 
@@ -355,3 +370,7 @@ has imported a post into GitLab's issue tracker.
 ##### Contact by iChat
 
 ##### Contact by Skype
+
+## Settings
+
+![Settings page](img/client-settings.png)
