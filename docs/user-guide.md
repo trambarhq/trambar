@@ -1,24 +1,68 @@
 Trambar User Guide
 ------------------
 
-* [Start screen](#start-screen)
-  * [Web browser](#web-browser)
-  * [Mobile app](#mobile-app)
+* [Start page - web browser](#start-page-web-browser)
+* [Start page - mobile app](#start-page-mobile-app)
 * [News](#news)
 * [Notifications](#notifications)
 * [Bookmarks](#bookmarks)
 * [People](#people)
 * [Settings](#settings)
 
-## Start screen
+## Start screen - web browser
 
-### Web browser
+The **Start** page is the first page that you'll see when you visit a Trambar
+website. On the left, you'll see a description of the site. On the right,
+you'll see a list of OAuth authentication provider. GitLab will likely be among
+the choices. If you have an account on the server, that's the button you
+should click. If not, then you will need to use one of the other options.
+
+A pop-up window will appear. If you're not signed already, you'll be prompted
+to do so. Once that's done, you might be greeted by a screen asking you to
+authorize the app:
+
+![OAuth popup](img/gitlab-oauth.png)
+
+Or the pop-up window might just quickly closes if authorization was granted
+earlier.
+
+It's possible to associate your Trambar account with multiple social-network
+accounts as long as the same e-mail address was used to create those accounts.
+You might do this if your GitLab server is protected by a firewall and you
+happen to be outside the permitted IP range. (You shouldn't try this with
+Facebook, since most likely your privacy settings preclude the sharing of your
+e-mail address).
+
+Social networks are used for authentication purpose only. Trambar will not
+retrieve your friend list or post things to your wall.
 
 ![Start page](img/client-start-oauth-multi.png)
 
+Once you have signed in, you will see a list of projects:
+
 ![Start page](img/client-start-projects.png)
 
-### Mobile app
+Click a project button to see the full description. If you're not a member of
+the project, you might have the option to request membership. You might be able
+to browse the project without gaining membership first, depending on how the
+project was set up by the administrator.
+
+### Start screen - mobile app
+
+In the mobile app, the *Start* page will appear if you have not yet connected
+the app to a server:
+
+![Start page](img/client-start-mobile.png)
+
+To access your account, first sign into the server using a web browser. Select a
+project then go to **Settings**. In the Projects panel, click **mobile set up**.
+A QR code will appear on-screen:
+
+![Settings page](img/client-settings-mobile-setup.png)
+
+On the mobile device, click the **Scan QR code** button and scan in the code.
+A green message will appear near the bottom of the screen when the code is
+correctly captured. A welcome message should quickly follow.
 
 ## News
 
