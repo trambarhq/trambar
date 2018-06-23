@@ -376,13 +376,29 @@ has imported a post into GitLab's issue tracker.
 
 ## Notifications
 
+In the **Notifications** page, you'll find the notification messages, typically
+generated when other people react to your stories:
+
 ![Notifications](img/client-notifications.png)
+
+By default, you're immediately alerted upon receiving a notification. You can
+alter this behavior in the [Settings](#settings) to reduce the amount of
+distraction.
+
+Unread notifications will be marked as read after a few seconds.
 
 ## Bookmarks
 
+In the **Bookmarks** page, you'll see stories you have bookmarked, as well as
+stories other project members want you to pay attention to:
+
 ![Bookmarks](img/client-bookmarks.png)
 
+To move a bookmarked story, simply uncheck the **Keep bookmark** option.
+
 ## People
+
+In the **People** page, you'll see the activities of all project members:
 
 ![People page](img/client-people.png)
 
