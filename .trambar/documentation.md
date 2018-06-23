@@ -4,6 +4,7 @@ Files that describe the application.
 
 ```match
 LICENSE
+README.md
 docs/*.md
 ```
 
