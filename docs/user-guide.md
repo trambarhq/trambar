@@ -435,4 +435,108 @@ In the **People** page, you'll see the activities of all project members:
 
 ## Settings
 
+In the **Settings** page, you'll find various panels for adjusting application
+parameters and entering personal information:
+
 ![Settings page](img/client-settings.png)
+
+* [Projects](#project-panel)
+* [Devices](#devices-panel)
+* [Notification](#notification)
+* [Web alert](#web-alert)
+* [Mobile alert](#mobile)
+* [User information](#user-information)
+* [Profile image](#profile-image)
+* [Social networks](#social-networks)
+* [Language](#language)
+
+### Projects
+
+The **Projects** panel lets you quickly switch between projects:
+
+![Projects panel](img/client-settings-project.png)
+
+Click the **mobile set up** button when you wish to access the project using
+the Trambar mobile app. A quickly scan of a QR code will tether the phone or
+tablet to your account.
+
+Click the **sign out** button when you want to end the user session. All data
+from the server will be removed from your computer or mobile device. If you
+only wish to remove a single project, click the **Manage list** button.
+
+Click the **Add** button if you want to add another project to the list.
+
+The Trambar mobile app can handle projects on multiple servers. When you jump
+from one server to another, you will notice changes in the other panels.
+
+### Devices
+
+The **Devices** panel lists the mobile devices that are tethered to your
+account:
+
+![Devices panel](img/client-settings-devices.png)
+
+Click **revoke** if you wish to terminate access to a device, with the most
+likely reason being the loss of that device.
+
+### Notification
+
+The **Notification** panel lets you decide for which events you'll be notified:
+
+![Notification panel](img/client-settings-notification.png)
+
+Notifications are shown in the [Notifications](#notifications) page. By default,
+an alert is immediately sent to your web browser or phone. You can override this
+behavior using the two panels below.
+
+### Web alert
+
+The **Web alert** panel lets you disable browser alert for certain events:
+
+![Web alert panel](img/client-settings-web-alert.png)
+
+### Mobile alert
+
+The **Web alert** panel lets you disable mobile alert for certain events:
+
+![Mobile alert panel](img/client-settings-mobile-alert.png)
+
+By default, Trambar will not send alerts to your phone when you're accessing
+the system through a web browser. Check **When a web session is active** if you
+wish to always receive alerts on your phone.
+
+### User information
+
+The **User information** panels lets you update your personal details:
+
+![User information panel](img/client-settings-user-information.png)
+
+Gender is used for grammatical purpose only.
+
+### Profile image
+
+The **Profile image** panel lets you change or adjust your profile image:
+
+![Profile image panel](img/client-settings-profile-image.png)
+
+Click the **Replace** button if you want to use a new image. You can select an
+image or take a photo using the camera.
+
+Click the **Adjust** if you only wish to adjust the position or zoom level of
+the current image.
+
+### Social networks
+
+The **Social networks** panel lets you add your contact info on social networks:
+
+![Social networks panel](img/client-settings-social-networks.png)
+
+### Language
+
+The **Language** panel is where you can set the language of the user interface:
+
+![Language panel](img/client-settings-language.png)
+
+The region determines which dialect or script variant is used. For example,
+when *United Kingdom* is selected, certain words will be spelled differently.
+The calendar will also list Monday the first day of the week instead of Sunday.
