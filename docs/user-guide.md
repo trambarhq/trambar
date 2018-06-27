@@ -280,15 +280,39 @@ Trambar allows multiple people to edit the same story at the same time.
 
 #### Bookmark story
 
+Bookmarking a story allows you to find it more easily later. Bookmarked stories
+will appear in the [Bookmarks](#bookmarks) page.
+
 #### Send bookmark to others
+
+Sending bookmarks to others user draws their attention to it.
 
 #### Add issue to tracker
 
+If your account is connected to GitLab, you can take a post and add it as an
+issue in GitLab's issue tracker:
+
+![Issue tracking](img/client-story-issue-tracker.png)
+
+The post could be written by another user. For instance, one day your client
+notices something funny in the app you're developing for him. He records the
+behavior using his phone and posts it onto the project's trambar. After
+reviewing the video, you decide that it is a bug. So you open an issue and tag
+it as such.
+
 #### Hide from guests
+
+If you do not want a story seen by guest users, use this option.
 
 #### Bump story
 
+Bumping a story makes it appear at the top again.
+
 #### Remove story
+
+Removing a story means it'll disappear for all users. Regular users and guests
+can only remove their own stories. Administrator and moderator can remove other
+people's stories.
 
 ### Story types
 
@@ -406,10 +430,6 @@ In the **People** page, you'll see the activities of all project members:
 * [Recent activities](#recent-activities)
 * [Activity chart](#activity-chart)
 * [Actions](#actions)
-  * [Contact by email](#contact-by-email)
-  * [Contact by phone](#contact-by-phone)
-  * [Contact by iChat](#contact-by-ichat)
-  * [Contact by Skype](#contact-by-skype)
 
 ### User view
 
@@ -424,6 +444,11 @@ In the **People** page, you'll see the activities of all project members:
 #### Activity chart
 
 #### Actions
+
+* [Contact by email](#contact-by-email)
+* [Contact by phone](#contact-by-phone)
+* [Contact by iChat](#contact-by-ichat)
+* [Contact by Skype](#contact-by-skype)
 
 ##### Contact by email
 
