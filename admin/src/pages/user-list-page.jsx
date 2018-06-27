@@ -231,7 +231,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
             return (
                 <div className="buttons">
                     <ComboButton>
-                        <option name="add" separator onClick={this.handleAddClick}>
+                        <option name="add" onClick={this.handleAddClick}>
                             {t('user-list-add')}
                         </option>
                     </ComboButton>
