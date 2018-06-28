@@ -295,10 +295,9 @@ issue in GitLab's issue tracker:
 ![Issue tracking](img/client-story-issue-tracker.png)
 
 The post could be written by another user. For instance, one day your client
-notices something funny in the app you're developing for him. He records the
-behavior using his phone and posts it onto the project's trambar. After
-reviewing the video, you decide that it is a bug. So you open an issue and tag
-it as such.
+notices something funny in the app you're developing. He records the behavior
+using his phone and posts it onto the project's trambar. After reviewing the
+video, you decide that it is a bug. So you open an issue and tag it as such.
 
 #### Hide from guests
 
@@ -319,7 +318,7 @@ people's stories.
 * [Post](#post)
 * [Task list](#task-list)
 * [Survey](#survey)
-* [Git events](#git-events)
+* Git events
   * [Push](#push)
   * [Merge](#merge)
   * [Branch](#branch)
@@ -332,29 +331,87 @@ people's stories.
 
 #### Post
 
+A **post** is a message you wish to share with others. It might contain ideas or
+observations about the project. It might be a question. It might be a video
+depicting an software defect--or your cat doing something funny.
+
 #### Task list
+
+**Task list** is self-reported mechanism letting people know what you're working
+on. It's not designed for workflow purpose. You cannot assigned a task list to
+someone else. You can, however, designate other users as coauthors of the list,
+allowing them to mark off tasks as completed.
 
 #### Survey
 
-#### Git events
+A **survey** lets you solicit opinion from other project members. It might be a
+question concerning how a feature should work. It might be a question on where
+to get lunch.
 
 ##### Push
 
+A **push** story is posted whenever someone pushes code into a git
+repository associated with the project. If [Trambar decoration](decoration.md)
+is present in the source tree, you'll see which parts of the application are
+impacted by the code changes.
+
+![Push](img/client-story-push.png)
+
+If you have GitLab access, clicking on the text will send you to a page showing
+the diff.
+
 ##### Merge
+
+A **merge** story is posted whenever someone merges code from one branch
+into another. It's basically a special kind of push. You may choose to receive
+notification when a merge to master occurs.
 
 ##### Branch
 
+A **branch** story is another special kind of push. It occurs someone pushes
+a new branch into a git repository. In a typical workflow, that usually means
+he's begun implementing a new feature or fixing a bug requiring substantial
+changes.
+
 ##### Issue
+
+An **issue** story is posted whenever someone opens a new issue in GitLab's
+issue tracker.
+
+![Issue](img/client-story-issue.png)
+
+The issue's status as well as its labels will get updated as they change
+subsequently. When the issue is closed, the story will get bumped to the top
+of the news feed.
+
+If you have GitLab access, clicking on the text will send you to the issue page.
+
+You may choose to receive notification when someone is assigned to your issues.
 
 ##### Merge request
 
+A **merge request** story is posted whenever someone creates a merge request.
+
 ##### Milestone
+
+A **milestone** story is posted whenever someone creates a milestone.
 
 ##### Membership
 
+A **membership** story indicates someone has either joined or left a GitLab
+project (i.e. gained or lost access to a repository).
+
 ##### Repository
 
+A **repository** story is posted when a git repository is created or deleted.
+Typically, you would only see it at the very beginning of a project's history.
+
 ##### Wiki
+
+A **wiki** story is posted when someone makes changes to a wiki page. Only one
+story will get generated when multiple saves occur within a 24-hour period.
+
+If you have GitLab access, clicking on the text will send you to the wiki page.
 
 ### Reaction types
 
