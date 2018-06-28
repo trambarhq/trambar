@@ -493,30 +493,58 @@ In the **People** page, you'll see the activities of all project members:
 
 ### User view
 
+The user view adjust its UI to fit the space available. On a wide screen,
+its three parts appear side-by-side:
+
 ![User view - column 3](img/client-user-view-col3.png)
 
+On the left are a user's recent activities. In the center are user statistics.
+On the right are user actions.
+
+When the screen is a bit more narrow, user actions are relocated to pop-up
+menus:
+
 ![User view - column 2](img/client-user-view-col2.png)
+
+On a mobile device (or in a narrow browser window), the two remaining panels
+are stacked on top of each other:
 
 ![User view - column 1](img/client-user-view-col1.png)
 
 #### Recent activities
 
-#### Activity chart
+The **Recent activities** panel shows five of the user's recent actions. Actions
+that took place today or yesterday will appear brighter than those further in
+the past:
+
+![Recent activities](img/client-user-view-recent-activities.png)
+
+Click on a link to navigate to the corresponding story. Click the user's name to
+see the full list starting from the top.
+
+Clicking the user's @tag will initiate a search for stories where he's
+mentioned.
+
+#### User statistics
+
+The **User statistics** panel shows the user's activities in the last 14 days.
+The default view is a bar chart. You can switch between chart types using the
+bottoms on top:
+
+![User statistics](img/client-user-view-statistics.png)
+
+When the screen is narrow, the chart is hidden initially. You have to click one
+of the chart button to show it. Click the same button second time to hide it
+once more.
+
+You can change the time range to the current month or the entire project
+lifetime using the buttons in the actions panel or the pop-up menu:
+
+![Time range](img/client-user-view-time-range-col3.png) ![Time range](img/client-user-view-time-range-col2.png)
 
 #### Actions
 
-* [Contact by email](#contact-by-email)
-* [Contact by phone](#contact-by-phone)
-* [Contact by iChat](#contact-by-ichat)
-* [Contact by Skype](#contact-by-skype)
 
-##### Contact by email
-
-##### Contact by phone
-
-##### Contact by iChat
-
-##### Contact by Skype
 
 ## Settings
 
