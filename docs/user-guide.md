@@ -8,6 +8,9 @@ Trambar User Guide
 * [Bookmarks](#bookmarks)
 * [People](#people)
 * [Settings](#settings)
+* [Calendar](#calendar)
+* [Filters](#filters)
+* [Search](#search)
 
 ## Start - web browser
 
@@ -622,3 +625,50 @@ The **Language** panel is where you can set the language of the user interface:
 The region determines which dialect or script variant is used. For example,
 when *United Kingdom* is selected, certain words will be spelled differently.
 The calendar will also list Monday the first day of the week instead of Sunday.
+
+## Calendar
+
+The **Calendar** bar lets you see what happened on a particular day. Click on a
+date to select it. If date is is grayed out, that means nothing occured on that
+date.
+
+![Calendar bar](img/client-calendar-bar.png)
+
+The [News](#news) page will show the stories published on the selected date.
+
+The [Notifications](#notifications) page will show the notifications you
+received on the selected date.
+
+The [People](#people) page will list the project members who were active on that
+day. Click on a name to see the full list of stories by that user. You can also
+select a date by clicking a bar in the activity chart.
+
+Click on the calendar icon a second time to retract the bar.
+
+## Filters
+
+The **Filters** bar lets you filter stories and users by roles.
+
+![Filters bar](img/client-filters-bar.png)
+
+Click on a role to select it. Click it again to deselect it.
+
+Click on the filter icon a second time to rectract the bar.
+
+## Search
+
+The **Search** bar lets you search for stories by keyword or by tag.
+
+![Search bar](img/client-search-bar.png)
+
+Beside (or below) the text box you will see a list of tags that were used
+recently. Click on one to search by that tag.
+
+The [People](#people) page will list the project members who have matching
+stories. Click on a name to see the full list.
+
+Search-by-tag is available when there's no Internet access. The search would be
+conducted on the local cache. On the other hand, search-by-keyword requires
+connection to the remote server.
+
+Click on the magnifying glass icon a second time to retract the bar.
