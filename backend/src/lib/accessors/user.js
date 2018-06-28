@@ -187,7 +187,20 @@ module.exports = _.create(ExternalData, {
                     if (row.id === credentials.user.id) {
                         object.settings = row.settings;
                         object.requested_project_ids = row.requested_project_ids;
+                    } else {
+                        // don't let guests see contact info
+                        if (credentials.user.type === 'guest') {
+                            var contactInfo = [
+                                'phone',
+                                'email',
+                                'skype_username',
+                                'ichat_username',
+                                'twitter_username',
+                            ];
+                            object.details = _.omit(object.details, contactInfo);
+                        }
                     }
+
                     // don't export these unless they're not their usual values
                     if (row.disabled) {
                         object.disabled = row.disabled;

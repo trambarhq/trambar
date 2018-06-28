@@ -99,7 +99,7 @@ module.exports = React.createClass({
                 label: t('action-contact-by-skype'),
                 icon: 'skype',
                 url: `skype:${details.skype_username}`,
-                hidden: !details.phone,
+                hidden: !details.skype_username,
                 onClick: this.handleLinkClick,
             };
             var ichatProps = {
