@@ -2,7 +2,7 @@
     float: right;
 
     .button {
-        color: #eeeeee;
+        color: #666666;
         touch-action: manipulation;
         padding: 4px 4px 4px 4px;
         margin: -4px -4px -4px -4px;
@@ -15,8 +15,14 @@
 
         .no-touch & {
             &:hover {
-                color: #666666;
+                color: #eeeeee;
             }
+        }
+    }
+
+    &.open {
+        .button {
+            color: #eeeeee;
         }
     }
 

@@ -65,6 +65,9 @@ module.exports = React.createClass({
         if (this.props.className) {
             className += ' ' + this.props.className;
         }
+        if (this.state.open) {
+            className += ' open';
+        }
         return (
             <span className={className}>
                 {this.renderButton()}

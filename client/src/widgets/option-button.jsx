@@ -8,26 +8,22 @@ function OptionButton(props) {
     if (props.hidden) {
         return null;
     }
-    var linkProps = {
+    var anchorProps = {
+        className: buttonClasses(props),
         id: props.id,
         href: props.url,
         target: props.target,
         onClick: !props.disabled ? props.onClick : null,
     };
-    var containerProps = {
-        className: buttonClasses(props),
-    };
     return (
-        <div {...containerProps}>
+        <a {...anchorProps}>
             <div className="icon">
-                <a {...linkProps}><i className={iconClasses(props)} /></a>
+                <i className={iconClasses(props)} />
             </div>
             <div className="label">
-                {props.beforeLabel}
-                <a {...linkProps}>{props.label}</a>
-                {props.afterLabel}
+                {props.label}
             </div>
-        </div>
+        </a>
     )
 }
 

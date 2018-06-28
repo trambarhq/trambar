@@ -4,28 +4,11 @@
     color: #666666;
     margin-bottom: 0.35em;
     touch-action: manipulation;
+    cursor: pointer;
 
     &:link, &:visited {
         text-decoration: none;
-    }
-
-    .icon {
-        display: table-cell;
-        width: 1em;
-        padding-right: 0.25em;
-    }
-
-    .label {
-        display: table-cell;
-    }
-
-    A {
-        cursor: pointer;
-
-        &:link, &:visited {
-            text-decoration: none;
-            color: #666666;
-        }
+        color: #666666;
     }
 
     &.selected {
@@ -42,14 +25,6 @@
         }
     }
 
-    .pop-up-menu & {
-        .no-touch & {
-            &:hover {
-                color: #000000;
-            }
-        }
-    }
-
     &.disabled {
         color: #666666;
         opacity: 0.25;
@@ -61,5 +36,23 @@
 
     &:last-child {
         margin-bottom: 0;
+    }
+
+    .icon {
+        display: table-cell;
+        width: 1em;
+        padding-right: 0.25em;
+    }
+
+    .label {
+        display: table-cell;
+    }
+
+    .pop-up-menu & {
+        .no-touch & {
+            &:hover {
+                color: #000000;
+            }
+        }
     }
 }

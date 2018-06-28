@@ -60,9 +60,9 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderButton: function(language) {
+        var countrySelect = this.renderCountrySelect(language);
         var buttonProps = {
-            label: language.name,
-            afterLabel: this.renderCountrySelect(language),
+            label: <span>{language.name}{countrySelect}</span>,
             selected: (language.code === this.props.locale.languageCode),
             onClick: this.handleLanguageClick,
             id: language.code,
