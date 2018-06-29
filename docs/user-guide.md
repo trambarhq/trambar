@@ -334,7 +334,7 @@ people's stories.
 
 #### Post
 
-A **post** is a message you wish to share with others. It might contain ideas or
+A **Post** is a message you wish to share with others. It might contain ideas or
 observations about the project. It might be a question. It might be a video
 depicting an software defect--or your cat doing something funny.
 
@@ -347,13 +347,13 @@ allowing them to mark off tasks as completed.
 
 #### Survey
 
-A **survey** lets you solicit opinion from other project members. It might be a
+A **Survey** lets you solicit opinion from other project members. It might be a
 question concerning how a feature should work. It might be a question on where
 to get lunch.
 
 ##### Push
 
-A **push** story is posted whenever someone pushes code into a git
+A **Push** story is posted whenever someone pushes code into a git
 repository associated with the project. If [Trambar decoration](decoration.md)
 is present in the source tree, you'll see which parts of the application are
 impacted by the code changes.
@@ -365,20 +365,20 @@ the diff.
 
 ##### Merge
 
-A **merge** story is posted whenever someone merges code from one branch
+A **Merge** story is posted whenever someone merges code from one branch
 into another. It's basically a special kind of push. You may choose to receive
 notification when a merge to master occurs.
 
 ##### Branch
 
-A **branch** story is another special kind of push. It occurs someone pushes
+A **Branch** story is another special kind of push. It occurs someone pushes
 a new branch into a git repository. In a typical workflow, that usually means
 he's begun implementing a new feature or fixing a bug requiring substantial
 changes.
 
 ##### Issue
 
-An **issue** story is posted whenever someone opens a new issue in GitLab's
+An **Issue** story is posted whenever someone opens a new issue in GitLab's
 issue tracker.
 
 ![Issue](img/client-story-issue.png)
@@ -393,25 +393,25 @@ You may choose to receive notification when someone is assigned to your issues.
 
 ##### Merge request
 
-A **merge request** story is posted whenever someone creates a merge request.
+A **Merge request** story is posted whenever someone creates a merge request.
 
 ##### Milestone
 
-A **milestone** story is posted whenever someone creates a milestone.
+A **Milestone** story is posted whenever someone creates a milestone.
 
 ##### Membership
 
-A **membership** story indicates someone has either joined or left a GitLab
+A **Membership** story indicates someone has either joined or left a GitLab
 project (i.e. gained or lost access to a repository).
 
 ##### Repository
 
-A **repository** story is posted when a git repository is created or deleted.
+A **Repository** story is posted when a git repository is created or deleted.
 Typically, you would only see it at the very beginning of a project's history.
 
 ##### Wiki
 
-A **wiki** story is posted when someone makes changes to a wiki page. Only one
+A **Wiki** story is posted when someone makes changes to a wiki page. Only one
 story will get generated when multiple saves occur within a 24-hour period.
 
 If you have GitLab access, clicking on the text will send you to the wiki page.
@@ -429,34 +429,36 @@ If you have GitLab access, clicking on the text will send you to the wiki page.
 
 #### Like
 
-A **like** is the simplest reaction to a story.
+A **Like** indicates that someone likes a story.
 
 #### Comment
 
+A **Comment** is a message posted in response to a story--or perhaps an earlier
+comment.
+
 #### Vote
 
-A **vote** reaction indicates that someone has answered a survey.
+A **Vote** reaction indicates that someone has answered a [survey](#survey).
 
 #### Task completion
 
-A **task completion** reaction indicates that a task has been completed. Only
-the author(s) of a task list can trigger it.
+A **Task completion** reaction indicates that someone has completed a task on a
+[task list](#task-list). Only the author(s) of a task list can trigger it.
 
 ##### Note
 
-A **note** reaction indicates that someone has written a comment in GitLab
-concerning an issue, a merge request, or a push. Most frequently, the subject is
-an issue.
+A **Note** reaction indicates that someone has written a comment in GitLab
+concerning an issue, a merge request, or a commit.
 
 ##### Issue assignment
 
-An **issue assignment** reaction indicates that someone has been assigned to
-an issue in the GitLab issue tracker.
+An **Issue assignment** reaction indicates that someone has been assigned to
+an [issue](#issue-assignment) in the GitLab issue tracker.
 
 ##### Issue tracking
 
-An **issue tracking** reaction indicates that someone, most likely a programmer,
-has imported a post into GitLab's issue tracker.
+An **Issue tracking** reaction indicates that someone, most likely a programmer,
+has [placed a post](#add-issue-to-tracker) into GitLab's issue tracker.
 
 ## Notifications
 
