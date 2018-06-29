@@ -234,17 +234,63 @@ adding users](#adding-existing-users) instead.
 
 ### Adding a new user
 
-![User list - add](img/admin-users-add.png)
+1. Click **Users** in the left navigation pane.
+
+   ![Navigation - Users](img/admin-settings-nav-users.png)
+
+2. Click the **Add new user** button.   
+
+   ![User list - add](img/admin-users-add.png)
+
+3. Enter the new user's personal information. Select a profile image. Choose
+   the user type and role.
+
+   ![User form](img/admin-user-form.png)
+
+4. Click the **Save user** button.
+
+   ![User form - save](img/admin-user-save.png)
 
 ### Deactivating users
+
+1. Click **Users** in the left navigation pane.
+
+   ![Navigation - Users](img/admin-settings-nav-users.png)
 
 ![User list - diable](img/admin-users-disable.png)
 
 ### Deleting a user
 
-![User summary - delete](img/admin-user-delete.png)
+1. Click **Users** in the left navigation pane.
+
+   ![Navigation - Users](img/admin-settings-nav-users.png)
+
+2. Click the name of the user you wish to delete.
+
+   ![User list](img/admin-users-choose.png)
+
+3. Click the arrow beside the gray button, then **Delete user account**.
+
+   ![User summary - delete](img/admin-user-delete.png)
 
 ### Restoring users
+
+1. Click **Users** in the left navigation pane.
+
+   ![Navigation - Users](img/admin-settings-nav-users.png)
+
+2. Click the **Edit user list** button.
+
+   ![User list - edit](img/admin-users-edit-2.png)
+
+3. The list will expand to show all users, including those who were deactivate
+   or deleted earlier. Click the name of each user you wish to restore.
+
+   ![User list - select](img/admin-users-restore-select.png)
+
+4. Click the **Save user list** button.
+
+   ![User list - save](img/admin-users-restore-save.png)
 
 ## Roles
 
