@@ -19,13 +19,13 @@ Trambar User Guide - Administrative Console
 
 ### Adding a new project
 
-![Project list - add](img/admin-project-list-add.png)
+![Project list - add](img/admin-projects-add.png)
 
 ### Archiving old projects
 
-![Project list - edit](img/admin-project-list-edit.png)
+![Project list - edit](img/admin-projects-edit.png)
 
-![Project list - archive](img/admin-project-list-archive.png)
+![Project list - archive](img/admin-projects-archive-save.png)
 
 ### Deleting a project
 
@@ -43,15 +43,15 @@ Trambar User Guide - Administrative Console
 
 ### Approving membership requests
 
-![Member list - approve](img/admin-member-list-approve.png)
+![Member list - approve](img/admin-members-approve.png)
 
 ### Rejecting membership requests
 
-![Member list - reject](img/admin-member-list-reject.png)
+![Member list - reject](img/admin-members-reject.png)
 
 ### Adding existing users
 
-![Member list - add](img/admin-member-list-add.png)
+![Member list - add](img/admin-members-add-save.png)
 
 ### Adding a new member
 
@@ -64,9 +64,59 @@ Trambar User Guide - Administrative Console
 
 ### Adding repositories to project
 
-![Repo list - add](img/admin-repo-list-edit.png)
+1. Click **Projects** in the left navigation pane.
+
+   ![Navigation - Projects](img/admin-settings-nav-projects.png)
+
+2. Click the name of the project.
+
+   ![Project list](img/admin-projects-choose.png)
+
+3. Click **Repositories** in the left navigation pane.
+
+   ![Navigation - Repositories](img/admin-project-nav-repos.png)
+
+4. Click the **Edit role list** button.
+
+   ![Repo list - edit](img/admin-repos-edit.png)
+
+   The list will expand to show all repositories.
+
+5. Click the name of each repo you wish to associate with the project.
+
+   ![Repo list - select](img/admin-repos-add-select.png)
+
+6. Click the **Save repository list** button.   
+
+   ![Repo list - save](img/admin-repos-add-save.png)
 
 ### Removing repositories
+
+1. Click **Projects** in the left navigation pane.
+
+   ![Navigation - Projects](img/admin-settings-nav-projects.png)
+
+2. Click the name of the project.
+
+   ![Project list](img/admin-projects-choose.png)
+
+3. Click **Repositories** in the left navigation pane.
+
+   ![Navigation - Repositories](img/admin-project-nav-repos.png)
+
+4. Click the **Edit role list** button.
+
+   ![Repo list - add](img/admin-repos-edit.png)
+
+   The list will expand to show all repositories.
+
+5. Click the name of each repo you wish to remove.   
+
+   ![Repo list - select](img/admin-repos-remove-select.png)
+
+6. Click the **Save repository list** button.   
+
+   ![Repo list - save](img/admin-repos-remove-save.png)
 
 ## Users
 
@@ -77,11 +127,11 @@ Trambar User Guide - Administrative Console
 
 ### Adding a new user
 
-![User list - add](img/admin-user-list-add.png)
+![User list - add](img/admin-users-add.png)
 
 ### Deactivating users
 
-![User list - diable](img/admin-user-list-disable.png)
+![User list - diable](img/admin-users-disable.png)
 
 ### Deleting a user
 
@@ -100,7 +150,7 @@ Trambar User Guide - Administrative Console
 
 ### Disabling roles
 
-![Role list - disable](img/admin-role-list-disable.png)
+![Role list - disable](img/admin-roles-disable-save.png)
 
 ### Deleting a role
 
@@ -129,8 +179,8 @@ Trambar User Guide - Administrative Console
 
 ### Disabling server
 
-![Server list - edit](img/admin-server-list-edit.png)
+![Server list - edit](img/admin-servers-edit.png)
 
-![Server list - disable](img/admin-server-list-disable.png)
+![Server list - disable](img/admin-servers-disable-save.png)
 
 ## Settings

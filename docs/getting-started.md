@@ -152,7 +152,7 @@ You might also need to increase the amount of memory available to the Docker VM.
 
 6. Click the **Add new server** button in the upper-right-hand corner.
 
-   ![Server list](img/admin-server-list-add.png)
+   ![Server list](img/admin-servers-add.png)
 
 7. In the *Server* page, select *GitLab* as the server type.
 
@@ -196,7 +196,7 @@ You might also need to increase the amount of memory available to the Docker VM.
 
 17. Click the **Acquire API access**.
 
-    ![Acquire API access](img/admin-server-acquire-access.png)
+    ![Acquire API access](img/admin-server-acquire.png)
 
 18. A GitLab pop-up window will appear. Click the **Authorize** button, then
     close the window when it says *OK*.
@@ -213,27 +213,27 @@ and users imported into the system.
 
 2. Click the **Add new project** button.
 
-   ![Project lists](img/admin-project-list-add.png)
+   ![Project lists](img/admin-projects-add.png)
 
 3. Enter project name and description. Select an image as its emblem. Choose
    whether users can request to join the project and whether non-members can
    view its contents. Click the **Save project** button when you're done.
 
-   ![Project form](img/admin-project-add.png)
+   ![Project form](img/admin-project-form.png)
 
 4. Click **Repositories** in the left navigation pane.
 
-   ![Project summary](img/admin-project-summary-repo.png)
+   ![Project summary](img/admin-project-nav-repos.png)
 
 5. Click the **Edit repository list** button.
 
-   ![Repository list](img/admin-repo-list-empty.png)
+   ![Repository list](img/admin-repos-empty.png)
 
 6. All repositories imported from GitLab will appear. Click on the ones you wish
    to associate with the project to select them. Click the **Save repository
    list** button when you're done.
 
-   ![Repository list](img/admin-repo-list-select.png)
+   ![Repository list](img/admin-repos-add-select.png)
 
 7. Trambar will begin to import past activities from the chosen repos. The
    process could take a long time if a repository has a long history. You can
