@@ -39,23 +39,106 @@ Trambar User Guide - Administrative Console
 * [Rejecting membership requests](#rejecting-membership-requests)
 * [Adding existing users](#adding-existing-users)
 * [Adding a new member](#adding-a-new-member)
-* [Deleting members](#deleting-members)
+* [Removing members](#deleting-members)
 
 ### Approving membership requests
 
-![Member list - approve](img/admin-members-approve.png)
+1. Click **Projects** in the left navigation pane.
+
+   ![Navigation - Projects](img/admin-settings-nav-projects.png)
+
+2. Click the name of the project.
+
+   ![Project list](img/admin-projects-choose.png)
+
+3. Click **Members** in the left navigation pane.
+
+  ![Navigation - Members](img/admin-project-nav-members.png)
+
+4. If there are unapproved requests, certain users will appear grayed out in
+   the list. The **Approve all requests** button will be preselected. Click it
+   to approve all requests.
+
+   ![Member list - approve](img/admin-members-approve.png)
+
+If you wish to add only some of the users, follow the [instructions for
+adding users](#adding-existing-users) instead.
 
 ### Rejecting membership requests
 
-![Member list - reject](img/admin-members-reject.png)
+1. Click **Projects** in the left navigation pane.
+
+   ![Navigation - Projects](img/admin-settings-nav-projects.png)
+
+2. Click the name of the project.
+
+   ![Project list](img/admin-projects-choose.png)
+
+3. Click **Members** in the left navigation pane.
+
+  ![Navigation - Members](img/admin-project-nav-members.png)
+
+4. If there are unapproved requests, certain users will appear grayed out in
+   the list. The **Approve all requests** button will be preselected. Click the
+   arrow beside it, then click **Reject all requests**.
+
+   ![Member list - reject](img/admin-members-reject.png)
 
 ### Adding existing users
 
-![Member list - add](img/admin-members-add-save.png)
+1. Click **Projects** in the left navigation pane.
+
+   ![Navigation - Projects](img/admin-settings-nav-projects.png)
+
+2. Click the name of the project.
+
+   ![Project list](img/admin-projects-choose.png)
+
+3. Click **Members** in the left navigation pane.
+
+   ![Navigation - Members](img/admin-project-nav-members.png)
+
+4. Click the **Edit member list** button.
+
+   ![Member list - edit](img/admin-members-edit.png)
+
+5. The list will expand to show all users. Click the name of each user that you
+   wish to add.
+
+   ![Member list -select](img/admin-members-add-select.png)
+
+6. Click the **Save member list** button.   
+
+   ![Member list - add](img/admin-members-add-save.png)
 
 ### Adding a new member
 
-### Deleting members
+### Removing members
+
+1. Click **Projects** in the left navigation pane.
+
+   ![Navigation - Projects](img/admin-settings-nav-projects.png)
+
+2. Click the name of the project.
+
+   ![Project list](img/admin-projects-choose.png)
+
+3. Click **Members** in the left navigation pane.
+
+   ![Navigation - Members](img/admin-project-nav-members.png)
+
+4. Click the **Edit member list** button.
+
+   ![Member list - edit](img/admin-members-edit.png)
+
+5. The list will expand to show all users. Current members will be highlighted.
+   Click the name of each member that you wish to remove.
+
+   ![Member list -select](img/admin-members-remove-select.png)
+
+6. Click the **Save member list** button.   
+
+   ![Member list - add](img/admin-members-remove-save.png)
 
 ## Repositories
 
@@ -80,9 +163,8 @@ Trambar User Guide - Administrative Console
 
    ![Repo list - edit](img/admin-repos-edit.png)
 
-   The list will expand to show all repositories.
-
-5. Click the name of each repo you wish to associate with the project.
+5. The list will expand to show all repositories. Click the name of each repo
+   you wish to associate with the project.
 
    ![Repo list - select](img/admin-repos-add-select.png)
 
@@ -144,7 +226,7 @@ Trambar User Guide - Administrative Console
 * [Adding a new role](#adding-a-new-role)
 * [Disabling roles](#disabling-roles)
 * [Deleting a role](#deleting-a-role)
-* [Assigning users to a role](#assigning-users-to-a-role)
+* [Assigning a role to users](#assigning-a-role-to-users)
 
 ### Adding a new role
 
@@ -154,7 +236,7 @@ Trambar User Guide - Administrative Console
 
 ### Deleting a role
 
-### Assigning users to a role
+### Assigning a role to users
 
 ## Servers
 
