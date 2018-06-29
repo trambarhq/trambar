@@ -255,13 +255,106 @@ adding users](#adding-existing-users) instead.
 
 ### Adding a new role
 
+1. Click **Roles** in the left navigation.
+
+   ![Navigation - Roles](img/admin-settings-nav-roles.png)
+
+2. Click the **Add new role** button.   
+
+   ![Roles - add](img/admin-roles-new.png)
+
+3. Enter the name and description of the role. Select a story priority. Finally,
+   choose the users to whom you wish to assign the new role.
+
+   ![Role form](img/admin-role-form.png)
+
+4. Click the **Save role** button.
+
+   ![Role form - save](img/admin-role-save.png)
+
 ### Disabling roles
 
-![Role list - disable](img/admin-roles-disable-save.png)
+1. Click **Roles** in the left navigation.
+
+   ![Navigation - Roles](img/admin-settings-nav-roles.png)
+
+2. Click the **Edit role list** button.
+
+   ![Role list - edit](img/admin-roles-edit.png)
+
+3. The list will expand to show all roles, including those disabled or deleted
+   earlier. Click the name of each role you wish to disable.
+
+   ![Role list - select](img/admin-roles-disable-select.png)
+
+4. Click the **Save role list** button.
+
+   ![Role list - save](img/admin-roles-disable-save.png)
 
 ### Deleting a role
 
+1. Click **Roles** in the left navigation.
+
+   ![Navigation - Roles](img/admin-settings-nav-roles.png)
+
+2. Click the name of the role you wish to delete.
+
+   ![Roles list](img/admin-roles-choose.png)
+
+3. Click the arrow beside the gray button, then **Delete role**.
+
+   ![Role summary - delete](img/admin-role-delete.png)
+
+If you delete a role by mistake. Use the browser's back button to return to the
+page and click the **Restore role** button.
+
 ### Assigning a role to users
+
+1. Click **Roles** in the left navigation.
+
+   ![Navigation - Roles](img/admin-settings-nav-roles.png)
+
+2. Click the name of the role you wish to assign.
+
+   ![Roles list](img/admin-roles-choose.png)
+
+3. Click the **Edit role** button.
+
+   ![Role summary - edit](img/admin-role-edit.png)
+
+4. Under **Users**, click the name of each user to whom you wish to assign the
+   role.   
+
+   ![Role form - users](img/admin-role-form-users.png)
+
+5. Click the **Save role** button.
+
+   ![Role form - save](img/admin-role-save-2.png)
+
+### Assigning a role automatically to new users   
+
+### Removing users from a role
+
+1. Click **Roles** in the left navigation.
+
+   ![Navigation - Roles](img/admin-settings-nav-roles.png)
+
+2. Click the name of the role you wish to assign.
+
+   ![Roles list](img/admin-roles-choose.png)
+
+3. Click the **Edit role** button.
+
+   ![Role summary - edit](img/admin-role-edit.png)
+
+4. Under **Users**, click the name of each user you wish to remove from the
+   role.   
+
+   ![Role form - users](img/admin-role-form-users-2.png)
+
+5. Click the **Save role** button.
+
+   ![Role form - save](img/admin-role-save-2.png)
 
 ## Servers
 
