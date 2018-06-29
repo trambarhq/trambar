@@ -113,6 +113,31 @@ adding users](#adding-existing-users) instead.
 
 ### Adding a new member
 
+1. Click **Projects** in the left navigation pane.
+
+   ![Navigation - Projects](img/admin-settings-nav-projects.png)
+
+2. Click the name of the project.
+
+   ![Project list](img/admin-projects-choose.png)
+
+3. Click **Members** in the left navigation pane.
+
+   ![Navigation - Members](img/admin-project-nav-members.png)
+
+4. Click the arrow beside the gray button, then **Add new member**.
+
+   ![Member list - new](img/admin-members-new.png)
+
+5. Enter the new member's personal information. Select a profile image. Choose
+   the user type and role.
+
+   ![Member form](img/admin-member-form.png)
+
+6. Click the **Save member** button.
+
+   ![Member form - save](img/admin-member-save.png)
+
 ### Removing members
 
 1. Click **Projects** in the left navigation pane.
