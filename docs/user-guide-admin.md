@@ -333,6 +333,27 @@ page and click the **Restore role** button.
 
 ### Assigning a role automatically to new users   
 
+1. Click **Servers** in the left navigation.
+
+   ![Navigation - Servers](img/admin-settings-nav-servers.png)
+
+2. Click on the name of the server whose users should be assigned the role.
+
+   ![Server lists](img/admin-servers-choose.png)
+
+3. Click the **Edit server button**
+
+   ![Server summary - edit](img/admin-server-edit.png)
+
+4. Under **Role assignments**, click the role that will be assigned to new users
+   from the server.
+
+   ![Server form - roles](img/admin-server-form-roles.png)
+
+5. Click the **Save server** button.
+
+   ![Server form -save](img/admin-server-save.png)
+
 ### Removing users from a role
 
 1. Click **Roles** in the left navigation.
