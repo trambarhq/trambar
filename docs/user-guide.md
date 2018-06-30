@@ -546,7 +546,13 @@ lifetime using the buttons in the actions panel or the pop-up menu:
 
 #### Actions
 
+The **Actions** panel lets you contact another project member and see their
+profiles on various social networks:
 
+![User actions](img/client-user-view-actions.png)
+
+Contact information is hidden from guest users. They'll only see social-network
+links.
 
 ## Settings
 
