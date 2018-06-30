@@ -10,6 +10,41 @@ Trambar User Guide - Administrative Console
 * [Servers](#servers)
 * [Settings](#settings)
 
+## Sign in
+
+* [Signing in using password](#signing-in-using-password)
+* [Signing in using OAuth](#signing-in-using-oauth)
+* [Signing off](#signing-off)
+
+### Signing in using password
+
+1. Enter user name and password.
+
+2. Click the **Sign in** button.
+
+   ![Sign in - password](img/admin-sign-in-password.png)
+
+### Signing in using OAuth
+
+1. Click the **GitLab** button.
+
+   ![Sign in - OAuth](img/admin-sign-in-oauth.png)
+
+2. A GitLab pop-up window will appear. If you're not currently signed into
+   GitLab, you're be asked to provide your credentials. Afterward, you'll be
+   asked you to grant authorization to Trambar. Click the **Authorize** button.
+
+   ![GitLab OAuth window](img/gitlab-oauth.png)
+
+   The window may close itself immediately if Trambar is set as a trusted
+   application and you're already signed in.
+
+### Signing off
+
+1. Click the user icon at the bottom of the left navigation, then **Sign off**.
+
+   ![Sign off](img/admin-sign-off.png)
+
 ## Projects
 
 * [Adding a new project](#adding-a-new-project)
