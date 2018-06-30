@@ -73,7 +73,7 @@ function findActiveProjects(db, minimum) {
         schema: 'global',
         table: 'project',
         criteria: {
-            achived: false,
+            archived: false,
             deleted: false,
         },
         minimum
