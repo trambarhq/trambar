@@ -269,7 +269,14 @@ The result would look like this:
 
 #### Coauthors
 
-Trambar allows multiple people to edit the same story at the same time.
+Trambar allows multiple people to edit the same story at the same time. The
+feature is most useful when two or more people are working on a [list of tasks](#task-list).
+They can come up with the list together. Afterward, each of them can check off
+tasks as they're completed.
+
+![Story editor - coauthors](img/client-story-editor-coauthors.png)
+
+When a user is designated as a coauthor, he'll receive a notification.
 
 ### Story view
 
