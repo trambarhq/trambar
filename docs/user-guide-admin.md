@@ -19,19 +19,78 @@ Trambar User Guide - Administrative Console
 
 ### Adding a new project
 
-![Project list - add](img/admin-projects-add.png)
+1. Click **Projects** in the left navigation.
+
+   ![Navigation - Projects](img/admin-settings-nav-projects.png)
+
+2. Click the **Add new project** button.   
+
+   ![Project list - add](img/admin-projects-add.png)
+
+3. Enter the name and description of the project. Choose a project emblem.
+   Indicate how new members are added and whether non-members may view the
+   project's news feed.
+
+   ![Project form](img/admin-project-form.png)
+
+4. Click the **Save project** button.
+
+   ![Project form - save](img/admin-project-save.png)
 
 ### Archiving old projects
 
-![Project list - edit](img/admin-projects-edit.png)
+1. Click **Projects** in the left navigation.
 
-![Project list - archive](img/admin-projects-archive-save.png)
+   ![Navigation - Projects](img/admin-settings-nav-projects.png)
+
+2. Click the **Edit project list** button.
+
+   ![Project list - edit](img/admin-projects-edit.png)
+
+3. The list will expand to show all projects, including those archived or
+   deleted earlier. Click the name of each project that you wish to archive.
+
+   ![Project list - select](img/admin-projects-archive-select.png)
+
+4. Click the **Save project list** button.   
+
+   ![Project list - archive](img/admin-projects-archive-save.png)
 
 ### Deleting a project
 
-![Project summary - delete](img/admin-project-delete.png)
+1. Click **Projects** in the left navigation.
+
+   ![Navigation - Projects](img/admin-settings-nav-projects.png)
+
+2. Click the name of the project you wish to delete.
+
+   ![Project list](img/admin-projects-choose.png)
+
+3. Click the arrow beside the gray button, then **Delete project**.
+
+   ![Project summary - delete](img/admin-project-delete.png)
+
+If you delete a project by mistake, use the browser's back button to return to
+the page and click the **Restore project** button.  
 
 ### Restoring a project
+
+1. Click **Projects** in the left navigation.
+
+   ![Navigation - Projects](img/admin-settings-nav-projects.png)
+
+2. Click the **Edit project list** button.
+
+   ![Project list - edit](img/admin-projects-edit.png)
+
+3. The list will expand to show all projects, including those archived or
+   deleted earlier. Click the name of each project that you wish to restore.
+
+   ![Project list - select](img/admin-projects-restore-select.png)
+
+4. Click the **Save project list** button.   
+
+   ![Project list - archive](img/admin-projects-restore-save.png)
 
 ## Members
 
