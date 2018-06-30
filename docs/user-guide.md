@@ -134,7 +134,7 @@ its three parts appear side-by-side:
 ![Story editor - 3 columns](img/client-story-editor-col3.png)
 
 On the left is the text editor. In the center is the text-preview/media pane.
-On the right are story options that you can toggle.
+On the right are [story options](#story-options) that you can toggle.
 
 When the screen is a bit more narrow, the stories options are relocated to
 pop-up menus:
@@ -198,7 +198,6 @@ pre-recorded or captured live from your phone or computer's camera.
 * [Adding screenshots](#adding-screenshots)
 
 ##### Capturing an image
-
 
 Click the **Photo** button in the media pane to activate the camera:
 
@@ -271,6 +270,29 @@ The result would look like this:
 #### Coauthors
 
 Trambar allows multiple people to edit the same story at the same time.
+
+### Story view
+
+The story view adjust its UI to fit the space available. On a wide screen,
+its three parts appear side-by-side:
+
+![Story view - 3 columns](img/client-story-view-col3.png)
+
+On the left are the story contents. In the center are reactions to the story.
+On the right are [story options](#story-options) that you can toggle.
+
+When the screen is a bit more narrow, the stories options are relocated to
+pop-up menus:
+
+![Story view - 2 columns](img/client-story-view-col2.png)
+
+On a mobile device (or a narrow browser window), the two remaining panels are
+stacked on top of each other:
+
+![Story view - 1 column](img/client-story-view-col1.png)
+
+In this view, reactions are initially hidden unless you're the story's author
+or you've reacted to the story.
 
 ### Story options
 
