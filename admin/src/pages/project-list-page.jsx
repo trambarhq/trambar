@@ -358,7 +358,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 }
             } else {
                 classes.push('fixed');
-                if (!_.includes(this.state.disablingProjectIds, project.id)) {
+                if (!_.includes(this.state.archivingProjectIds, project.id)) {
                     classes.push('selected');
                 }
             }
