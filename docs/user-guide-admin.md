@@ -622,10 +622,15 @@ page and click the **Restore role** button.
 
    ![Settings - description](img/admin-settings-description-polish.png)
 
-6. Provide a site name in the chosen language as well, if it's different.
+   Place the mouse cursor over the primary language to see the description in
+   that language:
+
+   ![Settings - mouse over](img/admin-settings-description-polish-mouseover.png)
+
+6. Provide a site name in the new language if it's different.
 
 7. Click the **Save settings** button.
 
    ![Settings - save](img/admin-settings-save-2.png)
 
-You will now be able to enter project descriptions in the language as well.
+You will now be able to enter project descriptions in the new language as well.
