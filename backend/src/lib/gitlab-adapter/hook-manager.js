@@ -180,7 +180,7 @@ function installProjectHook(host, server, repo, project) {
         _.each(glHooks, (glHook) => {
             if (glHook.url === url) {
                 console.log(`Removing existing hook: ${glHook.url}`);
-                destroyProjectHook(server, link.project.id, glHook);
+                destroyProjectHook(server, repoLink.project.id, glHook);
             }
         });
         return createProjectHook(server, repoLink.project.id, hookProps);
