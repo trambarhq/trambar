@@ -313,8 +313,8 @@ function handleStorage(req, res) {
             }
 
             var options = {
-                include_ctime: params.include_ctime,
-                include_mtime: params.include_mtime,
+                includeCreationTime: params.include_ctime,
+                includeModificationTime: params.include_mtime,
             };
 
             // load the original objects if id list isn't empty
