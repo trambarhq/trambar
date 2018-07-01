@@ -545,3 +545,87 @@ page and click the **Restore role** button.
 ![Server list - disable](img/admin-servers-disable-save.png)
 
 ## Settings
+
+* [Changing background image](#changing-background-image)
+* [Changing site description](#changing-site-description)
+* [Providing site descriptions in anther language](#providing-site-description-in-anther-language)
+
+### Changing background image
+
+1. Open a new browser window and sign into the Trambar web client. This will
+   allow you see to changes as soon as you save them.
+
+2. Click **Settings** in the left navigation.
+
+   ![Navigation - Settings](img/admin-projects-nav-settings.png)
+
+3. Click the **Edit settings** button.
+
+   ![Settings - edit](img/admin-settings-edit.png)
+
+4. Under **Background image**, click either **Upload image** or **Choose from
+   album** and select an image.
+
+   ![Settings - background image](img/admin-settings-background.png)
+
+5. Click the **Save settings** button.
+
+   ![Settings - save](img/admin-settings-save.png)
+
+6. Check the appearance of the web client in the other browser window. If you're
+   not satistfied with it, click the **Edit settings** button again.
+
+### Changing site description
+
+1. Open a new browser window and sign into the Trambar web client. This will
+   allow you see to changes as soon as you save them.
+
+2. Click **Settings** in the left navigation.
+
+   ![Navigation - Settings](img/admin-projects-nav-settings.png)
+
+3. Click the **Edit settings** button.
+
+   ![Settings - edit](img/admin-settings-edit.png)
+
+4. Edit the text in the text box under **Description**. If you're text text from
+   elsewhere, be sure there aren't any stray newlines.
+
+   ![Settings - background image](img/admin-settings-description.png)
+
+5. Click the **Save settings** button.
+
+   ![Settings - save](img/admin-settings-save.png)
+
+6. Check the appearance of the web client in the other browser window. If you're
+   not satisfied with it, click the **Edit settings** button again.
+
+### Providing site description in anther language
+
+1. Click **Settings** in the left navigation.
+
+   ![Navigation - Settings](img/admin-projects-nav-settings.png)
+
+2. Click the **Edit settings** button.
+
+   ![Settings - edit](img/admin-settings-edit.png)
+
+3. Under **Languages**, click the language you wish to add.
+
+   ![Settings - languages](img/admin-settings-languages.png)
+
+4. Under **Description**, click the language that you added.
+
+   ![Settings - select language](img/admin-settings-description-polish-select.png)
+
+5. Type or paste in the description in the chosen language.
+
+   ![Settings - description](img/admin-settings-description-polish.png)
+
+6. Provide a site name in the chosen language as well, if it's different.
+
+7. Click the **Save settings** button.
+
+   ![Settings - save](img/admin-settings-save-2.png)
+
+You will now be able to enter project descriptions in the language as well.
