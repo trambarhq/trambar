@@ -314,6 +314,7 @@ module.exports = React.createClass({
             theme: this.props.theme,
             width: this.props.width,
             height: this.props.width,
+            mosaic: true,
         };
         return <ResourceView {...props} />;
     },

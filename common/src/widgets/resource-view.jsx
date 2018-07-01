@@ -15,6 +15,7 @@ module.exports = React.createClass({
     propTypes: {
         clip: PropTypes.bool,
         animation: PropTypes.bool,
+        mosaic: PropTypes.bool,
         resource: PropTypes.object,
         url: PropTypes.string,
         width: PropTypes.number,
@@ -30,6 +31,8 @@ module.exports = React.createClass({
     getDefaultProps: function() {
         return {
             clip: true,
+            animation: false,
+            mosaic: false,
         };
     },
 
@@ -150,7 +153,7 @@ module.exports = React.createClass({
         if (!url) {
             return this.props.children || null;
         }
-        var props = _.omit(this.props, 'clip', 'animation', 'resource', 'url', 'width', 'height', 'theme');
+        var props = _.omit(this.props, 'clip', 'animation', 'mosaic', 'resource', 'url', 'width', 'height', 'theme');
         if (isJSONEncoded(url)) {
             var image = parseJSONEncodedURL(url);
             props.url = image.url;
@@ -168,7 +171,7 @@ module.exports = React.createClass({
             props.src = url;
             props.width = dims.width;
             props.height = dims.height;
-            if (!this.state.remoteImageLoaded) {
+            if (!this.state.remoteImageLoaded && this.props.mosaic) {
                 props.onLoad = this.handleRemoteImageLoad;
 
                 var heightToWidthRatio = props.height / props.width;

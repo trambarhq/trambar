@@ -16,7 +16,7 @@ function ProfileImage(props) {
     var image;
     if (profileImage) {
         var width = imageResolutions[props.size];
-        image = <ResourceView resource={profileImage} theme={props.theme} width={width} height={width} />;
+        image = <ResourceView resource={profileImage} mosaic={true} theme={props.theme} width={width} height={width} />;
     } else {
         var Icon = require('octicons/build/svg/person.svg');
         image = <div className="placeholder"><Icon /></div>;
