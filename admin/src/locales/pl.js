@@ -675,7 +675,7 @@ module.exports = function(localeCode) {
             } else {
                 hooks = `${count} haków`;
             }
-            return `Usunięto ${hooks}`;
+            return `Odinstalowano ${hooks}`;
         },
         'task-removed-$count-repos': (count) => {
             var repos;

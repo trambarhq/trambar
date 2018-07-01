@@ -482,9 +482,9 @@ module.exports = function(localeCode) {
         'task-installing-hooks': "Si sta installando i webhook",
         'task-removed-$count-hooks': (count) => {
             if (count === 1) {
-                return `Si 1 webhook è rimosso`;
+                return `Si 1 webhook è disinstallato`;
             } else {
-                return `Si ${count} webhook sono rimossi`;
+                return `Si ${count} webhook sono disinstallati`;
             }
         },
         'task-removed-$count-repos': (count) => {

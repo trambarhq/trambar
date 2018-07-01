@@ -461,7 +461,7 @@ module.exports = function(localeCode) {
         'task-installing-hooks': 'Installere kroker',
         'task-removed-$count-hooks': (count) => {
             var hooks = (count === 1) ? `1 krok` : `${count} kroker`;
-            return `Fjernet ${hooks}`;
+            return `Avinstallert ${hooks}`;
         },
         'task-removed-$count-repos': (count) => {
             var repos = (count === 1) ? `1 repo` : `${count} repoer`;
