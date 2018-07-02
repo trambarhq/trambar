@@ -492,7 +492,7 @@ page and click the **Restore role** button.
 
 5. Click the **Save server** button.
 
-   ![Server form -save](img/admin-server-save.png)
+   ![Server form -save](img/admin-server-gitlab-save.png)
 
 ### Removing users from a role
 
@@ -527,6 +527,73 @@ page and click the **Restore role** button.
 * [Adding Windows Live](#adding-windows-live)
 
 ### Adding a GitLab server
+
+1. Click **Servers** in the left navigation.
+
+   ![Navigation - Servers](img/admin-settings-nav-servers.png)
+
+2. Click the **Add new server** button.
+
+   ![Server list - add](img/admin-servers-add.png)
+
+3. Under **Server type**, select *GitLab*.
+
+   ![Server type](img/admin-server-gitlab-type-select.png)
+
+4. In a different browser tab, sign into GitLab using an account with
+   administrative privilege.
+
+5. Navigate to the **Admin area**.
+
+   ![GitLab start page](img/gitlab-home.png)
+
+6. Click **Applications** in the left navigation pane.
+
+   ![GitLab - admin area](img/gitlab-admin-area.png)
+
+7. Click the **New application** button.
+
+   ![GitLab - applications](img/gitlab-applications.png)
+
+8. Enter *Trambar* as the application's name, then copy the **Redirect URI**
+   from Trambar Administrative Console into the corresponding box here.
+   Select **api** and **read_user** as the application's scope, the click the
+   **Submit** button.
+
+   ![Server form - Gitlab URL](img/admin-server-gitlab-callback.png)
+
+   ![GitLab - new application](img/gitlab-application.png)
+
+9. Copy the **Application id** and **Application secret** from GitLab into the
+   corresponding box in Trambar Administrative Console.
+
+   ![GitLab - new application](img/gitlab-application-summary.png)
+
+   ![Server form - id & secret](img/admin-server-gitlab-secrets.png)
+
+10. Copy the URL of the GitLab server into the corresponding box in Trambar
+    Adminstrative Console.
+
+    ![Server form - Gitlab URL](img/admin-server-gitlab-url.png)
+
+    The URL should contains only the domain name (and possibly a port number).
+
+11. Indicate how you wish to map users from GitLab to Trambar.
+
+    ![Server form - user mapping](img/admin-server-new-users.png)
+
+12. Click the **Save server** button.
+
+    ![Server form - save](img/admin-server-gitlab-save.png)
+
+13. Click the **Acquire API access** button.
+
+    ![Acquire API access](img/admin-server-acquire.png)
+
+14. A GitLab pop-up window will appear. Click the **Authorize** button, then
+    close the window when it says *OK*.
+
+    ![GitLab OAuth window](img/gitlab-oauth.png)
 
 ### Adding Dropbox
 

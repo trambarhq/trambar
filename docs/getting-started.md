@@ -156,7 +156,7 @@ You might also need to increase the amount of memory available to the Docker VM.
 
 7. In the *Server* page, select *GitLab* as the server type.
 
-   ![Server type](img/admin-server-type-select.png)
+   ![Server type](img/admin-server-gitlab-type-select.png)
 
 8. In a different browser tab, sign into GitLab using an account with
    administrative privilege.
@@ -175,7 +175,10 @@ You might also need to increase the amount of memory available to the Docker VM.
 
 12. Enter *Trambar* as the application's name, then copy the **Redirect URI**
     from Trambar Administrative Console into the corresponding box here.
-    Select **api** and **read_user** as the application's scope.
+    Select **api** and **read_user** as the application's scope, the click the
+    **Submit** button.
+
+    ![Server form - Gitlab URL](img/admin-server-gitlab-callback.png)
 
     ![GitLab new application](img/gitlab-application.png)
 
@@ -184,9 +187,14 @@ You might also need to increase the amount of memory available to the Docker VM.
 
     ![GitLab new application](img/gitlab-application-summary.png)
 
+    ![Server form - id & secret](img/admin-server-gitlab-secrets.png)
+
 14. Copy the URL of the GitLab server into the corresponding box in Trambar
-    Adminstrative Console. The URL should contains only the domain name (and
-    possibly a port number).
+    Adminstrative Console.
+
+    ![Server form - Gitlab URL](img/admin-server-gitlab-url.png)
+
+    The URL should contains only the domain name (and possibly a port number).
 
 15. Indicate how you wish to map users from GitLab to Trambar.
 
@@ -194,7 +202,9 @@ You might also need to increase the amount of memory available to the Docker VM.
 
 16. Click the **Save server** button.
 
-17. Click the **Acquire API access**.
+    ![Server form - save](img/admin-server-gitlab-save.png)
+
+17. Click the **Acquire API access** button.
 
     ![Acquire API access](img/admin-server-acquire.png)
 
