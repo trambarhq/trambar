@@ -360,11 +360,13 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var props = {
             id: 'address',
+            type: 'url',
             value: this.getSystemProperty('settings.address'),
             locale: this.props.locale,
             placeholder: 'https://',
             onChange: this.handleAddressChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         return (
             <TextField {...props}>
@@ -382,11 +384,13 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var props = {
             id: 'relay',
+            type: 'url',
             value: this.getSystemProperty('settings.push_relay'),
             locale: this.props.locale,
             placeholder: 'https://',
             onChange: this.handlePushRelayChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         return (
             <TextField {...props}>

@@ -489,6 +489,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             onChange: this.handleNameChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         return (
             <TextField {...props}>
@@ -510,6 +511,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             onChange: this.handleUsernameChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         var problems = this.state.problems;
         return (
@@ -529,10 +531,12 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var props = {
             id: 'email',
+            type: 'email',
             value: this.getUserProperty('details.email'),
             locale: this.props.locale,
             onChange: this.handleEmailChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         var problems = this.state.problems;
         return (
@@ -552,10 +556,12 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var props = {
             id: 'phone',
+            type: 'tel',
             value: this.getUserProperty('details.phone'),
             locale: this.props.locale,
             onChange: this.handlePhoneChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         return (
             <TextField {...props}>
@@ -716,6 +722,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             onChange: this.handleSkypeUsernameChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         return <TextField {...props}>{t('user-summary-skype')}</TextField>;
     },
@@ -733,6 +740,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             onChange: this.handleIchatUsernameChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         return <TextField {...props}>{t('user-summary-ichat')}</TextField>;
     },
@@ -750,6 +758,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             onChange: this.handleTwitterUsernameChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         return <TextField {...props}>{t('user-summary-twitter')}</TextField>;
     },
@@ -763,10 +772,12 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var props = {
             id: 'github',
+            type: 'url',
             value: this.getUserProperty('details.github_url'),
             locale: this.props.locale,
             onChange: this.handleGitHubURLChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         return <TextField {...props}>{t('user-summary-github')}</TextField>;
     },
@@ -780,10 +791,12 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var props = {
             id: 'github',
+            type: 'url',
             value: this.getUserProperty('details.gitlab_url'),
             locale: this.props.locale,
             onChange: this.handleGitlabURLChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         return <TextField {...props}>{t('user-summary-gitlab')}</TextField>;
     },
@@ -797,10 +810,12 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var props = {
             id: 'linkedin',
+            type: 'url',
             value: this.getUserProperty('details.linkedin_url'),
             locale: this.props.locale,
             onChange: this.handleLinkedinURLChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         return <TextField {...props}>{t('user-summary-linkedin')}</TextField>;
     },
@@ -814,10 +829,12 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var props = {
             id: 'stackoverflow',
+            type: 'url',
             value: this.getUserProperty('details.stackoverflow_url'),
             locale: this.props.locale,
             onChange: this.handleStackoverflowURLChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         return <TextField {...props}>{t('user-summary-stackoverflow')}</TextField>;
     },

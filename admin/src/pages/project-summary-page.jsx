@@ -458,6 +458,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             onChange: this.handleNameChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         var problems = this.state.problems;
         return (

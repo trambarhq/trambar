@@ -549,6 +549,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             onChange: this.handleNameChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         var problems = this.state.problems;
         return (
@@ -807,7 +808,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 phrase = 'server-summary-oauth-callback-url';
                 break;
             case 'gitlab':
-                phrase = 'server-summary-oauth-callback-url';
+                phrase = 'server-summary-oauth-redirect-uri';
                 break;
             case 'google':
                 phrase = 'server-summary-oauth-redirect-uri';
@@ -901,10 +902,12 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var serverType = this.getServerProperty('type');
         var props = {
             id: 'oauth_token',
+            type: 'url',
             value: this.getServerProperty('settings.oauth.base_url'),
             locale: this.props.locale,
             onChange: this.handleOAuthURLChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         var problems = this.state.problems;
         return (
@@ -930,6 +933,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             onChange: this.handleOAuthIdChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         var problems = this.state.problems;
         var phrase = 'server-summary-oauth-client-id';
@@ -974,6 +978,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             locale: this.props.locale,
             onChange: this.handleOAuthSecretChange,
             readOnly: !this.isEditing(),
+            spellCheck: false,
         };
         var problems = this.state.problems;
         var phrase = 'server-summary-oauth-client-secret';
