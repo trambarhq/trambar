@@ -597,6 +597,81 @@ page and click the **Restore role** button.
 
 ### Adding Dropbox
 
+1. Click **Servers** in the left navigation.
+
+   ![Navigation - Servers](img/admin-settings-nav-servers.png)
+
+2. Click the **Add new server** button.
+
+   ![Server list - add](img/admin-servers-add.png)
+
+3. Under **Server type**, select *Dropbox*.
+
+   ![Server type](img/admin-server-dropbox-type.png)
+
+4. In a different browser window, navigate to the [Dropbox App Console](https://www.dropbox.com/developers/apps)
+   page.
+
+5. Click the **Create app** button.
+
+   ![Dropbox App list - add](img/dropbox-apps-add.png)
+
+6. Select **Dropbox API**.
+
+   ![Dropbox App - API](img/dropbox-app-api.png)
+
+7. Select **App Folder** as the access level.
+
+   ![Dropbox App - folder access](img/dropbox-app-folder-access.png)
+
+   Trambar won't actually write anything to the folder. OAuth is used for
+   authentication only.
+
+8. Enter an application name. The name should contain the name of your company
+   so that users will be able to correctly identify your app in Dropbox.
+
+   ![Dropbox App - name](img/dropbox-app-name.png)
+
+9. Click the **Create app** button.
+
+   ![Dropbox App - create](img/dropbox-app-create.png)
+
+10. Copy and paste the **Redirect URI** then click the **Add** button.
+
+   ![Server form - redirect URI](img/admin-server-dropbox-callback.png)
+
+   ![Dropbox App - redirect URI](img/dropbox-app-redirect-uri.png)
+
+11. Copy and paste the **App key** and **App secret** into Trambar
+    Administrative Console.
+
+    ![Dropbox App - secrets](img/dropbox-app-secrets.png)
+
+    ![Server form - secrets](img/admin-server-dropbox-secrets.png)
+
+12. Under **New users** select a user type for users coming from GitHub.
+
+    ![Server form - new users](img/admin-server-new-users.png)
+
+13. Optionally, choose a role for new users under **Role assignment**.
+
+    ![Server form - role](img/admin-server-role.png)
+
+14. Click the **Save server** button.
+
+    ![Server form - save](img/admin-server-dropbox-save.png)
+
+15. Click the **Test OAuth integration** button. A Dropbox pop-up window will
+    appear. Grant authorization when prompted. Afterward, the page should simply
+    read "OK".
+
+   ![Server form - test](img/admin-server-dropbox-test.png)
+
+16. Return to the Dropbox App Console. Click the **Apply for production**
+    button to make the app publicly available.
+
+   ![Dropbox App - apply](img/dropbox-app-apply.png)
+
 ### Adding Facebook
 
 1. Click **Servers** in the left navigation.
