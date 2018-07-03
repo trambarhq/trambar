@@ -156,7 +156,7 @@ You might also need to increase the amount of memory available to the Docker VM.
 
 7. In the *Server* page, select *GitLab* as the server type.
 
-   ![Server type](img/admin-server-gitlab-type-select.png)
+   ![Server type](img/admin-server-gitlab-type.png)
 
 8. In a different browser tab, sign into GitLab using an account with
    administrative privilege.
@@ -198,7 +198,7 @@ You might also need to increase the amount of memory available to the Docker VM.
 
 15. Indicate how you wish to map users from GitLab to Trambar.
 
-    ![User mapping](img/admin-server-new-users.png)
+    ![User mapping](img/admin-server-gitlab-new-users.png)
 
 16. Click the **Save server** button.
 

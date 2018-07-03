@@ -488,7 +488,7 @@ page and click the **Restore role** button.
 4. Under **Role assignments**, click the role that will be assigned to new users
    from the server.
 
-   ![Server form - roles](img/admin-server-form-roles.png)
+   ![Server form - roles](img/admin-server-role.png)
 
 5. Click the **Save server** button.
 
@@ -538,7 +538,7 @@ page and click the **Restore role** button.
 
 3. Under **Server type**, select *GitLab*.
 
-   ![Server type](img/admin-server-gitlab-type-select.png)
+   ![Server type](img/admin-server-gitlab-type.png)
 
 4. In a different browser tab, sign into GitLab using an account with
    administrative privilege.
@@ -580,7 +580,7 @@ page and click the **Restore role** button.
 
 11. Indicate how you wish to map users from GitLab to Trambar.
 
-    ![Server form - user mapping](img/admin-server-new-users.png)
+    ![Server form - user mapping](img/admin-server-gitlab-new-users.png)
 
 12. Click the **Save server** button.
 
@@ -598,6 +598,129 @@ page and click the **Restore role** button.
 ### Adding Dropbox
 
 ### Adding Facebook
+
+1. Click **Servers** in the left navigation.
+
+   ![Navigation - Servers](img/admin-settings-nav-servers.png)
+
+2. Click the **Add new server** button.
+
+   ![Server list - add](img/admin-servers-add.png)
+
+3. Under **Server type**, select *Facebook*.
+
+   ![Server type](img/admin-server-facebook-type.png)
+
+4. In a different browser tab, navigate to the [Facebook App Dashboard](https://developers.facebook.com/apps/).
+
+5. Click the **Add a New App** button.
+
+   ![Facebook App Dashboard - add](img/facebook-apps-add.png)
+
+6. Enter a display name and a contact e-mail address. The display name should
+   contact the name of your company so that users will be able to correctly
+   identify your app.
+
+   ![Facebook App - create](img/facebook-app-dialog.png)
+
+7. Click the **Create App ID** button
+
+   ![Facebook App - create](img/facebook-app-dialog-create.png)
+
+8. In the box label **Facebook Login**, click the **Set up** button.
+
+   ![Facebook Login - start](img/facebook-app-login-setup.png)
+
+9. Select **WWW** as the platform.
+
+   ![Facebook Login - platform](img/facebook-app-platform-www.png)
+
+10. Copy and paste site URL.
+
+   ![Server form - site url](img/admin-server-site-url.png)
+
+   ![Facebook Login - site url](img/facebook-app-site-url.png)
+
+11. Click the **Save button**.
+
+    ![Facebook Login - site url](img/facebook-app-site-url-save.png)
+
+12. Click **Settings** under **Facebook Login** in the left navigation pane.
+
+    ![Facebook Login - settings](img/facebook-app-site-url-nav-settings.png)
+
+13. Copy and paste **Redirect URI**.
+
+    ![Server form - redirect URL](img/admin-server-facebook-callback.png)
+
+    ![Facebook Login - redirect URI](img/facebook-app-redirect-uri.png)
+
+14. Click the **Save Changes** button at the bottom of the page.
+
+    ![Facebook Login - save](img/facebook-app-save.png)
+
+15. Click **Basic** under **Settings** in the left navigation pane.
+
+    ![Facebook Login](img/facebook-app-login-nav-basic.png)
+
+16. Copy and paste **Privacy policy** and **Terms** (or supply your own).
+
+    ![Server form - terms](img/admin-server-facebook-terms.png)
+
+    ![Facebook App - terms](img/facebook-app-terms.png)
+
+17. Download the default icon from Trambar Adminstrative Console.
+
+    ![Server form - default icon](img/admin-server-facebook-icons.png)
+
+    Click **App icon** and upload the image file.
+
+    ![Facebook App - icon](img/facebook-app-icon.png)
+
+18. Choose *Utility & Productivity* as the app category.
+
+    ![Facebook App - category](img/facebook-app-category.png)
+
+19. Click the **Save Changes** button at the bottom of the page.
+
+    ![Facebook Login - save](img/facebook-app-save.png)
+
+20. Copy and paste **App ID** into Trambar Administrative Console.
+
+    ![Facebook App - id](img/facebook-app-id.png)
+
+    ![Server form - app id](img/admin-server-facebook-app-id.png)
+
+21. Click the **Show** button in the *App Secret** text box. Copy and paste the
+    secret token into Trambar Administrative Console.    
+
+    ![Facebook App - secret](img/facebook-app-secret.png)
+
+    ![Server form - app secret](img/admin-server-facebook-app-secret.png)
+
+22. Under **New users** select a user type for users coming from Facebook.
+
+    ![Server form - new users](img/admin-server-new-users.png)
+
+23. Optionally, choose a role for new users under **Role assignment**.
+
+    ![Server form - role](img/admin-server-role.png)
+
+24. Click the **Save server** button.
+
+    ![Server form - save](img/admin-server-facebook-save.png)
+
+25. Click the **Test OAuth integration** button. A Facebook pop-up window will
+    appear. Grant authorization when prompted. Afterward, the page should simply
+    read "OK".
+
+    ![Server form - test](img/admin-server-facebook-test.png)
+
+26. Return to the Facebook App Dashboard. Click the **OFF** switch and confirm
+    that you wish to make the app public.
+
+    ![Facebook App - off](img/facebook-app-off.png)
+
 
 ### Adding GitHub
 
