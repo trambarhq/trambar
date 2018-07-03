@@ -611,14 +611,14 @@ page and click the **Restore role** button.
 
    ![Server type](img/admin-server-facebook-type.png)
 
-4. In a different browser tab, navigate to the [Facebook App Dashboard](https://developers.facebook.com/apps/).
+4. In a different browser window, navigate to the [Facebook App Dashboard](https://developers.facebook.com/apps/).
 
 5. Click the **Add a New App** button.
 
    ![Facebook App Dashboard - add](img/facebook-apps-add.png)
 
 6. Enter a display name and a contact e-mail address. The display name should
-   contact the name of your company so that users will be able to correctly
+   contain the name of your company so that users will be able to correctly
    identify your app.
 
    ![Facebook App - create](img/facebook-app-dialog.png)
@@ -723,6 +723,89 @@ page and click the **Restore role** button.
 
 
 ### Adding GitHub
+
+1. Click **Servers** in the left navigation.
+
+   ![Navigation - Servers](img/admin-settings-nav-servers.png)
+
+2. Click the **Add new server** button.
+
+   ![Server list - add](img/admin-servers-add.png)
+
+3. Under **Server type**, select *GitHub*.
+
+   ![Server type](img/admin-server-github-type.png)
+
+4. In a different browser window, navigate to the [GitHub Developer Settings](https://github.com/settings/developers)
+   page.
+
+5. Click the **New OAuth App** button.
+
+   ![GitHub App list - add](img/github-apps-add.png)
+
+6. Enter an application name. The name should contain the name of your company
+   so that users will be able to correctly identify your app in GitHub.
+
+   ![GitHub App - name](img/github-app-name.png)
+
+7. Copy the **Site URL** from Trambar Administrative Console and use it as the
+   app's **Homepage URL**.
+
+   ![Server form - site URL](img/admin-server-site-url.png)
+
+   ![GitHub App - homepage](img/github-app-homepage.png)
+
+8. Copy and paste the **Callback URL**.
+
+   ![Server form - callback URL](img/admin-server-github-callback.png)
+
+   ![GitHub App - callback](img/github-app-callback.png)
+
+9. Click the **Register Application** button.
+
+   ![GitHub App - register](img/github-app-register.png)
+
+10. Download the default app icon from Trambar Administrative Console.
+
+   ![Server form - icon](img/admin-server-github-icons.png)
+
+   Click the **Upload new logo** under **Application logo** and upload the image
+   file.
+
+   ![GitHub App - icon](img/github-app-icon.png)
+
+11. Set the **Badge color** to `#f29d25`.
+
+   ![GitHub App - badge color](img/github-app-badge-color.png)
+
+12. Click the **Update application** button.
+
+   ![GitHub App - update](img/github-app-update.png)
+
+13. Copy and paste the **Client ID** and **Client secret** into Trambar
+    ADministrative Console.
+
+    ![GitHub App - secrets](img/github-app-client-secrets.png)
+
+    ![Server form - secrets](img/admin-server-github-secrets.png)
+
+14. Under **New users** select a user type for users coming from GitHub.
+
+    ![Server form - new users](img/admin-server-new-users.png)
+
+15. Optionally, choose a role for new users under **Role assignment**.
+
+    ![Server form - role](img/admin-server-role.png)
+
+16. Click the **Save server** button.
+
+    ![Server form - save](img/admin-server-github-save.png)
+
+17. Click the **Test OAuth integration** button. A GitHub pop-up window will
+    appear. Grant authorization when prompted. Afterward, the page should simply
+    read "OK".
+
+    ![Server form - test](img/admin-server-github-test.png)
 
 ### Adding Google+
 
