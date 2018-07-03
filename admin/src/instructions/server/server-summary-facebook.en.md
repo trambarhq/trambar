@@ -34,7 +34,7 @@ in *Settings* > *Basic*.
 You may link to your company's own page or use this boilerplate. It is entered
 in *Settings* > *Basic*.
 
-**App key** - Copy the app key from Facebook App Dashboard. It can be found in
+**App ID** - Copy the app id from Facebook App Dashboard. It can be found in
 *Settings* > *Basic*.
 
 **App secret** - Copy the app secret from Facebook App Dashboard. You will
