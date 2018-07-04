@@ -322,7 +322,7 @@ adding users](#adding-existing-users) instead.
 ## Users
 
 * [Adding a new user](#adding-a-new-user)
-* [Deactivating users](#deactivating-a-users)
+* [Deactivating users](#deactivating-users)
 * [Deleting a user](#deleting-a-user)
 * [Restoring users](#restoring-users)
 
@@ -347,11 +347,22 @@ adding users](#adding-existing-users) instead.
 
 ### Deactivating users
 
-1. Click **Users** in the left navigation pane.
+1. Click **Users** in the left navigation.
 
-   ![Navigation - Users](img/admin-settings-nav-users.png)
+   ![Navigation - Roles](img/admin-settings-nav-users.png)
 
-![User list - diable](img/admin-users-disable.png)
+2. Click the **Edit user list** button.
+
+   ![User list - edit](img/admin-users-edit.png)
+
+3. The list will expand to show all users, including those disabled or deleted
+   earlier. Click the name of each user you wish to disable.
+
+   ![User list - select](img/admin-users-disable-select.png)
+
+4. Click the **Save user list** button.
+
+   ![User list - save](img/admin-users-disable-save.png)
 
 ### Deleting a user
 
@@ -389,9 +400,12 @@ adding users](#adding-existing-users) instead.
 ## Roles
 
 * [Adding a new role](#adding-a-new-role)
-* [Disabling roles](#disabling-roles)
-* [Deleting a role](#deleting-a-role)
 * [Assigning a role to users](#assigning-a-role-to-users)
+* [Assigning a role automatically to new users](#assigning-a-role-automatically-to-new-users)
+* [Removing users from a role](#removing-users-from-a-role)
+* [Deactivating roles](#deactivating-roles)
+* [Deleting a role](#deleting-a-role)
+* [Restoring roles](#restoring-roles)
 
 ### Adding a new role
 
@@ -412,42 +426,6 @@ adding users](#adding-existing-users) instead.
 
    ![Role form - save](img/admin-role-save.png)
 
-### Disabling roles
-
-1. Click **Roles** in the left navigation.
-
-   ![Navigation - Roles](img/admin-settings-nav-roles.png)
-
-2. Click the **Edit role list** button.
-
-   ![Role list - edit](img/admin-roles-edit.png)
-
-3. The list will expand to show all roles, including those disabled or deleted
-   earlier. Click the name of each role you wish to disable.
-
-   ![Role list - select](img/admin-roles-disable-select.png)
-
-4. Click the **Save role list** button.
-
-   ![Role list - save](img/admin-roles-disable-save.png)
-
-### Deleting a role
-
-1. Click **Roles** in the left navigation.
-
-   ![Navigation - Roles](img/admin-settings-nav-roles.png)
-
-2. Click the name of the role you wish to delete.
-
-   ![Roles list](img/admin-roles-choose.png)
-
-3. Click the arrow beside the gray button, then **Delete role**.
-
-   ![Role summary - delete](img/admin-role-delete.png)
-
-If you delete a role by mistake. Use the browser's back button to return to the
-page and click the **Restore role** button.
-
 ### Assigning a role to users
 
 1. Click **Roles** in the left navigation.
@@ -456,7 +434,7 @@ page and click the **Restore role** button.
 
 2. Click the name of the role you wish to assign.
 
-   ![Roles list](img/admin-roles-choose.png)
+   ![Role list](img/admin-roles-choose.png)
 
 3. Click the **Edit role** button.
 
@@ -502,7 +480,7 @@ page and click the **Restore role** button.
 
 2. Click the name of the role you wish to assign.
 
-   ![Roles list](img/admin-roles-choose.png)
+   ![Role list](img/admin-roles-choose.png)
 
 3. Click the **Edit role** button.
 
@@ -517,6 +495,61 @@ page and click the **Restore role** button.
 
    ![Role form - save](img/admin-role-save-2.png)
 
+### Deactivating roles
+
+1. Click **Roles** in the left navigation.
+
+   ![Navigation - Roles](img/admin-settings-nav-roles.png)
+
+2. Click the **Edit role list** button.
+
+   ![Role list - edit](img/admin-roles-edit.png)
+
+3. The list will expand to show all roles, including those disabled or deleted
+   earlier. Click the name of each role you wish to disable.
+
+   ![Role list - select](img/admin-roles-disable-select.png)
+
+4. Click the **Save role list** button.
+
+   ![Role list - save](img/admin-roles-disable-save.png)
+
+### Deleting a role
+
+1. Click **Roles** in the left navigation.
+
+   ![Navigation - Roles](img/admin-settings-nav-roles.png)
+
+2. Click the name of the role you wish to delete.
+
+   ![Role list](img/admin-roles-choose.png)
+
+3. Click the arrow beside the gray button, then **Delete role**.
+
+   ![Role summary - delete](img/admin-role-delete.png)
+
+If you delete a role by mistake. Use the browser's back button to return to the
+page and click the **Restore role** button.
+
+### Restoring roles
+
+1. Click **Roles** in the left navigation pane.
+
+   ![Navigation - Roles](img/admin-settings-nav-roles.png)
+
+2. Click the **Edit role list** button.
+
+   ![Role list - edit](img/admin-roles-edit.png)
+
+3. The list will expand to show all roles, including those who were deactivate
+   or deleted earlier. Click the name of each role you wish to restore.
+
+   ![Role list - select](img/admin-roles-restore-select.png)
+
+4. Click the **Save role list** button.
+
+   ![Role list - save](img/admin-roles-restore-save.png)
+
 ## Servers
 
 * [Adding a GitLab server](#adding-a-gitlab-server)
@@ -525,6 +558,9 @@ page and click the **Restore role** button.
 * [Adding GitHub](#adding-github)
 * [Adding Google+](#adding-google)
 * [Adding Windows Live](#adding-windows-live)
+* [Deactivating servers](#deactivating-servers)
+* [Deleting a server](#deleting-a-server)
+* [Restoring servers](#restoring-servers)
 
 ### Adding a GitLab server
 
@@ -998,11 +1034,60 @@ page and click the **Restore role** button.
 
 ### Adding Windows Live
 
-### Disabling server
+### Deactivating servers
 
-![Server list - edit](img/admin-servers-edit.png)
+1. Click **Servers** in the left navigation.
 
-![Server list - disable](img/admin-servers-disable-save.png)
+   ![Navigation - Servers](img/admin-settings-nav-servers.png)
+
+2. Click the **Edit server list** button.
+
+   ![Server list - edit](img/admin-servers-edit.png)
+
+3. The list will expand to show all roles, including those disabled or deleted
+   earlier. Click the name of each server you wish to disable.
+
+   ![Server list - select](img/admin-servers-disable-select.png)
+
+4. Click the **Save role list** button.
+
+   ![Role list - save](img/admin-servers-disable-save.png)
+
+### Deleting a server
+
+1. Click **Servers** in the left navigation.
+
+   ![Navigation - Servers](img/admin-settings-nav-servers.png)
+
+2. Click the name of the role you wish to delete.
+
+   ![Server list](img/admin-servers-choose.png)
+
+3. Click the arrow beside the gray button, then **Delete server**.
+
+   ![Server summary - delete](img/admin-server-delete.png)
+
+If you delete a role by mistake. Use the browser's back button to return to the
+page and click the **Restore role** button.
+
+### Restoring servers
+
+1. Click **Servers** in the left navigation pane.
+
+   ![Navigation - Servers](img/admin-settings-nav-servers.png)
+
+2. Click the **Edit server list** button.
+
+   ![Server list - edit](img/admin-servers-edit.png)
+
+3. The list will expand to show all servers, including those who were deactivated
+   or deleted earlier. Click the name of each server you wish to restore.
+
+   ![Server list - select](img/admin-servers-restore-select.png)
+
+4. Click the **Save server list** button.
+
+   ![Server list - save](img/admin-servers-restore-save.png)
 
 ## Settings
 
