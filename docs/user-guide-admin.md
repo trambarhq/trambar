@@ -884,6 +884,118 @@ page and click the **Restore role** button.
 
 ### Adding Google+
 
+1. Click **Servers** in the left navigation.
+
+   ![Navigation - Servers](img/admin-settings-nav-servers.png)
+
+2. Click the **Add new server** button.
+
+   ![Server list - add](img/admin-servers-add.png)
+
+3. Under **Server type**, select *Google*.
+
+   ![Server type](img/admin-server-google-type.png)
+
+4. In a different browser window, navigate to the [Google Developer Console](https://console.developers.google.com/cloud-resource-manager).
+
+5. Click the **Create Project** button.
+
+   ![Google app list - new](img/google-apps-add.png)
+
+6. Enter a **Project name**.
+
+   ![Google app - name](img/google-app-project.png)
+
+7. Click the **Create** button.
+
+   ![Google app - create](img/google-app-create.png)      
+
+8. Switch to the newly created project if it's not currently selected using
+   the drop-down list at the top of the page.
+
+   ![Google app - switch](img/google-app-switch.png)
+
+9. Click the "hamburger" button.
+
+   ![Google app - menu](img/google-app-menu.png)
+
+10. Under **APIs & Services**, click **Credentials**.
+
+    ![Google app - credentials](img/google-app-credentials.png)
+
+11. Click the **Create credentials** button, then **OAuth client ID**.
+
+    ![Google app - OAuth client](img/google-app-oauth-client.png)
+
+12. Click the **Configure consent screen** button.
+
+    ![Google app - app type](img/google-app-client-app-type-consent.png)
+
+13. Enter an product name. The name should contain the name of your company
+    so that users will be able to correctly identify your app in Google.
+
+14. Copy the **Site URL** from Trambar Administrative Console and use it as the
+    **Homepage URL**.
+
+    ![Server form - site URL](img/admin-server-site-url.png)
+
+    ![Google app - homepage](img/google-app-homepage.png)
+
+15. Copy the address of one of the default app icons and paste it into .
+
+    ![Server form - icons](img/admin-server-google-icons.png)
+
+    ![Google app - icon](img/google-app-icon.png)
+
+16. Copy and paste the **Privacy policy** and **Terms**.
+
+    ![Server form - terms](img/admin-server-google-terms.png)
+
+    ![Google app - terms](img/google-app-terms.png)
+
+17. Click the **Save** button.
+
+    ![Google app - save](img/google-app-consent-save.png)
+
+18. Select **Web application** as the **Application Type**.
+
+    ![Google app - client type](img/google-app-client-type.png)
+
+19. Copy and paste the **Redirect URI**.
+
+    ![Server form - redirect URI](img/admin-server-google-callback.png)
+
+    ![Google app - redirect URI](img/google-app-redirect-uri.png)
+
+20. Click the **Create** button.
+
+    ![Google app - create](img/google-app-client-create.png)
+
+21. Copy and paste the **client ID** and **Client secret** into Trambar
+    Administrative Console.
+
+    ![Google app - secrets](img/google-app-client-secrets.png)
+
+    ![Server form - secrets](img/admin-server-google-secrets.png)
+
+22. Under **New users** select a user type for users coming from Google.
+
+    ![Server form - new users](img/admin-server-new-users.png)
+
+23. Optionally, choose a role for new users under **Role assignment**.
+
+    ![Server form - role](img/admin-server-role.png)
+
+24. Click the **Save server** button.
+
+    ![Server form - save](img/admin-server-google-save.png)
+
+25. Click the **Test OAuth integration** button. A Google pop-up window will
+    appear. Grant authorization when prompted. Afterward, the page should simply
+    read "OK".
+
+    ![Server form - test](img/admin-server-google-test.png)
+
 ### Adding Windows Live
 
 ### Disabling server
