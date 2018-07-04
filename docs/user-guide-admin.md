@@ -54,7 +54,7 @@ Trambar User Guide - Administrative Console
 
 ### Adding a new project
 
-1. Click **Projects** in the left navigation.
+1. Click **Projects** in the left navigation pane.
 
    ![Navigation - Projects](img/admin-settings-nav-projects.png)
 
@@ -74,7 +74,7 @@ Trambar User Guide - Administrative Console
 
 ### Archiving old projects
 
-1. Click **Projects** in the left navigation.
+1. Click **Projects** in the left navigation pane.
 
    ![Navigation - Projects](img/admin-settings-nav-projects.png)
 
@@ -93,7 +93,7 @@ Trambar User Guide - Administrative Console
 
 ### Deleting a project
 
-1. Click **Projects** in the left navigation.
+1. Click **Projects** in the left navigation pane.
 
    ![Navigation - Projects](img/admin-settings-nav-projects.png)
 
@@ -110,7 +110,7 @@ the page and click the **Restore project** button.
 
 ### Restoring a project
 
-1. Click **Projects** in the left navigation.
+1. Click **Projects** in the left navigation pane.
 
    ![Navigation - Projects](img/admin-settings-nav-projects.png)
 
@@ -347,7 +347,7 @@ adding users](#adding-existing-users) instead.
 
 ### Deactivating users
 
-1. Click **Users** in the left navigation.
+1. Click **Users** in the left navigation pane.
 
    ![Navigation - Roles](img/admin-settings-nav-users.png)
 
@@ -409,7 +409,7 @@ adding users](#adding-existing-users) instead.
 
 ### Adding a new role
 
-1. Click **Roles** in the left navigation.
+1. Click **Roles** in the left navigation pane.
 
    ![Navigation - Roles](img/admin-settings-nav-roles.png)
 
@@ -428,7 +428,7 @@ adding users](#adding-existing-users) instead.
 
 ### Assigning a role to users
 
-1. Click **Roles** in the left navigation.
+1. Click **Roles** in the left navigation pane.
 
    ![Navigation - Roles](img/admin-settings-nav-roles.png)
 
@@ -451,7 +451,7 @@ adding users](#adding-existing-users) instead.
 
 ### Assigning a role automatically to new users   
 
-1. Click **Servers** in the left navigation.
+1. Click **Servers** in the left navigation pane.
 
    ![Navigation - Servers](img/admin-settings-nav-servers.png)
 
@@ -474,7 +474,7 @@ adding users](#adding-existing-users) instead.
 
 ### Removing users from a role
 
-1. Click **Roles** in the left navigation.
+1. Click **Roles** in the left navigation pane.
 
    ![Navigation - Roles](img/admin-settings-nav-roles.png)
 
@@ -497,7 +497,7 @@ adding users](#adding-existing-users) instead.
 
 ### Deactivating roles
 
-1. Click **Roles** in the left navigation.
+1. Click **Roles** in the left navigation pane.
 
    ![Navigation - Roles](img/admin-settings-nav-roles.png)
 
@@ -516,7 +516,7 @@ adding users](#adding-existing-users) instead.
 
 ### Deleting a role
 
-1. Click **Roles** in the left navigation.
+1. Click **Roles** in the left navigation pane.
 
    ![Navigation - Roles](img/admin-settings-nav-roles.png)
 
@@ -564,7 +564,7 @@ page and click the **Restore role** button.
 
 ### Adding a GitLab server
 
-1. Click **Servers** in the left navigation.
+1. Click **Servers** in the left navigation pane.
 
    ![Navigation - Servers](img/admin-settings-nav-servers.png)
 
@@ -633,7 +633,7 @@ page and click the **Restore role** button.
 
 ### Adding Dropbox
 
-1. Click **Servers** in the left navigation.
+1. Click **Servers** in the left navigation pane.
 
    ![Navigation - Servers](img/admin-settings-nav-servers.png)
 
@@ -710,7 +710,7 @@ page and click the **Restore role** button.
 
 ### Adding Facebook
 
-1. Click **Servers** in the left navigation.
+1. Click **Servers** in the left navigation pane.
 
    ![Navigation - Servers](img/admin-settings-nav-servers.png)
 
@@ -835,7 +835,7 @@ page and click the **Restore role** button.
 
 ### Adding GitHub
 
-1. Click **Servers** in the left navigation.
+1. Click **Servers** in the left navigation pane.
 
    ![Navigation - Servers](img/admin-settings-nav-servers.png)
 
@@ -920,7 +920,7 @@ page and click the **Restore role** button.
 
 ### Adding Google+
 
-1. Click **Servers** in the left navigation.
+1. Click **Servers** in the left navigation pane.
 
    ![Navigation - Servers](img/admin-settings-nav-servers.png)
 
@@ -1034,9 +1034,86 @@ page and click the **Restore role** button.
 
 ### Adding Windows Live
 
+1. Click **Servers** in the left navigation pane.
+
+   ![Navigation - Servers](img/admin-settings-nav-servers.png)
+
+2. Click the **Add new server** button.
+
+   ![Server list - add](img/admin-servers-add.png)
+
+3. Under **Server type**, select *Windows Live*.
+
+   ![Server form - type](img/admin-server-windows-type.png)
+
+4. In a different browser window, navigate to the [Windows Live Application
+   Management](https://apps.dev.microsoft.com/) page.
+
+5. In the **Live SDK Application** section, click **Add an app**.
+
+   ![Windows apps - add](img/windows-apps-add.png)
+
+6. Enter an application name. The name should contain the name of your company
+   so that users will be able to correctly identify your app in Windows.
+
+   ![Windows app - name](img/windows-app-name.png)
+
+7. Click the **Create application** button.
+
+   ![Windows app - create](img/windows-app-create.png)
+
+8. In the **Platforms** > **Web** section, click the **Add URL** button. Copy
+   and paste the **Redirect URL** from Trambar Administrative Console.
+
+   ![Server form - redirect URL](img/admin-server-windows-callback.png)
+
+   ![Windows app - redirect URL](img/windows-app-redirect-url.png)
+
+9. Download the default app icon from Trambar Administrative Console.
+
+   ![Server form - icon](img/admin-server-windows-icons.png)
+
+   Click the **Add** button under **Profile** > **Logo** and upload the image
+   file.
+
+   ![Windows app - icon](img/windows-app-icon.png)
+
+10. Copy and paste the URL for **Privacy policy** and **Terms**.
+
+   ![Server form - terms](img/admin-server-windows-terms.png)
+
+   ![Windows app - terms](img/windows-app-terms.png)
+
+11. Click the **Save** button at the bottom of the page.
+
+12. Copy and paste the **Application ID** and **Application secret** into
+    Trambar Administrative Console.
+
+    ![Windows app - secrets](img/windows-app-secrets.png)
+
+    ![Server form - secrets](img/admin-server-windows-secrets.png)
+
+13. Under **New users** select a user type for users coming from Google.
+
+    ![Server form - new users](img/admin-server-new-users.png)
+
+14. Optionally, choose a role for new users under **Role assignment**.
+
+    ![Server form - role](img/admin-server-role.png)
+
+15. Click the **Save server** button.
+
+    ![Server form - save](img/admin-server-windows-save.png)
+
+16. Click the **Test OAuth integration** button. A Windows pop-up window will
+    appear. Grant authorization when prompted. Afterward, the page should simply
+    read "OK".
+
+    ![Server form - test](img/admin-server-windows-test.png)
+
 ### Deactivating servers
 
-1. Click **Servers** in the left navigation.
+1. Click **Servers** in the left navigation pane.
 
    ![Navigation - Servers](img/admin-settings-nav-servers.png)
 
@@ -1055,7 +1132,7 @@ page and click the **Restore role** button.
 
 ### Deleting a server
 
-1. Click **Servers** in the left navigation.
+1. Click **Servers** in the left navigation pane.
 
    ![Navigation - Servers](img/admin-settings-nav-servers.png)
 
@@ -1100,7 +1177,7 @@ page and click the **Restore role** button.
 1. Open a new browser window and sign into the Trambar web client. This will
    allow you see to changes as soon as you save them.
 
-2. Click **Settings** in the left navigation.
+2. Click **Settings** in the left navigation pane.
 
    ![Navigation - Settings](img/admin-projects-nav-settings.png)
 
@@ -1125,7 +1202,7 @@ page and click the **Restore role** button.
 1. Open a new browser window and sign into the Trambar web client. This will
    allow you see to changes as soon as you save them.
 
-2. Click **Settings** in the left navigation.
+2. Click **Settings** in the left navigation pane.
 
    ![Navigation - Settings](img/admin-projects-nav-settings.png)
 
@@ -1147,7 +1224,7 @@ page and click the **Restore role** button.
 
 ### Providing site description in anther language
 
-1. Click **Settings** in the left navigation.
+1. Click **Settings** in the left navigation pane.
 
    ![Navigation - Settings](img/admin-projects-nav-settings.png)
 
