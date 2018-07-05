@@ -18,20 +18,29 @@ Trambar User Guide - Administrative Console
 
 ### Signing in using password
 
+The first time you sign into the Administrative Console, you must use the root
+password provided during installation. Once Trambar is linked to a GitLab
+server, you can sign in using OAuth instead.
+
 1. Enter user name and password.
 
 2. Click the **Sign in** button.
 
    ![Sign in - password](img/admin-sign-in-password.png)
 
+To reset the root password, run `sudo trambar password`.
+
 ### Signing in using OAuth
+
+The option to sign in thru OAuth will become available once a GitLab server is
+added.
 
 1. Click the **GitLab** button.
 
    ![Sign in - OAuth](img/admin-sign-in-oauth.png)
 
 2. A GitLab pop-up window will appear. If you're not currently signed into
-   GitLab, you're be asked to provide your credentials. Afterward, you'll be
+   GitLab, you'll be asked to provide your user credentials. Afterward, you'll be
    asked you to grant authorization to Trambar. Click the **Authorize** button.
 
    ![GitLab OAuth window](img/gitlab-oauth.png)
@@ -50,7 +59,7 @@ Trambar User Guide - Administrative Console
 * [Adding a new project](#adding-a-new-project)
 * [Archiving old projects](#archiving-old-projects)
 * [Deleting a project](#deleting-a-project)
-* [Restoring a project](#restoring-a-project)
+* [Restoring archived or deleted projects](#restoring-archived-or-deleted-projects)
 
 ### Adding a new project
 
@@ -62,17 +71,45 @@ Trambar User Guide - Administrative Console
 
    ![Project list - add](img/admin-projects-add.png)
 
-3. Enter the name and description of the project. Choose a project emblem.
-   Indicate how new members are added and whether non-members may view the
-   project's news feed.
+3. Enter the name and description of the project.
 
-   ![Project form](img/admin-project-form.png)
+   ![Project form - name](img/admin-project-name.png)
 
-4. Click the **Save project** button.
+   The project identifier will be derived automatically from the name, unless
+   you're writing in a non-Latin script.
+
+4. Choose a project emblem.
+
+   ![Project form - emblem](img/admin-project-emblem.png)
+
+5. Indicate how new members are added.
+
+   ![Project form](img/admin-project-new-users.png)
+
+   Generally it's easier to let users ask for membership. You can always reject
+   those you wish to keep out.
+
+   Automatically granting membership to regular users is sensible when your
+   organization is small and you can trust everyone. It spares the administrator
+   the task of approving each new member.
+
+   Automatically granting membership to guests is sensible only when guest
+   access is tightly controlled--for instance, when only GitLab external users
+   can become guests.
+
+6. Indicate whether non-members may view the project's news feed.
+
+   ![Project form](img/admin-project-access.png)
+
+7. Click the **Save project** button.
 
    ![Project form - save](img/admin-project-save.png)
 
 ### Archiving old projects
+
+Archiving a project makes it read-only. People will no longer be able to publish
+posts to its news feed. It will also disappear from the [Start](user-guide.md#start---web-browser)
+page. An archived project can be reactivated later on.
 
 1. Click **Projects** in the left navigation pane.
 
@@ -93,6 +130,9 @@ Trambar User Guide - Administrative Console
 
 ### Deleting a project
 
+Deleting a project destroys its records permanently. Typically, you would only
+do this after making a mistake shortly after the project's creation.
+
 1. Click **Projects** in the left navigation pane.
 
    ![Navigation - Projects](img/admin-settings-nav-projects.png)
@@ -105,10 +145,13 @@ Trambar User Guide - Administrative Console
 
    ![Project summary - delete](img/admin-project-delete.png)
 
-If you delete a project by mistake, use the browser's back button to return to
-the page and click the **Restore project** button.  
+If you've deleted a project by mistake, use the browser's back button to return
+to the page and click the **Restore project** button.  
 
-### Restoring a project
+### Restoring archived or deleted projects
+
+You can easily put a project back into an active state. Deleted projects can
+also be restored, provided its records have not yet been garbage-collected.
 
 1. Click **Projects** in the left navigation pane.
 
@@ -131,8 +174,8 @@ the page and click the **Restore project** button.
 
 * [Approving membership requests](#approving-membership-requests)
 * [Rejecting membership requests](#rejecting-membership-requests)
-* [Adding existing users](#adding-existing-users)
-* [Adding a new member](#adding-a-new-member)
+* [Adding existing users as members](#adding-existing-users-as-members)
+* [Adding a new member manually](#adding-a-new-member-manually)
 * [Removing members](#deleting-members)
 
 ### Approving membership requests
@@ -147,16 +190,16 @@ the page and click the **Restore project** button.
 
 3. Click **Members** in the left navigation pane.
 
-  ![Navigation - Members](img/admin-project-nav-members.png)
+   ![Navigation - Members](img/admin-project-nav-members.png)
 
 4. If there are unapproved requests, certain users will appear grayed out in
-   the list. The **Approve all requests** button will be preselected. Click it
-   to approve all requests.
+   the list. Click the **Approve all requests** button to bring these pending
+   members into the project.
 
    ![Member list - approve](img/admin-members-approve.png)
 
 If you wish to add only some of the users, follow the [instructions for
-adding users](#adding-existing-users) instead.
+adding users](#adding-existing-users-as-members) instead.
 
 ### Rejecting membership requests
 
@@ -170,15 +213,15 @@ adding users](#adding-existing-users) instead.
 
 3. Click **Members** in the left navigation pane.
 
-  ![Navigation - Members](img/admin-project-nav-members.png)
+   ![Navigation - Members](img/admin-project-nav-members.png)
 
 4. If there are unapproved requests, certain users will appear grayed out in
-   the list. The **Approve all requests** button will be preselected. Click the
-   arrow beside it, then click **Reject all requests**.
+   the list. Click the arrow beside the **Approve all requests** button, then
+   click **Reject all requests**.
 
    ![Member list - reject](img/admin-members-reject.png)
 
-### Adding existing users
+### Adding existing users as members
 
 1. Click **Projects** in the left navigation pane.
 
@@ -205,7 +248,10 @@ adding users](#adding-existing-users) instead.
 
    ![Member list - add](img/admin-members-add-save.png)
 
-### Adding a new member
+### Adding a new member manually
+
+In order to add a user, you must know the e-mail address he had used to register
+at an OAuth provider.
 
 1. Click **Projects** in the left navigation pane.
 
@@ -219,7 +265,7 @@ adding users](#adding-existing-users) instead.
 
    ![Navigation - Members](img/admin-project-nav-members.png)
 
-4. Click the arrow beside the gray button, then **Add new member**.
+4. Click the arrow beside the gray button, then **Add new user**.
 
    ![Member list - new](img/admin-members-new.png)
 
@@ -278,7 +324,7 @@ adding users](#adding-existing-users) instead.
 
    ![Navigation - Repositories](img/admin-project-nav-repos.png)
 
-4. Click the **Edit role list** button.
+4. Click the **Edit repository list** button.
 
    ![Repo list - edit](img/admin-repos-edit.png)
 
@@ -293,6 +339,10 @@ adding users](#adding-existing-users) instead.
 
 ### Removing repositories
 
+Removing a repo from a project does not remove stories from that repo. If you've
+accidentally added the wrong repo, your project is fubar. A mean to rectify such
+a situation will be implemented in the future.
+
 1. Click **Projects** in the left navigation pane.
 
    ![Navigation - Projects](img/admin-settings-nav-projects.png)
@@ -305,13 +355,12 @@ adding users](#adding-existing-users) instead.
 
    ![Navigation - Repositories](img/admin-project-nav-repos.png)
 
-4. Click the **Edit role list** button.
+4. Click the **Edit repository list** button.
 
-   ![Repo list - add](img/admin-repos-edit.png)
+   ![Repo list - add](img/admin-repos-edit-2.png)
 
-   The list will expand to show all repositories.
-
-5. Click the name of each repo you wish to remove.   
+5. The list will expand to show all repositories. Click the name of each repo
+   you wish to remove.   
 
    ![Repo list - select](img/admin-repos-remove-select.png)
 
@@ -321,12 +370,15 @@ adding users](#adding-existing-users) instead.
 
 ## Users
 
-* [Adding a new user](#adding-a-new-user)
+* [Adding a new user manually](#adding-a-new-user-manually)
 * [Deactivating users](#deactivating-users)
 * [Deleting a user](#deleting-a-user)
-* [Restoring users](#restoring-users)
+* [Restoring deactivated or deleted users](#restoring-deactivated-or-deleted-users)
 
 ### Adding a new user
+
+In order to add a user, you must know the e-mail address he had used to register
+at an OAuth provider.
 
 1. Click **Users** in the left navigation pane.
 
@@ -347,6 +399,9 @@ adding users](#adding-existing-users) instead.
 
 ### Deactivating users
 
+Deactivating a user keeps him from signing into Trambar again. Posts and
+comments he has written will remain.
+
 1. Click **Users** in the left navigation pane.
 
    ![Navigation - Roles](img/admin-settings-nav-users.png)
@@ -355,8 +410,8 @@ adding users](#adding-existing-users) instead.
 
    ![User list - edit](img/admin-users-edit.png)
 
-3. The list will expand to show all users, including those disabled or deleted
-   earlier. Click the name of each user you wish to disable.
+3. The list will expand to show all users, including those deactivated or
+   deleted earlier. Click the name of each user you wish to deactivate.
 
    ![User list - select](img/admin-users-disable-select.png)
 
@@ -365,6 +420,9 @@ adding users](#adding-existing-users) instead.
    ![User list - save](img/admin-users-disable-save.png)
 
 ### Deleting a user
+
+Deleting a user removes him from the system completely. Posts and comments
+written by him will be deleted as well.
 
 1. Click **Users** in the left navigation pane.
 
@@ -378,7 +436,13 @@ adding users](#adding-existing-users) instead.
 
    ![User summary - delete](img/admin-user-delete.png)
 
-### Restoring users
+If you've deleted a user by mistake, use the browser's back button to return
+to the page and click the **Restore user** button.  
+
+### Restoring deactivated or deleted users
+
+Deactivated user accounts can be made active again. Deleted users can also be
+restored, provided his records have not been garbage-collected yet.
 
 1. Click **Users** in the left navigation pane.
 
@@ -388,7 +452,7 @@ adding users](#adding-existing-users) instead.
 
    ![User list - edit](img/admin-users-edit-2.png)
 
-3. The list will expand to show all users, including those who were deactivate
+3. The list will expand to show all users, including those who were deactivated
    or deleted earlier. Click the name of each user you wish to restore.
 
    ![User list - select](img/admin-users-restore-select.png)
@@ -405,7 +469,7 @@ adding users](#adding-existing-users) instead.
 * [Removing users from a role](#removing-users-from-a-role)
 * [Deactivating roles](#deactivating-roles)
 * [Deleting a role](#deleting-a-role)
-* [Restoring roles](#restoring-roles)
+* [Restoring deactivated or deleted roles](#restoring-deactivated-or-deleted-roles)
 
 ### Adding a new role
 
@@ -417,12 +481,24 @@ adding users](#adding-existing-users) instead.
 
    ![Roles - add](img/admin-roles-new.png)
 
-3. Enter the name and description of the role. Select a story priority. Finally,
-   choose the users to whom you wish to assign the new role.
+3. Enter the name and description of the role.
 
-   ![Role form](img/admin-role-form.png)
+   ![Role form - name](img/admin-role-name.png)
 
-4. Click the **Save role** button.
+4. Select a story priority.
+
+   ![Role form - name](img/admin-role-priority.png)
+
+   Story priority comes into play when a user has many (100+) unread stories
+   and Trambar must decide which to present and which to omit. Typically, you
+   would want to suppress posts by those whose role in the project is somewhat
+   tangential.
+
+5. Choose the users to whom you wish to assign the new role.
+
+   ![Role form - users](img/admin-role-users.png)
+
+6. Click the **Save role** button.
 
    ![Role form - save](img/admin-role-save.png)
 
@@ -443,7 +519,7 @@ adding users](#adding-existing-users) instead.
 4. Under **Users**, click the name of each user to whom you wish to assign the
    role.   
 
-   ![Role form - users](img/admin-role-form-users.png)
+   ![Role form - users](img/admin-role-users.png)
 
 5. Click the **Save role** button.
 
@@ -455,11 +531,11 @@ adding users](#adding-existing-users) instead.
 
    ![Navigation - Servers](img/admin-settings-nav-servers.png)
 
-2. Click on the name of the server whose users should be assigned the role.
+2. Click the name of the server whose users should be assigned the role.
 
    ![Server lists](img/admin-servers-choose.png)
 
-3. Click the **Edit server button**
+3. Click the **Edit server** button.
 
    ![Server summary - edit](img/admin-server-edit.png)
 
@@ -478,7 +554,7 @@ adding users](#adding-existing-users) instead.
 
    ![Navigation - Roles](img/admin-settings-nav-roles.png)
 
-2. Click the name of the role you wish to assign.
+2. Click the name of the role from which you wish to remove users.
 
    ![Role list](img/admin-roles-choose.png)
 
@@ -489,7 +565,7 @@ adding users](#adding-existing-users) instead.
 4. Under **Users**, click the name of each user you wish to remove from the
    role.   
 
-   ![Role form - users](img/admin-role-form-users-2.png)
+   ![Role form - users](img/admin-role-users-2.png)
 
 5. Click the **Save role** button.
 
@@ -528,10 +604,10 @@ adding users](#adding-existing-users) instead.
 
    ![Role summary - delete](img/admin-role-delete.png)
 
-If you delete a role by mistake. Use the browser's back button to return to the
-page and click the **Restore role** button.
+If you've deleted a role by mistake, use the browser's back button to return to
+the page and click the **Restore role** button.
 
-### Restoring roles
+### Restoring deactivated or deleted roles
 
 1. Click **Roles** in the left navigation pane.
 
@@ -560,7 +636,7 @@ page and click the **Restore role** button.
 * [Adding Windows Live](#adding-windows-live)
 * [Deactivating servers](#deactivating-servers)
 * [Deleting a server](#deleting-a-server)
-* [Restoring servers](#restoring-servers)
+* [Restoring deactivated or deleted servers](#restoring-deactivated-or-deleted-servers)
 
 ### Adding a GitLab server
 
@@ -576,7 +652,7 @@ page and click the **Restore role** button.
 
    ![Server type](img/admin-server-gitlab-type.png)
 
-4. In a different browser tab, sign into GitLab using an account with
+4. In a different browser window, sign into GitLab using an account with
    administrative privilege.
 
 5. Navigate to the **Admin area**.
@@ -618,6 +694,11 @@ page and click the **Restore role** button.
 
     ![Server form - user mapping](img/admin-server-gitlab-new-users.png)
 
+    A typical setup is to map GitLab administrator to Trambar administrator,
+    GitLab regular user to Trambar regular user, and GitLab external user to
+    Trambar guest. Users can be promoted to more privileged user type on a
+    case by case basis.
+
 12. Click the **Save server** button.
 
     ![Server form - save](img/admin-server-gitlab-save.png)
@@ -645,8 +726,7 @@ page and click the **Restore role** button.
 
    ![Server type](img/admin-server-dropbox-type.png)
 
-4. In a different browser window, navigate to the [Dropbox App Console](https://www.dropbox.com/developers/apps)
-   page.
+4. In a different browser window, sign into [Dropbox App Console](https://www.dropbox.com/developers/apps).
 
 5. Click the **Create app** button.
 
@@ -722,7 +802,7 @@ page and click the **Restore role** button.
 
    ![Server type](img/admin-server-facebook-type.png)
 
-4. In a different browser window, navigate to the [Facebook App Dashboard](https://developers.facebook.com/apps/).
+4. In a different browser window, sign into [Facebook App Dashboard](https://developers.facebook.com/apps/).
 
 5. Click the **Add a New App** button.
 
@@ -746,7 +826,7 @@ page and click the **Restore role** button.
 
    ![Facebook Login - platform](img/facebook-app-platform-www.png)
 
-10. Copy and paste site URL.
+10. Copy and paste the **Site URL**.
 
    ![Server form - site url](img/admin-server-site-url.png)
 
@@ -760,7 +840,7 @@ page and click the **Restore role** button.
 
     ![Facebook Login - settings](img/facebook-app-site-url-nav-settings.png)
 
-13. Copy and paste **Redirect URI**.
+13. Copy and paste the **Redirect URI**.
 
     ![Server form - redirect URL](img/admin-server-facebook-callback.png)
 
@@ -774,7 +854,8 @@ page and click the **Restore role** button.
 
     ![Facebook Login](img/facebook-app-login-nav-basic.png)
 
-16. Copy and paste **Privacy policy** and **Terms** (or supply your own).
+16. Copy and paste the URLs for **Privacy policy** and **Terms** (or supply
+    your own).
 
     ![Server form - terms](img/admin-server-facebook-terms.png)
 
@@ -802,7 +883,7 @@ page and click the **Restore role** button.
 
     ![Server form - app id](img/admin-server-facebook-app-id.png)
 
-21. Click the **Show** button in the *App Secret** text box. Copy and paste the
+21. Click the **Show** button in the **App Secret** text box. Copy and paste the
     secret token into Trambar Administrative Console.    
 
     ![Facebook App - secret](img/facebook-app-secret.png)
@@ -894,7 +975,7 @@ page and click the **Restore role** button.
    ![GitHub App - update](img/github-app-update.png)
 
 13. Copy and paste the **Client ID** and **Client secret** into Trambar
-    ADministrative Console.
+    Administrative Console.
 
     ![GitHub App - secrets](img/github-app-client-secrets.png)
 
@@ -932,7 +1013,7 @@ page and click the **Restore role** button.
 
    ![Server type](img/admin-server-google-type.png)
 
-4. In a different browser window, navigate to the [Google Developer Console](https://console.developers.google.com/cloud-resource-manager).
+4. In a different browser window, sign into [Google Developer Console](https://console.developers.google.com/cloud-resource-manager).
 
 5. Click the **Create Project** button.
 
@@ -977,7 +1058,8 @@ page and click the **Restore role** button.
 
     ![Google app - homepage](img/google-app-homepage.png)
 
-15. Copy the address of one of the default app icons and paste it into .
+15. Copy the address of one of the default app icons and paste it into the box
+    labeled **Product logo URL**.
 
     ![Server form - icons](img/admin-server-google-icons.png)
 
@@ -993,7 +1075,7 @@ page and click the **Restore role** button.
 
     ![Google app - save](img/google-app-consent-save.png)
 
-18. Select **Web application** as the **Application Type**.
+18. Select *Web application* as the **Application Type**.
 
     ![Google app - client type](img/google-app-client-type.png)
 
@@ -1046,8 +1128,8 @@ page and click the **Restore role** button.
 
    ![Server form - type](img/admin-server-windows-type.png)
 
-4. In a different browser window, navigate to the [Windows Live Application
-   Management](https://apps.dev.microsoft.com/) page.
+4. In a different browser window, sign into to [Windows Live Application
+   Management](https://apps.dev.microsoft.com/).
 
 5. In the **Live SDK Application** section, click **Add an app**.
 
@@ -1093,7 +1175,7 @@ page and click the **Restore role** button.
 
     ![Server form - secrets](img/admin-server-windows-secrets.png)
 
-13. Under **New users** select a user type for users coming from Google.
+13. Under **New users** select a user type for users coming from Windows Live.
 
     ![Server form - new users](img/admin-server-new-users.png)
 
@@ -1121,14 +1203,14 @@ page and click the **Restore role** button.
 
    ![Server list - edit](img/admin-servers-edit.png)
 
-3. The list will expand to show all roles, including those disabled or deleted
+3. The list will expand to show all servers, including those disabled or deleted
    earlier. Click the name of each server you wish to disable.
 
    ![Server list - select](img/admin-servers-disable-select.png)
 
-4. Click the **Save role list** button.
+4. Click the **Save server list** button.
 
-   ![Role list - save](img/admin-servers-disable-save.png)
+   ![Server list - save](img/admin-servers-disable-save.png)
 
 ### Deleting a server
 
@@ -1136,7 +1218,7 @@ page and click the **Restore role** button.
 
    ![Navigation - Servers](img/admin-settings-nav-servers.png)
 
-2. Click the name of the role you wish to delete.
+2. Click the name of the server you wish to delete.
 
    ![Server list](img/admin-servers-choose.png)
 
@@ -1144,10 +1226,10 @@ page and click the **Restore role** button.
 
    ![Server summary - delete](img/admin-server-delete.png)
 
-If you delete a role by mistake. Use the browser's back button to return to the
-page and click the **Restore role** button.
+If you've deleted a server by mistake, use the browser's back button to return to
+the page and click the **Restore server** button.
 
-### Restoring servers
+### Restoring deactivated or deleted servers
 
 1. Click **Servers** in the left navigation pane.
 
@@ -1174,8 +1256,8 @@ page and click the **Restore role** button.
 
 ### Changing background image
 
-1. Open a new browser window and sign into the Trambar web client. This will
-   allow you see to changes as soon as you save them.
+1. Open a new browser window and sign into the web client. This will allow you
+   see to changes as soon as you save them.
 
 2. Click **Settings** in the left navigation pane.
 
@@ -1195,12 +1277,12 @@ page and click the **Restore role** button.
    ![Settings - save](img/admin-settings-save.png)
 
 6. Check the appearance of the web client in the other browser window. If you're
-   not satistfied with it, click the **Edit settings** button again.
+   not satisfied, click the **Edit settings** button again.
 
 ### Changing site description
 
-1. Open a new browser window and sign into the Trambar web client. This will
-   allow you see to changes as soon as you save them.
+1. Open a new browser window and sign into the web client. This will allow you
+   see to changes as soon as you save them.
 
 2. Click **Settings** in the left navigation pane.
 
@@ -1220,7 +1302,7 @@ page and click the **Restore role** button.
    ![Settings - save](img/admin-settings-save.png)
 
 6. Check the appearance of the web client in the other browser window. If you're
-   not satisfied with it, click the **Edit settings** button again.
+   not satisfied, click the **Edit settings** button again.
 
 ### Providing site description in anther language
 
@@ -1236,7 +1318,8 @@ page and click the **Restore role** button.
 
    ![Settings - languages](img/admin-settings-languages.png)
 
-4. Under **Description**, click the language that you added.
+4. Language tabs will appear beneath text boxes that accept text in multiple
+   languages. Under **Description**, click the language that you added.
 
    ![Settings - select language](img/admin-settings-description-polish-select.png)
 

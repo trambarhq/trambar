@@ -243,7 +243,7 @@ and users imported into the system.
 
 5. Click the **Edit repository list** button.
 
-   ![Repository list](img/admin-repos-empty.png)
+   ![Repository list](img/admin-repos-edit.png)
 
 6. All repositories imported from GitLab will appear. Click the name of each
    repo you wish to associate with the project. Click the **Save repository
