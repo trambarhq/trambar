@@ -88,12 +88,12 @@ to 100 stories are shown.
 The news feed is individualized. If you visit the site frequently, you'll end up
 seeing every story. If you visit the site only on occasions and the number of
 unread stories exceeds 100, you would only see the top 100. Stories are ranked
-using on a set of heuristic rules:
+using a set of heuristic rules:
 
 * Certain types of stories (merge, wiki, issue, survey) have high base scores
-* Stories receive points for each like, comment, and vote
+* Stories receive points for each like and comment
 * Recent stories are given an extra boost
-* A "diversity bonus" is given to stories by users authoring only a few
+* A "diversity bonus" is given to stories by users who write infrequently
 * Stories by users with a certain role can have a higher score
 
 Suppose you on a team developing a software for an external client. You've
@@ -149,9 +149,9 @@ the two remaining panels are stacked on top of each other:
 #### Auto-saving
 
 Contents entered into the story editor are automatically saved to the remote
-server. This allows you to start a post on a mobile phone (perhaps making use
-of not-so-perfect voice recognition) and finish editing it on a computer once
-you've returned to your desk.
+server. This allows you to start a post on a mobile phone (making use of
+not-so-perfect voice recognition, perhaps) and finish editing it on a computer
+once you've returned to your desk.
 
 #### Markdown
 
@@ -168,18 +168,18 @@ The editor also permits the creation of task lists and surveys:
 ![Story editor - task list](img/client-story-editor-task-list.png)
 
 When Trambar sees a list, it assumes you want to create a task list. If you
-want to create a survey instead, you would need to click the Survey button:
+want to create a survey instead, you would need to click the **Survey** button:
 
 ![Story editor - survey](img/client-story-editor-survey.png)
 
-The sequence `*[]` is automatically expanded to `* [ ]`. This eases the
-initiation of list creation on a touch device.
+The sequence `*[]` is automatically expanded to `* [ ]`. This makes list
+creation on a touch device much easier.
 
 #### Tagging
 
 Hash tags can be added to a story to make it easily to find in a search.
-Trambar also supports @ tags, used to indicate that someone is mentioned in a
-post. You can find a user's username in the [People](#people).
+Trambar also supports @tags, used to indicate that someone is mentioned in a
+post. You can find a user's username in the [People](#people) page.
 
 #### Emojis
 
@@ -215,12 +215,12 @@ permission to use the device.
 ![Video button](img/client-story-editor-media-video.png)
 
 With the mobile app, video clips are limited to 5 minutes, while audio clips are
-clipped to 15 minutes. If you wish to make longer recordings, you should
+limited to 15 minutes. If you wish to make longer recordings, you should
 activate the video/audio recorder by clicking the **File** button instead.
 
 With the web client, video and audio are streamed to the server. They can be as
 long as you like. Hour-long videos have been made in tests without difficulties.
-Such videos take up considerable space, however, up to a gigabyte each. If you
+Such videos take up considerable space, however--up to a gigabyte each. If you
 plan to making long recordings regularly (recording all your meetings, for
 instance), you would need to give your server a generous amount of storage.
 
@@ -288,8 +288,8 @@ its three parts appear side-by-side:
 On the left are the story contents. In the center are reactions to the story.
 On the right are [story options](#story-options) that you can toggle.
 
-When the screen is a bit more narrow, the stories options are relocated to
-pop-up menus:
+When the screen is a bit more narrow, the stories options are relocated to a
+pop-up menu:
 
 ![Story view - 2 columns](img/client-story-view-col2.png)
 
@@ -317,7 +317,7 @@ will appear in the [Bookmarks](#bookmarks) page.
 
 #### Send bookmark to others
 
-Sending bookmarks to others user draws their attention to it.
+Sending bookmarks to other users draws their attention to the story.
 
 #### Add issue to tracker
 
@@ -369,10 +369,10 @@ depicting an software defect--or your cat doing something funny.
 
 #### Task list
 
-**Task list** is self-reported mechanism letting people know what you're working
-on. It's not designed for workflow purpose. You cannot assigned a task list to
-someone else. You can, however, designate other users as coauthors of the list,
-allowing them to mark off tasks as completed.
+**Task list** is self-reporting mechanism letting others know what you're
+working on. It's not designed for workflow purpose. You cannot assigned a task
+list to someone else. You can, however, designate other users as coauthors of
+the list, allowing them to mark off tasks as completed.
 
 #### Survey
 
@@ -400,10 +400,10 @@ notification when a merge to master occurs.
 
 ##### Branch
 
-A **Branch** story is another special kind of push. It occurs someone pushes
-a new branch into a git repository. In a typical workflow, that usually means
-he's begun implementing a new feature or fixing a bug requiring substantial
-changes.
+A **Branch** story is another special kind of push. It occurs when someone
+pushes a new branch into a git repository. In a typical workflow, that usually
+means he's begun implementing a new feature or fixing a bug requiring
+substantial changes.
 
 ##### Issue
 
@@ -491,13 +491,13 @@ has [placed a post](#add-issue-to-tracker) into GitLab's issue tracker.
 
 ## Notifications
 
-In the **Notifications** page, you'll find the notification messages, typically
-generated when other people react to your stories:
+In the **Notifications** page, you'll find your notification messages, informing
+you how others people have reacted to your stories:
 
 ![Notifications](img/client-notifications.png)
 
-By default, you're immediately alerted upon receiving a notification. You can
-alter this behavior in the [Settings](#settings) to reduce the amount of
+By default, you're immediately alerted upon receiving most notifications. You
+can adjust this behavior in the [Settings](#notification) to reduce the amount of
 distraction.
 
 Unread notifications will be marked as read after a few seconds.
@@ -509,7 +509,7 @@ stories other project members want you to pay attention to:
 
 ![Bookmarks](img/client-bookmarks.png)
 
-To move a bookmarked story, simply uncheck the **Keep bookmark** option.
+To remove a bookmarked story, simply uncheck the **Keep bookmark** option.
 
 ## People
 
@@ -560,7 +560,7 @@ mentioned.
 
 The **User statistics** panel shows the user's activities in the last 14 days.
 The default view is a bar chart. You can switch between chart types using the
-bottoms on top:
+buttons on top:
 
 ![User statistics](img/client-user-view-statistics.png)
 
@@ -636,7 +636,7 @@ The **Notification** panel lets you decide for which events you'll be notified:
 ![Notification panel](img/client-settings-notification.png)
 
 Notifications are shown in the [Notifications](#notifications) page. By default,
-an alert is immediately sent to your web browser or phone. You can override this
+alerts are immediately sent to your web browser or phone. You can override this
 behavior using the two panels below.
 
 ### Web alert
@@ -689,7 +689,8 @@ The **Language** panel is where you can set the language of the user interface:
 
 The region determines which dialect or script variant is used. For example,
 when *United Kingdom* is selected, certain words will be spelled differently.
-The calendar will also list Monday the first day of the week instead of Sunday.
+The calendar will also list Monday as the first day of the week instead of
+Sunday.
 
 ## Calendar
 
@@ -699,10 +700,10 @@ date.
 
 ![Calendar bar](img/client-calendar-bar.png)
 
-The [News](#news) page will show the stories published on the selected date.
+The [News](#news) page will show stories published on the selected date.
 
-The [Notifications](#notifications) page will show the notifications you
-received on the selected date.
+The [Notifications](#notifications) page will show notifications you received
+on the selected date.
 
 The [People](#people) page will list the project members who were active on that
 day. Click on a name to see the full list of stories by that user. You can also
