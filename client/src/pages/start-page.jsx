@@ -698,7 +698,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
     renderOAuthButtons: function() {
         if (process.env.PLATFORM !== 'browser') return;
         var t = this.props.locale.translate;
-        var servers = this.props.servers;
+        var servers = sortServers(this.props.servers, this.props.locale);
         if (!servers) {
             return null;
         }
@@ -766,7 +766,7 @@ var StartPageSync = module.exports.Sync = React.createClass({
      */
     renderProjectButtons: function() {
         var t = this.props.locale.translate;
-        var projects = sortProject(this.props.projects, this.props.locale);
+        var projects = sortProjects(this.props.projects, this.props.locale);
         if (process.env.PLATFORM == 'browser') {
             return (
                 <div className="section buttons">
@@ -1317,10 +1317,17 @@ function getServerIcon(type) {
     }
 }
 
-var sortProject = Memoize(function(projects, locale) {
+var sortProjects = Memoize(function(projects, locale) {
     var p = locale.pick;
     return _.sortBy(projects, (project) => {
         return p(project.details.title) || project.name;
+    });
+});
+
+var sortServers = Memoize(function(servers, locale) {
+    var p = locale.pick;
+    return _.sortBy(servers, (server) => {
+        return p(server.details.title) || server.name;
     });
 });
 
