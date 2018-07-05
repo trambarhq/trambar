@@ -1087,6 +1087,9 @@ function getFutureTime(minutes) {
  */
 function addServerSpecificSettings(server, settings) {
     switch (server.type) {
+        case 'facebook':
+            settings.profileFields = [ 'id', 'emails', 'gender', 'link', 'displayName', 'name', 'picture', 'verified' ];
+            break;
         case 'dropbox':
             settings.apiVersion = '2';
             break;
@@ -1106,7 +1109,7 @@ function addServerSpecificSettings(server, settings) {
 function addServerSpecificOptions(server, params, options) {
     switch (server.type) {
         case 'facebook':
-            options.profileFields = [ 'id', 'email', 'gender', 'link', 'displayName', 'name', 'picture', 'verified' ];
+            options.scope = [ 'email' ];
             break;
         case 'gitlab':
             if (params.activation) {
