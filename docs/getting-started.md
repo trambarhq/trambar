@@ -12,19 +12,19 @@ updates are managed by a [CLI utility](https://github.com/chung-leong/trambar-cl
 
 ## Prerequisite
 
-For production deployment, you'll see a server connected to the Internet with a
+For production deployment, you'll need a server connected to the Internet with a
 valid domain name. Trambar Server is designed to run in the Cloud. A virtual machine
-with 2G of RAM and 16G of disk space should suffice, with the latter figure dependent
-on the amount of expected video contents.
+with 2G of RAM and 16G of disk space should suffice, with the latter figure
+dependent on the amount of video contents expected.
 
-You also need administrative access to a GitLab server.
+You'll also need administrative access to a GitLab server.
 
 For evaluation on your own computer, you should create a test instance of
 GitLab CE. The easiest method is with [Docker Compose](https://docs.gitlab.com/omnibus/docker/#install-gitlab-using-docker-compose).
 
 ## Installation on Linux
 
-1. Install **npm** if it's not a default part of the Linux distro you're using.
+1. Install **npm** if it's not a default part of the distro you're using.
 
 2. Install **trambar-cli**:
 
@@ -39,9 +39,8 @@ GitLab CE. The easiest method is with [Docker Compose](https://docs.gitlab.com/o
    > Set up SSL? [Y/n]
 
    For a production server, SSL is mandatory. Certain browser features (related
-   to notification and video recording) simply do not work on an unsecured page.
-   You should choose yes even if you're only evaluating the software on your own
-   computer.
+   to notification and video recording) do not work on an unsecured page. You
+   should choose yes even if you're only evaluating Trambar on your own computer.
 
    If you choose yes, the installation script will ask if you wish to use
    **certbot**:
@@ -89,8 +88,8 @@ GitLab CE. The easiest method is with [Docker Compose](https://docs.gitlab.com/o
 
 9. Wait while the installation script install Docker and retrieve Trambar's
    images from [Docker Hub](https://hub.docker.com/u/trambar/dashboard/). The
-   process should take a minute or two in a Cloud-based server with
-   high-bandwidth connection to the Internet.
+   process should take a minute or two in a cloud-based server with high
+   Internet bandwidth.
 
 10. Start Trambar server:
 
@@ -150,15 +149,17 @@ You might also need to increase the amount of memory available to the Docker VM.
 
 5. Click **Servers** in the left navigation pane.
 
+   ![Navigation - Servers](img/admin-settings-nav-servers.png)
+
 6. Click the **Add new server** button in the upper-right-hand corner.
 
    ![Server list](img/admin-servers-add.png)
 
-7. In the *Server* page, select *GitLab* as the server type.
+7. Select *GitLab* as the server type.
 
    ![Server type](img/admin-server-gitlab-type.png)
 
-8. In a different browser tab, sign into GitLab using an account with
+8. In a different browser window, sign into GitLab using an account with
    administrative privilege.
 
 9. Navigate to the **Admin area**.
@@ -174,7 +175,7 @@ You might also need to increase the amount of memory available to the Docker VM.
     ![GitLab applications](img/gitlab-applications.png)
 
 12. Enter *Trambar* as the application's name, then copy the **Redirect URI**
-    from Trambar Administrative Console into the corresponding box here.
+    from Trambar Administrative Console into the corresponding boxes here.
     Select **api** and **read_user** as the application's scope, the click the
     **Submit** button.
 
@@ -183,7 +184,7 @@ You might also need to increase the amount of memory available to the Docker VM.
     ![GitLab new application](img/gitlab-application.png)
 
 13. Copy the **Application id** and **Application secret** from GitLab into the
-    corresponding box in Trambar Administrative Console.
+    corresponding boxes in Trambar Administrative Console.
 
     ![GitLab new application](img/gitlab-application-summary.png)
 
@@ -199,6 +200,11 @@ You might also need to increase the amount of memory available to the Docker VM.
 15. Indicate how you wish to map users from GitLab to Trambar.
 
     ![User mapping](img/admin-server-gitlab-new-users.png)
+
+    A typical setup is to map GitLab administrator to Trambar administrator,
+    GitLab regular user to Trambar regular user, and GitLab external user to
+    Trambar guest. Users can be promoted to more privileged user type on a
+    case by case basis.
 
 16. Click the **Save server** button.
 
@@ -225,9 +231,9 @@ and users imported into the system.
 
    ![Project lists](img/admin-projects-add.png)
 
-3. Enter project name and description. Select an image as its emblem. Choose
-   whether users can request to join the project and whether non-members can
-   view its contents. Click the **Save project** button when you're done.
+3. Enter a project name and description. Select an image as the project emblem.
+   Choose whether users can request to join the project and whether non-members
+   can view its contents. Click the **Save project** button when you're done.
 
    ![Project form](img/admin-project-form.png)
 
@@ -239,16 +245,16 @@ and users imported into the system.
 
    ![Repository list](img/admin-repos-empty.png)
 
-6. All repositories imported from GitLab will appear. Click on the ones you wish
-   to associate with the project to select them. Click the **Save repository
+6. All repositories imported from GitLab will appear. Click the name of each
+   repo you wish to associate with the project. Click the **Save repository
    list** button when you're done.
 
    ![Repository list](img/admin-repos-add-select.png)
 
-7. Trambar will begin to import past activities from the chosen repos. The
-   process could take a long time if a repository has a long history. You can
-   monitor its progress in the project summary page. The activity bar chart will
-   update in real time as stories as created.
+7. Trambar will begin to import past activities from the chosen repo(s). The
+   process could take a long time if a repo has a long history. You can
+   monitor its progress in the project summary page. The activity chart will
+   update itself in real time as stories as created.
 
    ![Activity chart](img/admin-project-activity-chart.png)
 
@@ -276,3 +282,10 @@ and users imported into the system.
     on it to enter the project.
 
     ![Start page](img/client-start-project-selection.png)
+
+Trambar automatically grants memberships to GitLab users with access to the
+repo(s) associated with a project (with the exception of the root user). Members
+are listed in the [People](user-guide.md#people) page.
+
+Administrators have full access to all projects, including the ones where they
+are not members.
