@@ -51,6 +51,7 @@ function start() {
             app.use(CORS());
             app.set('json spaces', 2);
             app.route('/srv/data/signature/:schema/')
+                .post(handleSignature)
                 .get(handleSignature);
             app.route('/srv/data/discovery/:schema/:table/')
                 .post(handleDiscovery)
@@ -123,19 +124,32 @@ function sendError(res, err) {
  */
 function handleSignature(req, res) {
     var schema = req.params.schema;
+    var params = req.body;
     return Database.open().then((db) => {
-        if (!/^[\w\-]+$/.test(schema)) {
-            throw new HTTPError(404);
-        }
-        var table = `"${schema}"."meta"`;
-        var sql = `SELECT signature FROM ${table} LIMIT 1`;
-        return db.query(sql).then((rows) => {
-            if (_.isEmpty(rows)) {
+        return checkAuthorization(db, params.auth_token).then((userId) => {
+            return fetchCredentials(db, userId, schema);
+        }).then((credentials) => {
+            if (!/^[\w\-]+$/.test(schema)) {
                 throw new HTTPError(404);
             }
-            return rows[0].signature;
-        }).catch((err) => {
-            throw new HTTPError(404);
+            var table = `"${schema}"."meta"`;
+            var sql = `SELECT signature FROM ${table} LIMIT 1`;
+            return db.query(sql).then((rows) => {
+                if (_.isEmpty(rows)) {
+                    throw new HTTPError(404);
+                }
+                var tokens = [];
+                tokens.push(rows[0].signature);
+                tokens.push(credentials.user.type);
+                if (credentials.project) {
+                    if (_.includes(credentials.project.user_ids, credentials.user.id)) {
+                        tokens.push('member')
+                    }
+                }
+                return _.join(tokens, ':');
+            }).catch((err) => {
+                throw new HTTPError(404);
+            });
         });
     }).then((signature) => {
         sendResponse(res, { signature });

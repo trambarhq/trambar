@@ -1631,10 +1631,10 @@ module.exports = React.createClass({
      */
     getRemoteSignature: function(address, schema) {
         var url = `${address}${this.props.basePath}/signature/${schema}`;
-        var options = {
-            responseType: 'json'
-        };
-        return HTTPRequest.fetch('GET', url, null, options).then((result) => {
+        var session = getSession(address);
+        var options = { responseType: 'json', contentType: 'json' };
+        var payload = { auth_token: session.token };
+        return HTTPRequest.fetch('POST', url, payload, options).then((result) => {
             return _.get(result, 'signature');
         });
     },
