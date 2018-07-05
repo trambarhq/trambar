@@ -121,6 +121,7 @@ receives notifications about these changes and proceed to update the dirty rows.
 * [Propagating changes](#propagating-changes)
 * [Asynchronous operations](#asynchronous-operations)
 * [Data queries](#data-queries)
+* [Debugging frontend code](#debugging-frontend-code)
 
 ## Basic structure
 
@@ -271,3 +272,17 @@ Data queries occurs in two stages. In the discovery stage, client sends the
 query and the server responds with a list of ids and generation numbers (gn) of
 matching objects. In the retrieval stage, the client sends the ids of objects
 that are out-of-date or absent from the local cache.
+
+### Debugging frontend code
+
+First, clone the [Trambar repo](https://github.com/chung-leong/trambar) at
+GitHub. Then run `npm install` in the sub-folders `common`, `client`, and
+`admin`.
+
+To debug the Web Client, run `npm run start` in `client`. This will launch
+[WebPack DevServer](https://webpack.js.org/configuration/dev-server/). Open a
+browser window and navigate to http://localhost:8080/https/live.trambar.io/.
+Replace the domain name in the URL if you wish to use a different backend.
+
+To debug the Administrative Console, run `npm run start` in `admin` and navigate to http://localhost:8088/https/live.trambar.io/admin/ instead. Note the different
+port number.
