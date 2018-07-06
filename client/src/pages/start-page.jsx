@@ -305,31 +305,37 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (this.props.route !== nextProps.route
          || this.props.canAccessServer !== nextProps.canAccessServer
          || this.props.canAccessSchema !== nextProps.canAccessSchema) {
-             if (process.env.PLATFORM === 'browser') {
-                 if (nextProps.route.component !== StartPage) {
-                     // this page isn't the target--transition out if we have
-                     // access to the server and the schema
+             if (nextProps.route.component !== StartPage) {
+                 // this page isn't the target--transition out if we have
+                 // access to the server and the schema
+                 if (!this.state.transition) {
                      if (nextProps.canAccessSchema && nextProps.canAccessServer) {
                          this.transitionOut(nextProps.route);
                      }
                  }
-             } else if (process.env.PLATFORM === 'cordova') {
+             }
+             if (process.env.PLATFORM === 'cordova') {
                  if (nextProps.canAccessServer) {
                      var route = nextProps.route;
                      var params = route.parameters;
                      if (params.activationCode) {
                          // we have gain access--redirect to news page if schema
                          // was supplied or to this page again
-                         params = _.omit(params, 'activationCode');
+                         var targetPage;
                          if (this.state.addingServer) {
-                             route.replace(require('pages/settings-page'), params);
-                             this.transitionOut(nextProps.route);
+                             targetPage = require('pages/settings-page');
                          } else if (params.schema) {
-                             route.replace(require('pages/news-page'), params);
-                             this.transitionOut(nextProps.route);
+                             targetPage = require('pages/news-page');
                          } else {
-                             route.replace(require('pages/start-page'), params);
+                             targetPage = require('pages/start-page');
                          }
+                         if (targetPage !== StartPage) {
+                             // start transition here so the greeting is
+                             // rendered immediately
+                             this.transitionOut(nextProps.route);
+                         }
+                         params = _.omit(params, 'activationCode');
+                         route.replace(targetPage, params);
                      }
                  }
              }
@@ -515,28 +521,36 @@ var StartPageSync = module.exports.Sync = React.createClass({
     renderMobileGreeting: function() {
         if (process.env.PLATFORM !== 'cordova') return;
         var t = this.props.locale.translate;
-        var n = this.props.locale.name;
-        var user = this.props.currentUser;
-        var name;
         var className = 'welcome';
-        if (user) {
-            name = n(user.details.name, user.details.gender);
-            className += ' user';
+        if (this.state.receivedCorrectQRCode) {
+            var n = this.props.locale.name;
+            var user = this.props.currentUser;
+            var name;
+            if (user) {
+                name = n(user.details.name, user.details.gender);
+                className += ' user';
+            } else {
+                name = '\u00a0';
+            }
+            var imageProps = {
+                user: user,
+                size: 'large',
+                theme: this.props.theme,
+            };
+            return (
+                <div className={className}>
+                    <h3>{t('start-welcome-again')}</h3>
+                    <ProfileImage {...imageProps} />
+                    <h4 className="name">{name}</h4>
+                </div>
+            );
         } else {
-            name = '\u00a0';
+            return (
+                <div className={className}>
+                    <h3>{t('start-welcome')}</h3>
+                </div>
+            );
         }
-        var imageProps = {
-            user: user,
-            size: 'large',
-            theme: this.props.theme,
-        };
-        return (
-            <div className={className}>
-                <h3>{t('start-welcome-again')}</h3>
-                <ProfileImage {...imageProps} />
-                <h4 className="name">{name}</h4>
-            </div>
-        );
     },
 
     /**
