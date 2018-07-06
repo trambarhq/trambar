@@ -26,6 +26,9 @@ var ActivationDialogBox = (process.env.PLATFORM === 'cordova') ? require('dialog
 var LoadingAnimation = require('widgets/loading-animation');
 var EmptyMessage = require('widgets/empty-message');
 
+// mixins
+var UpdateCheck = require('mixins/update-check');
+
 require('./start-page.scss');
 
 var StartPage = module.exports = Relaks.createClass({
@@ -200,14 +203,7 @@ var StartPage = module.exports = Relaks.createClass({
             if (!params.add) {
                 // need to adjust the progressive rendering delay since Relaks
                 // by default disables it once a page has fully rendered
-                if (process.env.PLATFORM === 'cordova') {
-                    // rerender quickly so user knows the code has been accepted
-                    meanwhile.delay(undefined, 50);
-                } else if (process.env.PLATFORM === 'browser') {
-                    // give it a bit of time to load the project list, before
-                    // we show the loading animation
-                    meanwhile.delay(undefined, 300);
-                }
+                meanwhile.delay(undefined, 300);
             }
             meanwhile.show(<StartPageSync {...props} />);
             return db.start().then((currentUserId) => {
@@ -238,6 +234,7 @@ var StartPage = module.exports = Relaks.createClass({
 
 var StartPageSync = module.exports.Sync = React.createClass({
     displayName: 'StartPage.Sync',
+    mixins: [ UpdateCheck ],
     propTypes: {
         currentUser: PropTypes.object,
         system: PropTypes.object,
@@ -308,14 +305,15 @@ var StartPageSync = module.exports.Sync = React.createClass({
         if (this.props.route !== nextProps.route
          || this.props.canAccessServer !== nextProps.canAccessServer
          || this.props.canAccessSchema !== nextProps.canAccessSchema) {
-             if (nextProps.route.component !== StartPage) {
-                 // this page isn't the target--transition out if we have
-                 // access to the server and the schema
-                 if (nextProps.canAccessSchema && nextProps.canAccessServer) {
-                     this.transitionOut(nextProps.route);
+             if (process.env.PLATFORM === 'browser') {
+                 if (nextProps.route.component !== StartPage) {
+                     // this page isn't the target--transition out if we have
+                     // access to the server and the schema
+                     if (nextProps.canAccessSchema && nextProps.canAccessServer) {
+                         this.transitionOut(nextProps.route);
+                     }
                  }
-             }
-             if (process.env.PLATFORM === 'cordova') {
+             } else if (process.env.PLATFORM === 'cordova') {
                  if (nextProps.canAccessServer) {
                      var route = nextProps.route;
                      var params = route.parameters;
@@ -325,8 +323,10 @@ var StartPageSync = module.exports.Sync = React.createClass({
                          params = _.omit(params, 'activationCode');
                          if (this.state.addingServer) {
                              route.replace(require('pages/settings-page'), params);
+                             this.transitionOut(nextProps.route);
                          } else if (params.schema) {
                              route.replace(require('pages/news-page'), params);
+                             this.transitionOut(nextProps.route);
                          } else {
                              route.replace(require('pages/start-page'), params);
                          }
