@@ -201,8 +201,8 @@ var StartPage = module.exports = Relaks.createClass({
                 // need to adjust the progressive rendering delay since Relaks
                 // by default disables it once a page has fully rendered
                 if (process.env.PLATFORM === 'cordova') {
-                    // render immediately so user knows the code has been accepted
-                    meanwhile.delay(undefined, 0);
+                    // rerender quickly so user knows the code has been accepted
+                    meanwhile.delay(undefined, 50);
                 } else if (process.env.PLATFORM === 'browser') {
                     // give it a bit of time to load the project list, before
                     // we show the loading animation
@@ -1338,8 +1338,14 @@ if (process.env.PLATFORM === 'cordova') {
      * @return {String}
      */
     var getDeviceType = function() {
-        return cordova.platformId;
-    }
+        if (window.cordova) {
+            return cordova.platformId;
+        }
+        if (process.env.NODE_ENV !== 'production') {
+            return 'android';
+        }
+        return null;
+    };
 
     /**
      * Return device unique id
@@ -1355,7 +1361,7 @@ if (process.env.PLATFORM === 'cordova') {
             return '00000000000000000000000000000000';
         }
         return null;
-    }
+    };
 
     /**
      * Return device details
@@ -1379,5 +1385,5 @@ if (process.env.PLATFORM === 'cordova') {
             };
         }
         return {};
-    }
+    };
 }

@@ -28,7 +28,7 @@ module.exports = React.createClass({
          * @return {Boolean}
          */
         isAvailable: function() {
-            return true;
+            return !!window.cordova && !!navigator.device;
         },
     },
 

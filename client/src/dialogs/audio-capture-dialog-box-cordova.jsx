@@ -27,7 +27,7 @@ module.exports = React.createClass({
          */
         isAvailable: function() {
             // the plugin doesn't provide a UI on windows
-            return cordova.platformId !== 'windows';
+            return !!window.cordova && !!navigator.device && cordova.platformId !== 'windows';
         },
     },
 
