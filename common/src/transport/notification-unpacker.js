@@ -22,6 +22,11 @@ function unpack(payload) {
             type: 'alert',
             alert: unpackAlert(payload),
         };
+    } else if (payload.revalidation) {
+        return {
+            type: 'revalidation',
+            revalidation: unpackInvalidation(payload),
+        };
     } else if (payload.socket) {
         return {
             type: 'connection',
@@ -68,7 +73,7 @@ function unpackChanges(payload) {
  */
 function unpackAlert(payload) {
     var address = payload.address;
-    alert = _.clone(payload.alert);
+    var alert = _.clone(payload.alert);
     alert.address = address;
     if (alert.profile_image) {
         alert.profile_image = address + alert.profile_image;
@@ -77,6 +82,20 @@ function unpackAlert(payload) {
         alert.attached_image = address + alert.attached_image;
     }
     return alert;
+}
+
+/**
+ * Add address to a cache revalidation request
+ *
+ * @param  {Object} payload
+ *
+ * @return {Object}
+ */
+function unpackInvalidation(payload) {
+    var address = payload.address;
+    var revalidation = _.clone(payload.revalidation);
+    revalidation.address = address;
+    return revalidation;
 }
 
 /**

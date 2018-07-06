@@ -27,6 +27,7 @@ module.exports = React.createClass({
         onDisconnect: PropTypes.func,
         onNotify: PropTypes.func,
         onAlertClick: PropTypes.func,
+        onRevalidate: PropTypes.func,
     },
 
     statics: {
@@ -301,6 +302,21 @@ module.exports = React.createClass({
     },
 
     /**
+     * Notify parent component that we've received a cache revalidation request
+     *
+     * @param  {Object} revalidation
+     */
+    triggerRevalidateEvent: function(revalidation) {
+        if (this.props.onRevalidate) {
+            this.props.onRevalidate({
+                type: 'revalidate',
+                target: this,
+                revalidation,
+            });
+        }
+    },
+
+    /**
      * Inform parent component that an alert was clicked
      *
      * @param  {Object} alert
@@ -409,13 +425,13 @@ module.exports = React.createClass({
         var notification = NotificationUnpacker.unpack(payload) || {};
         if (notification.type === 'change') {
             this.triggerNotifyEvent(notification.changes);
-        } else {
-            if (notification.type === 'alert') {
-                // if notification was received in the background, the event is
-                // triggered when the user clicks on the notification
-                if (!notification.alert.foreground) {
-                    this.triggerAlertClickEvent(notification.alert);
-                }
+        } else if (notification.type === 'revalidation') {
+            this.triggerRevalidateEvent(notification.revalidation);
+        } else if (notification.type === 'alert') {
+            // if notification was received in the background, the event is
+            // triggered when the user clicks on the notification
+            if (!notification.alert.foreground) {
+                this.triggerAlertClickEvent(notification.alert);
             }
         }
         if (data.count !== undefined) {
@@ -435,14 +451,17 @@ module.exports = React.createClass({
         if (notification.type === 'change') {
             this.triggerNotifyEvent(notification.changes);
             this.startBackgroundTask(notId);
-        } else {
-            if (notification.type === 'alert') {
-                // if notification was received in the background, the event is
-                // triggered when the user clicks on the notification
-                if (!notification.alert.foreground) {
-                    this.triggerAlertClickEvent(notification.alert);
-                }
+        } else if (notification.type === 'revalidation') {
+            this.triggerRevalidateEvent(notification.revalidation);
+            this.startBackgroundTask(notId);
+        } else if (notification.type === 'alert') {
+            // if notification was received in the background, the event is
+            // triggered when the user clicks on the notification
+            if (!notification.alert.foreground) {
+                this.triggerAlertClickEvent(notification.alert);
             }
+            this.skipBackgroundTask(notId);
+        } else {
             this.skipBackgroundTask(notId);
         }
         if (data.count !== undefined) {
@@ -475,6 +494,8 @@ module.exports = React.createClass({
                 this.triggerNotifyEvent(notification.changes);
             } else if (notification.type === 'alert') {
                 this.triggerAlertClickEvent(notification.alert);
+            } else if (notification.type === 'revalidation') {
+                this.triggerRevalidateEvent(notification.revalidation);
             }
         }
     },

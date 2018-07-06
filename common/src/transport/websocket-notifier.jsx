@@ -27,6 +27,7 @@ module.exports = React.createClass({
         onDisconnect: PropTypes.func,
         onNotify: PropTypes.func,
         onAlertClick: PropTypes.func,
+        onRevalidate: PropTypes.func,
     },
 
     statics: {
@@ -172,6 +173,8 @@ module.exports = React.createClass({
                             } else if (notification.type === 'connection') {
                                 socket.id = notification.connection.token;
                                 this.triggerConnectEvent(notification.connection);
+                            } else if (notification.type === 'revalidation') {
+                                this.triggerRevalidateEvent(notification.revalidation);
                             }
                             var recentMessages = _.slice(this.state.recentMessages);
                             recentMessages.unshift(msg);
@@ -331,6 +334,21 @@ module.exports = React.createClass({
                 target: this,
                 alert,
             })
+        }
+    },
+
+    /**
+     * Notify parent component that
+     *
+     * @param  {Object} revalidation
+     */
+    triggerRevalidateEvent: function(revalidation) {
+        if (this.props.onRevalidate) {
+            this.props.onRevalidate({
+                type: 'invalidate',
+                target: this,
+                revalidation,
+            });
         }
     },
 

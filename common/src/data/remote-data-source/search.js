@@ -10,6 +10,8 @@ function Search(query) {
     this.criteria = query.criteria || {};
     this.remote = query.remote || false;
     this.dirty = false;
+    this.cacheSignatureBefore = '';
+    this.cacheSignatureAfter = '';
     this.updating = false;
     this.scheduled = false;
     this.lastRetrieved = 0;
@@ -181,6 +183,88 @@ Search.prototype.isSufficientlyCached = function() {
     return true;
 };
 
+/**
+ * Remember the current cache signature so we know whether the results we
+ * obtained earlier are valid or not
+ *
+ * @param  {String} signature
+ */
+Search.prototype.validateResults = function(signature) {
+    this.cacheSignatureAfter = signature;
+};
+
+/**
+ * Given lists of ids and gns (generation numbers), return the ids that
+ * either are missing from the current results or the objects' gns are
+ * different from the ones provided
+ *
+ * @param  {Array<Number>} ids
+ * @param  {Array<Number>} gns
+ *
+ * @return {Array<Number>}
+ */
+Search.prototype.getUpdateList = function(ids, gns) {
+    if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
+        // the current results aren't valid
+        // fetch everything anew
+        return _.slice(ids);
+    }
+    var objects = this.results;
+    var updated = [];
+    _.each(ids, (id, i) => {
+        var gn = gns[i];
+        var index = _.sortedIndexBy(objects, { id }, 'id');
+        var object = (objects) ? objects[index] : null;
+        if (!object || object.id !== id || object.gn !== gn) {
+            updated.push(id);
+        }
+    });
+    return updated;
+};
+
+/**
+ * Return ids of objects that aren't found in the list provided
+ *
+ * @param  {Array<Number>} ids
+ *
+ * @return {Array<Number>}
+ */
+Search.prototype.getRemovalList = function(ids) {
+    if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
+        return [];
+    }
+    var removal = [];
+    _.each(this.results, (object) => {
+        if (!_.includes(ids, object.id)) {
+            removal.push(object.id);
+        }
+    });
+    return removal;
+};
+
+/**
+ * Given a list of ids, return the ids that are missing from the current results
+ *
+ * @param  {Array<Number>} ids
+ *
+ * @return {Array<Number>}
+ */
+Search.prototype.getFetchList = function(ids) {
+    if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
+        return [];
+    }
+    var objects = this.results;
+    var updated = [];
+    _.each(ids, (id, i) => {
+        var index = _.sortedIndexBy(objects, { id }, 'id');
+        var object = (objects) ? objects[index] : null;
+        if (!object || object.id !== id) {
+            updated.push(id);
+        }
+    });
+    return updated;
+};
+
 Search.prototype.finish = function(results) {
     var previousResults = this.results;
     var missingResults = [];
@@ -188,6 +272,7 @@ Search.prototype.finish = function(results) {
     Operation.prototype.finish.call(this, results);
 
     this.dirty = false;
+    this.cacheSignatureBefore = this.cacheSignatureAfter;
     if (results) {
         this.promise = Promise.resolve(this.results);
 

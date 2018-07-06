@@ -94,11 +94,41 @@ function handleDatabaseChanges(events) {
     System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
         // see who's listening
         ListenerManager.find(db).then((listeners) => {
-            // send change messages (silent) first
-            return sendChangeNotifications(db, events, listeners, system).then(() => {
-                return sendAlerts(db, events, listeners, system);
-            })
+            // request revalidation of cache when access level changes
+            return sendRevalidationRequests(db, events, listeners, system).then(() => {
+                // send change messages (silent)
+                return sendChangeNotifications(db, events, listeners, system).then(() => {
+                    return sendAlerts(db, events, listeners, system);
+                });
+            });
         });
+    });
+}
+
+/**
+ * Send cache revalidation requests
+ *
+ * @param  {Database} db
+ * @param  {Array<Object>} events
+ * @param  {Array<Listener>} listeners
+ * @param  {System} system
+ *
+ * @return {Promise}
+ */
+function sendRevalidationRequests(db, events, listeners, system) {
+    var messages = [];
+    return Promise.each(listeners, (listener, index) => {
+        return Promise.each(events, (event) => {
+            if (event.table === 'user' && event.id === listener.user.id) {
+                if (event.diff.type) {
+                    var revalidation = { schema: '*' };
+                    messages.push(new Message('revalidation', listener, { revalidation }, system));
+                }
+            }
+        });
+    }).then(() => {
+        ListenerManager.send(db, messages);
+        return null;
     });
 }
 

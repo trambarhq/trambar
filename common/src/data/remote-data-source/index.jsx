@@ -809,10 +809,6 @@ module.exports = React.createClass({
                 });
                 return after;
             });
-            if (!changes) {
-                // force cache revalidation
-                this.cacheValidation = {};
-            }
             if (_.isEmpty(invalidated)) {
                 return false;
             }
@@ -829,6 +825,27 @@ module.exports = React.createClass({
                 }
             }
             return true;
+        });
+    },
+
+    /**
+     * Force cache revalidation
+     *
+     * @param  {Object|null} revalidation
+     */
+    revalidate: function(revalidation) {
+        this.cacheValidation = _.mapValues(this.cacheValidation, (promises, address) => {
+            return _.omitBy(promises, (promise, schema) => {
+                if (revalidation) {
+                    if (revalidation.address === address) {
+                        if (revalidation.schema === '*' || revalidation.schema === schema) {
+                            return true;
+                        }
+                    }
+                } else {
+                    return true;
+                }
+            });
         });
     },
 
@@ -1180,8 +1197,8 @@ module.exports = React.createClass({
             // which objects have changed and which have gone missing
             var ids = discovery.ids;
             var gns = discovery.gns;
-            var idsUpdated = getUpdateList(ids, gns, search.results);
-            var idsRemoved = getRemovalList(ids, gns, search.results);
+            var idsUpdated = search.getUpdateList(ids, gns);
+            var idsRemoved = search.getRemovalList(ids);
             if (!_.isEmpty(idsUpdated)) {
                 // retrieve the updated (or new) objects from server
                 return this.retrieveRemoteObjects(location, idsUpdated).then((retrieval) => {
@@ -1510,7 +1527,9 @@ module.exports = React.createClass({
      * @return {Promise<Boolean>}
      */
     searchLocalCache: function(search, discovery) {
-        return Promise.try(() => {
+        return this.validateCache(search.address, search.schema).then((signature) => {
+            search.validateResults(signature);
+
             var cache = this.props.cache;
             if (!discovery) {
                 // pre-discovery search of cache
@@ -1520,11 +1539,9 @@ module.exports = React.createClass({
                     return false;
                 }
                 var query = search.getQuery();
-                return this.validateCache(query.address, query.schema).then(() => {
-                    return cache.find(query).then((objects) => {
-                        search.results = objects;
-                        return true;
-                    });
+                return cache.find(query).then((objects) => {
+                    search.results = objects;
+                    return true;
                 });
             } else {
                 // post discovery loading of cached objects, needed only when
@@ -1532,16 +1549,14 @@ module.exports = React.createClass({
                 if (!search.remote) {
                     return false;
                 }
-                var ids = getFetchList(discovery.ids, search.results);
+                var ids = search.getFetchList(discovery.ids);
                 if (_.isEmpty(ids)) {
                     return false;
                 }
                 var query = _.assign({ criteria: { id: ids } }, search.getLocation());
-                return this.validateCache(query.address, query.schema).then(() => {
-                    return cache.find(query).then((objects) => {
-                        search.results = insertObjects(search.results, objects);
-                        return true;
-                    });
+                return cache.find(query).then((objects) => {
+                    search.results = insertObjects(search.results, objects);
+                    return true;
                 });
             }
         }).catch((err) => {
@@ -1557,11 +1572,11 @@ module.exports = React.createClass({
      * @param  {String} address
      * @param  {String} schema
      *
-     * @return {Promise}
+     * @return {Promise<String>}
      */
     validateCache: function(address, schema) {
-        if (schema === 'local' || !this.props.online || !this.props.cacheValidation) {
-            return Promise.resolve();
+        if (schema === 'local' || !this.props.cacheValidation) {
+            return Promise.resolve('none');
         }
         var cache = this.props.cache;
         var path = [ address, schema ];
@@ -1569,18 +1584,23 @@ module.exports = React.createClass({
         if (!promise) {
             promise = this.getRemoteSignature(address, schema).then((remoteSignature) => {
                 return this.getCacheSignature(address, schema).then((cacheSignature) => {
+                    if (!remoteSignature) {
+                        return cacheSignature || 'none';
+                    }
                     if (cacheSignature) {
-                        if (cacheSignature !== remoteSignature) {
+                        if (cacheSignature === remoteSignature) {
+                            return remoteSignature;
+                        } else {
                             return this.clearCachedObjects(address, schema).then(() => {
                                 this.setCacheSignature(address, schema, remoteSignature);
-                                return null;
+                                return remoteSignature;
                             });
                         }
                     } else {
                         // wait for any cache clearing operation to complete
                         return this.waitForCacheClearing(address, schema).then(() => {
                             this.setCacheSignature(address, schema, remoteSignature);
-                            return null;
+                            return remoteSignature;
                         });
                     }
                 });
@@ -1630,6 +1650,9 @@ module.exports = React.createClass({
      * @return {Promise<String>}
      */
     getRemoteSignature: function(address, schema) {
+        if (!this.props.online) {
+            return Promise.resolve('');
+        }
         var url = `${address}${this.props.basePath}/signature/${schema}`;
         var session = getSession(address);
         var options = { responseType: 'json', contentType: 'json' };
@@ -1733,7 +1756,6 @@ module.exports = React.createClass({
             if (!clearingSchemaPromise) {
                 clearingSchemaPromise = cache.clean({ address, schema }).then((count) => {
                     _.unset(this.cacheClearing, path);
-                    console.log(`Cache entries removed: ${count}`);
                     return count;
                 });
                 _.set(this.cacheClearing, path, clearingSchemaPromise);
@@ -1990,69 +2012,6 @@ module.exports = React.createClass({
 });
 
 var authCache = {};
-
-/**
- * Given a list of ids, return the ids that are missing from the list of objects
- *
- * @param  {Array<Number>} ids
- * @param  {Array<Object>} objects
- *
- * @return {Array<Number>}
- */
-function getFetchList(ids, objects) {
-    var updated = [];
-    _.each(ids, (id, i) => {
-        var index = _.sortedIndexBy(objects, { id }, 'id');
-        var object = (objects) ? objects[index] : null;
-        if (!object || object.id !== id) {
-            updated.push(id);
-        }
-    });
-    return updated;
-}
-
-/**
- * Given lists of ids and gns (generation numbers), return the ids that
- * either are missing from the list of objects or the objects' gns are
- * different from the ones provided
- *
- * @param  {Array<Number>} ids
- * @param  {Array<Number>} gns
- * @param  {Array<Object>} objects
- *
- * @return {Array<Number>}
- */
-function getUpdateList(ids, gns, objects) {
-    var updated = [];
-    _.each(ids, (id, i) => {
-        var gn = gns[i];
-        var index = _.sortedIndexBy(objects, { id }, 'id');
-        var object = (objects) ? objects[index] : null;
-        if (!object || object.id !== id || object.gn !== gn) {
-            updated.push(id);
-        }
-    });
-    return updated;
-}
-
-/**
- * Return ids of objects that aren't found in the list provided
- *
- * @param  {Array<Number>} ids
- * @param  {Array<Number>} gns
- * @param  {Array<Object>} objects
- *
- * @return {Array<Number>}
- */
-function getRemovalList(ids, gns, objects) {
-    var removal = [];
-    _.each(objects, (object) => {
-        if (!_.includes(ids, object.id)) {
-            removal.push(object.id);
-        }
-    });
-    return removal;
-}
 
 /**
  * Remove objects matching a list of ids from a sorted array, returning a

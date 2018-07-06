@@ -339,6 +339,7 @@ module.exports = React.createClass({
             onDisconnect: this.handleDisconnection,
             onNotify: this.handleChangeNotification,
             onAlertClick: this.handleAlertClick,
+            onRevalidate: this.handleCacheRevalidation,
         };
         if (Notifier === WebsocketNotifier) {
             _.assign(notifierProps, {
@@ -829,6 +830,7 @@ module.exports = React.createClass({
         this.setState({ connection: false }, () => {
             // invalidate search results when connection is lost
             var dataSource = this.components.remoteDataSource;
+            dataSource.revalidate();
             dataSource.invalidate();
         });
     },
@@ -848,6 +850,17 @@ module.exports = React.createClass({
 
         var dataSource = this.components.remoteDataSource;
         dataSource.invalidate(evt.changes);
+    },
+
+    /**
+     * Called when notifier receives a a cache revalidation request
+     *
+     * @param  {Object} evt
+     */
+    handleCacheRevalidation: function(evt) {
+        var dataSource = this.components.remoteDataSource;
+        dataSource.revalidate(evt.revalidation);
+        dataSource.invalidate();
     },
 
     /**
@@ -931,6 +944,7 @@ module.exports = React.createClass({
                 // force server check as background push notification
                 // isn't 100% reliable
                 var dataSource = this.components.remoteDataSource;
+                dataSource.revalidate();
                 dataSource.invalidate();
             }
         });
