@@ -36,9 +36,7 @@ earlier.
 It's possible to associate your Trambar account with multiple social-network
 accounts as long as the same e-mail address was used to create those accounts.
 You might do this if your GitLab server is protected by a firewall and you
-happen to be outside the permitted IP range. (You shouldn't try this with
-Facebook, since most likely your privacy settings preclude the sharing of your
-e-mail address).
+happen to be outside the permitted IP range. 
 
 Social networks are used for authentication purpose only. Trambar will not
 retrieve your friend list or post things to your wall.
