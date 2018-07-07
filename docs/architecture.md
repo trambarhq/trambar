@@ -23,6 +23,7 @@ Trambar Mobile Client runs a variant of the Web Client on
 
 * [Services](#services)
 * [Data model](#data-model)
+* [Data objects/tables](#data-objects-tables)
 * [Data accessors](#data-accessors)
 * [Change events](#change-events)
 
@@ -71,6 +72,97 @@ attached to an object, such as a user's profile picture, are also stored here.
 
 The integer column `gn` holds a generation number. It's incremented every time
 a row changes (by a database trigger).
+
+The `external` column in certain tables holds an JSON array. Each object points
+to one or more objects existing on an external server. For example, in a user
+object, there could be one object pointing to a GitLab account and a second
+object pointing to a Facebook account:
+
+```json
+[
+  {
+    "type": "gitlab",
+    "server_id": 1,
+    "user": {
+      "id": 2,
+      "username": "cleong"
+    }
+  },
+  {
+    "type": "facebook",
+    "server_id": 2,
+    "user": {
+      "id": "10155468403650846"
+    }
+  }
+]
+```
+
+In a [note reaction](user-manual.md#note) concerning a comment on an issue in
+GitLab, meanwhile, the array will look as follows:
+
+```json
+[
+  {
+    "type": "gitlab",
+    "server_id": 1,
+    "note": {
+      "id": 185
+    },
+    "issue": {
+      "id": 56,
+      "number": 3
+    },
+    "project": {
+      "id": 2
+    }
+  }
+]
+```
+
+The external IDs, combined with the server record, make it possible to construct
+a URL to the GitLab comment.
+
+A column with similar structure, `exchange`, is used to sync information between
+the internal object and the external object.
+
+### Data objects/tables
+
+* [Global objects](#global-objects)
+* [Project-specific objects](#project-specific-objects)
+
+#### Global objects
+
+* commit - Represents a Git commit. Contains only stats about the commit (number
+  of files/lines added, etc.).
+* device - Represents a mobile device.
+* picture - Represents a picture in the picture album available in the
+Administrative Console.
+* project - Represents a Trambar project. Contains name and description,
+list of project members, list of repositories associated with project, and
+other settings.
+* repo - Represents a GitLab repository. Contains list of users who have access
+to the repository.
+* server - Represents an external server such as GitLab.
+* session - Represents a user session.
+* subscription - Contains information need for change notification by Web Socket
+or mobile push.
+* system - Contains system information and settings. Only a single one exists.
+* task - Represents a system task. Contains progress information and details of
+the task's outcome.
+* user - Represents an end-user. Contains personal information, contact
+information, role assignments, and user settings.
+
+#### Project-specific objects
+
+* bookmark - Represents a [bookmark](user-manual.md#bookmarks)
+* listing - Contains the outcome of the [story selection process](user-manual.md#story-selection).
+* notification - Represents a [notification](user-manual.md#notifications)
+* reaction - Represents a [reaction](user-manual.md#reaction-types)
+* statistics - Contains statistical information about stories and notifications.
+* story - Represents a [story](user-manual.md#story-types).
+* task - Represents a user-initiated task such as uploading of a media file.
+Contains progress information and details of the task's outcome.
 
 ### Data accessors
 
