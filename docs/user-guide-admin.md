@@ -1,4 +1,4 @@
-#Trambar User Guide - Administrative Console
+Trambar User Guide - Administrative Console
 -------------------------------------------
 
 * [Sign in](#sign-in)
@@ -310,7 +310,7 @@ at an OAuth provider.
 * [Adding repositories to a project](#adding-repositories-to-a-project)
 * [Removing repositories](#removing-repositories)
 
-### Adding repositories to project
+### Adding repositories to a project
 
 1. Click **Projects** in the left navigation pane.
 
