@@ -1,4 +1,4 @@
-Trambar User Guide - Administrative Console
+#Trambar User Guide - Administrative Console
 -------------------------------------------
 
 * [Sign in](#sign-in)
@@ -176,7 +176,7 @@ also be restored, provided its records have not yet been garbage-collected.
 * [Rejecting membership requests](#rejecting-membership-requests)
 * [Adding existing users as members](#adding-existing-users-as-members)
 * [Adding a new member manually](#adding-a-new-member-manually)
-* [Removing members](#deleting-members)
+* [Removing members](#removing-members)
 
 ### Approving membership requests
 
@@ -307,8 +307,8 @@ at an OAuth provider.
 
 ## Repositories
 
-* [Adding repositories to project](adding-repositories)
-* [Removing repositories](removing-repositories)
+* [Adding repositories to a project](#adding-repositories-to-a-project)
+* [Removing repositories](#removing-repositories)
 
 ### Adding repositories to project
 
@@ -375,7 +375,7 @@ a situation will be implemented in the future.
 * [Deleting a user](#deleting-a-user)
 * [Restoring deactivated or deleted users](#restoring-deactivated-or-deleted-users)
 
-### Adding a new user
+### Adding a new user manually
 
 In order to add a user, you must know the e-mail address he had used to register
 at an OAuth provider.

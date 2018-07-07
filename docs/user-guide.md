@@ -36,7 +36,7 @@ earlier.
 It's possible to associate your Trambar account with multiple social-network
 accounts as long as the same e-mail address was used to create those accounts.
 You might do this if your GitLab server is protected by a firewall and you
-happen to be outside the permitted IP range. 
+happen to be outside the permitted IP range.
 
 Social networks are used for authentication purpose only. Trambar will not
 retrieve your friend list or post things to your wall.
@@ -517,7 +517,7 @@ In the **People** page, you'll see the activities of all project members:
 
 * [User view](#user-view)
 * [Recent activities](#recent-activities)
-* [Activity chart](#activity-chart)
+* [User statistics](#user-statistics)
 * [Actions](#actions)
 
 ### User view
@@ -588,8 +588,8 @@ parameters and entering personal information:
 
 ![Settings page](img/client-settings.png)
 
-* [Projects](#project-panel)
-* [Devices](#devices-panel)
+* [Projects](#project)
+* [Devices](#devices)
 * [Notification](#notification)
 * [Web alert](#web-alert)
 * [Mobile alert](#mobile)
@@ -705,7 +705,7 @@ on the selected date.
 
 The [People](#people) page will list the project members who were active on that
 day. Click on a name to see the full list of stories by that user. You can also
-select a date by clicking a bar in the activity chart.
+select a date by clicking a bar in the [activity chart](#user-statistics).
 
 Click on the calendar icon a second time to retract the bar.
 
