@@ -203,7 +203,7 @@ var americanPhrases = {
         return `${name} mentioned you in ${story}`;
     },
     'notification-$name-merged-code-to-$branch': (name, branch) => {
-        return `${name} merge changes into “${branch}”`;
+        return `${name} merged changes into “${branch}”`;
     },
     'notification-$name-opened-an-issue': (name) => {
         return `${name} opened an issue`;
@@ -229,7 +229,7 @@ var americanPhrases = {
         switch (story) {
             case 'survey': story = 'a survey'; break;
             case 'task-list': story = 'a task list'; break;
-            case 'post': story = 'post';
+            case 'post': story = 'a post';
             default: story = 'a story';
         }
         return `${name} sent you a bookmark to ${story}`;
