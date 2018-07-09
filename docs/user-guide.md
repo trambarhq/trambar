@@ -179,6 +179,9 @@ Hash tags can be added to a story to make it easily to find in a search.
 Trambar also supports @tags, used to indicate that someone is mentioned in a
 post. You can find a user's username in the [People](#people) page.
 
+The special tag `#yippeekiyay` creates explosions inside your post:
+![Explosions](img/explosion.gif)
+
 #### Emojis
 
 Trambar supports the displaying of emojis on desktop web-browsers. Currently

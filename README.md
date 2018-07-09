@@ -7,6 +7,9 @@ accessible to those without a programming background. It provides greater
 transparency to your software development process, with the aim of fostering
 trust between programmers and other stakeholders.
 
+Trambar is designed to work with self-hosted instances of GitLab. Currently,
+it's not possible to pair it with an account at [gitlab.com](https://about.gitlab.com/).
+
 * [Features](#features)
 * [Demo](#demo)
 * [Getting started](docs/getting-started.md)
