@@ -353,7 +353,7 @@ module.exports = React.createClass({
     },
 
     /**
-     * Destroy the IndexedDB database complete
+     * Destroy the IndexedDB database completely
      *
      * @return {Promise<Boolean>}
      */
@@ -374,7 +374,6 @@ module.exports = React.createClass({
      *
      * @param  {String|undefined} address
      * @param  {String|undefined} schema
-     *
      */
     reset: function(address, schema) {
         var path = (schema === 'local') ? [ 'local' ] : _.filter([ 'remote', address, schema ]);

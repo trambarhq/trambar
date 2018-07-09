@@ -439,7 +439,6 @@ module.exports = React.createClass({
      *
      * @param  {String|undefined} address
      * @param  {String|undefined} schema
-     *
      */
     reset: function(address, schema) {
         var path = (schema === 'local') ? [ 'local' ] : _.filter([ 'remote', address, schema ]);

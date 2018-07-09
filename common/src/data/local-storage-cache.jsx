@@ -30,17 +30,21 @@ module.exports = React.createClass({
 
     getRows: function(server, schema, table) {
         var store = (schema === 'local') ? this.localData : this.remoteData;
-        var path = [
+        var path = _.filter([
             server,
             schema,
             table,
-        ];
+        ]);
         var rows = _.get(store, path);
         if (!rows) {
             rows = [];
             _.set(store, path, rows);
         }
         return rows;
+    },
+
+    getKeyName: function(schema) {
+        return (schema === 'local') ? 'key' : 'id';
     },
 
     saveRows: function(server, schema, table) {
@@ -66,6 +70,7 @@ module.exports = React.createClass({
         var table = query.table;
         var criteria = query.criteria;
         var rows = this.getRows(server, schema, table);
+        var keyName = this.getKeyName(schema);
         var objects;
         if (criteria && criteria.id !== undefined && _.size(criteria) === 1) {
             // look up by id
@@ -74,7 +79,7 @@ module.exports = React.createClass({
                 ids = [ ids ];
             }
             objects = _.filter(_.map(ids, (id) => {
-                return findById(rows, id);
+                return findByKey(rows, id, keyName);
             }));
         } else {
             objects = _.filter(rows, (row) => {
@@ -98,8 +103,9 @@ module.exports = React.createClass({
         var schema = location.schema;
         var table = location.table;
         var rows = this.getRows(server, schema, table);
+        var keyName = this.getKeyName(schema);
         _.each(objects, (object) => {
-            replaceById(rows, _.cloneDeep(object));
+            replaceByKey(rows, _.cloneDeep(object), keyName);
         });
         this.saveRows(server, schema, table);
         return Promise.resolve(objects);
@@ -118,8 +124,9 @@ module.exports = React.createClass({
         var schema = location.schema;
         var table = location.table;
         var rows = this.getRows(server, schema, table);
+        var keyName = this.getKeyName(schema);
         _.each(objects, (object) => {
-            removeById(rows, object);
+            removeByKey(rows, object, keyName);
         });
         this.saveRows(server, schema, table);
         return Promise.resolve(objects);
@@ -209,6 +216,19 @@ module.exports = React.createClass({
     },
 
     /**
+     * Clear objects cached in memory
+     *
+     * @param  {String|undefined} address
+     * @param  {String|undefined} schema
+     */
+    reset: function(address, schema) {
+        if (schema !== 'local') {
+            var path = _.filter([ address, schema ]);
+            _.unset(this.remoteData, path);
+        }
+    },
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -226,28 +246,30 @@ function decodeJSON(s) {
     }
 }
 
-function findById(rows, id) {
-    var index = _.sortedIndexBy(rows, { id }, 'id');
+function findByKey(rows, key, keyName) {
+    var criteria = {};
+    criteria[keyName] = key;
+    var index = _.sortedIndexBy(rows, criteria, keyName);
     var target = rows[index];
-    if (target && target.id === id) {
+    if (target && target[keyName] === key) {
         return target;
     }
 }
 
-function replaceById(rows, object) {
-    var index = _.sortedIndexBy(rows, object, 'id');
+function replaceByKey(rows, object, keyName) {
+    var index = _.sortedIndexBy(rows, object, keyName);
     var target = rows[index];
-    if (target && target.id === object.id) {
+    if (target && target[keyName] === object[keyName]) {
         rows[index] = object;
     } else {
         rows.splice(index, 0, object);
     }
 }
 
-function removeById(rows, object) {
-    var index = _.sortedIndexBy(rows, object, 'id');
+function removeByKey(rows, object, keyName) {
+    var index = _.sortedIndexBy(rows, object, keyName);
     var target = rows[index];
-    if (target && target.id === object.id) {
+    if (target && target[keyName] === object[keyName]) {
         rows.splice(index, 1);
     }
 }
