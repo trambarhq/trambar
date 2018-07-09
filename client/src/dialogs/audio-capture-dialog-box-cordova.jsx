@@ -40,11 +40,13 @@ module.exports = React.createClass({
         if (!this.props.show && nextProps.show) {
             var capture = navigator.device.capture;
             if (capture) {
-                var options = {
-                    duration: 15 * 60 * 60,
-                    limit: 1,
-                };
-                capture.captureAudio(this.handleCaptureSuccess, this.handleCaptureFailure, options);
+                requestPermissions().then(() => {
+                    var options = {
+                        duration: 15 * 60 * 60,
+                        limit: 1,
+                    };
+                    capture.captureAudio(this.handleCaptureSuccess, this.handleCaptureFailure, options);
+                });
             }
         }
     },
@@ -155,3 +157,23 @@ module.exports = React.createClass({
         this.triggerCaptureErrorEvent(err);
     },
 });
+
+function requestPermissions() {
+    var permissions = cordova.plugins.permissions;
+    if (!permissions || cordova.platformId !== 'android') {
+        return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+        var successCB = () => {
+            resolve();
+        };
+        var errorCB = (err) => {
+            reject(new Error('Unable to obtain permission'));
+        };
+        permissions.requestPermissions([
+            permissions.RECORD_AUDIO,
+            permissions.READ_EXTERNAL_STORAGE,
+            permissions.WRITE_EXTERNAL_STORAGE,
+        ], successCB, errorCB);
+    });
+}
