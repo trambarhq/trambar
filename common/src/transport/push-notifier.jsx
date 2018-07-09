@@ -403,7 +403,7 @@ module.exports = React.createClass({
                 break;
             case 'windows':
                 this.handleWNSNotification(data);
-                breka;
+                break;
         }
 
         // store data received in a list for diagnostic purpose
