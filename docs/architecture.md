@@ -25,6 +25,7 @@ Trambar Mobile Client runs a variant of the Web Client on
 * [Data model](#data-model)
 * [Data objects/tables](#data-objects-tables)
 * [Data accessors](#data-accessors)
+* [Data protection](#data-protection)
 * [Change events](#change-events)
 
 ### Services
@@ -180,6 +181,34 @@ error check, and other possible adjustments
 control (read) and other possible adjustments
 * `isRelevantTo` - Checks if a change event involves an object that can be seen
 by a given user
+
+### Data protection
+
+Data access in Trambar is compartmentalized to reduce the risk of leaking
+sensitive information. There PostgreSQL roles are used to provide different
+access levels. The following table lists the roles and the tables they can
+access:
+
+| Role            |                                                          |
+|-----------------|----------------------------------------------------------|
+| client_role     | bookmark, commit (RO), device, listing, notification, project, reaction, repo (RO), role (RO), statistics, story, subscription, system (RO), task, user |
+| admin_role      | bookmark, commit, device, listing, notification, picture, project, reaction, repo, role, statistics, story, server, subscription, system, task, user |
+| auth_role       | device, project (RO), server, session, system (RO), user |
+
+Each Trambar backend service is assigned one of the above roles, with the
+exception of **Schema Manager**, which needs root level access:
+
+| Service                | Role               |
+|------------------------|--------------------|
+| Schema Manager         | root               |
+| Admin Data Server      | admin_role         |
+| GitLab Adapter         | admin_role         |                      
+| Data Server            | client_role        |
+| Media Server           | client_role        |
+| Event Notifier         | client_role        |
+| Live Data Invalidator  | client_role        |
+| Live Data Updater      | client_role        |
+| Session Manager        | auth_role          |
 
 ### Change events
 
