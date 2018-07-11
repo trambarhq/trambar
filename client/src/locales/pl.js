@@ -844,8 +844,8 @@ module.exports = function(localeCode) {
 
         'user-info-email': 'Adres e-mail',
         'user-info-gender': 'Płeć',
-        'user-info-gender-female': 'Żeńska',
-        'user-info-gender-male': 'Męska',
+        'user-info-gender-female': 'Kobieta',
+        'user-info-gender-male': 'Mężczyzna',
         'user-info-gender-unspecified': 'Nieokreślona',
         'user-info-name': 'Imię i nazwisko',
         'user-info-phone': 'Numer telefonu',

@@ -617,8 +617,8 @@ module.exports = function(localeCode) {
 
         'user-info-email': 'Epostadresse',
         'user-info-gender': 'Kjønn',
-        'user-info-gender-female': 'Kvinnelig',
-        'user-info-gender-male': 'Mannlig',
+        'user-info-gender-female': 'Kvinne',
+        'user-info-gender-male': 'Mann',
         'user-info-gender-unspecified': 'Uspesifisert',
         'user-info-name': 'Navn',
         'user-info-phone': 'Telefonnummer',
