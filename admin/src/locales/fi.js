@@ -536,7 +536,7 @@ module.exports = function(localeCode) {
         'user-summary-ichat': 'iChat-käyttäjänimi',
         'user-summary-linkedin': 'LinkedIn-profiilin URL-osoite',
         'user-summary-member-$name': (name) => {
-            var text = 'Käyttäjä';
+            var text = 'Jäsen';
             if (name) {
                 text += `: ${name}`;
             }

@@ -571,7 +571,7 @@ module.exports = function(localeCode) {
         'user-summary-ichat': "Nome utente iChat",
         'user-summary-linkedin': "URL del profilo LinkedIn",
         'user-summary-member-$name': (name) => {
-            var text = 'User';
+            var text = 'Membro';
             if (name) {
                 text += `: ${name}`;
             }

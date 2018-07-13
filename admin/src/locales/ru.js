@@ -799,7 +799,7 @@ module.exports = function(localeCode) {
         'user-summary-ichat': 'Имя пользователя iChat',
         'user-summary-linkedin': 'URL профиля LinkedIn',
         'user-summary-member-$name': (name) => {
-            var text = 'Пользователь';
+            var text = 'Член';
             if (name) {
                 text += `: ${name}`;
             }

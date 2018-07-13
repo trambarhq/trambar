@@ -540,7 +540,7 @@ module.exports = function(localeCode) {
         'user-summary-ichat': 'iChat user name',
         'user-summary-linkedin': 'Linkedin profile URL',
         'user-summary-member-$name': (name) => {
-            var text = 'User';
+            var text = 'Member';
             if (name) {
                 text += `: ${name}`;
             }
