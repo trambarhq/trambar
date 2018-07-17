@@ -123,6 +123,7 @@ module.exports = [
             tg: 'Togo',
         },
         defaultCountry: 'fr',
+        module: () => import('locales/fr' /* webpackChunkName: "locale-fr" */),
     },
     {
         name: '한국어',
