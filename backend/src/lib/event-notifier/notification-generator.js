@@ -170,6 +170,7 @@ function getStoryPublicationDetails(db, schema, storyId, notificationType) {
         case 'push':
         case 'merge':
         case 'branch':
+        case 'tag':
             // need addition info from story object not contained in event
             var criteria = { id: storyId };
             return Story.findOne(db, schema, criteria, 'details').then((story) => {

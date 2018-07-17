@@ -15,6 +15,7 @@ module.exports = {
  * @param  {Database} db
  * @param  {Server} server
  * @param  {Repo} repo
+ * @param  {String} type
  * @param  {String} branch
  * @param  {String} headId
  * @param  {String} tailId
@@ -22,7 +23,7 @@ module.exports = {
  *
  * @return {Promise<Object>}
  */
-function reconstructPush(db, server, repo, branch, headId, tailId, count) {
+function reconstructPush(db, server, repo, type, branch, headId, tailId, count) {
     return importCommits(db, server, repo, branch, headId, count).then((commits) => {
         // obtain a linear list of commits--ignoring branching within the push
         var chain = getCommitChain(commits, headId);
@@ -50,7 +51,7 @@ function reconstructPush(db, server, repo, branch, headId, tailId, count) {
         }, []);
 
         var commitIds = _.keys(commits);
-        return { headId, tailId, forkId, commitIds, lines, files, branch, fromBranches };
+        return { headId, tailId, forkId, commitIds, lines, files, type, branch, fromBranches };
     });
 }
 

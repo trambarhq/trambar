@@ -231,7 +231,6 @@ function extractStoryText(type, details, external, lang) {
             break;
         case 'push':
         case 'merge':
-        case 'branch':
             if (details.branch) {
                 list.push(details.branch);
             }
@@ -246,6 +245,12 @@ function extractStoryText(type, details, external, lang) {
                         list.push(component.text[lang]);
                     }
                 });
+            }
+            break;
+        case 'branch':
+        case 'tag':
+            if (details.branch) {
+                list.push(details.branch);
             }
             break;
     }

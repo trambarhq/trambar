@@ -211,8 +211,10 @@ module.exports = React.createClass({
                 return this.renderMemberText();
             case 'push':
             case 'merge':
-            case 'branch':
                 return this.renderPushText();
+            case 'branch':
+            case 'tag':
+                return this.renderBranchText();
             case 'issue':
                 if (story.details.exported) {
                     return this.renderStoryText();
@@ -558,16 +560,12 @@ module.exports = React.createClass({
         }, []);
         var url;
         if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
-            if (story.type === 'push' || story.type === 'merge') {
-                var commitBefore = story.details.commit_before;
-                var commitAfter = story.details.commit_after;
-                if (commitBefore) {
-                    url = `${repo.details.web_url}/compare/${commitBefore}...${commitAfter}`;
-                } else {
-                    url = `${repo.details.web_url}/commit/${commitAfter}`;
-                }
-            } else if (story.type === 'branch') {
-                url = `${repo.details.web_url}/commits/${branch}`;
+            var commitBefore = story.details.commit_before;
+            var commitAfter = story.details.commit_after;
+            if (commitBefore) {
+                url = `${repo.details.web_url}/compare/${commitBefore}...${commitAfter}`;
+            } else {
+                url = `${repo.details.web_url}/commit/${commitAfter}`;
             }
         }
         var text;
@@ -576,8 +574,6 @@ module.exports = React.createClass({
         } else if (story.type === 'merge') {
             var sourceBranches = story.details.source_branches;
             text = t(`story-$name-merged-$branches-into-$branch-of-$repo`, name, sourceBranches, branch, repoName);
-        } else if (story.type === 'branch') {
-            text = t(`story-$name-created-$branch-in-$repo`, name, branch, repoName);
         }
         return (
             <div className="text push">
@@ -588,6 +584,42 @@ module.exports = React.createClass({
                     <ul className="files">{fileChanges}</ul>
                     <ul className="lines">{lineChanges}</ul>
                 </div>
+            </div>
+        );
+    },
+
+    /**
+     * Render text for branch story
+     *
+     * @return {ReactElement}
+     */
+    renderBranchText: function() {
+        var t = this.props.locale.translate;
+        var p = this.props.locale.pick;
+        var story = this.props.story;
+        var name = this.getAuthorName();
+        var repo = this.props.repo;
+        var repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
+        var branch = story.details.branch;
+        var url;
+        if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
+            if (story.type === 'branch') {
+                url = `${repo.details.web_url}/commits/${branch}`;
+            } else if (story.type === 'tag') {
+                url = `${repo.details.web_url}/tags/${branch}`;
+            }
+        }
+        var text;
+        if (story.type === 'branch') {
+            text = t(`story-$name-created-$branch-in-$repo`, name, branch, repoName);
+        } else if (story.type === 'tag') {
+            text = t(`story-$name-created-$tag-in-$repo`, name, branch, repoName);
+        }
+        return (
+            <div className="text push">
+                <p>
+                    <a href={url} target="_blank">{text}</a>
+                </p>
             </div>
         );
     },
@@ -751,6 +783,10 @@ module.exports = React.createClass({
      */
     renderAppComponents: function() {
         var t = this.props.locale.translate;
+        var type = _.get(this.props.story, 'type');
+        if (type !== 'push' && type !== 'merge') {
+            return null;
+        }
         var components = _.get(this.props.story, 'details.components');
         if (_.isEmpty(components)) {
             return null;

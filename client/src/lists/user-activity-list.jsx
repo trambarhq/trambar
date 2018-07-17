@@ -115,6 +115,8 @@ module.exports = React.createClass({
                 return t(`user-activity-$name-merged-code`, name);
             case 'branch':
                 return t(`user-activity-$name-created-branch`, name);
+            case 'tag':
+                return t(`user-activity-$name-created-tag`, name);
             case 'issue':
                 return t(`user-activity-$name-reported-issue`, name);
             case 'milestone':

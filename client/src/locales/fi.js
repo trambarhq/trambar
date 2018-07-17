@@ -309,6 +309,9 @@ module.exports = function(localeCode) {
         'reaction-$name-commented-on-push': (name) => {
             return `${name} kommentoi tätä push`;
         },
+        'reaction-$name-commented-on-tag': (name) => {
+            return `${name} kommentoi tätä tagia`;
+        },
         'reaction-$name-completed-a-task': (name) => {
             return `${name} suoritti tehtävän`;
         },
@@ -432,6 +435,9 @@ module.exports = function(localeCode) {
                 text += ` “${repo}”`;
             }
             return text;
+        },
+        'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
+            return `Loi tagin “${tag}” projektissa “${repo}”`;
         },
         'story-$name-deleted-$page': (name, page) => {
             return `Poisti wiki-sivun “${page}”`;
@@ -584,6 +590,7 @@ module.exports = function(localeCode) {
         'user-activity-$name-created-merge-request': 'Teki merge request',
         'user-activity-$name-created-milestone': 'Loi virstanpylvään',
         'user-activity-$name-created-repo': 'Loi git-projektin',
+        'user-activity-$name-created-tag': 'Luonut uuden tagin',
         'user-activity-$name-edited-wiki-page': 'Muokkasi wiki-sivua',
         'user-activity-$name-joined-repo': 'Liittyi git-projektiin',
         'user-activity-$name-left-repo': 'Jätti git-projektin',
@@ -637,6 +644,7 @@ module.exports = function(localeCode) {
         'user-statistics-legend-push': 'Pushes',
         'user-statistics-legend-repo': 'Muutokset arkistoon',
         'user-statistics-legend-survey': 'Kyselyt',
+        'user-statistics-legend-tag': 'Tagit',
         'user-statistics-legend-task-list': 'Tehtäväluettelot',
         'user-statistics-legend-wiki': 'Wiki-muokkaukset',
         'user-statistics-today': 'Tänään',
@@ -669,6 +677,9 @@ module.exports = function(localeCode) {
         },
         'user-statistics-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 kysely` : `${count} kyselystä`;
+        },
+        'user-statistics-tooltip-$count-tag': (count) => {
+            return (count === 1) ? `1 tagi` : `${count} tagia`;
         },
         'user-statistics-tooltip-$count-task-list': (count) => {
             return (count === 1) ? `1 tehtäväluettelo` : `${count} tehtäväluetteloa`;

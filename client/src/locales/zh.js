@@ -191,7 +191,6 @@ var traditionalPhrases = {
         switch (story) {
             case 'push': story = '推送'; break;
             case 'merge': story = '合併'; break;
-            case 'branch': story = '分支'; break;
             case 'survey': story = '調查'; break;
             case 'task-list': story = '任務列表'; break;
             case 'post': story = '貼文'; break;
@@ -356,6 +355,9 @@ var traditionalPhrases = {
     'reaction-$name-commented-on-push': (name) => {
         return `${name}回應了這個推送`;
     },
+    'reaction-$name-commented-on-tag': (name) => {
+        return `${name}回應了這個標籤`;
+    },
     'reaction-$name-completed-a-task': (name) => {
         return `${name}完成了一個任務`;
     },
@@ -473,6 +475,9 @@ var traditionalPhrases = {
         }
         text += `數據庫`;
         return text;
+    },
+    'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
+        return `在《${repo}》數據庫中創建了《${tag}》標籤`;
     },
     'story-$name-deleted-$page': (name, page) => {
         return `刪除了wiki頁面《${page}》”`;
@@ -625,6 +630,7 @@ var traditionalPhrases = {
     'user-activity-$name-created-merge-request': '發出一個合併請求',
     'user-activity-$name-created-milestone': '建立了一個里程碑',
     'user-activity-$name-created-repo': '建立了一個git數據庫',
+    'user-activity-$name-created-tag': '建立了一個標籤',
     'user-activity-$name-edited-wiki-page': '編輯了一個wiki頁面',
     'user-activity-$name-joined-repo': '加入了數據庫',
     'user-activity-$name-left-repo': '離開了數據庫',
@@ -678,6 +684,7 @@ var traditionalPhrases = {
     'user-statistics-legend-push': '推送',
     'user-statistics-legend-repo': '數據庫修改',
     'user-statistics-legend-survey': '調查',
+    'user-statistics-legend-tag': '標籤',
     'user-statistics-legend-task-list': '任務列表',
     'user-statistics-legend-wiki': 'wiki修改',
     'user-statistics-today': '今天',
@@ -710,6 +717,9 @@ var traditionalPhrases = {
     },
     'user-statistics-tooltip-$count-survey': (count) => {
         return `${count}個調查`;
+    },
+    'user-statistics-tooltip-$count-tag': (count) => {
+        return `${count}個標籤`;
     },
     'user-statistics-tooltip-$count-task-list': (count) => {
         return `${count}個任務列表`;
@@ -882,7 +892,6 @@ var simplifiedPhrases = {
         switch (story) {
             case 'push': story = '推送'; break;
             case 'merge': story = '合并'; break;
-            case 'branch': story = '分支'; break;
             case 'survey': story = '调查'; break;
             case 'task-list': story = '任务列表'; break;
             case 'post': story = '贴文'; break;
@@ -1047,6 +1056,9 @@ var simplifiedPhrases = {
     'reaction-$name-commented-on-push': (name) => {
         return `${name}回应了这个推送`;
     },
+    'reaction-$name-commented-on-tag': (name) => {
+        return `${name}回应了这个标签`;
+    },
     'reaction-$name-completed-a-task': (name) => {
         return `${name}完成了一个任务`;
     },
@@ -1164,6 +1176,9 @@ var simplifiedPhrases = {
         }
         text += `数据库`;
         return text;
+    },
+    'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
+        return `在《${repo}》数据库中创建了《${tag}》标签`;
     },
     'story-$name-deleted-$page': (name, page) => {
         return `删除了wiki页面《${page}》”`;
@@ -1316,6 +1331,7 @@ var simplifiedPhrases = {
     'user-activity-$name-created-merge-request': '发出一个合并请求',
     'user-activity-$name-created-milestone': '建立了一个里程碑',
     'user-activity-$name-created-repo': '建立了一个git数据库',
+    'user-activity-$name-created-tag': '建立了一个标签',
     'user-activity-$name-edited-wiki-page': '编辑了一个wiki页面',
     'user-activity-$name-joined-repo': '加入了数据库',
     'user-activity-$name-left-repo': '离开了数据库',
@@ -1369,6 +1385,7 @@ var simplifiedPhrases = {
     'user-statistics-legend-push': '推送',
     'user-statistics-legend-repo': '数据库修改',
     'user-statistics-legend-survey': '调查',
+    'user-statistics-legend-tag': '标签',
     'user-statistics-legend-task-list': '任务列表',
     'user-statistics-legend-wiki': 'wiki修改',
     'user-statistics-today': '今天',
@@ -1401,6 +1418,9 @@ var simplifiedPhrases = {
     },
     'user-statistics-tooltip-$count-survey': (count) => {
         return `${count}个调查`;
+    },
+    'user-statistics-tooltip-$count-tag': (count) => {
+        return `${count}个标签`;
     },
     'user-statistics-tooltip-$count-task-list': (count) => {
         return `${count}个任务列表`;
@@ -1468,7 +1488,6 @@ var cantonesePhrases = {
         switch (story) {
             case 'push': story = '推送'; break;
             case 'merge': story = '合併'; break;
-            case 'branch': story = '分支'; break;
             case 'survey': story = '調查'; break;
             case 'task-list': story = '任務列表'; break;
             case 'post': story = '帖子'; break;
@@ -1486,7 +1505,6 @@ var cantonesePhrases = {
         switch (story) {
             case 'push': story = '推送'; break;
             case 'merge': story = '合併'; break;
-            case 'branch': story = '分支'; break;
             case 'survey': story = '調查'; break;
             case 'task-list': story = '任務列表'; break;
             case 'post': story = '帖子'; break;
@@ -1600,6 +1618,9 @@ var cantonesePhrases = {
     'reaction-$name-commented-on-push': (name) => {
         return `${name}回應咗呢個推送`;
     },
+    'reaction-$name-commented-on-tag': (name) => {
+        return `${name}回應咗呢個標籤`;
+    },
     'reaction-$name-completed-a-task': (name) => {
         return `${name}完成咗一個任務`;
     },
@@ -1644,6 +1665,9 @@ var cantonesePhrases = {
         }
         text += `數據庫`;
         return text;
+    },
+    'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
+        return `喺《${repo}》數據庫中創建咗《${tag}》標籤`;
     },
     'story-$name-deleted-$page': (name, page) => {
         return `刪除咗wiki頁面《${page}》”`;
@@ -1754,6 +1778,7 @@ var cantonesePhrases = {
     'user-activity-$name-created-branch': '建立咗一個分支',
     'user-activity-$name-created-milestone': '建立咗一個里程碑',
     'user-activity-$name-created-repo': '建立咗一個git數據庫',
+    'user-activity-$name-created-tag': '建立咗一個標籤',
     'user-activity-$name-edited-wiki-page': '編輯咗一個wiki頁面',
     'user-activity-$name-joined-repo': '加入咗數據庫',
     'user-activity-$name-left-repo': '離開咗數據庫',

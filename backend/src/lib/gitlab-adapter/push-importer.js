@@ -30,16 +30,19 @@ module.exports = {
  */
 function importEvent(db, system, server, repo, project, author, glEvent) {
     var schema = project.name;
-    var branch, headId, tailId, count;
+    var branch, headId, tailId, type, count;
     if (glEvent.push_data) {
         // version 10
         branch = glEvent.push_data.ref;
+        type = glEvent.push_data.ref_type;
         headId = glEvent.push_data.commit_to;
         tailId = glEvent.push_data.commit_from;
         count = glEvent.push_data.commit_count;
     } else if (glEvent.data) {
         // version 9
-        branch = _.last(_.split(glEvent.data.ref, '/'));
+        var refParts = _.split(glEvent.data.ref, '/');
+        branch = _.last(refParts);
+        type = /^tags$/.test(refParts[1]) ? 'tag' : 'branch';
         headId = glEvent.data.after;
         tailId = glEvent.data.before;
         if (/^0+$/.test(tailId)) {
@@ -49,7 +52,7 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
         count = glEvent.data.total_commits_count;
     }
     // retrieve all commits in the push
-    return PushReconstructor.reconstructPush(db, server, repo, branch, headId, tailId, count).then((push) => {
+    return PushReconstructor.reconstructPush(db, server, repo, type, branch, headId, tailId, count).then((push) => {
         // look for component descriptions
         return getDefaultLanguage(db).then((languageCode) => {
             return PushDecorator.retrieveDescriptions(server, repo, push, languageCode).then((components) => {
@@ -77,7 +80,11 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
 function copyPushProperties(story, system, server, repo, author, push, components, glEvent) {
     var storyType;
     if (push.forkId) {
-        storyType = 'branch';
+        if (push.type === 'tag') {
+            storyType = 'tag';
+        } else {
+            storyType = 'branch';
+        }
     } else if (!_.isEmpty(push.fromBranches)) {
         storyType = 'merge';
     } else {
