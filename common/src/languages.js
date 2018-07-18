@@ -8,7 +8,8 @@ module.exports = [
             pl: 'Polsko',
             sk: 'Slovensko',
         },
-        defaultCountry: 'cz'
+        defaultCountry: 'cz',
+        module: () => import('locales/cs' /* webpackChunkName: "locale-cs" */),
     },
     {
         name: 'Dansk',

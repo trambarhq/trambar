@@ -229,7 +229,7 @@ var americanPhrases = {
         switch (story) {
             case 'survey': story = 'a survey'; break;
             case 'task-list': story = 'a task list'; break;
-            case 'post': story = 'a post';
+            case 'post': story = 'a post'; break;
             default: story = 'a story';
         }
         return `${name} sent you a bookmark to ${story}`;

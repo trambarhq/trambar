@@ -210,7 +210,7 @@ module.exports = function(localeCode) {
             switch (story) {
                 case 'survey': story = 'un sondage'; break;
                 case 'task-list': story = 'une liste de tâches'; break;
-                case 'post': story = 'un message';
+                case 'post': story = 'un message'; break;
                 default: story = 'une histoire';
             }
             return `${name} vous a envoyé un signet à ${story}`;

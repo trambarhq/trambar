@@ -210,7 +210,7 @@ module.exports = function(localeCode) {
             switch (story) {
                 case 'survey': story = 'kyselyyn'; break;
                 case 'task-list': story = 'tehtäväluettelon'; break;
-                case 'post': story = 'viestiin';
+                case 'post': story = 'viestiin'; break;
                 default: story = 'tarinaan';
             }
             return `${name} lähetti sinulle kirjanmerkin ${story}`;

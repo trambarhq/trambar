@@ -210,7 +210,7 @@ module.exports = function(localeCode) {
             switch (story) {
                 case 'survey': story = 'en undersøkelse'; break;
                 case 'task-list': story = 'en oppgavelist'; break;
-                case 'post': story = 'et innlegg';
+                case 'post': story = 'et innlegg'; break;
                 default: story = 'en historie';
             }
             return `${name} sendte deg et bokmerke til ${story}`;
