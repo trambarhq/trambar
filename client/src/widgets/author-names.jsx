@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var UserUtils = require('objects/utils/user-utils');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -13,10 +14,9 @@ require('./author-names.scss');
 
 function AuthorNames(props) {
     var t = props.locale.translate;
-    var p = props.locale.pick;
     var authors = props.authors;
     var names = _.map(authors, (author) => {
-        return p(author.details.name);
+        return UserUtils.getDisplayName(author, props.locale);
     });
     var contents;
     switch (_.size(authors)) {

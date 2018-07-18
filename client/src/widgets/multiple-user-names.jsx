@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var UserUtils = require('objects/utils/user-utils');
 
 var Locale = require('locale/locale');
 var Theme = require('theme/theme');
@@ -219,8 +220,7 @@ function User(props) {
         theme: props.theme,
         size: 'small',
     };
-    var p = props.locale.pick;
-    var name = p(props.user.details.name);
+    var name = UserUtils.getDisplayName(props.user, props.locale);
     return (
         <div className={classNames.join(' ')}>
             <ProfileImage {...imageProps} />

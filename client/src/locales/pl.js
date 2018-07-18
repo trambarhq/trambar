@@ -83,7 +83,7 @@ module.exports = function(localeCode) {
         'bookmark-$name-recommends-this': (name) => {
             return `${name} poleca to`;
         },
-        'bookmark-$name1-and-$name2-recommend-this': (name) => {
+        'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
             return [ name1, ' i ', name2, ' polecają to' ];
         },
         'bookmark-$you-bookmarked-it': (you) => {

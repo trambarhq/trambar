@@ -95,7 +95,7 @@ var traditionalPhrases = {
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推薦這個`;
     },
-    'bookmark-$name1-and-$name2-recommend-this': (name) => {
+    'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
         return [ name1, '和', name2, '推薦這個' ];
     },
     'bookmark-$you-bookmarked-it': '你加了這個書籤',
@@ -796,7 +796,7 @@ var simplifiedPhrases = {
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推荐这个`;
     },
-    'bookmark-$name1-and-$name2-recommend-this': (name) => {
+    'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
         return [ name1, '和', name2, '推荐这个' ];
     },
     'bookmark-$you-bookmarked-it': '你加了这个书签',
@@ -1452,7 +1452,7 @@ var cantonesePhrases = {
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推薦呢個`;
     },
-    'bookmark-$name1-and-$name2-recommend-this': (name) => {
+    'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
         return [ name1, '同', name2, '都推薦呢個' ];
     },
     'bookmark-$you-bookmarked-it': '你加咗個書籤',

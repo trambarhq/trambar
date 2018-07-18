@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var UserUtils = require('objects/utils/user-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -54,7 +55,6 @@ module.exports = React.createClass({
      */
     renderSenderNames: function() {
         var t = this.props.locale.translate;
-        var n = this.props.locale.name;
         var userId = _.get(this.props.currentUser, 'id');
         var isOwner = _.some(this.props.senders, { id: userId });
         var others = _.filter(this.props.senders, (s) => {
@@ -63,13 +63,13 @@ module.exports = React.createClass({
         var contents;
         if (isOwner) {
             var user = this.props.currentUser;
-            var you = n(user.details.name, user.details.gender);
+            var you = UserUtils.getDisplayNameWithGender(user, this.props.locale);
             switch(others.length) {
                 case 0:
                     contents = t('bookmark-$you-bookmarked-it', you);
                     break;
                 case 1:
-                    var name = n(others[0].details.name, others[0].details.gender);
+                    var name = UserUtils.getDisplayNameWithGender(others[0], this.props.locale);
                     contents = t('bookmark-$you-bookmarked-it-and-$name-recommends-it', you, name);
                     break;
                 default:
@@ -89,16 +89,16 @@ module.exports = React.createClass({
                     contents = '\u00a0';
                     break;
                 case 1:
-                    var name = n(others[0].details.name, others[0].details.gender);
+                    var name = UserUtils.getDisplayNameWithGender(others[0], this.props.locale);
                     contents = t('bookmark-$name-recommends-this', name);
                     break;
                 case 2:
-                    var name1 = n(others[0].details.name, others[0].details.gender);
-                    var name2 = n(others[1].details.name, others[1].details.gender);
-                    contents = t('bookmark-$name1-and-$name2-recommend-this', name1);
+                    var name1 = UserUtils.getDisplayNameWithGender(others[0], this.props.locale);
+                    var name2 = UserUtils.getDisplayNameWithGender(others[1], this.props.locale);
+                    contents = t('bookmark-$name1-and-$name2-recommend-this', name1, name2);
                     break;
                 default:
-                    var name = n(others[0].details.name, others[0].details.gender);
+                    var name = UserUtils.getDisplayNameWithGender(others[0], this.props.locale);
                     var additional = _.slice(others, 1);
                     var props = {
                         users: additional,

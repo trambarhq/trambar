@@ -72,8 +72,8 @@ var americanPhrases = {
     'bookmark-$name-recommends-this': (name) => {
         return `${name} recommends this`;
     },
-    'bookmark-$name1-and-$name2-recommend-this': (name) => {
-        return [ name1, ' and ', name2, ' recommend this' ];
+    'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
+        return `${name1} and ${name2} recommend this`;
     },
     'bookmark-$you-bookmarked-it': 'You bookmarked this',
     'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {

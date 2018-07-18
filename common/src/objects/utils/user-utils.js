@@ -24,6 +24,8 @@ module.exports = {
     canHideReaction,
     canRemoveReaction,
     canReceiveNotification,
+    getDisplayName,
+    getDisplayNameWithGender,
     mergeRemoteChanges: StoryUtils.mergeRemoteChanges,
 };
 
@@ -468,4 +470,42 @@ function canReceiveNotification(user, repos, type) {
         }
     }
     return true;
+}
+
+/**
+ * Return the display name of the user
+ *
+ * @param  {User} user
+ * @param  {Locale} locale
+ *
+ * @return {String}
+ */
+function getDisplayName(user, locale) {
+    if (!user) {
+        return '\u00a0';
+    }
+    var name = locale.pick(user.details.name);
+    if (!_.trim(name)) {
+        name = _.capitalize(user.username);
+    }
+    return name;
+}
+
+/**
+ * Return the display name of the user
+ *
+ * @param  {User} user
+ * @param  {Locale} locale
+ *
+ * @return {Object|String}
+ */
+function getDisplayNameWithGender(user, locale) {
+    if (!user) {
+        return '\u00a0';
+    }
+    var name = locale.name(user.details.name, user.details.gender);
+    if (!_.trim(name)) {
+        name = locale.name(_.capitalize(user.username), user.details.gender);
+    }
+    return name;
 }

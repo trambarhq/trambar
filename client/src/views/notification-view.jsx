@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
+var UserUtils = require('objects/utils/user-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -130,10 +131,8 @@ module.exports = React.createClass({
      */
     getNotificationText: function() {
         var t = this.props.locale.translate;
-        var n = this.props.locale.name;
-        var user = this.props.user;
         var notification = this.props.notification;
-        var name = (user) ? n(user.details.name, user.details.gender) : '';
+        var name = UserUtils.getDisplayNameWithGender(this.props.user, this.props.locale);
         switch (notification.type) {
             case 'like':
                 return t('notification-$name-likes-your-$story', name, notification.details.story_type);

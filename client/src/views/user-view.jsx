@@ -2,6 +2,7 @@ var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ComponentRefs = require('utils/component-refs');
 var TagScanner = require('utils/tag-scanner');
+var UserUtils = require('objects/utils/user-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -348,9 +349,7 @@ module.exports = React.createClass({
      * @return {ReactElement}
      */
     renderName: function() {
-        var user = this.props.user;
-        var p = this.props.locale.pick;
-        var name = (user) ? p(user.details.name) : '\u00a0';
+        var name = UserUtils.getDisplayName(this.props.user, this.props.locale);
         var url = this.getUserPageURL();
         return (
             <h2 className="name">

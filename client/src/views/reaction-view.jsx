@@ -161,7 +161,7 @@ module.exports = React.createClass({
         var user = this.props.currentUser;
         var story = this.props.story;
         var repo = this.props.repo;
-        var name = p(_.get(this.props.respondent, 'details.name'));
+        var name = UserUtils.getDisplayName(this.props.respondent, this.props.locale);
         this.resourcesReferenced = {};
         if (reaction.published && reaction.ready !== false) {
             switch (reaction.type) {

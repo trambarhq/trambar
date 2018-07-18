@@ -4,6 +4,7 @@ var Relaks = require('relaks');
 var Memoize = require('utils/memoize');
 var ProjectFinder = require('objects/finders/project-finder');
 var UserFinder = require('objects/finders/user-finder');
+var UserUtils = require('objects/utils/user-utils');
 
 var Database = require('data/database');
 var Route = require('routing/route');
@@ -138,7 +139,6 @@ var UserSelectionListSync = module.exports.Sync = React.createClass({
 });
 
 function User(props) {
-    var p = props.locale.pick;
     var classNames = [ 'user' ];
     if (props.selected) {
         classNames.push('selected');
@@ -146,7 +146,7 @@ function User(props) {
     if (props.disabled) {
         classNames.push('disabled');
     }
-    var name = p(props.user.details.name);
+    var name = UserUtils.getDisplayName(props.user, props.locale);
     var containerProps = {
         className: classNames.join(' '),
         'data-user-id': props.user.id,

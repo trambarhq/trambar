@@ -53,7 +53,7 @@ module.exports = function(localeCode) {
         'bookmark-$name-recommends-this': (name) => {
             return `${name} suosittelee tätä`;
         },
-        'bookmark-$name1-and-$name2-recommend-this': (name) => {
+        'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
             return [ name1, ' ja ', name2, ' suosittelevat tätä' ];
         },
         'bookmark-$you-bookmarked-it': 'Teit kirjanmerkin tähän',
