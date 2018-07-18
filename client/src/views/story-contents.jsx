@@ -239,12 +239,12 @@ module.exports = React.createClass({
         var p = this.props.locale.pick;
         var story = this.props.story;
         var text = _.trimEnd(p(story.details.text));
-        if (!text) {
-            return null;
-        }
         var tags;
         if (story.details.labels) {
             tags = this.renderLabels();
+        }
+        if (!text && !tags) {
+            return null;
         }
         if (story.details.markdown) {
             return (
