@@ -335,7 +335,13 @@ function handleOAuthTestRequest(req, res, done) {
     return findSystem().then((system) => {
         return findServer(serverId).then((server) => {
             var params = { test: 1, sid: serverId, handle: 'TEST' };
-            return authenticateThruPassport(req, res, system, server, params);
+            return authenticateThruPassport(req, res, system, server, params).then((account) => {
+                console.log(`OAuth authentication test:\n`);
+                console.log(`Display name = ${account.profile.displayName}`);
+                console.log(`User name = ${account.profile.username}`);
+                console.log(`User ID = ${account.profile.id}`);
+                console.log(`Email = ${_.map(account.profile.emails, 'value').join(', ')}`);
+            });
         });
     }).then(() => {
         var html = `<h1>OK</h1>`;
@@ -1115,6 +1121,9 @@ function addServerSpecificOptions(server, params, options) {
             if (params.activation) {
                 options.scope = [ 'api' ];
             }
+            break;
+        case 'github':
+            options.scope = [ 'user:email', 'read:user' ];
             break;
         case 'google':
             options.scope = [ 'profile' ];
