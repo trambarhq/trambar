@@ -85,6 +85,9 @@ var traditionalPhrases = {
     'activity-tooltip-$count-survey': (count) => {
         return `${count}個調查`;
     },
+    'activity-tooltip-$count-tag': (count) => {
+        return `${count}個標籤`;
+    },
     'activity-tooltip-$count-task-list': (count) => {
         return `${count}個任務列表`;
     },
@@ -655,6 +658,9 @@ var simplifiedPhrases = {
     },
     'activity-tooltip-$count-survey': (count) => {
         return `${count}个调查`;
+    },
+    'activity-tooltip-$count-tag': (count) => {
+        return `${count}个标签`;
     },
     'activity-tooltip-$count-task-list': (count) => {
         return `${count}个任务列表`;

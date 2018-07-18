@@ -56,6 +56,9 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 undersøkelse` : `${count} undersøkelser`;
         },
+        'activity-tooltip-$count-tag': (count) => {
+            return (count === 1) ? `1 tagg` : `${count} tagger`;
+        },
         'activity-tooltip-$count-task-list': (count) => {
             return (count === 1) ? `1 oppgaveliste` : `${count} oppgavelister`;
         },

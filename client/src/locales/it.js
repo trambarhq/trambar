@@ -704,7 +704,7 @@ module.exports = function(localeCode) {
         'user-statistics-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 sondaggio` : `${count} sondaggi`;
         },
-        'user-statistics-tooltip-$count-branch': (count) => {
+        'user-statistics-tooltip-$count-tag': (count) => {
             return `${count} tag`;
         },
         'user-statistics-tooltip-$count-task-list': (count) => {

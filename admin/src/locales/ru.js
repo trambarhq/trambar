@@ -122,6 +122,15 @@ module.exports = function(localeCode) {
                 return `${count} опросов`;
             }
         },
+        'activity-tooltip-$count-tag': (count) => {
+            if (singularN(count)) {
+                return `${count} тег`;
+            } else if (singularG(count)) {
+                return `${count} теги`;
+            } else {
+                return `${count} тегов`;
+            }
+        },
         'activity-tooltip-$count-task-list': (count) => {
             if (singularN(count)) {
                 return `${count} список задач`;

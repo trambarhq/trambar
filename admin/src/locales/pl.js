@@ -122,6 +122,15 @@ module.exports = function(localeCode) {
                 return `${count} ankiet`;
             }
         },
+        'activity-tooltip-$count-tag': (count) => {
+            if (singular(count)) {
+                return `1 tag`;
+            } else if (plural(count)) {
+                return `${count} tagi`;
+            } else {
+                return `${count} tagów`;
+            }
+        },
         'activity-tooltip-$count-task-list': (count) => {
             if (singular(count)) {
                 return `1 lista zadań`;

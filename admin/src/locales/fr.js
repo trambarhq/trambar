@@ -60,6 +60,9 @@ module.exports = function(localeCode) {
         'activity-tooltip-$count-survey': (count) => {
             return (count === 1) ? `1 sondage` : `${count} sondages`;
         },
+        'activity-tooltip-$count-tag': (count) => {
+            return (count === 1) ? `1 étiquette` : `${count} étiquettes`;
+        },
         'activity-tooltip-$count-task-list': (count) => {
             return (count === 1) ? `1 liste de tâches` : `${count} listes de tâches`;
         },

@@ -32,7 +32,7 @@ module.exports = function(localeCode) {
                 return `${count} příběhů`;
             }
         },
-        'activity-chart-tooltip-$count-branch': (count) => {
+        'activity-tooltip-$count-branch': (count) => {
             if (singular(count)) {
                 return `1 větev`;
             } else if (plural(count)) {
@@ -41,7 +41,7 @@ module.exports = function(localeCode) {
                 return `${count} větví`;
             }
         },
-        'activity-chart-tooltip-$count-issue': (count) => {
+        'activity-tooltip-$count-issue': (count) => {
             if (singular(count)) {
                 return `1 problém`;
             } else if (plural(count)) {
@@ -50,7 +50,7 @@ module.exports = function(localeCode) {
                 return `${count} problémů`;
             }
         },
-        'activity-chart-tooltip-$count-member': (count) => {
+        'activity-tooltip-$count-member': (count) => {
             if (singular(count)) {
                 return `1 změna členství`;
             } else if (plural(count)) {
@@ -59,7 +59,7 @@ module.exports = function(localeCode) {
                 return `${count} změn členství`;
             }
         },
-        'activity-chart-tooltip-$count-merge': (count) => {
+        'activity-tooltip-$count-merge': (count) => {
             if (singular(count)) {
                 return `1 sloučení`;
             } else if (plural(count)) {
@@ -68,7 +68,7 @@ module.exports = function(localeCode) {
                 return `${count} sloučeních`;
             }
         },
-        'activity-chart-tooltip-$count-merge-request': (count) => {
+        'activity-tooltip-$count-merge-request': (count) => {
             if (singular(count)) {
                 return `1 žádost o sloučení`;
             } else if (plural(count)) {
@@ -77,7 +77,7 @@ module.exports = function(localeCode) {
                 return `${count} žádostí o sloučení`;
             }
         },
-        'activity-chart-tooltip-$count-milestone': (count) => {
+        'activity-tooltip-$count-milestone': (count) => {
             if (singular(count)) {
                 return `1 milník`;
             } else if (plural(count)) {
@@ -86,7 +86,7 @@ module.exports = function(localeCode) {
                 return `${count} milníků`;
             }
         },
-        'activity-chart-tooltip-$count-post': (count) => {
+        'activity-tooltip-$count-post': (count) => {
             if (singular(count)) {
                 return `1 příspěvek`;
             } else if (plural(count)) {
@@ -95,7 +95,7 @@ module.exports = function(localeCode) {
                 return `${count} příspěvků`;
             }
         },
-        'activity-chart-tooltip-$count-push': (count) => {
+        'activity-tooltip-$count-push': (count) => {
             if (singular(count)) {
                 return `1 přesun`;
             } else if (plural(count)) {
@@ -104,7 +104,7 @@ module.exports = function(localeCode) {
                 return `${count} přesunů`;
             }
         },
-        'activity-chart-tooltip-$count-repo': (count) => {
+        'activity-tooltip-$count-repo': (count) => {
             if (singular(count)) {
                 return `1 změna repozitáře`;
             } else if (plural(count)) {
@@ -113,7 +113,7 @@ module.exports = function(localeCode) {
                 return `${count} změn repozitářů`;
             }
         },
-        'activity-chart-tooltip-$count-survey': (count) => {
+        'activity-tooltip-$count-survey': (count) => {
             if (singular(count)) {
                 return `1 anketa`;
             } else if (plural(count)) {
@@ -122,7 +122,16 @@ module.exports = function(localeCode) {
                 return `${count} anket`;
             }
         },
-        'activity-chart-tooltip-$count-task-list': (count) => {
+        'activity-tooltip-$count-tag': (count) => {
+            if (singular(count)) {
+                return `1 tag`;
+            } else if (plural(count)) {
+                return `${count} tagy`;
+            } else {
+                return `${count} tagů`;
+            }
+        },
+        'activity-tooltip-$count-task-list': (count) => {
             if (singular(count)) {
                 return `1 seznam úkolů`;
             } else if (plural(count)) {
@@ -131,7 +140,7 @@ module.exports = function(localeCode) {
                 return `${count} seznamů úkolů`;
             }
         },
-        'activity-chart-tooltip-$count-wiki': (count) => {
+        'activity-tooltip-$count-wiki': (count) => {
             if (singular(count)) {
                 return `1 úprava stránky wiki`;
             } else if (plural(count)) {
