@@ -639,11 +639,11 @@ module.exports = function(localeCode) {
         'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
             var commits;
             if (singular(count)) {
-                users = `1 rewizją`;
+                commits = `1 rewizją`;
             } else if (plural(count)) {
-                users = `${count} rewizjami`;
+                commits = `${count} rewizjami`;
             } else {
-                users = `${count} rewizjami`;
+                commits = `${count} rewizjami`;
             }
             return `Zaimportowano wgrywanie z ${commits} do gałęzi „${branch}” projektu „${repo}”`;
         },

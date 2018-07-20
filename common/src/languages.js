@@ -35,6 +35,7 @@ module.exports = [
             ch: 'Schweiz',
         },
         defaultCountry: 'de',
+        module: () => import('locales/de' /* webpackChunkName: "locale-de" */),
     },
     {
         name: 'Ελληνικά',
