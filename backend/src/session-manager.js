@@ -341,6 +341,7 @@ function handleOAuthTestRequest(req, res, done) {
                 console.log(`User name = ${account.profile.username}`);
                 console.log(`User ID = ${account.profile.id}`);
                 console.log(`Email = ${_.map(account.profile.emails, 'value').join(', ')}`);
+                console.log(`Server type = ${server.type}`);
             });
         });
     }).then(() => {
@@ -526,7 +527,18 @@ function authenticateThruPassport(req, res, system, server, params) {
                 message = info.message;
             } else if (err && err.message) {
                 if (err.oauthError) {
-                    message = err.oauthError.message;
+                    if (err.oauthError.message) {
+                        message = err.oauthError.message;
+                    } else if (err.oauthError.data) {
+                        try {
+                            var oauthResult = JSON.parse(err.oauthError.data);
+                            if (oauthResult.error) {
+                                message = oauthResult.error.message;
+                            }
+                        } catch(err) {
+                            message = err.message;
+                        }
+                    }
                 } else {
                     message = err.message;
                 }
@@ -1126,7 +1138,7 @@ function addServerSpecificOptions(server, params, options) {
             options.scope = [ 'user:email', 'read:user' ];
             break;
         case 'google':
-            options.scope = [ 'profile' ];
+            options.scope = [ 'profile', 'email' ];
             break;
         case 'windows':
             options.scope = [ 'wl.signin', 'wl.basic', 'wl.emails' ];
