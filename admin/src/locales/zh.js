@@ -49,6 +49,7 @@ var traditionalPhrases = {
     'activity-chart-legend-push': '推送',
     'activity-chart-legend-repo': '數據庫修改',
     'activity-chart-legend-survey': '調查',
+    'activity-chart-legend-tag': '標籤',
     'activity-chart-legend-task-list': '任務列表',
     'activity-chart-legend-wiki': 'wiki修改',
 
@@ -623,6 +624,7 @@ var simplifiedPhrases = {
     'activity-chart-legend-push': '推送',
     'activity-chart-legend-repo': '数据库修改',
     'activity-chart-legend-survey': '调查',
+    'activity-chart-legend-tag': '标签',
     'activity-chart-legend-task-list': '任务列表',
     'activity-chart-legend-wiki': 'wiki修改',
 

@@ -178,13 +178,13 @@ module.exports = function(localeCode) {
                 case 'task-list': story = 'tehtäväluettelossa'; break;
                 case 'post': story = 'viestissä'; break;
                 case 'issue': story = 'asiassä'; break;
-                case 'merge-request': story = 'merge-requestissa'; break;
+                case 'merge-request': story = 'yhdistämispyynnössä'; break;
                 default: story = 'tarinassa';
             }
             return `${name} mainitsi sinut ${story}`;
         },
         'notification-$name-merged-code-to-$branch': (name, branch) => {
-            return `${name} yhdisti koodin branchien “${branch}”`;
+            return `${name} yhdisti koodin haaraan “${branch}”`;
         },
         'notification-$name-opened-an-issue': (name) => {
             return `${name} avasi asian`;
@@ -193,7 +193,7 @@ module.exports = function(localeCode) {
             switch (story) {
                 case 'push': story = 'commitiasi'; break;
                 case 'issue': story = 'asiaasi'; break;
-                case 'merge-request': story = 'merge-requestiasi'; break;
+                case 'merge-request': story = 'yhdistämispyyntöäsi'; break;
             }
             return `${name} kommentoi ${story}`;
         },
@@ -201,7 +201,7 @@ module.exports = function(localeCode) {
             return `${name} lähetti kyselyn`;
         },
         'notification-$name-pushed-code-to-$branch': (name, branch) => {
-            return `${name} painoi muutoksia branchien “${branch}”`;
+            return `${name} työnsi muutoksia haaraan “${branch}”`;
         },
         'notification-$name-requested-to-join': (name) => {
             return `${name} pyysi liittymään tähän projektiin`;
@@ -226,9 +226,9 @@ module.exports = function(localeCode) {
         'notification-option-join-request': 'Kun joku haluaa liittyä tähän projektiin',
         'notification-option-like': 'Kun joku tykkää tarinastasi',
         'notification-option-mention': 'Kun joku mainitsee sinut tarinassa tai kommentissa',
-        'notification-option-merge': 'Kun joku linkittää koodin branchien master',
+        'notification-option-merge': 'Kun joku linkittää koodin master-haaraan',
         'notification-option-note': 'Kun joku lähettää viestin commitista tai liikkeestä',
-        'notification-option-push': 'Kun joku painaa koodia Gitiin',
+        'notification-option-push': 'Kun joku työntää koodia arkistoon',
         'notification-option-survey': 'Kun joku lähettää kyselyn',
         'notification-option-task-completion': 'Kun joku täyttää tehtävän luettelossasi',
         'notification-option-vote': 'Kun joku vastaa kyselyyn',
@@ -295,19 +295,19 @@ module.exports = function(localeCode) {
             return `${name} äänesti`;
         },
         'reaction-$name-commented-on-branch': (name) => {
-            return `${name} kommentoi tätä branchia`;
+            return `${name} kommentoi tätä haaraa`;
         },
         'reaction-$name-commented-on-issue': (name) => {
             return `${name} kommentoi tätä asiaa`;
         },
         'reaction-$name-commented-on-merge': (name) => {
-            return `${name} kommentoi tätä commitia`;
+            return `${name} kommentoi tätä yhdistämistä`;
         },
         'reaction-$name-commented-on-merge-request': (name) => {
-            return `${name} kommentoi tätä merge-request`;
+            return `${name} kommentoi tätä yhdistämispyyntöä`;
         },
         'reaction-$name-commented-on-push': (name) => {
-            return `${name} kommentoi tätä push`;
+            return `${name} kommentoi tätä työntöä`;
         },
         'reaction-$name-commented-on-tag': (name) => {
             return `${name} kommentoi tätä tagia`;
@@ -319,7 +319,7 @@ module.exports = function(localeCode) {
             return `${name} oli määrätty tähän asiaan`;
         },
         'reaction-$name-is-assigned-to-merge-request': (name) => {
-            return `${name} oli määrätty tähän merge-request`;
+            return `${name} oli määrätty tähän yhdistämispyyntöön`;
         },
         'reaction-$name-is-editing': (name) => {
             return `${name} muokkaa kommenttia...`;
@@ -421,7 +421,7 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 reaktio` : `${count} reaktiota`;
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
-            return `Loi branchin “${branch}” projektissa “${repo}”`;
+            return `Loi haaran “${branch}” projektissa “${repo}”`;
         },
         'story-$name-created-$milestone': (name, milestone) => {
             return `Loi virstanpylvään “${milestone}”`;
@@ -462,11 +462,12 @@ module.exports = function(localeCode) {
                 var sources = branches.map((branch) => {
                     return `“${branch}”`;
                 });
-                text += ` branchista ${sources.join(', ')}`;
+                text += (sources.length === 1) ? ` haarasta` : ` haaroista`;
+                text += sources.join(', ');
             }
-            text += ` branchien “${branch}”`;
+            text += ` haaraan “${branch}”`;
             if (repo) {
-                text += ` projectin “${repo}”`;
+                text += ` projektin “${repo}”`;
             }
             return text;
         },
@@ -478,14 +479,14 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-            var text = `Painoi muutoksia branchien “${branch}”`;
+            var text = `Painoi muutoksia haaraan “${branch}”`;
             if (repo) {
                 text += ` projektin “${repo}”`;
             }
             return text;
         },
         'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
-            return `Pyysi yhdistämään branchin “${branch1}” branchien “${branch2}”`;
+            return `Pyysi yhdistämään haaran “${branch1}” haaraan “${branch2}”`;
         },
         'story-$name-updated-$page': (name, page) => {
             return `Päivitti wiki-sivun “${page}”`;
@@ -586,8 +587,8 @@ module.exports = function(localeCode) {
 
         'user-actions': 'Toimet',
 
-        'user-activity-$name-created-branch': 'Luonut uuden branchin',
-        'user-activity-$name-created-merge-request': 'Teki merge request',
+        'user-activity-$name-created-branch': 'Luonut uuden haaran',
+        'user-activity-$name-created-merge-request': 'Teki yhdistämispyynnön',
         'user-activity-$name-created-milestone': 'Loi virstanpylvään',
         'user-activity-$name-created-repo': 'Loi git-projektin',
         'user-activity-$name-created-tag': 'Luonut uuden tagin',
@@ -637,11 +638,11 @@ module.exports = function(localeCode) {
         'user-statistics-legend-branch': 'Branchit',
         'user-statistics-legend-issue': 'Asiat',
         'user-statistics-legend-member': 'Jäsenmuutokset',
-        'user-statistics-legend-merge': 'Merges',
-        'user-statistics-legend-merge-request': 'Merge requests',
+        'user-statistics-legend-merge': 'Yhdistämiset',
+        'user-statistics-legend-merge-request': 'Yhdistämispyynnöt',
         'user-statistics-legend-milestone': 'Virstanpylväät',
         'user-statistics-legend-post': 'Viestejä',
-        'user-statistics-legend-push': 'Pushes',
+        'user-statistics-legend-push': 'Työnnöt',
         'user-statistics-legend-repo': 'Muutokset arkistoon',
         'user-statistics-legend-survey': 'Kyselyt',
         'user-statistics-legend-tag': 'Tagit',
@@ -649,28 +650,28 @@ module.exports = function(localeCode) {
         'user-statistics-legend-wiki': 'Wiki-muokkaukset',
         'user-statistics-today': 'Tänään',
         'user-statistics-tooltip-$count-branch': (count) => {
-            return (count === 1) ? `1 branchi` : `${count} branchia`;
+            return (count === 1) ? `1 haara` : `${count} haaraa`;
         },
         'user-statistics-tooltip-$count-issue': (count) => {
             return (count === 1) ? `1 asia` : `${count} asiaa`;
         },
         'user-statistics-tooltip-$count-member': (count) => {
-            return (count === 1) ? `1 jäsenmuutos` : `${count} jäsenmuutoksia`;
+            return (count === 1) ? `1 jäsenmuutos` : `${count} jäsenmuutosta`;
         },
         'user-statistics-tooltip-$count-merge': (count) => {
-            return (count === 1) ? `1 merge` : `${count} merges`;
+            return (count === 1) ? `1 yhdistäminen` : `${count} yhdistämistä`;
         },
         'user-statistics-tooltip-$count-merge-request': (count) => {
-            return (count === 1) ? `1 merge request` : `${count} merge requests`;
+            return (count === 1) ? `1 yhdistämisenpyyntö` : `${count} yhdistämispyyntöä`;
         },
         'user-statistics-tooltip-$count-milestone': (count) => {
-            return (count === 1) ? `1 virstanpylväs` : `${count} virstanpylväitä`;
+            return (count === 1) ? `1 virstanpylväs` : `${count} virstanpylvästä`;
         },
         'user-statistics-tooltip-$count-post': (count) => {
             return (count === 1) ? `1 viesti` : `${count} viestiä`;
         },
         'user-statistics-tooltip-$count-push': (count) => {
-            return (count === 1) ? `1 push` : `${count} pushes`;
+            return (count === 1) ? `1 työntö` : `${count} työntöä`;
         },
         'user-statistics-tooltip-$count-repo': (count) => {
             return (count === 1) ? `1 muutos arkistoon` : `${count} muutosta arkistoon`;
@@ -685,7 +686,7 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 tehtäväluettelo` : `${count} tehtäväluetteloa`;
         },
         'user-statistics-tooltip-$count-wiki': (count) => {
-            return (count === 1) ? `1 wiki muokkaa` : `${count} wiki muokkausta`;
+            return (count === 1) ? `1 wiki muokkaus` : `${count} wiki muokkausta`;
         },
 
         'video-capture-accept': 'Hyväksy',

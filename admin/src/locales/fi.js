@@ -13,13 +13,14 @@ module.exports = function(localeCode) {
         'activity-chart-legend-branch': 'Branchit',
         'activity-chart-legend-issue': 'Asiat',
         'activity-chart-legend-member': 'Jäsenmuutokset',
-        'activity-chart-legend-merge': 'Merges',
-        'activity-chart-legend-merge-request': 'Merge requests',
+        'activity-chart-legend-merge': 'Yhdistämiset',
+        'activity-chart-legend-merge-request': 'Yhdistämispyynnöt',
         'activity-chart-legend-milestone': 'Virstanpylväät',
         'activity-chart-legend-post': 'Viestejä',
-        'activity-chart-legend-push': 'Pushes',
+        'activity-chart-legend-push': 'Työnnöt',
         'activity-chart-legend-repo': 'Muutokset arkistoon',
         'activity-chart-legend-survey': 'Kyselyt',
+        'activity-chart-legend-tag': 'Tagit',
         'activity-chart-legend-task-list': 'Tehtäväluettelot',
         'activity-chart-legend-wiki': 'Wiki-muokkaukset',
 
@@ -27,28 +28,28 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 tarina` : `${count} tarinaa`;
         },
         'activity-tooltip-$count-branch': (count) => {
-            return (count === 1) ? `1 branch` : `${count} branchia`;
+            return (count === 1) ? `1 haara` : `${count} haaraa`;
         },
         'activity-tooltip-$count-issue': (count) => {
             return (count === 1) ? `1 asia` : `${count} asiaa`;
         },
         'activity-tooltip-$count-member': (count) => {
-            return (count === 1) ? `1 jäsenmuutos` : `${count} jäsenmuutoksia`;
+            return (count === 1) ? `1 jäsenmuutos` : `${count} jäsenmuutosta`;
         },
         'activity-tooltip-$count-merge': (count) => {
-            return (count === 1) ? `1 merge` : `${count} merges`;
+            return (count === 1) ? `1 yhdistäminen` : `${count} yhdistämistä`;
         },
         'activity-tooltip-$count-merge-request': (count) => {
-            return (count === 1) ? `1 merge requests` : `${count} merge requests`;
+            return (count === 1) ? `1 yhdistämisenpyyntö` : `${count} yhdistämispyyntöä`;
         },
         'activity-tooltip-$count-milestone': (count) => {
-            return (count === 1) ? `1 virstanpylväs` : `${count} virstanpylväitä`;
+            return (count === 1) ? `1 virstanpylväs` : `${count} virstanpylvästä`;
         },
         'activity-tooltip-$count-post': (count) => {
             return (count === 1) ? `1 viesti` : `${count} viestiä`;
         },
         'activity-tooltip-$count-push': (count) => {
-            return (count === 1) ? `1 push` : `${count} pushes`;
+            return (count === 1) ? `1 työntö` : `${count} työntöä`;
         },
         'activity-tooltip-$count-repo': (count) => {
             return (count === 1) ? `1 muutos arkistoon` : `${count} muutosta arkistoon`;
@@ -63,7 +64,7 @@ module.exports = function(localeCode) {
             return (count === 1) ? `1 tehtäväluettelo` : `${count} tehtäväluetteloa`;
         },
         'activity-tooltip-$count-wiki': (count) => {
-            return (count === 1) ? `1 wiki muokkaa` : `${count} wiki muokkausta`;
+            return (count === 1) ? `1 wiki muokkaus` : `${count} wiki muokkausta`;
         },
 
         'app-name': 'Trambar',
@@ -413,7 +414,7 @@ module.exports = function(localeCode) {
             return (seconds === 1) ? `1 sekunti` : `${seconds} sekuntia`;
         },
         'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-            var comments = (count === 1) ? `1 commit-kommentti` : `${count} commit-kommenttia`;
+            var comments = (count === 1) ? `1 commitin kommentti` : `${count} commitin kommenttia`;
             return `Tuotu ${comments} arkistosta “${repo}”`;
         },
         'task-imported-$count-events-from-$repo': (count, repo) => {
@@ -421,11 +422,11 @@ module.exports = function(localeCode) {
             return `Tuotu ${events} arkistosta “${repo}”`;
         },
         'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-            var comments = (count === 1) ? `1 asiakommentti` : `${count} asiakommenttia`;
+            var comments = (count === 1) ? `1 asian kommentti` : `${count} asian kommenttia`;
             return `Tuotu ${comments} arkistosta “${repo}”`;
         },
         'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-            var comments = (count === 1) ? `1 merge-request-kommentti` : `${count} merge-request-kommenttia`;
+            var comments = (count === 1) ? `1 yhdistämispyynnön kommentti` : `${count} yhdistämispyynnön kommenttia`;
             return `Tuotu ${comments} arkistosta “${repo}”`;
         },
         'task-imported-$count-repos': (count) => {
@@ -438,22 +439,22 @@ module.exports = function(localeCode) {
         },
         'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
             var commits = (count === 1) ? `1 commiti` : `${count} commitia`;
-            return `Tuotu push jossa ${commits} branchista “${branch}” arkiston “${repo}”`;
+            return `Tuotu työntö jossa ${commits} haarasta “${branch}” arkiston “${repo}”`;
         },
         'task-importing-commit-comments-from-$repo': (repo) => {
-            return `Tuoda commit-kommentteja arkistosta “${repo}”`;
+            return `Tuoda commitin kommentteja arkistosta “${repo}”`;
         },
         'task-importing-events-from-$repo': (repo) => {
             return `Tuoda tapahtumia arkistosta “${repo}”`;
         },
         'task-importing-issue-comments-from-$repo': (repo) => {
-            return `Tuoda asiakommentteja arkistosta “${repo}”`;
+            return `Tuoda asian kommentteja arkistosta “${repo}”`;
         },
         'task-importing-merge-request-comments-from-$repo': (repo) => {
-            return `Tuoda merge-request-kommentteja arkistosta “${repo}”`;
+            return `Tuoda yhdistämispyynnön kommentteja arkistosta “${repo}”`;
         },
         'task-importing-push-from-$repo': (repo) => {
-            return `Tuoda push arkistosta “${repo}”`;
+            return `Tuoda työntöä arkistosta “${repo}”`;
         },
         'task-importing-repos': 'Tuodaan arkistot',
         'task-importing-users': 'Tuodaan käyttäjät',

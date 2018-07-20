@@ -341,7 +341,7 @@ module.exports = function(localeCode) {
         },
         'reaction-$name-commented-on-merge': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} komentoval${e} commit`;
+            return `${name} komentoval${e} toto sloučení kódu`;
         },
         'reaction-$name-commented-on-merge-request': (name) => {
             var e = pastTenseEnding(name, 3);

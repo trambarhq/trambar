@@ -302,7 +302,7 @@ module.exports = function(localeCode) {
             return `${name} a commenté ce problème`;
         },
         'reaction-$name-commented-on-merge': (name) => {
-            return `${name} a commenté un commit`;
+            return `${name} a commenté cette fusions de code`;
         },
         'reaction-$name-commented-on-merge-request': (name) => {
             return `${name} a commenté cette demande de fusion`;

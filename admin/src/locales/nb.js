@@ -20,6 +20,7 @@ module.exports = function(localeCode) {
         'activity-chart-legend-push': 'Pusher',
         'activity-chart-legend-repo': 'Repo endringer',
         'activity-chart-legend-survey': 'Undersøkelser',
+        'activity-chart-legend-tag': 'Tagger',
         'activity-chart-legend-task-list': 'Oppgavelister',
         'activity-chart-legend-wiki': 'Wiki redigeringer',
 

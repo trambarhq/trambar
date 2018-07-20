@@ -20,6 +20,7 @@ module.exports = function(localeCode) {
         'activity-chart-legend-push': 'Přesuny',
         'activity-chart-legend-repo': 'Změny repozitářů',
         'activity-chart-legend-survey': 'Ankety',
+        'activity-chart-legend-tag': 'Tagy',
         'activity-chart-legend-task-list': 'Seznamy úkolů',
         'activity-chart-legend-wiki': 'Úpravy wiki',
 

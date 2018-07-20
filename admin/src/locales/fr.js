@@ -24,6 +24,7 @@ module.exports = function(localeCode) {
         'activity-chart-legend-push': "Poussées de code",
         'activity-chart-legend-repo': "Modification de dépôt",
         'activity-chart-legend-survey': "Sondages",
+        'activity-chart-legend-tag': "étiquettes",
         'activity-chart-legend-task-list': "Listes de tâches",
         'activity-chart-legend-wiki': "Éditions wiki",
 

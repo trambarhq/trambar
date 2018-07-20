@@ -20,6 +20,7 @@ module.exports = function(localeCode) {
         'activity-chart-legend-push': 'Помещения',
         'activity-chart-legend-repo': 'Изменения репозитория',
         'activity-chart-legend-survey': 'Опросы',
+        'activity-chart-legend-tag': 'теги',
         'activity-chart-legend-task-list': 'Списки задач',
         'activity-chart-legend-wiki': 'Правки wiki',
 

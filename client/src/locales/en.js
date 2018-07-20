@@ -96,7 +96,7 @@ var americanPhrases = {
     'confirmation-confirm': 'Confirm',
 
     'development-code-push-$deployment': (deployment) => {
-        return `Pull code updates from "${deployment}"`;
+        return `Pull code updates from “${deployment}”`;
     },
     'development-show-diagnostics': 'Show diagnostics',
     'development-show-panel': 'Display this panel',
@@ -321,7 +321,7 @@ var americanPhrases = {
         return `${name} commented on this issue`;
     },
     'reaction-$name-commented-on-merge': (name) => {
-        return `${name} commented on a commit`;
+        return `${name} commented on this merge`;
     },
     'reaction-$name-commented-on-merge-request': (name) => {
         return `${name} commented on this merge request`;
@@ -402,7 +402,7 @@ var americanPhrases = {
             ui.projects,
             ' panel, click ',
             ui.mobileSetup,
-            '. A QR code will appear on screen. Then on this device, press the button below and scan the code. Alternately, you may manually input the activation code.'
+            '. A QR code will appear on screen. On this device, press the button below and scan the code. Alternatively, you may manually input the activation code.'
         ];
     },
     'start-activation-instructions-short': (ui) => {
