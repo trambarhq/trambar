@@ -355,6 +355,7 @@ people's stories.
   * [Push](#push)
   * [Merge](#merge)
   * [Branch](#branch)
+  * [Tag](#tag)
   * [Issue](#issue)
   * [Merge request](#merge-request)
   * [Milestone](#milestone)
@@ -401,10 +402,15 @@ notification when a merge to master occurs.
 
 ##### Branch
 
-A **Branch** story is another special kind of push. It occurs when someone
-pushes a new branch into a git repository. In a typical workflow, that usually
-means he's begun implementing a new feature or fixing a bug requiring
-substantial changes.
+A **Branch** story is posted when someone pushes a new branch into a git
+repository. In a typical workflow, that usually means he's begun implementing a
+new feature or fixing a bug requiring substantial changes.
+
+#### Tag
+
+A **Tag** story is posted when someone pushes a new tag into a git repository.
+This typically means a new version of the software is being prepared for
+release.
 
 ##### Issue
 

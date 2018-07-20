@@ -32,6 +32,7 @@ in using either your GitHub or Facebook account.
 * Accessible to external users through Facebook and other OAuth providers
 * Exporting videos from mobile phone into GitLab's issue tracker
 * Responsive user-interface
+* [Support for languages other than English](docs/localization.md)
 * Mobile notification
 * App for Android, iOS, and Windows Phone
 * Designed with device loss in mind
