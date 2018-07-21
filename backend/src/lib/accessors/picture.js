@@ -52,22 +52,6 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Grant privileges to table to appropriate Postgres users
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     *
-     * @return {Promise<Boolean>}
-     */
-    grant: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
-            GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
-        `;
-        return db.execute(sql).return(true);
-    },
-
-    /**
      * Attach triggers to this table, also add trigger on task so details
      * are updated when tasks complete
      *
