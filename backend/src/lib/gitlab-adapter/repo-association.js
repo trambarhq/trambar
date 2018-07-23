@@ -16,28 +16,39 @@ module.exports = {
  * Return a list of objects containing project, repo, and server
  *
  * @param  {Database} db
- * @param  {Object} criteria
+ * @param  {Object|undefined} projectCriteria
+ * @param  {Object|undefined} repoCriteria
+ * @param  {Object|undefined} serverCriteria
  *
  * @return {Array<Object>}
  */
-function find(db, criteria) {
+function find(db, projectCriteria, repoCriteria, serverCriteria) {
     // load projects
-    if (!criteria) {
-        criteria = {
+    if (!projectCriteria) {
+        projectCriteria = {
             deleted: false,
             archived: false,
         };
     }
-    return Project.find(db, 'global', criteria, '*').then((projects) => {
+    if (!repoCriteria) {
+        repoCriteria = {
+            deleted: false,
+        };
+    }
+    if (!serverCriteria) {
+        serverCriteria = {
+            deleted: false,
+            disabled: false,
+        };
+    }
+    return Project.find(db, 'global', projectCriteria, '*').then((projects) => {
         // load repos
         var repoIds = _.uniq(_.flatten(_.map(projects, 'repo_ids')));
-        var criteria = {
+        repoCriteria = _.extend({
             id: repoIds,
             type: 'gitlab',
-            deleted: false,
-            archived: false,
-        };
-        return Repo.find(db, 'global', criteria, '*').then((repos) => {
+        }, repoCriteria);
+        return Repo.find(db, 'global', repoCriteria, '*').then((repos) => {
             var serverIds = _.uniq(_.filter(_.map(repos, (repo) => {
                 var repoLink = _.find(repo.external, { type: 'gitlab' });
                 if (repoLink) {
@@ -45,12 +56,10 @@ function find(db, criteria) {
                 }
             })));
             // load server record
-            var criteria = {
+            serverCriteria = _.extend({
                 id: serverIds,
-                deleted: false,
-                disabled: false,
-            };
-            return Server.find(db, 'global', criteria, '*').then((servers) => {
+            }, serverCriteria);
+            return Server.find(db, 'global', serverCriteria, '*').then((servers) => {
                 var list = [];
                 _.each(projects, (project) => {
                     _.each(project.repo_ids, (repoId) => {

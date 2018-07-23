@@ -110,7 +110,7 @@ function removeHooks(db, host) {
  * @return {Promise}
  */
 function removeServerHooks(db, host, server) {
-    return RepoAssociation.find(db).then((associations) => {
+    return RepoAssociation.find(db, undefined, {}, {}).then((associations) => {
         var taskLog = TaskLog.start('gitlab-hook-remove', {
             server_id: server.id,
             server: server.name,
