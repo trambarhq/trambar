@@ -168,8 +168,8 @@ module.exports = _.create(Data, {
          return Promise.try(() => {
              var deletedServers = _.filter(rows, (serverAfter, index) => {
                  var serverBefore = originals[index];
+                 if (serverBefore) {
                      return serverAfter.deleted && !serverBefore.deleted;
-                     if (serverBefore) {
                  }
              });
              var undeletedServers = _.filter(rows, (serverAfter, index) => {
