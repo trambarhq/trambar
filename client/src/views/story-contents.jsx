@@ -431,8 +431,6 @@ module.exports = React.createClass({
         var name = this.getAuthorName();
         var repo = this.props.repo;
         var title = story.details.title;
-        var dueDate = formatDate(story.details.due_date);
-        var startDate = formatDate(story.details.start_date) || '-';
         var url;
         if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
             var milestoneLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'milestone');
@@ -446,16 +444,6 @@ module.exports = React.createClass({
                     <a href={url} target="_blank">
                         {t(`story-$name-created-$milestone`, name, p(title))}
                     </a>
-                </p>
-                <p className="start-date">
-                    <span>{t('story-milestone-start-date')}</span>
-                    {' '}
-                    <span>{startDate}</span>
-                </p>
-                <p className="due-date">
-                    <span className="label">{t('story-milestone-due-date')}</span>
-                    {' '}
-                    <span>{dueDate}</span>
                 </p>
             </div>
         );
@@ -1120,14 +1108,6 @@ var getUserVote = Memoize(function(reactions, user) {
         return null;
     }
 });
-
-function formatDate(date) {
-    date = _.trim(date);
-    if (date) {
-        var m = Moment(date);
-        return m.format('ll');
-    }
-}
 
 var getZoomableResources = Memoize(function(resources) {
     return _.filter(resources, (res) => {

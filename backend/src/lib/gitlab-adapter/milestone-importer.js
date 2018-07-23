@@ -29,10 +29,22 @@ module.exports = {
 function importEvent(db, system, server, repo, project, author, glEvent) {
     var schema = project.name;
     var repoLink = ExternalDataUtils.findLink(repo, server);
+
     return fetchMilestone(server, repoLink.project.id, glEvent.target_id).then((glMilestone) => {
         // the story is linked to both the issue and the repo
-        var storyNew = copyMilestoneProperties(null, system, server, repo, author, glMilestone);
-        return Story.insertOne(db, schema, storyNew);
+        var criteria = {
+            external_object: ExternalDataUtils.extendLink(server, repo, {
+                milestone: { id: glMilestone.id }
+            }),
+        };
+        return Story.findOne(db, schema, criteria, '*').then((story) => {
+            // the story is linked to both the milestone and the repo
+            var storyAfter = copyMilestoneProperties(story, system, server, repo, author, glMilestone);
+            if (storyAfter === story) {
+                return story;
+            }
+            return Story.saveOne(db, schema, storyAfter);
+        });
     });
 }
 
@@ -76,20 +88,8 @@ function copyMilestoneProperties(story, system, server, repo, author, glMileston
         value: author.role_ids,
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.state', {
-        value: glMilestone.state,
-        overwrite: 'always',
-    });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.title', {
         value: glMilestone.title,
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.due_date', {
-        value: glMilestone.due_date,
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.start_date', {
-        value: glMilestone.start_date,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'public', {
