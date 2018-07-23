@@ -41,6 +41,8 @@ var httpErrorNames = {
     413: 'Payload Too Large',
     414: 'URI Too Long',
     415: 'Unsupported Media Type',
+    422: 'Unprocessable Entity',
+    429: 'Too Many Requests',
 
     500: 'Internal Server Error',
     501: 'Not Implemented',

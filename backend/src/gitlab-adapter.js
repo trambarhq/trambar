@@ -627,9 +627,11 @@ function reimportUsers() {
         disabled: false,
     };
     return Server.find(db, 'global', criteria, '*').each((server) => {
-        return taskQueue.schedule(`reimport_user:${server.id}`, () => {
-            return UserImporter.importUsers(db, server);
-        });
+        if (hasAccessToken(server)) {
+            return taskQueue.schedule(`reimport_user:${server.id}`, () => {
+                return UserImporter.importUsers(db, server);
+            });
+        }
     });
 }
 
