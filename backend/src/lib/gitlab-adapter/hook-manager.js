@@ -347,6 +347,8 @@ function getProjectHookProps(url) {
         job_events: true,
         pipeline_events: true,
         wiki_page_events: true,
+        confidential_note_events: true,     // GL 11
+        confidential_issues_events: true,   // GL 11
         enable_ssl_verification: false,
         token: getSecretToken(),
     };

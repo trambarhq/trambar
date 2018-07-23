@@ -712,6 +712,11 @@ the page and click the **Restore role** button.
 
     ![GitLab OAuth window](img/gitlab-oauth.png)
 
+If you're using a local instance of GitLab 11, be sure the server permits
+outbound requests to the local network. Otherwise Trambar will not be able to
+install project hooks (for monitoring events). You'll find the checkbox in
+**Admin Area** > **Settings** > **Outbound requests**.
+
 ### Adding Dropbox
 
 1. Click **Servers** in the left navigation pane.

@@ -223,6 +223,13 @@ At this point, **API Access** should have changed to *Administrative access
 acquired*. You should also see entries in the activity log about repositories
 and users imported into the system.
 
+If you're using a local instance of GitLab 11, be sure the server permits
+outbound requests to the local network. Otherwise Trambar will not be able to
+install project hooks (for monitoring events). You'll find the checkbox in
+**Admin Area** > **Settings** > **Outbound requests**.
+
+![GitLab settings](img/gitlab-outbound-requests.png)
+
 ## Creating first project
 
 1. Click **Projects** in the left navigation pane.
