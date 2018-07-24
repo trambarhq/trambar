@@ -82,7 +82,7 @@ module.exports = React.createClass({
      */
     removeLocations: function(address) {
         var db = this.props.database.use({ by: this });
-        var criteria = {};
+        var criteria = { address };
         return db.find({ schema: 'local', table: 'project_link', criteria }).then((links) => {
             return db.remove({ schema: 'local', table: 'project_link' }, links);
         });
