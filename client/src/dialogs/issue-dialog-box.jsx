@@ -71,6 +71,7 @@ module.exports = React.createClass({
         issue = _.decoupleSet(issue, path, value);
         if (path === 'repo_id') {
             lastSelectedRepoId = value;
+            window.localStorage.last_selected_repo_id = value;
         }
         this.setState({ issue });
     },
@@ -120,9 +121,9 @@ module.exports = React.createClass({
         if (!repo) {
             // find one with labels--if a repo has no labels, then its
             // issue tracker probably isn't being used
-            repo = _.find(this.props.repos, (repo) => {
-                return !_.isEmpty(repo.details.labels);
-            });
+            repo = _.last(_.sortBy(this.props.repos, (repo) => {
+                return _.size(repo.details.labels);
+            }));
         }
         if (!repo) {
             repo = _.first(repos);
@@ -435,4 +436,4 @@ module.exports = React.createClass({
     },
 });
 
-var lastSelectedRepoId;
+var lastSelectedRepoId = parseInt(window.localStorage.last_selected_repo_id) || undefined;
