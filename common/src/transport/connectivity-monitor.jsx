@@ -120,7 +120,7 @@ module.exports = React.createClass({
                 var online = this.isOnline();
                 if (this.state.online !== online) {
                     this.setState({ online }, () => {
-                        this.triggerChangeEvent(true, type);
+                        this.triggerChangeEvent(this.state.online, this.state.type);
                     });
                 }
             }
