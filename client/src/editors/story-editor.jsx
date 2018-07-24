@@ -879,7 +879,9 @@ module.exports = React.createClass({
     saveDraft: function(draft, immediate, resourceIndex) {
         draft.public = !this.state.options.hidePost;
         return this.changeDraft(draft, resourceIndex).then((story) => {
-            this.saveStory(story, immediate);
+            if (!hasPendingResources(story.details.resources)) {
+                this.saveStory(story, immediate);
+            }
             return story;
         });
     },

@@ -444,6 +444,7 @@ module.exports = React.createClass({
             return {
                 type: type,
                 pending: `import-${++importCount}`,
+                imported: true,
             };
         });
         this.addResources(resources);
