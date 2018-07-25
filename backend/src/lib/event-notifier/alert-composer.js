@@ -1,14 +1,15 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var Localization = require('localization');
 
 module.exports = {
     format,
 };
 
 function format(system, schema, user, notification, locale) {
-    var title = chooseLocalizedVersion(locale, system.details.title);
+    var title = Localization.pick(locale, system.details.title);
     if (!title) {
-        title = getLocalizedText('app-name', locale);
+        title = Localization.translate(locale, 'app-name');
     }
     return {
         schema: schema,
@@ -24,15 +25,11 @@ function format(system, schema, user, notification, locale) {
 }
 
 function getNotificationText(user, notification, locale) {
+    var name = Localization.name(locale, user);
     var t = function() {
         var args = _.concat(locale, arguments);
-        return getLocalizedText.apply(null, args);
+        return Localization.translate.apply(null, args);
     };
-    var n = function() {
-        var args = _.concat(locale, arguments);
-        return getLocalizedName.apply(null, args);
-    };
-    var name = n(user);
     switch (notification.type) {
         case 'like':
             return t('notification-$name-likes-your-$story', name, notification.details.story_type);
@@ -71,61 +68,6 @@ function getNotificationText(user, notification, locale) {
         case 'join-request':
             return t('notification-$name-requested-to-join', name);
     }
-}
-
-function getLocalizedName(locale, user) {
-    var lang = getLanguageCode(locale);
-    var name = chooseLocalizedVersion(locale, user.details.name);
-    var strObject = new String(name);
-    strObject.gender = user.details.gender;
-    return strObject;
-}
-
-var phraseTables = {};
-
-function getLocalizedText(locale, phrase, ...args) {
-    var table = phraseTables[locale];
-    if (!table) {
-        var lang = locale.substr(0, 2);
-        var module;
-        try {
-            module = require(`locales/${lang}`);
-        } catch(err) {
-            module = require('locales/en');
-        }
-        table = phraseTables[lang] = module(locale);
-    }
-    var f = table[phrase];
-    if (f instanceof Function) {
-        return f.apply(table, args);
-    } else {
-        return String(f);
-    }
-}
-
-function chooseLocalizedVersion(locale, versions) {
-    var s;
-    if (typeof(versions) === 'object') {
-        var lang = getLanguageCode(locale);
-        s = versions[lang];
-        if (!s) {
-            s = _.first(versions);
-        }
-    } else {
-        s = String(versions);
-    }
-    return s;
-}
-
-function getLanguageCode(locale) {
-    var lang;
-    if (typeof(locale) === 'string') {
-        lang = locale.substr(0, 2);
-    }
-    if (!lang) {
-        lang = 'en';
-    }
-    return lang;
 }
 
 /**
