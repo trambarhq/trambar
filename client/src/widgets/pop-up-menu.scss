@@ -24,5 +24,10 @@
             text-align: left;
             max-width: 20em;
         }
+
+        .single-col & {
+            width: 90vw;
+            font-size: 1.2em;
+        }
     }
 }

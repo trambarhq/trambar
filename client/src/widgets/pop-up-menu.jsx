@@ -1,7 +1,9 @@
 var _ = require('lodash');
 var React = require('react'), PropTypes = React.PropTypes;
 var ReactDOM = require('react-dom');
+var ScrollIntoViewIfNeeded = require('scroll-into-view-if-needed').default;
 var Overlay = require('widgets/overlay');
+var ComponentRefs = require('utils/component-refs');
 
 require('./pop-up-menu.scss');
 
@@ -30,6 +32,9 @@ module.exports = React.createClass({
      * @return {Object}
      */
     getInitialState: function() {
+        this.components = ComponentRefs({
+            container: HTMLDivElement,
+        });
         return {
             open: false,
         };
@@ -102,8 +107,9 @@ module.exports = React.createClass({
         if (!this.state.open) {
             return null;
         }
+        var setters = this.components.setters;
         return (
-            <div className="container">
+            <div ref={setters.container} className="container">
                 <div className="menu">
                     {this.getContents('menu')}
                 </div>
@@ -116,8 +122,9 @@ module.exports = React.createClass({
      */
     redrawPopOutMenu: function() {
         var node = ReactDOM.findDOMNode(this);
-        var viewport = getViewportNode();
-        var nodePos = getRelativePosition(node, viewport);
+        var page = getPageNode();
+        var setters = this.components.setters;
+        var nodePos = getRelativePosition(node, page);
         var style = {
             position: 'absolute',
             left: nodePos.left + node.offsetWidth,
@@ -129,7 +136,7 @@ module.exports = React.createClass({
         }
         var element = (
             <div className={className} style={style}>
-                <div className="container">
+                <div ref={setters.container} className="container">
                     <div className="menu" onClick={this.handleMenuClick}>
                         {this.getContents('menu')}
                     </div>
@@ -162,6 +169,19 @@ module.exports = React.createClass({
         if (this.state.open && this.props.popOut) {
             this.redrawPopOutMenu();
         }
+        if (this.state.open && !prevProps.open) {
+            setTimeout(() => {
+                var container = this.components.container;
+                if (container) {
+                    var options = {
+                        behavior: 'smooth',
+                        scrollMode: 'if-needed',
+                        block: 'end',
+                    };
+                    ScrollIntoViewIfNeeded(container, options);
+                }
+            }, 50);
+        }
     },
 
     /**
@@ -179,11 +199,11 @@ module.exports = React.createClass({
      */
     addPopOutContainer: function() {
         if (!this.popOutContainer) {
-            var viewport = getViewportNode();
+            var page = getPageNode();
             this.popOutContainer = document.createElement('DIV');
             this.popOutContainer.style.left = '0';
             this.popOutContainer.style.top = '0';
-            viewport.appendChild(this.popOutContainer);
+            page.appendChild(this.popOutContainer);
             this.popOutContainer.style.position = 'absolute';
         }
     },
@@ -275,7 +295,7 @@ function getRelativePosition(node, container) {
     return { left, top };
 }
 
-function getViewportNode() {
+function getPageNode() {
     var appContainer = document.getElementById('app-container');
-    return appContainer.getElementsByClassName('page-view-port')[0];
+    return appContainer.getElementsByClassName('page-container')[0];
 }

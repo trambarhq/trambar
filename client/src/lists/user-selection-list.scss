@@ -28,11 +28,6 @@
             vertical-align: middle;
         }
 
-        &:hover {
-            color: #cccccc;
-            filter: none;
-        }
-
         &.selected {
             background-color: #211a1a;
             color: #eeeeee;
@@ -45,6 +40,17 @@
 
         &.disabled {
             cursor: default;
+        }
+
+        .no-touch & {
+            &:hover {
+                color: #cccccc;
+                filter: none;
+            }
+        }
+
+        .single-col & {
+            font-size: 1.2em;
         }
     }
 }
