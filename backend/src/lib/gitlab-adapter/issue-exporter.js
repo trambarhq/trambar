@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
 var TaskLog = require('task-log');
+var Localization = require('localization');
 var MarkdownExporter = require('utils/markdown-exporter');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 
@@ -64,19 +65,21 @@ function exportStory(db, system, project, task) {
 function exportStoryCreate(db, system, project, story, repo, task) {
     return findRepoServer(db, repo).then((server) => {
         return findActingUser(db, task).then((user) => {
-            var repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
-            var glProjectId = repoLink.project.id;
-            var glIssueNumber = undefined;
-            var userLink = findUserLink(user, server);
-            var glUserId = userLink.user.id;
-            var glIssueAfter = exportIssueProperties(null, server, system, project, story, task);
-            return saveIssue(server, glProjectId, glIssueNumber, glIssueAfter, glUserId).then((glIssue) => {
-                var schema = project.name;
-                var storyAfter = copyIssueProperties(story, server, repo, glIssue);
-                return Story.updateOne(db, schema, storyAfter).then((story) => {
-                    var reactionNew = copyTrackingReactionProperties(null, server, project, story, user);
-                    return Reaction.insertOne(db, schema, reactionNew).then((reaction) => {
-                        return story;
+            return findAuthors(db, story).then((authors) => {
+                var repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+                var glProjectId = repoLink.project.id;
+                var glIssueNumber = undefined;
+                var userLink = findUserLink(user, server);
+                var glUserId = userLink.user.id;
+                var glIssueAfter = exportIssueProperties(null, server, system, project, story, authors, task);
+                return saveIssue(server, glProjectId, glIssueNumber, glIssueAfter, glUserId).then((glIssue) => {
+                    var schema = project.name;
+                    var storyAfter = copyIssueProperties(story, server, repo, glIssue);
+                    return Story.updateOne(db, schema, storyAfter).then((story) => {
+                        var reactionNew = copyTrackingReactionProperties(null, server, project, story, user);
+                        return Reaction.insertOne(db, schema, reactionNew).then((reaction) => {
+                            return story;
+                        });
                     });
                 });
             });
@@ -99,21 +102,23 @@ function exportStoryCreate(db, system, project, story, repo, task) {
 function exportStoryUpdate(db, system, project, story, repo, task) {
     return findRepoServer(db, repo).then((server) => {
         return findActingUser(db, task).then((user) => {
-            var issueLink = findIssueLink(story);
-            var glProjectId = issueLink.project.id;
-            var glIssueNumber = issueLink.issue.number;
-            var userLink = findUserLink(user, server);
-            var glUserId = userLink.user.id;
-            return fetchIssue(server, glProjectId, glIssueNumber).then((glIssue) => {
-                var glIssueAfter = exportIssueProperties(glIssue, server, system, project, story, task);
-                if (glIssueAfter === glIssue) {
-                    return null;
-                }
-                return saveIssue(server, glProjectId, glIssueNumber, glIssueAfter, glUserId).then((glIssue) => {
-                    var schema = project.name;
-                    var storyAfter = copyIssueProperties(story, server, repo, glIssue);
-                    return Story.updateOne(db, schema, storyAfter).then((story) => {
-                        return story;
+            return findAuthors(db, story).then((authors) => {
+                var issueLink = findIssueLink(story);
+                var glProjectId = issueLink.project.id;
+                var glIssueNumber = issueLink.issue.number;
+                var userLink = findUserLink(user, server);
+                var glUserId = userLink.user.id;
+                return fetchIssue(server, glProjectId, glIssueNumber).then((glIssue) => {
+                    var glIssueAfter = exportIssueProperties(glIssue, server, system, project, story, authors, task);
+                    if (glIssueAfter === glIssue) {
+                        return null;
+                    }
+                    return saveIssue(server, glProjectId, glIssueNumber, glIssueAfter, glUserId).then((glIssue) => {
+                        var schema = project.name;
+                        var storyAfter = copyIssueProperties(story, server, repo, glIssue);
+                        return Story.updateOne(db, schema, storyAfter).then((story) => {
+                            return story;
+                        });
                     });
                 });
             });
@@ -242,23 +247,18 @@ function exportStoryMove(db, system, project, story, fromRepo, toRepo, task) {
  *
  * @param  {Object} glIssue
  * @param  {Server} server
- * @param  {Story} story
- * @param  {Project} project
  * @param  {System} system
+ * @param  {Project} project
+ * @param  {Story} story
+ * @param  {Array<User>} authors
+ * @param  {Task} task
+ *
  * @param  {Task} task
  *
  * @return {Object}
  */
-function exportIssueProperties(glIssue, server, system, project, story, task) {
-    var markdown = story.details.markdown;
-    var textVersions = _.filter(story.details.text);
-    var text = _.join(textVersions, '\n\n');
-    if (!markdown) {
-        text = MarkdownExporter.escape(text);
-    }
-    var address = _.get(system, 'settings.address');
-    var resources = story.details.resources;
-    var contents = MarkdownExporter.attachResources(text, resources, address);
+function exportIssueProperties(glIssue, server, system, project, story, authors, task) {
+    var contents = generateIssueText(system, project, story, authors, task);
 
     var glIssueAfter = _.clone(glIssue) || {};
     ExternalDataUtils.exportProperty(story, server, 'title', glIssueAfter, {
@@ -281,6 +281,53 @@ function exportIssueProperties(glIssue, server, system, project, story, task) {
         return glIssue;
     }
     return glIssueAfter;
+}
+
+/**
+ * Generate issue text suitable GitLab
+ *
+ * @param  {System} system
+ * @param  {Project} project
+ * @param  {Story} story
+ * @param  {Array<User>} authors
+ * @param  {Task} task
+ *
+ * @return {String}
+ */
+function generateIssueText(system, project, story, authors, task) {
+    var markdown = story.details.markdown;
+    var resources = story.details.resources;
+    var textVersions = _.filter(story.details.text);
+    var text = _.join(textVersions, '\n\n');
+    if (!markdown) {
+        text = MarkdownExporter.escape(text);
+    }
+    var authorIds = _.map(authors, 'id');
+    if (!_.isEqual(authorIds, [ task.user_id ])) {
+        // indicate who wrote the post when user is exporting someone else's post
+        var language = Localization.getDefaultLanguageCode(system);
+        var authorNames = _.map(authors, (author) => {
+            return Localization.name(language, author);
+        });
+        var opening;
+        if (_.trim(text)) {
+            opening = Localization.translate(language, 'issue-export-$names-wrote', authorNames);
+        } else {
+            var resources = story.details.resources;
+            var photos = _.size(_.filter(resources, { type: 'image' }));
+            var videos = _.size(_.filter(resources, { type: 'video' }));
+            var audios = _.size(_.filter(resources, { type: 'audio' }));
+            if (photos > 0 || videos > 0 || audios > 0) {
+                opening = Localization.translate(language, 'issue-export-$names-posted-$photos-$videos-$audios', authorNames, photos, videos, audios);
+            }
+        }
+        if (opening) {
+            text = MarkdownExporter.escape(opening) + '\n\n' + text;
+        }
+    }
+    // append resources
+    var address = _.get(system, 'settings.address');
+    return MarkdownExporter.attachResources(text, resources, address);
 }
 
 /**
@@ -514,6 +561,14 @@ function findActingUser(db, task) {
         }
         return user;
     });
+}
+
+function findAuthors(db, story) {
+    var criteria = {
+        id: story.user_ids,
+        delete: false
+    };
+    return User.find(db, 'global', criteria, '*');
 }
 
 /**

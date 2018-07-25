@@ -47,14 +47,11 @@ module.exports = function(localeCode) {
         'bookmark-$count-users': (count) => {
             return (count === 1) ? `1 utilisateur` : `${count} utilisateurs`;
         },
-        'bookmark-$name-and-$others-recommend-this': (name, others, count) => {
-            return [ `${name} et `, others, ` recommandent ceci` ];
-        },
         'bookmark-$name-recommends-this': (name) => {
             return `${name} recommande ceci`;
         },
         'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-            return [ name1, ' et ', name2, ' recommandent ceci' ];
+            return [ name1, ` et `, name2, ` recommandent ceci` ];
         },
         'bookmark-$you-bookmarked-it': "Vous avez ajouté un signet à cette",
         'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
@@ -99,6 +96,30 @@ module.exports = function(localeCode) {
 
         'issue-cancel': "Annuler",
         'issue-delete': "Effacer",
+        'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
+            var objects = [];
+            var ae;
+            if (photos > 0) {
+                objects.push(photos === 1 ? "l'image" : "les images");
+                ae = (photos === 1) ? 'e' : 'es';
+            }
+            if (videos > 0) {
+                objects.push(videos === 1 ? 'le clip vidéo' : 'les clips vidéo');
+                ae = (videos === 1) ? '' : 's';
+            }
+            if (audios > 0) {
+                objects.push(videos === 1 ? 'le clip audio' : 'les clips audio');
+                ae = (videos === 1) ? '' : 's';
+            }
+            if (objects.length > 1) {
+                ae = 's';
+            }
+            var verb = (names.length === 1) ? 'a' : 'ont';
+            return `${list(names)} ${verb} posté les ${list(objects)} suivant${ae}:`;
+        },
+        'issue-export-$names-wrote': (names) => {
+            return `${list(names)} a écrit:`;
+        },
         'issue-ok': "OK",
         'issue-repo': "Dépôt",
         'issue-title': "Titre",
@@ -495,7 +516,7 @@ module.exports = function(localeCode) {
             return `${count} autres`;
         },
         'story-author-$name1-and-$name2': (name1, name2) => {
-            return [ name1, ' et ', name2 ];
+            return [ name1, ` et `, name2 ];
         },
         'story-cancel': "Annuler",
         'story-cancel-are-you-sure': "Êtes-vous sûr de vouloir abandonner ce message?",
@@ -719,3 +740,14 @@ module.exports = function(localeCode) {
         'warning-no-connection': "Pas de mise à jour instantanée",
     };
 };
+
+function list(items) {
+    items = items.map((item) => {
+        return `${item}`;
+    });
+    if (items.length >= 2) {
+        var lastItem = items.pop();
+        items[items.length - 1] += ` et ${lastItem}`;
+    }
+    return items.join(', ');
+}

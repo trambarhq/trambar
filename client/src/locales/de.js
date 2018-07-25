@@ -49,14 +49,11 @@ module.exports = function(localeCode) {
         'bookmark-$count-users': (count) => {
             return `${count} Benutzer`;
         },
-        'bookmark-$name-and-$others-recommend-this': (name, others, count) => {
-            return [ `${name} und `, others, ` empfehlen dies` ];
-        },
         'bookmark-$name-recommends-this': (name) => {
             return `${name} empfiehlt dies`;
         },
         'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-            return `${name1} und ${name2} empfehlen dies`;
+            return [ name1, ` und `, name2, ` empfehlen dies` ];
         },
         'bookmark-$you-bookmarked-it': 'Sie hinzugefügt haben ein Lesezeichen auf diese',
         'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
@@ -101,6 +98,36 @@ module.exports = function(localeCode) {
 
         'issue-cancel': 'Abbrechen',
         'issue-delete': 'Löschen',
+        'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
+            var objects = [];
+            var adjectives = [];
+            if (photos > 0) {
+                objects.push(photos === 1 ? 'das Bild' : 'die Bilder');
+                adjectives.push(photos === 1 ? 'folgende' : 'folgenden');
+            }
+            if (videos > 0) {
+                objects.push(videos === 1 ? 'den Videoclip' : 'die Videoclips');
+                adjectives.push('folgenden');
+            }
+            if (audios > 0) {
+                objects.push(audios === 1 ? 'den Audioclip' : 'die Audioclips');
+                adjectives.push('folgenden');
+            }
+            for (var i = 0; i < objects.length; i++) {
+                if (i === 0) {
+                    // insert adjustive after article
+                    objects[i] = objects[i].replace(/^(\S+)/, '$1 ' + adjectives[i]);
+                } else {
+                    // remove article
+                    objects[i] = objects[i].replace(/^(\S+)\s+/, '');
+                }
+            }
+            var verb = (names.length > 1) ? 'haben' : 'hat';
+            return `${list(names)} ${verb} ${list(objects)} gepostet:`;
+        },
+        'issue-export-$names-wrote': (names) => {
+            return `${list(names)} schrieb:`;
+        },
         'issue-ok': 'OK',
         'issue-repo': 'Repository',
         'issue-title': 'Titel',
@@ -506,7 +533,7 @@ module.exports = function(localeCode) {
             return `${count} andere`;
         },
         'story-author-$name1-and-$name2': (name1, name2) => {
-            return [ name1, ' und ', name2 ];
+            return [ name1, ` und `, name2 ];
         },
         'story-cancel': 'Abbrechen',
         'story-cancel-are-you-sure': 'Möchten Sie diesen Beitrag wirklich aufgeben?',
@@ -710,3 +737,14 @@ module.exports = function(localeCode) {
         'warning-no-connection': 'Keine sofortige Datenaktualisierung',
     };
 };
+
+function list(items) {
+    items = items.map((item) => {
+        return `${item}`;
+    });
+    if (items.length >= 2) {
+        var lastItem = items.pop();
+        items[items.length - 1] += ` und ${lastItem}`;
+    }
+    return items.join(', ');
+}

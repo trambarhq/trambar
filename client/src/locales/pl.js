@@ -77,27 +77,24 @@ module.exports = function(localeCode) {
                 return `${count} osób`
             }
         },
-        'bookmark-$name-and-$others-recommend-this': (name, others, count) => {
-            return [ `${name} i `, others, ` polecają to` ];
-        },
         'bookmark-$name-recommends-this': (name) => {
             return `${name} poleca to`;
         },
         'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-            return [ name1, ' i ', name2, ' polecają to' ];
+            return [ name1, ` i `, name2, ` polecają to` ];
         },
         'bookmark-$you-bookmarked-it': (you) => {
             var e = pastTenseEnding(you, 2);
-            return `Założył${e} zakładkę do tego`;
+            return `Założy${e} zakładkę do tego`;
         },
         'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
             var e = pastTenseEnding(you, 2);
-            return `Założył${e} zakładkę do tego (i ${name} poleca go)`;
+            return `Założy${e} zakładkę do tego (i ${name} poleca go)`;
         },
         'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, users, count) => {
             var e = pastTenseEnding(you, 2);
             var verb = plural(count) ? 'polecają' : 'poleca';
-            return [ `Założył${e} zakładkę do tego (i `, users, ` ${verb} it)` ];
+            return [ `Założy${e} zakładkę do tego (i `, users, ` ${verb} it)` ];
         },
         'bookmark-recommendations': 'Polecenia',
 
@@ -135,6 +132,32 @@ module.exports = function(localeCode) {
 
         'issue-cancel': 'Anuluj',
         'issue-delete': 'Usuń',
+        'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
+            var objects = [];
+            var ae;
+            if (photos === 1) {
+                objects.push(photos === 1 ? 'zdjęcie' : 'zdjęcia');
+                ae = 'e';
+            }
+            if (videos > 0) {
+                objects.push(videos === 1 ? 'klip wideo' : 'klipy wideo');
+                if (!ae) {
+                    ae = (videos === 1) ? 'y' : 'e';
+                }
+            }
+            if (audios > 0) {
+                objects.push(audios === 1 ? 'klip audio' : 'klipy audio');
+                if (!ae) {
+                    ae = (audios === 1) ? 'y' : 'e';
+                }
+            }
+            var ve = pastTenseEnding(names, 3, names.length > 1);
+            return `${list(names)} wysła${ve} następując${ae} ${list(objects)}:`;
+        },
+        'issue-export-$names-wrote': (names) => {
+            var e = pastTenseEnding(names, 3, names.length > 1);
+            return `${list(names)} napisa${e}:`;
+        },
         'issue-ok': 'OK',
         'issue-repo': 'Repozytorium',
         'issue-title': 'Tytul',
@@ -158,11 +181,11 @@ module.exports = function(localeCode) {
         'membership-request-$you-are-now-member': (you) => {
             var e = pastTenseEnding(you, 2);
             var member = (gender(you) === 'female') ? `członkinią` : `członkiem`;
-            return `Został${e} ${member} tego projektu`;
+            return `Zosta${e} ${member} tego projektu`;
         },
         'membership-request-$you-have-requested-membership': (you) => {
             var e = pastTenseEnding(you, 2);
-            return `Zgłosił${e} się o członkostwo w tym projekcie`;
+            return `Zgłosi${e} się o członkostwo w tym projekcie`;
         },
         'membership-request-browse': 'Przeglądaj',
         'membership-request-cancel': 'Anuluj',
@@ -186,11 +209,11 @@ module.exports = function(localeCode) {
 
         'notification-$name-added-you-as-coauthor': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} zaprosił${e} Cię do wspólnej edycji posta`;
+            return `${name} zaprosi${e} Cię do wspólnej edycji posta`;
         },
         'notification-$name-added-your-post-to-issue-tracker': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} dodał${e} twojego posta do issue-trackera`;
+            return `${name} doda${e} twojego posta do issue-trackera`;
         },
         'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
@@ -200,15 +223,15 @@ module.exports = function(localeCode) {
                 default: story = 'Twoją wiadomość';
             }
             var e = pastTenseEnding(name, 3);
-            return `${name} skomentował${e} ${story}`;
+            return `${name} skomentowa${e} ${story}`;
         },
         'notification-$name-completed-task': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} wykonał${e} zadanie z Twojej listy`;
+            return `${name} wykona${e} zadanie z Twojej listy`;
         },
         'notification-$name-is-assigned-to-your-issue': (name) => {
             var ve = pastTenseEnding(name, 3);
-            var ae = (ve === 'a') ? 'a' : 'y';
+            var ae = (ve === 'ła') ? 'a' : 'y';
             return `${name} został${ve} przydzielon${ae} do twojego problemu`;
         },
         'notification-$name-likes-your-$story': (name, story) => {
@@ -237,11 +260,11 @@ module.exports = function(localeCode) {
         },
         'notification-$name-merged-code-to-$branch': (name, branch) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} scalił${e} zmiany do gałęzi „${branch}”`;
+            return `${name} scali${e} zmiany do gałęzi „${branch}”`;
         },
         'notification-$name-opened-an-issue': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} napisał${e} zgłoszenie błędu`;
+            return `${name} napisa${e} zgłoszenie błędu`;
         },
         'notification-$name-posted-a-note-about-your-$story': (name, story) => {
             var e = pastTenseEnding(name, 3);
@@ -250,20 +273,20 @@ module.exports = function(localeCode) {
                 case 'issue': story = 'twoje zgłoszenie'; break;
                 case 'merge-request': story = 'twoją prośbę o połączenie'; break;
             }
-            return `${name} skomentował${e} ${story}`;
+            return `${name} skomentowa${e} ${story}`;
         },
         'notification-$name-posted-a-survey': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} opublikował${e} ankietę`;
+            return `${name} opublikowa${e} ankietę`;
         },
         'notification-$name-pushed-code-to-$branch': (name, branch) => {
             var e = pastTenseEnding(name, 3);
-            var a = (e === 'a') ? 'ę' : 'ą';
-            return `Wypchn${a}ł${e} zmiany gałęzi „${branch}”`;
+            var a = (e === 'ł') ? 'ą' : 'ę';
+            return `Wypchn${a}${e} zmiany gałęzi „${branch}”`;
         },
         'notification-$name-requested-to-join': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} poprosił${e} o dołączenie do tego projektu`;
+            return `${name} poprosi${e} o dołączenie do tego projektu`;
         },
         'notification-$name-sent-bookmark-to-$story': (name, story) => {
             switch (story) {
@@ -273,11 +296,11 @@ module.exports = function(localeCode) {
                 default: story = 'wiadomości';
             }
             var e = pastTenseEnding(name, 3);
-            return `${name} przysłał${e} Ci zakładkę do ${story}`;
+            return `${name} przysła${e} Ci zakładkę do ${story}`;
         },
         'notification-$name-voted-in-your-survey': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} odpowiedział${e} na Twoją ankietę`;
+            return `${name} odpowiedzia${e} na Twoją ankietę`;
         },
         'notification-option-assignment': 'Po przydzieleniu do Twojego zgłoszenia błędu',
         'notification-option-bookmark': 'Po otrzymaniu zakładki',
@@ -353,48 +376,48 @@ module.exports = function(localeCode) {
 
         'reaction-$name-added-story-to-issue-tracker': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} dodał${e} tego posta do issue-trackera`;
+            return `${name} doda${e} tego posta do issue-trackera`;
         },
         'reaction-$name-cast-a-vote': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} głosował${e}`;
+            return `${name} głosowa${e}`;
         },
         'reaction-$name-commented-on-branch': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} skomentował${e} tę gałąź`;
+            return `${name} skomentowa${e} tę gałąź`;
         },
         'reaction-$name-commented-on-issue': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} skomentował${e} to zgłoszenie`;
+            return `${name} skomentowa${e} to zgłoszenie`;
         },
         'reaction-$name-commented-on-merge': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} skomentował${e} to połączenie`;
+            return `${name} skomentowa${e} to połączenie`;
         },
         'reaction-$name-commented-on-merge-request': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} skomentował${e} tę prośbę o połączenie`;
+            return `${name} skomentowa${e} tę prośbę o połączenie`;
         },
         'reaction-$name-commented-on-push': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} skomentował${e} zmiany w tym wgrywaniu`;
+            return `${name} skomentowa${e} zmiany w tym wgrywaniu`;
         },
         'reaction-$name-commented-on-tag': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} skomentował${e} ten tag`;
+            return `${name} skomentowa${e} ten tag`;
         },
         'reaction-$name-completed-a-task': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `${name} wykonał${e} zadanie`;
+            return `${name} wykona${e} zadanie`;
         },
         'reaction-$name-is-assigned-to-issue': (name) => {
             var ve = pastTenseEnding(name, 3);
-            var ae = (ve === 'a') ? 'a' : 'y';
+            var ae = (ve === 'ła') ? 'a' : 'y';
             return `${name} został${ve} przydzielon${ae} do tego problemu`;
         },
         'reaction-$name-is-assigned-to-merge-request': (name) => {
             var ve = pastTenseEnding(name, 3);
-            var ae = (ve === 'a') ? 'a' : 'y';
+            var ae = (ve === 'ła') ? 'a' : 'y';
             return `${name} został${ve} przydzielon${ae} do tej prośby o połączenie`;
         },
         'reaction-$name-is-editing': (name) => {
@@ -501,19 +524,19 @@ module.exports = function(localeCode) {
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             var e = pastTenseEnding(name, 3);
-            return `Stworzył${e} gałąź „${branch}” w projektcie „${repo}”`;
+            return `Stworzy${e} gałąź „${branch}” w projektcie „${repo}”`;
         },
         'story-$name-created-$milestone': (name, milestone) => {
             var e = pastTenseEnding(name, 3);
-            return `Stworzył${e} kamień milowy „${milestone}”`;
+            return `Stworzy${e} kamień milowy „${milestone}”`;
         },
         'story-$name-created-$page': (name, page) => {
             var e = pastTenseEnding(name, 3);
-            return `Stworzył${e} stronę wiki „${page}”`;
+            return `Stworzy${e} stronę wiki „${page}”`;
         },
         'story-$name-created-$repo': (name, repo) => {
             var e = pastTenseEnding(name, 3);
-            var text = `Stworzył${e} projekt`;
+            var text = `Stworzy${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
             }
@@ -521,15 +544,15 @@ module.exports = function(localeCode) {
         },
         'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
             var e = pastTenseEnding(name, 3);
-            return `Stworzył${e} tag „${tag}” w projektcie „${repo}”`;
+            return `Stworzy${e} tag „${tag}” w projektcie „${repo}”`;
         },
         'story-$name-deleted-$page': (name, page) => {
             var e = pastTenseEnding(name, 3);
-            return `Usunał${e} stronę wiki „${page}”`;
+            return `Usuna${e} stronę wiki „${page}”`;
         },
         'story-$name-joined-$repo': (name, repo) => {
             var e = pastTenseEnding(name, 3);
-            var text = `Dołączył${e} do projektu`;
+            var text = `Dołączy${e} do projektu`;
             if (repo) {
                 text += ` „${repo}”`;
             }
@@ -537,7 +560,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-left-$repo': (name, repo) => {
             var e = pastTenseEnding(name, 3);
-            var text = `Opuścił${e} projekt`;
+            var text = `Opuści${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
             }
@@ -545,7 +568,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
             var e = pastTenseEnding(name, 3);
-            var text = `Scalił${e} zmiany`;
+            var text = `Scali${e} zmiany`;
             if (branches && branches.length > 0) {
                 var sources = branches.map((branch) => {
                     return `„${branch}”`;
@@ -560,7 +583,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-opened-issue-$number-$title': (name, number, title) => {
             var e = pastTenseEnding(name, 3);
-            var text = `Napisał${e} zgłoszenie błędu #${number}`;
+            var text = `Napisa${e} zgłoszenie błędu #${number}`;
             if (title) {
                 text += `: ${title}`;
             }
@@ -568,8 +591,8 @@ module.exports = function(localeCode) {
         },
         'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
             var e = pastTenseEnding(name, 3);
-            var a = (e === 'a') ? 'ę' : 'ą';
-            var text = `Wypchn${a}ł${e} zmiany gałęzi „${branch}”`;
+            var a = (e === 'ła') ? 'ę' : 'ą';
+            var text = `Wypchn${a}${e} zmiany gałęzi „${branch}”`;
             if (repo) {
                 text += ` projektu „${repo}”`;
             }
@@ -577,11 +600,11 @@ module.exports = function(localeCode) {
         },
         'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
             var e = pastTenseEnding(name, 3);
-            return `Poprosił${e} o scalanie zmian z gałęzi „${branch1}” do gałęzi „${branch2}”`;
+            return `Poprosi${e} o scalanie zmian z gałęzi „${branch1}” do gałęzi „${branch2}”`;
         },
         'story-$name-updated-$page': (name, page) => {
             var e = pastTenseEnding(name, 3);
-            return `Redagował${e} wiki page „${page}”`;
+            return `Redagowa${e} wiki page „${page}”`;
         },
         'story-add-coauthor': 'Dodaj współautora',
         'story-add-remove-coauthor': 'Dodaj/Usuń współautora',
@@ -596,7 +619,7 @@ module.exports = function(localeCode) {
             }
         },
         'story-author-$name1-and-$name2': (name1, name2) => {
-            return [ name1, ' i ', name2 ];
+            return [ name1, ` i `, name2 ];
         },
         'story-cancel': 'Anuluj',
         'story-cancel-are-you-sure': 'Czy na pewno chcesz zrezygnować z tego posta?',
@@ -748,39 +771,39 @@ module.exports = function(localeCode) {
 
         'user-activity-$name-created-branch': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Stworzył${e} nową gałąź`;
+            return `Stworzy${e} nową gałąź`;
         },
         'user-activity-$name-created-merge-request': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Stworzył${e} prośbę o połączenie zmain`;
+            return `Stworzy${e} prośbę o połączenie zmain`;
         },
         'user-activity-$name-created-milestone': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Stworzył${e} kamień milowy`;
+            return `Stworzy${e} kamień milowy`;
         },
         'user-activity-$name-created-repo': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Stworzył${e} projekt gita`;
+            return `Stworzy${e} projekt gita`;
         },
         'user-activity-$name-created-tag': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Stworzył${e} nowy tag`;
+            return `Stworzy${e} nowy tag`;
         },
         'user-activity-$name-edited-wiki-page': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Redagował${e} stronę wiki`;
+            return `Redagowa${e} stronę wiki`;
         },
         'user-activity-$name-joined-repo': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Dołączył${e} do projektu gita`;
+            return `Dołączy${e} do projektu gita`;
         },
         'user-activity-$name-left-repo': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Opuścił${e} projekt gita`;
+            return `Opuści${e} projekt gita`;
         },
         'user-activity-$name-merged-code': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Wykonał${e} scalenie zmian`;
+            return `Wykona${e} scalenie zmian`;
         },
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios;
@@ -792,13 +815,13 @@ module.exports = function(localeCode) {
                 audios = `${count} klipów audio`;
             }
             var e = pastTenseEnding(name, 3);
-            return `Wysłał${e} ${audios}`;
+            return `Wysła${e} ${audios}`;
         },
         'user-activity-$name-posted-$count-links': (name, count) => {
             var links = (count === 1) ? `link` : `linki`;
             var website = (count === 1) ? `strony internetowej` : `${count} stron internetowych`;
             var e = pastTenseEnding(name, 3);
-            return `Wysłał${e} ${links} do ${website}`
+            return `Wysła${e} ${links} do ${website}`
         },
         'user-activity-$name-posted-$count-pictures': (name, count) => {
             var pictures;
@@ -810,7 +833,7 @@ module.exports = function(localeCode) {
                 pictures = `${count} zdjęć`;
             }
             var e = pastTenseEnding(name, 3);
-            return `Wysłał${e} ${pictures}`;
+            return `Wysła${e} ${pictures}`;
         },
         'user-activity-$name-posted-$count-video-clips': (name, count) => {
             var videos;
@@ -822,27 +845,27 @@ module.exports = function(localeCode) {
                 videos = `${count} klipów wideo`;
             }
             var e = pastTenseEnding(name, 3);
-            return `Wysłał${e} ${videos}`;
+            return `Wysła${e} ${videos}`;
         },
         'user-activity-$name-pushed-code': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Przesłał${e} kod do repozytorium`;
+            return `Przesła${e} kod do repozytorium`;
         },
         'user-activity-$name-reported-issue': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Zgłosił${e} problem`;
+            return `Zgłosi${e} problem`;
         },
         'user-activity-$name-started-survey': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Stworzył${e} ankietę`;
+            return `Stworzy${e} ankietę`;
         },
         'user-activity-$name-started-task-list': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Stworzył${e} listę zadań`;
+            return `Stworzy${e} listę zadań`;
         },
         'user-activity-$name-wrote-post': (name) => {
             var e = pastTenseEnding(name, 3);
-            return `Napisał${e} post`;
+            return `Napisa${e} post`;
         },
         'user-activity-back': 'Powrót',
         'user-activity-more': 'Więcej',
@@ -1022,6 +1045,14 @@ function plural(n) {
 
 function gender(name) {
     if (name) {
+        if (name instanceof Array) {
+            for (var i = 0; i < name.length; i++) {
+                if (gender(name[i]) === 'male') {
+                    return 'male';
+                }
+            }
+            return 'female';
+        }
         if (name.gender) {
             return name.gender;
         }
@@ -1081,18 +1112,45 @@ var isMasculine = {};
     isMasculine[name.toLocaleLowerCase()] = true;
 });
 
-function pastTenseEnding(name, person) {
+function pastTenseEnding(name, person, plural) {
     if (gender(name) === 'female') {
         if (person === 3) {
-            return 'a';
+            if (plural) {
+                return 'ły';
+            } else {
+                return 'ła';
+            }
         } else if (person === 2) {
-            return 'aś';
+            if (plural) {
+                return 'łyście';
+            } else {
+                return 'aś';
+            }
         }
     } else {
         if (person === 3) {
-            return '';
+            if (plural) {
+                return 'li';
+            } else {
+                return 'ł';
+            }
         } else if (person === 2) {
-            return 'eś';
+            if (plural) {
+                return 'liście';
+            } else {
+                return 'eś';
+            }
         }
     }
+}
+
+function list(items) {
+    items = items.map((item) => {
+        return `${item}`;
+    });
+    if (items.length >= 2) {
+        var lastItem = items.pop();
+        items[items.length - 1] += ` i ${lastItem}`;
+    }
+    return items.join(', ');
 }

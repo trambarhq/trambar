@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
+var Localization = require('localization');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var PushReconstructor = require('gitlab-adapter/push-reconstructor');
@@ -53,11 +54,14 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
     }
     // retrieve all commits in the push
     return PushReconstructor.reconstructPush(db, server, repo, type, branch, headId, tailId, count).then((push) => {
-        // look for component descriptions
-        return getDefaultLanguage(db).then((languageCode) => {
-            return PushDecorator.retrieveDescriptions(server, repo, push, languageCode).then((components) => {
-                var storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
-                return Story.insertOne(db, schema, storyNew);
+        return System.findOne(db, 'global', { deleted: false }, 'settings').then((system) => {
+            // look for component descriptions
+            var languageCode = Localization.getDefaultLanguageCode(system);
+            return getDefaultLanguage(db).then((languageCode) => {
+                return PushDecorator.retrieveDescriptions(server, repo, push, languageCode).then((components) => {
+                    var storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
+                    return Story.insertOne(db, schema, storyNew);
+                });
             });
         });
     });
@@ -157,21 +161,4 @@ function copyPushProperties(story, system, server, repo, author, push, component
     }
     storyAfter.itime = new String('NOW()');
     return storyAfter;
-}
-
-/**
- * Get the system's default language
- *
- * @param  {Database} db
- *
- * @return {Promise<String>}
- */
-function getDefaultLanguage(db) {
-    return System.findOne(db, 'global', { deleted: false }, 'settings').then((system) => {
-        var languageCode = _.get(system, 'settings.input_languages.0');
-        if (!languageCode) {
-            languageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase();
-        }
-        return languageCode;
-    });
 }

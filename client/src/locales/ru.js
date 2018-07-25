@@ -77,14 +77,11 @@ module.exports = function(localeCode) {
                 return `${count} пользователей`;
             }
         },
-        'bookmark-$name-and-$others-recommend-this': (name, others, count) => {
-            return [ `${name} и `, others, ` рекомендуют это` ];
-        },
         'bookmark-$name-recommends-this': (name) => {
             return `${name} рекомендует это`;
         },
         'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-            return [ name1, ' и ', name2, ' рекомендуют это' ];
+            return [ name1, ` и `, name2, ` рекомендуют это` ];
         },
         'bookmark-$you-bookmarked-it': (you) => {
             return `Вы добавили это в закладки`;
@@ -131,6 +128,32 @@ module.exports = function(localeCode) {
 
         'issue-cancel': 'Отмена',
         'issue-delete': 'Удалить',
+        'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
+            var objects = [];
+            var ae;
+            if (photos > 0) {
+                objects.push(photos === 1 ? 'изображение' : 'изображения');
+                ae = (photos === 1) ? 'ий' : 'ие';
+            }
+            if (videos > 0) {
+                objects.push(videos === 1 ? 'видеоклип' : 'видеоклипы');
+                if (!ae) {
+                    ae = (photos === 1) ? 'ий' : 'ие';
+                }
+            }
+            if (audios > 0) {
+                objects.push(audios === 1 ? 'аудиоклип' : 'аудиоклипы');
+                if (!ae) {
+                    ae = (photos === 1) ? 'ий' : 'ие';
+                }
+            }
+            var ve = pastTenseEnding(names, names.length > 1);
+            return `${list(names)} размести${ve} следующ${ae} ${list(objects)}:`;
+        },
+        'issue-export-$names-wrote': (names) => {
+            var e = pastTenseEnding(names, names.length > 1);
+            return `${list(names)} написа${e}:`;
+        },
         'issue-ok': 'OK',
         'issue-repo': 'Репозиторий',
         'issue-title': 'Название',
@@ -172,11 +195,11 @@ module.exports = function(localeCode) {
 
         'notification-$name-added-you-as-coauthor': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} предложил${e} вам совместно редактировать сообщение`;
+            return `${name} предложи${e} вам совместно редактировать сообщение`;
         },
         'notification-$name-added-your-post-to-issue-tracker': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} добавил${e} ваше сообщение в баг трекер`;
+            return `${name} добави${e} ваше сообщение в баг трекер`;
         },
         'notification-$name-commented-on-your-$story': (name, story) => {
             switch (story) {
@@ -186,7 +209,7 @@ module.exports = function(localeCode) {
                 default: story = 'ваш рассказ';
             }
             var e = pastTenseEnding(name);
-            return `${name} прокомментировал${e} ${story}`;
+            return `${name} прокомментирова${e} ${story}`;
         },
         'notification-$name-completed-task': (name) => {
             var e = pastTenseEnding(name);
@@ -223,11 +246,11 @@ module.exports = function(localeCode) {
         },
         'notification-$name-merged-code-to-$branch': (name, branch) => {
             var e = pastTenseEnding(name);
-            return `${name} слил${e} изменения в ветку «${branch}»`;
+            return `${name} сли${e} изменения в ветку «${branch}»`;
         },
         'notification-$name-opened-an-issue': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} написал${e} отчёт об ошибке`;
+            return `${name} написа${e} отчёт об ошибке`;
         },
         'notification-$name-posted-a-note-about-your-$story': (name, story) => {
             var e = pastTenseEnding(name);
@@ -236,19 +259,19 @@ module.exports = function(localeCode) {
                 case 'issue': story = 'ваш отчёт об ошибке'; break;
                 case 'merge-request': story = 'ваш слияния'; break;
             }
-            return `${name} прокомментировал${e} ${story}`;
+            return `${name} прокомментирова${e} ${story}`;
         },
         'notification-$name-posted-a-survey': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} опубликовал${e} опрос`;
+            return `${name} опубликова${e} опрос`;
         },
         'notification-$name-pushed-code-to-$branch': (name, branch) => {
             var e = pastTenseEnding(name);
-            return `${name} отправил${e} изменения в ветку «${branch}»`;
+            return `${name} отправи${e} изменения в ветку «${branch}»`;
         },
         'notification-$name-requested-to-join': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} попросил${e} присоединиться к проекту`;
+            return `${name} попроси${e} присоединиться к проекту`;
         },
         'notification-$name-sent-bookmark-to-$story': (name, story) => {
             switch (story) {
@@ -258,11 +281,11 @@ module.exports = function(localeCode) {
                 default: story = 'рассказ';
             }
             var e = pastTenseEnding(name);
-            return `${name} отправил${e} вам закладку в ${story}`;
+            return `${name} отправи${e} вам закладку в ${story}`;
         },
         'notification-$name-voted-in-your-survey': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} ответил${e} на ваш опрос`;
+            return `${name} ответи${e} на ваш опрос`;
         },
         'notification-option-assignment': 'Когда кто-то назначен на вашу проблему',
         'notification-option-bookmark': 'Когда кто-то отправляет вам закладку',
@@ -341,35 +364,35 @@ module.exports = function(localeCode) {
 
         'reaction-$name-added-story-to-issue-tracker': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} добавил${e} это сообщение в баг трекер`;
+            return `${name} добави${e} это сообщение в баг трекер`;
         },
         'reaction-$name-cast-a-vote': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} проголосовал${e}`;
+            return `${name} проголосова${e}`;
         },
         'reaction-$name-commented-on-branch': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} прокомментировал${e} эту ветку`;
+            return `${name} прокомментирова${e} эту ветку`;
         },
         'reaction-$name-commented-on-issue': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} прокомментировал${e} эту проблему`;
+            return `${name} прокомментирова${e} эту проблему`;
         },
         'reaction-$name-commented-on-merge': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} прокомментировал${e} это слияние`;
+            return `${name} прокомментирова${e} это слияние`;
         },
         'reaction-$name-commented-on-merge-request': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} прокомментировал${e} этот запрос слияния`;
+            return `${name} прокомментирова${e} этот запрос слияния`;
         },
         'reaction-$name-commented-on-push': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} прокомментировал${e} это помещение`;
+            return `${name} прокомментирова${e} это помещение`;
         },
         'reaction-$name-commented-on-tag': (name) => {
             var e = pastTenseEnding(name);
-            return `${name} прокомментировал${e} этот тег`;
+            return `${name} прокомментирова${e} этот тег`;
         },
         'reaction-$name-completed-a-task': (name) => {
             var e = pastTenseEnding(name);
@@ -488,15 +511,15 @@ module.exports = function(localeCode) {
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
             var e = pastTenseEnding(name);
-            return `Создал${e} ветку «${branch}» в репозитории «${repo}»`;
+            return `Созда${e} ветку «${branch}» в репозитории «${repo}»`;
         },
         'story-$name-created-$milestone': (name, milestone) => {
             var e = pastTenseEnding(name);
-            return `Создал${e} веху «${milestone}»`;
+            return `Созда${e} веху «${milestone}»`;
         },
         'story-$name-created-$page': (name, page) => {
             var e = pastTenseEnding(name);
-            return `Создал${e} wiki-страницу «${page}»`;
+            return `Созда${e} wiki-страницу «${page}»`;
         },
         'story-$name-created-$repo': (name, repo) => {
             var e = pastTenseEnding(name);
@@ -508,15 +531,15 @@ module.exports = function(localeCode) {
         },
         'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
             var e = pastTenseEnding(name);
-            return `Создал${e} тег «${tag}» в репозитории «${repo}»`;
+            return `Созда${e} тег «${tag}» в репозитории «${repo}»`;
         },
         'story-$name-deleted-$page': (name, page) => {
             var e = pastTenseEnding(name);
-            return `Удалил${e} wiki-страницу «${page}»`;
+            return `Удали${e} wiki-страницу «${page}»`;
         },
         'story-$name-joined-$repo': (name, repo) => {
             var e = reflective(pastTenseEnding(name));
-            var text = `Присоединил${e} к репозиторию`;
+            var text = `Присоедини${e} к репозиторию`;
             if (repo) {
                 text += ` «${repo}»`;
             }
@@ -524,7 +547,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-left-$repo': (name, repo) => {
             var e = pastTenseEnding(name);
-            var text = `Оставил${e} репозиторий`;
+            var text = `Остави${e} репозиторий`;
             if (repo) {
                 text += ` «${repo}»`;
             }
@@ -532,7 +555,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
             var e = pastTenseEnding(name);
-            var text = `Слил${e} изменения`;
+            var text = `Сли${e} изменения`;
             if (branches && branches.length > 0) {
                 var sources = branches.map((branch) => {
                     return `«${branch}»`;
@@ -553,7 +576,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-opened-issue-$number-$title': (name, number, title) => {
             var e = pastTenseEnding(name);
-            var text = `Написал${e} отчёт ${number}`;
+            var text = `Написа${e} отчёт ${number}`;
             if (title) {
                 text += `: ${title}`;
             }
@@ -561,7 +584,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
             var e = pastTenseEnding(name);
-            var text = `Отправил${e} изменения в ветку «${branch}»`;
+            var text = `Отправи${e} изменения в ветку «${branch}»`;
             if (repo) {
                 text += ` репозитория «${repo}»`;
             }
@@ -569,11 +592,11 @@ module.exports = function(localeCode) {
         },
         'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
             var e = pastTenseEnding(name);
-            return `Попросил${e} слить ветку «${branch1}» в ветку «${branch2}»`;
+            return `Попроси${e} слить ветку «${branch1}» в ветку «${branch2}»`;
         },
         'story-$name-updated-$page': (name, page) => {
             var e = pastTenseEnding(name);
-            return `Обновил${e} wiki-страницу «${page}»`;
+            return `Обнови${e} wiki-страницу «${page}»`;
         },
         'story-add-coauthor': 'Добавить соавтора',
         'story-add-remove-coauthor': 'Добавить/удалить соавтора',
@@ -582,7 +605,7 @@ module.exports = function(localeCode) {
             return `${count} других`;
         },
         'story-author-$name1-and-$name2': (name1, name2) => {
-            return [ name1, ' и ', name2 ];
+            return [ name1, ` и `, name2 ];
         },
         'story-cancel': 'Отмена',
         'story-cancel-are-you-sure': 'Вы действительно хотите покинуть это сообщение?',
@@ -741,39 +764,39 @@ module.exports = function(localeCode) {
 
         'user-activity-$name-created-branch': (name) => {
             var e = pastTenseEnding(name);
-            return `Создал${e} новую ветку`;
+            return `Созда${e} новую ветку`;
         },
         'user-activity-$name-created-merge-request': (name) => {
             var e = pastTenseEnding(name);
-            return `Отправил${e} a запрос слияния`;
+            return `Отправи${e} a запрос слияния`;
         },
         'user-activity-$name-created-milestone': (name) => {
             var e = pastTenseEnding(name);
-            return `Создал${e} веху`;
+            return `Созда${e} веху`;
         },
         'user-activity-$name-created-repo': (name) => {
             var e = pastTenseEnding(name);
-            return `Создал${e} проект git`;
+            return `Созда${e} проект git`;
         },
         'user-activity-$name-created-tag': (name) => {
             var e = pastTenseEnding(name);
-            return `Создал${e} новый тег`;
+            return `Созда${e} новый тег`;
         },
         'user-activity-$name-edited-wiki-page': (name) => {
             var e = pastTenseEnding(name);
-            return `Редактировал${e} страницу wiki`;
+            return `Редактирова${e} страницу wiki`;
         },
         'user-activity-$name-joined-repo': (name) => {
             var e = reflective(pastTenseEnding(name));
-            return `Присоединил${e} к проекту git`
+            return `Присоедини${e} к проекту git`
         },
         'user-activity-$name-left-repo': (name) => {
             var e = pastTenseEnding(name);
-            return `Оставил${e} проект git`;
+            return `Остави${e} проект git`;
         },
         'user-activity-$name-merged-code': (name) => {
             var e = pastTenseEnding(name);
-            return `Выполнил${e} слияние`;
+            return `Выполни${e} слияние`;
         },
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
             var audios;
@@ -785,7 +808,7 @@ module.exports = function(localeCode) {
                 audios = `${count} аудиоклипов`;
             }
             var e = pastTenseEnding(name);
-            return `Опубликовал${e} ${audios}`;
+            return `Опубликова${e} ${audios}`;
         },
         'user-activity-$name-posted-$count-links': (name, count) => {
             var links;
@@ -797,7 +820,7 @@ module.exports = function(localeCode) {
                 links = `${count} веб-ссылок`;
             }
             var e = pastTenseEnding(name);
-            return `Опубликовал${e} ${links}`;
+            return `Опубликова${e} ${links}`;
         },
         'user-activity-$name-posted-$count-pictures': (name, count) => {
             var pictures;
@@ -809,7 +832,7 @@ module.exports = function(localeCode) {
                 pictures = `фото`;
             }
             var e = pastTenseEnding(name);
-            return `Опубликовал${e} ${pictures}`;
+            return `Опубликова${e} ${pictures}`;
         },
         'user-activity-$name-posted-$count-video-clips': (name, count) => {
             var videos;
@@ -821,27 +844,27 @@ module.exports = function(localeCode) {
                 videos = `${count} видеоклипов`;
             }
             var e = pastTenseEnding(name);
-            return `Опубликовал${e} ${videos}`;
+            return `Опубликова${e} ${videos}`;
         },
         'user-activity-$name-pushed-code': (name) => {
             var e = pastTenseEnding(name);
-            return `Отправил${e} код в репозиторий`;
+            return `Отправи${e} код в репозиторий`;
         },
         'user-activity-$name-reported-issue': (name ) => {
             var e = pastTenseEnding(name);
-            return `Сообщил${e} о проблеме`;
+            return `Сообщи${e} о проблеме`;
         },
         'user-activity-$name-started-survey': (name) => {
             var e = pastTenseEnding(name);
-            return `Начал${e} опрос`;
+            return `Нача${e} опрос`;
         },
         'user-activity-$name-started-task-list': (name) => {
             var e = pastTenseEnding(name);
-            return `Начал${e} список задач`;
+            return `Нача${e} список задач`;
         },
         'user-activity-$name-wrote-post': (name) => {
             var e = pastTenseEnding(name);
-            return `Написал${e} сообщение`;
+            return `Написа${e} сообщение`;
         },
         'user-activity-back': 'Назад',
         'user-activity-more': 'Более',
@@ -1021,11 +1044,19 @@ function singularG(n) {
 
 function gender(name) {
     if (name) {
+        if (name instanceof Array) {
+            for (var i = 0; i < name.length; i++) {
+                if (gender(name[i]) === 'male') {
+                    return 'male';
+                }
+            }
+            return 'female';
+        }
         if (name.gender) {
             return name.gender;
         }
         var parts = name.split(/\s+/);
-        if (parts > 1) {
+        if (parts.length > 1) {
             // check patronymic and family name
             for (var i = 1; i < parts.length; i++) {
                 if (/а$/.test(parts[i])) {
@@ -1067,6 +1098,7 @@ var isFeminine = {};
     'Инна',
     'Ира',
     'Ирина',
+    'Катерина',
     'Катя',
     'Ксения',
     'Ксюша',
@@ -1107,18 +1139,33 @@ var isFeminine = {};
     isFeminine[name.toLocaleLowerCase()] = true;
 });
 
-function pastTenseEnding(name) {
-    if (gender(name) === 'female') {
-        return 'а';
+function pastTenseEnding(name, plural) {
+    if (plural) {
+        return 'ли';
     } else {
-        return '';
+        if (gender(name) === 'female') {
+            return 'ла';
+        } else {
+            return 'л';
+        }
     }
 }
 
 function reflective(e) {
-    if (e) {
-        return е + 'сь';
-    } else {
+    if (e === 'л') {
         return 'ся';
+    } else {
+        return е + 'сь';
     }
+}
+
+function list(items) {
+    items = items.map((item) => {
+        return `${item}`;
+    });
+    if (items.length >= 2) {
+        var lastItem = items.pop();
+        items[items.length - 1] += ` и ${lastItem}`;
+    }
+    return items.join(', ');
 }

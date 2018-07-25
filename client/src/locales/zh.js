@@ -89,14 +89,11 @@ var traditionalPhrases = {
         var num = cardinalT(count);
         return `${num}個人`;
     },
-    'bookmark-$name-and-$others-recommend-this': (name, others) => {
-        return [ `${name}和`, others, `推薦這個` ];
-    },
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推薦這個`;
     },
     'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-        return [ name1, '和', name2, '推薦這個' ];
+        return [ name1, `和`, name2, `推薦這個` ];
     },
     'bookmark-$you-bookmarked-it': '你加了這個書籤',
     'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
@@ -141,6 +138,22 @@ var traditionalPhrases = {
 
     'issue-cancel': '取消',
     'issue-delete': '刪除',
+    'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
+        var objects = [];
+        if (photos > 0) {
+            objects.push('圖片');
+        }
+        if (videos > 0) {
+            objects.push('影片');
+        }
+        if (audios > 0) {
+            objects.push('音頻片段');
+        }
+        return `${list(names)}發布了以下${list(objects)}：`;
+    },
+    'issue-export-$names-wrote': (names) => {
+        return `${list(names)}寫：`;
+    },
     'issue-ok': '完成',
     'issue-repo': '數據庫',
     'issue-title': '標題',
@@ -541,7 +554,7 @@ var traditionalPhrases = {
         return `另外${num}個人`;
     },
     'story-author-$name1-and-$name2': (name1, name2) => {
-        return [ name1, '和', name2 ];
+        return [ name1, `和`, name2 ];
     },
     'story-cancel': '取消',
     'story-cancel-are-you-sure': '你確定要取消這個貼文？',
@@ -790,14 +803,11 @@ var simplifiedPhrases = {
         var num = cardinalS(count);
         return `${num}个人`;
     },
-    'bookmark-$name-and-$others-recommend-this': (name, others) => {
-        return [ `${name}和`, others, `推荐这个` ];
-    },
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推荐这个`;
     },
     'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-        return [ name1, '和', name2, '推荐这个' ];
+        return [ name1, `和`, name2, `推荐这个` ];
     },
     'bookmark-$you-bookmarked-it': '你加了这个书签',
     'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
@@ -842,6 +852,22 @@ var simplifiedPhrases = {
 
     'issue-cancel': '取消',
     'issue-delete': '删除',
+    'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
+        var objects = [];
+        if (photos > 0) {
+            objects.push('图片');
+        }
+        if (videos > 0) {
+            objects.push('影片');
+        }
+        if (audios > 0) {
+            objects.push('音频剪辑');
+        }
+        return `${list(names)}發布了以下${list(objects)}：`;
+    },
+    'issue-export-$names-wrote': (names) => {
+        return `${list(names)}写：`;
+    },
     'issue-ok': '完成',
     'issue-repo': '数据库',
     'issue-title': '标题',
@@ -1242,7 +1268,7 @@ var simplifiedPhrases = {
         return `另外${num}个人`;
     },
     'story-author-$name1-and-$name2': (name1, name2) => {
-        return [ name1, '和', name2 ];
+        return [ name1, `和`, name2 ];
     },
     'story-cancel': '取消',
     'story-cancel-are-you-sure': '你确定要取消这个贴文？',
@@ -1446,14 +1472,11 @@ var cantonesePhrases = {
     'action-view-linkedin-page': '睇佢嘅LinkedIn網頁',
     'action-view-stackoverflow-page': '睇佢嘅StackOverflow網頁',
 
-    'bookmark-$name-and-$others-recommend-this': (name, others) => {
-        return [ name, '同', others, `都推薦呢個` ];
-    },
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推薦呢個`;
     },
     'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-        return [ name1, '同', name2, '都推薦呢個' ];
+        return [ name1, `同`, name2, `都推薦呢個` ];
     },
     'bookmark-$you-bookmarked-it': '你加咗個書籤',
     'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
@@ -1724,7 +1747,7 @@ var cantonesePhrases = {
         return `修正咗wiki頁面《${page}》`;
     },
     'story-author-$name1-and-$name2': (name1, name2) => {
-        return [ name1, '同', name2 ];
+        return [ name1, `同`, name2 ];
     },
     'story-cancel-are-you-sure': '你確定要取消呢個帖子？',
     'story-cancel-edit-are-you-sure': '你確定要取消呢啲改變？',
@@ -1842,4 +1865,15 @@ function cardinal(num, traditional) {
     } else {
         return String(num);
     }
+}
+
+function list(items) {
+    items = items.map((item) => {
+        return `${item}`;
+    });
+    if (items.length >= 2) {
+        var lastItem = items.pop();
+        items[items.length - 1] += `和${lastItem}`;
+    }
+    return items.join('，');
 }

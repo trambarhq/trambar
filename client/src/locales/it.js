@@ -47,14 +47,11 @@ module.exports = function(localeCode) {
         'bookmark-$count-users': (count) => {
             return (count === 1) ? `1 utente` : `${count} utenti`;
         },
-        'bookmark-$name-and-$others-recommend-this': (name, others, count) => {
-            return [ `${name} o `, others, ` lo raccomandano` ];
-        },
         'bookmark-$name-recommends-this': (name) => {
             return `${name} lo raccomanda`;
         },
         'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-            return [ name1, ' o ', name2, ' lo raccomandano' ];
+            return [ name1, ` e `, name2, ` lo raccomandano` ];
         },
         'bookmark-$you-bookmarked-it': "L'hai messo tra i segnalibri",
         'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
@@ -99,6 +96,26 @@ module.exports = function(localeCode) {
 
         'issue-cancel': "Annulla",
         'issue-delete': "Elimina",
+        'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
+            var objects = [];
+            if (photos > 0) {
+                objects.push(photos === 1 ? 'la immagine' : 'le immagini');
+            }
+            if (videos > 0) {
+                objects.push(videos === 1 ? 'il videoclip' : 'i videoclip');
+            }
+            if (audios > 0) {
+                objects.push(audios === 1 ? 'il audioclip' : 'i audioclip');
+            }
+            if (objects.length > 0) {
+                objects[0] = objects[0].replace(/^(\S+)/, '$1 seguenti');
+            }
+            var verb = (names.length === 1) ? 'ha' : 'hanno';
+            return `${list(names)} ${verb} inviato ${list(objects)}:`;
+        },
+        'issue-export-$names-wrote': (names) => {
+            return `${list(names)} scritto:`;
+        },
         'issue-ok': "OK",
         'issue-repo': "Repository",
         'issue-title': "Titolo",
@@ -501,7 +518,7 @@ module.exports = function(localeCode) {
             return `altri ${count}`;
         },
         'story-author-$name1-and-$name2': (name1, name2) => {
-            return [ name1, ' e ', name2 ];
+            return [ name1, ` e `, name2 ];
         },
         'story-cancel': "Annulla",
         'story-cancel-are-you-sure': "Sei sicuro di voler abbandonare questo post?",
@@ -725,3 +742,14 @@ module.exports = function(localeCode) {
         'warning-no-connection': "Nessun aggiornamento istantaneo",
     };
 };
+
+function list(items) {
+    items = items.map((item) => {
+        return `${item}`;
+    });
+    if (items.length >= 2) {
+        var lastItem = items.pop();
+        items[items.length - 1] += ` e ${lastItem}`;
+    }
+    return items.join(', ');
+}

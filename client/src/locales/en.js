@@ -66,14 +66,11 @@ var americanPhrases = {
     'bookmark-$count-users': (count) => {
         return (count === 1) ? `1 user` : `${count} users`;
     },
-    'bookmark-$name-and-$others-recommend-this': (name, others, count) => {
-        return [ `${name} and `, others, ` recommend this` ];
-    },
     'bookmark-$name-recommends-this': (name) => {
         return `${name} recommends this`;
     },
     'bookmark-$name1-and-$name2-recommend-this': (name1, name2) => {
-        return `${name1} and ${name2} recommend this`;
+        return [ name1, ` and `, name2, ` recommend this` ];
     },
     'bookmark-$you-bookmarked-it': 'You bookmarked this',
     'bookmark-$you-bookmarked-it-and-$name-recommends-it': (you, name) => {
@@ -118,6 +115,22 @@ var americanPhrases = {
 
     'issue-cancel': 'Cancel',
     'issue-delete': 'Delete',
+    'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
+        var objects = [];
+        if (photos > 0) {
+            objects.push(photos === 1 ? 'picture' : 'pictures');
+        }
+        if (videos > 0) {
+            objects.push(videos === 1 ? 'video clip' : 'video clips');
+        }
+        if (audios > 0) {
+            objects.push(audios === 1 ? 'audio clip' : 'audio clips');
+        }
+        return `${list(names)} posted the following ${list(objects)}:`;
+    },
+    'issue-export-$names-wrote': (names) => {
+        return `${list(names)} wrote:`;
+    },
     'issue-ok': 'OK',
     'issue-repo': 'Repository',
     'issue-title': 'Title',
@@ -514,7 +527,7 @@ var americanPhrases = {
         return `${count} others`;
     },
     'story-author-$name1-and-$name2': (name1, name2) => {
-        return [ name1, ' and ', name2 ];
+        return [ name1, ` and `, name2 ];
     },
     'story-cancel': 'Cancel',
     'story-cancel-are-you-sure': 'Are you sure you want to abandon this post?',
@@ -722,3 +735,15 @@ var unamericanPhrases = {
     'mobile-setup-code': 'Authorisation code',
     'start-error-existing-users-only': 'Only authorised personnel can access this system',
 };
+
+function list(items) {
+    items = items.map((item) => {
+        return `${item}`;
+    });
+    if (items.length >= 2) {
+        var oxfordComma = (items.length > 2) ? ',' : '';
+        var lastItem = items.pop();
+        items[items.length - 1] += `${oxfordComma} and ${lastItem}`;
+    }
+    return items.join(', ');
+}

@@ -9,8 +9,6 @@ var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var Transport = require('gitlab-adapter/transport');
 
-var languageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase();
-
 module.exports = {
     retrieveDescriptions,
 };
