@@ -45,6 +45,7 @@ function start() {
     app.set('json spaces', 2);
     app.use(CORS());
     app.use(BodyParser.json());
+    app.use(BodyParser.urlencoded({ extended: true }));
     app.use(Passport.initialize());
 
     app.route('/srv/session/?')
@@ -55,7 +56,13 @@ function start() {
         .get(handleLegalDocumentRequest);
     app.route('/srv/session/htpasswd/?')
         .post(handleHTPasswdRequest);
-    app.route('/srv/session/:provider/:callback?/?')
+    app.route('/srv/session/:provider/callback/?')
+        .get(handleOAuthTestRequest)
+        .get(handleOAuthActivationRequest)
+        .get(handleOAuthRequest);
+    app.route('/srv/session/:provider/deauthorize/?')
+        .post(handleOAuthDeauthorizationRequest);
+    app.route('/srv/session/:provider/?')
         .get(handleOAuthTestRequest)
         .get(handleOAuthActivationRequest)
         .get(handleOAuthRequest);
@@ -405,6 +412,50 @@ function handleOAuthActivationRequest(req, res, done) {
 }
 
 /**
+ * Remove relation to external server upon deauthorization request, possibly
+ * disabling the account as well
+ *
+ * @param  {Request}   req
+ * @param  {Response}  res
+ * @param  {Function}  done
+ */
+function handleOAuthDeauthorizationRequest(req, res, done) {
+    var provider = req.params.provider;
+    var signedRequest = req.body.signed_request;
+    return findServersByType(req.params.provider).then((servers) => {
+        var matchingServer, payload, lastError;
+        _.each(servers, (server) => {
+            // see which server has the right secret
+            // having multiple servers isn't really a normal use case
+            var secret = _.get(server, 'settings.oauth.client_secret');
+            if (secret) {
+                try {
+                    payload = parseDeauthorizationRequest(signedRequest, secret);
+                    if (payload) {
+                        matchingServer = server;
+                        return false;
+                    }
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+        });
+        if (payload) {
+            return detachExternalAccount(matchingServer, payload.user_id);
+        } else {
+            if (lastError) {
+                throw lastError;
+            }
+        }
+    }).then(() => {
+        sendJSON(res, { status: 'ok' });
+    }).catch((err) => {
+        console.error(err);
+        sendErrorJSON(res, err);
+    });
+}
+
+/**
  * Handle requests for legal documents
  *
  * @param  {Request}   req
@@ -550,6 +601,42 @@ function authenticateThruPassport(req, res, system, server, params) {
 }
 
 /**
+ * Remove link between user and an external account
+ *
+ * @param  {Server} server
+ * @param  {String|Number} externalUserId
+ *
+ * @return {Promise<User>}
+ */
+function detachExternalAccount(server, externalUserId) {
+    return Database.open().then((db) => {
+        var criteria = {
+            external_object: ExternalDataUtils.createLink(server, {
+                user: { id: externalUserId },
+            }),
+        };
+        return User.findOne(db, 'global', criteria, '*').then((user) => {
+            if (!user) {
+                return null;
+            }
+            ExternalDataUtils.removeLink(user, server);
+            return User.saveOne(db, 'global', user).then((user) => {
+                // delete active sessions when user is not connected to any account
+                if (ExternalDataUtils.countLinks(user) === 0) {
+                    var sessionCriteria = {
+                        deleted: false,
+                        user_id: user.id,
+                    };
+                    return Session.updateMatching(db, 'global', sessionCriteria, { deleted: true }).then(() => {
+                        return user;
+                    });
+                }
+            });
+        });
+    });
+}
+
+/**
  * Create or update session object
  *
  * @param  {Object} session
@@ -632,6 +719,20 @@ function findServer(serverId) {
             }
             return server;
         });
+    });
+}
+
+/**
+ * Find a server objects of given type
+ *
+ * @param  {String} type
+ *
+ * @return {Promise<Server>}
+ */
+function findServersByType(type) {
+    return Database.open().then((db) => {
+        var criteria = { type, deleted: false };
+        return Server.find(db, 'global', criteria, '*');
     });
 }
 
@@ -1106,7 +1207,7 @@ function getFutureTime(minutes) {
 function addServerSpecificSettings(server, settings) {
     switch (server.type) {
         case 'facebook':
-            settings.profileFields = [ 'id', 'emails', 'gender', 'link', 'displayName', 'name', 'picture', 'verified' ];
+            settings.profileFields = [ 'id', 'emails', 'link', 'displayName', 'name', 'picture', 'verified' ];
             break;
         case 'dropbox':
             settings.apiVersion = '2';
@@ -1127,7 +1228,7 @@ function addServerSpecificSettings(server, settings) {
 function addServerSpecificOptions(server, params, options) {
     switch (server.type) {
         case 'facebook':
-            options.scope = [ 'email' ];
+            options.scope = [ 'email', 'public_profile' ];
             break;
         case 'gitlab':
             if (params.activation) {
@@ -1173,6 +1274,34 @@ function parseQueryString(queryString) {
         values[name] = value;
     });
     return values;
+}
+
+/**
+ * Parse a signed request, checking whether the given signature was
+ * signed using the app secret
+ *
+ * @param  {String} signedRequest
+ * @param  {String} appSecret
+ *
+ * @return {Object}
+ */
+function parseDeauthorizationRequest(signedRequest, appSecret){
+    var [ signatureReceived, payloadBase64 ] = signedRequest.split('.');
+    var payloadText = new Buffer(payloadBase64, 'base64').toString();
+    var payload = JSON.parse(payloadText);
+    var algorithm = _.toLower(payload.algorithm);
+    if (!_.startsWith(algorithm, 'hmac-')) {
+        throw new Error(`Unsupported hashing scheme: ${algorithm}`);
+    }
+    var hmac = Crypto.createHmac(algorithm.substr(5), appSecret);
+    var signatureCalculated = hmac.update(payloadBase64).digest('base64');
+    signatureCalculated = _.replace(signatureCalculated, /\//g, '_');
+    signatureCalculated = _.replace(signatureCalculated, /\+/g, '-');
+    signatureCalculated = _.trimEnd(signatureCalculated, '=');
+    if (signatureReceived !== signatureCalculated) {
+        throw new Error(`Signature does not match`);
+    }
+    return payload;
 }
 
 /**
