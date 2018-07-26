@@ -95,7 +95,6 @@ function pick(locale, versions) {
  */
 function getDefaultLanguageCode(system) {
     var lang = _.get(system, 'settings.input_languages.0');
-    console.log('default language = ' + lang);
     if (!lang) {
         lang = serverLanguageCode;
     }
