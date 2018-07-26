@@ -328,6 +328,7 @@ module.exports = function(localeCode) {
         'server-summary-oauth-callback-url': 'Rückruf-URL',
         'server-summary-oauth-client-id': 'Kunden-ID',
         'server-summary-oauth-client-secret': 'Kundengeheimnis',
+        'server-summary-oauth-deauthorize-callback-url': 'Entauthorisierung-Rückruf-URL ',
         'server-summary-oauth-gitlab-url': 'GitLab-URL',
         'server-summary-oauth-redirect-uri': 'URI umleiten',
         'server-summary-oauth-redirect-url': 'URL umleiten',

@@ -477,6 +477,7 @@ module.exports = function(localeCode) {
         'server-summary-oauth-callback-url': 'URL обратного вызова',
         'server-summary-oauth-client-id': 'ID клиента',
         'server-summary-oauth-client-secret': 'Секрет клиента',
+        'server-summary-oauth-deauthorize-callback-url': 'URL обратного вызова для деавторизации',
         'server-summary-oauth-gitlab-url': 'URL сервера GitLab',
         'server-summary-oauth-redirect-uri': 'Перенаправление URI',
         'server-summary-oauth-redirect-url': 'Перенаправление URL',

@@ -466,6 +466,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderRoleSelector()}
                 {this.renderSiteURL()}
                 {this.renderOAuthCallbackURL()}
+                {this.renderDeauthorizeCallbackURL()}
                 {this.renderPrivacyPolicyURL()}
                 {this.renderTermsAndConditionsURL()}
                 {this.renderGitlabURLInput()}
@@ -820,6 +821,36 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         return (
             <TextField {...props}>
                 {t(phrase)}
+            </TextField>
+        );
+    },
+
+    /**
+     * Render read-only input for deauthorize callback URL
+     *
+     * @return {ReactElement|null}
+     */
+    renderDeauthorizeCallbackURL: function() {
+        var t = this.props.locale.translate;
+        var serverType = this.getServerProperty('type');
+        var needed = [ 'facebook' ];
+        if (!_.includes(needed, serverType)) {
+            return null;
+        }
+        var address = _.get(this.props.system, 'settings.address');
+        if (!address) {
+            address = window.location.origin;
+        }
+        var url = `${address}/srv/session/${serverType || '...'}/deauthorize/`;
+        var props = {
+            id: 'deauthize_callback',
+            value: url,
+            locale: this.props.locale,
+            readOnly: true,
+        };
+        return (
+            <TextField {...props}>
+                {t('server-summary-oauth-deauthorize-callback-url')}
             </TextField>
         );
     },

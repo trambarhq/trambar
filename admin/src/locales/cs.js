@@ -475,6 +475,7 @@ module.exports = function(localeCode) {
         'server-summary-oauth-callback-url': 'URL zpětného volání',
         'server-summary-oauth-client-id': 'ID klienta',
         'server-summary-oauth-client-secret': 'Tajemství klienta',
+        'server-summary-oauth-deauthorize-callback-url': 'URL zpětného volání odautorizace',
         'server-summary-oauth-gitlab-url': 'URL GitLab',
         'server-summary-oauth-redirect-uri': 'URI přesměrování',
         'server-summary-oauth-redirect-url': 'URL přesměrování',

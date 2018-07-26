@@ -26,6 +26,9 @@ the app. Select *WWW* as the platform. Copy this URL into the box under
 *Settings*. Copy and paste this URL into the box labeled *Valid OAuth Redirect
 URIs*.
 
+**Deauthorize Callback URL** - Copy and paste this URL into the box labeled
+*Deauthorize Callback URL*.
+
 **Privacy policy URL** - Facebook requires a privacy policy URL. You may
 link to your company's own page or use this boilerplate. It is entered
 in *Settings* > *Basic*.

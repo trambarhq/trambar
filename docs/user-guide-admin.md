@@ -847,26 +847,32 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
 13. Copy and paste the **Redirect URI**.
 
-    ![Server form - redirect URL](img/admin-server-facebook-callback.png)
+    ![Server form - redirect URI](img/admin-server-facebook-callback.png)
 
     ![Facebook Login - redirect URI](img/facebook-app-redirect-uri.png)
 
-14. Click the **Save Changes** button at the bottom of the page.
+14. Copy and paste the **Deauthorize Callback URL**.
+
+    ![Server form - deauthorize URL](img/admin-server-facebook-deauthorize-url.png)
+
+    ![Facebook Login - deauthorize URL](img/facebook-app-deauthorize-url.png)
+
+15. Click the **Save Changes** button at the bottom of the page.
 
     ![Facebook Login - save](img/facebook-app-save.png)
 
-15. Click **Basic** under **Settings** in the left navigation pane.
+16. Click **Basic** under **Settings** in the left navigation pane.
 
     ![Facebook Login](img/facebook-app-login-nav-basic.png)
 
-16. Copy and paste the URLs for **Privacy policy** and **Terms** (or supply
+17. Copy and paste the URLs for **Privacy policy** and **Terms** (or supply
     your own).
 
     ![Server form - terms](img/admin-server-facebook-terms.png)
 
     ![Facebook App - terms](img/facebook-app-terms.png)
 
-17. Download the default icon from Trambar Adminstrative Console.
+18. Download the default icon from Trambar Adminstrative Console.
 
     ![Server form - default icon](img/admin-server-facebook-icons.png)
 
@@ -874,50 +880,49 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
     ![Facebook App - icon](img/facebook-app-icon.png)
 
-18. Choose *Utility & Productivity* as the app category.
+19. Choose *Utility & Productivity* as the app category.
 
     ![Facebook App - category](img/facebook-app-category.png)
 
-19. Click the **Save Changes** button at the bottom of the page.
+20. Click the **Save Changes** button at the bottom of the page.
 
     ![Facebook Login - save](img/facebook-app-save.png)
 
-20. Copy and paste **App ID** into Trambar Administrative Console.
+21. Copy and paste **App ID** into Trambar Administrative Console.
 
     ![Facebook App - id](img/facebook-app-id.png)
 
     ![Server form - app id](img/admin-server-facebook-app-id.png)
 
-21. Click the **Show** button in the **App Secret** text box. Copy and paste the
+22. Click the **Show** button in the **App Secret** text box. Copy and paste the
     secret token into Trambar Administrative Console.    
 
     ![Facebook App - secret](img/facebook-app-secret.png)
 
     ![Server form - app secret](img/admin-server-facebook-app-secret.png)
 
-22. Under **New users** select a user type for users coming from Facebook.
+23. Under **New users** select a user type for users coming from Facebook.
 
     ![Server form - new users](img/admin-server-new-users.png)
 
-23. Optionally, choose a role for new users under **Role assignment**.
+24. Optionally, choose a role for new users under **Role assignment**.
 
     ![Server form - role](img/admin-server-role.png)
 
-24. Click the **Save server** button.
+25. Click the **Save server** button.
 
     ![Server form - save](img/admin-server-facebook-save.png)
 
-25. Click the **Test OAuth integration** button. A Facebook pop-up window will
+26. Click the **Test OAuth integration** button. A Facebook pop-up window will
     appear. Grant authorization when prompted. Afterward, the page should simply
     read "OK".
 
     ![Server form - test](img/admin-server-facebook-test.png)
 
-26. Return to the Facebook App Dashboard. Click the **OFF** switch and confirm
+27. Return to the Facebook App Dashboard. Click the **OFF** switch and confirm
     that you wish to make the app public.
 
     ![Facebook App - off](img/facebook-app-off.png)
-
 
 ### Adding GitHub
 

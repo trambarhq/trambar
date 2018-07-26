@@ -326,6 +326,7 @@ module.exports = function(localeCode) {
         'server-summary-oauth-callback-url': 'Palautus-URL',
         'server-summary-oauth-client-id': 'Asiakastunnus',
         'server-summary-oauth-client-secret': 'Asiakkaan salaisuus',
+        'server-summary-oauth-deauthorize-callback-url': 'Luvan peruutus-URL',
         'server-summary-oauth-gitlab-url': 'GitLab-URL',
         'server-summary-oauth-redirect-uri': 'Uudelleenohjaus-URI',
         'server-summary-oauth-redirect-url': 'Uudelleenohjaus-URL',

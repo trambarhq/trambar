@@ -330,6 +330,7 @@ module.exports = function(localeCode) {
         'server-summary-oauth-callback-url': "URL callback",
         'server-summary-oauth-client-id': "ID du client",
         'server-summary-oauth-client-secret': "Secret du client",
+        'server-summary-oauth-deauthorize-callback-url': "URL callback de la deautorisation",
         'server-summary-oauth-gitlab-url': "URL du serveur GitLab",
         'server-summary-oauth-redirect-uri': "URI de redirection",
         'server-summary-oauth-redirect-url': "URL de redirection",
