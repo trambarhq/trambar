@@ -56,6 +56,7 @@
     "react-easy-emoji": "^1.1.0",
     "relaks": "^1.0.1",
     "sass-loader": "^6.0.5",
+    "scroll-into-view-if-needed": "^2.2.16",
     "style-loader": "^0.17.0",
     "svg-react-loader": "^0.4.4",
     "uglifyjs-webpack-plugin": "^0.4.6",
