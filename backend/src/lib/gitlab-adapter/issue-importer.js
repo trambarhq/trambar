@@ -116,7 +116,6 @@ function importHookEvent(db, system, server, repo, project, author, glHookEvent)
                 if (!story) {
                     return null;
                 }
-                console.log('Deleting ', story);
                 var storyAfter = { id: story.id, deleted: true };
                 return Story.saveOne(db, schema, storyAfter).then((story) => {
                     return null;
@@ -179,10 +178,12 @@ function copyIssueProperties(story, system, server, repo, author, assignments, g
     ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
         value: [ author.id ],
         overwrite: 'always',
+        ignore: exported,
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
         value: author.role_ids,
         overwrite: 'always',
+        ignore: exported,
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.title', {
         value: glIssue.title,
