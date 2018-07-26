@@ -57,11 +57,9 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
         return System.findOne(db, 'global', { deleted: false }, 'settings').then((system) => {
             // look for component descriptions
             var languageCode = Localization.getDefaultLanguageCode(system);
-            return getDefaultLanguage(db).then((languageCode) => {
-                return PushDecorator.retrieveDescriptions(server, repo, push, languageCode).then((components) => {
-                    var storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
-                    return Story.insertOne(db, schema, storyNew);
-                });
+            return PushDecorator.retrieveDescriptions(server, repo, push, languageCode).then((components) => {
+                var storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
+                return Story.insertOne(db, schema, storyNew);
             });
         });
     });
