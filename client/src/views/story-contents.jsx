@@ -518,34 +518,10 @@ module.exports = React.createClass({
         var p = this.props.locale.pick;
         var story = this.props.story;
         var name = this.getAuthorName();
-        var files = _.get(this.props.story, 'details.files');
-        var lines = _.get(this.props.story, 'details.lines');
         var commits = _.get(this.props.story, 'details.commit_ids.length');
         var repo = this.props.repo;
         var repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
         var branch = story.details.branch;
-        var fileChangeTypes = [ 'added', 'deleted', 'modified', 'renamed' ];
-        var fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {
-            var count = files[type];
-            if (count > 0) {
-                elements.push(
-                    <li key={i} className={type}>
-                        {t(`story-push-${type}-$count-files`, count)}
-                    </li>
-                );
-            }
-        }, []);
-        var lineChangeTypes = [ 'added', 'deleted', 'modified' ];
-        var lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
-            var count = lines[type];
-            if (count > 0) {
-                elements.push(
-                    <li key={i} className={type}>
-                        {t(`story-push-${type}-$count-lines`, count)}
-                    </li>
-                );
-            }
-        }, []);
         var url;
         if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
             var commitBefore = story.details.commit_before;
@@ -568,10 +544,7 @@ module.exports = React.createClass({
                 <p>
                     <a href={url} target="_blank">{text}</a>
                 </p>
-                <div>
-                    <ul className="files">{fileChanges}</ul>
-                    <ul className="lines">{lineChanges}</ul>
-                </div>
+                {this.renderChanges()}
             </div>
         );
     },
@@ -608,6 +581,49 @@ module.exports = React.createClass({
                 <p>
                     <a href={url} target="_blank">{text}</a>
                 </p>
+                {this.renderChanges()}
+            </div>
+        );
+    },
+
+    /**
+     * Render the number of file/lines changed
+     *
+     * @return {ReactElement|null}
+     */
+    renderChanges: function() {
+        var t = this.props.locale.translate;
+        var files = _.get(this.props.story, 'details.files');
+        if (_.isEmpty(files)) {
+            return null;
+        }
+        var fileChangeTypes = [ 'added', 'deleted', 'modified', 'renamed' ];
+        var fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {
+            var count = files[type];
+            if (count > 0) {
+                elements.push(
+                    <li key={i} className={type}>
+                        {t(`story-push-${type}-$count-files`, count)}
+                    </li>
+                );
+            }
+        }, []);
+        var lines = _.get(this.props.story, 'details.lines');
+        var lineChangeTypes = [ 'added', 'deleted', 'modified' ];
+        var lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
+            var count = lines[type];
+            if (count > 0) {
+                elements.push(
+                    <li key={i} className={type}>
+                        {t(`story-push-${type}-$count-lines`, count)}
+                    </li>
+                );
+            }
+        }, []);
+        return (
+            <div>
+                <ul className="files">{fileChanges}</ul>
+                <ul className="lines">{lineChanges}</ul>
             </div>
         );
     },
@@ -772,9 +788,6 @@ module.exports = React.createClass({
     renderAppComponents: function() {
         var t = this.props.locale.translate;
         var type = _.get(this.props.story, 'type');
-        if (type !== 'push' && type !== 'merge') {
-            return null;
-        }
         var components = _.get(this.props.story, 'details.components');
         if (_.isEmpty(components)) {
             return null;
