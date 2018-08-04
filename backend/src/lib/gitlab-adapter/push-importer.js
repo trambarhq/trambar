@@ -6,11 +6,9 @@ var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var PushReconstructor = require('gitlab-adapter/push-reconstructor');
 var PushDecorator = require('gitlab-adapter/push-decorator');
-var UserImporter = require('gitlab-adapter/user-importer');
 
 // accessors
 var Story = require('accessors/story');
-var System = require('accessors/system');
 
 module.exports = {
     importEvent,
@@ -54,13 +52,11 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
     }
     // retrieve all commits in the push
     return PushReconstructor.reconstructPush(db, server, repo, type, branch, headId, tailId, count).then((push) => {
-        return System.findOne(db, 'global', { deleted: false }, 'settings').then((system) => {
-            // look for component descriptions
-            var languageCode = Localization.getDefaultLanguageCode(system);
-            return PushDecorator.retrieveDescriptions(server, repo, push, languageCode).then((components) => {
-                var storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
-                return Story.insertOne(db, schema, storyNew);
-            });
+        // look for component descriptions
+        var languageCode = Localization.getDefaultLanguageCode(system);
+        return PushDecorator.retrieveDescriptions(server, repo, push, languageCode).then((components) => {
+            var storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
+            return Story.insertOne(db, schema, storyNew);
         });
     });
 }
@@ -81,12 +77,22 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
  */
 function copyPushProperties(story, system, server, repo, author, push, components, glEvent) {
     var storyType;
-    if (push.forkId) {
-        if (push.type === 'tag') {
-            storyType = 'tag';
-        } else {
-            storyType = 'branch';
+    var isBranching = false;
+    if (!push.tailId) {
+        if (glEvent.push_data) {
+            // GL 10+
+            if (glEvent.push_data.action === 'created') {
+                isBranching = true;
+            }
+        } else if (glEvent.data) {
+            // GL 9
+            if (glEvent.data.project.default_branch !== push.branch) {
+                isBranching = true;
+            }
         }
+    }
+    if (isBranching) {
+        storyType = push.type;
     } else if (!_.isEmpty(push.fromBranches)) {
         storyType = 'merge';
     } else {
@@ -115,7 +121,7 @@ function copyPushProperties(story, system, server, repo, author, push, component
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.commit_before', {
-        value: push.tailId,
+        value: push.tailId || undefined,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.commit_after', {

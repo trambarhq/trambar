@@ -27,14 +27,10 @@ function reconstructPush(db, server, repo, type, branch, headId, tailId, count) 
     return importCommits(db, server, repo, branch, headId, count).then((commits) => {
         // obtain a linear list of commits--ignoring branching within the push
         var chain = getCommitChain(commits, headId);
-        var forkId;
         if (!tailId) {
-            // a new branch, find the fork
-            var firstCommit = _.last(chain);
-            var firstCommitParentIds = getParentIds(firstCommit);
-            if (firstCommitParentIds.length === 1) {
-                forkId = firstCommitParentIds[0];
-            }
+            // a new branch--count only changes from commits that are 
+            // checked directly into branch
+            chain = _.filter(chain, { initial_branch: branch });
         }
 
         // merge changes of commits
@@ -42,16 +38,10 @@ function reconstructPush(db, server, repo, type, branch, headId, tailId, count) 
         var files = mergeFileChanges(chain);
 
         // see if the commits were initially pushed into a different branch
-        var fromBranches = _.transform(commits, (list, commit) => {
-            if (commit.initial_branch !== branch) {
-                if (!_.includes(list, commit.initial_branch)) {
-                    list.push(commit.initial_branch);
-                }
-            }
-        }, []);
+        var fromBranches = findSourceBranches(commits, branch);
 
         var commitIds = _.keys(commits);
-        return { headId, tailId, forkId, commitIds, lines, files, type, branch, fromBranches };
+        return { headId, tailId, commitIds, lines, files, type, branch, fromBranches };
     });
 }
 
@@ -177,6 +167,18 @@ function mergeFileChanges(chain) {
         }
     });
     return pf;
+}
+
+function findSourceBranches(commits, branch) {
+    var list = [];
+    _.each(commits, (commit) => {
+        if (commit.initial_branch !== branch) {
+            if (!_.includes(list, commit.initial_branch)) {
+                list.push(commit.initial_branch);
+            }
+        }
+    });
+    return list;
 }
 
 /**
