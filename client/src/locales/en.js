@@ -472,6 +472,20 @@ var americanPhrases = {
     'story-$name-deleted-$page': (name, page) => {
         return `Deleted wiki page “${page}”`;
     },
+    'story-$name-deleted-$repo': (name, repo) => {
+        var text = `Deleted project`;
+        if (repo) {
+            text += ` “${repo}”`;
+        }
+        return text;
+    },
+    'story-$name-imported-$repo': (name, repo) => {
+        var text = `Imported project`;
+        if (repo) {
+            text += ` “${repo}”`;
+        }
+        return text;
+    },
     'story-$name-joined-$repo': (name, repo) => {
         var text = `Joined project`;
         if (repo) {

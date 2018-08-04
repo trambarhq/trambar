@@ -454,6 +454,20 @@ module.exports = function(localeCode) {
         'story-$name-deleted-$page': (name, page) => {
             return `Fjernet wiki-siden “${page}”`;
         },
+        'story-$name-deleted-$repo': (name, repo) => {
+            var text = `Slettet prosjektet`;
+            if (repo) {
+                text += ` “${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-imported-$repo': (name, repo) => {
+            var text = `Importerte prosjektet`;
+            if (repo) {
+                text += ` “${repo}”`;
+            }
+            return text;
+        },
         'story-$name-joined-$repo': (name, repo) => {
             var text = `Ble med i prosjektet`;
             if (repo) {

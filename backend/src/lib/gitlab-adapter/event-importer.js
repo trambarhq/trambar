@@ -63,6 +63,7 @@ function importEvents(db, system, server, repo, project, glHookEvent) {
         var firstEventAge;
         var now = Moment();
         return Transport.fetchEach(server, url, params, (glEvent, index, total) => {
+            console.log(glEvent);
             var ctime = glEvent.created_at;
             if (lastEventTime) {
                 if (ctime <= lastEventTime) {
@@ -87,6 +88,7 @@ function importEvents(db, system, server, repo, project, glHookEvent) {
                     denom = firstEventAge;
                 }
                 taskLog.report(nom, denom, { added, last_event_time: ctime });
+            }).catch((err) => {
             });
         }).tap(() => {
             taskLog.finish();

@@ -548,7 +548,25 @@ module.exports = function(localeCode) {
         },
         'story-$name-deleted-$page': (name, page) => {
             var e = pastTenseEnding(name, 3);
-            return `Usuna${e} stronę wiki „${page}”`;
+            var a = (e === 'ła') ? 'ę' : 'ą';
+            return `Usun${a}${e} stronę wiki „${page}”`;
+        },
+        'story-$name-deleted-$repo': (name, repo) => {
+            var e = pastTenseEnding(name, 3);
+            var a = (e === 'ła') ? 'ę' : 'ą';
+            var text = `Usun${a}${e} projekt`;
+            if (repo) {
+                text += ` „${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-imported-$repo': (name, repo) => {
+            var e = pastTenseEnding(name, 3);
+            var text = `Zaimportowa${e} projekt`;
+            if (repo) {
+                text += ` „${repo}”`;
+            }
+            return text;
         },
         'story-$name-joined-$repo': (name, repo) => {
             var e = pastTenseEnding(name, 3);

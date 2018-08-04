@@ -458,6 +458,20 @@ module.exports = function(localeCode) {
         'story-$name-deleted-$page': (name, page) => {
             return `Ha rimosso la pagina wiki «${page}»`;
         },
+        'story-$name-deleted-$repo': (name, repo) => {
+            var text = `Ha cancellato il progetto`;
+            if (repo) {
+                text += ` «${repo}»`;
+            }
+            return text;
+        },
+        'story-$name-imported-$repo': (name, repo) => {
+            var text = `Ha importato il progetto`;
+            if (repo) {
+                text += ` «${repo}»`;
+            }
+            return text;
+        },
         'story-$name-joined-$repo': (name, repo) => {
             var text = `Si è unito al repository`;
             if (repo) {

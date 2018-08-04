@@ -516,6 +516,22 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `Smaza${e} stránku wiki „${page}”`;
         },
+        'story-$name-deleted-$repo': (name, repo) => {
+            var e = pastTenseEnding(name);
+            var text = `Smaza${e} project`;
+            if (repo) {
+                text += ` „${repo}”`;
+            }
+            return text;
+        },
+        'story-$name-imported-$repo': (name, repo) => {
+            var e = pastTenseEnding(name);
+            var text = `Importova${e} project`;
+            if (repo) {
+                text += ` „${repo}”`;
+            }
+            return text;
+        },
         'story-$name-joined-$repo': (name, repo) => {
             var e = pastTenseEnding(name);
             var text = `Vstoupi${e} Do projektu`;

@@ -326,6 +326,8 @@ function request(server, uri, method, query, payload, userToken) {
             lastError = err;
             if (err instanceof HTTPError) {
                 if (err.statusCode >= 400 && err.statusCode <= 499) {
+                    console.log(uri);
+                    console.log(err.message);
                     throw err;
                 }
             }

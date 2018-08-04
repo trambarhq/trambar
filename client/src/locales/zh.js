@@ -495,6 +495,22 @@ var traditionalPhrases = {
     'story-$name-deleted-$page': (name, page) => {
         return `刪除了wiki頁面《${page}》”`;
     },
+    'story-$name-deleted-$repo': (name, repo) => {
+        var text = `刪除了`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `數據庫`;
+        return text;
+    },
+    'story-$name-imported-$repo': (name, repo) => {
+        var text = `導入了`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `數據庫`;
+        return text;
+    },
     'story-$name-joined-$repo': (name, repo) => {
         var text = `加入了`;
         if (repo) {
@@ -1209,6 +1225,22 @@ var simplifiedPhrases = {
     'story-$name-deleted-$page': (name, page) => {
         return `删除了wiki页面《${page}》”`;
     },
+    'story-$name-deleted-$repo': (name, repo) => {
+        var text = `删除了`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `数据库`;
+        return text;
+    },
+    'story-$name-imported-$repo': (name, repo) => {
+        var text = `导入了`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `数据库`;
+        return text;
+    },
     'story-$name-joined-$repo': (name, repo) => {
         var text = `加入了`;
         if (repo) {
@@ -1694,6 +1726,22 @@ var cantonesePhrases = {
     },
     'story-$name-deleted-$page': (name, page) => {
         return `刪除咗wiki頁面《${page}》”`;
+    },
+    'story-$name-deleted-$repo': (name, repo) => {
+        var text = `刪除咗`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `數據庫`;
+        return text;
+    },
+    'story-$name-imported-$repo': (name, repo) => {
+        var text = `導入咗`;
+        if (repo) {
+            text += `《${repo}》`;
+        }
+        text += `數據庫`;
+        return text;
     },
     'story-$name-joined-$repo': (name, repo) => {
         var text = `加入咗`;

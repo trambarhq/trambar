@@ -537,6 +537,20 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `Удали${e} wiki-страницу «${page}»`;
         },
+        'story-$name-deleted-$repo': (name, repo) => {
+            var text = `Удали${e} проект`;
+            if (repo) {
+                text += ` «${repo}»`;
+            }
+            return text;
+        },
+        'story-$name-imported-$repo': (name, repo) => {
+            var text = `Импортирова${e} проект`;
+            if (repo) {
+                text += ` «${repo}»`;
+            }
+            return text;
+        },
         'story-$name-joined-$repo': (name, repo) => {
             var e = reflective(pastTenseEnding(name));
             var text = `Присоедини${e} к репозиторию`;
