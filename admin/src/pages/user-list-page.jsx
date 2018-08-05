@@ -562,7 +562,6 @@ var UserListPageSync = module.exports.Sync = React.createClass({
      * @param  {Object} evt
      */
     handleSort: function(evt) {
-        console.log(evt.columns)
         this.setState({
             sortColumns: evt.columns,
             sortDirections: evt.directions
