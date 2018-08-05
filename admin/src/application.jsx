@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks'), createClass = require('relaks/create-class');
+var Relaks = require('relaks'); Relaks.createClass = require('relaks/create-class');
 
 var ComponentRefs = require('utils/component-refs');
 var HTTPError = require('errors/http-error');
