@@ -34,6 +34,7 @@ module.exports = React.createClass({
     getInitialState: function() {
         this.components = ComponentRefs({
             container: HTMLDivElement,
+            menu: HTMLDivElement,
         });
         return {
             open: false,
@@ -110,7 +111,7 @@ module.exports = React.createClass({
         var setters = this.components.setters;
         return (
             <div ref={setters.container} className="container">
-                <div className="menu">
+                <div ref={setters.menu} className="menu">
                     {this.getContents('menu')}
                 </div>
             </div>
@@ -137,7 +138,7 @@ module.exports = React.createClass({
         var element = (
             <div className={className} style={style}>
                 <div ref={setters.container} className="container">
-                    <div className="menu" onClick={this.handleMenuClick}>
+                    <div ref={setters.menu} className="menu" onClick={this.handleMenuClick}>
                         {this.getContents('menu')}
                     </div>
                 </div>
@@ -171,14 +172,14 @@ module.exports = React.createClass({
         }
         if (this.state.open && !prevProps.open) {
             setTimeout(() => {
-                var container = this.components.container;
-                if (container) {
+                var menu = this.components.menu;
+                if (menu) {
                     var options = {
                         behavior: 'smooth',
                         scrollMode: 'if-needed',
                         block: 'end',
                     };
-                    ScrollIntoViewIfNeeded(container, options);
+                    ScrollIntoViewIfNeeded(menu, options);
                 }
             }, 50);
         }
