@@ -204,10 +204,12 @@ Search.prototype.validateResults = function(signature) {
  * @return {Array<Number>}
  */
 Search.prototype.getUpdateList = function(ids, gns) {
-    if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
-        // the current results aren't valid
-        // fetch everything anew
-        return _.slice(ids);
+    if (this.cacheSignatureBefore) {
+        if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
+            // the current results aren't valid
+            // fetch everything anew
+            return _.slice(ids);
+        }
     }
     var objects = this.results;
     var updated = [];
@@ -230,8 +232,10 @@ Search.prototype.getUpdateList = function(ids, gns) {
  * @return {Array<Number>}
  */
 Search.prototype.getRemovalList = function(ids) {
-    if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
-        return [];
+    if (this.cacheSignatureBefore) {
+        if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
+            return [];
+        }
     }
     var removal = [];
     _.each(this.results, (object) => {
@@ -250,8 +254,10 @@ Search.prototype.getRemovalList = function(ids) {
  * @return {Array<Number>}
  */
 Search.prototype.getFetchList = function(ids) {
-    if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
-        return [];
+    if (this.cacheSignatureBefore) {
+        if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
+            return [];
+        }
     }
     var objects = this.results;
     var updated = [];

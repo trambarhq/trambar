@@ -1191,6 +1191,9 @@ module.exports = React.createClass({
         var criteria = search.criteria;
         search.start();
         return this.discoverRemoteObjects(location, criteria).then((discovery) => {
+            if (location.table === 'story') {
+                console.log('discovery', discovery)
+            }
             return this.searchLocalCache(search, discovery).return(discovery);
         }).then((discovery) => {
             // use the list of ids and gns (generation number) to determine
