@@ -306,6 +306,7 @@ function packagePushMessage(message) {
                 push.fcm = packageFirebaseMessage(message);
                 break;
             case 'apns':
+            case 'apns-sb'
                 push.apns = packageAppleMessage(message);
                 break;
             case 'wns':

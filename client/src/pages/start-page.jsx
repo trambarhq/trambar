@@ -1388,7 +1388,7 @@ if (process.env.PLATFORM === 'cordova') {
             var manufacturer = device.manufacturer;
             var name = device.model;
             if (manufacturer === 'MicrosoftMDG') {
-                manufacturer = 'MicrosoftMDG';
+                manufacturer = 'Microsoft';
             }
             return { manufacturer, name };
         }
