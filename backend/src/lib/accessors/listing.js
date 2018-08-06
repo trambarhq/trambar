@@ -416,7 +416,7 @@ function addStories(stories, newStories, rtime) {
  */
 function removeStoriesWithLowRating(stories, listing, desiredLength) {
     // apply retrieval time rating adjustments
-    var context = ByRetrievalTime.createContext(stories, row);
+    var context = ByRetrievalTime.createContext(stories, listing);
     _.eachRight(stories, (story) => {
         story.rating += ByRetrievalTime.calculateRating(context, story);
     });
