@@ -654,7 +654,7 @@ module.exports = React.createClass({
      * @return {ReactElement|null}
      */
     renderLabels: function() {
-        var labels = this.props.story.details.labels;
+        var labels = _.sortBy(this.props.story.details.labels);
         if (_.isEmpty(labels)) {
             return null;
         }
