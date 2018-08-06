@@ -206,34 +206,29 @@ module.exports = React.createClass({
         // keep trying to connect until the effort is abandoned (i.e. user
         // goes to a different server)
         Async.do(() => {
-            return isDebugMode().then((debug) => {
-                var url = `${relayAddress}/register`;
-                var details = getDeviceDetails();
-                var payload = {
-                    network: registrationType,
-                    registration_id: registrationId,
-                    details: details,
-                    address: serverAddress,
-                };
-                if (registrationType === 'apns' && debug) {
-                    registrationType += '-sb';
+            var url = `${relayAddress}/register`;
+            var details = getDeviceDetails();
+            var payload = {
+                network: registrationType,
+                registration_id: registrationId,
+                details: details,
+                address: serverAddress,
+            };
+            return this.sendRegistration(url, payload).then((result) => {
+                if (attempt === this.registrationAttempt) {
+                    this.registrationAttempt = null;
+                    this.setState({ pushRelayResponse: result });
+                    var connection = {
+                        method: registrationType,
+                        relay: relayAddress,
+                        token: result.token,
+                        address: serverAddress,
+                        details: getDeviceDetails(),
+                    };
+                    this.triggerConnectEvent(connection);
                 }
-                return this.sendRegistration(url, payload).then((result) => {
-                    if (attempt === this.registrationAttempt) {
-                        this.registrationAttempt = null;
-                        this.setState({ pushRelayResponse: result });
-                        var connection = {
-                            method: registrationType,
-                            relay: relayAddress,
-                            token: result.token,
-                            address: serverAddress,
-                            details: getDeviceDetails(),
-                        };
-                        this.triggerConnectEvent(connection);
-                    }
-                    registered = true;
-                    return null;
-                });
+                registered = true;
+                return null;
             }).catch((err) => {
                 delay *= 2;
                 if (delay > maximumDelay) {
@@ -390,7 +385,12 @@ module.exports = React.createClass({
                 type = 'wns';
             }
         }
-        this.setState({ registrationId: id, registrationType: type });
+        isDebugMode().then((debug) => {
+            if (type === 'apns' && debug) {
+                type += '-sb';  // use sandbox
+            }
+            this.setState({ registrationId: id, registrationType: type });
+        });
     },
 
     /**
@@ -615,12 +615,12 @@ function setApplicationIconBadgeNumber(count) {
 function isDebugMode() {
     return new Promise((resolve, reject) => {
         try {
-            cordova.plugins.IsDebug.getIsDebug(function(isDebug) {
+            cordova.plugins.IsDebug.getIsDebug((isDebug) => {
                 resolve(isDebug);
-            }, function(err) {
+            }, (err) => {
                 resolve(false);
             });
-        } catch {
+        } catch (err) {
             resolve(false);
         }
     });
