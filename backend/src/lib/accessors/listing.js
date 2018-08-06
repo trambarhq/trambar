@@ -421,7 +421,7 @@ function removeStoriesWithLowRating(stories, listing, desiredLength) {
         story.rating += ByRetrievalTime.calculateRating(context, story);
     });
     var storiesByRating = _.orderBy(stories, [ 'rating', 'btime' ], [ 'asc', 'asc' ]);
-    return _.slice(storiesByRating, newStories.length - desiredLength);
+    return _.slice(storiesByRating, stories.length - desiredLength);
 }
 
 var HOUR = 60 * 60 * 1000;
