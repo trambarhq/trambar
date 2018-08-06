@@ -340,49 +340,23 @@ function chooseStories(row) {
         // remember the latest story that was considered (not necessarily going
         // to be included in the list)
         var latestStory = _.maxBy(newStories, 'btime');
-        if (newStoryCount !== newStories.length) {
-            // apply retrieval time rating adjustments
-            var context = ByRetrievalTime.createContext(newStories, row);
-            _.eachRight(newStories, (story) => {
-                story.rating += ByRetrievalTime.calculateRating(context, story);
-            });
-
-            // remove lowly rated stories
-            newStories = _.orderBy(newStories, [ 'rating', 'btime' ], [ 'asc', 'asc' ]);
-            newStories = _.slice(newStories, newStories.length - newStoryCount);
-            newStories = _.orderBy(newStories, [ 'btime' ], [ 'asc' ]);
+        if (newStories.length > newStoryCount) {
+            newStories = removeStoriesWithLowRating(newStories, row, newStoryCount);
         }
-        // don't need the info used to calculate rating any more
-        // just attach the retrieval time
         var rtime = now.toISOString();
-        newStories = _.map(newStories, (story) => {
-            return {
-                id: story.id,
-                btime: story.btime,
-                rtime: rtime,
-            };
-        });
-        var stories = _.concat(oldStories, newStories);
+        var stories = addStories(oldStories, newStories, rtime);
+
+        // see if we have the right number of stories
         var gap = limit - _.size(stories);
         if (gap > 0) {
-            // apply retrieval time rating adjustments
-            var context = ByRetrievalTime.createContext(backfillingStories, row);
-            _.eachRight(backfillingStories, (story) => {
-                story.rating += ByRetrievalTime.calculateRating(context, story);
-            });
-
-            // remove lowly rated stories
-            backfillingStories = _.orderBy(backfillingStories, [ 'rating', 'btime' ], [ 'asc', 'asc' ]);
-            backfillingStories = _.slice(backfillingStories, 0, gap);
-
-            // fill the gap
-            _.each(backfillingStories, (story) => {
-                var index = _.sortedIndexBy(stories, story, 'btime');
-                stories.splice(index, 0, story);
-            });
+            // backfill the gap
+            if (backfillingStories.length > gap) {
+                backfillingStories = removeStoriesWithLowRating(backfillingStories, row, gap);
+            }
+            stories = addStories(stories, backfillingStories, rtime);
         }
-        var earliestStory = _.minBy(stories, 'btime');
 
+        var earliestStory = _.minBy(stories, 'btime');
         if (latestStory) {
             row.details.latest = latestStory.btime;
         }
@@ -399,6 +373,55 @@ function chooseStories(row) {
     } else {
         return false;
     }
+}
+
+/**
+ * Return a new list with new stories added, ordered by btime
+ *
+ * @param  {Array<Object>} stories
+ * @param  {Array<Object>} newStories
+ * @param  {String} rtime
+ *
+ * @return {Array<Object>}
+ */
+function addStories(stories, newStories, rtime) {
+    if (_.isEmpty(newStories)) {
+        return stories;
+    }
+    stories = _.slice(stories);
+    _.each(newStories, (story) => {
+        // don't need the info used to calculate rating any more
+        // just attach the retrieval time
+        var s = {
+            id: story.id,
+            btime: story.btime,
+            rtime: rtime,
+        };
+        // insert it in the correct location based on publication or bump time
+        var index = _.sortedIndexBy(stories, s, 'btime');
+        stories.splice(index, 0, s);
+    });
+    return stories;
+}
+
+/**
+ * Return a list with the desired number of stories, removing those that are
+ * lowly rated
+ *
+ * @param  {Array<Object>} stories
+ * @param  {Listing} listing
+ * @param  {Number} desiredLength
+ *
+ * @return {Array<Object>}
+ */
+function removeStoriesWithLowRating(stories, listing, desiredLength) {
+    // apply retrieval time rating adjustments
+    var context = ByRetrievalTime.createContext(stories, row);
+    _.eachRight(stories, (story) => {
+        story.rating += ByRetrievalTime.calculateRating(context, story);
+    });
+    var storiesByRating = _.orderBy(stories, [ 'rating', 'btime' ], [ 'asc', 'asc' ]);
+    return _.slice(storiesByRating, newStories.length - desiredLength);
 }
 
 var HOUR = 60 * 60 * 1000;
