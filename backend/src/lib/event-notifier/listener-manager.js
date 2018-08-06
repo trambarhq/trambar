@@ -303,14 +303,16 @@ function packagePushMessage(message) {
     _.each(message.methods, (method) => {
         switch (method) {
             case 'fcm':
-                push.fcm = packageFirebaseMessage(message);
+                push['fcm'] = packageFirebaseMessage(message);
                 break;
             case 'apns':
-            case 'apns-sb'
-                push.apns = packageAppleMessage(message);
+                push['apns'] = packageAppleMessage(message);
+                break;
+            case 'apns-sb':
+                push['apns-sb'] = packageAppleMessage(message);
                 break;
             case 'wns':
-                push.wns = packageWindowsMessage(message);
+                push['wns'] = packageWindowsMessage(message);
                 break;
         }
     });
