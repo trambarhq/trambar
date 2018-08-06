@@ -68,7 +68,7 @@ $ct-include-colored-series: $ct-include-classes !default;
 $ct-include-alternative-responsive-containers: $ct-include-classes !default;
 
 // Series names and colors. This can be extended or customized as desired. Just add more series and colors.
-$ct-series-names: (a, b, c, d, e, f, g, h, i, j, k, l) !default;
+$ct-series-names: (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x) !default;
 $ct-series-colors: (
   hsl(30, 100%, 65%),
   hsl(60, 80%, 55%),
@@ -82,6 +82,19 @@ $ct-series-colors: (
   hsl(300, 80%, 55%),
   hsl(330, 100%, 65%),
   hsl(360, 80%, 45%),
+
+  hsl(45, 80%, 45%),
+  hsl(75, 60%, 35%),
+  hsl(105, 80%, 45%),
+  hsl(135, 60%, 25%),
+  hsl(165, 80%, 45%),
+  hsl(195, 60%, 35%),
+  hsl(225, 80%, 45%),
+  hsl(255, 60%, 25%),
+  hsl(285, 80%, 45%),
+  hsl(315, 60%, 35%),
+  hsl(345, 80%, 45%),
+  hsl(15, 60%, 25%),
 ) !default;
 
 @import "../../node_modules/chartist/dist/scss/chartist.scss";
