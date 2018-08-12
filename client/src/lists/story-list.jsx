@@ -218,7 +218,17 @@ var StoryListSync = module.exports.Sync = React.createClass({
             _.each(storiesBefore, (story) => {
                 if (story) {
                     if (!storiesAfterHash[story.id]) {
-                        nextProps.payloads.abandon(story);
+                        // TODO: clean this up
+                        var params = this.props.route.parameters;
+                        var location = {
+                            address: params.address,
+                            schema: params.schema,
+                            table: 'story'
+                        };
+                        var permanentID = this.props.database.findPermanentID(location, story.id);
+                        if (!permanentID || !storiesAfterHash[permanentID]) {
+                            nextProps.payloads.abandon(story);
+                        }
                     }
                 }
             });

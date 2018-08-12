@@ -298,6 +298,19 @@ Database.prototype.findTemporaryID = function(location, id) {
     return this.remoteDataSource.findTemporaryID(location, id);
 };
 
+/**
+ * Return the permanent ID assigned to an object after saving
+ *
+ * @param  {Object} location
+ * @param  {Number} id
+ *
+ * @return {Number|undefined}
+ */
+Database.prototype.findPermanentID = function(location, id) {
+    location = merge(this.context, location);
+    return this.remoteDataSource.findPermanentID(location, id);
+};
+
 function merge(context, query) {
     return _.assign({}, context, query);
 }

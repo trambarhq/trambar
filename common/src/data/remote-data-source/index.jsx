@@ -1420,6 +1420,23 @@ module.exports = React.createClass({
     },
 
     /**
+     * Return the permanent ID assigned to an object after saving
+     *
+     * @param  {Object} location
+     * @param  {Number} temporaryID
+     *
+     * @return {Number|undefined}
+     */
+    findPermanentID: function(location, temporaryID) {
+        var path = [ location.address, location.schema, location.table ];
+        var list = _.get(this.idMappings, path);
+        var entry = _.find(list, { temporary: temporaryID });
+        if (entry) {
+            return entry.permanent;
+        }
+    },
+
+    /**
      * Apply uncommitted changes to search results
      *
      * @param  {Search} search

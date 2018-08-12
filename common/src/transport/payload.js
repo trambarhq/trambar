@@ -85,13 +85,15 @@ Payload.prototype.attachFile = function(file, name) {
             blob: file,
             size: file.size,
             uploaded: 0,
-            name
+            sent: false,
+            name,
         });
     } else if (file instanceof CordovaFile && process.env.PLATFORM === 'cordova') {
         this.parts.push({
             cordovaFile: file,
             size: file.size,
             uploaded: 0,
+            sent: false,
             name
         });
     }
@@ -114,6 +116,7 @@ Payload.prototype.attachStream = function(stream, name) {
         stream: stream,
         size: stream.size,
         uploaded: stream.transferred,
+        sent: false,
         name
     });
     return this;
@@ -131,7 +134,7 @@ Payload.prototype.attachURL = function(url, name) {
     if (!name) {
         name = 'main';
     }
-    this.parts.push({ url, name });
+    this.parts.push({ url, name, sent: false });
     return this;
 };
 
@@ -152,7 +155,7 @@ Payload.prototype.attachStep = function(source, name) {
             break;
     }
     this.setPartOptions(options, source);
-    this.parts.push({ name });
+    this.parts.push({ name, sent: false });
     return this;
 };
 
@@ -196,7 +199,7 @@ Payload.prototype.send = function() {
         var delay = 1000;
         Async.do(() => {
             return this.sendPart(part).then(() => {
-                sent = true;
+                sent = part.sent = true;
             }).catch((err) => {
                 if (err.statusCode >= 400 && err.statusCode <= 499) {
                     throw err;
@@ -366,7 +369,9 @@ Payload.prototype.cancel = function() {
             if (!this.failed && !this.canceled) {
                 this.canceled = true;
                 return Promise.each(this.parts, (part) => {
-                    return this.cancelPart(part);
+                    if (!part.sent) {
+                        return this.cancelPart(part);
+                    }
                 }).then(() => {
                     return true;
                 });
@@ -384,6 +389,7 @@ Payload.prototype.cancel = function() {
  * @return {Promise}
  */
 Payload.prototype.cancelPart = function(part) {
+
     if (part.stream) {
         return this.cancelStream(part);
     } else if (part.blob) {
