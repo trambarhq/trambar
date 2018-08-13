@@ -91,17 +91,19 @@ Change.prototype.dispatch = function() {
                 if (err.statusCode >= 400 && err.statusCode <= 499) {
                     this.error = err;
                     this.rejectPromise(err);
+                    this.canceled = true;
+                } else {
+                    this.dispatched = false;
+                    // wait a bit then try again
+                    delay = Math.min(delay * 2, 10 * 1000);
+                    return Promise.delay(delay).then(() => {
+                        if (!this.canceled) {
+                            attempt++;
+                        } else {
+                            this.resolvePromise([]);
+                        }
+                    });
                 }
-                this.dispatched = false;
-                // wait a bit then try again
-                delay = Math.min(delay * 2, 10 * 1000);
-                return Promise.delay(delay).then(() => {
-                    if (!this.canceled) {
-                        attempt++;
-                    } else {
-                        this.resolvePromise([]);
-                    }
-                });
             });
         });
         return Async.end();
