@@ -182,9 +182,6 @@ module.exports = {
      * @param  {Object} credentials
      */
     checkWritePermission: function(objectReceived, objectBefore, credentials) {
-        if (!credentials.unrestricted) {
-            throw new HTTPError(400);
-        }
     },
 
     /**
@@ -713,7 +710,9 @@ module.exports = {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return Promise.mapSeries(objects, (objectReceived) => {
+        return Promise.mapSeries(objects, (objectReceived, index) => {
+            var objectBefore = originals[index];
+            this.checkWritePermission(objectReceived, objectBefore, credentials);
             // these properties cannot be modified from the client side
             return _.omit(objectReceived, 'gn', 'ctime', 'mtime');
         });

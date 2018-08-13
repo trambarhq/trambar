@@ -135,24 +135,21 @@ module.exports = _.create(Data, {
      * @return {Promise<Array>}
      */
     import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials, options).each((object) => {
-            if (object.user_id && object.user_id !== credentials.user.id) {
-                throw new HTTPError(403);
-            }
-            if (!object.deleted && !object.id) {
+        return Data.import.call(this, db, schema, objects, originals, credentials, options).each((deviceReceived) => {
+            if (!deviceReceived.deleted && !deviceReceived.id) {
                 // look for an existing record with the same UUID
-                if (object.user_id && object.uuid) {
+                if (deviceReceived.user_id && deviceReceived.uuid) {
                     var criteria = {
-                        user_id: object.user_id,
-                        uuid: object.uuid,
+                        user_id: deviceReceived.user_id,
+                        uuid: deviceReceived.uuid,
                         deleted: false
                     };
                     return this.findOne(db, schema, criteria, 'id').then((row) => {
                         if (row) {
-                            object.id = row.id;
+                            deviceReceived.id = row.id;
                         }
-                        if (object.type && object.details) {
-                            return fixDeviceDetails(object);
+                        if (deviceReceived.type && deviceReceived.details) {
+                            return fixDeviceDetails(deviceReceived);
                         }
                     });
                 }
@@ -180,6 +177,22 @@ module.exports = _.create(Data, {
             }
         }
         return false;
+    },
+
+    /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} deviceReceived
+     * @param  {Object} deviceBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(deviceReceived, deviceBefore, credentials) {
+        if (credentials.unrestricted) {
+            return;
+        }
+        if (deviceReceived.user_id && deviceReceived.user_id !== credentials.user.id) {
+            throw new HTTPError(403);
+        }
     },
 });
 

@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var HTTPError = require('errors/http-error');
 var ExternalData = require('accessors/external-data');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 
@@ -121,6 +122,20 @@ module.exports = _.create(ExternalData, {
             });
             return objects;
         });
+    },
+
+    /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} repoReceived
+     * @param  {Object} repoBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(repoReceived, repoBefore, credentials) {
+        if (credentials.unrestricted) {
+            return;
+        }
+        throw new HTTPError(403);
     },
 
     /**

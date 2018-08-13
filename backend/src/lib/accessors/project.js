@@ -206,6 +206,20 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} projectReceived
+     * @param  {Object} projectBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(projectReceived, projectBefore, credentials) {
+        if (credentials.unrestricted) {
+            return;
+        }
+        throw new HTTPError(403);
+    },
+
+    /**
      * Create associations between newly created or modified rows with
      * rows in other tables
      *

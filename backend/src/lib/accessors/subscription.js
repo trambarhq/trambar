@@ -131,7 +131,7 @@ module.exports = _.create(Data, {
             this.checkWritePermission(subscriptionReceived, subscriptionBefore, credentials);
 
             if (subscriptionBefore && subscriptionBefore.deleted) {
-                // restore it 
+                // restore it
                 subscriptionReceived.deleted = false;
             }
 
@@ -188,7 +188,7 @@ module.exports = _.create(Data, {
         // don't allow non-admin to monitor all schemas
         if (subscriptionReceived.schema === '*') {
             if (credentials.area !== 'admin') {
-                throw new HTTPError(400);
+                throw new HTTPError(403);
             }
         }
     }

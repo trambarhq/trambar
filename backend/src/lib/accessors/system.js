@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var HTTPError = require('errors/http-error');
 var Data = require('accessors/data');
 
 module.exports = _.create(Data, {
@@ -112,5 +113,19 @@ module.exports = _.create(Data, {
             });
             return objects;
         });
+    },
+
+    /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} systemReceived
+     * @param  {Object} systemBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(systemReceived, systemBefore, credentials) {
+        if (credentials.unrestricted) {
+            return;
+        }
+        throw new HTTPError(403);
     },
 });

@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
+var HTTPError = require('errors/http-error');
 var ExternalData = require('accessors/external-data');
 
 module.exports = _.create(ExternalData, {
@@ -144,5 +145,19 @@ module.exports = _.create(ExternalData, {
             var roleBefore = originals[index];
             return this.ensureUniqueName(db, schema, roleBefore, roleReceived);
         });
+    },
+
+    /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} roleReceived
+     * @param  {Object} roleBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(roleReceived, roleBefore, credentials) {
+        if (credentials.unrestricted) {
+            return;
+        }
+        throw new HTTPError(403);
     },
 });

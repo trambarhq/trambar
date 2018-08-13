@@ -323,8 +323,8 @@ module.exports = _.create(ExternalData, {
     /**
      * Throw an exception if modifications aren't permitted
      *
-     * @param  {Object} storyReceived
-     * @param  {Object} storyBefore
+     * @param  {Object} userReceived
+     * @param  {Object} userBefore
      * @param  {Object} credentials
      */
     checkWritePermission: function(userReceived, userBefore, credentials) {
@@ -333,11 +333,11 @@ module.exports = _.create(ExternalData, {
         }
         if (!userBefore) {
             // normal user cannot create new user
-            throw new HTTPError(400);
+            throw new HTTPError(403);
         }
         if (userBefore.id !== credentials.user.id) {
             // user cannot modify someone else
-            throw new HTTPError(400);
+            throw new HTTPError(403);
         }
         if (userBefore.deleted) {
             // cannot modified a deleted user

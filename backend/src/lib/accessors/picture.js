@@ -111,4 +111,18 @@ module.exports = _.create(Data, {
             return objects;
         });
     },
+
+    /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} pictureReceived
+     * @param  {Object} pictureBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(pictureReceived, pictureBefore, credentials) {
+        if (credentials.unrestricted) {
+            return;
+        }
+        throw new HTTPError(403);
+    },
 });

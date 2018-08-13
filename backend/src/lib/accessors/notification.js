@@ -175,6 +175,17 @@ module.exports = _.create(Data, {
     },
 
     /**
+     * Throw an exception if modifications aren't permitted
+     *
+     * @param  {Object} notificationReceived
+     * @param  {Object} notificationBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission: function(notificationReceived, notificationBefore, credentials) {
+        throw new HTTPError(400);
+    },
+
+    /**
      * Mark notifications associated with stories or reactions as deleted
      *
      * @param  {Database} db
