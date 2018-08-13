@@ -33,6 +33,8 @@ var CornerPopUp = require('widgets/corner-pop-up');
 
 require('./story-view.scss');
 
+const AUTOSAVE_DURATION = 2000;
+
 module.exports = React.createClass({
     displayName: 'StoryView',
     mixins: [ UpdateCheck ],
@@ -564,52 +566,30 @@ module.exports = React.createClass({
     },
 
     /**
-     * Save a story after a delay
-     *
-     * @param  {Story} story
-     * @param  {Number} delay
-     */
-    autosaveStory: function(story, delay) {
-        this.cancelAutosave();
-        this.autosaveTimeout = setTimeout(() => {
-            this.saveStory(story);
-        }, delay);
-        this.autosaveUnloadHandler = () => {
-            this.saveStory(story);
-        };
-        window.addEventListener('beforeunload', this.autosaveUnloadHandler);
-    },
-
-    /**
-     * Cancel any scheduled autosave operation
-     */
-    cancelAutosave: function() {
-        if (this.autosaveTimeout) {
-            clearTimeout(this.autosaveTimeout);
-            this.autosaveTimeout = 0;
-        }
-        if (this.autosaveUnloadHandler) {
-            window.removeEventListener('beforeunload', this.autosaveUnloadHandler);
-            this.autosaveUnloadHandler = null;
-        }
-    },
-
-    /**
      * Save story to remote database
      *
      * @param  {Story} story
+     * @param  {Boolean|undefined} immediate
      *
      * @return {Promise<Story>}
      */
-    saveStory: function(story) {
-        this.cancelAutosave();
-
+    saveStory: function(story, immediate) {
         var params = this.props.route.parameters;
+        var options = {
+            delay: (immediate) ? undefined : AUTOSAVE_DURATION,
+            onConflict: (evt) => {
+                // perform merge on conflict, if the object still exists
+                // otherwise saving will be cancelled
+                if (StoryUtils.mergeRemoteChanges(evt.local, evt.remote, original)) {
+                    evt.preventDefault();
+                }
+            },
+        };
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             var newStory = !StoryUtils.isSaved(story);
             var bookmarkRecipients = this.state.options.bookmarkRecipients;
-            return db.saveOne({ table: 'story' }, story).then((story) => {
+            return db.saveOne({ table: 'story' }, story, options).then((story) => {
                 if (newStory && !_.isEmpty(bookmarkRecipients)) {
                     // bookmarks were added after the story was published but
                     // not yet saved
@@ -829,7 +809,7 @@ module.exports = React.createClass({
      * @param  {Object} evt
      */
     handleStoryChange: function(evt) {
-        this.autosaveStory(evt.story, 1000);
+        this.saveStory(evt.story);
     },
 
     /**

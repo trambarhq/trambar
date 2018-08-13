@@ -895,7 +895,6 @@ module.exports = React.createClass({
      * @return {Promise<Story>}
      */
     saveStory: function(story, immediate) {
-        // send images and videos to server
         var params = this.props.route.parameters;
         var resources = story.details.resources || [];
         var original = this.state.original;
@@ -912,6 +911,7 @@ module.exports = React.createClass({
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'story' }, story, options).then((story) => {
+                // send images and videos to server
                 this.props.payloads.dispatch(story);
                 return story;
             });
