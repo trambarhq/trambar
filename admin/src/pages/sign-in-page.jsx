@@ -219,9 +219,9 @@ var SignInPageSync = module.exports.Sync = React.createClass({
             className: 'oauth-button',
             href: url,
             onClick: this.handleOAuthButtonClick,
-            'data-type': server.type,
+            'data-id': server.id,
         };
-        var error = this.state.errors[server.type];
+        var error = this.state.errors[server.id];
         if (error) {
             var t = this.props.locale.translate;
             var text = t(`sign-in-error-${error.reason}`);
@@ -298,14 +298,14 @@ var SignInPageSync = module.exports.Sync = React.createClass({
      */
     handleOAuthButtonClick: function(evt) {
         var url = evt.currentTarget.getAttribute('href');
-        var provider = evt.currentTarget.getAttribute('data-type');
+        var serverID = parseInt(evt.currentTarget.getAttribute('data-id'))
         evt.preventDefault();
         return this.openPopUpWindow(url).then(() => {
             // retrieve authorization object from server
             var db = this.props.database.use({ by: this });
             return db.checkSession().catch((err) => {
                 var errors = _.clone(this.state.errors);
-                errors[provider] = err;
+                errors[serverID] = err;
                 console.log(err);
                 this.setState({ errors });
             });
