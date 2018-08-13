@@ -22,6 +22,7 @@ var OptionList = require('widgets/option-list');
 var ActivityChart = require('widgets/activity-chart');
 var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
+var UnexpectedError = require('widgets/unexpected-error');
 
 require('./repo-summary-page.scss');
 
@@ -141,6 +142,8 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         });
         return {
             newRepo: null,
+            saving: false,
+            problems: {},
         };
     },
 
@@ -247,6 +250,8 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
                     newRepo: null,
                     hasChanges: false,
                 });
+            } else {
+                this.setState({ problems: {} });
             }
         }
     },
@@ -265,6 +270,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
             <div className="repo-summary-page">
                 {this.renderButtons()}
                 <h2>{t('repo-summary-$title', title)}</h2>
+                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
                 {this.renderForm()}
                 {this.renderInstructions()}
                 {this.renderChart()}
@@ -460,7 +466,10 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
             repoIds = _.difference(repoIds, [ repo.id ]);
         }
         var projectAfter = _.assign({}, this.props.project, { repo_ids: repoIds });
-        return db.saveOne({ table: 'project' }, projectAfter);
+        return db.saveOne({ table: 'project' }, projectAfter).catch((err) => {
+            var problems = { unexpected: err.message };
+            this.setState({ problems });
+        });
     },
 
     /**
@@ -474,7 +483,9 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
         return this.components.confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeInclusion(false).then((project) => {
-                    return this.returnToList();
+                    if (project) {
+                        return this.returnToList();
+                    }
                 });
             }
         });
@@ -528,13 +539,21 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {Event} evt
      */
     handleSaveClick: function(evt) {
+        if (this.state.saving) {
+            return;
+        }
         var db = this.props.database.use({ schema: 'global', by: this });
         var repo = this.getRepo();
-        return db.start().then((userId) => {
-            return db.saveOne({ table: 'repo' }, repo).then((repo) => {
-                this.setState({ hasChanges: false }, () => {
-                    this.setEditability(false);
+        this.setState({ saving: true, problems: {} }, () => {
+            return db.start().then((userId) => {
+                return db.saveOne({ table: 'repo' }, repo).then((repo) => {
+                    this.setState({ hasChanges: false, saving: false }, () => {
+                        this.setEditability(false);
+                    });
                 });
+            }).catch((err) => {
+                var problems = { unexpected: err.message };
+                this.setState({ problems, saving: false });
             });
         });
     },

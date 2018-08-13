@@ -23,6 +23,7 @@ var RoleTooltip = require('tooltips/role-tooltip');
 var ActionBadge = require('widgets/action-badge');
 var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
 var DataLossWarning = require('widgets/data-loss-warning');
+var UnexpectedError = require('widgets/unexpected-error');
 
 require('./member-list-page.scss');
 
@@ -144,6 +145,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             addingUserIds: [],
             hasChanges: false,
             renderingFullList: this.isEditing(),
+            problems: {},
         };
     },
 
@@ -190,7 +192,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             } else {
                 setTimeout(() => {
                     if (!this.isEditing()) {
-                        this.setState({ renderingFullList: false });
+                        this.setState({ renderingFullList: false, problems: {} });
                     }
                 }, 500);
             }
@@ -208,6 +210,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
             <div className="member-list-page">
                 {this.renderButtons()}
                 <h2>{t('member-list-title')}</h2>
+                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
                 {this.renderTable()}
                 <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
             </div>
@@ -700,6 +703,9 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                     return this.setEditability(false);
                 });
                 return null;
+            }).catch((err) => {
+                var problems = { unexpected: err.message };
+                this.setState({ problems });
             });
         });
     },

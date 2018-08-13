@@ -18,6 +18,7 @@ var MultilingualTextField = require('widgets/multilingual-text-field');
 var OptionList = require('widgets/option-list');
 var ImageSelector = require('widgets/image-selector');
 var DataLossWarning = require('widgets/data-loss-warning');
+var UnexpectedError = require('widgets/unexpected-error');
 
 require('./settings-page.scss');
 
@@ -117,6 +118,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
         return {
             newSystem: null,
             saving: false,
+            problems: {},
         };
     },
 
@@ -228,6 +230,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             <div className="settings-page">
                 {this.renderButtons()}
                 <h2>{t('settings-title')}</h2>
+                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
                 {this.renderForm()}
                 {this.renderInstructions()}
             </div>
@@ -511,14 +514,14 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             return db.start().then((userId) => {
                 return db.saveOne({ table: 'system' }, system).then((system) => {
                     this.props.payloads.dispatch(system);
-                    this.setState({ hasChanges: false, saving: false }, () => {
+                    this.setState({ hasChanges: false, saving: false, problems: {} }, () => {
                         this.setEditability(false);
                     });
                     return null;
                 });
             }).catch((err) => {
-                console.error(err);
-                this.setState({ saving: false });
+                var problems = { unexpected: err.message };
+                this.setState({ problems, saving: false });
             });
         });
     },

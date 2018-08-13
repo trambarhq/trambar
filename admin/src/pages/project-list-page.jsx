@@ -32,6 +32,7 @@ var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
 var ActionBadge = require('widgets/action-badge');
 var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
+var UnexpectedError = require('widgets/unexpected-error');
 
 require('./project-list-page.scss');
 
@@ -153,6 +154,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             archivingProjectIds: [],
             hasChanges: false,
             renderingFullList: this.isEditing(),
+            problems: {},
         };
     },
 
@@ -200,7 +202,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             } else {
                 setTimeout(() => {
                     if (!this.isEditing()) {
-                        this.setState({ renderingFullList: false });
+                        this.setState({ renderingFullList: false, problems: {} });
                     }
                 }, 500);
             }
@@ -218,6 +220,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             <div className="project-list-page">
                 {this.renderButtons()}
                 <h2>{t('project-list-title')}</h2>
+                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
                 {this.renderTable()}
                 <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
                 <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
@@ -669,30 +672,35 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
         ];
         var confirmation = this.components.confirmation;
         return confirmation.askSeries(messages, bypass).then((confirmed) => {
-            if (confirmed) {
-                var db = this.props.database.use({ schema: 'global', by: this });
-                return db.start().then((userId) => {
-                    var projectsAfter = [];
-                    _.each(this.props.projects, (project) => {
-                        var flags = {};
-                        if (_.includes(archiving, project.id)) {
-                            flags.archived = true;
-                        } else if (_.includes(restoring, project.id)) {
-                            flags.archived = flags.deleted = false;
-                        } else {
-                            return;
-                        }
-                        var projectAfter = _.assign({}, project, flags);
-                        projectsAfter.push(projectAfter);
-                    });
-                    return db.save({ table: 'project' }, projectsAfter).then((projects) => {
-                        this.setState({ hasChanges: false }, () => {
-                            this.setEditability(false);
-                        });
-                        return null;
-                    });
-                });
+            if (!confirmed) {
+                return;
             }
+            this.setState({ problems: {} });
+            var db = this.props.database.use({ schema: 'global', by: this });
+            return db.start().then((userId) => {
+                var projectsAfter = [];
+                _.each(this.props.projects, (project) => {
+                    var flags = {};
+                    if (_.includes(archiving, project.id)) {
+                        flags.archived = true;
+                    } else if (_.includes(restoring, project.id)) {
+                        flags.archived = flags.deleted = false;
+                    } else {
+                        return;
+                    }
+                    var projectAfter = _.assign({}, project, flags);
+                    projectsAfter.push(projectAfter);
+                });
+                return db.save({ table: 'project' }, projectsAfter).then((projects) => {
+                    this.setState({ hasChanges: false }, () => {
+                        this.setEditability(false);
+                    });
+                    return null;
+                }).catch((err) => {
+                    var problems = { unexpected: err.message };
+                    this.setState({ problems });
+                });
+            });
         });
     },
 

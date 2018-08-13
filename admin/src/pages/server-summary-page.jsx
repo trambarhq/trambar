@@ -29,6 +29,7 @@ var TaskList = require('widgets/task-list');
 var InputError = require('widgets/input-error');
 var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
+var UnexpectedError = require('widgets/unexpected-error');
 
 require('./server-summary-page.scss');
 
@@ -299,11 +300,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 // use id of newly created server
                 params.server = newServer.id;
             }
-            return route.replace(module.exports, params).then((replaced) => {
-                if (replaced) {
-                    this.setState({ problems: {} });
-                }
-            });
+            return route.replace(module.exports, params);
         }
     },
 
@@ -345,10 +342,14 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      */
     componentWillReceiveProps: function(nextProps) {
         if (this.isEditing() !== this.isEditing(nextProps)) {
-            this.setState({
-                newServer: null,
-                hasChanges: false,
-            });
+            if (this.isEditing(nextProps)) {
+                this.setState({
+                    newServer: null,
+                    hasChanges: false,
+                });
+            } else {
+                this.setState({ problems: {} });
+            }
         }
     },
 
@@ -369,6 +370,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             <div className="server-summary-page">
                 {this.renderButtons()}
                 <h2>{t('server-summary-member-$name', title)}</h2>
+                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
                 {this.renderForm()}
                 {this.renderInstructions()}
                 {this.renderTaskList()}
@@ -1133,7 +1135,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
     changeFlags: function(flags) {
         var db = this.props.database.use({ schema: 'global', by: this });
         var serverAfter = _.assign({}, this.props.server, flags);
-        return db.saveOne({ table: 'server' }, serverAfter);
+        return db.saveOne({ table: 'server' }, serverAfter).catch((err) => {
+            var problems = { unexpected: err.message };
+            this.setState({ problems });
+        });
     },
 
     /**
@@ -1147,8 +1152,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var confirmation = this.components.confirmation;
         return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
-                return this.changeFlags({ disabled: true }).then(() => {
-                    return this.returnToList();
+                return this.changeFlags({ disabled: true }).then((server) => {
+                    if (server) {
+                        return this.returnToList();
+                    }
                 });
             }
         });
@@ -1165,8 +1172,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         var confirmation = this.components.confirmation;
         return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
-                return this.changeFlags({ deleted: true }).then(() => {
-                    return this.returnToList();
+                return this.changeFlags({ deleted: true }).then((server) => {
+                    if (server) {
+                        return this.returnToList();
+                    }
                 });
             }
         });
@@ -1297,12 +1306,11 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                     return null;
                 });
             }).catch((err) => {
-                var problems = {};
+                var problems;
                 if (err.statusCode === 409) {
-                    problems.name = 'validation-duplicate-server-name';
+                    problems = { name: 'validation-duplicate-server-name' };
                 } else {
-                    problems.general = err.message;
-                    console.error(err);
+                    problems = { unexpected: err.message };
                 }
                 this.setState({ problems, saving: false });
             });

@@ -26,6 +26,7 @@ var ActivityChart = require('widgets/activity-chart');
 var InputError = require('widgets/input-error');
 var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
+var UnexpectedError = require('widgets/unexpected-error');
 
 require('./project-summary-page.scss');
 
@@ -321,6 +322,8 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                     newProject: null,
                     hasChanges: false,
                 });
+            } else {
+                this.setState({ problems: {} });
             }
         }
     },
@@ -339,6 +342,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             <div className="project-summary-page">
                 {this.renderButtons()}
                 <h2>{t('project-summary-$title', title)}</h2>
+                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
                 {this.renderForm()}
                 {this.renderInstructions()}
                 {this.renderChart()}
@@ -670,7 +674,10 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
     changeFlags: function(flags) {
         var db = this.props.database.use({ schema: 'global', by: this });
         var projectAfter = _.assign({}, this.props.project, flags);
-        return db.saveOne({ table: 'project' }, projectAfter);
+        return db.saveOne({ table: 'project' }, projectAfter).catch((err) => {
+            var problems = { unexpected: err.message };
+            this.setState({ problems });
+        });
     },
 
     /**
@@ -684,7 +691,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         return this.components.confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ archived: true }).then((project) => {
-                    return this.returnToList();
+                    if (project) {
+                        return this.returnToList();
+                    }
                 });
             }
         });
@@ -701,7 +710,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
         return this.components.confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ deleted: true }).then((project) => {
-                    return this.returnToList();
+                    if (project)  {
+                        return this.returnToList();
+                    }
                 });
             }
         });
@@ -787,10 +798,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
             }).catch((err) => {
                 var problems = {};
                 if (err.statusCode === 409) {
-                    problems.name = 'validation-duplicate-project-name';
+                    problems = { name: 'validation-duplicate-project-name' };
                 } else {
-                    problems.general = err.message;
-                    console.error(err);
+                    problems = { unexpected: err.message };
                 }
                 this.setState({ problems, saving: false });
             });

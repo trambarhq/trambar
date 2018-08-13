@@ -20,6 +20,7 @@ var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
 var ActionBadge = require('widgets/action-badge');
 var ActionConfirmation = require('widgets/action-confirmation');
 var DataLossWarning = require('widgets/data-loss-warning');
+var UnexpectedError = require('widgets/unexpected-error');
 
 require('./role-list-page.scss');
 
@@ -129,6 +130,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
             disablingRoleIds: [],
             hasChanges: false,
             renderingFullList: this.isEditing(),
+            problems: {},
         };
     },
 
@@ -176,7 +178,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
             } else {
                 setTimeout(() => {
                     if (!this.isEditing()) {
-                        this.setState({ renderingFullList: false });
+                        this.setState({ renderingFullList: false, problems: {} });
                     }
                 }, 500);
             }
@@ -194,6 +196,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
             <div className="role-list-page">
                 {this.renderButtons()}
                 <h2>{t('role-list-title')}</h2>
+                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
                 {this.renderTable()}
                 <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
                 <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
@@ -502,30 +505,35 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
         ];
         var confirmation = this.components.confirmation;
         return confirmation.askSeries(messages, bypass).then((confirmed) => {
-            if (confirmed) {
-                var db = this.props.database.use({ schema: 'global', by: this });
-                return db.start().then((userId) => {
-                    var rolesAfter = [];
-                    _.each(this.props.roles, (role) => {
-                        var flags = {};
-                        if (_.includes(disabling, role.id)) {
-                            flags.disabled = true;
-                        } else if (_.includes(restoring, role.id)) {
-                            flags.disabled = flags.deleted = false;
-                        } else {
-                            return;
-                        }
-                        var roleAfter = _.assign({}, role, flags);
-                        rolesAfter.push(roleAfter);
-                    });
-                    return db.save({ table: 'role' }, rolesAfter).then((roles) => {
-                        this.setState({ hasChanges: false }, () => {
-                            this.setEditability(false);
-                        });
-                        return null;
-                    });
-                });
+            if (!confirmed) {
+                return;
             }
+            this.setState({ problems: {} });
+            var db = this.props.database.use({ schema: 'global', by: this });
+            return db.start().then((userId) => {
+                var rolesAfter = [];
+                _.each(this.props.roles, (role) => {
+                    var flags = {};
+                    if (_.includes(disabling, role.id)) {
+                        flags.disabled = true;
+                    } else if (_.includes(restoring, role.id)) {
+                        flags.disabled = flags.deleted = false;
+                    } else {
+                        return;
+                    }
+                    var roleAfter = _.assign({}, role, flags);
+                    rolesAfter.push(roleAfter);
+                });
+                return db.save({ table: 'role' }, rolesAfter).then((roles) => {
+                    this.setState({ hasChanges: false }, () => {
+                        this.setEditability(false);
+                    });
+                    return null;
+                }).catch((err) => {
+                    var problems = { unexpected: err.message };
+                    this.setState({ problems });
+                });
+            });
         });
     },
 
