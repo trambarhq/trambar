@@ -307,14 +307,16 @@ Payload.prototype.sendCordovaFile = function(part) {
 
         BackgroundFileTransfer.send(token, file.fullPath, url, options);
         part.uploaded = 0;
-    }).then((text) => {
-        var res;
-        try {
-            res = JSON.parse(text);
-            this.associateRemoteURL(res.url, file);
-        } catch(err) {
-            res = {};
+    }).then((res) => {
+        if (!(res instanceof Object)) {
+            // plugin didn't automatically decode JSON response
+            try {
+                res = JSON.parse(res);
+            } catch(err) {
+                res = {};
+            }
         }
+        this.associateRemoteURL(res.url, file);
         return res;
     });
 };
