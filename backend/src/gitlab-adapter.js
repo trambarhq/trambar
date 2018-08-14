@@ -75,6 +75,7 @@ function start() {
             // update repo lists, in case they were added while Trambar is down
             var criteria = {
                 type: 'gitlab',
+                disabled: false,
                 deleted: false
             };
             return Server.find(db, 'global', criteria, '*').each((server) => {

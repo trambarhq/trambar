@@ -546,6 +546,9 @@ function findRepoServer(db, repo) {
         if (!server) {
             throw new Error('Server not found');
         }
+        if (server.disabled) {
+            throw new Error('Server is disabled');
+        }
         return server;
     });
 }

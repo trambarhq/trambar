@@ -277,6 +277,8 @@ function updateAccessTokens(server, response) {
     });
 }
 
+var unreachableLocations = [];
+
 /**
  * Perform a HTTP request, using either a user impersonation token or the OAuth
  * access token stored in the server object to assert authorization
@@ -321,6 +323,7 @@ function request(server, uri, method, query, payload, userToken) {
         return attempt(options).then((body) => {
             result = body;
             succeeded = true;
+            _.pull(unreachableLocations, baseURL);
         }).catch((err) => {
             // throw the error if it's HTTP 4xx
             lastError = err;
@@ -335,15 +338,19 @@ function request(server, uri, method, query, payload, userToken) {
     });
     Async.while(() => {
         if (!succeeded) {
-            if (attempts < 10) {
+            var unreachable = _.includes(unreachableLocations, baseURL);
+            if (attempts < 8 && !unreachable) {
                 // try again after a delay
                 return Promise.delay(delayInterval).then(() => {
-                    console.log(`Attempting to access ${uri} at ${baseURL} (${attempts}/10)...`);
                     attempts++;
+                    console.log(`Attempting to access ${uri} at ${baseURL} (${attempts}/8)...`);
                     delayInterval *= 2;
                     return true;
                 });
             } else {
+                if (!unreachable) {
+                    unreachableLocations.push(baseURL);
+                }
                 throw lastError;
             }
         }
