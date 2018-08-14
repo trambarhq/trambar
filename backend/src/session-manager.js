@@ -490,10 +490,12 @@ function handleLegalDocumentRequest(req, res) {
 function authorizeUser(session, user, details, activate) {
     return createRandomToken(16).then((token) => {
         if (session.area === 'admin' && user.type !== 'admin') {
-            throw new HTTPError(403, {
-                reason: 'restricted-area',
-                username: user.username,
-            });
+            if (!process.env.ADMIN_GUEST_MODE) {
+                throw new HTTPError(403, {
+                    reason: 'restricted-area',
+                    username: user.username,
+                });
+            }
         }
         if (user.disabled) {
             throw new HTTPError(403, {
@@ -986,6 +988,10 @@ function canProvideAccess(server, area) {
                 switch (server.type) {
                     case 'gitlab':
                         return true;
+                    default:
+                        if (process.env.ADMIN_GUEST_MODE) {
+                            return true;
+                        }
                 }
             } else if (area === 'client') {
                 switch (server.type) {

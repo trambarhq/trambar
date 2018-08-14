@@ -146,7 +146,7 @@ module.exports = _.create(Data, {
                 object.etime = row.etime;
                 object.failed = row.failed;
                 object.completion = row.completion;
-                if (credentials.unrestricted) {
+                if (credentials.area === 'admin') {
                     object.server_id = row.server_id;
                     object.options = row.options;
                 } else {
