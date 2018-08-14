@@ -215,6 +215,8 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                     newSystem: null,
                     hasChanges: false,
                 });
+            } else {
+                this.setState({ problems: {} });
             }
         }
     },

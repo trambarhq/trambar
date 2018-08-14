@@ -306,7 +306,6 @@ var SignInPageSync = module.exports.Sync = React.createClass({
             return db.checkSession().catch((err) => {
                 var errors = _.clone(this.state.errors);
                 errors[serverID] = err;
-                console.log(err);
                 this.setState({ errors });
             });
         });

@@ -339,13 +339,21 @@ module.exports = _.create(ExternalData, {
             // user cannot modify someone else
             throw new HTTPError(403);
         }
+        if (userReceived.deleted || userReceived.disabled) {
+            // users cannot delete themselves
+            throw new HTTPError(400);
+        }
         if (userBefore.deleted) {
             // cannot modified a deleted user
             throw new HTTPError(400);
         }
-        if (userReceived.deleted) {
-            // users cannot delete themselves
-            throw new HTTPError(400);
+        if (userReceived.type !== userBefore.type) {
+            // user cannot change his own type
+            throw new HTTPError(403);
+        }
+        if (!_.isEqual(userReceived.role_ids, userBefore.role_ids)) {
+            // user cannot change his roles
+            throw new HTTPError(403);
         }
     },
 
