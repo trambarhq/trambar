@@ -55,13 +55,6 @@ function start() {
                 });
             });
         }).then(() => {
-            // install hooks--after a short delay during development to keep
-            // hooks from getting zapped while nodemon restarts
-            var delay = (process.env.NODE_ENV === 'production') ? 0 : 2000;
-            return getServerAddress(db).delay(delay).then((host) => {
-                return HookManager.installHooks(db, host);
-            });
-        }).then(() => {
             // listen for database change events
             var tables = [
                 'project',
@@ -71,6 +64,13 @@ function start() {
                 'task',
             ];
             return db.listen(tables, 'change', handleDatabaseChanges, 100);
+        }).then(() => {
+            // install hooks--after a short delay during development to keep
+            // hooks from getting zapped while nodemon restarts
+            var delay = (process.env.NODE_ENV === 'production') ? 0 : 2000;
+            return getServerAddress(db).delay(delay).then((host) => {
+                return HookManager.installHooks(db, host);
+            });
         }).then(() => {
             // update repo lists, in case they were added while Trambar is down
             var criteria = {
