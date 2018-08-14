@@ -83,12 +83,17 @@ function attachResources(text, resources, address) {
  */
 function getURL(res, address) {
     var url = res.url;
-    if (res.type === 'video') {
-        // use transcoded version if it isn't MP4
-        if (res.format !== 'mp4') {
+    if (url) {
+        if (res.type === 'video' && res.format === 'flv') {
+            // use transcoded version if it is Flash video
             var version = _.maxBy(res.versions, 'bitrates.video') ;
             if (version) {
                 url += `.${version.name}.${version.format}`;
+            }
+        } else {
+            if (res.filename) {
+                // attach the original filename
+                url += `/original/${encodeURI(res.filename)}`;
             }
         }
     }

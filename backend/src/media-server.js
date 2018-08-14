@@ -43,9 +43,12 @@ function start() {
         app.use(CORS());
         app.use(BodyParser.json());
         app.set('json spaces', 2);
+        app.get('/srv/media/images/:filename/original/:alias', handleImageOriginalRequest);
         app.get('/srv/media/images/:hash/:filename', handleImageFiltersRequest);
         app.get('/srv/media/images/:filename', handleImageOriginalRequest);
+        app.get('/srv/media/videos/:filename/original/:alias', handleVideoRequest);
         app.get('/srv/media/videos/:filename', handleVideoRequest);
+        app.get('/srv/media/audios/:filename/original/:alias', handleAudioRequest);
         app.get('/srv/media/audios/:filename', handleAudioRequest);
         app.get('/srv/media/cliparts/:filename', handleClipartRequest);
         app.post('/srv/media/html/poster/:schema/', upload.array(), handleWebsitePoster);
