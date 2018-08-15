@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var Crypto = require('crypto');
 var TaskLog = require('task-log');
+var HTTPError = require('errors/http-error');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var Transport = require('gitlab-adapter/transport');
@@ -64,12 +65,12 @@ function importIssueNote(db, system, server, repo, project, author, glEvent) {
     };
     return Story.findOne(db, schema, criteria, '*').then((story) => {
         if (!story) {
-            throw new Error('Story not found');
+            throw new HTTPError(404, 'Story not found');
         }
         var reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
         return Reaction.insertOne(db, schema, reactioNew).return(story);
     }).catch((err) => {
-        console.error(err);
+        console.error(err.message);
         return null;
     });
 }
@@ -96,12 +97,12 @@ function importMergeRequestNote(db, system, server, repo, project, author, glEve
     };
     return Story.findOne(db, schema, criteria, '*').then((story) => {
         if (!story) {
-            throw new Error('Story not found');
+            throw new HTTPError(404, 'Story not found');
         }
         var reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
         return Reaction.insertOne(db, schema, reactioNew).return(story);
     }).catch((err) => {
-        console.error(err);
+        console.error(err.message);
         return null;
     });
 }
@@ -124,7 +125,7 @@ function importCommitNote(db, system, server, repo, project, author, glEvent, gl
     // in the activity log entry
     return findCommitId(db, server, repo, glEvent, glHookEvent).then((commitId) => {
         if (!commitId) {
-            throw new Error('Commit not found');
+            throw new HTTPError(404, 'Commit not found');
         }
         var schema = project.name;
         var criteria = {
@@ -134,13 +135,13 @@ function importCommitNote(db, system, server, repo, project, author, glEvent, gl
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
             if (!story) {
-                throw new Error('Story not found');
+                throw new HTTPError(404, 'Story not found');
             }
             var reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
             return Reaction.insertOne(db, schema, reactioNew).return(story);
         });
     }).catch((err) => {
-        console.error(err);
+        console.error(err.message);
         return null;
     });
 }

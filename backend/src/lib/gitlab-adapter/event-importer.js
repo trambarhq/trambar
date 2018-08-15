@@ -93,7 +93,7 @@ function importEvents(db, system, server, repo, project, glHookEvent) {
         }).tap(() => {
             taskLog.finish();
         }).tapCatch((err) => {
-            console.error(err);
+            console.error(err.message);
             taskLog.abort(err);
         });
     });

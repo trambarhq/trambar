@@ -3,6 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var TaskLog = require('task-log');
 var Localization = require('localization');
+var HTTPError = require('errors/http-error');
 var MarkdownExporter = require('utils/markdown-exporter');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 
@@ -168,7 +169,7 @@ function exportStoryRemove(db, system, project, story, repo, task) {
             });
         });
     }).catch((err) => {
-        console.error(err);
+        console.error(err.message);
         return null;
     });
 }
@@ -236,7 +237,7 @@ function exportStoryMove(db, system, project, story, fromRepo, toRepo, task) {
                 });
             });
         }).catch((err) => {
-            console.error(err);
+            console.error(err.message);
             return null;
         });
     });
@@ -475,7 +476,7 @@ function findSourceStory(db, project, task) {
     };
     return Story.findOne(db, project.name, criteria, '*').then((story) => {
         if (!story) {
-            throw new Error('Story not found');
+            throw new HTTPError(404, 'Story not found');
         }
         return story;
     });
@@ -496,7 +497,7 @@ function findDestinationRepo(db, task) {
     }
     return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
         if (!repo) {
-            throw new Error('Repo not found');
+            throw new HTTPError(404, 'Repo not found');
         }
         return repo;
     });
@@ -522,7 +523,7 @@ function findCurrentRepo(db, story) {
     };
     return Repo.findOne(db, 'global', criteria, '*').then((repo) => {
         if (!repo) {
-            throw new Error('Repo not found');
+            throw new HTTPError(404, 'Repo not found');
         }
         return repo;
     });
@@ -544,10 +545,10 @@ function findRepoServer(db, repo) {
     };
     return Server.findOne(db, 'global', criteria, '*').then((server) => {
         if (!server) {
-            throw new Error('Server not found');
+            throw new HTTPError(404, 'Server not found');
         }
         if (server.disabled) {
-            throw new Error('Server is disabled');
+            throw new HTTPError(403, 'Server is disabled');
         }
         return server;
     });
@@ -560,7 +561,7 @@ function findActingUser(db, task) {
     };
     return User.findOne(db, 'global', criteria, '*').then((user) => {
         if (!user) {
-            throw new Error('User not found');
+            throw new HTTPError(404, 'User not found');
         }
         return user;
     });
@@ -599,7 +600,7 @@ function findIssueLink(story) {
 function findUserLink(user, server) {
     var link = ExternalDataUtils.findLink(user, server);
     if (!link) {
-        throw new Error('User is not associated with a GitLab account')
+        throw new HTTPError(403, 'User is not associated with a GitLab account')
     }
     return link;
 }

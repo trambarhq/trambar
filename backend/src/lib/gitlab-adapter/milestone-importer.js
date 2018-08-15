@@ -11,6 +11,7 @@ var Story = require('accessors/story');
 
 module.exports = {
     importEvent,
+    updateMilestones,
 };
 
 /**
@@ -49,6 +50,54 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
 }
 
 /**
+ * Update properties of milestone stories
+ *
+ * @param  {Database} db
+ * @param  {System} system
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Project} project
+ *
+ * @return {Promise<Array>}
+ */
+function updateMilestones(db, system, server, repo, project) {
+    var schema = project.name;
+    var repoLink = ExternalDataUtils.findLink(repo, server);
+    // find milestone stories
+    var criteria = {
+        type: 'milestone',
+        external_object: repoLink,
+        deleted: false,
+    };
+    return Story.find(db, schema, criteria, '*').then((stories) => {
+        // fetch milestones from GitLab
+        return fetchMilestones(server, repoLink.project.id).then((glMilestones) => {
+            // delete ones that no longer exists
+            return Promise.each(stories, (story) => {
+                var storyLink = ExternalDataUtils.findLink(story, server);
+                if (!_.some(glMilestones, { id: storyLink.milestone.id })) {
+                    return Story.updateOne(db, schema, { id: story.id, deleted: true });
+                }
+            }).return(glMilestones);
+        }).mapSeries((glMilestone) => {
+            var story = _.find(stories, (story) => {
+                return !!ExternalDataUtils.findLink(story, server, {
+                    milestone: { id: glMilestone.id }
+                });
+            });
+            if (story) {
+                var storyAfter = copyMilestoneProperties(story, system, server, repo, null, glMilestone);
+                if (storyAfter !== story) {
+                    return Story.updateOne(db, schema, storyAfter);
+                }
+            }
+        });
+    }).then((stories) => {
+        return _.filter(stories);
+    });
+}
+
+/**
  * Copy properties of milestone
  *
  * @param  {Story|null} story
@@ -80,14 +129,16 @@ function copyMilestoneProperties(story, system, server, repo, author, glMileston
         value: [ defLangCode ],
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
-        value: [ author.id ],
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
-        value: author.role_ids,
-        overwrite: 'always',
-    });
+    if (author) {
+        ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
+            value: [ author.id ],
+            overwrite: 'always',
+        });
+        ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
+            value: author.role_ids,
+            overwrite: 'always',
+        });
+    }
     ExternalDataUtils.importProperty(storyAfter, server, 'details.title', {
         value: glMilestone.title,
         overwrite: 'always',
@@ -123,4 +174,18 @@ function copyMilestoneProperties(story, system, server, repo, author, glMileston
 function fetchMilestone(server, glProjectId, glMilestoneId) {
     var url = `/projects/${glProjectId}/milestones/${glMilestoneId}`;
     return Transport.fetch(server, url);
+}
+
+/**
+ * Retrieve milestone from Gitlab
+ *
+ * @param  {Server} server
+ * @param  {Number} glProjectId
+ * @param  {Number} glMilestoneId
+ *
+ * @return {Promise<Object>}
+ */
+function fetchMilestones(server, glProjectId) {
+    var url = `/projects/${glProjectId}/milestones`;
+    return Transport.fetchAll(server, url);
 }

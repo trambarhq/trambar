@@ -329,8 +329,6 @@ function request(server, uri, method, query, payload, userToken) {
             lastError = err;
             if (err instanceof HTTPError) {
                 if (err.statusCode >= 400 && err.statusCode <= 499) {
-                    console.log(uri);
-                    console.log(err.message);
                     throw err;
                 }
             }
@@ -339,11 +337,11 @@ function request(server, uri, method, query, payload, userToken) {
     Async.while(() => {
         if (!succeeded) {
             var unreachable = _.includes(unreachableLocations, baseURL);
-            if (attempts < 8 && !unreachable) {
+            if (attempts < 5 && !unreachable) {
                 // try again after a delay
                 return Promise.delay(delayInterval).then(() => {
                     attempts++;
-                    console.log(`Attempting to access ${uri} at ${baseURL} (${attempts}/8)...`);
+                    console.log(`Attempting to access ${uri} at ${baseURL} (${attempts}/5)...`);
                     delayInterval *= 2;
                     return true;
                 });

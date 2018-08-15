@@ -12,6 +12,7 @@ var RepoAssociation = require('gitlab-adapter/repo-association');
 
 module.exports = {
     installHooks,
+    installFailedHooks,
     installServerHooks,
     installSystemHook,
     installProjectHook,
@@ -21,6 +22,8 @@ module.exports = {
     removeProjectHook,
     verifyHookRequest,
 };
+
+var problematicServerIDs = [];
 
 /**
  * Re-install all hooks
@@ -38,8 +41,48 @@ function installHooks(db, host) {
     };
     return Server.find(db, 'global', criteria, '*').each((server) => {
         if (hasAccessToken(server)) {
-            return installServerHooks(db, host, server);
+            return installServerHooks(db, host, server).catch((err) => {
+                if (!(err.statusCode >= 400 && err.statusCode <= 499)) {
+                    if (!_.includes(problematicServerIDs, server.id)) {
+                        problematicServerIDs.push(server.id);
+                    }
+                }
+                throw err;
+            });
         }
+    });
+}
+
+/**
+ * Attempt to install hooks on server that failed earlier
+ *
+ * @param  {Database} db
+ * @param  {String} host
+ *
+ * @return {Promise}
+ */
+function installFailedHooks(db, host) {
+    return Promise.each(problematicServerIDs, (serverID) => {
+        var criteria = {
+            id: serverID,
+            type: 'gitlab',
+            deleted: false,
+            disabled: false,
+        };
+        return Server.find(db, 'global', criteria, '*').each((server) => {
+            if (hasAccessToken(server)) {
+                return installServerHooks(db, host, server).then(() => {
+                    _.pull(problematicServerIDs, serverID);
+                }).catch((err) => {
+                    if (err.statusCode >= 400 && err.statusCode <= 499) {
+                        _.pull(problematicServerIDs, serverID);
+                    }
+                    throw err;
+                });
+            } else {
+                _.pull(problematicServerIDs, serverID);
+            }
+        });
     });
 }
 
@@ -69,6 +112,8 @@ function installServerHooks(db, host, server) {
                 return installProjectHook(host, server, repo, project).tap(() => {
                     added.push(repo.name);
                     taskLog.report(added.length, hookCount, { added });
+                }).catch((err) => {
+                    console.error(err.message);
                 });
             });
         }).tap(() => {
@@ -95,7 +140,9 @@ function removeHooks(db, host) {
     };
     return Server.find(db, 'global', criteria, '*').each((server) => {
         if (hasAccessToken(server)) {
-            return removeServerHooks(db, host, server);
+            return removeServerHooks(db, host, server).finally(() => {
+                _.pull(problematicServerIDs, server.id);
+            });
         }
     });
 }
@@ -138,12 +185,11 @@ function removeServerHooks(db, host, server) {
 }
 
 function installSystemHook(host, server) {
-    if (!host) {
-        console.log('Unable to install hook due to missing server address');
-        return Promise.resolve();
-    }
     console.log(`Installing web-hook on server: ${server.name}`);
     return fetchSystemHooks(server).then((glHooks) => {
+        if (!host) {
+            throw HTTPError(400, 'Unable to install hook due to missing server address')
+        }
         var url = getSystemHookEndpoint(host, server);
         var hookProps = getSystemHookProps(url);
         _.each(glHooks, (glHook) => {
@@ -167,13 +213,12 @@ function installSystemHook(host, server) {
  * @return {Promise}
  */
 function installProjectHook(host, server, repo, project) {
-    if (!host) {
-        console.log('Unable to install hook due to missing server address');
-        return Promise.resolve();
-    }
     console.log(`Installing web-hook on repo for project: ${repo.name} -> ${project.name}`);
     var repoLink = ExternalDataUtils.findLink(repo, server);
     return fetchProjectHooks(server, repoLink.project.id).then((glHooks) => {
+        if (!host) {
+            throw HTTPError(400, 'Unable to install hook due to missing server address')
+        }
         // remove existing hooks
         var url = getProjectHookEndpoint(host, server, repo, project);
         var hookProps = getProjectHookProps(url);

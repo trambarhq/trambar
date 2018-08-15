@@ -15,6 +15,7 @@ var HookManager = require('gitlab-adapter/hook-manager');
 var EventImporter = require('gitlab-adapter/event-importer');
 var RepoImporter = require('gitlab-adapter/repo-importer');
 var UserImporter = require('gitlab-adapter/user-importer');
+var MilestoneImporter = require('gitlab-adapter/milestone-importer');
 var IssueExporter = require('gitlab-adapter/issue-exporter');
 
 // accessors
@@ -26,8 +27,6 @@ var Story = require('accessors/story');
 var System = require('accessors/system');
 var Task = require('accessors/task');
 var User = require('accessors/user');
-
-const USER_SCAN_INTERVAL = 10;
 
 module.exports = {
     start,
@@ -65,40 +64,12 @@ function start() {
             ];
             return db.listen(tables, 'change', handleDatabaseChanges, 100);
         }).then(() => {
-            // install hooks--after a short delay during development to keep
-            // hooks from getting zapped while nodemon restarts
-            var delay = (process.env.NODE_ENV === 'production') ? 0 : 2000;
-            return getServerAddress(db).delay(delay).then((host) => {
-                return HookManager.installHooks(db, host);
-            });
+            if (process.env.NODE_ENV !== 'production') {
+                // reduce the chance that operations will overlap on nodemon restart
+                return Promise.delay(3000);
+            }
         }).then(() => {
-            // update repo lists, in case they were added while Trambar is down
-            var criteria = {
-                type: 'gitlab',
-                disabled: false,
-                deleted: false
-            };
-            return Server.find(db, 'global', criteria, '*').each((server) => {
-                if (hasAccessToken(server)) {
-                    return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
-                        return RepoImporter.importRepositories(db, server);
-                    });
-                }
-            });
-        }).then(() => {
-            // try importing events from all projects, as events could have
-            // occurred while Trambar is down
-            return RepoAssociation.find(db).each((a) => {
-                var { server, repo, project } = a;
-                return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
-                    return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
-                        return EventImporter.importEvents(db, system, server, repo, project);
-                    });
-                });
-            });
-        }).then(() => {
-            startPeriodicUserScan();
-            startPeriodicExportRetry();
+            return startPeriodicTasks();
         });
     });
 }
@@ -106,14 +77,10 @@ function start() {
 function stop() {
     return Shutdown.close(server).then(() => {
         if (database) {
-            stopPeriodicUserScan();
-            stopPeriodicExportRetry();
-            return getServerAddress(database).then((host) => {
-                return HookManager.removeHooks(database, host);
-            }).finally(() => {
+            return stopPeriodicTasks().finally(() => {
                 database.close();
                 database = null;
-            })
+            });
         }
     });
 }
@@ -158,7 +125,9 @@ function handleServerChangeEvent(db, event) {
         if (event.diff.settings) {
             if (hasAccessToken(server)) {
                 return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
-                    return RepoImporter.importRepositories(db, server);
+                    return RepoImporter.importRepositories(db, server).catch((err) => {
+                        console.error(err.message);
+                    });
                 });
             }
         }
@@ -256,6 +225,8 @@ function connectRepositories(db, project, repoIds) {
                 return HookManager.installProjectHook(host, server, repo, project);
             });
         });
+    }).catch((err) => {
+        console.error(err.message);
     });
 }
 
@@ -332,18 +303,12 @@ function handleStoryChangeEvent(db, event) {
                 // reexport only if the exporting user is among the author
                 if (_.includes(event.current.user_ids, task.user_id)) {
                     task.completion = 50;
-                    return Task.saveOne(db, schema, task)
+                    return Task.saveOne(db, schema, task).then((task) => {
+                        return exportStory(db, schema, task);
+                    });
                 }
             }
         });
-    }).then((task) => {
-        if (task) {
-            return exportStory(db, schema, task.id).then((task) => {
-                if (task.failed) {
-                    queueExportRetry(schema, taskId);
-                }
-            });
-        }
     });
 }
 
@@ -366,146 +331,51 @@ function handleTaskChangeEvent(db, event) {
     if (schema === 'global') {
         return;
     }
-    var taskId = event.id;
-    return exportStory(db, schema, taskId).then((task) => {
-        if (task.failed) {
-            queueExportRetry(schema, taskId);
+    if (event.current.deleted) {
+        return;
+    }
+    return Task.findOne(db, schema, { id: event.id, deleted: false }, '*').then((task) => {
+        if (task) {
+            return exportStory(db, schema, task);
         }
     });
 }
-
-var exportPromises = [];
 
 /**
  * Export a story to a repo associated with the project
  *
  * @param  {Database} db
  * @param  {String} schema
- * @param  {Number} taskId
+ * @param  {Task} task
  *
  * @return {Promise<Task>}
  */
-function exportStory(db, schema, taskId) {
-    var promise = Task.findOne(db, schema, { id: taskId }, '*').then((task) => {
-        return Project.findOne(db, 'global', { name: schema }, '*').then((project) => {
-            return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
-                return IssueExporter.exportStory(db, system, project, task);
-            });
-        }).then((story) => {
-            task.completion = 100;
-            task.failed = false;
-            task.etime = new String('NOW()');
-            delete task.details.error;
-            if (story) {
-                var issueLink = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
-                _.assign(task.details, _.pick(issueLink, 'repo', 'issue'));
-            }
-            return Task.saveOne(db, schema, task);
-        }).catch((err) => {
-            console.error(err);
-            task.details.error = _.pick(err, 'message', 'statusCode');
-            task.failed = true;
-            return Task.saveOne(db, schema, task);
+function exportStory(db, schema, task) {
+    return Project.findOne(db, 'global', { name: schema }, '*').then((project) => {
+        return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
+            return IssueExporter.exportStory(db, system, project, task);
         });
-    }).finally(() => {
-        _.pull(exportPromises, promise);
+    }).then((story) => {
+        task.completion = 100;
+        task.failed = false;
+        task.etime = new String('NOW()');
+        delete task.details.error;
+        if (story) {
+            var issueLink = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
+            _.assign(task.details, _.pick(issueLink, 'repo', 'issue'));
+        }
+        return Task.saveOne(db, schema, task);
+    }).catch((err) => {
+        task.details.error = _.pick(err, 'message', 'statusCode');
+        task.failed = true;
+        if (err.statusCode >= 400 && err.statusCode <= 499) {
+            // stop trying
+            task.deleted = true;
+        }
+        return Task.saveOne(db, schema, task).throw(err);
+    }).catch((err) => {
+        console.error(err.message);
     });
-    exportPromises.push(promise);
-    return promise;
-}
-
-var exportRetryQueue = [];
-
-/**
- * Add story to retry queue
- *
- * @param  {String} schema
- * @param  {Number} storyId
- * @param  {Number|undefined} delay
- * @param  {Number|undefined} attempts
- */
-function queueExportRetry(schema, taskId, delay, attempts) {
-    var time = new Date;
-    if (!delay) {
-        delay = 30 * 1000;
-    }
-    if (!attempts) {
-        attempts = 1;
-    }
-    var existing = _.find(exportRetryQueue, { schema, taskId });
-    if (existing) {
-        // obviously, it has just failed again
-        existing.time = time;
-    } else {
-        exportRetryQueue.push({ schema, taskId, delay, attempts, time })
-    }
-}
-
-var exportRetryInterval;
-
-/**
- * Start retrying failed export exports
- */
-function startPeriodicExportRetry() {
-    exportRetryInterval = setInterval(retryFailedExports, 10 * 1000);
-
-    // look for story they have failed and put them into the queue
-    var db = database;
-    return RepoAssociation.find(db).then((list) => {
-        return _.uniq(_.map(list, 'project'));
-    }).each((project) => {
-        // load export tasks that failed and try them again
-        var schema = project.name;
-        var criteria = {
-            action: 'export-issue',
-            complete: false,
-            newer_than: Moment().startOf('day').subtract(3, 'day'),
-        };
-        return Task.find(db, schema, criteria, 'id').each((row) => {
-            queueExportRetry(schema, row.id, 1 * 1000);
-        });
-    });
-}
-
-/**
- * Stop retrying export exports
- */
-function stopPeriodicExportRetry() {
-    exportRetryInterval = clearInterval(exportRetryInterval);
-}
-
-/**
- * Check export retry queue and schedule stories for export
- */
-function retryFailedExports() {
-    var db = database;
-    var now = new Date;
-    var ready = _.remove(exportRetryQueue, (entry) => {
-        var elapsed = now - entry.time;
-        return (elapsed > entry.delay);
-    });
-    _.each(ready, (entry) => {
-        var { schema, taskId, delay, attempts } = entry;
-        taskQueue.schedule(`retry_story_export:${taskId}`, () => {
-            return exportStory(db, schema, taskId).catch((err) => {
-                if (attempts < 10) {
-                    // double the delay when it fails again
-                    delay = Math.min(10 * 60 * 1000, delay * 2);
-                    attempts++;
-                    queueExportRetry(schema, taskId, delay, attempts);
-                }
-            });
-        });
-    });
-}
-
-/**
- * Wait for any ongoing export operations to complete
- *
- * @return {Promise}
- */
-function waitForExports() {
-    return Promise.all(exportPromises);
 }
 
 /**
@@ -522,6 +392,8 @@ function handleSystemChangeEvent(db, event) {
         var hostAfter = event.current.settings.address;
         return HookManager.removeHooks(db, hostBefore).then(() => {
             return HookManager.installHooks(db, hostAfter);
+        }).catch((err) => {
+            console.error(err.message);
         });
     }
 }
@@ -557,7 +429,7 @@ function handleSystemHookCallback(req, res) {
                 });
         }
     }).catch((err) => {
-        console.error(err);
+        console.error(err.message);
     }).finally(() => {
         res.end();
     });
@@ -580,58 +452,301 @@ function handleProjectHookCallback(req, res) {
     return RepoAssociation.findOne(db, criteria).then((a) => {
         HookManager.verifyHookRequest(req);
 
+        var ts = Moment().valueOf();
         var { server, repo, project } = a;
-        return waitForExports().then(() => {
+        return taskQueue.schedule(`import_hook_event:${repo.id}-${project.id}-${ts}`, () => {
             return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
                 return EventImporter.importHookEvent(db, system, server, repo, project, glHookEvent).then((story) => {
                     if (story === false) {
                         // hook event wasn't handled--scan activity log
                         return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
-                            return EventImporter.importEvents(db, system, server, repo, project, glHookEvent);
+                            return EventImporter.importEvents(db, system, server, repo, project, glHookEvent).catch((err) => {
+                                console.error(err.message);
+                            });
                         });
                     }
                 });
             });
         });
     }).catch((err) => {
-        console.error(err);
+        console.error(err.message);
     }).finally(() => {
         res.end();
     });
 }
 
-var userScanInterval;
-
 /**
- * Start reimporting users periodically
+ * Install web hooks
+ *
+ * @return {Promise}
  */
-function startPeriodicUserScan() {
-    userScanInterval = setInterval(reimportUsers, USER_SCAN_INTERVAL * 60 * 1000);
+function startHookMaintenance() {
+    var db = database;
+    return getServerAddress(db).then((host) => {
+        return HookManager.installHooks(db, host);
+    }).catch((err) => {
+        console.error(err.message);
+    });
 }
 
 /**
- * Stop reimporting users periodically
+ * Attempt to install hooks that fail previous
+ *
+ * @return {null}
  */
-function stopPeriodicUserScan() {
-    userScanInterval = clearInterval(userScanInterval);
+function performPeriodicHookMaintenance() {
+    var db = database;
+    return getServerAddress(db).then((host) => {
+        return HookManager.installFailedHooks(db, host);
+    }).catch((err) => {
+        console.error(err.message);
+    });
+}
+
+/**
+ * Remove web hooks
+ *
+ * @return {Promise}
+ */
+function stopHookMaintenance() {
+    return getServerAddress(database).then((host) => {
+        return HookManager.removeHooks(database, host);
+    }).catch((err) => {
+        console.error(err.message);
+    });
+}
+
+/**
+ * Reimport repos from all servers
+ *
+ * @return {null}
+ */
+function performPeriodicRepoImport() {
+    var db = database;
+    var criteria = {
+        type: 'gitlab',
+        disabled: false,
+        deleted: false
+    };
+    Server.find(db, 'global', criteria, '*').each((server) => {
+        if (hasAccessToken(server)) {
+            return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
+                return RepoImporter.importRepositories(db, server).catch((err) => {
+                    console.error(err.message);
+                });
+            });
+        }
+    });
+    return null;
+}
+
+/**
+ * Import events from all repos
+ *
+ * @return {null}
+ */
+function performPeriodicEventImport() {
+    var db = database;
+    System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
+        RepoAssociation.find(db).each((a) => {
+            var { server, repo, project } = a;
+            return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
+                return EventImporter.importEvents(db, system, server, repo, project).catch((err) => {
+                    console.error(err.message);
+                });
+            });
+        });
+    });
+    return null;
 }
 
 /**
  * Reimport users from all GitLab servers
+ *
+ * @return {null}
  */
-function reimportUsers() {
+function performPeriodicUserImport() {
     var db = database;
     var criteria = {
         type: 'gitlab',
         deleted: false,
         disabled: false,
     };
-    return Server.find(db, 'global', criteria, '*').each((server) => {
+    Server.find(db, 'global', criteria, '*').each((server) => {
         if (hasAccessToken(server)) {
-            return taskQueue.schedule(`reimport_user:${server.id}`, () => {
-                return UserImporter.importUsers(db, server);
+            return taskQueue.schedule(`import_users:${server.id}`, () => {
+                return UserImporter.importUsers(db, server).catch((err) => {
+                    console.error(err.message);
+                });
             });
         }
+    });
+    return null;
+}
+
+/**
+ * Scan milestones for change
+ *
+ * @return {null}
+ */
+function performPeriodicMilestoneUpdate() {
+    var db = database;
+    System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
+        if (!system) {
+            return;
+        }
+        return RepoAssociation.find(db).each((a) => {
+            var { server, repo, project } = a;
+            return taskQueue.schedule(`update_milestones:${server.id}-${project.id}-${repo.id}`, () => {
+                return MilestoneImporter.updateMilestones(db, system, server, repo, project).catch((err) => {
+                    console.error(err.message);
+                });
+            });
+        });
+    });
+    return null;
+}
+
+/**
+ * Start retrying failed export exports
+ *
+ * @return {null}
+ */
+function performPeriodicExportRetry() {
+    // look for story they have failed and put them into the queue
+    var db = database;
+    RepoAssociation.find(db).then((list) => {
+        return _.uniq(_.map(list, 'project'));
+    }).each((project) => {
+        // load export tasks that failed and try them again
+        var schema = project.name;
+        var criteria = {
+            action: 'export-issue',
+            complete: false,
+            newer_than: Moment().startOf('day').subtract(3, 'day'),
+            deleted: false,
+        };
+        return Task.find(db, schema, criteria, '*').each((task) => {
+            taskQueue.schedule(`export_story:${task.id}`, () => {
+                return exportStory(db, schema, task);
+            });
+        });
+    });
+    return null;
+}
+
+const SEC = 1000;
+const MIN = 60 * SEC;
+
+var periodicTasks = [
+    {
+        name: 'import-users',
+        every: 5 * MIN,
+        delay: 1 * MIN,
+        start: performPeriodicUserImport,
+        run: performPeriodicUserImport,
+    },
+    {
+        name: 'import-repos',
+        every: 5 * MIN,
+        delay: 2 * MIN,
+        start: performPeriodicRepoImport,
+        run: performPeriodicRepoImport,
+    },
+    {
+        name: 'import-events',
+        every: 1 * MIN,
+        delay: 0,
+        start: performPeriodicEventImport,
+        run: performPeriodicEventImport,
+    },
+    {
+        name: 'install-hooks',
+        every: 1 * MIN,
+        delay: 0,
+        start: startHookMaintenance,
+        run: performPeriodicHookMaintenance,
+        stop: stopHookMaintenance,
+    },
+    {
+        name: 'update-milestones',
+        every: 5 * MIN,
+        delay: 3 * MIN,
+        start: performPeriodicMilestoneUpdate,
+        run: performPeriodicMilestoneUpdate,
+    },
+    {
+        name: 'retry-failed-issue-export',
+        every: 5 * MIN,
+        delay: 0,
+        start: performPeriodicExportRetry,
+        run: performPeriodicExportRetry,
+    }
+];
+var periodicTasksInterval;
+var periodicTasksLastRun;
+
+/**
+ * Start periodic tasks
+ */
+function startPeriodicTasks() {
+    return Promise.each(periodicTasks, (task) => {
+        task.delay += task.every;
+        return Promise.try(() => {
+            if (task.start) {
+                return task.start();
+            }
+        }).catch((err) => {
+            console.error(err.message);
+        });
+    }).finally(() => {
+        periodicTasksLastRun = Moment();
+        periodicTasksInterval = setInterval(runPeriodicTasks, 5 * 1000);
+    });
+}
+
+/**
+ * Decrement delay counters and run tasks on reaching zero
+ *
+ * @return {null}
+ */
+function runPeriodicTasks() {
+    var now = Moment();
+    var elapsed = now - periodicTasksLastRun;
+    periodicTasksLastRun = now;
+    var readyTasks = _.filter(periodicTasks, (task) => {
+        task.delay -= elapsed;
+        if (task.delay <= 0) {
+            task.delay = task.every;
+            return true;
+        }
+    });
+    Promise.each(readyTasks, (task) => {
+        return Promise.try(() => {
+            if (task.run) {
+                return task.run();
+            }
+        }).catch((err) => {
+            console.error(err.message);
+        });
+    });
+    return null;
+}
+
+/**
+ * Stop periodic tasks
+ */
+function stopPeriodicTasks() {
+    periodicTasksInterval = clearInterval(periodicTasksInterval);
+
+    return Promise.each(periodicTasks, (task) => {
+        return Promise.try(() => {
+            if (task.stop) {
+                return task.stop();
+            }
+        }).catch((err) => {
+            console.error(err.message);
+        });
     });
 }
 
