@@ -465,6 +465,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderTitleInput()}
                 {this.renderNameInput()}
                 {this.renderUserOptions()}
+                {this.renderWhitelist()}
                 {this.renderRoleSelector()}
                 {this.renderSiteURL()}
                 {this.renderOAuthCallbackURL()}
@@ -709,6 +710,38 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 </label>
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
+        );
+    },
+
+    /**
+     * Render user white list
+     *
+     * @return {ReactElement}
+     */
+    renderWhitelist: function() {
+        var serverType = this.getServerProperty('type');
+        if (serverType === 'gitlab') {
+            return null;
+        }
+        var userOpts = this.getServerProperty('settings.user', 'current') || {};
+        if (!userOpts.type) {
+            return null;
+        }
+        var t = this.props.locale.translate;
+        var props = {
+            id: 'whitelist',
+            value: this.getServerProperty('settings.user.whitelist'),
+            locale: this.props.locale,
+            onChange: this.handleWhitelistChange,
+            readOnly: !this.isEditing(),
+            type: 'textarea',
+            spellCheck: false,
+        };
+        var problems = this.state.problems;
+        return (
+            <TextField {...props}>
+                {t('server-summary-whitelist')}
+            </TextField>
         );
     },
 
@@ -1343,6 +1376,16 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      */
     handleTypeOptionClick: function(evt) {
         this.setServerProperty(`type`, evt.name);
+    },
+
+    /**
+     * Called when user changes the white list
+     *
+     * @param  {Object} evt
+     */
+    handleWhitelistChange: function(evt) {
+        var whitelist = evt.target.value.replace(/\s*[;,]\s*/g, '\n');
+        this.setServerProperty(`settings.user.whitelist`, whitelist);
     },
 
     /**

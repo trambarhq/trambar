@@ -351,6 +351,7 @@ module.exports = function(localeCode) {
         'server-summary-user-type-guest': 'Vieraskäyttäjä',
         'server-summary-user-type-moderator': 'Sovittelija',
         'server-summary-user-type-regular': 'Tavallinen käyttäjä',
+        'server-summary-whitelist': 'Sähköpostiosoitteen sallittujen luetteloiden luettelo',
 
         'server-type-dropbox': 'Dropbox',
         'server-type-facebook': 'Facebook',

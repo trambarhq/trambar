@@ -502,6 +502,7 @@ module.exports = function(localeCode) {
         'server-summary-user-type-guest': 'Gość',
         'server-summary-user-type-moderator': 'Moderator',
         'server-summary-user-type-regular': 'Zwykły użytkownik',
+        'server-summary-whitelist': 'Biała lista adresów e-mail',
 
         'server-type-dropbox': 'Dropbox',
         'server-type-facebook': 'Facebook',

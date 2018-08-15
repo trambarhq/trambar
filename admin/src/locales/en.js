@@ -355,6 +355,7 @@ module.exports = function(localeCode) {
         'server-summary-user-type-guest': 'Guest',
         'server-summary-user-type-moderator': 'Moderator',
         'server-summary-user-type-regular': 'Regular user',
+        'server-summary-whitelist': 'E-mail address whitelist',
 
         'server-type-dropbox': 'Dropbox',
         'server-type-facebook': 'Facebook',

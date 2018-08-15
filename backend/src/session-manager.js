@@ -16,6 +16,7 @@ var Shutdown = require('shutdown');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 var UserTypes = require('objects/types/user-types');
 var UserSettings = require('objects/settings/user-settings');
+var Whitelist = require('utils/whitelist');
 
 var GitlabUserImporter = require('gitlab-adapter/user-importer');
 
@@ -898,7 +899,7 @@ function findMatchingUser(server, account) {
                 });
                 return user;
             } else {
-                if (!acceptNewUser(server)) {
+                if (!acceptNewUser(server, profile)) {
                     throw new HTTPError(403, {
                         reason: 'existing-users-only',
                     });
@@ -1008,13 +1009,25 @@ function canProvideAccess(server, area) {
  * Return true if server accepts new users
  *
  * @param  {Server} server
+ * @param  {Object} profile
  *
  * @return {Boolean}
  */
-function acceptNewUser(server) {
+function acceptNewUser(server, profile) {
     var type = _.get(server, 'settings.user.type');
     var mapping = _.get(server, 'settings.user.mapping');
-    return !!type || _.some(mapping);
+    if (!type && !_.some(mapping)) {
+        return false;
+    }
+    var whitelist = _.trim(_.get(server, 'settings.user.whitelist'));
+    if (whitelist) {
+        var emails = _.map(profile.emails, 'value');
+        return _.some(emails, (email) => {
+            return Whitelist.match(email, whitelist);
+        });
+    } else {
+        return true;
+    }
 }
 
 /**

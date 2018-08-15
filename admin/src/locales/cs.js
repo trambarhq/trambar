@@ -500,6 +500,7 @@ module.exports = function(localeCode) {
         'server-summary-user-type-guest': 'Host',
         'server-summary-user-type-moderator': 'Moderátor',
         'server-summary-user-type-regular': 'Běžný uživatel',
+        'server-summary-whitelist': 'Whitelist e-mailových adres',
 
         'server-type-dropbox': 'Dropbox',
         'server-type-facebook': 'Facebook',

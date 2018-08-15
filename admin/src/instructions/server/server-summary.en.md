@@ -13,6 +13,11 @@ accept users with matching accounts. The first option might be appropriate
 for a GitLab server operated by your organization. The second option might be
 appropriate for a third-party OAuth provider like Facebook.
 
+**E-mail address whitelist** - Controls by e-mail address who get accepted as
+new users. When an e-mail address is given, only that user will be accepted.
+When a domain name is given, all users from that domain will be accepted. When
+the list is empty, all users authenticated through this server are accepted.
+
 **Role assignment** - You can automatically assign roles to new users
 authenticated through this server. This is useful for story filtering.
 

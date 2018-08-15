@@ -12,6 +12,11 @@ If you choose to not register new users, then only users you've manually created
 can sign-in through Facebook. You will need to know which e-mail address they've
 used to sign up for Facebook.
 
+**E-mail address whitelist** - Controls by e-mail address who get accepted as
+new users. When an e-mail address is given, only that user will be accepted.
+When a domain name is given, all users from that domain will be accepted. When
+the list is empty, all Facebook users are accepted.
+
 **Role assignment** - You can automatically assign roles to new users
 authenticated through this server. This is useful for story filtering.
 

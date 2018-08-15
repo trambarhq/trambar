@@ -382,6 +382,7 @@ var traditionalPhrases = {
     'server-summary-user-type-guest': '訪客用戶',
     'server-summary-user-type-moderator': '檢查員',
     'server-summary-user-type-regular': '普通用戶',
+    'server-summary-whitelist': '電子郵件地址白名單',
 
     'server-type-dropbox': 'Dropbox',
     'server-type-facebook': 'Facebook',
@@ -958,6 +959,7 @@ var simplifiedPhrases = {
     'server-summary-user-type-guest': '访客用户',
     'server-summary-user-type-moderator': '检查员',
     'server-summary-user-type-regular': '普通用户',
+    'server-summary-whitelist': '电子邮件地址白名单',
 
     'server-type-dropbox': 'Dropbox',
     'server-type-facebook': 'Facebook',
