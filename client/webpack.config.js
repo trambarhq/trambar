@@ -13,6 +13,7 @@ var DefinePlugin = Webpack.DefinePlugin;
 var SourceMapDevToolPlugin = Webpack.SourceMapDevToolPlugin;
 var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+var ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 var event = 'build';
 var platform = 'browser';
@@ -109,29 +110,28 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                loader: 'css-loader'
+                use: ExtractTextPlugin.extract({
+                    fallback: 'style-loader',
+                    use: 'css-loader',
+                }),
             },
             {
                 test: /\.scss$/,
-                use: [
-                    {
-                        loader: 'style-loader'
-                    },
-                    {
-                        loader: 'css-loader'
-                    },
-                    {
-                        loader: 'postcss-loader',
-                        options: {
-                            config: {
-                                path: resolve('postcss.config.js'),
-                            },
-                        }
-                    },
-                    {
-                        loader: 'sass-loader',
-                    },
-                ]
+                use: ExtractTextPlugin.extract({
+                    fallback: 'style-loader',
+                    use: [
+                        'css-loader',
+                        {
+                            loader: 'postcss-loader',
+                            options: {
+                                config: {
+                                    path: resolve('postcss.config.js'),
+                                },
+                            }
+                        },
+                        'sass-loader',
+                    ],
+                }),
             },
             {
                 test: /fonts.*\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
@@ -171,6 +171,10 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: `${folders.assets}/${platform}.html`,
             filename: `${folders.www}/index.html`,
+        }),
+        new ExtractTextPlugin({
+            filename: 'styles.css',
+            allChunks: true,
         }),
         // pull library code out of app chunk and into their own files
         ... _.map(libraries, (lib) => {
