@@ -182,7 +182,10 @@ module.exports = _.create(Data, {
      * @param  {Object} credentials
      */
     checkWritePermission: function(notificationReceived, notificationBefore, credentials) {
-        throw new HTTPError(400);
+        if (notificationBefore.target_user_id !== credentials.user.id) {
+            // can't modify an object that doesn't belong to the user
+            throw new HTTPError(400);
+        }
     },
 
     /**

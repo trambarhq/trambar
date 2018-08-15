@@ -244,34 +244,30 @@ function generateReactionPublicationNotifications(db, event) {
  */
 function generateBookmarkNotifications(db, event) {
     return Promise.try(() => {
-        var senderIds = getNewBookmarkSenderIds(event);
-        if (_.isEmpty(senderIds)) {
+        var senderIdsBefore = event.previous.user_ids;
+        var senderIdsAfter = event.current.user_ids;
+        if (!_.isEmpty(senderIdsBefore) || _.isEmpty(senderIdsAfter)) {
             return [];
         }
+        var senderId = _.first(senderIdsAfter);
         var schema = event.schema;
         var notificationType = 'bookmark';
         var storyId = event.current.story_id;
         var targetUserId = event.current.target_user_id;
         var criteria = { id: storyId, deleted: false };
-        return Story.findOne(db, schema, criteria, 'type').then((story) => {
-            if (!story) {
-                return [];
-            }
-            var details = {
-                story_type: story.type
-            };
-            return _.map(senderIds, (senderId) => {
-                return {
-                    notification: {
-                        type: notificationType,
-                        story_id: storyId,
-                        user_id: senderId,
-                        target_user_id: targetUserId,
-                        details,
+        return Story.find(db, schema, criteria, 'type').map((story) => {
+            return {
+                notification: {
+                    type: notificationType,
+                    story_id: storyId,
+                    user_id: senderId,
+                    target_user_id: targetUserId,
+                    details: {
+                        story_type: story.type
                     },
-                    schema,
-                };
-            });
+                },
+                schema,
+            };
         });
     });
 }
@@ -442,24 +438,6 @@ function getNewCoauthorIds(event) {
             var coauthorIdsBefore = _.slice(event.previous.user_ids, 1);
             var coauthorIdsAfter = _.slice(event.current.user_ids, 1);
             return _.difference(coauthorIdsAfter, coauthorIdsBefore);
-        }
-    }
-    return [];
-}
-
-/**
- * Return ids of new senders of a bookmark
- *
- * @param  {Object} event
- *
- * @return {Array<Number>}
- */
-function getNewBookmarkSenderIds(event) {
-    if (isModifying(event, 'bookmark')) {
-        if (event.diff.user_ids) {
-            var senderIdsBefore = event.previous.user_ids;
-            var senderIdsAfter = event.current.user_ids;
-            return _.difference(senderIdsAfter, senderIdsBefore);
         }
     }
     return [];
