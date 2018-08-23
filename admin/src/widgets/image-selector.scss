@@ -9,7 +9,6 @@
 
     .contents {
         margin-top: 4px;
-        // padding: 2px 2px 1px 4px;
 
         .image {
             float: left;
@@ -59,9 +58,9 @@
 
                 INPUT[type="file"] {
                     position: absolute;
-                    z-index: -50000;
                     width: 1px;
                     height: 1px;
+                    opacity: 0;
                 }
 
                 &:hover {
