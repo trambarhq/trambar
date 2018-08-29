@@ -796,9 +796,17 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `Созда${e} новый тег`;
         },
+        'user-activity-$name-deleted-repo': (name) => {
+            var e = pastTenseEnding(name);
+            return `Удали${e} проект git`;
+        },
         'user-activity-$name-edited-wiki-page': (name) => {
             var e = pastTenseEnding(name);
             return `Редактирова${e} страницу wiki`;
+        },
+        'user-activity-$name-imported-repo': (name) => {
+            var e = pastTenseEnding(name);
+            return `Импортирова${e} проект git`;
         },
         'user-activity-$name-joined-repo': (name) => {
             var e = reflective(pastTenseEnding(name));

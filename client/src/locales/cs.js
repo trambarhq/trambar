@@ -518,7 +518,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-deleted-$repo': (name, repo) => {
             var e = pastTenseEnding(name);
-            var text = `Smaza${e} project`;
+            var text = `Smaza${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
             }
@@ -526,7 +526,7 @@ module.exports = function(localeCode) {
         },
         'story-$name-imported-$repo': (name, repo) => {
             var e = pastTenseEnding(name);
-            var text = `Importova${e} project`;
+            var text = `Importova${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
             }
@@ -771,9 +771,17 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name);
             return `Vytvoři${e} tag`;
         },
+        'user-activity-$name-deleted-repo': (name) => {
+            var e = pastTenseEnding(name);
+            return `Smaza${e} projekt git`;
+        },
         'user-activity-$name-edited-wiki-page': (name) => {
             var e = pastTenseEnding(name);
             return `Upravi${e} stránku wiki`;
+        },
+        'user-activity-$name-imported-repo': (name) => {
+            var e = pastTenseEnding(name);
+            return `Importova${e} projekt git`;
         },
         'user-activity-$name-joined-repo': (name) => {
             var e = pastTenseEnding(name);

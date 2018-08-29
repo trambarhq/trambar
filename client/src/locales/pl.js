@@ -807,9 +807,18 @@ module.exports = function(localeCode) {
             var e = pastTenseEnding(name, 3);
             return `Stworzy${e} nowy tag`;
         },
+        'user-activity-$name-deleted-repo': (name) => {
+            var e = pastTenseEnding(name, 3);
+            var a = (e === 'ła') ? 'ę' : 'ą';
+            return `Usun${a}${e} projekt gita`;
+        },
         'user-activity-$name-edited-wiki-page': (name) => {
             var e = pastTenseEnding(name, 3);
             return `Redagowa${e} stronę wiki`;
+        },
+        'user-activity-$name-imported-repo': (name) => {
+            var e = pastTenseEnding(name, 3);
+            return `Zaimportowa${e} projekt gita`;
         },
         'user-activity-$name-joined-repo': (name) => {
             var e = pastTenseEnding(name, 3);

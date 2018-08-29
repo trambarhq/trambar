@@ -471,18 +471,18 @@ module.exports = function(localeCode) {
             return `Hat die Wiki-Seite “${page}” gelöscht`;
         },
         'story-$name-deleted-$repo': (name, repo) => {
-            var text = `Deleted project`;
+            var project = `das Projekt`;
             if (repo) {
-                text += ` “${repo}”`;
+                project += ` “${repo}”`;
             }
-            return text;
+            return `Hat ${project} gelöscht`;
         },
         'story-$name-imported-$repo': (name, repo) => {
-            var text = `Imported project`;
+            var project = `das Projekt`;
             if (repo) {
-                text += ` “${repo}”`;
+                project += ` “${repo}”`;
             }
-            return text;
+            return `Hat ${project} importiert`;
         },
         'story-$name-joined-$repo': (name, repo) => {
             var project = `das Projekt`;
@@ -642,7 +642,9 @@ module.exports = function(localeCode) {
         'user-activity-$name-created-milestone': 'Hat einen Meilenstein erstellt',
         'user-activity-$name-created-repo': 'Hat ein Git-Projekt erstellt',
         'user-activity-$name-created-tag': 'Hat einen neuen Tag erstellt',
+        'user-activity-$name-deleted-repo': 'Hat ein Git-Projekt gelöscht',
         'user-activity-$name-edited-wiki-page': 'Hat eine Wiki-Seite bearbeitet',
+        'user-activity-$name-imported-repo': 'Hat ein Git-Projekt importiert',
         'user-activity-$name-joined-repo': 'Hat ein Git-Projekt beigetreten',
         'user-activity-$name-left-repo': 'Hat ein Git-Projekt verlassen',
         'user-activity-$name-merged-code': 'Hat einen Merge durchgeführt',
