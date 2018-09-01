@@ -1,122 +1,43 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var SockJS = require('sockjs-client');
-var Async = require('async-do-while');
-var NotificationUnpacker = require('transport/notification-unpacker');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React from 'react', PropTypes = React.PropTypes;
+import SockJS from 'sockjs-client';
+import Async from 'async-do-while';
+import NotificationUnpacker from 'transport/notification-unpacker';
+import EventEmitter from 'utils/event-emitter';
 
-var Locale = require('locale/locale');
+import Locale from 'locale/locale';
 
-// widgets
-var Diagnostics = require('widgets/diagnostics');
-var DiagnosticsSection = require('widgets/diagnostics-section');
+const defaultOptions = {
+    basePath: '/srv/socket',
+    online: true,
+    initialReconnectionDelay: 500,
+    maximumReconnectionDelay: 30000,
+};
 
-module.exports = React.createClass({
-    displayName: 'WebsocketNotifier',
-    propTypes: {
-        serverAddress: PropTypes.string,
-        basePath: PropTypes.string,
-        initialReconnectionDelay: PropTypes.number,
-        maximumReconnectionDelay: PropTypes.number,
-        defaultProfileImage: PropTypes.string,
-        online: PropTypes.bool,
+class WebsocketNotifier extends EventEmitter {
+    constructor(options) {
+        this.options = _.defaults({}, options, defaultOptions);
+        this.socket = null;
+        this.notificationPermitted = false;
+        this.reconnectionCount = 0;
+        this.recentMessages = [];
+    }
 
-        locale: PropTypes.instanceOf(Locale),
-
-        onConnect: PropTypes.func,
-        onDisconnect: PropTypes.func,
-        onNotify: PropTypes.func,
-        onAlertClick: PropTypes.func,
-        onRevalidate: PropTypes.func,
-    },
-
-    statics: {
-        isAvailable: function() {
-            return (process.env.PLATFORM !== 'mobile');
-        }
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            basePath: '/srv/socket',
-            online: true,
-            initialReconnectionDelay: 500,
-            maximumReconnectionDelay: 30000,
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
-            socket: null,
-            notificationPermitted: false,
-            reconnectionCount: 0,
-            recentMessages: [],
-        };
-    },
-
-     /**
-      * Ask user for permission to show notification on mount
-      */
-     componentWillMount: function() {
-         requestNotificationPermission().then(() => {
-             this.setState({ notificationPermitted: true })
-         }).catch((err) => {
-         })
-
-         // connect on mount if we somehow have the info (unlikely)
-         this.updateConnection(this.props);
-     },
-
-    /**
-     * Change the connect when server or schema changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.serverAddress !== nextProps.serverAddress) {
-             this.updateConnection(nextProps);
-        }
-        if (!this.props.online && nextProps.online) {
-            if (this.onConnectivity) {
-                this.onConnectivity();
-            }
-        } else if(this.props.online && !nextProps.online) {
-            if (this.state.socket) {
-                // putting Chrome into offline mode does not automatically
-                // break the WebSocket connection--do it manually
-                this.state.socket.close();
-            }
-        }
-    },
-
-    /**
-     * Update the connection to reflect new props
-     *
-     * @param  {Object} nextProps
-     */
-    updateConnection: function(nextProps) {
-        this.disconnect();
-        if (nextProps.serverAddress) {
-            this.connect(nextProps.serverAddress)
-        }
-    },
+    initialize() {
+        // ask user for permission to show notification
+        requestNotificationPermission().then(() => {
+            this.setState({ notificationPermitted: true })
+        }).catch((err) => {
+        })
+    }
 
     /**
      * Wait for props.online to become true
      *
      * @return {Promise}
      */
-    waitForConnectivity: function() {
+    waitForConnectivity() {
         if (this.props.online) {
             return Promise.resolve();
         } else {
@@ -132,7 +53,7 @@ module.exports = React.createClass({
             }
             return this.connectivityPromise;
         }
-    },
+    }
 
     /**
      * Connect to server
@@ -141,7 +62,7 @@ module.exports = React.createClass({
      *
      * @return {Boolean}
      */
-    connect: function(serverAddress) {
+    connect(serverAddress) {
         // track connection attempt with an object
         var attempt = this.connectionAttempt;
         if (attempt) {
@@ -162,7 +83,7 @@ module.exports = React.createClass({
             return this.createSocket(serverAddress).then((socket) => {
                 if (attempt === this.connectionAttempt) {
                     socket.onmessage = (evt) => {
-                        if (this.state.socket === socket) {
+                        if (this.socket === socket) {
                             var msg = parseJSON(evt.data);
                             var payload = _.assign({ address: serverAddress }, msg);
                             var notification = NotificationUnpacker.unpack(payload);
@@ -176,34 +97,32 @@ module.exports = React.createClass({
                             } else if (notification.type === 'revalidation') {
                                 this.triggerRevalidateEvent(notification.revalidation);
                             }
-                            var recentMessages = _.slice(this.state.recentMessages);
-                            recentMessages.unshift(msg);
-                            if (recentMessages.length > 10) {
-                               recentMessages.splice(10);
+
+                            this.recentMessages.unshift(msg);
+                            if (this.recentMessages.length > 10) {
+                               this.recentMessages.splice(10);
                             }
-                            this.setState({ recentMessages })
                         }
                     };
                     socket.onclose = () => {
-                        if (this.state.socket === socket) {
+                        if (this.socket === socket) {
                             // we're still supposed to be connected
                             // try to reestablish connection
-                            this.setState({ socket: null }, () => {
-                                this.connect(serverAddress).then((connected) => {
-                                    if (connected) {
-                                        var reconnectionCount = this.state.reconnectionCount + 1;
-                                        this.setState({ reconnectionCount })
-                                        console.log('Connection reestablished');
-                                    }
-                                });
+                            this.socket = null;
+                            this.connect(serverAddress).then((connected) => {
+                                if (connected) {
+                                    this.reconnectionCount += 1;
+                                    console.log('Connection reestablished');
+                                }
                             });
-                            if (this.props.serverAddress === serverAddress) {
+
+                            if (this.options.serverAddress === serverAddress) {
                                 console.log('Disconnect');
                                 this.triggerDisconnectEvent();
                             }
                         }
                     };
-                    this.setState({ socket });
+                    this.socket = socket;
                 }
                 connected = true;
             }).catch((err) => {
@@ -228,20 +147,18 @@ module.exports = React.createClass({
         });
         attempt.promise = Async.end();
         return attempt.promise;
-    },
+    }
 
     /**
      * Close web-socket connection
      */
-    disconnect: function() {
-        var socket = this.state.socket;
-        if (socket) {
-            // set state.socket to null first, to stop reconnection attempt
-            this.setState({ socket: null, reconnectionCount: 0 }, () => {
-                socket.close();
-            });
+    disconnect() {
+        if (this.socket) {
+            this.socket.close();
+            this.socket = null;
+            this.reconnectionCount = 0;
         }
-    },
+    }
 
     /**
      * Create a SockJS socket
@@ -250,7 +167,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<SockJS>}
      */
-    createSocket: function(serverAddress) {
+    createSocket(serverAddress) {
         var basePath = this.props.basePath;
         return this.waitForConnectivity().then(() => {
             return new Promise((resolve, reject) => {
@@ -277,93 +194,20 @@ module.exports = React.createClass({
                 };
             });
         });
-    },
-
-    /**
-     * Notify parent component that a change event was received
-     *
-     * @param  {String} address
-     * @param  {Array<Object>} changes
-     */
-    triggerNotifyEvent: function(changes) {
-        if (this.props.onNotify) {
-            this.props.onNotify({
-                type: 'notify',
-                target: this,
-                changes,
-            });
-        }
-    },
-
-    /**
-     * Notify parent component that a connection was established
-     *
-     * @param  {Object} connection
-     */
-    triggerConnectEvent: function(connection) {
-        if (this.props.onConnect) {
-            this.props.onConnect({
-                type: 'connect',
-                target: this,
-                connection,
-            });
-        }
-    },
-
-    /**
-     * Notify parent component that a connection was lost
-     */
-    triggerDisconnectEvent: function() {
-        if (this.props.onDisconnect) {
-            this.props.onDisconnect({
-                type: 'disconnect',
-                target: this,
-            });
-        }
-    },
-
-    /**
-     * Inform parent component that an alert was clicked
-     *
-     * @param  {Object} alert
-     */
-    triggerAlertClickEvent: function(alert) {
-        if (this.props.onAlertClick) {
-            this.props.onAlertClick({
-                type: 'alertclick',
-                target: this,
-                alert,
-            })
-        }
-    },
-
-    /**
-     * Notify parent component that
-     *
-     * @param  {Object} revalidation
-     */
-    triggerRevalidateEvent: function(revalidation) {
-        if (this.props.onRevalidate) {
-            this.props.onRevalidate({
-                type: 'invalidate',
-                target: this,
-                revalidation,
-            });
-        }
-    },
+    }
 
     /**
      * Display an alert popup
      *
      * @param  {Object} alert
      */
-    showAlert: function(alert) {
-        if (this.state.notificationPermitted) {
+    showAlert(alert) {
+        if (this.notificationPermitted) {
             var options = {};
             if (alert.profile_image) {
                 options.icon = alert.profile_image;
             } else {
-                options.icon = this.props.defaultProfileImage;
+                options.icon = this.options.defaultProfileImage;
             }
             if (alert.message) {
                 options.body = alert.message;
@@ -378,30 +222,8 @@ module.exports = React.createClass({
                 notification.close();
             });
         }
-    },
-
-    /**
-     * Render diagnostics
-     *
-     * @return {ReactElement}
-     */
-    render: function() {
-        var id = _.get(this.state.socket, 'id');
-        return (
-            <Diagnostics type="websocket-notifier">
-                <DiagnosticsSection label="Connection">
-                    <div>ID: {id}</div>
-                    <div>Socket: {this.state.socket ? 'established' : 'none'}</div>
-                    <div>Reconnection count: {this.state.reconnectionCount}</div>
-                    <div>Notification: {this.state.notificationPermitted ? 'permitted' : 'denied'}</div>
-                </DiagnosticsSection>
-                <DiagnosticsSection label="Recent messages">
-                    {_.map(this.state.recentMessages, renderJSON)}
-                </DiagnosticsSection>
-            </Diagnostics>
-        );
-    },
-});
+    }
+}
 
 function requestNotificationPermission() {
     return new Promise((resolve, reject) => {
@@ -413,10 +235,6 @@ function requestNotificationPermission() {
             }
         })
     });
-}
-
-function renderJSON(object, i) {
-    return <pre key={i}>{JSON.stringify(object, undefined, 4)}</pre>;
 }
 
 function parseJSON(text) {
