@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react');
+var EmojiRegex = require('emoji-regex');
 var ReactEasyEmoji = require('react-easy-emoji');
 var ListParser = require('utils/list-parser');
 
@@ -8,6 +9,7 @@ module.exports = {
     renderSurveyResults,
     renderTaskList,
     renderEmoji,
+    findEmoji,
     hasEmojiSupport,
 };
 
@@ -194,4 +196,17 @@ function hasEmojiSupport() {
     context.fillText(smile, 0, 0);
     var pixels = context.getImageData(16, 16, 1, 1).data;
     return pixels[0] !== 0;
+}
+
+var emojiRegex;
+
+function findEmoji(string) {
+    if (typeof(string) !== 'string') {
+        return 0;
+    }
+    if (!emojiRegex) {
+        emojiRegex = EmojiRegex();
+    }
+    var m = string.match(emojiRegex);
+    return m;
 }

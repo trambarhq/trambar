@@ -254,8 +254,15 @@ module.exports = React.createClass({
                 </div>
             );
         } else {
+            var className = 'text story plain-text';
+            var emoji = PlainText.findEmoji(text);
+            if (emoji) {
+                if (_.join(emoji, '') === text) {
+                    className += ` emoji-${emoji.length}`;
+                }
+            }
             return (
-                <div className="text story plain-text">
+                <div className={className}>
                     <p>{PlainText.renderEmoji(text)}</p>
                     {tags}
                 </div>
