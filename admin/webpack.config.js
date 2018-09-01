@@ -54,7 +54,7 @@ while (m = re.exec(code)) {
 
 module.exports = {
     context: folders.src,
-    entry: './bootstrap',
+    entry: './main',
     output: {
         path: folders.www,
         filename: '[name].js?[hash]',
