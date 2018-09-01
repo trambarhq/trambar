@@ -1,3 +1,5 @@
+@import '../colors';
+
 .sign-in-page {
     FORM {
         max-width: 20em;
@@ -8,14 +10,14 @@
         }
 
         .error {
-            color: #cc0000;
+            color: $error-text-color;
             margin-bottom: 1em;
         }
     }
 
     .oauth-button {
         display: table;
-        border: 1px solid #000000;
+        border: 1px solid $normal-border-color;
         width: 100%;
         max-width: 20em;
         margin-top: 0.5em;
@@ -46,17 +48,17 @@
 
         &:link, &:visited {
             text-decoration: none;
-            color: #000000;
+            color: $normal-text-color;
         }
 
         &.error {
-            border-color: #990000;
-            color: #990000;
+            border-color: $error-text-color;
+            color: $error-border-color;
         }
 
         &:hover, &:active {
-            background-color: #99ddff;
-            color: #000000;
+            background-color: $oauth-button-hover-background-color;
+            color: $normal-text-color;
         }
     }
 }

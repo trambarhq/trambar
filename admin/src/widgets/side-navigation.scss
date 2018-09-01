@@ -1,8 +1,10 @@
+@import '../colors';
+
 .side-navigation {
     flex: 1 1 auto;
     position: relative;
-    color: #fff;
-    background-color: #006699;
+    color: $navigation-text-color;
+    background-color: $navigation-background-color;
     min-width: 15em;
     max-width: 20em;
 
@@ -34,7 +36,7 @@
         bottom: 0;
         right: 0;
         left: 0;
-        background-color: #005580;
+        background-color: $navigation-background-color;
         transition: bottom 1s linear 1s;
 
         .button {
@@ -43,14 +45,14 @@
 
             &.country {
                 .label {
-                    border-left: 1px solid #006699;
+                    border-left: 1px solid $navigation-background-color;
                 }
             }
 
             &.user {
                 float: right;
                 .label {
-                    border-left: 1px solid #006699;
+                    border-left: 1px solid $navigation-background-color;
                 }
 
                 .window-container {
@@ -62,7 +64,7 @@
             .tooltip {
                 .label {
                     display: inline-block;
-                    color: #0077b3;
+                    color: $navigation-menu-button-text-color;
                     padding: 0.4em 0.5em 0.3em 0.5em;
                 }
 
@@ -71,13 +73,13 @@
                         cursor: pointer;
 
                         &:hover {
-                            color: #99ddff;
+                            color: $navigation-menu-button-hover-text-color;
                         }
                     }
                 }
 
                 .item {
-                    color: #777777;
+                    color: $navigation-menu-text-color;
                     margin-top: 0.25em;
                     margin-right: 0.25em;
                     cursor: pointer;
@@ -88,7 +90,7 @@
 
                     &.selected {
                         cursor: default;
-                        color: #0077b3;
+                        color: $navigation-menu-button-text-color;
 
                         .fa {
                             visibility: visible;

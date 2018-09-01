@@ -1,12 +1,14 @@
+@import '../colors';
+
 .combo-button {
     display: inline-block;
     position: relative;
 
     BUTTON {
         font-size: 1.2em;
-        background-color: #cccccc;
-        border: 2px outset #dddddd;
-        color: #000000;
+        background-color: $combo-button-background-color;
+        border: 2px outset $combo-button-border-color;
+        color: $combo-button-text-color;
 
         &.main {
             padding: 0.14em 0.5em 0.14em 0.5em;
@@ -19,7 +21,7 @@
 
         &.side {
             padding: 0.14em 5px 0.14em 5px;
-            border-left: 1px inset #dddddd;
+            border-left: 1px inset $combo-button-border-color;
 
             &:active {
                 border-left-width: 2px;
@@ -33,9 +35,9 @@
 
             @keyframes blink {
                 50% {
-                    background-color: #e0e0e0;
-                    border-color: #e0e0e0;
-                    color: #101010;
+                    background-color: $combo-button-alert-background-color;
+                    border-color: $combo-button-alert-border-color;
+                    color: $combo-button-alert-text-color;
                 }
             }
         }
@@ -50,9 +52,9 @@
 
         .menu {
             display: inline-block;
-            border: 2px outset #dddddd;
+            border: 2px outset $combo-button-border-color;
             padding: 0.5em 0.5em 0.5em 0.5em;
-            background-color: #cccccc;
+            background-color: $combo-button-background-color;
             text-align: left;
 
             .option {
@@ -60,12 +62,12 @@
                 margin-bottom: 0.5em;
 
                 &.disabled {
-                    color: #aaaaaa;
+                    color: $combo-button-disabled-text-color;
                     cursor: default;
                 }
 
                 &.separator {
-                    border-top: 1px solid #999999;
+                    border-top: 1px solid $combo-button-separator-color;
                     padding-top: 0.5em;
                 }
 

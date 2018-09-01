@@ -1,31 +1,33 @@
+@import '../colors';
+
 .push-button {
     font-size: 1.2em;
     padding: 0.14em 0.5em 0.14em 0.5em;
-    background-color: #cccccc;
-    border: 2px outset #dddddd;
-    color: #000000;
+    background-color: $button-background-color;
+    border: 2px outset $button-border-color;
+    color: $button-text-color;
 
     &:disabled {
-        color: #999999;
+        color: $button-disabled-text-color;
     }
 
     &.emphasis {
-        color: #ffffff;
-        background-color: #006699;
-        border: 2px outset #0088cc;
+        color: $button-emphasis-text-color;
+        background-color: $button-emphasis-background-color;
+        border: 2px outset $button-emphasis-border-color;
 
         &:disabled {
-            color: #5c8599;
+            color: $button-emphasis-disabled-text-color;
         }
     }
 
     &.danger {
-        color: #ffffff;
-        background-color: #cc2929;
-        border: 2px outset #ff3333;
+        color: $button-danger-text-color;
+        background-color: $button-danger-background-color;
+        border: 2px outset $button-danger-border-color;
 
         &:disabled {
-            color: #cc7a7a;
+            color: $button-danger-disabled-text-color;
         }
     }
 

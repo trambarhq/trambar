@@ -1,3 +1,5 @@
+@import '../colors';
+
 .activity-chart {
     margin-bottom: 1em;
 
@@ -62,7 +64,7 @@
     }
 
     .ct-grid.ct-horizontal.month-start {
-        stroke: #000000;
+        stroke: $normal-border-color;
         stroke-width: 1px;
         stroke-dasharray: none;
     }

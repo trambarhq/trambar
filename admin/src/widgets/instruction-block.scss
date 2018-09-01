@@ -1,3 +1,5 @@
+@import '../colors';
+
 .instruction-block {
     transition: opacity 0.5s linear 0.5s;
     opacity: 1;
@@ -9,13 +11,11 @@
         margin-bottom: 1em;
 
         $corner-width: 0.6em;
-        $background-color: #99ddff;
-        background: $background-color;
         background:
-            linear-gradient(135deg, transparent $corner-width, $background-color 0) top left,
-            linear-gradient(225deg, transparent $corner-width, $background-color 0) top right,
-            linear-gradient(315deg, transparent $corner-width, $background-color 0) bottom right,
-            linear-gradient(45deg,  transparent $corner-width, $background-color 0) bottom left;
+            linear-gradient(135deg, transparent $corner-width, $instruction-background-color 0) top left,
+            linear-gradient(225deg, transparent $corner-width, $instruction-background-color 0) top right,
+            linear-gradient(315deg, transparent $corner-width, $instruction-background-color 0) bottom right,
+            linear-gradient(45deg,  transparent $corner-width, $instruction-background-color 0) bottom left;
         background-size: 51% 51%;
         background-repeat: no-repeat;
     }

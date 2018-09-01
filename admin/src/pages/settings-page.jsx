@@ -442,7 +442,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             var index = _.indexOf(inputLanguageCurr, language.code);
             var badge;
             if (index !== -1) {
-                badge = <span className="pos">{index + 1}</span>;
+                badge = <span className="language-badge">{index + 1}</span>;
             }
             return {
                 name: language.code,

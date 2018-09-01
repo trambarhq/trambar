@@ -1,0 +1,120 @@
+$dark-blue: #006699;
+$light-blue: #99ddff;
+$light-red: #ff9999;
+$green: #009900;
+$red: #cc0000;
+$black: #000000;
+$white: #ffffff;
+$gray: #999999;
+$light-gray: #cccccc;
+$lighter-gray: #dddddd;
+$off-white: #eeeeee;
+$orange: #cc6600;
+$bright-yellow: #ffff66;
+
+$page-viewport-background-color: $white;
+$focus-outline-color: $light-blue;
+
+$normal-text-color: $black;
+$normal-border-color: $black;
+$normal-background-color: $white;
+
+$link-hover-color: $dark-blue;
+$link-disabled-color: $gray;
+
+$error-text-color: $red;
+$error-border-color: $red;
+
+$warning-text-color: $orange;
+
+$combo-button-background-color: $light-gray;
+$combo-button-border-color: $lighter-gray;
+$combo-button-text-color: $black;
+$combo-button-disabled-text-color: #aaaaaa;
+$combo-button-separator-color: $gray;
+$combo-button-alert-background-color: $off-white;
+$combo-button-alert-border-color: $off-white;
+$combo-button-alert-text-color: #101010;
+
+$navigation-background-color: $dark-blue;
+$navigation-text-color: $white;
+$navigation-hover-text-color: $light-blue;
+$navigation-disabled-text-color: #2483b3;
+$navigation-menu-text-color: #777777;
+$navigation-menu-button-text-color: #0077b3;
+$navigation-menu-button-hover-text-color: $light-blue;
+
+$alert-bar-text-color: #0077b3;
+$alert-bar-hover-text-color: $light-blue;
+$alert-bar-progress-bar-color: #0077b3;
+
+$dialog-box-background-color: $dark-blue;
+$dialog-box-text-color: $white;
+$dialog-box-shadow-color: $black;
+$dialog-box-separator-color: $white;
+
+$button-background-color: $light-gray;
+$button-border-color: $lighter-gray;
+$button-text-color: $normal-text-color;
+$button-disabled-text-color: $gray;
+$button-emphasis-background-color: $dark-blue;
+$button-emphasis-border-color: #0088cc;
+$button-emphasis-text-color: $white;
+$button-emphasis-disabled-text-color: #5c8599;
+
+$button-danger-background-color: #cc2929;
+$button-danger-border-color: #ff3333;
+$button-danger-text-color: $white;
+$button-danger-disabled-text-color: #cc7a7a;
+
+$table-alternate-background-color: $off-white;
+$table-selected-row-background-color: $light-blue;
+
+$badge-add-background-color: $green;
+$badge-remove-background-color: $red;
+$badge-text-color: $white;
+
+$language-badge-background-color: $black;
+$language-badge-text-color: $white;
+
+$picture-border-color: $white;
+$picture-selected-border-color: $light-blue;
+$picture-deleting-border-color: $light-red;
+
+$tool-tip-border-color: $black;
+$tool-tip-background-color: $white;
+$tool-tip-separator-color: $gray;
+$tool-tip-ellipsis-color: $gray;
+$tool-tip-shadow-color: rgba(0,0,0,0.75);
+
+$text-field-border-color: $black;
+$text-field-read-only-border-color: $white;
+$text-field-language-tab-background-color: $black;
+$text-field-language-tab-text-color: $white;
+$text-field-language-tab-disabled-text-color: $gray;
+$text-field-language-bubble-background-color: #e0e0e0;
+$text-field-language-bubble-shadow-color: rgba(0,0,0,0.5);
+
+$instruction-background-color: $light-blue;
+
+$image-placeholder-background-color: $off-white;
+
+$profile-placeholder-background-color: $gray;
+
+$oauth-button-border-color: black;
+$oauth-button-text-color: black;
+$oauth-button-hover-background-color: $light-blue;
+
+$sign-off-menu-text-color: #777777;
+$sign-off-menu-separator-color: #dddddd;
+
+$task-progress-bar-color: $dark-blue;
+$task-expanded-background-color: $light-blue;
+$task-item-added-background-color: #99ee66;
+$task-item-deleted-background-color: #ee3333;
+$task-item-modified-background-color: #66aaff;
+$task-error-border-color: #551111;
+$task-error-progress-bar: #ff6666;
+
+$drop-target-background-color: rgba(255,255,102,0.2);
+$drop-target-border-color: $bright-yellow;

@@ -1,3 +1,5 @@
+@import '../colors';
+
 .sign-off-menu {
     text-align: center;
     padding-top: 0.25em;
@@ -8,12 +10,12 @@
         cursor: pointer;
 
         &:link, &:visited {
-            color: #777777;
+            color: $sign-off-menu-text-color;
             text-decoration: none;
         }
 
         &:hover {
-            color: #004466;
+            color: $link-hover-color;
         }
     }
 
@@ -25,12 +27,12 @@
     .sign-off {
         text-align: center;
         padding: 0.5em 0.25em 0 0.25em;
-        border-top: 1px solid #dddddd;
-        color: #777777;
+        border-top: 1px solid $sign-off-menu-separator-color;
+        color: $sign-off-menu-text-color;
         cursor: pointer;
 
         &:hover {
-            color: #004466;
+            color: $link-hover-color;
         }
     }
 }

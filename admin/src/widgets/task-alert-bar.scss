@@ -1,22 +1,24 @@
+@import '../colors';
+
 .task-alert-bar {
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #005580;
+    background-color: $navigation-background-color;
     padding: 0.4em 0.5em 0.3em 0.5em;
-    border-left: 1px solid #006699;
+    border-left: 1px solid $navigation-background-color;
     text-align: right;
     transition: bottom 0.4s;
 
     .progress-bar-frame {
         display: inline-block;
         width: 10em;
-        border: 1px solid #0077b3;
+        border: 1px solid $alert-bar-progress-bar-color;
         margin-left: 0.5em;
 
         .bar {
-            background-color: #0077b3;
+            background-color: $alert-bar-progress-bar-color;
             height: 0.6em;
         }
     }
@@ -26,14 +28,14 @@
     }
 
     A {
-        color: #0077b3;
+        color: $alert-bar-text-color;
 
         &:link, &:visited {
             text-decoration: none;
         }
 
         &:hover {
-            color: #99ddff;
+            color: $alert-bar-hover-text-color;
         }
     }
 }

@@ -1,3 +1,5 @@
+@import '../colors';
+
 .task-list {
     max-height: 25em;
     overflow-y: auto;
@@ -37,18 +39,18 @@
             display: inline-block;
             float: right;
             width: 7em;
-            border: 1px solid #000000;
+            border: 1px solid $normal-text-color;
             margin-top: 0.2em;
             margin-left: 0.5em;
 
             .bar {
-                background-color: #0077b3;
+                background-color: $task-progress-bar-color;
                 height: 0.6em;
             }
         }
 
         &.expanded {
-            background: #99ddff;
+            background: $task-expanded-background-color;
         }
 
         .details {
@@ -59,26 +61,26 @@
 
             .item {
                 display: inline-block;
-                color: #000000;
+                color: $normal-text-color;
                 max-width: 8em;
                 padding: 0.15em 0.5em 0.15em 0.5em;
                 margin-right: 0.3em;
                 text-align: center;
                 text-overflow: ellipsis;
-                border: 1px solid black;
+                border: 1px solid $normal-border-color;
                 overflow: hidden;
                 white-space: nowrap;
 
                 &.added {
-                    background-color: #99ee66;
+                    background-color: $task-item-added-background-color;
                 }
 
                 &.deleted {
-                    background-color: #ee3333;
+                    background-color: $task-item-deleted-background-color;
                 }
 
                 &.modified {
-                    background-color: #66aaff;
+                    background-color: $task-item-modified-background-color;
                 }
             }
         }
@@ -89,22 +91,22 @@
             white-space: pre-wrap;
             padding-top: 0.35em;
             padding-bottom: 0.35em;
-            border-top: 1px solid #551111;
+            border-top: 1px solid $task-error-border-color;
         }
 
         &.failure {
-            color: #551111;
+            color: $task-error-border-color;
 
             .progress-bar-frame {
-                border-color: #551111;
+                border-color: $task-error-border-color;
 
                 .bar {
-                    background-color: #ff6666;
+                    background-color: $task-error-progress-bar;
                 }
             }
 
             .details {
-                border-top-color: #551111;
+                border-top-color: $task-error-border-color;
             }
         }
     }

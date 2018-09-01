@@ -1,9 +1,11 @@
+@import 'colors';
+
 * {
     box-sizing: border-box;
     font-family: sans-serif;
 
     &:focus {
-        outline-color: #fca326;
+        outline-color: $focus-outline-color;
     }
 }
 
@@ -26,7 +28,7 @@ body {
 .page-view-port {
     flex: 3 1 800px;
     position: relative;
-    background-color: #ffffff;
+    background-color: $page-viewport-background-color;
 
     .scroll-box {
         position: absolute;

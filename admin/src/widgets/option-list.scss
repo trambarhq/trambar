@@ -1,3 +1,5 @@
+@import '../colors';
+
 .option-list {
     margin-bottom: 1em;
 
@@ -8,7 +10,7 @@
 
     .container {
         margin-top: 3px;
-        border: 1px solid #000000;
+        border: 1px solid $normal-border-color;
         transition: border-color 1s ease-out;
         max-height: 30em;
         min-height: 1em;
@@ -27,17 +29,17 @@
         margin-top: 0.1em;
 
         &.add {
-            color: #009900;
+            color: $badge-add-background-color;
         }
 
         &.remove {
-            color: #cc0000;
+            color: $badge-remove-background-color;
         }
     }
 
     &.readonly {
         .container {
-            border-color: #ffffff;
+            border-color: $normal-background-color;
         }
     }
 }

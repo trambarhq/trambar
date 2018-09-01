@@ -1,3 +1,5 @@
+@import '../colors';
+
 .sortable-table {
     width: 100%;
     border-collapse: collapse;
@@ -7,8 +9,8 @@
     TH {
         text-align: left;
         cursor: pointer;
-        border-bottom: 1px solid #000000;
-        border-top: 1px solid #000000;
+        border-bottom: 1px solid $normal-border-color;
+        border-top: 1px solid $normal-border-color;
         padding: 0.2em 0.4em 0.1em 0.4em;
 
         .arrow {
@@ -41,7 +43,7 @@
         }
 
         TR {
-            background-color: #ffffff;
+            background-color: $normal-background-color;
             transition: background-color $expansion-time, opacity $expansion-time;
 
             &.pending {
@@ -58,7 +60,7 @@
         }
 
         TR:nth-child(even) {
-            background-color: #eeeeee;
+            background-color: $table-alternate-background-color;
         }
     }
 
@@ -68,11 +70,11 @@
 
     A {
         &:link, &:visited {
-            color: #000000;
+            color: $normal-text-color;
             text-decoration: none;
 
             &:hover {
-                color: #004466;
+                color: $link-hover-color;
             }
         }
     }
@@ -80,7 +82,7 @@
     &.expandable {
         TBODY {
             TR {
-                background-color: #ffffff;
+                background-color: $normal-background-color;
 
                 &.collapsed {
                     opacity: 0;
@@ -109,7 +111,7 @@
                 cursor: pointer;
 
                 &.selected {
-                    background-color: #99ddff;
+                    background-color: $table-selected-row-background-color;
                     opacity: 1 !important;
                 }
             }

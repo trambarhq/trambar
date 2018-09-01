@@ -1,3 +1,5 @@
+@import '../colors';
+
 .navigation-tree {
     position: relative;
 
@@ -35,12 +37,12 @@
         cursor: default;
 
         &:link, &:visited {
-            color: #ffffff;
+            color: $navigation-text-color;
             text-decoration: none;
             cursor: pointer;
 
             &:hover {
-                color: #99ddff;
+                color: $navigation-hover-text-color;
             }
         }
     }
@@ -118,7 +120,7 @@
 
     &.disabled {
         A {
-            color: #2483b3;
+            color: $navigation-disabled-text-color;
         }
 
         .arrow {

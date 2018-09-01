@@ -77,6 +77,7 @@ var pageClasses = [
 require('setimmediate');
 require('utils/lodash-extra');
 require('application.scss');
+require('colors.scss');
 require('font-awesome-webpack');
 
 module.exports = React.createClass({

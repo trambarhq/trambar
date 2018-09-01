@@ -1,6 +1,8 @@
+@import '../colors';
+
 .action-badge {
     font-size: 0.7em;
-    color: #ffffff;
+    color: $badge-text-color;
     padding: 2px 4px 2px 4px;
     float: right;
     text-transform: uppercase;
@@ -11,10 +13,10 @@
     }
 
     &.add {
-        background-color: #009900;
+        background-color: $badge-add-background-color;
     }
 
     &.remove {
-        background-color: #cc0000;
+        background-color: $badge-remove-background-color;
     }
 }

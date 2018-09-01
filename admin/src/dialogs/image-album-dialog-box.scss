@@ -1,13 +1,15 @@
+@import '../colors';
+
 .image-album-dialog-box {
     display: flex;
     position: relative;
     flex-direction: column;
-    background-color: #006699;
-    color: #ffffff;
+    background-color: $dialog-box-background-color;
+    color: $dialog-box-text-color;
     width: 80vw;
     max-height: 60vh;
     padding: 1em 1em 1em 1em;
-    box-shadow: 5px 5px 4px #000000;
+    box-shadow: 5px 5px 4px $dialog-box-shadow-color;
 
     .scrollable {
         flex: 1 1 auto;
@@ -18,7 +20,7 @@
 
         .picture {
             display: inline-block;
-            border: 5px solid #ffffff;
+            border: 5px solid $picture-border-color;
             margin: 0.3em 0.4em 0.3em 0.4em;
             cursor: pointer;
 
@@ -27,11 +29,11 @@
             }
 
             &.selected {
-                border-color: #99ddff;
+                border-color: $picture-selected-border-color;
             }
 
             &.deleting {
-                border-color: #ff9999;
+                border-color: $picture-deleting-border-color;
             }
 
             &.disabled {
@@ -42,7 +44,7 @@
 
     .buttons {
         flex: 0 0 auto;
-        border-top: 1px solid #ffffff;
+        border-top: 1px solid $dialog-box-separator-color;
         padding-top: 0.8em;
 
         .left {
@@ -60,9 +62,9 @@
 
             INPUT[type="file"] {
                 position: absolute;
-                z-index: -50000;
                 width: 1px;
                 height: 1px;
+                opacity: 0;
             }
         }
     }
@@ -73,7 +75,7 @@
         top: 0;
         right: 0;
         bottom: 0;
-        border: 4px solid #ffff66;
-        background-color: rgba(255,255,102,0.2);
+        border: 4px solid $drop-target-border-color;
+        background-color: $drop-target-background-color;
     }
 }

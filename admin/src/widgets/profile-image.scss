@@ -1,3 +1,5 @@
+@import '../colors';
+
 .profile-image {
     &.small {
         width: 1.5em;
@@ -13,5 +15,5 @@
 }
 
 svg.profile-image {
-    background-color: #999999;
+    background-color: $profile-placeholder-background-color;
 }

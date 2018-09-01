@@ -1,3 +1,5 @@
+@import '../colors';
+
 .tooltip.user {
     .item {
         margin-bottom: 2px;
@@ -6,14 +8,14 @@
 
     .ellipsis {
         text-align: center;
-        color: #999999;
+        color: $tool-tip-ellipsis-color;
         padding-bottom: 0.2em;
     }
 
     .bottom {
         font-size: 0.9em;
         text-align: center;
-        border-top: 1px solid #999999;
+        border-top: 1px solid $tool-tip-separator-color;
         padding-top: 0.2em;
 
         A {

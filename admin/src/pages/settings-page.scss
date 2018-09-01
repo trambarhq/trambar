@@ -1,3 +1,5 @@
+@import '../colors';
+
 .settings-page {
     .buttons {
         float: right;
@@ -17,9 +19,9 @@
     }
 
     .option-list {
-        .pos {
-            background-color: #000000;
-            color: #eeeeee;
+        .language-badge {
+            background-color: $language-badge-background-color;
+            color: $language-badge-text-color;
             display: inline-block;
             font-size: 0.7em;
             padding: 0.1em 0.4em 0.1em 0.4em;

@@ -1,3 +1,5 @@
+@import '../colors';
+
 .user-summary-page {
     .buttons {
         float: right;
@@ -23,7 +25,7 @@
         cursor: pointer;
 
         &:hover {
-            color: #004466;
+            color: $link-hover-color;
         }
     }
 

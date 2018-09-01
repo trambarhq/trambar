@@ -1,3 +1,5 @@
+@import '../colors';
+
 .image-selector {
     margin-bottom: 1em;
     overflow: hidden;
@@ -26,7 +28,7 @@
             .placeholder {
                 display: block;
                 position: relative;
-                background-color: #eeeeee;
+                background-color: $image-placeholder-background-color;
 
                 .fa {
                     display: block;
@@ -64,12 +66,12 @@
                 }
 
                 &:hover {
-                    background-color: #99ddff;
+                    background-color: $link-hover-color;
                 }
 
                 &.disabled {
                     cursor: default;
-                    color: #999999;
+                    color: $link-disabled-color;
 
                     &:hover {
                         background-color: transparent;

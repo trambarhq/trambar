@@ -1,3 +1,5 @@
+@import '../colors';
+
 .tooltip {
     position: relative;
     display: inline-block;
@@ -39,8 +41,8 @@
     .window {
         display: inline-block;
         padding: 0.4em 0.5em 0.4em 0.5em;
-        border: 1px solid black;
-        background-color: #ffffff;
-        box-shadow: 1px 1px 3px 0px rgba(0,0,0,0.75);
+        border: 1px solid $tool-tip-border-color;
+        background-color: $tool-tip-background-color;
+        box-shadow: 1px 1px 3px 0px $tool-tip-shadow-color;
     }
 }
