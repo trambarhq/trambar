@@ -57,6 +57,7 @@
     "react-dom": "~15.4.0",
     "react-easy-emoji": "^1.1.0",
     "relaks": "^1.1.1",
+    "relaks-route-manager": "0.0.1",
     "sass-loader": "^6.0.5",
     "scroll-into-view-if-needed": "^2.2.16",
     "style-loader": "^0.17.0",

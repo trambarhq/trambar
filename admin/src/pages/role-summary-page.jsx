@@ -37,42 +37,6 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/roles/:role/?'
-            ], (params) => {
-                return {
-                    role: (params.role === 'new') ? 'new' : Route.parseId(params.role),
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/roles/${params.role}/`, query;
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -271,7 +235,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      */
     returnToList: function() {
         var route = this.props.route;
-        return route.push(require('pages/role-list-page'));
+        return route.push('role-list-page');
     },
 
     /**

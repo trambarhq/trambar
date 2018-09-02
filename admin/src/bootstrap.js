@@ -38,7 +38,17 @@ function initialize(evt) {
         var Application = modules['app'];
         var React = modules['react'];
         var ReactDOM = modules['react-dom'];
-        var appElement = React.createElement(Application);
-        ReactDOM.render(appElement, appContainer);
+        var RelaksRouteManager = modules['relaks-route-manager'];
+
+        var routeManager = new RelaksRouteManager({
+            basePath: '/admin',
+            routes: Application.routes,
+            rewrites: Application.rewrites,
+        });
+        routeManager.initialize().then(() => {
+            var appProps = { routeManager };
+            var appElement = React.createElement(Application, appProps);
+            ReactDOM.render(appElement, appContainer);
+        });
     });
 }

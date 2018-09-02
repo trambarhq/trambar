@@ -34,7 +34,7 @@ module.exports = React.createClass({
         var route = this.props.route;
         var label = t('repository-tooltip-$count', this.props.repos.length);
         var list = _.map(this.props.repos, (repo, i) => {
-            var url = route.find(require('pages/repo-summary-page'), {
+            var url = route.find('repo-summary-page', {
                 project: this.props.project.id,
                 repo: repo.id,
             });
@@ -50,7 +50,7 @@ module.exports = React.createClass({
                 </div>
             );
         });
-        var listURL = route.find(require('pages/repo-list-page'), {
+        var listURL = route.find('repo-list-page', {
             project: this.props.project.id,
         });
         return (

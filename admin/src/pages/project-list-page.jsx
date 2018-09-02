@@ -45,41 +45,6 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/projects/?'
-            ], (params) => {
-                return {
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/projects/`, query;
-            if (params && params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -424,7 +389,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 // link to project summary in non-editing mode
                 var route = this.props.route;
                 var params = { project: project.id };
-                url = route.find(require('pages/project-summary-page'), params);
+                url = route.find('project-summary-page', params);
             }
             return (
                 <td>
@@ -630,7 +595,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      */
     handleAddClick: function(evt) {
         var route = this.props.route;
-        return route.push(require('pages/project-summary-page'), {
+        return route.push('project-summary-page', {
             project: 'new'
         });
     },

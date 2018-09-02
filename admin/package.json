@@ -55,6 +55,7 @@
     "react-addons-test-utils": "~15.4.0",
     "react-dom": "~15.4.0",
     "relaks": "^1.1.1",
+    "relaks-route-manager": "0.0.1",
     "sass-loader": "^6.0.5",
     "setimmediate": "^1.0.5",
     "style-loader": "^0.17.0",

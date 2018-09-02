@@ -32,41 +32,6 @@ module.exports = Relaks.createClass({
         payloads: PropTypes.instanceOf(Payloads).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/settings/?'
-            ], (params) => {
-                return {
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/settings/`, query;
-            if (params && params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *

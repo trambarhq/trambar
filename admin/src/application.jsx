@@ -5,13 +5,13 @@ var Relaks = require('relaks'); Relaks.createClass = require('relaks/create-clas
 
 var ComponentRefs = require('utils/component-refs');
 var HTTPError = require('errors/http-error');
-var CorsRewriter = require('routing/cors-rewriter');
+
+var RelaksRouteManager = require('relaks-route-manager');
+var Routing = require('routing'), Route = Routing.Route, routes = Routing.routes, rewrites = Routing.rewrites;
 
 // non-visual components
 var RemoteDataSource = require('data/remote-data-source');
 var Database = require('data/database');
-var RouteManager = require('routing/route-manager');
-var Route = require('routing/route');
 var PayloadManager = require('transport/payload-manager');
 var Payloads = require('transport/payloads');
 var LocaleManager = require('locale/locale-manager');
@@ -21,23 +21,7 @@ var Theme = require('theme/theme');
 var SubscriptionManager = require('data/subscription-manager');
 var SessionManager = require('data/session-manager');
 
-// pages
-var ProjectListPage = require('pages/project-list-page');
-var ProjectSummaryPage = require('pages/project-summary-page');
-var MemberListPage = require('pages/member-list-page');
-var RoleListPage = require('pages/role-list-page');
-var RolePage = require('pages/role-summary-page');
-var RepoListPage = require('pages/repo-list-page');
-var RepoSummaryPage = require('pages/repo-summary-page');
-var ServerListPage = require('pages/server-list-page');
-var ServerSummaryPage = require('pages/server-summary-page');
-var SettingsPage = require('pages/settings-page');
-var StartPage = require('pages/start-page');
-var UserListPage = require('pages/user-list-page');
-var UserSummaryPage = require('pages/user-summary-page');
-
 var SignInPage = require('pages/sign-in-page');
-var ErrorPage  = require('pages/error-page');
 
 // widgets
 var SideNavigation = require('widgets/side-navigation');
@@ -57,23 +41,6 @@ if (IndexedDBCache.isAvailable()) {
 // notifier
 var WebsocketNotifier = require('transport/websocket-notifier');
 
-var pageClasses = [
-    ProjectListPage,
-    ProjectSummaryPage,
-    MemberListPage,
-    RoleListPage,
-    RolePage,
-    RepoListPage,
-    RepoSummaryPage,
-    ServerListPage,
-    ServerSummaryPage,
-    SettingsPage,
-    StartPage,
-    UserListPage,
-    UserSummaryPage,
-    ErrorPage,
-];
-
 require('setimmediate');
 require('utils/lodash-extra');
 require('application.scss');
@@ -82,6 +49,10 @@ require('font-awesome-webpack');
 
 module.exports = React.createClass({
     displayName: 'Application',
+    propTypes: {
+        routeManager: PropTypes.instanceOf(RelaksRouteManager),
+    },
+    statics: { routes, rewrites },
 
     /**
      * Return initial state of component
@@ -91,7 +62,6 @@ module.exports = React.createClass({
     getInitialState: function() {
         this.components = ComponentRefs({
             remoteDataSource: RemoteDataSource,
-            routeManager: RouteManager,
             localeManager: LocaleManager,
             themeManager: ThemeManager,
             payloadManager: PayloadManager,
@@ -103,7 +73,7 @@ module.exports = React.createClass({
         return {
             database: null,
             payloads: null,
-            route: null,
+            route: new Route(this.props.routeManager),
             locale: null,
             theme: null,
 
@@ -186,9 +156,9 @@ module.exports = React.createClass({
             theme: this.state.theme,
         };
         if (!this.state.canAccessServer) {
-            if (CurrentPage !== ErrorPage) {
+            //if (CurrentPage !== ErrorPage) {
                 CurrentPage = SignInPage;
-            }
+            //}
         }
         return <CurrentPage {...pageProps} />;
     },
@@ -220,7 +190,7 @@ module.exports = React.createClass({
     renderConfiguration: function() {
         var setters = this.components.setters;
         var route = this.state.route;
-        var serverAddress = (route) ? route.parameters.address : null;
+        var serverAddress = (route) ? route.context.address : null;
         var remoteDataSourceProps = {
             ref: setters.remoteDataSource,
             basePath: '/srv/admin-data',
@@ -244,14 +214,6 @@ module.exports = React.createClass({
             database: this.state.database,
             route: this.state.route,
             onChange: this.handlePayloadsChange,
-        };
-        var routeManagerProps = {
-            ref: setters.routeManager,
-            pages: pageClasses,
-            database: this.state.database,
-            rewrite: this.rewriteURL,
-            onChange: this.handleRouteChange,
-            onRedirectionRequest: this.handleRedirectionRequest,
         };
         var localeManagerProps = {
             ref: setters.localeManager,
@@ -304,7 +266,6 @@ module.exports = React.createClass({
                 <WebsocketNotifier {...notifierProps} />
                 <RemoteDataSource {...remoteDataSourceProps} cache={this.components.cache} />
                 <PayloadManager {...payloadManagerProps} />
-                <RouteManager {...routeManagerProps} />
                 <LocaleManager {...localeManagerProps} />
                 <ThemeManager {...themeManagerProps} />
                 <SubscriptionManager {...subscriptionManagerProps} />
@@ -356,24 +317,6 @@ module.exports = React.createClass({
     },
 
     /**
-     * Rewrite the URL that, either extracting the server address or inserting it
-     *
-     * @param  {Object} urlParts
-     * @param  {Object} params
-     * @param  {String} op
-     */
-    rewriteURL: function(urlParts, params, op) {
-        if (op === 'parse') {
-            CorsRewriter.extract(urlParts, params);
-        } else {
-            if (this.state.route) {
-                params = _.defaults(params, this.state.route.parameters);
-            }
-            CorsRewriter.insert(urlParts, params);
-        }
-    },
-
-    /**
      * Called when the database queries might yield new results
      *
      * @param  {Object} evt
@@ -382,8 +325,8 @@ module.exports = React.createClass({
         var context;
         if (this.state.route) {
             context = {
-                address: this.state.route.parameters.address,
-                schema: this.state.route.parameters.schema,
+                address: this.state.route.context.address,
+                schema: this.state.route.params.schema,
             };
         }
         var database = new Database(evt.target, context);
@@ -398,7 +341,7 @@ module.exports = React.createClass({
     handleAuthorization: function(evt) {
         this.components.sessionManager.saveToCache(evt.session);
 
-        var address = this.state.route.parameters.address;
+        var address = this.state.route.context.address;
         if (evt.session.address === address) {
             this.setState({
                 canAccessServer: true
@@ -414,7 +357,7 @@ module.exports = React.createClass({
     handleExpiration: function(evt) {
         this.components.sessionManager.removeFromCache(evt.session);
 
-        var address = this.state.route.parameters.address;
+        var address = this.state.route.context.address;
         if (evt.session.address === address) {
             this.setState({
                 canAccessServer: false
@@ -429,7 +372,7 @@ module.exports = React.createClass({
      */
     handleStupefaction: function(evt) {
         var route = this.state.route;
-        route.replace(require('pages/error-page'), { code: 404 });
+        route.replace('pages/error-page', { code: 404 });
     },
 
     /**
@@ -465,7 +408,7 @@ module.exports = React.createClass({
      */
     handleRouteChange: function(evt) {
         var route = new Route(evt.target);
-        var address = route.parameters.address;
+        var address = route.context.address;
         var database = this.state.database;
         if (address != this.state.database.context.address) {
             var dataSource = this.components.remoteDataSource;
@@ -508,35 +451,9 @@ module.exports = React.createClass({
      *
      * @param  {Object} evt
      *
-     * @return {Promise<String>}
      */
     handleRedirectionRequest: function(evt) {
-        var routeManager = evt.target;
-        var url = routeManager.find(ErrorPage, { code: 404 });
-        return Promise.resolve(url);
-    },
-
-    /**
-     * Called when users clicks on an element anywhere on the page
-     *
-     * @param  {Event} evt
-     */
-    handleClick: function(evt) {
-        if (evt.button === 0) {
-            // trap clicks on hyperlinks
-            var anchor = getAnchor(evt.target);
-            if (anchor && !anchor.target && !anchor.download) {
-                var url = anchor.getAttribute('href') || anchor.getAttribute('data-url');
-                if (url && url.indexOf(':') === -1) {
-                    // relative links are handled by RouteManager
-                    this.state.route.change(url);
-                    evt.preventDefault();
-                    // clear focus on change
-                    anchor.blur();
-                }
-            }
-        }
-
+        // TODO
     },
 
     /**

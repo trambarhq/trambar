@@ -42,42 +42,6 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/servers/:server/?'
-            ], (params) => {
-                return {
-                    server: (params.server === 'new') ? 'new' : Route.parseId(params.server),
-                    edit: !!query.edit
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/servers/${params.server}/`, query;
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -311,7 +275,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      */
     returnToList: function() {
         var route = this.props.route;
-        return route.push(require('pages/server-list-page'));
+        return route.push('server-list-page');
     },
 
     /**

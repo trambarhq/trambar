@@ -45,49 +45,6 @@ module.exports = Relaks.createClass({
         payloads: PropTypes.instanceOf(Payloads).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/users/:user/',
-                '/projects/:project/members/:user/?',
-            ], (params) => {
-                return {
-                    user: (params.user === 'new') ? 'new' : Route.parseId(params.user),
-                    project: Route.parseId(params.project),
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path, query;
-            if (params.project) {
-                path = `/projects/${params.project}/members/${params.user}/`;
-            } else {
-                path = `/users/${params.user}/`;
-            }
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -325,9 +282,9 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
         var route = this.props.route;
         if (route.parameters.project) {
             var params = { project: route.parameters.project };
-            return route.push(require('pages/member-list-page'), params);
+            return route.push('member-list-page', params);
         } else {
-            return route.push(require('pages/user-list-page'));
+            return route.push('user-list-page');
         }
     },
 

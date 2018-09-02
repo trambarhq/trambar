@@ -34,41 +34,6 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/servers/?'
-            ], (params) => {
-                return {
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/servers/`, query;
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -394,7 +359,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             } else {
                 var route = this.props.route;
                 var params = { server: server.id };
-                url = route.find(require('pages/server-summary-page'), params);
+                url = route.find('server-summary-page', params);
             }
             var iconName = getServerIcon(server.type);
             var icon = <i className={`fa fa-${iconName} fa-fw`} />;
@@ -529,7 +494,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      */
     handleAddClick: function(evt) {
         var route = this.props.route;
-        return route.push(require('pages/server-summary-page'), {
+        return route.push('server-summary-page', {
             server: 'new'
         });
     },

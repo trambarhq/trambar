@@ -33,41 +33,6 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/roles/?',
-            ], (params) => {
-                return {
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {String}
-         */
-        getURL: function(params) {
-            var path = `/roles/`, query;
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -387,7 +352,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
             } else {
                 var route = this.props.route;
                 var params = { role: role.id };
-                url = route.find(require('pages/role-summary-page'), params);
+                url = route.find('role-summary-page', params);
             }
             return (
                 <td>
@@ -465,7 +430,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
     handleAddClick: function(evt) {
         var route = this.props.route;
         var params = { role: 'new' };
-        return route.push(require('pages/role-summary-page'), params);
+        return route.push('role-summary-page', params);
     },
 
     /**

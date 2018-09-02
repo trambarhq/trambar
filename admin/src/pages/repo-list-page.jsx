@@ -36,42 +36,6 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/projects/:project/repos/?'
-            ], (params) => {
-                return {
-                    project: Route.parseId(params.project),
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/projects/${params.project}/repos/`, query;
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -405,7 +369,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 var route = this.props.route;
                 var params = _.clone(route.parameters);
                 params.repo = repo.id;
-                url = route.find(require('pages/repo-summary-page'), params);
+                url = route.find('repo-summary-page', params);
             }
             return (
                 <td>
@@ -434,7 +398,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 var title = p(server.details.title) || t(`server-type-${server.type}`);
                 var route = this.props.route;
                 var params = { server: server.id };
-                var url = route.find(require('pages/server-summary-page'), params);
+                var url = route.find('server-summary-page', params);
                 contents =(
                     <a href={url}>
                         <i className={`fa fa-${server.type} fa-fw`} />

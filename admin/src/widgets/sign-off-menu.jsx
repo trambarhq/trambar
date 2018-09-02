@@ -63,7 +63,7 @@ module.exports = Relaks.createClass({
     handleSignOffClick: function() {
         var db = this.props.database.use({ by: this });
         db.endSession().then(() => {
-            this.props.route.push(require('pages/start-page'));
+            this.props.route.push('start-page');
         });
     },
 });

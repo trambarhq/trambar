@@ -38,41 +38,6 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/users/?'
-            ], (params) => {
-                return {
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/users/`, query;
-            if (params && params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -401,7 +366,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
                 // don't create the link when we're editing the list
                 var route = this.props.route;
                 var params = { user: user.id }
-                url = route.find(require('pages/user-summary-page'), params);
+                url = route.find('user-summary-page', params);
             }
             var image = <ProfileImage user={user} theme={this.props.theme} />;
             return (
@@ -579,7 +544,7 @@ var UserListPageSync = module.exports.Sync = React.createClass({
     handleAddClick: function(evt) {
         var route = this.props.route;
         var params = { user: 'new' };
-        return route.push(require('pages/user-summary-page'), params);
+        return route.push('user-summary-page', params);
     },
 
     /**

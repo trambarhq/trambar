@@ -20,40 +20,6 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/:extra?'
-            ], (params) => {
-                if (_.trimEnd(params.extra, '/')) {
-                    // there's extra stuff--not a match
-                    return null;
-                }
-                return params;
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/`, query;
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -71,11 +37,11 @@ module.exports = Relaks.createClass({
                 if (_.isEmpty(system)) {
                     if (!this.redirectTimeout) {
                         this.redirectTimeout = setTimeout(() => {
-                            this.props.route.replace(require('pages/settings-page'), { edit: true });
+                            this.props.route.replace('settings-page', { edit: true });
                         }, 2500);
                     }
                 } else {
-                    return this.props.route.replace(require('pages/project-list-page'));
+                    return this.props.route.replace('project-list-page');
                 }
             });
         }).then((system) => {

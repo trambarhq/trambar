@@ -38,7 +38,7 @@ module.exports = React.createClass({
             var role0 = roles[0]
             var url0;
             if (!this.props.disabled) {
-                url0 = route.find(require('pages/role-summary-page'), {
+                url0 = route.find('role-summary-page', {
                    role: role0.id,
                 });
             }
@@ -55,7 +55,7 @@ module.exports = React.createClass({
                 ellipsis = <div className="ellipsis"><i className="fa fa-ellipsis-v" /></div>;
             }
             var list = _.map(roles, (role, i) => {
-                var url = route.find(require('pages/role-summary-page'), {
+                var url = route.find('role-summary-page', {
                     role: role.id,
                 });
                 var title = p(role.details.title) || role.name;
@@ -67,7 +67,7 @@ module.exports = React.createClass({
                     </div>
                 );
             });
-            var listURL = route.find(require('pages/role-list-page'));
+            var listURL = route.find('role-list-page');
             var tooltip = (
                 <Tooltip className="role" disabled={this.props.disabled || list.length === 0} key={1}>
                     <inline>{label}</inline>

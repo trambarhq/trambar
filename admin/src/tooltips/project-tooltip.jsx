@@ -37,7 +37,7 @@ module.exports = React.createClass({
             var project0 = projects[0]
             var url0;
             if (!this.props.disabled) {
-                url0 = route.find(require('pages/project-summary-page'), {
+                url0 = route.find('project-summary-page', {
                     project: project0.id,
                 });
             }
@@ -54,7 +54,7 @@ module.exports = React.createClass({
                 ellipsis = <div className="ellipsis"><i className="fa fa-ellipsis-v" /></div>;
             }
             var list = _.map(projects, (project, i) => {
-                var url = route.find(require('pages/project-summary-page'), {
+                var url = route.find('project-summary-page', {
                     project: project.id,
                 });
                 var title = p(project.details.title) || project.name;
@@ -66,7 +66,7 @@ module.exports = React.createClass({
                     </div>
                 );
             });
-            var listURL = route.find(require('pages/project-list-page'), {});
+            var listURL = route.find('project-list-page', {});
             var tooltip = (
                 <Tooltip className="project" disabled={this.props.disabled || list.length === 0} key={1}>
                     <inline>{label}</inline>

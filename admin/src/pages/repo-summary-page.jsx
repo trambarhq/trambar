@@ -35,43 +35,6 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/projects/:project/repos/:repo/?',
-            ], (params) => {
-                return {
-                    project: Route.parseId(params.project),
-                    repo: Route.parseId(params.repo),
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/projects/${params.project}/repos/${params.repo}/`, query;
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -226,7 +189,7 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
     returnToList: function() {
         var route = this.props.route;
         var params = { project: route.parameters.project };
-        return route.push(require('pages/repo-list-page'), params);
+        return route.push('repo-list-page', params);
     },
 
     /**

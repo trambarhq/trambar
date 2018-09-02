@@ -246,7 +246,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var route = this.props.route;
         var label = t('nav-projects');
-        var url = route.find(require('pages/project-list-page'));
+        var url = route.find('project-list-page');
         var children = [
             this.getProjectNode(),
         ];
@@ -270,7 +270,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         } else {
             label = p(project.details.title) || project.name || '-';
         }
-        var url = route.find(require('pages/project-summary-page'), {
+        var url = route.find('project-summary-page', {
             project: params.project
         });
         // show children when there's actually a project
@@ -294,7 +294,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var label = t('nav-members');
         var url;
         if (typeof(params.project) === 'number') {
-            url = route.find(require('pages/member-list-page'), {
+            url = route.find('member-list-page', {
                 project: params.project
             });
         }
@@ -322,7 +322,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
             label = p(user.details.name) || user.username || '-';
         }
         if (typeof(params.project) === 'number') {
-            url = route.find(require('pages/user-summary-page'), {
+            url = route.find('user-summary-page', {
                 project: params.project,
                 user: params.user,
             });
@@ -342,7 +342,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var label = t('nav-repositories');
         var url;
         if (typeof(params.project) === 'number') {
-            url = route.find(require('pages/repo-list-page'), {
+            url = route.find('repo-list-page', {
                 project: params.project
             });
         }
@@ -366,7 +366,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var label = p(repo.details.title) || repo.name || '-';
         var url;
         if (params.project && params.repo) {
-            url = route.find(require('pages/repo-summary-page'), {
+            url = route.find('repo-summary-page', {
                 project: params.project,
                 repo: params.repo,
             });
@@ -383,7 +383,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var label = t('nav-users');
         var route = this.props.route;
-        var url = route.find(require('pages/user-list-page'));
+        var url = route.find('user-list-page');
         var children = [
             this.getUserNode(),
         ];
@@ -408,7 +408,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
             label = p(user.details.name) || user.username || '-';
         }
         if (params.user) {
-            url = route.find(require('pages/user-summary-page'), {
+            url = route.find('user-summary-page', {
                 user: params.user
             });
         }
@@ -424,7 +424,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var route = this.props.route;
         var label = t('nav-roles');
-        var url = route.find(require('pages/role-list-page'));
+        var url = route.find('role-list-page');
         var children = [
             this.getRoleNode(),
         ];
@@ -449,7 +449,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
             label = p(role.details.title) || role.name || '-';
         }
         if (params.role) {
-            url = route.find(require('pages/role-summary-page'), {
+            url = route.find('role-summary-page', {
                 role: params.role
             });
         }
@@ -465,7 +465,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var route = this.props.route;
         var label = t('nav-servers');
-        var url = route.find(require('pages/server-list-page'));
+        var url = route.find('server-list-page');
         var children = [
             this.getServerNode(),
         ];
@@ -493,7 +493,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
             }
         }
         if (params.server) {
-            url = route.find(require('pages/server-summary-page'), {
+            url = route.find('server-summary-page', {
                 server: params.server
             });
         }
@@ -509,7 +509,7 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
         var t = this.props.locale.translate;
         var route = this.props.route;
         var label = t('nav-settings');
-        var url = route.find(require('pages/settings-page'));
+        var url = route.find('settings-page');
         return { label, url };
     },
 

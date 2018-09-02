@@ -36,42 +36,6 @@ module.exports = Relaks.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/projects/:project/members/?'
-            ], (params) => {
-                return {
-                    project: Route.parseId(params.project),
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/projects/${params.project}/members/`, query;
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -429,7 +393,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
                 }
             } else {
                 // don't create the link when we're editing the list
-                url = this.props.route.find(require('pages/user-summary-page'), {
+                url = this.props.route.find('user-summary-page', {
                     user: user.id,
                     project: this.props.project.id,
                 });
@@ -668,7 +632,7 @@ var MemberListPageSync = module.exports.Sync = React.createClass({
         var route = this.props.route;
         var params = _.clone(route.parameters);
         params.user = 'new';
-        return route.push(require('pages/user-summary-page'), params);
+        return route.push('user-summary-page', params);
     },
 
     /**

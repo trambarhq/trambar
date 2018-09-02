@@ -17,33 +17,6 @@ module.exports = React.createClass({
         theme: PropTypes.instanceOf(Theme).isRequired,
     },
 
-    statics: {
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/error/:code',
-            ], (params) => {
-                return {
-                    code: parseInt(params.code)
-                };
-            });
-        },
-
-        getURL: function(params) {
-            var code = params.code;
-            if (params.error) {
-                code = params.error.statusCode;
-            } else {
-                code = params.code || 400;
-            }
-            var path = `/error/${code}`, query;
-            return { path, query };
-        },
-
-        getOptions: function(route) {
-            return {};
-        },
-    },
-
     render: function() {
         var params = this.props.route.parameters;
         var error = new HTTPError(params.code)

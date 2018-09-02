@@ -42,12 +42,12 @@ module.exports = React.createClass({
         var list = _.map(users, (user, i) => {
             var url;
             if (this.props.project) {
-                url = route.find(require('pages/user-summary-page'), {
+                url = route.find('user-summary-page', {
                     project: this.props.project.id,
                     user: user.id,
                 });
             } else {
-                url = route.find(require('pages/user-summary-page'), {
+                url = route.find('user-summary-page', {
                     user: user.id,
                 });
             }
@@ -63,11 +63,11 @@ module.exports = React.createClass({
         });
         var listURL;
         if (this.props.project) {
-            listURL = route.find(require('pages/member-list-page'), {
+            listURL = route.find('member-list-page', {
                 project: this.props.project.id,
             });
         } else {
-            listURL = route.find(require('pages/user-list-page'));
+            listURL = route.find('user-list-page');
         }
         return (
             <Tooltip className="user" disabled={list.length === 0}>

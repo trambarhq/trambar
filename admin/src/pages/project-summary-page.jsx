@@ -40,42 +40,6 @@ module.exports = Relaks.createClass({
         payloads: PropTypes.instanceOf(Payloads).isRequired,
     },
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/projects/:project/?'
-            ], (params) => {
-                return {
-                    project: (params.project === 'new') ? 'new' : Route.parseId(params.project),
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/projects/${params.project}/`, query;
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
-
     /**
      * Render the component asynchronously
      *
@@ -286,7 +250,7 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      */
     returnToList: function() {
         var route = this.props.route;
-        return route.push(require('pages/project-list-page'));
+        return route.push('project-list-page');
     },
 
     /**
