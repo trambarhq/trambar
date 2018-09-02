@@ -100,12 +100,13 @@ module.exports = {
                 exclude: /node_modules/,
                 query: {
                     presets: [
-                        'babel-preset-es2015',
-                        'babel-preset-react',
-                    ].map(require.resolve),
+                        'env',
+                        'react',
+                        'stage-0'
+                    ],
                     plugins: [
-                        'babel-plugin-syntax-dynamic-import'
-                    ].map(require.resolve),
+                        'syntax-dynamic-import',
+                    ],
                 }
             },
             {
@@ -220,3 +221,5 @@ function resolve(path) {
         return Path.resolve(`${__dirname}/${path}`);
     }
 }
+
+require('./webpack.resolve.js')(module.exports);
