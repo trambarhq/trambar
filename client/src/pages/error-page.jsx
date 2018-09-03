@@ -1,26 +1,15 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var HTTPError = require('errors/http-error');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import React, { PureComponent } from 'react';
+import HTTPError from 'errors/http-error';
 
 // widgets
-var PageContainer = require('widgets/page-container');
+import Unicorn from 'unicorn.svg';
+import PageContainer from 'widgets/page-container';
 
 require('./error-page.scss');
 
-module.exports = React.createClass({
-    displayName: 'ErrorPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class ErrorPage extends PureComponent {
+    static displayName = 'ErrorPage';
 
-    statics: {
         /**
          * Match current URL against the page's
          *
@@ -30,61 +19,59 @@ module.exports = React.createClass({
          *
          * @return {Object|null}
          */
-        parseURL: function(path, query, hash) {
-            return Route.match(path, [
-                '/:schema/error/:code',
-                '/error/:code',
-            ], (params) => {
-                return {
-                    schema: params.schema,
-                    code: parseInt(params.code)
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/error/${params.code}`, query, hash;
-            if (params.schema) {
-                path = `/${params.schema}` + path;
-            }
-            return { path, query, hash };
-        },
-
-        /**
-         * Return configuration info for global UI elements
-         *
-         * @param  {Route} currentRoute
-         *
-         * @return {Object}
-         */
-        configureUI: function(currentRoute) {
-            var params = currentRoute.parameters;
-            var hasSchema = !!params.schema;
+    static parseURL(path, query, hash) {
+        return Route.match(path, [
+            '/:schema/error/:code',
+            '/error/:code',
+        ], (params) => {
             return {
-                navigation: {
-                    top: hasSchema,
-                    bottom: hasSchema,
-                }
+                schema: params.schema,
+                code: parseInt(params.code)
             };
-        },
-    },
+        });
+    }
+
+    /**
+     * Generate a URL of this page based on given parameters
+     *
+     * @param  {Object} params
+     *
+     * @return {Object}
+     */
+    static getURL(params) {
+        var path = `/error/${params.code}`, query, hash;
+        if (params.schema) {
+            path = `/${params.schema}` + path;
+        }
+        return { path, query, hash };
+    }
+
+    /**
+     * Return configuration info for global UI elements
+     *
+     * @param  {Route} currentRoute
+     *
+     * @return {Object}
+     */
+    static configureUI(currentRoute) {
+        var params = currentRoute.parameters;
+        var hasSchema = !!params.schema;
+        return {
+            navigation: {
+                top: hasSchema,
+                bottom: hasSchema,
+            }
+        };
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var params = this.props.route.parameters;
         var error = new HTTPError(params.code)
-        var Unicorn = require('unicorn.svg');
         var message;
         if (params.code === 404) {
             message = `The page you're trying to reach doesn't exist. But then again, who does?`;
@@ -101,4 +88,25 @@ module.exports = React.createClass({
             </PageContainer>
         );
     }
-});
+}
+
+export {
+    ErrorPage as default,
+    ErrorPage,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ErrorPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+}

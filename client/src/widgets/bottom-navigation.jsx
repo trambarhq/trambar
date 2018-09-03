@@ -1,62 +1,35 @@
-/**
- * BottomNavigation - React component
- *
- * Buttons at the bottom of the screen for going from section to section.
- */
- var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var ComponentRefs = require('utils/component-refs');
-var HTTPError = require('errors/http-error');
-var NotificationFinder = require('objects/finders/notification-finder');
-var UserFinder = require('objects/finders/user-finder');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import ComponentRefs from 'utils/component-refs';
+import HTTPError from 'errors/http-error';
+import NotificationFinder from 'objects/finders/notification-finder';
+import UserFinder from 'objects/finders/user-finder';
 
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-var NewsPage = require('pages/news-page');
-var PeoplePage = require('pages/people-page');
-var NotificationsPage = require('pages/notifications-page');
-var BookmarksPage = require('pages/bookmarks-page');
-var SettingsPage = require('pages/settings-page');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import NewsPage from 'pages/news-page';
+import PeoplePage from 'pages/people-page';
+import NotificationsPage from 'pages/notifications-page';
+import BookmarksPage from 'pages/bookmarks-page';
+import SettingsPage from 'pages/settings-page';
 
 // widgets
-var Link = require('widgets/link');
+import Link from 'widgets/link';
 
-require('./bottom-navigation.scss');
+import './bottom-navigation.scss';
 
-module.exports = React.createClass({
-    displayName: 'BottomNavigation',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        settings: PropTypes.object.isRequired,
-        hasAccess: PropTypes.bool,
+class BottomNavigation extends PureComponent {
+    static displayName = 'BottomNavigation';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             container: HTMLDivElement,
         });
-        return {
+        this.state =  {
             height: this.isHidden() ? 0 : 'auto',
             stacking: false,
         };
-    },
+    }
 
     /**
      * Return true if bottom nav is supposed to be hidden
@@ -65,12 +38,12 @@ module.exports = React.createClass({
      *
      * @return {Boolean}
      */
-    isHidden: function(settings) {
+    isHidden(settings) {
         if (!settings) {
             settings = this.props.settings;
         }
         return !_.get(settings, 'navigation.bottom', true);
-    },
+    }
 
     /**
      * Return a URL that points to the given page.
@@ -80,7 +53,7 @@ module.exports = React.createClass({
      *
      * @return {String|null}
      */
-    getPageURL: function(pageClass, route) {
+    getPageURL(pageClass, route) {
         if (!route) {
             route = this.props.route;
         }
@@ -89,15 +62,16 @@ module.exports = React.createClass({
         if (!params) {
             return null;
         }
-        return route.find(pageClass, params);
-    },
+        var url = route.find(pageClass, params);
+        return url;
+    }
 
     /**
      * Change this.state.height when this.props.hidden changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         var hiddenBefore = this.isHidden();
         var hiddenAfter = this.isHidden(nextProps.settings);
         if (hiddenBefore !== hiddenAfter) {
@@ -127,28 +101,28 @@ module.exports = React.createClass({
                 }, 1000);
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var style = { height: this.state.height };
         return (
             <footer className="bottom-navigation" style={style}>
                 {this.renderButtons()}
             </footer>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         var setters = this.components.setters;
         var route = this.props.route;
@@ -209,27 +183,27 @@ module.exports = React.createClass({
                 <Button {...settingsProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Perform stacking check on mount and add resize handler
      */
-    componentDidMount: function() {
+    componentDidMount() {
         this.detectStacking();
         window.addEventListener('resize', this.handleWindowResize);
-    },
+    }
 
     /**
      * Remove resize listener
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         window.removeEventListener('resize', this.handleWindowResize);
-    },
+    }
 
     /**
      * Check if icon and text labels are on top of each other
      */
-    detectStacking: function() {
+    detectStacking() {
         var container = this.components.container;
         if (container) {
             var icon = container.getElementsByClassName('fa')[1];
@@ -239,23 +213,23 @@ module.exports = React.createClass({
                 this.setState({ stacking });
             }
         }
-    },
+    }
 
     /**
      * Called when user resize the browser window
      *
      * @param  {Event} evt
      */
-    handleWindowResize: function(evt) {
+    handleWindowResize = (evt) => {
         this.detectStacking();
-    },
+    }
 
     /**
      * Called when user clicks a button that's already active
      *
      * @param  {Event} evt
      */
-    handleActiveButtonClick: function(evt) {
+    handleActiveButtonClick = (evt) => {
         var page = document.getElementsByClassName('page-container')[0];
         if (page && page.scrollTop > 0) {
             if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
@@ -267,8 +241,8 @@ module.exports = React.createClass({
                 page.scrollTop = 0;
             }
         }
-    },
-});
+    }
+}
 
 function Button(props) {
     var className = 'button';
@@ -302,14 +276,8 @@ function Button(props) {
     }
 }
 
-var NewNotificationsBadge = Relaks.createClass({
-    displayName: 'NewNotificationsBadge',
-    propTypes: {
-        stacking: PropTypes.bool,
-        hasAccess: PropTypes.bool,
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-    },
+class NewNotificationsBadge extends AsyncComponent {
+    static displayName = 'NewNotificationsBadge';
 
     /**
      * Render component asynchronously
@@ -318,7 +286,7 @@ var NewNotificationsBadge = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync(meanwhile) {
         var params = this.props.route.parameters;
         if (!params.schema) {
             return null;
@@ -346,8 +314,8 @@ var NewNotificationsBadge = Relaks.createClass({
                 });
             });
         });
-    },
-});
+    }
+}
 
 if (process.env.PLATFORM === 'browser') {
     var favIcons;
@@ -398,4 +366,34 @@ if (process.env.PLATFORM === 'browser') {
         }
         document.title = title;
     }
+}
+
+export {
+    BottomNavigation as default,
+    BottomNavigation,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    NewNotificationsBadge.propTypes = {
+        stacking: PropTypes.bool,
+        hasAccess: PropTypes.bool,
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+    };
+    BottomNavigation.propTypes = {
+        settings: PropTypes.object.isRequired,
+        hasAccess: PropTypes.bool,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
 }

@@ -19,6 +19,7 @@ function load(importFuncs, progress) {
                     resolve(modules);
                 }
             }).catch((err) => {
+                console.error(err);
                 if (reject) {
                     reject(err);
                     reject = null;

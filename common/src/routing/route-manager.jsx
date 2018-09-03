@@ -121,6 +121,9 @@ module.exports = React.createClass({
         } else {
             page = components;
         }
+        if (!(page instanceof Function) && page.default) {
+            page = page.default;
+        }
         params = _.clone(params) || {};
         var urlParts = page.getURL(params);
         var basePath = this.state.basePath;

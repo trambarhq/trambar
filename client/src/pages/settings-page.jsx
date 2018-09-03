@@ -1,101 +1,86 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var KonamiCode = require('utils/konami-code');
-var DeviceFinder = require('objects/finders/device-finder');
-var ProjectFinder = require('objects/finders/project-finder');
-var RepoFinder = require('objects/finders/repo-finder');
-var SystemFinder = require('objects/finders/system-finder');
-var UserFinder = require('objects/finders/user-finder');
-var UserUtils = require('objects/utils/user-utils');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import KonamiCode from 'utils/konami-code';
+import DeviceFinder from 'objects/finders/device-finder';
+import ProjectFinder from 'objects/finders/project-finder';
+import RepoFinder from 'objects/finders/repo-finder';
+import SystemFinder from 'objects/finders/system-finder';
+import UserFinder from 'objects/finders/user-finder';
+import UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var PageContainer = require('widgets/page-container');
-var DevelopmentPanel = require('panels/development-panel');
-var ProjectPanel = require('panels/project-panel');
-var DevicePanel = require('panels/device-panel');
-var UserInfoPanel = require('panels/user-info-panel');
-var UserImagePanel = require('panels/user-image-panel');
-var NotificationPanel = require('panels/notification-panel');
-var WebAlertPanel = require('panels/web-alert-panel');
-var MobileAlertPanel = require('panels/mobile-alert-panel');
-var SocialNetworkPanel = require('panels/social-network-panel');
-var LanguagePanel = require('panels/language-panel');
-var DiagnoisticsPanel = require('panels/diagnostics-panel');
+import PageContainer from 'widgets/page-container';
+import DevelopmentPanel from 'panels/development-panel';
+import ProjectPanel from 'panels/project-panel';
+import DevicePanel from 'panels/device-panel';
+import UserInfoPanel from 'panels/user-info-panel';
+import UserImagePanel from 'panels/user-image-panel';
+import NotificationPanel from 'panels/notification-panel';
+import WebAlertPanel from 'panels/web-alert-panel';
+import MobileAlertPanel from 'panels/mobile-alert-panel';
+import SocialNetworkPanel from 'panels/social-network-panel';
+import LanguagePanel from 'panels/language-panel';
+import DiagnoisticsPanel from 'panels/diagnostics-panel';
 
-require('./settings-page.scss');
+import './settings-page.scss';
 
 var AUTOSAVE_DURATION = 2000;
 
-module.exports = Relaks.createClass({
-    displayName: 'SettingsPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class SettingsPage extends AsyncComponent {
+    static displayName = 'SettingsPage';
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/global/settings/?',
-                '/:schema/settings/?',
-            ], (params) => {
-                return {
-                    schema: params.schema,
-                    diagnostics: !!query.diagnostics,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/${params.schema || 'global'}/settings/`, query = {};
-            if (params.diagnostics) {
-                query.diagnostics = 1;
-            }
-            return { path, query };
-        },
-
-        /**
-         * Return configuration info for global UI elements
-         *
-         * @param  {Route} currentRoute
-         *
-         * @return {Object}
-         */
-        configureUI: function(currentRoute) {
-            var params = currentRoute.parameters;
-            var route = {
-                schema: params.schema,
-            };
+    /**
+     * Match current URL against the page's
+     *
+     * @param  {String} path
+     * @param  {Object} query
+     *
+     * @return {Object|null}
+     */
+    static parseURL(path, query) {
+        return Route.match(path, [
+            '/global/settings/?',
+            '/:schema/settings/?',
+        ], (params) => {
             return {
-                navigation: { route, section: 'settings' }
+                schema: params.schema,
+                diagnostics: !!query.diagnostics,
             };
-        },
-    },
+        });
+    }
+
+    /**
+     * Generate a URL of this page based on given parameters
+     *
+     * @param  {Object} params
+     *
+     * @return {Object}
+     */
+    static getURL(params) {
+        var path = `/${params.schema || 'global'}/settings/`, query = {};
+        if (params.diagnostics) {
+            query.diagnostics = 1;
+        }
+        return { path, query };
+    }
+
+    /**
+     * Return configuration info for global UI elements
+     *
+     * @param  {Route} currentRoute
+     *
+     * @return {Object}
+     */
+    static configureUI(currentRoute) {
+        var params = currentRoute.parameters;
+        var route = {
+            schema: params.schema,
+        };
+        return {
+            navigation: { route, section: 'settings' }
+        };
+    }
 
     /**
      * Render the component asynchronously
@@ -104,7 +89,7 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync(meanwhile) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
@@ -152,53 +137,35 @@ module.exports = Relaks.createClass({
         }).then(() => {
             return <SettingsPageSync {...props} />;
         });
-    },
-});
+    }
+}
 
-var SettingsPageSync = module.exports.Sync = React.createClass({
-    displayName: 'SettingsPage.Sync',
-    propTypes: {
-        currentUser: PropTypes.object,
-        currentProject: PropTypes.object,
-        projectLinks: PropTypes.arrayOf(PropTypes.object),
-        repos: PropTypes.arrayOf(PropTypes.object),
-        devices: PropTypes.arrayOf(PropTypes.object),
-        system: PropTypes.object,
+class SettingsPageSync extends PureComponent {
+    static displayName = 'SettingsPage.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             user: null,
             original: null,
         };
-    },
+    }
 
     /**
      * Return current user, possibility with unsaved modifications
      *
      * @return {User}
      */
-    getUser: function() {
+    getUser() {
         return this.state.user || this.props.currentUser;
-    },
+    }
 
     /**
      * Update state on prop changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.currentUser !== nextProps.currentUser) {
             var state = { user: null };
             if (nextProps.currentUser && !nextProps.currentUser.uncommitted) {
@@ -206,28 +173,28 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             }
             this.setState({ user: null });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var params = this.props.route.parameters;
         if (params.diagnostics) {
             return this.renderDiagnostics();
         } else {
             return this.renderSettings();
         }
-    },
+    }
 
     /**
      * Render settings panels
      *
      * @return {ReactElement|null}
      */
-    renderSettings: function() {
+    renderSettings() {
         if (!this.props.currentUser) {
             return null;
         }
@@ -247,14 +214,14 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                 </div>
             </PageContainer>
         );
-    },
+    }
 
     /**
      * Render diagnostics panels
      *
      * @return {ReactElement}
      */
-    renderDiagnostics: function() {
+    renderDiagnostics() {
         return (
             <PageContainer className="settings-page">
                 <div className="panels diagnostics">
@@ -273,14 +240,14 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                 </div>
             </PageContainer>
         );
-    },
+    }
 
     /**
      * Render diagnostics panel if it's turned on
      *
      * @return {ReactElement|null}
      */
-    renderDevelopmentPanel: function() {
+    renderDevelopmentPanel() {
         var user = this.getUser();
         var enabled = _.get(user, 'settings.development.show_panel');
         if (!enabled) {
@@ -293,14 +260,14 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleChange,
         };
         return <DevelopmentPanel {...panelProps} />;
-    },
+    }
 
     /**
      * Render project panel
      *
      * @return {ReactElement}
      */
-    renderProjectPanel: function() {
+    renderProjectPanel() {
         var panelProps = {
             system: this.props.system,
             currentUser: this.getUser(),
@@ -313,14 +280,14 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleChange,
         };
         return <ProjectPanel {...panelProps} />;
-    },
+    }
 
     /**
      * Render device panel
      *
      * @return {ReactElement}
      */
-    renderDevicePanel: function() {
+    renderDevicePanel() {
         if (process.env.PLATFORM === 'cordova') {
             return null;
         }
@@ -335,28 +302,28 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
         };
         return <DevicePanel {...panelProps} />;
-    },
+    }
 
     /**
      * Render user info panel
      *
      * @return {ReactElement}
      */
-    renderUserInfoPanel: function() {
+    renderUserInfoPanel() {
         var panelProps = {
             currentUser: this.getUser(),
             locale: this.props.locale,
             onChange: this.handleChange,
         };
         return <UserInfoPanel {...panelProps} />;
-    },
+    }
 
     /**
      * Render user image panel
      *
      * @return {ReactElement}
      */
-    renderUserImagePanel: function() {
+    renderUserImagePanel() {
         var panelProps = {
             currentUser: this.getUser(),
             payloads: this.props.payloads,
@@ -365,28 +332,28 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleChange,
         };
         return <UserImagePanel {...panelProps} />;
-    },
+    }
 
     /**
      * Render social network panel
      *
      * @return {ReactElement}
      */
-    renderSocialNetworkPanel: function() {
+    renderSocialNetworkPanel() {
         var panelProps = {
             currentUser: this.getUser(),
             locale: this.props.locale,
             onChange: this.handleChange,
         };
         return <SocialNetworkPanel {...panelProps} />;
-    },
+    }
 
     /**
      * Render notification panel
      *
      * @return {ReactElement}
      */
-    renderNotificationPanel: function() {
+    renderNotificationPanel() {
         var panelProps = {
             currentUser: this.getUser(),
             repos: this.props.repos,
@@ -394,14 +361,14 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleChange,
         };
         return <NotificationPanel {...panelProps} />;
-    },
+    }
 
     /**
      * Render web alert panel
      *
      * @return {ReactElement|null}
      */
-    renderWebAlertPanel: function() {
+    renderWebAlertPanel() {
         if (process.env.PLATFORM === 'cordova') {
             return null;
         }
@@ -412,14 +379,14 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleChange,
         };
         return <WebAlertPanel {...panelProps} />;
-    },
+    }
 
     /**
      * Render mobile alert panel
      *
      * @return {ReactElement|null}
      */
-    renderMobileAlertPanel: function() {
+    renderMobileAlertPanel() {
         if (_.isEmpty(this.props.devices)) {
             return null;
         }
@@ -430,35 +397,35 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             onChange: this.handleChange,
         };
         return <MobileAlertPanel {...panelProps} />;
-    },
+    }
 
     /**
      * Render language panel
      *
      * @return {ReactElement}
      */
-    renderLanguagePanel: function() {
+    renderLanguagePanel() {
         var panelProps = {
             locale: this.props.locale,
         };
         return <LanguagePanel {...panelProps} />;
-    },
+    }
 
     /**
      * Add Konami code listener
      */
-    componentDidMount: function() {
+    componentDidMount() {
         KonamiCode.addListener(this.handleKonamiCode);
-    },
+    }
 
     /**
      * Save immediately on unmount
      *
      * @return {[type]}
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         KonamiCode.removeListener(this.handleKonamiCode);
-    },
+    }
 
     /**
      * Save new user object to remote database
@@ -468,7 +435,7 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise<User>}
      */
-    saveUser: function(user, immediate) {
+    saveUser(user, immediate) {
         var schema = 'global';
         var original = this.state.original;
         var options = {
@@ -487,29 +454,67 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
             this.props.payloads.dispatch(user);
             return user;
         });
-    },
+    }
 
     /**
      * Called when the user is changed by one of the panels
      *
      * @param  {Object} evt
      */
-    handleChange: function(evt) {
+    handleChange = (evt) => {
         var user = evt.user;
         this.setState({ user }, () => {
             this.saveUser(user, evt.immediate || false);
         });
-    },
+    }
 
     /**
      * Called when user enters Konami code
      *
      * @param  {Object} evt
      */
-    handleKonamiCode: function(evt) {
+    handleKonamiCode = (evt) => {
         var user = _.decoupleSet(this.getUser(), 'settings.development.show_panel', true);
         this.setState({ user }, () => {
             this.saveUser(user, true);
         });
-    },
-});
+    }
+}
+
+export {
+    SettingsPage as default,
+    SettingsPage,
+    SettingsPageSync,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+    
+    SettingsPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+    SettingsPageSync.propTypes = {
+        currentUser: PropTypes.object,
+        currentProject: PropTypes.object,
+        projectLinks: PropTypes.arrayOf(PropTypes.object),
+        repos: PropTypes.arrayOf(PropTypes.object),
+        devices: PropTypes.arrayOf(PropTypes.object),
+        system: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+}

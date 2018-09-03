@@ -1,109 +1,90 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var ReactDOM = require('react-dom');
-var Moment = require('moment');
-var Relaks = require('relaks');
-var UserFinder = require('objects/finders/user-finder');
-var ProjectFinder = require('objects/finders/project-finder');
-var StoryFinder = require('objects/finders/story-finder');
-var ProjectSettings = require('objects/settings/project-settings');
-var TagScanner = require('utils/tag-scanner');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import UserFinder from 'objects/finders/user-finder';
+import ProjectFinder from 'objects/finders/project-finder';
+import StoryFinder from 'objects/finders/story-finder';
+import ProjectSettings from 'objects/settings/project-settings';
+import TagScanner from 'utils/tag-scanner';
 
 // widgets
-var PageContainer = require('widgets/page-container');
-var StoryList = require('lists/story-list');
-var LoadingAnimation = require('widgets/loading-animation');
-var EmptyMessage = require('widgets/empty-message');
+import PageContainer from 'widgets/page-container';
+import StoryList from 'lists/story-list';
+import LoadingAnimation from 'widgets/loading-animation';
+import EmptyMessage from 'widgets/empty-message';
 
-require('./news-page.scss');
+import './news-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'NewsPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class NewsPage extends AsyncComponent {
+    static displayName = 'NewsPage';
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/:schema/news/?',
-            ], (params) => {
-                return {
-                    schema: params.schema,
-                    roles: Route.parseIdList(query.roles),
-                    search: query.search,
-                    date: Route.parseDate(query.date),
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/${params.schema}/news/`, query = {};
-            if (params.date != undefined) {
-                query.date = params.date;
-            }
-            if (params.roles != undefined) {
-                query.roles = params.roles.join(' ');
-            }
-            if (params.search != undefined) {
-                query.search = params.search;
-            }
-            return { path, query };
-        },
-
-        /**
-         * Return configuration info for global UI elements
-         *
-         * @param  {Route} currentRoute
-         *
-         * @return {Object}
-         */
-        configureUI: function(currentRoute) {
-            var params = currentRoute.parameters;
-            var route = {
-                schema: params.schema
-            };
-            var statistics = {
-                type: 'daily-activities',
-                schema: params.schema,
-                public: 'guest',
-            };
+    /**
+     * Match current URL against the page's
+     *
+     * @param  {String} path
+     * @param  {Object} query
+     *
+     * @return {Object|null}
+     */
+    static parseURL(path, query) {
+        return Route.match(path, [
+            '/:schema/news/?',
+        ], (params) => {
             return {
-                calendar: { route, statistics },
-                filter: { route },
-                search: { route, statistics },
-                navigation: { route, section: 'news' }
+                schema: params.schema,
+                roles: Route.parseIdList(query.roles),
+                search: query.search,
+                date: Route.parseDate(query.date),
             };
-        },
-    },
+        });
+    }
+
+    /**
+     * Generate a URL of this page based on given parameters
+     *
+     * @param  {Object} params
+     *
+     * @return {Object}
+     */
+    static getURL(params) {
+        var path = `/${params.schema}/news/`, query = {};
+        if (params.date != undefined) {
+            query.date = params.date;
+        }
+        if (params.roles != undefined) {
+            query.roles = params.roles.join(' ');
+        }
+        if (params.search != undefined) {
+            query.search = params.search;
+        }
+        return { path, query };
+    }
+
+    /**
+     * Return configuration info for global UI elements
+     *
+     * @param  {Route} currentRoute
+     *
+     * @return {Object}
+     */
+    static configureUI(currentRoute) {
+        var params = currentRoute.parameters;
+        var route = {
+            schema: params.schema
+        };
+        var statistics = {
+            type: 'daily-activities',
+            schema: params.schema,
+            public: 'guest',
+        };
+        return {
+            calendar: { route, statistics },
+            filter: { route },
+            search: { route, statistics },
+            navigation: { route, section: 'news' }
+        };
+    }
 
     /**
      * Render the component asynchronously
@@ -112,7 +93,7 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync(meanwhile) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var tags;
@@ -193,7 +174,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             return <NewsPageSync {...props} />;
         });
-    },
+    }
 
     /**
      * Redirect to page showing stories on the date of a story
@@ -203,7 +184,7 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise|undefined}
      */
-    redirectToStory: function(schema, story) {
+    redirectToStory(schema, story) {
         var redirect = true;
         if (story.ptime && story.published && story.ready !== false) {
             // don't redirect if the story is very recent
@@ -226,57 +207,41 @@ module.exports = Relaks.createClass({
             return this.props.route.replace(components, params);
         }
     }
-});
+}
 
-var NewsPageSync = module.exports.Sync = React.createClass({
-    displayName: 'NewsPage.Sync',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        acceptNewStory: PropTypes.bool,
-        listing: PropTypes.object,
-        stories: PropTypes.arrayOf(PropTypes.object),
-        draftStories: PropTypes.arrayOf(PropTypes.object),
-        pendingStories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        project: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class NewsPageSync extends PureComponent {
+    static displayName = 'NewsPage.Sync';
 
     /**
      * Return the access level
      *
      * @return {String}
      */
-    getAccessLevel: function() {
+    getAccessLevel() {
         var { project, currentUser } = this.props;
         return ProjectSettings.getUserAccessLevel(project, currentUser) || 'read-only';
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <PageContainer className="news-page">
                 {this.renderList()}
                 {this.renderEmptyMessage()}
             </PageContainer>
         );
-    },
+    }
 
     /**
      * Render list of stories
      *
      * @return {ReactElement|null}
      */
-    renderList: function() {
+    renderList() {
         // don't render when we haven't done loading
         if (!this.props.stories) {
             return null;
@@ -301,14 +266,14 @@ var NewsPageSync = module.exports.Sync = React.createClass({
             onMissingStory: this.handleMissingStory,
         };
         return <StoryList {...listProps} />
-    },
+    }
 
     /**
      * Render a message if there're no stories
      *
      * @return {ReactElement|null}
      */
-    renderEmptyMessage: function() {
+    renderEmptyMessage() {
         var stories = this.props.stories;
         if (!_.isEmpty(stories)) {
             return null;
@@ -335,9 +300,47 @@ var NewsPageSync = module.exports.Sync = React.createClass({
             };
             return <EmptyMessage {...props} />;
         }
-    },
+    }
 
-    handleMissingStory: function(evt) {
+    handleMissingStory = (evt) => {
+    }
+}
 
-    },
-});
+export {
+    NewsPage as default,
+    NewsPage,
+    NewsPageSync
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+    
+    NewsPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+    NewsPageSync.propTypes = {
+        acceptNewStory: PropTypes.bool,
+        listing: PropTypes.object,
+        stories: PropTypes.arrayOf(PropTypes.object),
+        draftStories: PropTypes.arrayOf(PropTypes.object),
+        pendingStories: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        project: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+}

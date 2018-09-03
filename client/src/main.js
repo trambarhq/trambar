@@ -54,7 +54,7 @@ function initialize(evt) {
             });
         }
 
-        var Application = modules['app'];
+        var Application = modules['app'].default;
         var React = modules['react'];
         var ReactDOM = modules['react-dom'];
         var appElement = React.createElement(Application);

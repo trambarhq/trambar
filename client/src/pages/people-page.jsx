@@ -1,140 +1,121 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Moment = require('moment');
-var Memoize = require('utils/memoize');
-var Empty = require('data/empty');
-var DateTracker = require('utils/date-tracker');
-var ProjectFinder = require('objects/finders/project-finder');
-var ProjectSettings = require('objects/settings/project-settings');
-var StatisticsFinder = require('objects/finders/statistics-finder');
-var StoryFinder = require('objects/finders/story-finder');
-var UserFinder = require('objects/finders/user-finder');
-var TagScanner = require('utils/tag-scanner');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import Memoize from 'utils/memoize';
+import Empty from 'data/empty';
+import DateTracker from 'utils/date-tracker';
+import ProjectFinder from 'objects/finders/project-finder';
+import ProjectSettings from 'objects/settings/project-settings';
+import StatisticsFinder from 'objects/finders/statistics-finder';
+import StoryFinder from 'objects/finders/story-finder';
+import UserFinder from 'objects/finders/user-finder';
+import TagScanner from 'utils/tag-scanner';
 
 // widgets
-var PageContainer = require('widgets/page-container');
-var UserList = require('lists/user-list');
-var StoryList = require('lists/story-list');
-var LoadingAnimation = require('widgets/loading-animation');
-var EmptyMessage = require('widgets/empty-message');
+import PageContainer from 'widgets/page-container';
+import UserList from 'lists/user-list';
+import StoryList from 'lists/story-list';
+import LoadingAnimation from 'widgets/loading-animation';
+import EmptyMessage from 'widgets/empty-message';
 
-require('./people-page.scss')
+import './people-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'PeoplePage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class PeoplePage extends AsyncComponent {
+    static displayName = 'PeoplePage';
 
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/:schema/people/:user/?',
-                '/:schema/people/?',
-            ], (params) => {
-                return {
-                    schema: params.schema,
-                    search: query.search,
-                    user: Route.parseId(params.user),
-                    date: Route.parseDate(query.date),
-                    roles: Route.parseIdList(query.roles),
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/${params.schema}/people/`, query = {};
-            if (params.user) {
-                path += `${params.user}/`;
-            }
-            if (params.date != undefined) {
-                query.date = params.date;
-            }
-            if (params.roles != undefined) {
-                query.roles = params.roles.join(' ');
-            }
-            if (params.search != undefined) {
-                query.search = params.search;
-            }
-            return { path, query };
-        },
-
-        /**
-         * Return configuration info for global UI elements
-         *
-         * @param  {Route} currentRoute
-         *
-         * @return {Object}
-         */
-        configureUI: function(currentRoute) {
-            var params = currentRoute.parameters;
-            var route = {
-                schema: params.schema,
-                user: params.user,
-            };
-            var statistics = {
-                type: 'daily-activities',
-                schema: params.schema,
-                user_id: params.user,
-            };
-            if (!params.user) {
-                return {
-                    calendar: { route, statistics },
-                    filter: { route },
-                    search: { route, statistics },
-                    navigation: { route, section: 'people' }
-                };
-            } else {
-                return {
-                    calendar: { route, statistics },
-                    search: { route, statistics },
-                    navigation: {
-                        // go back to full list
-                        route: _.omit(route, 'user'),
-                        section: 'people'
-                    }
-                };
-            }
-        },
-    },
+    constructor(props) {
+        super(props);
+        this.state = {
+            today: DateTracker.today,
+        };
+    }
 
     /**
-     * Return initial state of component
+     * Match current URL against the page's
+     *
+     * @param  {String} path
+     * @param  {Object} query
+     *
+     * @return {Object|null}
+     */
+    static parseURL(path, query) {
+        return Route.match(path, [
+            '/:schema/people/:user/?',
+            '/:schema/people/?',
+        ], (params) => {
+            return {
+                schema: params.schema,
+                search: query.search,
+                user: Route.parseId(params.user),
+                date: Route.parseDate(query.date),
+                roles: Route.parseIdList(query.roles),
+            };
+        });
+    }
+
+    /**
+     * Generate a URL of this page based on given parameters
+     *
+     * @param  {Object} params
      *
      * @return {Object}
      */
-    getInitialState: function() {
-        return {
-            today: DateTracker.today,
+    static getURL(params) {
+        var path = `/${params.schema}/people/`, query = {};
+        if (params.user) {
+            path += `${params.user}/`;
+        }
+        if (params.date != undefined) {
+            query.date = params.date;
+        }
+        if (params.roles != undefined) {
+            query.roles = params.roles.join(' ');
+        }
+        if (params.search != undefined) {
+            query.search = params.search;
+        }
+        return { path, query };
+    }
+
+    /**
+     * Return configuration info for global UI elements
+     *
+     * @param  {Route} currentRoute
+     *
+     * @return {Object}
+     */
+    static configureUI(currentRoute) {
+        var params = currentRoute.parameters;
+        var route = {
+            schema: params.schema,
+            user: params.user,
         };
-    },
+        var statistics = {
+            type: 'daily-activities',
+            schema: params.schema,
+            user_id: params.user,
+        };
+        if (!params.user) {
+            return {
+                calendar: { route, statistics },
+                filter: { route },
+                search: { route, statistics },
+                navigation: { route, section: 'people' }
+            };
+        } else {
+            return {
+                calendar: { route, statistics },
+                search: { route, statistics },
+                navigation: {
+                    // go back to full list
+                    route: _.omit(route, 'user'),
+                    section: 'people'
+                }
+            };
+        }
+    }
 
     /**
      * Render the component asynchronously
@@ -143,7 +124,7 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync(meanwhile) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var tags;
@@ -340,7 +321,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             return <PeoplePageSync {...props} />;
         });
-    },
+    }
 
     /**
      * Redirect to page showing stories on the date of a story
@@ -350,7 +331,7 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise}
      */
-    redirectToStory: function(schema, story) {
+    redirectToStory(schema, story) {
         var redirect = true;
         if (story.ptime && story.published && story.ready !== false) {
             // don't redirect if the story is very recent
@@ -373,88 +354,66 @@ module.exports = Relaks.createClass({
             };
             return this.props.route.replace(components, params);
         }
-    },
+    }
 
     /**
      * Listen for date change event
      */
-    componentDidMount: function() {
+    componentDidMount() {
         DateTracker.addEventListener('change', this.handleDateChange);
-    },
+    }
 
     /**
      * Remove event listener
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         DateTracker.removeEventListener('change', this.handleDateChange);
-    },
+    }
 
     /**
      * Force rerendering by setting today's date
      */
-    handleDateChange: function() {
+    handleDateChange = (evt) => {
         // force rerendering
         this.setState({ today: DateTracker.today });
-    },
-});
+    }
+}
 
-var PeoplePageSync = module.exports.Sync = React.createClass({
-    displayName: 'PeoplePageSync',
-    propTypes: {
-        project: PropTypes.object,
-        members: PropTypes.arrayOf(PropTypes.object),
-        selectedUser: PropTypes.object,
-        visibleUsers: PropTypes.arrayOf(PropTypes.object),
-        dailyActivities: PropTypes.object,
-        listings: PropTypes.arrayOf(PropTypes.object),
-        stories: PropTypes.arrayOf(PropTypes.object),
-        selectedUserStories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        selectedDate: PropTypes.string,
-        today: PropTypes.string,
+class PeoplePageSync extends PureComponent {
+    static displayName = 'PeoplePageSync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             chartType: undefined
         };
-    },
+    }
 
     /**
      * Return the access level
      *
      * @return {String}
      */
-    getAccessLevel: function() {
+    getAccessLevel() {
         var { project, currentUser } = this.props;
         return ProjectSettings.getUserAccessLevel(project, currentUser) || 'read-only';
-    },
+    }
 
     /**
      * Remember the previously selected user
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.selectedUser && !nextProps.selectedUser) {
             this.previouslySelectedUser = this.props.selectedUser;
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <PageContainer className="people-page">
                 {this.renderUserList()}
@@ -462,14 +421,14 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
                 {this.renderEmptyMessage()}
             </PageContainer>
         );
-    },
+    }
 
     /**
      * Render list of users
      *
      * @return {ReactElement}
      */
-    renderUserList: function() {
+    renderUserList() {
         var params = this.props.route.parameters;
         var listProps = {
             users: this.props.visibleUsers,
@@ -487,14 +446,14 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
         };
         return <UserList {...listProps} />
-    },
+    }
 
     /**
      * Render list of stories authored by selected user
      *
      * @return {ReactElement|null}
      */
-    renderSelectedUserStoryList: function() {
+    renderSelectedUserStoryList() {
         if (!this.props.selectedUser || !this.props.selectedUserStories) {
             return null;
         }
@@ -512,14 +471,14 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             theme: this.props.theme,
         };
         return <StoryList {...listProps} />
-    },
+    }
 
     /**
      * Render a message if there're no bookmarks
      *
      * @return {ReactElement|null}
      */
-    renderEmptyMessage: function() {
+    renderEmptyMessage() {
         var list;
         if (this.props.selectedUser) {
             list = this.props.selectedUserStories;
@@ -551,8 +510,8 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             };
             return <EmptyMessage {...props} />;
         }
-    },
-});
+    }
+}
 
 var findUsersWithRoles = Memoize(function(users, roleIds) {
     return _.filter(users, (user) => {
@@ -607,3 +566,45 @@ var findUsersWithStories = Memoize(function(users, stories) {
     }
     return list;
 });
+
+export {
+    PeoplePage as default,
+    PeoplePage,
+    PeoplePageSync,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    PeoplePage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+    PeoplePageSync.propTypes = {
+        project: PropTypes.object,
+        members: PropTypes.arrayOf(PropTypes.object),
+        selectedUser: PropTypes.object,
+        visibleUsers: PropTypes.arrayOf(PropTypes.object),
+        dailyActivities: PropTypes.object,
+        listings: PropTypes.arrayOf(PropTypes.object),
+        stories: PropTypes.arrayOf(PropTypes.object),
+        selectedUserStories: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        selectedDate: PropTypes.string,
+        today: PropTypes.string,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+}
