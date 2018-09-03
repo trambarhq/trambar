@@ -1,31 +1,23 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React, { PureComponent } from 'react';
 
-var Locale = require('locale/locale');
+import Locale from 'locale/locale';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var QRCode = require('widgets/qr-code');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import QRCode from 'widgets/qr-code';
 
-require('./telephone-number-dialog-box.scss');
+import './telephone-number-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'TelephoneNumberDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        number: PropTypes.string,
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onClose: PropTypes.func,
-    },
+class TelephoneNumberDialogBox extends PureComponent {
+    static displayName = 'TelephoneNumberDialogBox';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.props.onClose,
@@ -38,14 +30,14 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render QR-code and number
      *
      * @return {ReactElement}
      */
-    renderContents: function() {
+    renderContents() {
         var number = this.props.number;
         var url = `tel:${number}`;
         return (
@@ -54,14 +46,14 @@ module.exports = React.createClass({
                 <div className="number">{number}</div>
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         var closeButtonProps = {
             label: t('telephone-dialog-close'),
@@ -73,5 +65,23 @@ module.exports = React.createClass({
                 <PushButton {...closeButtonProps} />
             </div>
         );
-    },
-});
+    }
+}
+
+export {
+    TelephoneNumberDialogBox as default,
+    TelephoneNumberDialogBox,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    TelephoneNumberDialogBox.propTypes = {
+        show: PropTypes.bool,
+        number: PropTypes.string,
+
+        locale: PropTypes.instanceOf(Locale).isRequired,
+
+        onClose: PropTypes.func,
+    };
+}

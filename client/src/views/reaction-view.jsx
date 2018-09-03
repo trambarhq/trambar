@@ -1,86 +1,58 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Markdown = require('utils/markdown');
-var PlainText = require('utils/plain-text');
-var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
-var UserUtils = require('objects/utils/user-utils');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import Markdown from 'utils/markdown';
+import PlainText from 'utils/plain-text';
+import Memoize from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import ExternalDataUtils from 'objects/utils/external-data-utils';
+import UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var ProfileImage = require('widgets/profile-image');
-var MediaView = require('views/media-view');
-var MediaDialogBox = require('dialogs/media-dialog-box');
-var ReactionProgress = require('widgets/reaction-progress');
-var Time = require('widgets/time');
-var ReactionViewOptions = require('views/reaction-view-options');
+import ProfileImage from 'widgets/profile-image';
+import MediaView from 'views/media-view';
+import MediaDialogBox from 'dialogs/media-dialog-box';
+import ReactionProgress from 'widgets/reaction-progress';
+import Time from 'widgets/time';
+import ReactionViewOptions from 'views/reaction-view-options';
 
-require('./reaction-view.scss');
+import './reaction-view.scss';
 
-module.exports = React.createClass({
-    displayName: 'ReactionView',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        highlighting: PropTypes.bool,
-        reaction: PropTypes.object.isRequired,
-        respondent: PropTypes.object,
-        story: PropTypes.object.isRequired,
-        currentUser: PropTypes.object.isRequired,
-        repo: PropTypes.object,
+class ReactionView extends PureComponent {
+    static displayName = 'ReactionView';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             audioPlayer: HTMLAudioElement,
         });
-        var nextState = {
+        this.state = {
             options: defaultOptions,
             selectedResourceURL: null,
             showingReferencedMediaDialog: false,
             renderingReferencedMediaDialog: false,
         };
-        this.updateOptions(nextState, this.props);
-        return nextState;
-    },
+        this.updateOptions(this.state, this.props);
+    }
 
     /**
      * Return class name, possibly with modifiers
      *
      * @return {String}
      */
-    getClassName: function() {
+    getClassName() {
         var className = 'reaction-view';
         if (this.props.highlighting) {
             className += ' highlighting';
         }
         return className;
-    },
+    }
 
     /**
      * Update options when new data arrives from server
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         var nextState = _.clone(this.state);
         if (this.props.reaction !== nextProps.reaction) {
             this.updateOptions(nextState, nextProps);
@@ -91,7 +63,7 @@ module.exports = React.createClass({
         if (!_.isEmpty(changes)) {
             this.setState(changes);
         }
-    },
+    }
 
     /**
      * Update state.options based on props
@@ -99,17 +71,17 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateOptions: function(nextState, nextProps) {
+    updateOptions(nextState, nextProps) {
         var options = nextState.options = _.clone(nextState.options);
         options.hideReaction = !nextProps.reaction.public;
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className={this.getClassName()}>
                 <div className="profile-image-column">
@@ -127,14 +99,14 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render profile image
      *
      * @return {ReactElement}
      */
-    renderProfileImage: function() {
+    renderProfileImage() {
         var props = {
             user: this.props.respondent,
             theme: this.props.theme,
@@ -147,14 +119,14 @@ module.exports = React.createClass({
             });
         }
         return <ProfileImage {...props} />;
-    },
+    }
 
     /**
      * Render user name and text
      *
      * @return {ReactElement}
      */
-    renderText: function() {
+    renderText() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var reaction = this.props.reaction;
@@ -316,14 +288,14 @@ module.exports = React.createClass({
                 </span>
             );
         }
-    },
+    }
 
     /**
      * Render option button
      *
      * @return {ReactElement|null}
      */
-    renderOptionButton: function() {
+    renderOptionButton() {
         if (!this.props.reaction.published) {
             return null;
         }
@@ -338,14 +310,14 @@ module.exports = React.createClass({
             onChange: this.handleOptionsChange,
         };
         return <ReactionViewOptions {...props} />;
-    },
+    }
 
     /**
      * Render the publication time
      *
      * @return {ReactElement|null}
      */
-    renderProgress: function() {
+    renderProgress() {
         if (!this.props.reaction.published) {
             return null;
         }
@@ -354,14 +326,14 @@ module.exports = React.createClass({
             locale: this.props.locale,
         };
         return <ReactionProgress {...props} />;
-    },
+    }
 
     /**
      * Render audio player for embed audio in markdown text
      *
      * @return {ReactElement|null}
      */
-    renderAudioPlayer: function() {
+    renderAudioPlayer() {
         if (!this.state.audioURL) {
             return null;
         }
@@ -373,14 +345,14 @@ module.exports = React.createClass({
             onEnded: this.handleAudioEnded,
         };
         return <audio {...audioProps} />;
-    },
+    }
 
     /**
      * Render attached media
      *
      * @return {ReactElement}
      */
-    renderMedia: function() {
+    renderMedia() {
         var resources = _.get(this.props.reaction, 'details.resources');
         if (!_.isEmpty(this.resourcesReferenced)) {
             resources = _.difference(resources, _.values(this.resourcesReferenced));
@@ -395,14 +367,14 @@ module.exports = React.createClass({
             width: (this.props.theme.mode === 'signle-col') ? 220 : 300
         };
         return <div className="media"><MediaView {...props} /></div>;
-    },
+    }
 
     /**
      * Render dialog box showing referenced image at full size
      *
      * @return {ReactElement|null}
      */
-    renderReferencedMediaDialog: function() {
+    renderReferencedMediaDialog() {
         if (!this.state.renderingReferencedMediaDialog) {
             return null;
         }
@@ -423,7 +395,7 @@ module.exports = React.createClass({
             onClose: this.handleReferencedMediaDialogClose,
         };
         return <MediaDialogBox {...dialogProps} />;
-    },
+    }
 
     /**
      * Save reaction to remote database
@@ -432,13 +404,13 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    saveReaction: function(reaction) {
+    saveReaction(reaction) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'reaction' }, reaction);
         });
-    },
+    }
 
     /**
      * Remove reaction from remote database
@@ -447,18 +419,18 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    removeReaction: function(reaction) {
+    removeReaction(reaction) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.removeOne({ table: 'reaction' }, reaction);
-    },
+    }
 
     /**
      * Change options concerning a story
      *
      * @param  {Object} options
      */
-    setOptions: function(options) {
+    setOptions(options) {
         var before = this.state.options;
         this.setState({ options }, () => {
             if (options.editReaction && !before.editReaction) {
@@ -475,12 +447,12 @@ module.exports = React.createClass({
                 this.saveReaction(reaction);
             }
         });
-    },
+    }
 
     /**
      * Called when a resource is referenced by Markdown
      */
-    handleReference: function(evt) {
+    handleReference = (evt) => {
         var resources = this.props.reaction.details.resources;
         var res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
@@ -503,14 +475,14 @@ module.exports = React.createClass({
                 title: undefined
             };
         }
-    },
+    }
 
     /**
      * Called when user clicks on the text contents
      *
      * @param  {Event} evt
      */
-     handleMarkdownClick: function(evt) {
+     handleMarkdownClick = (evt) => {
         var target = evt.target;
         if (target.tagName === 'IMG') {
             var src = target.getAttribute('src');
@@ -538,14 +510,14 @@ module.exports = React.createClass({
                 window.open(target.src, '_blank', `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`);
             }
         }
-    },
+    }
 
     /**
      * Called when user closes referenced media dialog
      *
      * @param  {Object} evt
      */
-    handleReferencedMediaDialogClose: function(evt) {
+    handleReferencedMediaDialogClose = (evt) => {
         this.setState({ showingReferencedMediaDialog: false }, () => {
             setTimeout(() => {
                 if (!this.state.showingReferencedMediaDialog) {
@@ -556,26 +528,26 @@ module.exports = React.createClass({
                 }
             }, 500);
         })
-    },
+    }
 
     /**
      * Called when options are changed
      *
      * @param  {Object} evt
      */
-    handleOptionsChange: function(evt) {
+    handleOptionsChange = (evt) => {
         this.setOptions(evt.options);
-    },
+    }
 
     /**
      * Called when audio playback ends
      *
      * @param  {Event} evt
      */
-    handleAudioEnded: function(evt) {
+    handleAudioEnded = (evt) => {
         this.setState({ audioURL: null });
-    },
-});
+    }
+}
 
 var defaultOptions = {
     hideReaction: false,
@@ -607,4 +579,33 @@ function chooseAudioVersion(res) {
 function getNoteHash(link) {
     var noteId = _.get(link, 'note.id');
     return (noteId) ? `#note_${noteId}` : '';
+}
+
+export {
+    ReactionView as default,
+    ReactionView,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ReactionView.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        highlighting: PropTypes.bool,
+        reaction: PropTypes.object.isRequired,
+        respondent: PropTypes.object,
+        story: PropTypes.object.isRequired,
+        currentUser: PropTypes.object.isRequired,
+        repo: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
 }

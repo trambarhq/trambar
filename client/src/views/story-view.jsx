@@ -1,106 +1,68 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Moment = require('moment');
-var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
-var FocusManager = require('utils/focus-manager');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
-var IssueUtils = require('objects/utils/issue-utils');
-var StoryUtils = require('objects/utils/story-utils');
-var RandomToken = require('utils/random-token');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import Memoize from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import FocusManager from 'utils/focus-manager';
+import ExternalDataUtils from 'objects/utils/external-data-utils';
+import IssueUtils from 'objects/utils/issue-utils';
+import StoryUtils from 'objects/utils/story-utils';
+import RandomToken from 'utils/random-token';
 
 // widgets
-var ProfileImage = require('widgets/profile-image');
-var AuthorNames = require('widgets/author-names');
-var StoryProgress = require('widgets/story-progress');
-var StoryEmblem = require('widgets/story-emblem');
-var Scrollable = require('widgets/scrollable');
-var ReactionToolbar = require('widgets/reaction-toolbar');
-var ReactionList = require('lists/reaction-list');
-var HeaderButton = require('widgets/header-button');
-var StoryContents = require('views/story-contents');
-var StoryViewOptions = require('views/story-view-options');
-var CornerPopUp = require('widgets/corner-pop-up');
+import ProfileImage from 'widgets/profile-image';
+import AuthorNames from 'widgets/author-names';
+import StoryProgress from 'widgets/story-progress';
+import StoryEmblem from 'widgets/story-emblem';
+import Scrollable from 'widgets/scrollable';
+import ReactionToolbar from 'widgets/reaction-toolbar';
+import ReactionList from 'lists/reaction-list';
+import HeaderButton from 'widgets/header-button';
+import StoryContents from 'views/story-contents';
+import StoryViewOptions from 'views/story-view-options';
+import CornerPopUp from 'widgets/corner-pop-up';
 
-require('./story-view.scss');
+import './story-view.scss';
 
 const AUTOSAVE_DURATION = 2000;
 
-module.exports = React.createClass({
-    displayName: 'StoryView',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        highlighting: PropTypes.bool,
-        pending: PropTypes.bool,
-        story: PropTypes.object.isRequired,
-        bookmark: PropTypes.object,
-        authors: PropTypes.arrayOf(PropTypes.object),
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        respondents: PropTypes.arrayOf(PropTypes.object),
-        recommendations: PropTypes.arrayOf(PropTypes.object),
-        recipients: PropTypes.arrayOf(PropTypes.object),
-        repos: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object.isRequired,
-        selectedReactionId: PropTypes.number,
+class StoryView extends PureComponent {
+    static displayName = 'StoryView';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onBump: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             reactionContainer: HTMLDivElement,
             reactionList: ReactionList,
             mainPopUp: CornerPopUp,
         });
-        var nextState = {
+        this.state = {
             options: defaultOptions,
-            commentsExpanded: this.shouldExpandComments(this.props),
+            commentsExpanded: this.shouldExpandComments(props),
             isTall: false,
         };
-        this.updateOptions(nextState, this.props);
-        return nextState;
-    },
+        this.updateOptions(this.state, props);
+    }
 
     /**
      * Return class name, possibly with modifiers
      *
      * @return {String}
      */
-    getClassName: function() {
+    getClassName() {
         var className = 'story-view';
         if (this.props.highlighting) {
             className += ' highlighting';
         }
         return className;
-    },
+    }
 
     /**
      * Return true if there's a non-published comment by the current user
      *
      * @return {Boolean}
      */
-    hasUserDraft: function() {
+    hasUserDraft() {
         return _.some(this.props.reactions, (r) => {
             if (!r.published) {
                 if (r.user_id === this.props.currentUser.id) {
@@ -108,7 +70,7 @@ module.exports = React.createClass({
                 }
             }
         });
-    },
+    }
 
     /**
      * Return true if comment should be expanded automatically
@@ -117,7 +79,7 @@ module.exports = React.createClass({
      *
      * @return {Boolean|undefined}
      */
-    shouldExpandComments: function(props) {
+    shouldExpandComments(props) {
         if (!props.reactions || !props.respondents) {
             return;
         }
@@ -138,14 +100,14 @@ module.exports = React.createClass({
             }
         }
         return false;
-    },
+    }
 
     /**
      * Update options when new data arrives from server
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         var nextState = _.clone(this.state);
         if (this.props.story !== nextProps.story || this.props.recommendations !== nextProps.recommendations) {
             this.updateOptions(nextState, nextProps);
@@ -161,7 +123,7 @@ module.exports = React.createClass({
         if (!_.isEmpty(changes)) {
             this.setState(changes);
         }
-    },
+    }
 
     /**
      * Update state.options based on props
@@ -169,20 +131,20 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateOptions: function(nextState, nextProps) {
+    updateOptions(nextState, nextProps) {
         var options = nextState.options = _.clone(nextState.options);
         options.hideStory = !nextProps.story.public;
         options.bookmarkRecipients = _.map(nextProps.recommendations, 'target_user_id');
         options.issueDetails = IssueUtils.extractIssueDetails(nextProps.story, nextProps.repos);
         options.keepBookmark = (nextProps.bookmark) ? true : undefined;
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         switch (this.props.theme.mode) {
             case 'single-col':
                 return this.renderSingleColumn();
@@ -191,14 +153,14 @@ module.exports = React.createClass({
             case 'triple-col':
                 return this.renderTripleColumn();
         }
-    },
+    }
 
     /**
      * Render single-column view
      *
      * @return {ReactElement}
      */
-    renderSingleColumn: function() {
+    renderSingleColumn() {
         var reactionToolbar = this.renderReactionToolbar();
         var reactionLink = this.renderReactionLink();
         var needPadding = false;
@@ -237,14 +199,14 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render double-column view
      *
      * @return {ReactElement}
      */
-    renderDoubleColumn: function() {
+    renderDoubleColumn() {
         return (
             <div className={this.getClassName()}>
                 <div className="header">
@@ -269,14 +231,14 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render triple-column view
      *
      * @return {ReactElement}
      */
-    renderTripleColumn: function() {
+    renderTripleColumn() {
         var t = this.props.locale.translate;
         return (
             <div className={this.getClassName()}>
@@ -307,14 +269,14 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render the author's profile image
      *
      * @return {ReactElement}
      */
-    renderProfileImage: function() {
+    renderProfileImage() {
         var leadAuthor = _.get(this.props.authors, 0);
         var props = {
             user: leadAuthor,
@@ -328,28 +290,28 @@ module.exports = React.createClass({
             });
         }
         return <ProfileImage {...props} />;
-    },
+    }
 
     /**
      * Render the names of the author and co-authors
      *
      * @return {ReactElement}
      */
-    renderAuthorNames: function() {
+    renderAuthorNames() {
         var props = {
             authors: this.props.authors,
             locale: this.props.locale,
             theme: this.props.theme,
         };
         return <AuthorNames {...props} />;
-    },
+    }
 
     /**
      * Render link and comment buttons on title bar
      *
      * @return {ReactElement|null}
      */
-    renderReactionToolbar: function() {
+    renderReactionToolbar() {
         var access = this.props.access;
         if (access !== 'read-comment' && access !== 'read-write') {
             return null;
@@ -365,14 +327,14 @@ module.exports = React.createClass({
             onAction: this.handleAction,
         };
         return <ReactionToolbar {...props} />;
-    },
+    }
 
     /**
      * Render link for expanding reaction section
      *
      * @return {ReactElement|null}
      */
-    renderReactionLink: function() {
+    renderReactionLink() {
         var count = _.size(this.props.reactions);
         if (count === 0) {
             return null;
@@ -386,14 +348,14 @@ module.exports = React.createClass({
                 {t('story-$count-reactions', count)}
             </span>
         );
-    },
+    }
 
     /**
      * Render upload status or the publication time
      *
      * @return {ReactElement}
      */
-    renderProgress: function() {
+    renderProgress() {
         var uploadStatus;
         if (this.props.story.ready === false) {
             uploadStatus = this.props.payloads.inquire(this.props.story);
@@ -405,26 +367,26 @@ module.exports = React.createClass({
             locale: this.props.locale,
         };
         return <StoryProgress {...props} />;
-    },
+    }
 
     /**
      * Render emblem
      *
      * @return {ReactElement}
      */
-    renderEmblem: function() {
+    renderEmblem() {
         var props = {
             story: this.props.story,
         };
         return <StoryEmblem {...props} />
-    },
+    }
 
     /**
      * Render the main contents, including media attached to story
      *
      * @return {ReactElement}
      */
-    renderContents: function() {
+    renderContents() {
         var props = {
             access: this.props.access,
             story: this.props.story,
@@ -439,14 +401,14 @@ module.exports = React.createClass({
             onReaction: this.handleStoryReaction,
         };
         return <StoryContents {...props} />;
-    },
+    }
 
     /**
      * Render reactions to story
      *
      * @return {ReactElement|null}
      */
-    renderReactions: function() {
+    renderReactions() {
         if (_.isEmpty(this.props.reactions)) {
             return null;
         }
@@ -479,14 +441,14 @@ module.exports = React.createClass({
                 <ReactionList ref={setters.reactionList} {...listProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Check the height of the cell containing the reaction scroll box. If it's
      * taller than the scroll box's max height, then we use absolute positioning
      * instead so there's no gap at the bottom.
      */
-    adjustReactionContainer: function() {
+    adjustReactionContainer() {
         if (this.props.theme.mode !== 'single-col') {
             var container = this.components.reactionContainer;
             if (container) {
@@ -502,7 +464,7 @@ module.exports = React.createClass({
                 }
             }
         }
-    },
+    }
 
     /**
      * Render popup menu containing options for given section
@@ -511,14 +473,14 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderPopUpMenu: function(section) {
+    renderPopUpMenu(section) {
         var ref = this.components.setters[section + 'PopUp'];
         return (
             <CornerPopUp ref={ref}>
                 {this.renderOptions(section)}
             </CornerPopUp>
         );
-    },
+    }
 
     /**
      * Render options pane or simply the list of options when it's in a menu
@@ -527,7 +489,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOptions: function(section) {
+    renderOptions(section) {
         var props = {
             section,
             access: this.props.access,
@@ -546,14 +508,14 @@ module.exports = React.createClass({
             onComplete: this.handleOptionsComplete,
         };
         return <StoryViewOptions {...props} />;
-    },
+    }
 
     /**
      * Adjust height of reaction container on mount
      */
-    componentDidMount: function() {
+    componentDidMount() {
         this.adjustReactionContainer();
-    },
+    }
 
     /**
      * Adjust height of reaction container on update
@@ -561,9 +523,9 @@ module.exports = React.createClass({
      * @param  {Object} prevProps
      * @param  {Object} prevState
      */
-    componentDidUpdate: function(prevProps, prevState) {
+    componentDidUpdate(prevProps, prevState) {
         this.adjustReactionContainer();
-    },
+    }
 
     /**
      * Save story to remote database
@@ -573,7 +535,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    saveStory: function(story, immediate) {
+    saveStory(story, immediate) {
         var params = this.props.route.parameters;
         var options = {
             delay: (immediate) ? undefined : AUTOSAVE_DURATION,
@@ -600,7 +562,7 @@ module.exports = React.createClass({
                 return story
             });
         });
-    },
+    }
 
     /**
      * Remove story from remote database
@@ -609,11 +571,11 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    removeStory: function(story) {
+    removeStory(story) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.removeOne({ table: 'story' }, story);
-    },
+    }
 
     /**
      * Save reaction to remote database
@@ -622,13 +584,13 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    saveReaction: function(reaction) {
+    saveReaction(reaction) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'reaction' }, reaction);
         });
-    },
+    }
 
     /**
      * Remove a reaction from remote database
@@ -637,13 +599,13 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    removeReaction: function(reaction) {
+    removeReaction(reaction) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.removeOne({ table: 'reaction' }, reaction);
         });
-    },
+    }
 
     /**
      * Save bookmarks to remote database
@@ -652,7 +614,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    saveBookmarks: function(bookmarks) {
+    saveBookmarks(bookmarks) {
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
@@ -661,7 +623,7 @@ module.exports = React.createClass({
         return db.start().then(() => {
             return db.save({ table: 'bookmark' }, bookmarks);
         });
-    },
+    }
 
     /**
      * Remove bookmarks from remote database
@@ -670,7 +632,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    removeBookmarks: function(bookmarks) {
+    removeBookmarks(bookmarks) {
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
@@ -679,7 +641,7 @@ module.exports = React.createClass({
         return db.start().then(() => {
             return db.remove({ table: 'bookmark' }, bookmarks);
         });
-    },
+    }
 
     /**
      * Send bookmarks to list of users
@@ -689,7 +651,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    sendBookmarks: function(story, recipientIds) {
+    sendBookmarks(story, recipientIds) {
         var bookmarks = this.props.recommendations;
         var newBookmarks = [];
         // add bookmarks that don't exist yet
@@ -716,7 +678,7 @@ module.exports = React.createClass({
                 return _.concat(newBookmarks, redundantBookmarks);
             });
         });
-    },
+    }
 
     /**
      * Create a task in the backend
@@ -726,7 +688,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Task>}
      */
-    sendTask: function(action, options) {
+    sendTask(action, options) {
         var task = {
             action,
             options,
@@ -738,14 +700,14 @@ module.exports = React.createClass({
         return db.start().then(() => {
             return db.saveOne({ table: 'task' }, task);
         });
-    },
+    }
 
     /**
      * Change options concerning a story
      *
      * @param  {Object} options
      */
-    setOptions: function(options) {
+    setOptions(options) {
         var before = this.state.options;
         this.setState({ options }, () => {
             var story = this.props.story;
@@ -801,72 +763,72 @@ module.exports = React.createClass({
                 }
             }
         });
-    },
+    }
 
     /**
      * Called when user changes story (only task lists can change here)
      *
      * @param  {Object} evt
      */
-    handleStoryChange: function(evt) {
+    handleStoryChange = (evt) => {
         this.saveStory(evt.story);
-    },
+    }
 
     /**
      * Called when user submits votes
      *
      * @param  {Object} evt
      */
-    handleStoryReaction: function(evt) {
+    handleStoryReaction = (evt) => {
         if (evt.reaction.deleted) {
             this.removeReaction(evt.reaction);
         } else {
             this.saveReaction(evt.reaction);
         }
-    },
+    }
 
     /**
      * Called when user clicks on reaction link
      *
      * @param  {Event} evt
      */
-    handleExpansionClick: function(evt) {
+    handleExpansionClick = (evt) => {
         this.setState({ commentsExpanded: true });
-    },
+    }
 
     /**
      * Called when options are changed
      *
      * @param  {Object} evt
      */
-    handleOptionsChange: function(evt) {
+    handleOptionsChange = (evt) => {
         this.setOptions(evt.options);
         var section = evt.target.props.section;
         var popUp = this.components[section + 'PopUp'];
         if (popUp) {
             popUp.close();
         }
-    },
+    }
 
     /**
      * Called when a change to the story options is complete
      *
      * @param  {Object} evt
      */
-    handleOptionsComplete: function(evt) {
+    handleOptionsComplete = (evt) => {
         var section = evt.target.props.section;
         var popUp = this.components[section + 'PopUp'];
         if (popUp) {
             popUp.close();
         }
-    },
+    }
 
     /**
      * Called when user initiates an action
      *
      * @param  {Object} evt
      */
-    handleAction: function(evt) {
+    handleAction = (evt) => {
         switch (evt.action) {
             case 'like-add':
                 var like = {
@@ -915,7 +877,7 @@ module.exports = React.createClass({
                 break;
         }
     }
-});
+}
 
 var reactionContainerMaxHeight;
 
@@ -940,3 +902,42 @@ var countRespondents = Memoize(function(reactions) {
     var userIds = _.map(reactions, 'user_id');
     return _.size(_.uniq(userIds));
 }, 0);
+
+export {
+    StoryView as default,
+    StoryView,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryView.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        highlighting: PropTypes.bool,
+        pending: PropTypes.bool,
+        story: PropTypes.object.isRequired,
+        bookmark: PropTypes.object,
+        authors: PropTypes.arrayOf(PropTypes.object),
+        reactions: PropTypes.arrayOf(PropTypes.object),
+        respondents: PropTypes.arrayOf(PropTypes.object),
+        recommendations: PropTypes.arrayOf(PropTypes.object),
+        recipients: PropTypes.arrayOf(PropTypes.object),
+        repos: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object.isRequired,
+        selectedReactionId: PropTypes.number,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onBump: PropTypes.func,
+    };
+}

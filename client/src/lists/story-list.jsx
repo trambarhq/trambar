@@ -1,97 +1,60 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var Empty = require('data/empty');
-var ComponentRefs = require('utils/component-refs');
-var UserFinder = require('objects/finders/user-finder');
-var RepoFinder = require('objects/finders/repo-finder');
-var BookmarkFinder = require('objects/finders/bookmark-finder');
-var ReactionFinder = require('objects/finders/reaction-finder');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import Memoize from 'utils/memoize';
+import Empty from 'data/empty';
+import ComponentRefs from 'utils/component-refs';
+import UserFinder from 'objects/finders/user-finder';
+import RepoFinder from 'objects/finders/repo-finder';
+import BookmarkFinder from 'objects/finders/bookmark-finder';
+import ReactionFinder from 'objects/finders/reaction-finder';
 
 // widgets
-var SmartList = require('widgets/smart-list');
-var StoryView = require('views/story-view');
-var StoryEditor = require('editors/story-editor');
-var NewItemsAlert = require('widgets/new-items-alert');
+import SmartList from 'widgets/smart-list';
+import StoryView from 'views/story-view';
+import StoryEditor from 'editors/story-editor';
+import NewItemsAlert from 'widgets/new-items-alert';
 
-require('./story-list.scss');
+import './story-list.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'StoryList',
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        acceptNewStory: PropTypes.bool,
-        stories: PropTypes.arrayOf(PropTypes.object),
-        draftStories: PropTypes.arrayOf(PropTypes.object),
-        pendingStories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        project: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    statics: {
-        /**
-         * Extract id from URL hash
-         *
-         * @param  {String} hash
-         *
-         * @return {Object}
-         */
-        parseHash: function(hash) {
-            var story, highlighting;
-            if (story = Route.parseId(hash, /S(\d+)/)) {
-                highlighting = true;
-            } else if (story = Route.parseId(hash, /s(\d+)/)) {
-                highlighting = false;
-            }
-            return { story, highlighting };
-        },
-
-        /**
-         * Get URL hash based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {String}
-         */
-        getHash: function(params) {
-            if (params.story) {
-                if (params.highlighting) {
-                    return `S${params.story}`;
-                } else {
-                    return `s${params.story}`;
-                }
-            }
-            return '';
-        },
-    },
+class StoryList extends AsyncComponent {
+    static displayName = 'StoryList';
 
     /**
-     * Return default props
+     * Extract id from URL hash
+     *
+     * @param  {String} hash
      *
      * @return {Object}
      */
-    getDefaultProps: function() {
-        return {
-            acceptNewStory: false,
-        };
-    },
+    static parseHash(hash) {
+        var story, highlighting;
+        if (story = Route.parseId(hash, /S(\d+)/)) {
+            highlighting = true;
+        } else if (story = Route.parseId(hash, /s(\d+)/)) {
+            highlighting = false;
+        }
+        return { story, highlighting };
+    }
+
+    /**
+     * Get URL hash based on given parameters
+     *
+     * @param  {Object} params
+     *
+     * @return {String}
+     */
+    static getHash(params) {
+        if (params.story) {
+            if (params.highlighting) {
+                return `S${params.story}`;
+            } else {
+                return `s${params.story}`;
+            }
+        }
+        return '';
+    }
 
     /**
      * Render the component asynchronously
@@ -101,7 +64,7 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile, prevProps) {
+    renderAsync(meanwhile, prevProps) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
@@ -163,54 +126,28 @@ module.exports = Relaks.createClass({
         }).then(() => {
             return <StoryListSync {...props} />;
         });
-    },
-});
+    }
+}
 
-var StoryListSync = module.exports.Sync = React.createClass({
-    displayName: 'StoryList.Sync',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        acceptNewStory: PropTypes.bool,
-        stories: PropTypes.arrayOf(PropTypes.object),
-        authors: PropTypes.arrayOf(PropTypes.object),
-        draftStories: PropTypes.arrayOf(PropTypes.object),
-        pendingStories: PropTypes.arrayOf(PropTypes.object),
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        respondents: PropTypes.arrayOf(PropTypes.object),
-        recommendations: PropTypes.arrayOf(PropTypes.object),
-        recipients: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        project: PropTypes.object,
-        repos: PropTypes.arrayOf(PropTypes.object),
+class StoryListSync extends PureComponent {
+    static displayName = 'StoryList.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             list: SmartList
         });
-        return {
+        this.state = {
             hiddenStoryIds: [],
         };
-    },
+    }
 
     /**
      * Cancel payloads of stories that no longer exists
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.stories !== nextProps.stories || this.props.draftStories !== nextProps.draftStories || this.props.pendingStories !== nextProps.pendingStories) {
             var storiesBefore = _.concat(this.props.draftStories, this.props.pendingStories, this.props.stories);
             var storiesAfter = _.concat(nextProps.draftStories, nextProps.pendingStories, nextProps.stories);
@@ -233,21 +170,21 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 }
             });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var setters = this.components.setters;
         var stories = sortStories(this.props.stories, this.props.pendingStories);
         if (this.props.acceptNewStory) {
             stories = attachDrafts(stories, this.props.draftStories, this.props.currentUser);
         }
         var anchor;
-        var hashParams = module.exports.parseHash(this.props.route.hash);
+        var hashParams = StoryList.parseHash(this.props.route.hash);
         if (hashParams.story) {
             anchor = `story-${hashParams.story}`;
         }
@@ -271,21 +208,21 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 {this.renderNewStoryAlert()}
             </div>
         );
-    },
+    }
 
     /**
      * Render alert indicating there're new stories hidden up top
      *
      * @return {ReactElement}
      */
-    renderNewStoryAlert: function() {
+    renderNewStoryAlert() {
         var t = this.props.locale.translate;
         var count = _.size(this.state.hiddenStoryIds);
         var params = {
             story: _.first(this.state.hiddenStoryIds)
         };
         var props = {
-            hash: module.exports.getHash(params),
+            hash: StoryList.getHash(params),
             route: this.props.route,
             onClick: this.handleNewStoryAlertClick,
         };
@@ -294,7 +231,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 {t('alert-$count-new-stories', count)}
             </NewItemsAlert>
         );
-    },
+    }
 
     /**
      * Called when SmartList wants an item's id
@@ -303,7 +240,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
      *
      * @return {String}
      */
-    handleStoryIdentity: function(evt) {
+    handleStoryIdentity = (evt) => {
         if (evt.alternative && evt.item) {
             // look for temporary id
             var params = this.props.route.parameters;
@@ -322,7 +259,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             }
             return `story-${evt.item.id}`;
         }
-    },
+    }
 
     /**
      * Called when SmartList wants to render an item
@@ -331,7 +268,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    handleStoryRender: function(evt) {
+    handleStoryRender = (evt) => {
         var story = evt.item;
         // see if it's being editted
         var isDraft = false;
@@ -351,7 +288,7 @@ var StoryListSync = module.exports.Sync = React.createClass({
             }
 
             var hash = this.props.route.hash;
-            var hashParams = module.exports.parseHash(hash);
+            var hashParams = StoryList.parseHash(hash);
             if (story.id === hashParams.story) {
                 if (hashParams.highlighting) {
                     highlighting = true;
@@ -420,49 +357,49 @@ var StoryListSync = module.exports.Sync = React.createClass({
                 return <div className="story-view" style={{ height }} />
             }
         }
-    },
+    }
 
     /**
      * Called when a different story is positioned at the top of the viewport
      *
      * @param  {Object} evt
      */
-    handleStoryAnchorChange: function(evt) {
+    handleStoryAnchorChange = (evt) => {
         var params = {
             story: _.get(evt.item, 'id')
         };
-        var hash = module.exports.getHash(params);
+        var hash = StoryList.getHash(params);
         this.props.route.reanchor(hash);
-    },
+    }
 
     /**
      * Called when SmartList notice new items were rendered off screen
      *
      * @param  {Object} evt
      */
-    handleStoryBeforeAnchor: function(evt) {
+    handleStoryBeforeAnchor = (evt) => {
         var hiddenStoryIds = _.map(evt.items, 'id');
         this.setState({ hiddenStoryIds });
-    },
+    }
 
     /**
      * Called when user clicks on new story alert
      *
      * @param  {Event} evt
      */
-    handleNewStoryAlertClick: function(evt) {
+    handleNewStoryAlertClick = (evt) => {
         this.setState({ hiddenStoryIds: [] });
-    },
+    }
 
     /**
      * Scroll back to the top when a story is bumped
      *
      * @param  {Object} evt
      */
-    handleStoryBump: function(evt) {
+    handleStoryBump = (evt) => {
         this.components.list.releaseAnchor();
     }
-});
+}
 
 var array = Memoize(function(object) {
     return [ object ];
@@ -568,4 +505,61 @@ var findRecipients = Memoize(function(recipients, recommendations) {
 function getAuthorIds(stories) {
     var userIds = _.flatten(_.map(stories, 'user_ids'));
     return _.uniq(userIds);
+}
+
+StoryList.defaultProps = {
+    acceptNewStory: false,
+};
+
+export {
+    StoryList as default,
+    StoryList,
+    StoryListSync,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryList.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        acceptNewStory: PropTypes.bool,
+        stories: PropTypes.arrayOf(PropTypes.object),
+        draftStories: PropTypes.arrayOf(PropTypes.object),
+        pendingStories: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        project: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+    StoryListSync.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        acceptNewStory: PropTypes.bool,
+        stories: PropTypes.arrayOf(PropTypes.object),
+        authors: PropTypes.arrayOf(PropTypes.object),
+        draftStories: PropTypes.arrayOf(PropTypes.object),
+        pendingStories: PropTypes.arrayOf(PropTypes.object),
+        reactions: PropTypes.arrayOf(PropTypes.object),
+        respondents: PropTypes.arrayOf(PropTypes.object),
+        recommendations: PropTypes.arrayOf(PropTypes.object),
+        recipients: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        project: PropTypes.object,
+        repos: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
 }

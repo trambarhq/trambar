@@ -1,69 +1,34 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var UserUtils = require('objects/utils/user-utils');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var HeaderButton = require('widgets/header-button');
-var OptionButton = require('widgets/option-button');
-var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
-var IssueDialogBox = require('dialogs/issue-dialog-box');
+import HeaderButton from 'widgets/header-button';
+import OptionButton from 'widgets/option-button';
+import UserSelectionDialogBox from 'dialogs/user-selection-dialog-box';
+import IssueDialogBox from 'dialogs/issue-dialog-box';
 
-require('./story-editor-options.scss');
+import './story-editor-options.scss';
 
-module.exports = React.createClass({
-    displayName: 'StoryEditorOptions',
-    propTypes: {
-        section: PropTypes.oneOf([ 'main', 'preview', 'both' ]),
-        story: PropTypes.object.isRequired,
-        repos: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        options: PropTypes.object.isRequired,
+class StoryEditorOptions extends PureComponent {
+    static displayName = 'StoryEditorOptions';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onChange: PropTypes.func,
-        onComplete: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            section: 'both',
-        }
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             selectingRecipients: false,
             renderingRecipientDialogBox: false,
             enteringIssueDetails: false,
             renderingIssueDialogBox: false,
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         if (this.props.section === 'both') {
             return (
                 <div className="story-editor-options">
@@ -79,7 +44,7 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render list of buttons belonging to specified section
@@ -88,7 +53,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderButtons: function(section) {
+    renderButtons(section) {
         var t = this.props.locale.translate;
         var options = this.props.options;
         if (section === 'main') {
@@ -151,14 +116,14 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render dialog for selecting users
      *
      * @return {ReactElement}
      */
-    renderRecipientDialogBox: function() {
+    renderRecipientDialogBox() {
         if (!this.state.renderingRecipientDialogBox) {
             return null;
         }
@@ -175,14 +140,14 @@ module.exports = React.createClass({
             onCancel: this.handleRecipientsCancel,
         };
         return <UserSelectionDialogBox {...props} />;
-    },
+    }
 
     /**
      * Render dialog for entering issue details
      *
      * @return {ReactElement}
      */
-    renderIssueDialogBox: function() {
+    renderIssueDialogBox() {
         if (!this.state.renderingIssueDialogBox) {
             return null;
         }
@@ -200,14 +165,14 @@ module.exports = React.createClass({
             onCancel: this.handleIssueCancel,
         };
         return <IssueDialogBox {...props} />;
-    },
+    }
 
     /**
      * Inform parent component that options have been changed
      *
      * @param  {Object} options
      */
-    triggerChangeEvent: function(options) {
+    triggerChangeEvent(options) {
         if (this.props.onChange) {
             this.props.onChange({
                 type: 'change',
@@ -215,38 +180,38 @@ module.exports = React.createClass({
                 options,
             });
         }
-    },
+    }
 
     /**
      * Inform parent component the action requested is either done or canceled
      */
-    triggerCompleteEvent: function() {
+    triggerCompleteEvent() {
         if (this.props.onComplete) {
             this.props.onComplete({
                 type: 'complete',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Open dialog box for selecting user
      *
      * @param  {Event} evt
      */
-    openSelectionDialogBox: function(evt) {
+    openSelectionDialogBox(evt) {
         if (!this.state.selectingRecipients) {
             this.setState({
                 selectingRecipients: true,
                 renderingRecipientDialogBox: true
             });
         }
-    },
+    }
 
     /**
      * Close dialog box
      */
-    closeSelectionDialogBox: function() {
+    closeSelectionDialogBox() {
         if (this.state.selectingRecipients) {
             this.setState({ selectingRecipients: false });
             setTimeout(() => {
@@ -255,26 +220,26 @@ module.exports = React.createClass({
                 }
             }, 500);
         }
-    },
+    }
 
     /**
      * Open dialog box for entering issue details
      *
      * @param  {Event} evt
      */
-    openIssueDialogBox: function(evt) {
+    openIssueDialogBox(evt) {
         if (!this.state.enteringIssueDetails) {
             this.setState({
                 enteringIssueDetails: true,
                 renderingIssueDialogBox: true
             });
         }
-    },
+    }
 
     /**
      * Close dialog box
      */
-    closeIssueDialogBox: function() {
+    closeIssueDialogBox() {
         if (this.state.enteringIssueDetails) {
             this.setState({ enteringIssueDetails: false });
             setTimeout(() => {
@@ -283,14 +248,14 @@ module.exports = React.createClass({
                 }
             }, 500);
         }
-    },
+    }
 
     /**
      * Called when user clicks on bookmark post button
      *
      * @param  {Event} evt
      */
-    handleBookmarkClick: function(evt) {
+    handleBookmarkClick = (evt) => {
         var options = _.clone(this.props.options);
         var userId = this.props.currentUser.id;
         if (_.includes(options.bookmarkRecipients, userId)) {
@@ -300,105 +265,139 @@ module.exports = React.createClass({
         }
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user clicks on send bookmark button
      *
      * @param  {Event} evt
      */
-    handleSendBookmarkClick: function(evt) {
+    handleSendBookmarkClick = (evt) => {
         this.openSelectionDialogBox(evt);
-    },
+    }
 
     /**
      * Called when user clicks on add issue to tracker button
      *
      * @param  {Event} evt
      */
-    handleAddIssueClick: function(evt) {
+    handleAddIssueClick = (evt) => {
         this.openIssueDialogBox(evt);
-    },
+    }
 
     /**
      * Called when user clicks on hide post button
      *
      * @param  {Event} evt
      */
-    handleHidePostClick: function(evt) {
+    handleHidePostClick = (evt) => {
         var options = _.clone(this.props.options);
         options.hidePost = !options.hidePost;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user finishes selecting user
      *
      * @param  {Object} evt
      */
-    handleRecipientsSelect: function(evt) {
+    handleRecipientsSelect = (evt) => {
         var options = _.clone(this.props.options);
         options.bookmarkRecipients = evt.selection;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
         this.closeSelectionDialogBox();
-    },
+    }
 
     /**
      * Called when user cancel user selection
      *
      * @param  {Object} evt
      */
-    handleRecipientsCancel: function(evt) {
+    handleRecipientsCancel = (evt) => {
         this.triggerCompleteEvent();
         this.closeSelectionDialogBox();
-    },
+    }
 
     /**
      * Called when user finishes entering issue details
      *
      * @param  {Object} evt
      */
-    handleIssueConfirm: function(evt) {
+    handleIssueConfirm = (evt) => {
         var options = _.clone(this.props.options);
         options.issueDetails = evt.issue;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
         this.closeIssueDialogBox();
-    },
+    }
 
     /**
      * Called when user cancel editing of issue details
      *
      * @param  {Object} evt
      */
-    handleIssueCancel: function(evt) {
+    handleIssueCancel = (evt) => {
         this.triggerCompleteEvent();
         this.closeIssueDialogBox();
-    },
+    }
 
     /**
      * Called when user clicks show media button
      *
      * @param  {Event} evt
      */
-    handleShowMediaPreviewClick: function(evt) {
+    handleShowMediaPreviewClick = (evt) => {
         var options = _.clone(this.props.options);
         options.preview = 'media';
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user clicks show preview button
      *
      * @param  {Event} evt
      */
-    handleShowTextPreviewClick: function(evt) {
+    handleShowTextPreviewClick = (evt) => {
         var options = _.clone(this.props.options);
         options.preview = 'text';
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
-    },
-});
+    }
+}
+
+StoryEditorOptions.defaultProps = {
+    section: 'both',
+};
+
+export {
+    StoryEditorOptions as default,
+    StoryEditorOptions,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryEditorOptions.propTypes = {
+        section: PropTypes.oneOf([ 'main', 'preview', 'both' ]),
+        story: PropTypes.object.isRequired,
+        repos: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        options: PropTypes.object.isRequired,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onChange: PropTypes.func,
+        onComplete: PropTypes.func,
+    };
+}

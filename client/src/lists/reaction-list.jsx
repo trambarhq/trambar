@@ -1,102 +1,69 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var ReactDOM = require('react-dom');
-var Memoize = require('utils/memoize');
-var Merger = require('data/merger');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import Memoize from 'utils/memoize';
+import Merger from 'data/merger';
 
 // widgets
-var ReactionView = require('views/reaction-view');
-var ReactionEditor = require('editors/reaction-editor');
-var SmartList = require('widgets/smart-list');
+import ReactionView from 'views/reaction-view';
+import ReactionEditor from 'editors/reaction-editor';
+import SmartList from 'widgets/smart-list';
 
-require('./reaction-list.scss');
+import './reaction-list.scss';
 
-module.exports = React.createClass({
-    displayName: 'ReactionList',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        story: PropTypes.object.isRequired,
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        respondents: PropTypes.arrayOf(PropTypes.object),
-        repo: PropTypes.object,
-        currentUser: PropTypes.object,
+class ReactionList extends PureComponent {
+    static displayName = 'ReactionList';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onFinish: PropTypes.func,
-    },
-
-    statics: {
-        /**
-         * Extract id from URL hash
-         *
-         * @param  {String} hash
-         *
-         * @return {Object}
-         */
-        parseHash: function(hash) {
-            var reaction, highlighting;
-            if (reaction = Route.parseId(hash, /R(\d+)/)) {
-                highlighting = true;
-            } else if (reaction = Route.parseId(hash, /r(\d+)/)) {
-                highlighting = false;
-            }
-            return { reaction, highlighting };
-        },
-
-        /**
-         * Get URL hash based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {String}
-         */
-        getHash: function(params) {
-            if (params.reaction != undefined) {
-                if (params.highlighting) {
-                    return `R${params.reaction}`;
-                } else {
-                    return `r${params.reaction}`;
-                }
-            }
-            return '';
-        },
-    },
+    constructor(props) {
+        super(props);
+        this.state = {
+            hiddenReactionIds: [],
+        };
+    }
 
     /**
-     * Return initial state of component
+     * Extract id from URL hash
+     *
+     * @param  {String} hash
      *
      * @return {Object}
      */
-    getInitialState: function() {
-        return {
-            hiddenReactionIds: [],
-        };
-    },
+    static parseHash(hash) {
+        var reaction, highlighting;
+        if (reaction = Route.parseId(hash, /R(\d+)/)) {
+            highlighting = true;
+        } else if (reaction = Route.parseId(hash, /r(\d+)/)) {
+            highlighting = false;
+        }
+        return { reaction, highlighting };
+    }
+
+    /**
+     * Get URL hash based on given parameters
+     *
+     * @param  {Object} params
+     *
+     * @return {String}
+     */
+    static getHash(params) {
+        if (params.reaction != undefined) {
+            if (params.highlighting) {
+                return `R${params.reaction}`;
+            } else {
+                return `r${params.reaction}`;
+            }
+        }
+        return '';
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var reactions = sortReactions(this.props.reactions, this.props.currentUser);
         var anchor;
-        var hashParams = module.exports.parseHash(this.props.route.hash);
+        var hashParams = ReactionList.parseHash(this.props.route.hash);
         if (hashParams.reaction) {
             anchor = `reaction-${hashParams.reaction}`;
         }
@@ -119,7 +86,7 @@ module.exports = React.createClass({
                 <SmartList {...props} />
             </div>
         );
-    },
+    }
 
     /**
      * Called when SmartList wants an item's id
@@ -128,7 +95,7 @@ module.exports = React.createClass({
      *
      * @return {String|undefined}
      */
-    handleReactionIdentity: function(evt) {
+    handleReactionIdentity = (evt) => {
         if (evt.alternative) {
             var params = this.props.route.parameters;
             var location = { schema: params.schema, table: 'reaction' };
@@ -139,7 +106,7 @@ module.exports = React.createClass({
         } else {
             return `reaction-${evt.item.id}`;
         }
-    },
+    }
 
     /**
      * Called when SmartList wants to know if it should use transition effect
@@ -148,13 +115,13 @@ module.exports = React.createClass({
      *
      * @return {Boolean}
      */
-    handleReactionTransition: function(evt) {
+    handleReactionTransition = (evt) => {
         // don't transition in comment editor with a temporary object
         if (evt.item.id < 1) {
             return false;
         }
         return true;
-    },
+    }
 
     /**
      * Called when SmartList wants to render an item
@@ -163,7 +130,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    handleReactionRender: function(evt) {
+    handleReactionRender = (evt) => {
         var reaction = evt.item;
         var isUserDraft = false;
         var isNewComment = false;
@@ -180,7 +147,7 @@ module.exports = React.createClass({
                     }
                 }
             }
-            var hashParams = module.exports.parseHash(this.props.route.hash);
+            var hashParams = ReactionList.parseHash(this.props.route.hash);
             if (reaction.id === hashParams.reaction) {
                 highlighting = hashParams.highlighting;
             }
@@ -219,18 +186,18 @@ module.exports = React.createClass({
             };
             return <ReactionView key={reaction.id} {...props} />
         }
-    },
+    }
 
     /**
      * Called when SmartList notice new items were rendered off screen
      *
      * @param  {Object} evt
      */
-    handleReactionBeforeAnchor: function(evt) {
+    handleReactionBeforeAnchor = (evt) => {
         var hiddenReactionIds = _.map(evt.items, 'id');
         this.setState({ hiddenReactionIds });
-    },
-});
+    }
+}
 
 var sortReactions = Memoize(function(reactions, currentUser) {
     // reactions are positioned from bottom up
@@ -252,3 +219,35 @@ var findRespondent = Memoize(function(users, reaction) {
         return null;
     }
 });
+
+export {
+    ReactionList as default,
+    ReactionList,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ReactionList.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        story: PropTypes.object.isRequired,
+        reactions: PropTypes.arrayOf(PropTypes.object),
+        respondents: PropTypes.arrayOf(PropTypes.object),
+        repo: PropTypes.object,
+        currentUser: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onFinish: PropTypes.func,
+    };
+}

@@ -1,53 +1,32 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var UserUtils = require('objects/utils/user-utils');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var ResourceView = require('widgets/resource-view');
-var Scrollable = require('widgets/scrollable');
-var CollapsibleContainer = require('widgets/collapsible-container');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import ResourceView from 'widgets/resource-view';
+import Scrollable from 'widgets/scrollable';
+import CollapsibleContainer from 'widgets/collapsible-container';
 
-require('./membership-request-dialog-box.scss');
+import './membership-request-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'MembershipRequestDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        currentUser: PropTypes.object.isRequired,
-        project: PropTypes.object.isRequired,
+class MembershipRequestDialogBox extends PureComponent {
+    static displayName = 'MembershipRequestDialogBox';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onConfirm: PropTypes.func,
-        onRevoke: PropTypes.func,
-        onClose: PropTypes.func,
-        onProceed: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of project
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             userJustJoined: false
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.handleCloseClick,
@@ -62,14 +41,14 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render description of project
      *
      * @return {ReactElement}
      */
-    renderText: function() {
+    renderText() {
         var p = this.props.locale.pick;
         var project = this.props.project;
         var image = _.find(project.details.resources, { type: 'image' });
@@ -84,14 +63,14 @@ module.exports = React.createClass({
                 </div>
             </Scrollable>
         );
-    },
+    }
 
     /**
      * Render message about member status
      *
      * @return {ReactElement|null}
      */
-    renderMessage: function() {
+    renderMessage() {
         var t = this.props.locale.translate;
         var n = this.props.locale.name;
         var user = this.props.currentUser;
@@ -120,14 +99,14 @@ module.exports = React.createClass({
                 </div>
             </CollapsibleContainer>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         var user = this.props.currentUser;
         var project = this.props.project;
@@ -194,50 +173,76 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Called when user click join button
      *
      * @param  {Event} evt
      */
-    handleJoinClick: function(evt) {
+    handleJoinClick(evt) {
         this.setState({ userJustJoined: true });
         if (this.props.onConfirm) {
             this.props.onConfirm({ type: 'confirm', target: this });
         }
-    },
+    }
 
     /**
      * Called when user click withdraw button
      *
      * @param  {Event} evt
      */
-    handleWithdrawClick: function(evt) {
+    handleWithdrawClick(evt) {
         if (this.props.onRevoke) {
             this.props.onRevoke({ type: 'revoke', target: this });
         }
-    },
+    }
 
     /**
      * Called when user click cancel or ok button or outside the dialog box
      *
      * @param  {Event} evt
      */
-    handleCloseClick: function(evt) {
+    handleCloseClick(evt) {
         if (this.props.onClose) {
             this.props.onClose({ type: 'cancel', target: this });
         }
-    },
+    }
 
     /**
      * Called when user click proceed button
      *
      * @param  {Event} evt
      */
-    handleProceedClick: function(evt) {
+    handleProceedClick(evt) {
         if (this.props.onProceed) {
             this.props.onProceed({ type: 'proceed', target: this });
         }
-    },
-});
+    }
+}
+
+export {
+    MembershipRequestDialogBox as default,
+    MembershipRequestDialogBox,
+};
+
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MembershipRequestDialogBox.propTypes = {
+        show: PropTypes.bool,
+        currentUser: PropTypes.object.isRequired,
+        project: PropTypes.object.isRequired,
+
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onConfirm: PropTypes.func,
+        onRevoke: PropTypes.func,
+        onClose: PropTypes.func,
+        onProceed: PropTypes.func,
+    };
+}

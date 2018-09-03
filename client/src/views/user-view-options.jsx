@@ -1,58 +1,29 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var OptionButton = require('widgets/option-button');
-var TelephoneNumberDialogBox = require('dialogs/telephone-number-dialog-box');
+import OptionButton from 'widgets/option-button';
+import TelephoneNumberDialogBox from 'dialogs/telephone-number-dialog-box';
 
-require('./user-view-options.scss');
+import './user-view-options.scss';
 
-module.exports = React.createClass({
-    displayName: 'UserViewOptions',
-    propTypes: {
-        section: PropTypes.oneOf([ 'main', 'statistics', 'both' ]),
-        user: PropTypes.object,
-        options: PropTypes.object.isRequired,
+class UserViewOptions extends PureComponent {
+    static displayName = 'UserViewOptions';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onChange: PropTypes.func,
-        onComplete: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            section: 'both',
-        }
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             showingPhoneDialog: false,
             renderingPhoneDialog: false,
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         if (this.props.section === 'both') {
             return (
                 <div className="user-view-options">
@@ -68,7 +39,7 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render buttons
@@ -77,7 +48,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderButtons: function(section) {
+    renderButtons(section) {
         var t = this.props.locale.translate;
         var details = _.get(this.props.user, 'details', {});
         if (section === 'main') {
@@ -188,14 +159,14 @@ module.exports = React.createClass({
                 </div>
             )
         }
-    },
+    }
 
     /**
      * Render dialog box showing telephone number
      *
      * @return {ReactElement|null}
      */
-    renderPhoneDialog: function() {
+    renderPhoneDialog() {
         if (process.env.PLATFORM !== 'browser') return null;
 
         if (!this.state.renderingPhoneDialog) {
@@ -208,14 +179,14 @@ module.exports = React.createClass({
             onClose: this.handlePhoneDialogClose,
         };
         return <TelephoneNumberDialogBox {...dialogProps} />;
-    },
+    }
 
     /**
      * Inform parent component that new options have been selected
      *
      * @param  {Object} changes
      */
-    triggerChangeEvent: function(changes) {
+    triggerChangeEvent(changes) {
         var options = _.assign({}, this.props.options, changes);
         if (this.props.onChange) {
             this.props.onChange({
@@ -224,28 +195,28 @@ module.exports = React.createClass({
                 options
             });
         }
-    },
+    }
 
     /**
      * Inform parent component that some action has taken place
      *
      * @param  {Object} changes
      */
-    triggerCompleteEvent: function() {
+    triggerCompleteEvent() {
         if (this.props.onComplete) {
             this.props.onComplete({
                 type: 'complete',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Called when user click on "contact by phone"
      *
      * @param  {Event} evt
      */
-    handlePhoneClick: function(evt) {
+    handlePhoneClick = (evt) => {
         if (process.env.PLATFORM !== 'browser') return;
 
         evt.preventDefault();
@@ -253,14 +224,14 @@ module.exports = React.createClass({
             renderingPhoneDialog: true,
             showingPhoneDialog: true,
         });
-    },
+    }
 
     /**
      * Called when user closes telephone number dialog
      *
      * @param  {Event} evt
      */
-    handlePhoneDialogClose: function(evt) {
+    handlePhoneDialogClose = (evt) => {
         if (process.env.PLATFORM !== 'browser') return;
 
         this.setState({ showingPhoneDialog: false }, () => {
@@ -271,50 +242,78 @@ module.exports = React.createClass({
                 }
             }, 500);
         });
-    },
+    }
 
     /**
      * Called when user clicks biweekly activities button
      *
      * @param  {Event} evt
      */
-    handleBiweeklyActivitiesClick: function(evt) {
+    handleBiweeklyActivitiesClick = (evt) => {
         var chartRange = 'biweekly';
         var chartType = this.props.options.chartType || 'bar';
         this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user clicks monthly activities button
      *
      * @param  {Event} evt
      */
-    handleMonthlyActivitiesClick: function(evt) {
+    handleMonthlyActivitiesClick = (evt) => {
         var chartRange = 'monthly';
         var chartType = this.props.options.chartType || 'bar';
         this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user clicks activities to-date button
      *
      * @param  {Event} evt
      */
-    handleActivitiesToDateClick: function(evt) {
+    handleActivitiesToDateClick = (evt) => {
         var chartRange = 'full';
         var chartType = this.props.options.chartType || 'bar';
         this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user clicks a link
      *
      * @param  {Event} evt
      */
-    handleLinkClick: function(evt) {
+    handleLinkClick = (evt) => {
         this.triggerCompleteEvent();
     }
-});
+}
+
+UserViewOptions.defaultProps = {
+    section: 'both',
+};
+
+export {
+    UserViewOptions as default,
+    UserViewOptions,
+};
+
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UserViewOptions.propTypes = {
+        section: PropTypes.oneOf([ 'main', 'statistics', 'both' ]),
+        user: PropTypes.object,
+        options: PropTypes.object.isRequired,
+
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onChange: PropTypes.func,
+        onComplete: PropTypes.func,
+    };
+}

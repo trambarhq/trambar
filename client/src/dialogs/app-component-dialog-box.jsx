@@ -1,32 +1,22 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var MarkGor = require('mark-gor/react');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import React, { PureComponent } from 'react';
+import MarkGor from 'mark-gor/react';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var ResourceView = require('widgets/resource-view');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import ResourceView from 'widgets/resource-view';
 
-require('./app-component-dialog-box.scss');
+import './app-component-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'AppComponentDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        component: PropTypes.object.isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        onClose: PropTypes.func,
-    },
+class AppComponentDialogBox extends PureComponent {
+    static displayName = 'AppComponentDialogBox';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         if (!this.props.component) {
             return null;
         }
@@ -45,14 +35,14 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render icon or image
      *
      * @return {ReactElement}
      */
-    renderPicture: function() {
+    renderPicture() {
         var component = this.props.component;
         if (component.image) {
             return (
@@ -75,14 +65,14 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render text description of component, formatted as Markdown
      *
      * @return {ReactElement}
      */
-    renderText: function() {
+    renderText() {
         var p = this.props.locale.pick;
         var text = p(this.props.component.text);
         var elements = MarkGor.parse(text);
@@ -91,14 +81,14 @@ module.exports = React.createClass({
                 {elements}
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         var closeButtonProps = {
             label: t('app-component-close'),
@@ -110,5 +100,25 @@ module.exports = React.createClass({
                 <PushButton {...closeButtonProps} />
             </div>
         );
-    },
-});
+    }
+}
+
+export {
+    AppComponentDialogBox as default,
+    AppComponentDialogBox,
+};
+
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    AppComponentDialogBox.propTypes = {
+        show: PropTypes.bool,
+        component: PropTypes.object.isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+        onClose: PropTypes.func,
+    };
+}

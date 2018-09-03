@@ -1,82 +1,55 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Memoize = require('utils/memoize');
-var DeviceManager = require('media/device-manager');
-var ComponentRefs = require('utils/component-refs');
-var TagScanner = require('utils/tag-scanner');
-var Markdown = require('utils/markdown');
-var FocusManager = require('utils/focus-manager');
-var ReactionUtils = require('objects/utils/reaction-utils');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import Memoize from 'utils/memoize';
+import DeviceManager from 'media/device-manager';
+import ComponentRefs from 'utils/component-refs';
+import TagScanner from 'utils/tag-scanner';
+import Markdown from 'utils/markdown';
+import FocusManager from 'utils/focus-manager';
+import ReactionUtils from 'objects/utils/reaction-utils';
 
 // widgets
-var AutosizeTextArea = require('widgets/autosize-text-area');
-var PushButton = require('widgets/push-button');
-var HeaderButton = require('widgets/header-button');
-var ProfileImage = require('widgets/profile-image');
-var DropZone = require('widgets/drop-zone');
-var ReactionMediaToolbar = require('widgets/reaction-media-toolbar');
-var MediaEditor = require('editors/media-editor');
-var MediaImporter = require('editors/media-importer');
+import AutosizeTextArea from 'widgets/autosize-text-area';
+import PushButton from 'widgets/push-button';
+import HeaderButton from 'widgets/header-button';
+import ProfileImage from 'widgets/profile-image';
+import DropZone from 'widgets/drop-zone';
+import ReactionMediaToolbar from 'widgets/reaction-media-toolbar';
+import MediaEditor from 'editors/media-editor';
+import MediaImporter from 'editors/media-importer';
 
-require('./reaction-editor.scss');
+import './reaction-editor.scss';
 
 const AUTOSAVE_DURATION = 2000;
 
-module.exports = React.createClass({
-    displayName: 'CommentEditor',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        reaction: PropTypes.object,
-        story: PropTypes.object.isRequired,
-        currentUser: PropTypes.object,
+class ReactionEditor extends PureComponent {
+    static displayName = 'ReactionEditor';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
+    constructor(props) {
+        super(props);
 
-        onFinish: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
         this.components = ComponentRefs({
             mediaImporter: MediaImporter,
             textArea: AutosizeTextArea,
         });
-        var nextState = {
+        this.state = {
             draft: null,
             original: null,
             selectedResourceIndex: 0,
             hasCamera: DeviceManager.hasDevice('videoinput'),
             hasMicrophone: DeviceManager.hasDevice('audioinput'),
         };
-        this.updateDraft(nextState, this.props);
-        this.updateResourceIndex(nextState, this.props);
-        return nextState;
-    },
+        this.updateDraft(this.state, props);
+        this.updateResourceIndex(this.state, props);
+    }
 
     /**
      * Update draft upon receiving data from server
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         var nextState = _.clone(this.state);
         if (this.props.reaction !== nextProps.reaction) {
             this.updateDraft(nextState, nextProps);
@@ -86,7 +59,7 @@ module.exports = React.createClass({
         if (!_.isEmpty(changes)) {
             this.setState(changes);
         }
-    },
+    }
 
     /**
      * Update reaction object with information from new props
@@ -94,7 +67,7 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateDraft: function(nextState, nextProps) {
+    updateDraft(nextState, nextProps) {
         if (nextProps.reaction) {
             nextState.draft = nextProps.reaction;
             if (!nextProps.reaction.uncommitted) {
@@ -104,7 +77,7 @@ module.exports = React.createClass({
             nextState.draft = createBlankComment(nextProps.story, nextProps.currentUser);
             nextState.original = null;
         }
-    },
+    }
 
     /**
      * Update state.selectedResourceIndex
@@ -112,7 +85,7 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateResourceIndex: function(nextState, nextProps) {
+    updateResourceIndex(nextState, nextProps) {
         var resources = _.get(nextState.draft, 'details.resources');
         var count = _.size(resources);
         if (nextState.selectedResourceIndex >= count) {
@@ -120,14 +93,14 @@ module.exports = React.createClass({
         } else if (nextState.selectedResourceIndex < 0 && count > 0) {
             nextState.selectedResourceIndex = 0;
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className="reaction-editor">
                 <div className="profile-image-column">
@@ -150,28 +123,28 @@ module.exports = React.createClass({
                 </div>
             </div>
         )
-    },
+    }
 
     /**
      * Render profile image of current user
      *
      * @return {ReactElement}
      */
-    renderProfileImage: function() {
+    renderProfileImage() {
         var props = {
             user: this.props.currentUser,
             theme: this.props.theme,
             size: 'small',
         };
         return <ProfileImage {...props} />;
-    },
+    }
 
     /**
      * Render text area
      *
      * @return {ReactElement}
      */
-    renderTextArea: function() {
+    renderTextArea() {
         var lang = this.props.locale.languageCode;
         var langText = _.get(this.state.draft, [ 'details', 'text', lang ], '');
         var textareaProps = {
@@ -183,14 +156,14 @@ module.exports = React.createClass({
             onPaste: this.handlePaste,
         };
         return <AutosizeTextArea {...textareaProps} />
-    },
+    }
 
     /**
      * Render button of attaching media to comment
      *
      * @return {ReactElement}
      */
-    renderMediaToolbar: function() {
+    renderMediaToolbar() {
         var props = {
             reaction: this.state.draft,
             capturing: this.state.capturing,
@@ -198,14 +171,14 @@ module.exports = React.createClass({
             onAction: this.handleAction,
         };
         return <ReactionMediaToolbar {...props} />;
-    },
+    }
 
     /**
      * Render post and cancel buttons
      *
      * @return {ReactElement}
      */
-    renderActionButtons: function() {
+    renderActionButtons() {
         var t = this.props.locale.translate;
         var noText = _.isEmpty(_.get(this.state.draft, 'details.text'));
         var noResources = _.isEmpty(_.get(this.state.draft, 'details.resources'));
@@ -227,14 +200,14 @@ module.exports = React.createClass({
                 <PushButton {...postButtonProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render resources editor
      *
      * @return {ReactElement}
      */
-    renderMediaEditor: function() {
+    renderMediaEditor() {
         var t = this.props.locale.translate;
         var props = {
             ref: this.components.setters.mediaImporter,
@@ -249,14 +222,14 @@ module.exports = React.createClass({
         return (
             <MediaEditor {...props} />
         );
-    },
+    }
 
     /**
      * Render resources importer
      *
      * @return {ReactElement}
      */
-    renderMediaImporter: function() {
+    renderMediaImporter() {
         var t = this.props.locale.translate;
         var props = {
             ref: this.components.setters.mediaImporter,
@@ -272,25 +245,25 @@ module.exports = React.createClass({
         return (
             <MediaImporter {...props} />
         );
-    },
+    }
 
     /**
      * Register the component at FocusManager so others can bring focus to it
      */
-    componentDidMount: function() {
+    componentDidMount() {
         FocusManager.register(this, {
             type: 'ReactionEditor',
             story_id: this.props.story.id,
             user_id: this.props.currentUser.id,
         });
-    },
+    }
 
     /**
      * Unregister on unmount
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         FocusManager.unregister(this);
-    },
+    }
 
     /**
      * Set current draft
@@ -300,7 +273,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    changeDraft: function(draft, resourceIndex) {
+    changeDraft(draft, resourceIndex) {
         return new Promise((resolve, reject) => {
             var newState = { draft };
             if (resourceIndex !== undefined) {
@@ -310,7 +283,7 @@ module.exports = React.createClass({
                 resolve(draft);
             });
         });
-    },
+    }
 
     /**
      * Set current draft and initiate autosave
@@ -321,12 +294,12 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    saveDraft: function(draft, immediate, resourceIndex) {
+    saveDraft(draft, immediate, resourceIndex) {
         return this.changeDraft(draft, resourceIndex).then((reaction) => {
             this.saveReaction(reaction, immediate);
             return reaction;
         });
-    },
+    }
 
     /**
      * Save reaction to remote database
@@ -336,7 +309,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    saveReaction: function(reaction, immediate) {
+    saveReaction(reaction, immediate) {
         // send images and videos to server
         var params = this.props.route.parameters;
         var original = this.state.original;
@@ -358,7 +331,7 @@ module.exports = React.createClass({
                 return reaction;
             });
         });
-    },
+    }
 
     /**
      * Remove reaction from remote database
@@ -367,34 +340,34 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    removeReaction: function(reaction) {
+    removeReaction(reaction) {
         var route = this.props.route;
         var schema = route.parameters.schema;
         var db = this.props.database.use({ schema, by: this });
         return db.removeOne({ table: 'reaction' }, reaction);
-    },
+    }
 
     /**
      * Inform parent component that editing is over
      */
-    triggerFinishEvent: function() {
+    triggerFinishEvent() {
         if (this.props.onFinish) {
             this.props.onFinish({
                 type: 'finish',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Focus text area
      */
-    focus: function() {
+    focus() {
         var textArea = this.components.textArea;
         if (textArea) {
             textArea.focus();
         }
-    },
+    }
 
     /**
      * Called when user changes contents in text area
@@ -403,7 +376,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    handleTextChange: function(evt) {
+    handleTextChange = (evt) => {
         var langText = evt.currentTarget.value;
         var lang = this.props.locale.languageCode;
         var path = `details.text.${lang}`;
@@ -419,14 +392,14 @@ module.exports = React.createClass({
         // look for tags
         draft.tags = TagScanner.findTags(draft.details.text);
         return this.saveDraft(draft);
-    },
+    }
 
     /**
      * Called when user press a key
      *
      * @param  {Event} evt
      */
-    handleKeyPress: function(evt) {
+    handleKeyPress = (evt) => {
         var target = evt.target;
         if (evt.charCode == 0x0D) {
             if (this.props.theme.mode === 'single-col') {
@@ -435,17 +408,17 @@ module.exports = React.createClass({
                 target.blur();
             }
         }
-    },
+    }
 
     /**
      * Called when user paste into editor
      *
      * @param  {Event} evt
      */
-    handlePaste: function(evt) {
+    handlePaste = (evt) => {
         this.components.mediaImporter.importFiles(evt.clipboardData.files);
         this.components.mediaImporter.importDataItems(evt.clipboardData.items);
-    },
+    }
 
     /**
      * Called when user clicks the Post button
@@ -454,13 +427,13 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    handlePublishClick: function(evt) {
+    handlePublishClick = (evt) => {
         this.triggerFinishEvent();
 
         var reaction = _.clone(this.state.draft);
         reaction.published = true;
         return this.saveDraft(reaction, true);
-    },
+    }
 
     /**
      * Called when user click Cancel button
@@ -469,7 +442,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         return Promise.try(() => {
             this.triggerFinishEvent();
 
@@ -487,7 +460,7 @@ module.exports = React.createClass({
             }
             return reaction;
         });
-    },
+    }
 
     /**
      * Called when user add or remove a resource or adjusted image cropping
@@ -496,7 +469,7 @@ module.exports = React.createClass({
      *
      * @return {Promise}
      */
-    handleResourcesChange: function(evt) {
+    handleResourcesChange = (evt) => {
         var resourcesBefore = _.get(this.state.draft, 'details.resources');
         var resourcesAfter = evt.resources;
         var selectedResourceIndex = evt.selection;
@@ -507,32 +480,32 @@ module.exports = React.createClass({
         } else {
             this.setState({ selectedResourceIndex });
         }
-    },
+    }
 
     /**
      * Called when MediaEditor opens one of the capture dialog boxes
      *
      * @param  {Object} evt
      */
-    handleCaptureStart: function(evt) {
+    handleCaptureStart = (evt) => {
         this.setState({ capturing: evt.mediaType });
-    },
+    }
 
     /**
      * Called when MediaEditor stops rendering a media capture dialog box
      *
      * @param  {Object} evt
      */
-    handleCaptureEnd: function(evt) {
+    handleCaptureEnd = (evt) => {
         this.setState({ capturing: null });
-    },
+    }
 
     /**
      * Called when Markdown text references a resource
      *
      * @param  {Object} evt
      */
-    handleReference: function(evt) {
+    handleReference = (evt) => {
         var resources = this.state.draft.details.resources;
         var res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
@@ -548,14 +521,14 @@ module.exports = React.createClass({
                 title: undefined
             };
         }
-    },
+    }
 
     /**
      * Called when user initiates an action
      *
      * @param  {Object} evt
      */
-    handleAction: function(evt) {
+    handleAction = (evt) => {
         switch (evt.action) {
             case 'markdown-set':
                 var draft = _.decoupleSet(this.state.draft, 'details.markdown', evt.value);
@@ -574,8 +547,8 @@ module.exports = React.createClass({
                 this.components.mediaImporter.importFiles(evt.files);
                 break;
         }
-    },
-});
+    }
+}
 
 /**
  * Return a blank comment
@@ -600,4 +573,33 @@ function hasUnsentFiles(resources) {
             return true;
         }
     });
+}
+
+export {
+    ReactionEditor as default,
+    ReactionEditor,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ReactionEditor.propTypes = {
+        reaction: PropTypes.object,
+        story: PropTypes.object.isRequired,
+        currentUser: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onFinish: PropTypes.func,
+    };
 }

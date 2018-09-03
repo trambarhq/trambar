@@ -1,64 +1,41 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var Scrollable = require('widgets/scrollable');
-var UserSelectionList = require('lists/user-selection-list');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import Scrollable from 'widgets/scrollable';
+import UserSelectionList from 'lists/user-selection-list';
 
-require('./user-selection-dialog-box.scss');
+import './user-selection-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'UserSelectionDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        selection: PropTypes.arrayOf(PropTypes.number).isRequired,
-        disabled: PropTypes.arrayOf(PropTypes.number),
+class UserSelectionDialogBox extends PureComponent {
+    static displayName = 'UserSelectionDialogBox';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onSelect: PropTypes.func,
-        onCancel: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             selection: this.props.selection,
         };
-    },
+    }
 
     /**
      * Update selection in state if necessary
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.selection !== nextProps.selection) {
             this.setState({ selection: nextProps.selection });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.handleCancelClick,
@@ -71,14 +48,14 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render list of users
      *
      * @return {ReactElement}
      */
-    renderList: function() {
+    renderList() {
         var listProps = {
             selection: this.state.selection,
             disabled: this.props.disabled,
@@ -95,14 +72,14 @@ module.exports = React.createClass({
                 <UserSelectionList {...listProps} />
             </Scrollable>
         );
-    },
+    }
 
     /**
      * Render cancel and OK buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         var cancelButtonProps = {
             label: t('selection-cancel'),
@@ -119,27 +96,27 @@ module.exports = React.createClass({
                 <PushButton {...okButtonProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Called when user select or unselect another user
      *
      * @param  {Object} evt
      */
-    handleListSelect: function(evt) {
+    handleListSelect = (evt) => {
         var selection = evt.selection;
         if (_.isEqual(selection, this.props.selection)) {
             selection = this.props.selection;
         }
         this.setState({ selection });
-    },
+    }
 
     /**
      * Called when user click OK button
      *
      * @param  {Event} evt
      */
-    handleOKClick: function(evt) {
+    handleOKClick = (evt) => {
         if (this.props.onSelect) {
             this.props.onSelect({
                 type: 'select',
@@ -147,19 +124,47 @@ module.exports = React.createClass({
                 selection: this.state.selection,
             });
         }
-    },
+    }
 
     /**
      * Called when user click cancel button or outside the dialog box
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         if (this.props.onCancel) {
             this.props.onCancel({
                 type: 'cancel',
                 target: this,
             });
         }
-    },
-});
+    }
+}
+
+export {
+    UserSelectionDialogBox as default,
+    UserSelectionDialogBox,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UserSelectionDialogBox.propTypes = {
+        show: PropTypes.bool,
+        selection: PropTypes.arrayOf(PropTypes.number).isRequired,
+        disabled: PropTypes.arrayOf(PropTypes.number),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onSelect: PropTypes.func,
+        onCancel: PropTypes.func,
+    };
+}

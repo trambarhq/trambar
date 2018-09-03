@@ -1,52 +1,29 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var ComponentRefs = require('utils/component-refs');
-var TagScanner = require('utils/tag-scanner');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import ComponentRefs from 'utils/component-refs';
+import TagScanner from 'utils/tag-scanner';
 
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var TextField = require('widgets/text-field');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import TextField from 'widgets/text-field';
 
-require('./issue-dialog-box.scss');
+import './issue-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'IssueDialogBox',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        show: PropTypes.bool,
-        allowDeletion: PropTypes.bool.isRequired,
-        story: PropTypes.object.isRequired,
-        repos: PropTypes.arrayOf(PropTypes.object),
-        issue: PropTypes.object,
+class IssueDialogBox extends PureComponent {
+    static displayName = 'IssueDialogBox';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onConfirm: PropTypes.func,
-        onClose: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             textField: TextField
         });
-        return {
+        this.state = {
             issue: this.props.issue ? null : this.getDefaultIssue(),
         };
-    },
+    }
 
     /**
      * Return the current issue details
@@ -55,10 +32,10 @@ module.exports = React.createClass({
      *
      * @return {*}
      */
-    getIssueProperty: function(path) {
+    getIssueProperty(path) {
         var issue = this.state.issue || this.props.issue || {};
         return _.get(issue, path);
-    },
+    }
 
     /**
      * Set a property of the issue object
@@ -66,7 +43,7 @@ module.exports = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setIssueProperty: function(path, value) {
+    setIssueProperty(path, value) {
         var issue = this.state.issue || this.props.issue || {};
         issue = _.decoupleSet(issue, path, value);
         if (path === 'repo_id') {
@@ -74,14 +51,14 @@ module.exports = React.createClass({
             window.localStorage.last_selected_repo_id = value;
         }
         this.setState({ issue });
-    },
+    }
 
     /**
      * Derive issue details from story
      *
      * @return {Object|null}
      */
-    getDefaultIssue: function() {
+    getDefaultIssue() {
         // look for a title in the text
         var t = this.props.locale.translate;
         var text = t(this.props.story.details.text);
@@ -104,14 +81,14 @@ module.exports = React.createClass({
             return null;
         }
         return { title, labels };
-    },
+    }
 
     /**
      * Return the selected repo
      *
      * @return {Repo}
      */
-    getSelectedRepo: function() {
+    getSelectedRepo() {
         var repoId = this.getIssueProperty('repo_id');
         var repos = this.getAvailableRepos();
         var repo = _.find(this.props.repos, { id: repoId });
@@ -129,14 +106,14 @@ module.exports = React.createClass({
             repo = _.first(repos);
         }
         return repo || null;
-    },
+    }
 
     /**
      * Return repos that have issue-trackers
      *
      * @return {Array<Object>}
      */
-    getAvailableRepos: function() {
+    getAvailableRepos() {
         var p = this.props.locale.pick;
         var repos = this.props.repos;
         repos = _.filter(repos, (repo) => {
@@ -146,14 +123,14 @@ module.exports = React.createClass({
             return _.toLower(p(repo.details.title) || repo.name);
         });
         return repos;
-    },
+    }
 
     /**
      * Update start when props change
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.show !== nextProps.show) {
             if (nextProps.show) {
                 var issue;
@@ -163,14 +140,14 @@ module.exports = React.createClass({
                 this.setState({ issue });
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.props.onClose,
@@ -185,14 +162,14 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render issue form
      *
      * @return {ReactElement}
      */
-    renderForm: function() {
+    renderForm() {
         return (
             <div className="container">
                 <div className="top">
@@ -202,14 +179,14 @@ module.exports = React.createClass({
                 {this.renderLabelSelector()}
             </div>
         );
-    },
+    }
 
     /**
      * Render input for issue title
      *
      * @return {ReactElement}
      */
-    renderTitleInput: function() {
+    renderTitleInput() {
         var t = this.props.locale.translate;
         var setters = this.components.setters;
         var props = {
@@ -220,14 +197,14 @@ module.exports = React.createClass({
             onChange: this.handleTitleChange,
         };
         return <TextField {...props}>{t('issue-title')}</TextField>;
-    },
+    }
 
     /**
      * Render select control for repo if there're more than one
      *
      * @return {[type]}
      */
-    renderRepoSelector: function() {
+    renderRepoSelector() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var repos = this.getAvailableRepos();
@@ -247,14 +224,14 @@ module.exports = React.createClass({
                 </select>
             </div>
         );
-    },
+    }
 
     /**
      * Render tag selector
      *
      * @return {ReactElement}
      */
-    renderLabelSelector: function() {
+    renderLabelSelector() {
         var repo = this.getSelectedRepo();
         if (!repo) {
             return null;
@@ -280,14 +257,14 @@ module.exports = React.createClass({
             tags.splice(i, 0, ' ');
         }
         return  <div className="tags">{tags}</div>;
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         var repo = this.getSelectedRepo();
         var text = this.getIssueProperty('title');
@@ -334,24 +311,24 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Focus text field on mount
      */
-    componentDidMount: function() {
+    componentDidMount() {
         // only if the title is currently empty
         if (!this.getIssueProperty('title')) {
             this.components.textField.focus();
         }
-    },
+    }
 
     /**
      * Called when user clicks the delete button
      *
      * @param  {Event} evt
      */
-    handleDeleteClick: function(evt) {
+    handleDeleteClick = (evt) => {
         if (this.props.onConfirm) {
             this.props.onConfirm({
                 type: 'confirm',
@@ -359,28 +336,28 @@ module.exports = React.createClass({
                 issue: null,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks the cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         if (this.props.onCancel) {
             this.props.onCancel({
                 type: 'cancel',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks the open button
      *
      * @param  {Event} evt
      */
-    handleOKClick: function(evt) {
+    handleOKClick = (evt) => {
         var story = this.props.story;
         var issue = _.clone(this.state.issue);
         var repo = this.getSelectedRepo();
@@ -395,27 +372,27 @@ module.exports = React.createClass({
                 issue
             });
         }
-    },
+    }
 
     /**
      * Called when user changes the title
      *
      * @param  {Event} evt
      */
-    handleTitleChange: function(evt) {
+    handleTitleChange = (evt) => {
         var text = evt.target.value;
         this.setIssueProperty('title', text);
-    },
+    }
 
     /**
      * Called when user selects a repo
      *
      * @param  {Event} evt
      */
-    handleRepoChange: function(evt) {
+    handleRepoChange = (evt) => {
         var repoId = parseInt(evt.target.value);
         this.setIssueProperty('repo_id', repoId);
-    },
+    }
 
     /**
      * Called when user clicks a tag
@@ -424,7 +401,7 @@ module.exports = React.createClass({
      *
      * @return {[type]}
      */
-    handleTagClick: function(evt) {
+    handleTagClick = (evt) => {
         var label = evt.target.getAttribute('data-label');
         var labels = this.getIssueProperty('labels') || [];
         if (_.includes(labels, label)) {
@@ -433,7 +410,33 @@ module.exports = React.createClass({
             labels = _.union(labels, [ label ]);
         }
         this.setIssueProperty('labels', labels);
-    },
-});
+    }
+}
 
 var lastSelectedRepoId = parseInt(window.localStorage.last_selected_repo_id) || undefined;
+
+export {
+    IssueDialogBox as default,
+    IssueDialogBox,
+};
+
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    IssueDialogBox.propTypes = {
+        show: PropTypes.bool,
+        allowDeletion: PropTypes.bool.isRequired,
+        story: PropTypes.object.isRequired,
+        repos: PropTypes.arrayOf(PropTypes.object),
+        issue: PropTypes.object,
+
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onConfirm: PropTypes.func,
+        onClose: PropTypes.func,
+    };
+}

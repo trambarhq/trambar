@@ -1,65 +1,27 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var FrameGrabber = require('media/frame-grabber');
-var DeviceManager = require('media/device-manager');
-var MediaStreamUtils = require('media/media-stream-utils');
-var BlobManager = require('transport/blob-manager');
-
-var Payloads = require('transport/payloads');
-var Locale = require('locale/locale');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import FrameGrabber from 'media/frame-grabber';
+import DeviceManager from 'media/device-manager';
+import MediaStreamUtils from 'media/media-stream-utils';
+import BlobManager from 'transport/blob-manager';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var DeviceSelector = require('widgets/device-selector');
-var DevicePlaceholder = require('widgets/device-placeholder');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import DeviceSelector from 'widgets/device-selector';
+import DevicePlaceholder from 'widgets/device-placeholder';
 
-require('./photo-capture-dialog-box-browser.scss');
+import './photo-capture-dialog-box-browser.scss';
 
-module.exports = React.createClass({
-    displayName: 'PhotoCaptureDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        cameraDirection: PropTypes.oneOf([ 'front', 'back' ]),
+class PhotoCaptureDialogBox extends PureComponent {
+    static displayName = 'PhotoCaptureDialogBox';
 
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onClose: PropTypes.func,
-        onCapturePending: PropTypes.func,
-        onCaptureError: PropTypes.func,
-        onCapture: PropTypes.func,
-    },
-
-    statics: {
-        /**
-         * Return true if the browser has the necessary functionalities
-         *
-         * @return {Boolean}
-         */
-        isAvailable: function() {
-            if (!MediaStreamUtils.hasSupport()) {
-                return false;
-            }
-            if (typeof(HTMLCanvasElement.prototype.toBlob) !== 'function') {
-                if (typeof(HTMLCanvasElement.prototype.toDataURL) !== 'function') {
-                    return false;
-                }
-            }
-            return true;
-        },
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         var devices = DeviceManager.getDevices('videoinput');
-        var preferredDevice = DeviceSelector.choose(devices, this.props.cameraDirection);
-        return {
+        var preferredDevice = DeviceSelector.choose(devices, props.cameraDirection);
+        this.state = {
             liveVideoStream: null,
             liveVideoError : null,
             liveVideoWidth: 640,
@@ -68,24 +30,41 @@ module.exports = React.createClass({
             videoDevices: devices,
             selectedDeviceId: (preferredDevice) ? preferredDevice.deviceId : null,
         };
-    },
+    }
+
+    /**
+     * Return true if the browser has the necessary functionalities
+     *
+     * @return {Boolean}
+     */
+    static isAvailable() {
+        if (!MediaStreamUtils.hasSupport()) {
+            return false;
+        }
+        if (typeof(HTMLCanvasElement.prototype.toBlob) !== 'function') {
+            if (typeof(HTMLCanvasElement.prototype.toDataURL) !== 'function') {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /**
      * Initialize camera if component is mounted as shown (probably not)
      */
-    componentWillMount: function() {
+    componentWillMount() {
         if (this.props.show) {
             this.initializeCamera();
         }
         DeviceManager.addEventListener('change', this.handleDeviceChange);
-    },
+    }
 
     /**
      * Initialize camera when component becomes visible
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.show !== nextProps.show) {
             if (nextProps.show) {
                 this.setState({ capturedImage: null });
@@ -97,12 +76,12 @@ module.exports = React.createClass({
                 }, 500);
             }
         }
-    },
+    }
 
     /**
      * Create live video stream, asking user for permission if necessary
      */
-    initializeCamera: function() {
+    initializeCamera() {
         this.createLiveVideoStream().then((stream) => {
             var dim = MediaStreamUtils.getVideoDimensions(stream);
             this.setState({
@@ -118,35 +97,35 @@ module.exports = React.createClass({
                 liveVideoError: err,
             });
         });
-    },
+    }
 
     /**
      * Release live video stream
      */
-    shutdownCamera: function() {
+    shutdownCamera() {
         this.destroyLiveVideoStream().then(() => {
             this.setState({
                 liveVideoStream: null,
                 liveVideoError: null,
             });
         });
-    },
+    }
 
     /**
      * Recreate live video stream after a different camera is selected
      */
-    reinitializeCamera: function() {
+    reinitializeCamera() {
         this.destroyLiveVideoStream().then(() => {
             this.initializeCamera();
         });
-    },
+    }
 
     /**
      * Set the video node and apply live video stream to it
      *
      * @param  {HTMLVideoElement} node
      */
-    setLiveVideoNode: function(node) {
+    setLiveVideoNode(node) {
         this.videoNode = node;
         if (this.videoNode) {
             this.videoNode.srcObject = this.state.liveVideoStream;
@@ -162,14 +141,14 @@ module.exports = React.createClass({
                 }
             });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.handleCancelClick,
@@ -187,14 +166,14 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render either live video or captured image
      *
      * @return {ReactElement}
      */
-    renderView: function() {
+    renderView() {
         if (this.state.capturedImage) {
             return this.renderCapturedImage();
         } else if (this.state.liveVideoStream) {
@@ -202,27 +181,27 @@ module.exports = React.createClass({
         } else {
             return this.renderPlaceholder();
         }
-    },
+    }
 
     /**
      * Render placeholder graphic when camera isn't available
      *
      * @return {ReactElement}
      */
-    renderPlaceholder: function() {
+    renderPlaceholder() {
         var props = {
             blocked: !!this.state.liveVideoError,
             icon: 'camera',
         };
         return <DevicePlaceholder {...props} />;
-    },
+    }
 
     /**
      * Render view of live video stream
      *
      * @return {ReactElement}
      */
-    renderLiveVideo: function() {
+    renderLiveVideo() {
         var videoProps = {
             ref: this.setLiveVideoNode,
             className: 'live-video',
@@ -234,28 +213,28 @@ module.exports = React.createClass({
                 <video {...videoProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render a spacer element
      *
      * @return {ReactElement}
      */
-    renderSpacer: function() {
+    renderSpacer() {
         var spacerProps = {
             className: 'spacer',
             width: this.state.liveVideoWidth,
             height: this.state.liveVideoHeight,
         };
         return <canvas {...spacerProps} />;
-    },
+    }
 
     /**
      * Render video captured previously
      *
      * @return {ReactElement}
      */
-    renderCapturedImage: function() {
+    renderCapturedImage() {
         var imageProps = {
             className: 'preview',
             src: this.state.capturedImage.url
@@ -266,14 +245,14 @@ module.exports = React.createClass({
                 <img {...imageProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render a dropdown if there're multiple devices
      *
      * @return {ReactElement|null}
      */
-    renderDeviceSelector: function() {
+    renderDeviceSelector() {
         if (this.state.capturedImage) {
             return null;
         }
@@ -285,14 +264,14 @@ module.exports = React.createClass({
             onSelect: this.handleDeviceSelect,
         };
         return <DeviceSelector {...props} />;
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         if (!this.state.capturedImage) {
             var cancelButtonProps = {
@@ -328,45 +307,45 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Change the video's source object when user changes camera
      */
-    componentDidUpdate: function(prevProps, prevState) {
+    componentDidUpdate(prevProps, prevState) {
         if (this.videoNode) {
             if (prevState.liveVideoStream !== this.state.liveVideoStream) {
                 this.setLiveVideoNode(this.videoNode);
             }
         }
-    },
+    }
 
     /**
      * Destroy live video stream when component unmounts
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         this.destroyLiveVideoStream();
         DeviceManager.removeEventListener('change', this.handleDeviceChange);
-    },
+    }
 
     /**
      * Create a live video stream
      *
      * @return {Promise<MediaStream>}
      */
-    createLiveVideoStream: function() {
+    createLiveVideoStream() {
         if (!this.videoStreamPromise) {
             this.videoStreamPromise = MediaStreamUtils.getSilentVideoStream(this.state.selectedDeviceId);
         }
         return this.videoStreamPromise;
-    },
+    }
 
     /**
      * Destroy live video stream created previously
      *
      * @return {Promise}
      */
-    destroyLiveVideoStream: function() {
+    destroyLiveVideoStream() {
         if (!this.videoStreamPromise) {
             return Promise.resolve();
         }
@@ -375,14 +354,14 @@ module.exports = React.createClass({
         return promise.then((stream) => {
             MediaStreamUtils.stopAllTracks(stream);
         });
-    },
+    }
 
     /**
      * Capture a frame from camera
      *
      * @return {Promise<Object>}
      */
-    captureImage: function() {
+    captureImage() {
         var video = this.videoNode;
         return FrameGrabber.capture(video).then((blob) => {
             var localURL = BlobManager.manage(blob);
@@ -393,7 +372,7 @@ module.exports = React.createClass({
                 height: video.videoHeight,
             };
         });
-    },
+    }
 
     /**
      * Report back to parent component that an image has been captured and
@@ -401,7 +380,7 @@ module.exports = React.createClass({
      *
      * @param  {Object} resource
      */
-    triggerCaptureEvent: function(resource) {
+    triggerCaptureEvent(resource) {
         if (this.props.onCapture) {
             this.props.onCapture({
                 type: 'capture',
@@ -409,49 +388,49 @@ module.exports = React.createClass({
                 resource,
             });
         }
-    },
+    }
 
     /**
      * Inform parent component that dialog box should be closed
      */
-    triggerCloseEvent: function() {
+    triggerCloseEvent() {
         if (this.props.onClose) {
             this.props.onClose({
                 type: 'close',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks snap button
      *
      * @param  {Event} evt
      */
-    handleSnapClick: function(evt) {
+    handleSnapClick = (evt) => {
         this.captureImage().then((image) => {
             this.setState({ capturedImage: image });
         }).catch((err) => {
             console.error(err);
         });
-    },
+    }
 
     /**
      * Called when user clicks retake button
      *
      * @param  {Event} evt
      */
-    handleRetakeClick: function(evt) {
+    handleRetakeClick = (evt) => {
         BlobManager.release(this.state.capturedImage.blob);
         this.setState({ capturedImage: null });
-    },
+    }
 
     /**
      * Called when user clicks accept button
      *
      * @param  {Event} evt
      */
-    handleAcceptClick: function(evt) {
+    handleAcceptClick = (evt) => {
         var capturedImage = this.state.capturedImage;
         var payload = this.props.payloads.add('image');
         payload.attachFile(capturedImage.blob);
@@ -465,35 +444,35 @@ module.exports = React.createClass({
         };
         this.triggerCloseEvent(true);
         this.triggerCaptureEvent(res);
-    },
+    }
 
     /**
      * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         this.triggerCloseEvent(false);
-    },
+    }
 
     /**
      * Called when user selects a different device
      *
      * @param  {Event} evt
      */
-    handleDeviceSelect: function(evt) {
+    handleDeviceSelect = (evt) => {
         var selectedDeviceId = evt.currentTarget.value;
         this.setState({ selectedDeviceId }, () => {
             this.reinitializeCamera();
         });
-    },
+    }
 
     /**
      * Called when the list of media devices changes
      *
      * @param  {Object} evt
      */
-    handleDeviceChange: function(evt) {
+    handleDeviceChange = (evt) => {
         var videoDevices = DeviceManager.getDevices('videoinput');
         var selectedDeviceId = this.state.selectedDeviceId;
         var reinitialize = false;
@@ -509,5 +488,30 @@ module.exports = React.createClass({
                 this.reinitializeCamera();
             }
         });
-    },
-});
+    }
+}
+
+export {
+    PhotoCaptureDialogBox as default,
+    PhotoCaptureDialogBox,
+};
+
+import Payloads from 'transport/payloads';
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    PhotoCaptureDialogBox.propTypes = {
+        show: PropTypes.bool,
+        cameraDirection: PropTypes.oneOf([ 'front', 'back' ]),
+
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+
+        onClose: PropTypes.func,
+        onCapturePending: PropTypes.func,
+        onCaptureError: PropTypes.func,
+        onCapture: PropTypes.func,
+    };
+}

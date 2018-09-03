@@ -1,28 +1,20 @@
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
+import React, { PureComponent } from 'react';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
 
-require('./confirmation-dialog-box.scss');
+import './confirmation-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'ConfirmationDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onClose: PropTypes.func,
-        onConfirm: PropTypes.func,
-    },
+class ConfirmationDialogBox extends PureComponent {
+    static displayName = 'ConfirmationDialogBox';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.props.onClose,
@@ -35,27 +27,27 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render message
      *
      * @return {ReactElement}
      */
-    renderMessage: function() {
+    renderMessage() {
         return (
             <div className="message">
                 {this.props.children}
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         var cancelProps = {
             label: t('confirmation-cancel'),
@@ -74,5 +66,23 @@ module.exports = React.createClass({
                 <PushButton {...confirmProps} />
             </div>
         );
-    },
-});
+    }
+}
+
+export {
+    ConfirmationDialogBox as default,
+    ConfirmationDialogBox,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ConfirmationDialogBox.propTypes = {
+        show: PropTypes.bool,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        onClose: PropTypes.func,
+        onConfirm: PropTypes.func,
+    };
+}

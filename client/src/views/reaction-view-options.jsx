@@ -1,47 +1,30 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Moment = require('moment');
-var UserUtils = require('objects/utils/user-utils');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var PopUpMenu = require('widgets/pop-up-menu');
-var OptionButton = require('widgets/option-button');
+import PopUpMenu from 'widgets/pop-up-menu';
+import OptionButton from 'widgets/option-button';
 
-require('./reaction-view-options.scss');
+import './reaction-view-options.scss';
 
-module.exports = React.createClass({
-    displayName: 'ReactionViewOptions',
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        currentUser: PropTypes.object.isRequired,
-        reaction: PropTypes.object.isRequired,
-        story: PropTypes.object.isRequired,
-        options: PropTypes.object.isRequired,
+class ReactionViewOptions extends PureComponent {
+    static displayName = 'ReactionViewOptions';
 
-        locale: PropTypes.instanceOf(Locale),
-        theme: PropTypes.instanceOf(Theme),
-    },
-
-    /**
-     * Return intial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             open: false
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var access = this.props.access;
         var user = this.props.currentUser;
         var story = this.props.story;
@@ -73,14 +56,14 @@ module.exports = React.createClass({
                 </menu>
             </PopUpMenu>
         );
-    },
+    }
 
     /**
      * Render options
      *
      * @return {ReactElement|null}
      */
-    renderOptions: function() {
+    renderOptions() {
         if (!this.state.open) {
             return null;
         }
@@ -115,14 +98,14 @@ module.exports = React.createClass({
                 <OptionButton {...removeProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Inform parent component that options have been changed
      *
      * @param  {Object} options
      */
-    triggerChangeEvent: function(options) {
+    triggerChangeEvent(options) {
         if (this.props.onChange) {
             this.props.onChange({
                 type: 'change',
@@ -130,56 +113,79 @@ module.exports = React.createClass({
                 options,
             });
         }
-    },
+    }
 
     /**
      * Called when user opens the menu
      *
      * @param  {Object} evt
      */
-    handleOpen: function(evt) {
+    handleOpen = (evt) => {
         this.setState({ open: true });
-    },
+    }
 
     /**
      * Called when user closes the menu
      *
      * @param  {Object} evt
      */
-    handleClose: function(evt) {
+    handleClose = (evt) => {
         this.setState({ open: false });
-    },
+    }
 
     /**
      * Called when user clicks on hide comment button
      *
      * @param  {Event} evt
      */
-    handleHideClick: function(evt) {
+    handleHideClick = (evt) => {
         var options = _.clone(this.props.options);
         options.hideReaction = !options.hideReaction;
         this.triggerChangeEvent(options);
-    },
+    }
 
     /**
      * Called when user clicks on edit comment button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
+    handleEditClick = (evt) => {
         var options = _.clone(this.props.options);
         options.editReaction = true;
         this.triggerChangeEvent(options);
-    },
+    }
 
     /**
      * Called when user clicks on remove comment button
      *
      * @param  {Event} evt
      */
-    handleRemoveClick: function(evt) {
+    handleRemoveClick = (evt) => {
         var options = _.clone(this.props.options);
         options.removeReaction = true;
         this.triggerChangeEvent(options);
-    },
-});
+    }
+}
+
+export {
+    ReactionViewOptions as default,
+    ReactionViewOptions,
+};
+
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ReactionViewOptions.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        currentUser: PropTypes.object.isRequired,
+        reaction: PropTypes.object.isRequired,
+        story: PropTypes.object.isRequired,
+        options: PropTypes.object.isRequired,
+
+        locale: PropTypes.instanceOf(Locale),
+        theme: PropTypes.instanceOf(Theme),
+    };
+}

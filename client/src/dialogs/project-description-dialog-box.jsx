@@ -1,35 +1,23 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var ResourceView = require('widgets/resource-view');
-var Scrollable = require('widgets/scrollable');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import ResourceView from 'widgets/resource-view';
+import Scrollable from 'widgets/scrollable';
 
-require('./project-description-dialog-box.scss');
+import './project-description-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'ProjectDescriptionDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        project: PropTypes.object.isRequired,
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onClose: PropTypes.func,
-    },
+class ProjectDescriptionDialogBox extends PureComponent {
+    static displayName = 'ProjectDescriptionDialogBox';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.handleCloseClick,
@@ -42,14 +30,14 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render description of project
      *
      * @return {ReactElement}
      */
-    renderText: function() {
+    renderText() {
         var p = this.props.locale.pick;
         var project = this.props.project;
         var image = _.find(project.details.resources, { type: 'image' });
@@ -64,14 +52,14 @@ module.exports = React.createClass({
                 </div>
             </Scrollable>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         var closeButtonProps = {
             label: t('project-description-close'),
@@ -83,16 +71,38 @@ module.exports = React.createClass({
                 <PushButton {...closeButtonProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Called when user click cancel or ok button or outside the dialog box
      *
      * @param  {Event} evt
      */
-    handleCloseClick: function(evt) {
+    handleCloseClick = (evt) => {
         if (this.props.onClose) {
             this.props.onClose({ type: 'cancel', target: this });
         }
-    },
-});
+    }
+}
+
+export {
+    ProjectDescriptionDialogBox as default,
+    ProjectDescriptionDialogBox,
+};
+
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ProjectDescriptionDialogBox.propTypes = {
+        show: PropTypes.bool,
+        project: PropTypes.object.isRequired,
+
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onClose: PropTypes.func,
+    };
+}

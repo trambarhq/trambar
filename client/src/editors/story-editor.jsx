@@ -1,92 +1,51 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Memoize = require('utils/memoize');
-var ListParser = require('utils/list-parser');
-var Markdown = require('utils/markdown');
-var PlainText = require('utils/plain-text');
-var TagScanner = require('utils/tag-scanner');
-var FocusManager = require('utils/focus-manager');
-var ComponentRefs = require('utils/component-refs');
-var StoryUtils = require('objects/utils/story-utils');
-var IssueUtils = require('objects/utils/issue-utils');
-var TemporaryId = require('data/remote-data-source/temporary-id');
-var RandomToken = require('utils/random-token');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import Memoize from 'utils/memoize';
+import ListParser from 'utils/list-parser';
+import Markdown from 'utils/markdown';
+import PlainText from 'utils/plain-text';
+import TagScanner from 'utils/tag-scanner';
+import FocusManager from 'utils/focus-manager';
+import ComponentRefs from 'utils/component-refs';
+import StoryUtils from 'objects/utils/story-utils';
+import IssueUtils from 'objects/utils/issue-utils';
+import TemporaryId from 'data/remote-data-source/temporary-id';
+import RandomToken from 'utils/random-token';
 
 // widgets
-var AuthorNames = require('widgets/author-names');
-var ProfileImage = require('widgets/profile-image');
-var CoauthoringButton = require('widgets/coauthoring-button');
-var PushButton = require('widgets/push-button');
-var AutosizeTextArea = require('widgets/autosize-text-area');
-var MediaToolbar = require('widgets/media-toolbar');
-var TextToolbar = require('widgets/text-toolbar');
-var HeaderButton = require('widgets/header-button');
-var DropZone = require('widgets/drop-zone');
-var MediaEditor = require('editors/media-editor');
-var MediaImporter = require('editors/media-importer');
-var MediaPlaceholder = require('widgets/media-placeholder');
-var StoryEditorOptions = require('editors/story-editor-options');
-var CornerPopUp = require('widgets/corner-pop-up');
-var ConfirmationDialogBox = require('dialogs/confirmation-dialog-box');
+import AuthorNames from 'widgets/author-names';
+import ProfileImage from 'widgets/profile-image';
+import CoauthoringButton from 'widgets/coauthoring-button';
+import PushButton from 'widgets/push-button';
+import AutosizeTextArea from 'widgets/autosize-text-area';
+import MediaToolbar from 'widgets/media-toolbar';
+import TextToolbar from 'widgets/text-toolbar';
+import HeaderButton from 'widgets/header-button';
+import DropZone from 'widgets/drop-zone';
+import MediaEditor from 'editors/media-editor';
+import MediaImporter from 'editors/media-importer';
+import MediaPlaceholder from 'widgets/media-placeholder';
+import StoryEditorOptions from 'editors/story-editor-options';
+import CornerPopUp from 'widgets/corner-pop-up';
+import ConfirmationDialogBox from 'dialogs/confirmation-dialog-box';
 
-require('./story-editor.scss');
+import './story-editor.scss';
 
 const AUTOSAVE_DURATION = 2000;
 
-module.exports = React.createClass({
-    displayName: 'StoryEditor',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        isStationary: PropTypes.bool,
-        highlighting: PropTypes.bool,
-        story: PropTypes.object,
-        authors: PropTypes.arrayOf(PropTypes.object),
-        recommendations: PropTypes.arrayOf(PropTypes.object),
-        recipients: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        repos: PropTypes.arrayOf(PropTypes.object),
+class StoryEditor extends PureComponent {
+    static displayName = 'StoryEditor';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            isStationary: false
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             mediaImporter: MediaImporter,
             textArea: AutosizeTextArea,
             mainPopUp: CornerPopUp,
             previewPopUp: CornerPopUp,
         });
-        var nextState = {
+        this.state = {
             options: defaultOptions,
             selectedResourceIndex: 0,
             original: null,
@@ -95,46 +54,45 @@ module.exports = React.createClass({
             capturing: null,
             action: null,
         };
-        this.updateDraft(nextState, this.props);
-        this.updateOptions(nextState, this.props);
-        this.updateLocaleCode(nextState, this.props);
-        this.updateLeadAuthor(nextState, this.props);
-        this.updateBookmarkRecipients(nextState, this.props);
-        this.updateResourceIndex(nextState, this.props);
-        return nextState;
-    },
+        this.updateDraft(this.state, props);
+        this.updateOptions(this.state, props);
+        this.updateLocaleCode(this.state, props);
+        this.updateLeadAuthor(this.state, props);
+        this.updateBookmarkRecipients(this.state, props);
+        this.updateResourceIndex(this.state, props);
+    }
 
     /**
      * Return class name, possibly with modifiers
      *
      * @return {String}
      */
-    getClassName: function() {
+    getClassName() {
         var className = 'story-editor';
         if (this.props.highlighting) {
             className += ' highlighting';
         }
         return className;
-    },
+    }
 
     /**
      * Return true if the current user is coauthoring this article
      *
      * @return {Boolean}
      */
-    isCoauthoring: function() {
+    isCoauthoring() {
         var userIds = _.get(this.props.story, 'user_ids');
         var currentUserId = _.get(this.props.currentUser, 'id');
         var index = _.indexOf(userIds, currentUserId);
         return (index > 0);
-    },
+    }
 
     /**
      * Update state when certain props change
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         var nextState = _.clone(this.state);
         if (this.props.story !== nextProps.story) {
             this.updateDraft(nextState, nextProps);
@@ -159,7 +117,7 @@ module.exports = React.createClass({
         if (!_.isEmpty(changes)) {
             this.setState(changes);
         }
-    },
+    }
 
     /**
      * Update state.draft based on props
@@ -167,7 +125,7 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateDraft: function(nextState, nextProps) {
+    updateDraft(nextState, nextProps) {
         if (nextProps.story) {
             nextState.draft = nextProps.story;
             if (!nextProps.story.uncommitted) {
@@ -177,7 +135,7 @@ module.exports = React.createClass({
             nextState.draft = createBlankStory(nextProps.currentUser);
             nextState.original = null;
         }
-    },
+    }
 
     /**
      * Update state.draft.user_ids
@@ -185,7 +143,7 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateLeadAuthor: function(nextState, nextProps) {
+    updateLeadAuthor(nextState, nextProps) {
         if (!nextState.story) {
             var currentUserId = _.get(nextProps.currentUser, 'id');
             if (!nextState.draft.user_ids) {
@@ -193,7 +151,7 @@ module.exports = React.createClass({
                 nextState.draft.user_ids[0] = currentUserId;
             }
         }
-    },
+    }
 
     /**
      * Update state.options based on props
@@ -201,7 +159,7 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateOptions: function(nextState, nextProps) {
+    updateOptions(nextState, nextProps) {
         if (!nextProps.story) {
             // reset options to default when a new story starts
             nextState.options = defaultOptions;
@@ -213,7 +171,7 @@ module.exports = React.createClass({
                 nextState.options.preview = this.choosePreview(nextState.draft);
             }
         }
-    },
+    }
 
     /**
      * Update state.options.bookmarkRecipients based on props
@@ -221,11 +179,11 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateBookmarkRecipients: function(nextState, nextProps) {
+    updateBookmarkRecipients(nextState, nextProps) {
         var targetUserIds = _.map(nextProps.recommendations, 'target_user_id');
         nextState.options = _.clone(nextState.options);
         nextState.options.bookmarkRecipients = _.union(nextState.options.bookmarkRecipients, targetUserIds);
-    },
+    }
 
     /**
      * Update state.options.localeCode based on props
@@ -233,10 +191,10 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateLocaleCode: function(nextState, nextProps) {
+    updateLocaleCode(nextState, nextProps) {
         nextState.options = _.clone(nextState.options);
         nextState.options.localeCode = this.chooseLocale(nextState.draft, nextProps.locale);
-    },
+    }
 
     /**
      * Update state.selectedResourceIndex
@@ -244,7 +202,7 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateResourceIndex: function(nextState, nextProps) {
+    updateResourceIndex(nextState, nextProps) {
         var resources = _.get(nextState.draft, 'details.resources');
         var count = _.size(resources);
         if (nextState.selectedResourceIndex >= count) {
@@ -252,7 +210,7 @@ module.exports = React.createClass({
         } else if (nextState.selectedResourceIndex < 0 && count > 0) {
             nextState.selectedResourceIndex = 0;
         }
-    },
+    }
 
     /**
      * Choose preview type based on story contents
@@ -261,7 +219,7 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    choosePreview: function(story) {
+    choosePreview(story) {
         // show preview when text is formatted
         if (story.type === 'survey' || story.type === 'task-list') {
             return 'text';
@@ -271,7 +229,7 @@ module.exports = React.createClass({
         }
         // default to media until we know more
         return '';
-    },
+    }
 
     /**
      * Choose locale based on selected locale and story contents
@@ -280,7 +238,7 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    chooseLocale: function(story, locale) {
+    chooseLocale(story, locale) {
         var localeCode;
         var text = _.get(story, 'details.text');
         if (!_.isEmpty(text)) {
@@ -306,14 +264,14 @@ module.exports = React.createClass({
             localeCode = locale.localeCode;
         }
         return localeCode;
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         switch (this.props.theme.mode) {
             case 'single-col':
                 return this.renderSingleColumn();
@@ -322,14 +280,14 @@ module.exports = React.createClass({
             case 'triple-col':
                 return this.renderTripleColumn();
         }
-    },
+    }
 
     /**
      * Render single-column view
      *
      * @return {ReactElement}
      */
-    renderSingleColumn: function() {
+    renderSingleColumn() {
         return (
             <div className={this.getClassName()}>
                 <div className="header">
@@ -361,14 +319,14 @@ module.exports = React.createClass({
                 {this.renderConfirmationDialogBox()}
             </div>
         );
-    },
+    }
 
     /**
      * Render double-column view
      *
      * @return {ReactElement}
      */
-    renderDoubleColumn: function() {
+    renderDoubleColumn() {
         return (
             <div className={this.getClassName()}>
                 <div className="header">
@@ -396,14 +354,14 @@ module.exports = React.createClass({
                 {this.renderConfirmationDialogBox()}
             </div>
         );
-    },
+    }
 
     /**
      * Render triple-column view
      *
      * @return {ReactElement}
      */
-    renderTripleColumn: function() {
+    renderTripleColumn() {
         var t = this.props.locale.translate;
         return (
             <div className={this.getClassName()}>
@@ -436,42 +394,42 @@ module.exports = React.createClass({
                 {this.renderConfirmationDialogBox()}
             </div>
         );
-    },
+    }
 
     /**
      * Render profile image
      *
      * @return {ReactElement}
      */
-    renderProfileImage: function() {
+    renderProfileImage() {
         var props = {
             user: _.get(this.props.authors, 0),
             theme: this.props.theme,
             size: 'medium',
         };
         return <ProfileImage {...props} />;
-    },
+    }
 
     /**
      * Render the names of the author and co-authors
      *
      * @return {ReactElement}
      */
-    renderAuthorNames: function() {
+    renderAuthorNames() {
         var props = {
             authors: this.props.authors,
             locale: this.props.locale,
             theme: this.props.theme,
         };
         return <AuthorNames {...props} />;
-    },
+    }
 
     /**
      * Render button that opens coauthor selection dialog box
      *
      * @return {ReactElement}
      */
-    renderCoauthoringButton: function() {
+    renderCoauthoringButton() {
         var props = {
             coauthoring: this.isCoauthoring(),
             story: this.state.draft,
@@ -484,14 +442,14 @@ module.exports = React.createClass({
             onRemove: this.handleCancelClick,
         };
         return <CoauthoringButton {...props} />;
-    },
+    }
 
     /**
      * Render the control for text entry
      *
      * @return {ReactElement}
      */
-    renderTextArea: function() {
+    renderTextArea() {
         var setters = this.components.setters;
         var loc = this.state.options.localeCode;
         var lang = loc.substr(0, 2);
@@ -506,14 +464,14 @@ module.exports = React.createClass({
             onPaste: this.handlePaste,
         };
         return <AutosizeTextArea ref={setters.textArea} {...props} />;
-    },
+    }
 
     /**
      * Render cancel and post buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         var draft = this.state.draft;
         var text = _.get(draft, 'details.text');
@@ -539,41 +497,41 @@ module.exports = React.createClass({
                 <PushButton {...postButtonProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render text or media preview
      *
      * @return {ReactElement|null}
      */
-    renderToolbar: function() {
+    renderToolbar() {
         if (this.state.options.preview === 'text') {
             return this.renderTextToolbar();
         } else {
             return this.renderMediaToolbar();
         }
-    },
+    }
 
     /**
      * Render buttons in title bar
      *
      * @return {ReactElement}
      */
-    renderTextToolbar: function() {
+    renderTextToolbar() {
         var props = {
             story: this.state.draft,
             locale: this.props.locale,
             onAction: this.handleAction,
         };
         return <TextToolbar {...props} />;
-    },
+    }
 
     /**
      * Render buttons for ataching media
      *
      * @return {ReactElement}
      */
-    renderMediaToolbar: function() {
+    renderMediaToolbar() {
         var props = {
             story: this.state.draft,
             capturing: this.state.capturing,
@@ -581,27 +539,27 @@ module.exports = React.createClass({
             onAction: this.handleAction,
         };
         return <MediaToolbar {...props} />;
-    },
+    }
 
     /**
      * Render text or media preview
      *
      * @return {ReactElement|null}
      */
-    renderPreview: function() {
+    renderPreview() {
         if (this.state.options.preview === 'text') {
             return this.renderTextPreview();
         } else {
             return this.renderMediaPreview();
         }
-    },
+    }
 
     /**
      * Render MarkDown preview
      *
      * @return {ReactElement}
      */
-    renderTextPreview: function() {
+    renderTextPreview() {
         var contents;
         switch (this.state.draft.type) {
             case undefined:
@@ -617,14 +575,14 @@ module.exports = React.createClass({
                 break;
         }
         return <div className="story-contents">{contents}</div>;
-    },
+    }
 
     /**
      * Render text for regular post
      *
      * @return {ReactElement}
      */
-    renderRegularPost: function() {
+    renderRegularPost() {
         var p = this.props.locale.pick;
         var className = 'text story';
         var draft = this.state.draft;
@@ -641,14 +599,14 @@ module.exports = React.createClass({
                 {text}
             </div>
         );
-    },
+    }
 
     /**
      * Render task list
      *
      * @return {ReactElement}
      */
-    renderTaskListText: function() {
+    renderTaskListText() {
         var p = this.props.locale.pick;
         var className = 'text task-list';
         var draft = this.state.draft;
@@ -669,14 +627,14 @@ module.exports = React.createClass({
                 {list}
             </div>
         );
-    },
+    }
 
     /**
      * Render survey choices or results depending whether user has voted
      *
      * @return {ReactElement}
      */
-    renderSurveyText: function() {
+    renderSurveyText() {
         var p = this.props.locale.pick;
         var className = 'text survey';
         var draft = this.state.draft;
@@ -695,14 +653,14 @@ module.exports = React.createClass({
                 {survey}
             </div>
         );
-    },
+    }
 
     /**
      * Render preview of images and videos
      *
      * @return {ReactElement}
      */
-    renderMediaPreview: function() {
+    renderMediaPreview() {
         var editorProps = {
             allowEmbedding: true,
             allowShifting: true,
@@ -726,14 +684,14 @@ module.exports = React.createClass({
                 </MediaEditor>
             </DropZone>
         );
-    },
+    }
 
     /**
      * Render preview of images and videos
      *
      * @return {ReactElement}
      */
-    renderMediaImporter: function() {
+    renderMediaImporter() {
         var props = {
             ref: this.components.setters.mediaImporter,
             resources: _.get(this.state.draft, 'details.resources', []),
@@ -746,21 +704,21 @@ module.exports = React.createClass({
             onChange: this.handleResourcesChange,
         };
         return <MediaImporter {...props} />;
-    },
+    }
 
     /**
      * Render popup menu
      *
      * @return {ReactElement}
      */
-    renderPopUpMenu: function(section) {
+    renderPopUpMenu(section) {
         var ref = this.components.setters[section + 'PopUp'];
         return (
             <CornerPopUp ref={ref}>
                 {this.renderOptions(section)}
             </CornerPopUp>
         );
-    },
+    }
 
     /**
      * Render editor options
@@ -769,7 +727,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOptions: function(section) {
+    renderOptions(section) {
         var props = {
             section,
             story: this.state.draft,
@@ -786,14 +744,14 @@ module.exports = React.createClass({
             onComplete: this.handleOptionComplete,
         };
         return <StoryEditorOptions {...props} />;
-    },
+    }
 
     /**
      * Render confirmation dialog box
      *
      * @return {ReactElement}
      */
-    renderConfirmationDialogBox: function() {
+    renderConfirmationDialogBox() {
         var t = this.props.locale.translate;
         var props = {
             show: this.state.confirming,
@@ -816,15 +774,15 @@ module.exports = React.createClass({
                 {message}
             </ConfirmationDialogBox>
         );
-    },
+    }
 
-    componentDidUpdate: function(prevProp, prevState) {
+    componentDidUpdate(prevProp, prevState) {
         if (this.repositionCursor) {
             var target = this.repositionCursor.target;
             target.selectionStart = target.selectionEnd = this.repositionCursor.position;
             this.repositionCursor = null;
         }
-    },
+    }
 
     /**
      * Set current draft
@@ -833,7 +791,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    changeDraft: function(draft, resourceIndex) {
+    changeDraft(draft, resourceIndex) {
         return new Promise((resolve, reject) => {
             var options = this.state.options;
             if (!options.preview) {
@@ -850,7 +808,7 @@ module.exports = React.createClass({
                 resolve(draft);
             });
         });
-    },
+    }
 
     /**
      * Set options
@@ -859,13 +817,13 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    changeOptions: function(options) {
+    changeOptions(options) {
         return new Promise((resolve, reject) => {
             this.setState({ options }, () => {
                 resolve(options);
             });
         });
-    },
+    }
 
     /**
      * Set current draft and initiate autosave
@@ -876,7 +834,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    saveDraft: function(draft, immediate, resourceIndex) {
+    saveDraft(draft, immediate, resourceIndex) {
         draft.public = !this.state.options.hidePost;
         return this.changeDraft(draft, resourceIndex).then((story) => {
             if (!hasPendingResources(story.details.resources)) {
@@ -884,7 +842,7 @@ module.exports = React.createClass({
             }
             return story;
         });
-    },
+    }
 
     /**
      * Save story to remote database
@@ -894,7 +852,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    saveStory: function(story, immediate) {
+    saveStory(story, immediate) {
         var params = this.props.route.parameters;
         var resources = story.details.resources || [];
         var original = this.state.original;
@@ -916,7 +874,7 @@ module.exports = React.createClass({
                 return story;
             });
         });
-    },
+    }
 
     /**
      * Remove story from remote database
@@ -925,19 +883,19 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    removeStory: function(story) {
+    removeStory(story) {
         var route = this.props.route;
         var schema = route.parameters.schema;
         var db = this.props.database.use({ schema, by: this });
         return db.removeOne({ table: 'story' }, story);
-    },
+    }
 
     /**
      * Remove current user from author list
      *
      * @return {Promise<Story>}
      */
-    removeSelf: function() {
+    removeSelf() {
         var story = this.props.story;
         var userIds = _.without(story.user_ids, this.props.currentUser.id);
         var columns = {
@@ -949,7 +907,7 @@ module.exports = React.createClass({
         return db.start().then(() => {
             return db.saveOne({ table: 'story' }, columns);
         });
-    },
+    }
 
     /**
      * Save bookmarks to remote database
@@ -958,7 +916,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    saveBookmarks: function(bookmarks) {
+    saveBookmarks(bookmarks) {
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
@@ -967,7 +925,7 @@ module.exports = React.createClass({
         return db.start().then(() => {
             return db.save({ table: 'bookmark' }, bookmarks);
         });
-    },
+    }
 
     /**
      * Remove bookmarks from remote database
@@ -976,7 +934,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    removeBookmarks: function(bookmarks) {
+    removeBookmarks(bookmarks) {
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
@@ -985,7 +943,7 @@ module.exports = React.createClass({
         return db.start().then(() => {
             return db.remove({ table: 'bookmark' }, bookmarks);
         });
-    },
+    }
 
     /**
      * Send bookmarks to recipients
@@ -995,7 +953,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    sendBookmarks: function(story, recipientIds) {
+    sendBookmarks(story, recipientIds) {
         var bookmarks = this.props.recommendations;
         var newBookmarks = [];
         // add bookmarks that don't exist yet
@@ -1022,7 +980,7 @@ module.exports = React.createClass({
                 return _.concat(newBookmarks, redundantBookmarks);
             });
         });
-    },
+    }
 
     /**
      * Create a task in the backend
@@ -1032,7 +990,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Task>}
      */
-    sendTask: function(action, options) {
+    sendTask(action, options) {
         var task = {
             action,
             options,
@@ -1044,14 +1002,14 @@ module.exports = React.createClass({
         return db.start().then(() => {
             return db.saveOne({ table: 'task' }, task);
         });
-    },
+    }
 
     /**
      * Publish the story
      *
      * @return {[type]}
      */
-    publishStory: function() {
+    publishStory() {
         var draft = _.clone(this.state.draft);
         var options = this.state.options;
         if (!draft.type) {
@@ -1076,23 +1034,23 @@ module.exports = React.createClass({
                 }
             });
         });
-    },
+    }
 
     /**
      * Called when user clicks the Post button
      *
      * @param  {Event} evt
      */
-    handlePublishClick: function(evt) {
+    handlePublishClick = (evt) => {
         this.publishStory();
-    },
+    }
 
     /**
      * Called when user changes the text
      *
      * @param  {Event} evt
      */
-    handleTextChange: function(evt) {
+    handleTextChange = (evt) => {
         var langText = evt.currentTarget.value;
         var loc = this.state.options.localeCode;
         var lang = loc.substr(0, 2);
@@ -1143,23 +1101,23 @@ module.exports = React.createClass({
         // look for tags
         draft.tags = TagScanner.findTags(draft.details.text);
         this.saveDraft(draft);
-    },
+    }
 
     /**
      * Called when user press a key
      *
      * @param  {Event} evt
      */
-    handleKeyDown: function(evt) {
+    handleKeyDown = (evt) => {
         this.lastInput = null;
-    },
+    }
 
     /**
      * Called when keystrokes generate text input
      *
      * @param  {Event} evt
      */
-    handleBeforeInput: function(evt) {
+    handleBeforeInput = (evt) => {
         var target = evt.target;
         if (evt.data === '\n') {
             var storyType = this.state.draft.type;
@@ -1173,14 +1131,14 @@ module.exports = React.createClass({
             }
         }
         this.lastInput = evt.data;
-    },
+    }
 
     /**
      * Called when user releases a key
      *
      * @param  {Event} evt
      */
-    handleKeyUp: function(evt) {
+    handleKeyUp = (evt) => {
         var target = evt.target;
         if (this.lastInput === '\n') {
             var storyType = this.state.draft.type;
@@ -1216,14 +1174,14 @@ module.exports = React.createClass({
                 document.execCommand("insertText", false, '* [ ]');
             }
         }
-    },
+    }
 
     /**
      * Called when user paste into editor
      *
      * @param  {Event} evt
      */
-    handlePaste: function(evt) {
+    handlePaste = (evt) => {
         Promise.all([
             this.components.mediaImporter.importFiles(evt.clipboardData.files),
             this.components.mediaImporter.importDataItems(evt.clipboardData.items)
@@ -1231,7 +1189,7 @@ module.exports = React.createClass({
         if (evt.clipboardData.files.length > 0) {
             evt.preventDefault();
         }
-    },
+    }
 
     /**
      * Called when user click Cancel button
@@ -1240,7 +1198,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         var action;
         if (this.isCoauthoring()) {
             action = 'remove-self';
@@ -1250,7 +1208,7 @@ module.exports = React.createClass({
             action = 'cancel-edit';
         }
         this.setState({ confirming: true, action });
-    },
+    }
 
     /**
      * Called when options are changed
@@ -1259,38 +1217,38 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    handleOptionChange: function(evt) {
+    handleOptionChange = (evt) => {
         return this.changeOptions(evt.options);
-    },
+    }
 
     /**
      * Called when a change to the story options is complete
      *
      * @param  {Object} evt
      */
-    handleOptionComplete: function(evt) {
+    handleOptionComplete = (evt) => {
         var section = evt.target.props.section;
         var popUp = this.components[section + 'PopUp'];
         if (popUp) {
             popUp.close();
         }
-    },
+    }
 
     /**
      * Called when user cancel an action
      *
      * @param  {Event} evt
      */
-    handleDialogClose: function(evt) {
+    handleDialogClose = (evt) => {
         this.setState({ confirming: false });
-    },
+    }
 
     /**
      * Called when user confirms his desire to cancel a story
      *
      * @param  {Event} evt
      */
-    handleCancelConfirm: function(evt) {
+    handleCancelConfirm = (evt) => {
         this.setState({ confirming: false });
         var draft = this.state.draft;
         if (this.props.isStationary) {
@@ -1307,14 +1265,14 @@ module.exports = React.createClass({
         } else {
             this.removeStory(draft);
         }
-    },
+    }
 
     /**
      * Called when Markdown text references a resource
      *
      * @param  {Object} evt
      */
-    handleReference: function(evt) {
+    handleReference = (evt) => {
         var resources = this.state.draft.details.resources;
         var res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
@@ -1335,14 +1293,14 @@ module.exports = React.createClass({
                 title: evt.name
             };
         }
-    },
+    }
 
     /**
      * Called when user clicks on the text contents
      *
      * @param  {Event} evt
      */
-    handleTextClick: function(evt) {
+    handleTextClick = (evt) => {
         var target = evt.target;
         if (target.viewportElement) {
             target = target.viewportElement;
@@ -1365,14 +1323,14 @@ module.exports = React.createClass({
                 this.setState({ selectedResourceIndex, options });
             }
         }
-    },
+    }
 
     /**
      * Called when user click a checkbox or radio button in the preview
      *
      * @param  {Event} evt
      */
-    handleItemChange: function(evt) {
+    handleItemChange = (evt) => {
         // update the text of the story to reflect the selection
         var target = evt.currentTarget;
         var list = parseInt(target.name);
@@ -1397,34 +1355,34 @@ module.exports = React.createClass({
             });
         }
         this.saveDraft(draft);
-    },
+    }
 
     /**
      * Called when user confirms his desire to remove himself as a co-author
      *
      * @param  {Event} evt
      */
-    handleRemoveConfirm: function(evt) {
+    handleRemoveConfirm = (evt) => {
         this.setState({ confirming: false });
         this.removeSelf();
-    },
+    }
 
     /**
      * Called when user has added or removed users from author list
      *
      * @param  {Object} evt
      */
-    handleCoauthorSelect: function(evt) {
+    handleCoauthorSelect = (evt) => {
         var draft = _.decoupleSet(this.state.draft, 'user_ids', evt.selection);
         this.saveDraft(draft, true);
-    },
+    }
 
     /**
      * Called when user add new resources or adjusted image cropping
      *
      * @param  {Object} evt
      */
-    handleResourcesChange: function(evt) {
+    handleResourcesChange = (evt) => {
         var resourcesBefore = this.state.draft.resources;
         var resourcesAfter = evt.resources;
         var selectedResourceIndex = evt.selection;
@@ -1443,14 +1401,14 @@ module.exports = React.createClass({
         } else {
             this.setState({ selectedResourceIndex });
         }
-    },
+    }
 
     /**
      * Called when user wants to embed a resource into Markdown text
      *
      * @param  {Object} evt
      */
-    handleResourceEmbed: function(evt) {
+    handleResourceEmbed = (evt) => {
         var resource = evt.resource;
         var draft = _.decouple(this.state.draft, 'details');
         var resources = draft.details.resources;
@@ -1472,44 +1430,44 @@ module.exports = React.createClass({
                 });
             });
         }
-    },
+    }
 
     /**
      * Called when user drops an item over the editor
      *
      * @param  {Event} evt
      */
-    handleDrop: function(evt) {
+    handleDrop = (evt) => {
         Promise.all([
             this.components.mediaImporter.importFiles(evt.files),
             this.components.mediaImporter.importDataItems(evt.items),
         ]);
-    },
+    }
 
     /**
      * Called when MediaEditor opens one of the capture dialog boxes
      *
      * @param  {Object} evt
      */
-    handleCaptureStart: function(evt) {
+    handleCaptureStart = (evt) => {
         this.setState({ capturing: evt.mediaType });
-    },
+    }
 
     /**
      * Called when MediaEditor stops rendering a media capture dialog box
      *
      * @param  {Object} evt
      */
-    handleCaptureEnd: function(evt) {
+    handleCaptureEnd = (evt) => {
         this.setState({ capturing: null });
-    },
+    }
 
     /**
      * Called when user initiates an action
      *
      * @param  {Object} evt
      */
-    handleAction: function(evt) {
+    handleAction = (evt) => {
         switch (evt.action) {
             case 'markdown-set':
                 var draft = _.decouple(this.state.draft, 'details');
@@ -1552,7 +1510,7 @@ module.exports = React.createClass({
                 break;
         }
     }
-});
+}
 
 var defaultOptions = {
     localeCode: '',
@@ -1594,4 +1552,40 @@ function hasUnsentFiles(resources) {
             return true;
         }
     });
+}
+
+StoryEditor.defaultProps = {
+    isStationary: false
+};
+
+export {
+    StoryEditor as default,
+    StoryEditor,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryEditor.propTypes = {
+        isStationary: PropTypes.bool,
+        highlighting: PropTypes.bool,
+        story: PropTypes.object,
+        authors: PropTypes.arrayOf(PropTypes.object),
+        recommendations: PropTypes.arrayOf(PropTypes.object),
+        recipients: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        repos: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
 }

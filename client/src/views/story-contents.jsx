@@ -1,58 +1,34 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Moment = require('moment');
-var Memoize = require('utils/memoize');
-var ListParser = require('utils/list-parser');
-var Markdown = require('utils/markdown');
-var PlainText = require('utils/plain-text');
-var ComponentRefs = require('utils/component-refs');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
-var UserUtils = require('objects/utils/user-utils');
-var Payload = require('transport/payload');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import Memoize from 'utils/memoize';
+import ListParser from 'utils/list-parser';
+import Markdown from 'utils/markdown';
+import PlainText from 'utils/plain-text';
+import ComponentRefs from 'utils/component-refs';
+import ExternalDataUtils from 'objects/utils/external-data-utils';
+import UserUtils from 'objects/utils/user-utils';
+import Payload from 'transport/payload';
 
 // widgets
-var MediaView = require('views/media-view');
-var MediaDialogBox = require('dialogs/media-dialog-box');
-var AppComponent = require('views/app-component');
-var AppComponentDialogBox = require('dialogs/app-component-dialog-box');
-var Scrollable = require('widgets/scrollable');
-var PushButton = require('widgets/push-button');
+import MediaView from 'views/media-view';
+import MediaDialogBox from 'dialogs/media-dialog-box';
+import AppComponent from 'views/app-component';
+import AppComponentDialogBox from 'dialogs/app-component-dialog-box';
+import Scrollable from 'widgets/scrollable';
+import PushButton from 'widgets/push-button';
 
-require('./story-contents.scss');
+import './story-contents.scss';
 
-module.exports = React.createClass({
-    displayName: 'StoryContents',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        story: PropTypes.object.isRequired,
-        authors: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object.isRequired,
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        repo: PropTypes.object,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
+class StoryContents extends PureComponent {
+    static displayName = 'StoryContents';
 
-        onChange: PropTypes.func,
-        onReaction: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             audioPlayer: HTMLAudioElement,
         });
-        var nextState = {
+        this.state = {
             voteSubmitted: false,
             selectedComponent: null,
             showingComponentDialog: false,
@@ -62,28 +38,27 @@ module.exports = React.createClass({
             renderingReferencedMediaDialog: false,
             audioURL: null,
         };
-        this.updateUserAnswers({}, nextState);
-        return nextState;
-    },
+        this.updateUserAnswers({}, this.state);
+    }
 
     /**
      * Return the name the lead author
      *
      * @return {String}
      */
-    getAuthorName: function() {
+    getAuthorName() {
         var n = this.props.locale.name;
         var author = _.first(this.props.authors);
         var name = (author) ? n(author.details.name, author.details.gender) : '';
         return name;
-    },
+    }
 
     /**
      * Update state when props changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         var nextState = _.clone(this.state);
         if (this.props.story !== nextProps.story) {
             this.updateUserAnswers(nextState, nextProps);
@@ -92,7 +67,7 @@ module.exports = React.createClass({
         if (!_.isEmpty(changes)) {
             this.setState(changes);
         }
-    },
+    }
 
     /**
      * Update the default answers of survey question
@@ -100,7 +75,7 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateUserAnswers: function(nextState, nextProps) {
+    updateUserAnswers(nextState, nextProps) {
         if (nextProps.story) {
             if (nextProps.story.type === 'survey') {
                 var p = nextProps.locale.pick;
@@ -121,47 +96,47 @@ module.exports = React.createClass({
                 nextState.userAnswers = null;
             }
         }
-    },
+    }
 
     /**
      * Return true if the current user is one of the story's author
      *
      * @return {Boolean}
      */
-    isCurrentUserAuthor: function() {
+    isCurrentUserAuthor() {
         var userIds = this.props.story.user_ids;
         var currentUserId = this.props.currentUser.id;
         return _.includes(userIds, currentUserId);
-    },
+    }
 
     /**
      * Return true if the current user has already voted
      *
      * @return {Boolean|undefined}
      */
-    hasUserVoted: function() {
+    hasUserVoted() {
         if (this.props.reactions === null) {
             return undefined;
         }
         var vote = getUserVote(this.props.reactions, this.props.currentUser);
         return !!vote;
-    },
+    }
 
     /**
      * Return true of the current user can vote
      *
      * @return {Boolean}
      */
-    canUserVote: function() {
+    canUserVote() {
         return (this.props.access === 'read-write');
-    },
+    }
 
     /**
      * Clear state.voteSubmitted once vote has been recorded
      *
      * @param  {Object} nextProps
      */
-    componentDidUpdate: function(nextProps) {
+    componentDidUpdate(nextProps) {
         if (this.props.reactions !== nextProps.reactions) {
             if (this.state.voteSubmitted) {
                 var vote = getUserVote(nextProps.reactions, nextProps.currentUser);
@@ -170,14 +145,14 @@ module.exports = React.createClass({
                 }
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className="story-contents">
                 {this.renderText()}
@@ -188,14 +163,14 @@ module.exports = React.createClass({
                 {this.renderButtons()}
             </div>
         );
-    },
+    }
 
     /**
      * Render text of the story
      *
      * @return {ReactElement}
      */
-    renderText: function() {
+    renderText() {
         var story = this.props.story;
         this.resourcesReferenced = [];
         switch (story.type) {
@@ -228,14 +203,14 @@ module.exports = React.createClass({
             case 'wiki':
                 return this.renderWikiText();
         }
-    },
+    }
 
     /**
      * Render text for regular post, task list, and survey
      *
      * @return {ReactElement|null}
      */
-    renderStoryText: function() {
+    renderStoryText() {
         var p = this.props.locale.pick;
         var story = this.props.story;
         var text = _.trimEnd(p(story.details.text));
@@ -268,14 +243,14 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render task list
      *
      * @return {ReactElement}
      */
-    renderTaskListText: function() {
+    renderTaskListText() {
         var p = this.props.locale.pick;
         var story = this.props.story;
         var text = _.trimEnd(p(story.details.text));
@@ -296,14 +271,14 @@ module.exports = React.createClass({
             var list = PlainText.renderTaskList(text, answers, onChange);
             return <div className="text task-list plain-text"><p>{list}</p></div>;
         }
-    },
+    }
 
     /**
      * Render survey choices or results depending whether user has voted
      *
      * @return {ReactElement|null}
      */
-    renderSurveyText: function() {
+    renderSurveyText() {
         var p = this.props.locale.pick;
         var story = this.props.story;
         var text = _.trimEnd(p(story.details.text));
@@ -339,14 +314,14 @@ module.exports = React.createClass({
                 return <div className="text survey plain-text"><p>{results}</p></div>;
             }
         }
-    },
+    }
 
     /**
      * Render text for repo story
      *
      * @return {ReactElement}
      */
-    renderRepoText: function() {
+    renderRepoText() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var story = this.props.story;
@@ -364,14 +339,14 @@ module.exports = React.createClass({
                 </p>
             </div>
         );
-    },
+    }
 
     /**
      * Render text for member story
      *
      * @return {ReactElement}
      */
-    renderMemberText: function() {
+    renderMemberText() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var story = this.props.story;
@@ -389,14 +364,14 @@ module.exports = React.createClass({
                 </p>
             </div>
         );
-    },
+    }
 
     /**
      * Render text for issue story
      *
      * @return {ReactElement}
      */
-    renderIssueText: function() {
+    renderIssueText() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var story = this.props.story;
@@ -424,14 +399,14 @@ module.exports = React.createClass({
                 {this.renderLabels()}
             </div>
         );
-    },
+    }
 
     /**
      * Render text for milestone story
      *
      * @return {ReactElement}
      */
-    renderMilestoneText: function() {
+    renderMilestoneText() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var story = this.props.story;
@@ -454,14 +429,14 @@ module.exports = React.createClass({
                 </p>
             </div>
         );
-    },
+    }
 
     /**
      * Render text for merge request story
      *
      * @return {ReactElement}
      */
-    renderMergeRequestText: function() {
+    renderMergeRequestText() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var story = this.props.story;
@@ -487,14 +462,14 @@ module.exports = React.createClass({
                 {this.renderLabels()}
             </div>
         );
-    },
+    }
 
     /**
      * Render text for wiki story
      *
      * @return {ReactElement}
      */
-    renderWikiText: function() {
+    renderWikiText() {
         var t = this.props.locale.translate;
         var story = this.props.story;
         var name = this.getAuthorName();
@@ -513,14 +488,14 @@ module.exports = React.createClass({
                 </p>
             </div>
         );
-    },
+    }
 
     /**
      * Render text for push story
      *
      * @return {ReactElement}
      */
-    renderPushText: function() {
+    renderPushText() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var story = this.props.story;
@@ -554,14 +529,14 @@ module.exports = React.createClass({
                 {this.renderChanges()}
             </div>
         );
-    },
+    }
 
     /**
      * Render text for branch story
      *
      * @return {ReactElement}
      */
-    renderBranchText: function() {
+    renderBranchText() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var story = this.props.story;
@@ -591,14 +566,14 @@ module.exports = React.createClass({
                 {this.renderChanges()}
             </div>
         );
-    },
+    }
 
     /**
      * Render the number of file/lines changed
      *
      * @return {ReactElement|null}
      */
-    renderChanges: function() {
+    renderChanges() {
         var t = this.props.locale.translate;
         var files = _.get(this.props.story, 'details.files');
         if (_.isEmpty(files)) {
@@ -633,14 +608,14 @@ module.exports = React.createClass({
                 <ul className="lines">{lineChanges}</ul>
             </div>
         );
-    },
+    }
 
     /**
      * Render current status of issue or merge request
      *
      * @return {ReactElement}
      */
-    renderStatus: function() {
+    renderStatus() {
         var t = this.props.locale.translate;
         var state = this.props.story.details.state;
         if (!state) {
@@ -653,14 +628,14 @@ module.exports = React.createClass({
                 <span>{t(`story-issue-status-${state}`)}</span>
             </p>
         );
-    },
+    }
 
     /**
      * Render labels for issue and merge requests
      *
      * @return {ReactElement|null}
      */
-    renderLabels: function() {
+    renderLabels() {
         var labels = _.sortBy(this.props.story.details.labels);
         if (_.isEmpty(labels)) {
             return null;
@@ -682,14 +657,14 @@ module.exports = React.createClass({
             tags.splice(i, 0, ' ');
         }
         return <p className="tags">{tags}</p>;
-    },
+    }
 
     /**
      * Render button for filling survey
      *
      * @return {ReactElement|null}
      */
-    renderButtons: function() {
+    renderButtons() {
         if (this.props.story.type !== 'survey') {
             return null;
         }
@@ -711,14 +686,14 @@ module.exports = React.createClass({
                 <PushButton {...submitProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render audio player for embed audio in markdown text
      *
      * @return {ReactElement|null}
      */
-    renderAudioPlayer: function() {
+    renderAudioPlayer() {
         if (!this.state.audioURL) {
             return null;
         }
@@ -730,14 +705,14 @@ module.exports = React.createClass({
             onEnded: this.handleAudioEnded,
         };
         return <audio {...audioProps} />;
-    },
+    }
 
     /**
      * Render attached media
      *
      * @return {ReactElement}
      */
-    renderMedia: function() {
+    renderMedia() {
         var resources = _.get(this.props.story, 'details.resources');
         if (!_.isEmpty(this.resourcesReferenced)) {
             // exclude the ones that are shown in Markdown
@@ -753,14 +728,14 @@ module.exports = React.createClass({
             width: Math.min(512, screen.width),
         };
         return <MediaView {...props} />
-    },
+    }
 
     /**
      * Render dialog box showing referenced image at full size
      *
      * @return {ReactElement|null}
      */
-    renderReferencedMediaDialog: function() {
+    renderReferencedMediaDialog() {
         if (!this.state.renderingReferencedMediaDialog) {
             return null;
         }
@@ -785,14 +760,14 @@ module.exports = React.createClass({
             onClose: this.handleReferencedMediaDialogClose,
         };
         return <MediaDialogBox {...dialogProps} />;
-    },
+    }
 
     /**
      * Render affected app components
      *
      * @return {ReactElement}
      */
-    renderAppComponents: function() {
+    renderAppComponents() {
         var t = this.props.locale.translate;
         var type = _.get(this.props.story, 'type');
         var components = _.get(this.props.story, 'details.components');
@@ -809,14 +784,14 @@ module.exports = React.createClass({
                 {this.renderAppComponentDialog()}
             </div>
         );
-    },
+    }
 
     /**
      * Render an affected app component
      *
      * @return {ReactElement}
      */
-    renderAppComponent: function(component, i) {
+    renderAppComponent(component, i) {
         var componentProps = {
             component: component,
             locale: this.props.locale,
@@ -824,14 +799,14 @@ module.exports = React.createClass({
             onSelect: this.handleComponentSelect,
         };
         return <AppComponent key={i} {...componentProps} />
-    },
+    }
 
     /**
      * Render dialog showing full description of component
      *
      * @return {ReactElement}
      */
-    renderAppComponentDialog: function() {
+    renderAppComponentDialog() {
         if (!this.state.renderingComponentDialog) {
             return null;
         }
@@ -843,14 +818,14 @@ module.exports = React.createClass({
             onClose: this.handleComponentDialogClose,
         };
         return <AppComponentDialogBox {...dialogProps} />;
-    },
+    }
 
     /**
      * Inform parent component that changes were made to story
      *
      * @param  {Story} story
      */
-    triggerChangeEvent: function(story) {
+    triggerChangeEvent(story) {
         if (this.props.onChange) {
             this.props.onChange({
                 type: 'change',
@@ -858,14 +833,14 @@ module.exports = React.createClass({
                 story,
             });
         }
-    },
+    }
 
     /**
      * Inform parent component that there's a new reaction to story
      *
      * @param  {Story} story
      */
-    triggerReactionEvent: function(reaction) {
+    triggerReactionEvent(reaction) {
         if (this.props.onReaction) {
             this.props.onReaction({
                 type: 'reaction',
@@ -873,14 +848,14 @@ module.exports = React.createClass({
                 reaction,
             });
         }
-    },
+    }
 
     /**
      * Called when Markdown text references a resource
      *
      * @param  {Object} evt
      */
-    handleReference: function(evt) {
+    handleReference = (evt) => {
         var resources = this.props.story.details.resources;
         var res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
@@ -903,14 +878,14 @@ module.exports = React.createClass({
                 title: evt.name
             };
         }
-    },
+    }
 
     /**
      * Called when user clicks on the text contents
      *
      * @param  {Event} evt
      */
-     handleMarkdownClick: function(evt) {
+     handleMarkdownClick = (evt) => {
          var target = evt.target;
          if (target.viewportElement) {
              target = target.viewportElement;
@@ -953,14 +928,14 @@ module.exports = React.createClass({
                  window.open(target.src, '_blank', `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`);
              }
          }
-    },
+    }
 
     /**
      * Called when user clicks on a checkbox in a task list
      *
      * @param  {Event} evt
      */
-    handleTaskListItemChange: function(evt) {
+    handleTaskListItemChange = (evt) => {
         var target = evt.currentTarget;
         var list = parseInt(target.name);
         var item = parseInt(target.value);
@@ -1009,27 +984,27 @@ module.exports = React.createClass({
                 this.triggerReactionEvent(reaction);
             }
         }
-    },
+    }
 
     /**
      * Called when user clicks on a radio button in a survey
      *
      * @param  {Event} evt
      */
-    handleSurveyItemChange: function(evt) {
+    handleSurveyItemChange = (evt) => {
         var target = evt.currentTarget;
         var list = target.name;
         var item = target.value;
         var userAnswers = _.decoupleSet(this.state.userAnswers, [ list ], item);
         this.setState({ userAnswers });
-    },
+    }
 
     /**
      * Called when user clicks on the submit button
      *
      * @param  {Event} evt
      */
-    handleVoteSubmitClick: function(evt) {
+    handleVoteSubmitClick = (evt) => {
         var story = this.props.story;
         var reaction = {
             type: 'vote',
@@ -1043,27 +1018,27 @@ module.exports = React.createClass({
         };
         this.triggerReactionEvent(reaction);
         this.setState({ voteSubmitted: true });
-    },
+    }
 
     /**
      * Called when user clicks on an app component description
      *
      * @param  {Object} evt
      */
-    handleComponentSelect: function(evt) {
+    handleComponentSelect = (evt) => {
         this.setState({
             renderingComponentDialog: true,
             showingComponentDialog: true,
             selectedComponent: evt.component,
         });
-    },
+    }
 
     /**
      * Called when user closes component description dialog
      *
      * @param  {Object} evt
      */
-    handleComponentDialogClose: function(evt) {
+    handleComponentDialogClose = (evt) => {
         this.setState({ showingComponentDialog: false }, () => {
             setTimeout(() => {
                 if (!this.state.showingComponentDialog) {
@@ -1074,14 +1049,14 @@ module.exports = React.createClass({
                 }
             }, 500);
         });
-    },
+    }
 
     /**
      * Called when user closes referenced media dialog
      *
      * @param  {Object} evt
      */
-    handleReferencedMediaDialogClose: function(evt) {
+    handleReferencedMediaDialogClose = (evt) => {
         this.setState({ showingReferencedMediaDialog: false }, () => {
             setTimeout(() => {
                 if (!this.state.showingReferencedMediaDialog) {
@@ -1092,17 +1067,17 @@ module.exports = React.createClass({
                 }
             }, 500);
         })
-    },
+    }
 
     /**
      * Called when audio playback ends
      *
      * @param  {Event} evt
      */
-    handleAudioEnded: function(evt) {
+    handleAudioEnded = (evt) => {
         this.setState({ audioURL: null });
-    },
-});
+    }
+}
 
 var countVotes = Memoize(function(reactions) {
     var tallies = {};
@@ -1156,3 +1131,29 @@ var sortComponents = Memoize(function(components, locale) {
         return _.toLower(p(component.text));
     });
 });
+
+export {
+    StoryContents as default,
+    StoryContents,
+};
+
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryContents.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        story: PropTypes.object.isRequired,
+        authors: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object.isRequired,
+        reactions: PropTypes.arrayOf(PropTypes.object),
+        repo: PropTypes.object,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onChange: PropTypes.func,
+        onReaction: PropTypes.func,
+    };
+}

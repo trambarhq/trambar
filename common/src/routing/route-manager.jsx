@@ -143,6 +143,9 @@ module.exports = React.createClass({
             url += qs;
         }
         var hashParts = _.map(subcomponents, (subcomponent) => {
+            if (!(subcomponent instanceof Function) && subcomponent.default) {
+                subcomponent = subcomponent.default;
+            }
             return subcomponent.getHash(params);
         });
         var hash = _.join(hashParts, '');

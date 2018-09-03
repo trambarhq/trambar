@@ -1,55 +1,54 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Memoize = require('utils/memoize');
-var DateTracker = require('utils/date-tracker');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import Memoize from 'utils/memoize';
+import DateTracker from 'utils/date-tracker';
 
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
 
 // mixins
-var UpdateCheck = require('mixins/update-check');
+import UpdateCheck from 'mixins/update-check';
 
 // widgets
-var ProfileImage = require('widgets/profile-image');
-var Time = require('widgets/time');
+import ProfileImage from 'widgets/profile-image';
+import Time from 'widgets/time';
 
-require('./user-activity-list.scss');
+import './user-activity-list.scss';
 
-module.exports = React.createClass({
-    displayName: 'UserActivityList',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        user: PropTypes.object,
-        stories: PropTypes.arrayOf(PropTypes.object),
-        storyCountEstimate: PropTypes.number,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class UserActivityList extends PureComponent {
+    static displayName = 'UserActivityList';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         if (this.props.stories) {
             var stories = sortStories(this.props.stories);
             return (
                 <div className="user-activity-list">
-                    {_.map(stories, this.renderActivity)}
+                {
+                    _.map(stories, (story) => {
+                        return this.renderActivity(story);
+                    })
+                }
                 </div>
             );
         } else {
             var indices = _.range(0, this.props.storyCountEstimate);
             return (
                 <div className="user-activity-list">
-                    {_.map(indices, this.renderActivityPlaceholder)}
+                {
+                    _.map(indices, (index) => {
+                        return this.renderActivityPlaceholder(index);
+                    })
+                }
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render a brief description about a story
@@ -58,7 +57,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderActivity: function(story) {
+    renderActivity(story) {
         var route = this.props.route;
         var components = [
             require('pages/people-page'),
@@ -83,7 +82,7 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render a placeholder
@@ -92,9 +91,9 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderActivityPlaceholder: function(index) {
+    renderActivityPlaceholder(index) {
         return <div key={index} className="activity">{'\u00a0'}</div>;
-    },
+    }
 
     /**
      * Return short summary about story
@@ -103,7 +102,7 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    renderText: function(story) {
+    renderText(story) {
         var t = this.props.locale.translate;
         var n = this.props.locale.name;
         var user = this.props.user;
@@ -150,8 +149,8 @@ module.exports = React.createClass({
             default:
                 return story.type;
         }
-    },
-});
+    }
+}
 
 var sortStories = Memoize(function(stories) {
     stories = _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
@@ -161,3 +160,21 @@ var sortStories = Memoize(function(stories) {
 var getStoryTime = function(story) {
     return story.btime || story.ptime;
 };
+
+export {
+    UserActivityList as default,
+    UserActivityList,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UserActivityList.propTypes = {
+        user: PropTypes.object,
+        stories: PropTypes.arrayOf(PropTypes.object),
+        storyCountEstimate: PropTypes.number,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+}

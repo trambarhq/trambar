@@ -1,42 +1,22 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var UserUtils = require('objects/utils/user-utils');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var Time = require('widgets/time');
-var ProfileImage = require('widgets/profile-image');
+import Time from 'widgets/time';
+import ProfileImage from 'widgets/profile-image';
 
-require('./notification-view.scss');
+import './notification-view.scss';
 
-module.exports = React.createClass({
-    displayName: 'NotificationView',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        notification: PropTypes.object.isRequired,
-        user: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onClick: PropTypes.func,
-    },
+class NotificationView extends PureComponent {
+    static displayName = 'NotificationView';
 
     /**
      * Render the component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var props = {
             className: `notification-view ${this.props.theme.mode}`,
             href: this.getNotificationURL(),
@@ -58,78 +38,78 @@ module.exports = React.createClass({
                 </div>
             </a>
         );
-    },
+    }
 
     /**
      * Render the user's profile image
      *
      * @return {ReactElement}
      */
-    renderProfileImage: function() {
+    renderProfileImage() {
         var props = {
             user: this.props.user,
             theme: this.props.theme,
             size: 'small',
         };
         return <ProfileImage {...props} />;
-    },
+    }
 
     /**
      * Render a descript of what happened
      *
      * @return {ReactElement}
      */
-    renderText: function() {
+    renderText() {
         var text = this.getNotificationText();
         return <span className="text">{text}</span>;
-    },
+    }
 
     /**
      * Render the time of the event
      *
      * @return {ReactElement}
      */
-    renderTime: function() {
+    renderTime() {
         var props = {
             time: this.props.notification.ctime,
             locale: this.props.locale,
         };
         return <Time {...props} />;
-    },
+    }
 
     /**
      * Render a small icon indicating the notification type
      *
      * @return {ReactElement}
      */
-    renderIcon: function() {
+    renderIcon() {
         return <i className={`fa fa-${this.getNotificationIcon()} fa-fw`}/>;
-    },
+    }
 
     /**
      * Return URL that notification directs to
      *
      * @return {String}
      */
-    getNotificationURL: function() {
+    getNotificationURL() {
         return getNotificationURL(this.props.notification, this.props.route);
-    },
+    }
 
     /**
      * Return target window that notification directs to
      *
      * @return {String|undefined}
      */
-    getNotificationTarget: function() {
+    getNotificationTarget() {
         return getNotificationTarget(this.props.notification);
-    },
+    }
 
     /**
      * Return text of the notification
      *
      * @return {String}
      */
-    getNotificationText: function() {
+    getNotificationText() {
         var t = this.props.locale.translate;
         var notification = this.props.notification;
         var name = UserUtils.getDisplayNameWithGender(this.props.user, this.props.locale);
@@ -169,14 +149,14 @@ module.exports = React.createClass({
             case 'join-request':
                 return t('notification-$name-requested-to-join', name);
         }
-    },
+    }
 
     /**
      * Return Font Awesome class name
      *
      * @return {String}
      */
-    getNotificationIcon: function() {
+    getNotificationIcon() {
         var notification = this.props.notification;
         switch (notification.type) {
             case 'like': return 'thumbs-up';
@@ -194,14 +174,14 @@ module.exports = React.createClass({
             case 'mention': return 'at';
             case 'join-request': return 'user-circle';
         }
-    },
+    }
 
     /**
      * Called when click is clicked
      *
      * @param  {Event} evt
      */
-    handleClick: function(evt) {
+    handleClick = (evt) => {
         if (this.props.onClick) {
             this.props.onClick({
                 type: 'click',
@@ -209,7 +189,7 @@ module.exports = React.createClass({
             });
         }
     }
-});
+}
 
 // these functions are needed for handling web and push alerts
 module.exports.getNotificationURL = getNotificationURL;
@@ -260,4 +240,30 @@ function getNotificationTarget(notification) {
             return 'admin';
     }
     return '';
+}
+
+export {
+    NotificationView as default,
+    NotificationView,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    NotificationView.propTypes = {
+        notification: PropTypes.object.isRequired,
+        user: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onClick: PropTypes.func,
+    };
 }

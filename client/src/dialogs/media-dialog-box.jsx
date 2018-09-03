@@ -1,61 +1,44 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Hammer = require('hammerjs');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import Hammer from 'hammerjs';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var ResourceView = require('widgets/resource-view');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import ResourceView from 'widgets/resource-view';
 
-require('./media-dialog-box.scss');
+import './media-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'MediaDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        resources: PropTypes.arrayOf(PropTypes.object).isRequired,
-        selectedIndex: PropTypes.number.isRequired,
+class MediaDialogBox extends PureComponent {
+    static displayName = 'MediaDialogBox';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onClose: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             selectedIndex: this.props.selectedIndex,
         };
-    },
+    }
 
     /**
      * Return the number of resources
      *
      * @return {Number}
      */
-    getResourceCount: function() {
+    getResourceCount() {
         return this.props.resources.length;
-    },
+    }
 
     /**
      * Return the currently selected resource
      *
      * @return {Number}
      */
-    getSelectedResourceIndex: function() {
+    getSelectedResourceIndex() {
         var maxIndex = this.getResourceCount() - 1;
         var index = _.min([ this.state.selectedIndex, maxIndex ]);
         return index;
-    },
+    }
 
     /**
      * Select a resource by index
@@ -64,7 +47,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    selectResource: function(index) {
+    selectResource(index) {
         return new Promise((resolve, reject) => {
             var count = this.getResourceCount();
             if (index >= 0 && index < count) {
@@ -75,24 +58,24 @@ module.exports = React.createClass({
                 resolve(this.getSelectedResourceIndex());
             }
         });
-    },
+    }
 
     /**
      * Add event listeners
      */
-    addListeners: function() {
+    addListeners() {
         document.addEventListener('keydown', this.handleKeyDown);
         document.addEventListener('mousewheel', this.handleMouseWheel);
 
         this.hammer = new Hammer(document.body);
         this.hammer.on('swipeleft', this.handleSwipeLeft);
         this.hammer.on('swiperight', this.handleSwipeRight);
-    },
+    }
 
     /**
      * Remove event listeners
      */
-    removeListeners: function() {
+    removeListeners() {
         document.removeEventListener('keydown', this.handleKeyDown);
         document.removeEventListener('mousewheel', this.handleMouseWheel);
 
@@ -103,23 +86,23 @@ module.exports = React.createClass({
             this.hammer.destroy();
             this.hammer = null;
         }
-    },
+    }
 
     /**
      * Add listeners on mount
      */
-    componentWillMount: function() {
+    componentWillMount() {
         if (this.props.show) {
             this.addListeners();
         }
-    },
+    }
 
     /**
      * Set the selectedIndex when the dialog box becomes visible
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.show !== nextProps.show) {
             if (nextProps.show) {
                 this.setState({
@@ -134,14 +117,14 @@ module.exports = React.createClass({
                 this.removeListeners();
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.props.onClose,
@@ -157,14 +140,14 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render either live or captured video
      *
      * @return {ReactElement}
      */
-    renderView: function() {
+    renderView() {
         var index = this.getSelectedResourceIndex();
         var res = this.props.resources[index];
         if (res) {
@@ -217,7 +200,7 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render image
@@ -228,7 +211,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderImage: function(res, maxWidth, maxHeight) {
+    renderImage(res, maxWidth, maxHeight) {
         var props = {
             // prevent image element from being reused, so when changing from
             // one image to the next the current image doesn't momentarily
@@ -250,7 +233,7 @@ module.exports = React.createClass({
             props.height = maxHeight;
         }
         return <ResourceView {...props} />;
-    },
+    }
 
     /**
      * Render video player
@@ -261,7 +244,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderVideo: function(res) {
+    renderVideo(res) {
         var theme = this.props.theme;
         var url = theme.getVideoURL(res);
         var dims = theme.getDimensions(res, { clip: null });
@@ -279,14 +262,14 @@ module.exports = React.createClass({
             poster: posterURL,
         };
         return <video {...props} />;
-    },
+    }
 
     /**
      * Render links
      *
      * @return {ReactElement|null}
      */
-    renderThumbnails: function(index) {
+    renderThumbnails(index) {
         var selectedIndex = this.getSelectedResourceIndex();
         var thumbnails = _.map(this.props.resources, (res, index) => {
             var frameProps = {
@@ -310,14 +293,14 @@ module.exports = React.createClass({
             );
         });
         return <div className="links">{thumbnails}</div>;
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         var downloadButtonProps = {
             label: t('media-download-original'),
@@ -336,31 +319,31 @@ module.exports = React.createClass({
                 <PushButton {...closeButtonProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Remove event handler on unmount
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         this.removeListeners();
-    },
+    }
 
     /**
      * Called when user clicks on a thumbnail
      *
      * @param  {Event} evt
      */
-    handleThumbnailClick: function(evt) {
+    handleThumbnailClick = (evt) => {
         var index = parseInt(evt.currentTarget.getAttribute('data-index'));
         return this.selectResource(index);
-    },
+    }
 
     /**
      * Called when user clicks on download button
      *
      * @param  {Evt} evt
      */
-    handleDownloadClick: function(evt) {
+    handleDownloadClick = (evt) => {
         var index = this.getSelectedResourceIndex();
         var res = this.props.resources[index];
         if (res) {
@@ -376,14 +359,14 @@ module.exports = React.createClass({
             link.download = res.filename || true;   // only works when it's same origin
             link.click();
         }
-    },
+    }
 
     /**
      * Change the selection index
      *
      * @param  {Number} diff
      */
-    changeSelection: function(diff) {
+    changeSelection(diff) {
         if (diff) {
             var count = this.getResourceCount();
             var index = this.getSelectedResourceIndex() + diff;
@@ -394,14 +377,14 @@ module.exports = React.createClass({
             }
             this.selectResource(index);
         }
-    },
+    }
 
     /**
      * Called when user presses a key
      *
      * @param  {Event} evt
      */
-    handleKeyDown: function(evt) {
+    handleKeyDown = (evt) => {
         var diff = 0;
         if (evt.keyCode === 39) {           // right arrow
             diff = +1;
@@ -412,14 +395,14 @@ module.exports = React.createClass({
         }
         this.changeSelection(diff);
         evt.preventDefault();
-    },
+    }
 
     /**
      * Called when user turns the mouse wheel
      *
      * @param  {Event} evt
      */
-    handleMouseWheel: function(evt) {
+    handleMouseWheel = (evt) => {
         var diff = 0;
         var delta;
         if (Math.abs(evt.deltaX) >= Math.abs(evt.deltaY)) {
@@ -436,19 +419,42 @@ module.exports = React.createClass({
         }
         this.changeSelection(diff);
         evt.preventDefault();
-    },
+    }
 
     /**
      * Called when user swipe left
      */
-    handleSwipeLeft: function(evt) {
+    handleSwipeLeft = (evt) => {
         this.changeSelection(-1);
-    },
+    }
 
     /**
      * Called when user swipe right
      */
-    handleSwipeRight: function(evt) {
+    handleSwipeRight = (evt) => {
         this.changeSelection(+1);
-    },
-});
+    }
+}
+
+export {
+    MediaDialogBox as default,
+    MediaDialogBox,
+};
+
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MediaDialogBox.propTypes = {
+        show: PropTypes.bool,
+        resources: PropTypes.arrayOf(PropTypes.object).isRequired,
+        selectedIndex: PropTypes.number.isRequired,
+
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+
+        onClose: PropTypes.func,
+    };
+}

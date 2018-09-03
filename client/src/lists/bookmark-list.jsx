@@ -1,86 +1,62 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var Empty = require('data/empty');
-var Merger = require('data/merger');
-var UserFinder = require('objects/finders/user-finder');
-var StoryFinder = require('objects/finders/story-finder');
-var RepoFinder = require('objects/finders/repo-finder');
-var BookmarkFinder = require('objects/finders/bookmark-finder');
-var ReactionFinder = require('objects/finders/reaction-finder');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import Memoize from 'utils/memoize';
+import Empty from 'data/empty';
+import Merger from 'data/merger';
+import UserFinder from 'objects/finders/user-finder';
+import StoryFinder from 'objects/finders/story-finder';
+import RepoFinder from 'objects/finders/repo-finder';
+import BookmarkFinder from 'objects/finders/bookmark-finder';
+import ReactionFinder from 'objects/finders/reaction-finder';
 
 // widgets
-var SmartList = require('widgets/smart-list');
-var BookmarkView = require('views/bookmark-view');
-var StoryView = require('views/story-view');
-var StoryEditor = require('editors/story-editor');
-var NewItemsAlert = require('widgets/new-items-alert');
+import SmartList from 'widgets/smart-list';
+import BookmarkView from 'views/bookmark-view';
+import StoryView from 'views/story-view';
+import StoryEditor from 'editors/story-editor';
+import NewItemsAlert from 'widgets/new-items-alert';
 
-require('./bookmark-list.scss');
+import './bookmark-list.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'BookmarkList',
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        bookmarks: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        project: PropTypes.object,
-        selectedStoryId: PropTypes.number,
+class BookmarkList extends AsyncComponent {
+    static displayName = 'BookmarkList';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+    /**
+     * Extract id from URL hash
+     *
+     * @param  {String} hash
+     *
+     * @return {Object}
+     */
+    static parseHash(hash) {
+        var story, highlighting;
+        if (story = Route.parseId(hash, /S(\d+)/)) {
+            highlighting = true;
+        } else if (story = Route.parseId(hash, /s(\d+)/)) {
+            highlighting = false;
+        }
+        return { story, highlighting };
+    }
 
-    statics: {
-        /**
-         * Extract id from URL hash
-         *
-         * @param  {String} hash
-         *
-         * @return {Object}
-         */
-        parseHash: function(hash) {
-            var story, highlighting;
-            if (story = Route.parseId(hash, /S(\d+)/)) {
-                highlighting = true;
-            } else if (story = Route.parseId(hash, /s(\d+)/)) {
-                highlighting = false;
+    /**
+     * Get URL hash based on given parameters
+     *
+     * @param  {Object} params
+     *
+     * @return {String}
+     */
+    static getHash(params) {
+        if (params.story) {
+            if (params.highlighting) {
+                return `S${params.story}`;
+            } else {
+                return `s${params.story}`;
             }
-            return { story, highlighting };
-        },
-
-        /**
-         * Get URL hash based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {String}
-         */
-        getHash: function(params) {
-            if (params.story) {
-                if (params.highlighting) {
-                    return `S${params.story}`;
-                } else {
-                    return `s${params.story}`;
-                }
-            }
-            return '';
-        },
-    },
+        }
+        return '';
+    }
 
     /**
      * Render the component asynchronously
@@ -89,7 +65,7 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync(meanwhile) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var props = {
@@ -161,55 +137,28 @@ module.exports = Relaks.createClass({
         }).then(() => {
             return <BookmarkListSync {...props} />;
         });
-    },
-});
+    }
+}
 
-var BookmarkListSync = module.exports.Sync = React.createClass({
-    displayName: 'BookmarkList.Sync',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        bookmarks: PropTypes.arrayOf(PropTypes.object),
-        senders: PropTypes.arrayOf(PropTypes.object),
-        stories: PropTypes.arrayOf(PropTypes.object),
-        authors: PropTypes.arrayOf(PropTypes.object),
-        draftStories: PropTypes.arrayOf(PropTypes.object),
-        draftAuthors: PropTypes.arrayOf(PropTypes.object),
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        respondents: PropTypes.arrayOf(PropTypes.object),
-        recommendations: PropTypes.arrayOf(PropTypes.object),
-        recipients: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        project: PropTypes.object,
-        repos: PropTypes.arrayOf(PropTypes.object),
+class BookmarkListSync extends PureComponent {
+    static displayName = 'BookmarkList.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             hiddenStoryIds: [],
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var bookmarks = sortBookmark(this.props.bookmarks);
         var anchor;
-        var hashParams = module.exports.parseHash(this.props.route.hash);
+        var hashParams = BookmarkList.parseHash(this.props.route.hash);
         if (hashParams.story) {
             anchor = `story-${hashParams.story}`;
         }
@@ -231,21 +180,21 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
                 {this.renderNewStoryAlert()}
             </div>
         );
-    },
+    }
 
     /**
      * Render alert indicating there're new stories hidden up top
      *
      * @return {ReactElement}
      */
-    renderNewStoryAlert: function() {
+    renderNewStoryAlert() {
         var t = this.props.locale.translate;
         var count = _.size(this.state.hiddenStoryIds);
         var params = {
             story: _.first(this.state.hiddenStoryIds)
         };
         var props = {
-            hash: module.exports.getHash(params),
+            hash: BookmarkList.getHash(params),
             route: this.props.route,
             onClick: this.handleNewBookmarkAlertClick,
         };
@@ -254,7 +203,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
                 {t('alert-$count-new-bookmarks', count)}
             </NewItemsAlert>
         );
-    },
+    }
 
     /**
      * Return id of bookmark view in response to event triggered by SmartList
@@ -263,9 +212,9 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      *
      * @return {String}
      */
-    handleBookmarkIdentity: function(evt) {
+    handleBookmarkIdentity = (evt) => {
         return `story-${evt.item.story_id}`;
-    },
+    }
 
     /**
      * Render a bookmark
@@ -274,7 +223,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    handleBookmarkRender: function(evt) {
+    handleBookmarkRender = (evt) => {
         var bookmark = evt.item;
         var story = findStory(this.props.stories, bookmark);
         if (!story) {
@@ -299,7 +248,7 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
             }
 
             var hash = this.props.route.hash;
-            var hashParams = module.exports.parseHash(hash);
+            var hashParams = BookmarkList.parseHash(hash);
             if (story.id === hashParams.story) {
                 if (hashParams.highlighting) {
                     highlighting = true;
@@ -383,40 +332,40 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
             }
         }
 
-    },
+    }
 
     /**
      * Called when a different story is positioned at the top of the viewport
      *
      * @param  {Object} evt
      */
-    handleBookmarkAnchorChange: function(evt) {
+    handleBookmarkAnchorChange = (evt) => {
         var params = {
             story: _.get(evt.item, 'story_id')
         };
-        var hash = module.exports.getHash(params);
+        var hash = BookmarkList.getHash(params);
         this.props.route.reanchor(hash);
-    },
+    }
 
     /**
      * Called when SmartList notice new items were rendered off screen
      *
      * @param  {Object} evt
      */
-    handleBookmarkBeforeAnchor: function(evt) {
+    handleBookmarkBeforeAnchor = (evt) => {
         var hiddenStoryIds = _.map(evt.items, 'story_id');
         this.setState({ hiddenStoryIds });
-    },
+    }
 
     /**
      * Called when user clicks on new story alert
      *
      * @param  {Event} evt
      */
-    handleNewBookmarkAlertClick: function(evt) {
+    handleNewBookmarkAlertClick = (evt) => {
         this.setState({ hiddenStoryIds: [] });
-    },
-});
+    }
+}
 
 var array = Memoize(function(object) {
     return [ object ];
@@ -495,4 +444,56 @@ function getAuthorIds(stories, currentUser) {
         userIds.push(currentUser.id);
     }
     return _.uniq(userIds);
+}
+
+export {
+    BookmarkList as default,
+    BookmarkList,
+    BookmarkListSync,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    BookmarkList.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        bookmarks: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        project: PropTypes.object,
+        selectedStoryId: PropTypes.number,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+    BookmarkList.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        bookmarks: PropTypes.arrayOf(PropTypes.object),
+        senders: PropTypes.arrayOf(PropTypes.object),
+        stories: PropTypes.arrayOf(PropTypes.object),
+        authors: PropTypes.arrayOf(PropTypes.object),
+        draftStories: PropTypes.arrayOf(PropTypes.object),
+        draftAuthors: PropTypes.arrayOf(PropTypes.object),
+        reactions: PropTypes.arrayOf(PropTypes.object),
+        respondents: PropTypes.arrayOf(PropTypes.object),
+        recommendations: PropTypes.arrayOf(PropTypes.object),
+        recipients: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        project: PropTypes.object,
+        repos: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
 }

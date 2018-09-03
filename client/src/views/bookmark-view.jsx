@@ -1,37 +1,21 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var UserUtils = require('objects/utils/user-utils');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var MultipleUserNames = require('widgets/multiple-user-names');
+import MultipleUserNames from 'widgets/multiple-user-names';
 
-require('./bookmark-view.scss');
+import './bookmark-view.scss';
 
-module.exports = React.createClass({
-    displayName: 'BookmarkView',
-    propTypes: {
-        highlighting: PropTypes.bool,
-        bookmark: PropTypes.object,
-        senders: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class BookmarkView extends PureComponent {
+    static displayName = 'BookmarkView';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var className = 'bookmark-view';
         if (this.props.highlighting) {
             className += ' highlighting';
@@ -46,14 +30,14 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render names of senders
      *
      * @return {ReactElement}
      */
-    renderSenderNames: function() {
+    renderSenderNames() {
         var t = this.props.locale.translate;
         var userId = _.get(this.props.currentUser, 'id');
         var isOwner = _.some(this.props.senders, { id: userId });
@@ -112,7 +96,7 @@ module.exports = React.createClass({
             }
         }
         return <span className="name">{contents}</span>
-    },
+    }
 
     /**
      * Remove bookmark from remote database
@@ -121,18 +105,44 @@ module.exports = React.createClass({
      *
      * @return {Promise<Bookmark>}
      */
-    removeBookmark: function(bookmark) {
+    removeBookmark(bookmark) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         return db.removeOne({ table: 'bookmark' }, bookmark);
-    },
+    }
 
     /**
      * Called when user clicks close button
      *
      * @param  {Event} evt
      */
-    handleCloseClick: function(evt) {
+    handleCloseClick = (evt) => {
         this.removeBookmark(this.props.bookmark);
     }
-});
+}
+
+export {
+    BookmarkView as default,
+    BookmarkView,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    BookmarkView.propTypes = {
+        highlighting: PropTypes.bool,
+        bookmark: PropTypes.object,
+        senders: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+}

@@ -1,54 +1,19 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Chartist = require('widgets/chartist');
-var Moment = require('moment');
-var Memoize = require('utils/memoize');
-var DateTracker = require('utils/date-tracker');
-var StoryTypes = require('objects/types/story-types');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import Chartist from 'widgets/chartist';
+import Moment from 'moment';
+import Memoize from 'utils/memoize';
+import DateTracker from 'utils/date-tracker';
+import StoryTypes from 'objects/types/story-types';
 
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import './user-statistics.scss';
 
-// mixins
-var UpdateCheck = require('mixins/update-check');
+class UserStatistics extends PureComponent {
+    static displayName = 'UserStatistics';
 
-require('./user-statistics.scss');
-
-module.exports = React.createClass({
-    displayName: 'UserStatistics',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
-        chartRange: PropTypes.oneOf([ 'biweekly', 'monthly', 'full' ]),
-        dailyActivities: PropTypes.object,
-        selectedDate: PropTypes.string,
-        today: PropTypes.string,
-        user: PropTypes.object,
-
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            chartRange: 'biweekly'
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        var state = {
+    constructor(props) {
+        super(props);
+        this.state = {
             dates: [],
             labels: [],
             series: [],
@@ -56,23 +21,22 @@ module.exports = React.createClass({
             upperRange: 0,
             selectedDateIndex: -1,
         };
-        this.updateSeries(state, this.props);
-        return state;
-    },
+        this.updateSeries(this.state, props);
+    }
 
     /**
      * Update data and labels on props change
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         var diff = _.shallowDiff(nextProps, this.props);
         if (diff.chartRange || diff.dailyActivities || diff.selectedDate || diff.today) {
             var nextState = _.clone(this.state);
             this.updateSeries(nextState, nextProps);
             this.setState(nextState);
         }
-    },
+    }
 
     /**
      * Update data and labels
@@ -80,7 +44,7 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateSeries: function(nextState, nextProps) {
+    updateSeries(nextState, nextProps) {
         var date = nextProps.selectedDate || nextProps.today;
         var activities = _.get(nextProps.dailyActivities, 'daily', {});
         var localeCode = nextProps.locale.localeCode;
@@ -124,28 +88,28 @@ module.exports = React.createClass({
                 return `${objects}\n${dateLabel}`;
             });
         });
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className="user-statistics">
                 {this.renderLegend()}
                 {this.renderChart()}
             </div>
         );
-    },
+    }
 
     /**
      * Render legend for data series
      *
      * @return {ReactElement|null}
      */
-    renderLegend: function() {
+    renderLegend() {
         if (!this.props.chartType) {
             return null;
         }
@@ -161,28 +125,28 @@ module.exports = React.createClass({
             items = '\u00a0';
         }
         return <div className="legend">{items}</div>;
-    },
+    }
 
     /**
      * Render currently selected chart type
      *
      * @return {ReactElement|null}
      */
-    renderChart: function() {
+    renderChart() {
         switch (this.props.chartType) {
             case 'bar': return this.renderBarChart();
             case 'line': return this.renderLineChart();
             case 'pie': return this.renderPieChart();
             default: return null;
         }
-    },
+    }
 
     /**
      * Render a stacked bar chart showing activities on each day
      *
      * @return {ReactElement}
      */
-    renderBarChart: function() {
+    renderBarChart() {
         var chartProps = {
             type: 'bar',
             data: {
@@ -206,14 +170,14 @@ module.exports = React.createClass({
                 <Chartist {...chartProps} />
             </ChartContainer>
         );
-    },
+    }
 
     /**
      * Render a line chart showing activities on each day
      *
      * @return {ReactElement}
      */
-    renderLineChart: function() {
+    renderLineChart() {
         var chartProps = {
             type: 'line',
             data: {
@@ -237,14 +201,14 @@ module.exports = React.createClass({
                 <Chartist {...chartProps} />
             </ChartContainer>
         );
-    },
+    }
 
     /**
      * Render a pie chart showing relative frequencies of activity types
      *
      * @return {ReactElement}
      */
-    renderPieChart: function() {
+    renderPieChart() {
         var chartProps = {
             type: 'pie',
             data: {
@@ -262,14 +226,14 @@ module.exports = React.createClass({
             },
         };
         return <Chartist {...chartProps} />;
-    },
+    }
 
     /**
      * Called when Chartist is drawing a chart
      *
      * @param  {Object} cxt
      */
-    handleChartDraw: function(cxt) {
+    handleChartDraw = (cxt) => {
         // move y-axis to the right side
         if(cxt.type === 'label' && cxt.axis.units.pos === 'y') {
             cxt.element.attr({
@@ -347,14 +311,14 @@ module.exports = React.createClass({
             cxt.element.append(title);
             cxt.element.attr({ 'data-date': date });
         }
-    },
+    }
 
     /**
      * Called when user clicks on the chart
      *
      * @param  {Event} evt
      */
-    handleChartClick: function(evt) {
+    handleChartClick = (evt) => {
         var date = evt.target.getAttribute('data-date');
         if (date) {
             // go to the user's personal page on that date
@@ -366,8 +330,8 @@ module.exports = React.createClass({
             };
             route.push(require('pages/people-page'), params);
         }
-    },
-});
+    }
+}
 
 var getActivityIndices = Memoize(function(activities, dates) {
     var present = {};
@@ -548,4 +512,34 @@ function ChartContainer(props) {
     } else {
         return props.children;
     }
+}
+
+UserStatistics.defaultProps = {
+    chartRange: 'biweekly'
+};
+
+export {
+    UserStatistics as default,
+    UserStatistics,
+};
+
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UserStatistics.propTypes = {
+        chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
+        chartRange: PropTypes.oneOf([ 'biweekly', 'monthly', 'full' ]),
+        dailyActivities: PropTypes.object,
+        selectedDate: PropTypes.string,
+        today: PropTypes.string,
+        user: PropTypes.object,
+
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
 }
