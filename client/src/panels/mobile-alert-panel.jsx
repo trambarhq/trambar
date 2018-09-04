@@ -1,28 +1,16 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var NotificationTypes = require('objects/types/notification-types');
-var UserUtils = require('objects/utils/user-utils');
-
-var Locale = require('locale/locale');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import NotificationTypes from 'objects/types/notification-types';
+import UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var SettingsPanel = require('widgets/settings-panel');
-var OptionButton = require('widgets/option-button');
+import SettingsPanel from 'widgets/settings-panel';
+import OptionButton from 'widgets/option-button';
 
 require('./mobile-alert-panel.scss');
 
-module.exports = React.createClass({
-    displayName: 'WebAlertPanel',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        currentUser: PropTypes.object,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onChange: PropTypes.func,
-    },
+class MobileAlertPanel extends PureComponent {
+    static displayName = 'MobileAlertPanel';
 
     /**
      * Change a property of the user object
@@ -30,7 +18,7 @@ module.exports = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setUserProperty: function(path, value) {
+    setUserProperty(path, value) {
         if (!this.props.currentUser) {
             return;
         }
@@ -42,14 +30,14 @@ module.exports = React.createClass({
                 user: userAfter
             });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var t = this.props.locale.translate;
         return (
             <SettingsPanel className="mobile-alert">
@@ -66,14 +54,14 @@ module.exports = React.createClass({
                 </body>
             </SettingsPanel>
         );
-    },
+    }
 
     /**
      * Render notification options
      *
      * @return {Array<ReactElement>}
      */
-    renderOptions: function() {
+    renderOptions() {
         var types = NotificationTypes;
         var userType = _.get(this.props.currentUser, 'type');
         if (userType !== 'admin') {
@@ -81,7 +69,7 @@ module.exports = React.createClass({
         }
         types = _.concat(types, 'web-session');
         return _.map(types, this.renderOption);
-    },
+    }
 
     /**
      * Render notification option button
@@ -91,7 +79,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOption: function(type, index) {
+    renderOption(type, index) {
         var t = this.props.locale.translate;
         var optionName = _.snakeCase(type);
         var settings = _.get(this.props.currentUser, 'settings', {});
@@ -107,12 +95,12 @@ module.exports = React.createClass({
             id: optionName,
         };
         return <OptionButton key={index} {...buttonProps} />
-    },
+    }
 
     /**
      * Called when an option is clicked
      */
-    handleOptionClick: function(evt) {
+    handleOptionClick = (evt) => {
         var optionName = evt.currentTarget.id;
         var optionPath = `mobile_alert.${optionName}`;
         var settings = _.clone(_.get(this.props.currentUser, 'settings', {}));
@@ -123,5 +111,22 @@ module.exports = React.createClass({
             _.set(settings, optionPath, true);
         }
         this.setUserProperty('settings', settings);
-    },
-});
+    }
+}
+
+export {
+    MobileAlertPanel as default,
+    MobileAlertPanel,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MobileAlertPanel.propTypes = {
+        currentUser: PropTypes.object,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        onChange: PropTypes.func,
+    }
+}

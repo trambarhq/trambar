@@ -1,43 +1,23 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-if (process.env.PLATFORM === 'cordova') {
-    var CodePush = require('transport/code-push');
-}
-
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import CodePush from 'transport/code-push';
 
 // widgets
-var SettingsPanel = require('widgets/settings-panel');
-var PushButton = require('widgets/push-button');
-var OptionButton = require('widgets/option-button');
+import SettingsPanel from 'widgets/settings-panel';
+import PushButton from 'widgets/push-button';
+import OptionButton from 'widgets/option-button';
 
-require('./development-panel.scss');
+import './development-panel.scss';
 
-module.exports = React.createClass({
-    displayName: 'DevelopmentPanel',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        currentUser: PropTypes.object,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onChange: PropTypes.func,
-    },
+class DevelopmentPanel extends PureComponent {
+    static displayName = 'DevelopmentPanel';
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             selectedDeploymentName: null
         };
-    },
+    }
 
     /**
      * Change a property of the user object
@@ -45,7 +25,7 @@ module.exports = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setUserProperty: function(path, value) {
+    setUserProperty(path, value) {
         if (!this.props.currentUser) {
             return;
         }
@@ -57,12 +37,12 @@ module.exports = React.createClass({
                 user: userAfter
             });
         }
-    },
+    }
 
     /**
      * Load deployment selection if platform is Cordova
      */
-    componentWillMount: function() {
+    componentWillMount() {
         if (process.env.PLATFORM === 'cordova') {
             var codePush = CodePush.instance;
             if (codePush) {
@@ -71,14 +51,14 @@ module.exports = React.createClass({
                 });
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var t = this.props.locale.translate;
         return (
             <SettingsPanel className="diagnostics">
@@ -99,14 +79,14 @@ module.exports = React.createClass({
                 </footer>
             </SettingsPanel>
         );
-    },
+    }
 
     /**
      * Render codepush deployment options
      *
      * @return {Array<ReactElement>|null}
      */
-    renderDeploymentOptions: function() {
+    renderDeploymentOptions() {
         if (process.env.PLATFORM !== 'cordova') return null;
         var codePush = CodePush.instance;
         var names;
@@ -114,17 +94,19 @@ module.exports = React.createClass({
             names = codePush.getDeploymentNames();
         }
         return _.map(names, this.renderDeploymentOption);
-    },
+    }
 
     /**
      * Render diagnostic options
      *
      * @return {Array<ReactElement>}
      */
-    renderDevelopmentOptions: function() {
+    renderDevelopmentOptions() {
         var names = [ 'show-panel' ];
-        return _.map(names, this.renderDevelopmentOption);
-    },
+        return _.map(names, (name, index) => {
+            return this.renderDevelopmentOption(name, index);
+        });
+    }
 
     /**
      * Render diagnostics option button
@@ -134,7 +116,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderDevelopmentOption: function(name, index) {
+    renderDevelopmentOption(name, index) {
         var t = this.props.locale.translate;
         var optionName = _.snakeCase(name);
         var settings = _.get(this.props.currentUser, 'settings', {});
@@ -146,7 +128,7 @@ module.exports = React.createClass({
             id: optionName,
         };
         return <OptionButton key={index} {...buttonProps} />
-    },
+    }
 
     /**
      * Render diagnostics option button
@@ -156,7 +138,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderDeploymentOption: function(name, index) {
+    renderDeploymentOption(name, index) {
         if (process.env.PLATFORM !== 'cordova') return null;
         var t = this.props.locale.translate;
         var buttonProps = {
@@ -166,14 +148,14 @@ module.exports = React.createClass({
             id: name,
         };
         return <OptionButton key={index} {...buttonProps} />
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
+    renderButtons() {
         var t = this.props.locale.translate;
         var showProps = {
             label: t('development-show-diagnostics'),
@@ -184,14 +166,14 @@ module.exports = React.createClass({
                 <PushButton {...showProps} />
             </div>
         );
-    },
+    }
 
     /**
       * Called when a development option is clicked
       *
       * @param  {Event} evt
       */
-    handleDevelopmentOptionClick: function(evt) {
+    handleDevelopmentOptionClick = (evt) => {
         var optionName = evt.currentTarget.id;
         var optionPath = `development.${optionName}`;
         var settings = _.clone(_.get(this.props.currentUser, 'settings', {}));
@@ -202,33 +184,52 @@ module.exports = React.createClass({
             _.set(settings, optionPath, true);
          }
         this.setUserProperty('settings', settings);
-    },
+    }
 
     /**
      * Called when a deployment option is clicked
      *
      * @param  {Event} evt
      */
-    handleDeploymentOptionClick: function(evt) {
+    handleDeploymentOptionClick = (evt) => {
         if (process.env.PLATFORM !== 'cordova') return null;
         var selectedDeploymentName = evt.currentTarget.id;
         this.setState({ selectedDeploymentName }, () => {
             var codePush = CodePush.instance;
             codePush.saveDeploymentName(selectedDeploymentName);
         });
-    },
+    }
 
     /**
      * Called when user presses show button
      *
      * @param  {Event} evt
      */
-    handleShowClick: function(evt) {
+    handleShowClick = (evt) => {
         var route = this.props.route;
         var params = {
             schema: route.parameters.schema,
             diagnostics: true,
         };
         route.push(require('pages/settings-page'), params);
-    },
-});
+    }
+}
+
+export {
+    DevelopmentPanel as default,
+    DevelopmentPanel,
+};
+
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    DevelopmentPanel.propTypes = {
+        currentUser: PropTypes.object,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        onChange: PropTypes.func,
+    };
+}

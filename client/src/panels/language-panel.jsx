@@ -1,32 +1,21 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-
-var Locale = require('locale/locale');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var SettingsPanel = require('widgets/settings-panel');
-var OptionButton = require('widgets/option-button');
+import SettingsPanel from 'widgets/settings-panel';
+import OptionButton from 'widgets/option-button';
 
-require('./language-panel.scss');
+import './language-panel.scss';
 
-module.exports = React.createClass({
-    displayName: 'LanguagePanel',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        locale: PropTypes.instanceOf(Locale).isRequired,
-    },
+class LanguagePanel extends PureComponent {
+    static displayName = 'LanguagePanel';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var t = this.props.locale.translate;
         return (
             <SettingsPanel className="language">
@@ -38,19 +27,21 @@ module.exports = React.createClass({
                 </body>
             </SettingsPanel>
         );
-    },
+    }
 
     /**
      * Render list of languages
      *
      * @return {Array<ReactElement>}
      */
-    renderList: function() {
+    renderList() {
         var languages = _.filter(this.props.locale.directory, (language) => {
             return !!language.module;
         });
-        return _.map(languages, this.renderButton);
-    },
+        return _.map(languages, (language) => {
+            return this.renderButton(language);
+        });
+    }
 
     /**
      * Render a language button and a country dropdown
@@ -59,7 +50,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderButton: function(language) {
+    renderButton(language) {
         var countrySelect = this.renderCountrySelect(language);
         var buttonProps = {
             label: <span>{language.name}{countrySelect}</span>,
@@ -68,7 +59,7 @@ module.exports = React.createClass({
             id: language.code,
         };
         return <OptionButton key={language.code} {...buttonProps} />
-    },
+    }
 
     /**
      * Render a select control for country selection
@@ -77,7 +68,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderCountrySelect: function(language) {
+    renderCountrySelect(language) {
         var languageCode = this.props.locale.languageCode;
         var countryCode = this.props.locale.countryCode;
         if (!countryCode) {
@@ -98,33 +89,48 @@ module.exports = React.createClass({
                 {options}
             </select>
         );
-    },
+    }
 
     /**
      * Called when user click on a language
      *
      * @param  {Event} evt
      */
-    handleLanguageClick: function(evt) {
+    handleLanguageClick = (evt) => {
         var code = evt.currentTarget.id;
         if (code !== this.props.locale.languageCode) {
             var language = _.find(this.props.locale.directory, { code });
             var dialectCode = language.code + '-' + language.defaultCountry;
             this.props.locale.change(dialectCode);
         }
-    },
+    }
 
     /**
      * Called when user changes the country dropdown
      *
      * @param  {Event} evt
      */
-    handleCountryChange: function(evt) {
+    handleCountryChange = (evt) => {
         var code = evt.currentTarget.value;
         if (code !== this.props.locale.countryCode) {
             var languageCode = this.props.locale.languageCode;
             var localeCode = languageCode + '-' + code;
             this.props.locale.change(localeCode);
         }
-    },
-});
+    }
+}
+
+export {
+    LanguagePanel as default,
+    LanguagePanel,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+    
+    LanguagePanel.propTypes = {
+        locale: PropTypes.instanceOf(Locale).isRequired,
+    };
+}

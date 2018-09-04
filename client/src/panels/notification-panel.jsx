@@ -1,29 +1,16 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var NotificationTypes = require('objects/types/notification-types');
-var UserUtils = require('objects/utils/user-utils');
-
-var Locale = require('locale/locale');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import NotificationTypes from 'objects/types/notification-types';
+import UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var SettingsPanel = require('widgets/settings-panel');
-var OptionButton = require('widgets/option-button');
+import SettingsPanel from 'widgets/settings-panel';
+import OptionButton from 'widgets/option-button';
 
-require('./notification-panel.scss');
+import './notification-panel.scss';
 
-module.exports = React.createClass({
-    displayName: 'NotificationPanel',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        currentUser: PropTypes.object,
-        repos: PropTypes.arrayOf(PropTypes.object),
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onChange: PropTypes.func,
-    },
+class NotificationPanel extends PureComponent {
+    static displayName = 'NotificationPanel';
 
     /**
      * Change a property of the user object
@@ -31,7 +18,7 @@ module.exports = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setUserProperty: function(path, value) {
+    setUserProperty(path, value) {
         if (!this.props.currentUser) {
             return;
         }
@@ -43,14 +30,14 @@ module.exports = React.createClass({
                 user: userAfter
             });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var t = this.props.locale.translate;
         return (
             <SettingsPanel className="notification">
@@ -62,21 +49,23 @@ module.exports = React.createClass({
                 </body>
             </SettingsPanel>
         );
-    },
+    }
 
     /**
      * Render notification options
      *
      * @return {Array<ReactElement>}
      */
-    renderOptions: function() {
+    renderOptions() {
         var types = NotificationTypes;
         var userType = _.get(this.props.currentUser, 'type');
         if (userType !== 'admin') {
             types = _.without(types, NotificationTypes.admin);
         }
-        return _.map(types, this.renderOption);
-    },
+        return _.map(types, (type, index) => {
+            return this.renderOption(type, index);
+        });
+    }
 
     /**
      * Render notification option button
@@ -86,7 +75,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOption: function(type, index) {
+    renderOption(type, index) {
         var t = this.props.locale.translate;
         var optionName = _.snakeCase(type);
         var settings = _.get(this.props.currentUser, 'settings', {});
@@ -100,12 +89,12 @@ module.exports = React.createClass({
             id: optionName,
         };
         return <OptionButton key={index} {...buttonProps} />
-    },
+    }
 
     /**
      * Called when an option is clicked
      */
-    handleOptionClick: function(evt) {
+    handleOptionClick = (evt) => {
         var optionName = evt.currentTarget.id;
         var optionPaths = [
             `notification.${optionName}`,
@@ -126,5 +115,23 @@ module.exports = React.createClass({
             }
         });
         this.setUserProperty('settings', settings);
-    },
-});
+    }
+}
+
+export {
+    NotificationPanel as default,
+    NotificationPanel,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    NotificationPanel.propTypes = {
+        currentUser: PropTypes.object,
+        repos: PropTypes.arrayOf(PropTypes.object),
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        onChange: PropTypes.func,
+    };
+}

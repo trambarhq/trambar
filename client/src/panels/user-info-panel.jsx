@@ -1,28 +1,15 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-
-var Locale = require('locale/locale');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var SettingsPanel = require('widgets/settings-panel');
-var PushButton = require('widgets/push-button');
-var TextField = require('widgets/text-field');
+import SettingsPanel from 'widgets/settings-panel';
+import PushButton from 'widgets/push-button';
+import TextField from 'widgets/text-field';
 
-require('./user-info-panel.scss');
+import './user-info-panel.scss';
 
-module.exports = React.createClass({
-    displayName: 'UserInfoPanel',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        currentUser: PropTypes.object,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onChange: PropTypes.func,
-    },
+class UserInfoPanel extends PureComponent {
+    static displayName = 'UserInfoPanel';
 
     /**
      * Return a property of the user object
@@ -31,9 +18,9 @@ module.exports = React.createClass({
      *
      * @return {*}
      */
-    getUserProperty: function(path) {
+    getUserProperty(path) {
         return _.get(this.props.currentUser, path);
-    },
+    }
 
     /**
      * Change a property of the user object
@@ -41,7 +28,7 @@ module.exports = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setUserProperty: function(path, value) {
+    setUserProperty(path, value) {
         if (!this.props.currentUser) {
             return;
         }
@@ -53,14 +40,14 @@ module.exports = React.createClass({
                 user: userAfter
             });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var t = this.props.locale.translate;
         return (
             <SettingsPanel className="user-info">
@@ -75,14 +62,14 @@ module.exports = React.createClass({
                 </body>
             </SettingsPanel>
         );
-    },
+    }
 
     /**
      * Render name input
      *
      * @return {ReactElement}
      */
-    renderNameInput: function() {
+    renderNameInput() {
         var t = this.props.locale.translate;
         var p = this.props.locale.pick;
         var name = this.getUserProperty('details.name')
@@ -93,14 +80,14 @@ module.exports = React.createClass({
             onChange: this.handleNameChange,
         };
         return <TextField {...props}>{t('user-info-name')}</TextField>;
-    },
+    }
 
     /**
      * Render name input
      *
      * @return {ReactElement}
      */
-    renderEmailInput: function() {
+    renderEmailInput() {
         var t = this.props.locale.translate;
         var props = {
             id: 'email',
@@ -109,14 +96,14 @@ module.exports = React.createClass({
             onChange: this.handleEmailChange,
         };
         return <TextField {...props}>{t('user-info-email')}</TextField>;
-    },
+    }
 
     /**
      * Render name input
      *
      * @return {ReactElement}
      */
-    renderPhoneInput: function() {
+    renderPhoneInput() {
         var t = this.props.locale.translate;
         var props = {
             id: 'email',
@@ -125,14 +112,14 @@ module.exports = React.createClass({
             onChange: this.handlePhoneChange,
         };
         return <TextField {...props}>{t('user-info-phone')}</TextField>;
-    },
+    }
 
     /**
      * Render gender select box
      *
      * @return {ReactElement}
      */
-    renderGenderSelector: function() {
+    renderGenderSelector() {
         var t = this.props.locale.translate;
         var selectProps = {
             id: 'gender',
@@ -150,45 +137,62 @@ module.exports = React.createClass({
                 </select>
             </div>
         );
-    },
+    }
 
     /**
      * Called when user changes his name
      *
      * @param  {Event} evt
      */
-    handleNameChange: function(evt) {
+    handleNameChange = (evt) => {
         var text = evt.target.value;
         this.setUserProperty(`details.name`, text);
-    },
+    }
 
     /**
      * Called when user changes his email
      *
      * @param  {Event} evt
      */
-    handleEmailChange: function(evt) {
+    handleEmailChange = (evt) => {
         var text = evt.target.value;
         this.setUserProperty(`details.email`, text);
-    },
+    }
 
     /**
      * Called when user changes his email
      *
      * @param  {Event} evt
      */
-    handlePhoneChange: function(evt) {
+    handlePhoneChange = (evt) => {
         var text = evt.target.value;
         this.setUserProperty(`details.phone`, text);
-    },
+    }
 
     /**
      * Called when user changes his gender
      *
      * @param  {Event} evt
      */
-    handleGenderChange: function(evt) {
+    handleGenderChange = (evt) => {
         var text = evt.target.value;
         this.setUserProperty(`details.gender`, text || undefined);
-    },
-});
+    }
+}
+
+export {
+    UserInfoPanel as default,
+    UserInfoPanel,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UserInfoPanel.propTypes = {
+        currentUser: PropTypes.object,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        onChange: PropTypes.func,
+    }
+}

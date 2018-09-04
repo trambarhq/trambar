@@ -1,28 +1,16 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var NotificationTypes = require('objects/types/notification-types');
-var UserUtils = require('objects/utils/user-utils');
-
-var Locale = require('locale/locale');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import NotificationTypes from 'objects/types/notification-types';
+import UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var SettingsPanel = require('widgets/settings-panel');
-var OptionButton = require('widgets/option-button');
+import SettingsPanel from 'widgets/settings-panel';
+import OptionButton from 'widgets/option-button';
 
-require('./web-alert-panel.scss');
+import './web-alert-panel.scss';
 
-module.exports = React.createClass({
-    displayName: 'WebAlertPanel',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        currentUser: PropTypes.object,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onChange: PropTypes.func,
-    },
+class WebAlertPanel extends PureComponent {
+    static displayName = 'WebAlertPanel';
 
     /**
      * Change a property of the user object
@@ -30,7 +18,7 @@ module.exports = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setUserProperty: function(path, value) {
+    setUserProperty(path, value) {
         if (!this.props.currentUser) {
             return;
         }
@@ -42,14 +30,14 @@ module.exports = React.createClass({
                 user: userAfter
             });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var t = this.props.locale.translate;
         var browserIcon = getBrowserIcon();
         return (
@@ -67,21 +55,23 @@ module.exports = React.createClass({
                 </body>
             </SettingsPanel>
         );
-    },
+    }
 
     /**
      * Render notification options
      *
      * @return {Array<ReactElement>}
      */
-    renderOptions: function() {
+    renderOptions() {
         var types = NotificationTypes;
         var userType = _.get(this.props.currentUser, 'type');
         if (userType !== 'admin') {
             types = _.without(types, NotificationTypes.admin);
         }
-        return _.map(types, this.renderOption);
-    },
+        return _.map(types, (type, index) => {
+            return this.renderOption(type, index);
+        });
+    }
 
     /**
      * Render notification option button
@@ -91,7 +81,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOption: function(type, index) {
+    renderOption(type, index) {
         var t = this.props.locale.translate;
         var optionName = _.snakeCase(type);
         var settings = _.get(this.props.currentUser, 'settings', {});
@@ -107,12 +97,12 @@ module.exports = React.createClass({
             id: optionName,
         };
         return <OptionButton key={index} {...buttonProps} />
-    },
+    }
 
     /**
      * Called when an option is clicked
      */
-    handleOptionClick: function(evt) {
+    handleOptionClick = (evt) => {
         var optionName = evt.currentTarget.id;
         var optionPath = `web_alert.${optionName}`;
         var settings = _.clone(_.get(this.props.currentUser, 'settings', {}));
@@ -123,8 +113,8 @@ module.exports = React.createClass({
             _.set(settings, optionPath, true);
         }
         this.setUserProperty('settings', settings);
-    },
-});
+    }
+}
 
 var userAgentRegExps = {
     'edge': /(Edge|Internet Explorer)/,
@@ -142,4 +132,21 @@ function getBrowserIcon() {
         }
     }
     return 'globe';
+}
+
+export {
+    WebAlertPanel as default,
+    WebAlertPanel,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    WebAlertPanel.propTypes = {
+        currentUser: PropTypes.object,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        onChange: PropTypes.func,
+    };
 }

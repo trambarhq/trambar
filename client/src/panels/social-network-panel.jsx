@@ -1,28 +1,15 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-
-var Locale = require('locale/locale');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var SettingsPanel = require('widgets/settings-panel');
-var PushButton = require('widgets/push-button');
-var TextField = require('widgets/text-field');
+import SettingsPanel from 'widgets/settings-panel';
+import PushButton from 'widgets/push-button';
+import TextField from 'widgets/text-field';
 
 require('./social-network-panel.scss');
 
-module.exports = React.createClass({
-    displayName: 'UserPanel',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        currentUser: PropTypes.object,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onChange: PropTypes.func,
-    },
+class SocialNetworkPanel extends PureComponent {
+    static displayName = 'SocialNetworkPanel';
 
     /**
      * Return a property of the user object
@@ -31,9 +18,9 @@ module.exports = React.createClass({
      *
      * @return {*}
      */
-    getUserProperty: function(path) {
+    getUserProperty(path) {
         return _.get(this.props.currentUser, path);
-    },
+    }
 
     /**
      * Change a property of the user object
@@ -41,7 +28,7 @@ module.exports = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setUserProperty: function(path, value) {
+    setUserProperty(path, value) {
         if (!this.props.currentUser) {
             return;
         }
@@ -53,14 +40,14 @@ module.exports = React.createClass({
                 user: userAfter
             });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var t = this.props.locale.translate;
         return (
             <SettingsPanel className="user">
@@ -78,14 +65,14 @@ module.exports = React.createClass({
                 </body>
             </SettingsPanel>
         );
-    },
+    }
 
     /**
      * Render input for Skype username
      *
      * @return {ReactElement}
      */
-    renderSkypeNameInput: function() {
+    renderSkypeNameInput() {
         var t = this.props.locale.translate;
         var props = {
             id: 'skype',
@@ -94,14 +81,14 @@ module.exports = React.createClass({
             onChange: this.handleSkypeUsernameChange,
         };
         return <TextField {...props}>{t('social-network-skype')}</TextField>;
-    },
+    }
 
     /**
      * Render input for iChat username
      *
      * @return {ReactElement}
      */
-    renderIChatInput: function() {
+    renderIChatInput() {
         var t = this.props.locale.translate;
         var props = {
             id: 'ichat',
@@ -110,14 +97,14 @@ module.exports = React.createClass({
             onChange: this.handleIchatUsernameChange,
         };
         return <TextField {...props}>{t('social-network-ichat')}</TextField>;
-    },
+    }
 
     /**
      * Render input for Twitter username
      *
      * @return {ReactElement}
      */
-    renderTwitterInput: function() {
+    renderTwitterInput() {
         var t = this.props.locale.translate;
         var props = {
             id: 'twitter',
@@ -126,14 +113,14 @@ module.exports = React.createClass({
             onChange: this.handleTwitterUsernameChange,
         };
         return <TextField {...props}>{t('social-network-twitter')}</TextField>;
-    },
+    }
 
     /**
      * Render input for Github URL
      *
      * @return {ReactElement}
      */
-    renderGithubURLInput: function() {
+    renderGithubURLInput() {
         var t = this.props.locale.translate;
         var props = {
             id: 'github',
@@ -142,14 +129,14 @@ module.exports = React.createClass({
             onChange: this.handleGitHubURLChange,
         };
         return <TextField {...props}>{t('social-network-github')}</TextField>;
-    },
+    }
 
     /**
      * Render input for Gitlab URL
      *
      * @return {ReactElement}
      */
-    renderGitlabURLInput: function() {
+    renderGitlabURLInput() {
         var t = this.props.locale.translate;
         var props = {
             id: 'github',
@@ -158,14 +145,14 @@ module.exports = React.createClass({
             onChange: this.handleGitlabURLChange,
         };
         return <TextField {...props}>{t('social-network-gitlab')}</TextField>;
-    },
+    }
 
     /**
      * Render input for Linkedin URL
      *
      * @return {ReactElement}
      */
-    renderLinkedInURLInput: function() {
+    renderLinkedInURLInput() {
         var t = this.props.locale.translate;
         var props = {
             id: 'linkedin',
@@ -174,14 +161,14 @@ module.exports = React.createClass({
             onChange: this.handleLinkedinURLChange,
         };
         return <TextField {...props}>{t('social-network-linkedin')}</TextField>;
-    },
+    }
 
     /**
      * Render input for Stackoverflow URL
      *
      * @return {ReactElement}
      */
-    renderStackoverflowURLInput: function() {
+    renderStackoverflowURLInput() {
         var t = this.props.locale.translate;
         var props = {
             id: 'stackoverflow',
@@ -190,78 +177,78 @@ module.exports = React.createClass({
             onChange: this.handleStackoverflowURLChange,
         };
         return <TextField {...props}>{t('social-network-stackoverflow')}</TextField>;
-    },
+    }
 
     /**
      * Called when user changes Skype username
      *
      * @param  {Event} evt
      */
-    handleSkypeUsernameChange: function(evt) {
+    handleSkypeUsernameChange = (evt) => {
         var username = _.trim(evt.target.value);
         this.setUserProperty(`details.skype_username`, username);
-    },
+    }
 
     /**
      * Called when user changes iChat username
      *
      * @param  {Event} evt
      */
-    handleIchatUsernameChange: function(evt) {
+    handleIchatUsernameChange = (evt) => {
         var username = _.trim(evt.target.value);
         this.setUserProperty(`details.ichat_username`, username);
-    },
+    }
 
     /**
      * Called when user changes Twitter username
      *
      * @param  {Event} evt
      */
-    handleTwitterUsernameChange: function(evt) {
+    handleTwitterUsernameChange = (evt) => {
         var username = extractUsername(evt.target.value);
         this.setUserProperty(`details.twitter_username`, username);
-    },
+    }
 
     /**
      * Called when user changes Linkedin username
      *
      * @param  {Event} evt
      */
-    handleLinkedinURLChange: function(evt) {
+    handleLinkedinURLChange = (evt) => {
         var url = _.trim(evt.target.value);
         this.setUserProperty(`details.linkedin_url`, url);
-    },
+    }
 
     /**
      * Called when user changes Github username
      *
      * @param  {Event} evt
      */
-    handleGitHubURLChange: function(evt) {
+    handleGitHubURLChange = (evt) => {
         var url = _.trim(evt.target.value);
         this.setUserProperty(`details.github_url`, url);
-    },
+    }
 
     /**
      * Called when user changes Gitlab username
      *
      * @param  {Event} evt
      */
-    handleGitlabURLChange: function(evt) {
+    handleGitlabURLChange = (evt) => {
         var url = _.trim(evt.target.value);
         this.setUserProperty(`details.gitlab_url`, url);
-    },
+    }
 
     /**
      * Called when user changes StackOverflow username
      *
      * @param  {Event} evt
      */
-    handleStackoverflowURLChange: function(evt) {
+    handleStackoverflowURLChange = (evt) => {
         var url = _.trim(evt.target.value);
         this.setUserProperty(`details.stackoverflow_url`, url);
-    },
-});
+    }
+}
 
 function extractUsername(text, type) {
     if (/https?:/.test(text)) {
@@ -271,4 +258,21 @@ function extractUsername(text, type) {
         return parts[parts.length - 1];
     }
     return text;
+}
+
+export {
+    SocialNetworkPanel as default,
+    SocialNetworkPanel,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    SocialNetworkPanel.propTypes = {
+        currentUser: PropTypes.object,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        onChange: PropTypes.func,
+    };
 }
