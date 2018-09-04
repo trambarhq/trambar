@@ -1,46 +1,38 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var ComponentRefs = require('utils/component-refs');
+import React, { PureComponent } from 'react';
+import ComponentRefs from 'utils/component-refs';
 
 // widgets
-var PopUpMenu = require('widgets/pop-up-menu');
+import PopUpMenu from 'widgets/pop-up-menu';
 
-require('./corner-pop-up.scss');
+import './corner-pop-up.scss';
 
-module.exports = React.createClass({
-    displayName: 'CornerPopUp',
-    propType: {
-        onOpen: PropTypes.func,
-        onClose: PropTypes.func,
-    },
+class CornerPopUp extends PureComponent {
+    static displayName = 'CornerPopUp';
 
-    /**
-     * Return intial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             popUpMenu: PopUpMenu,
         });
-        return {
+        this.state = {
             open: false
         };
-    },
+    }
 
     /**
      * Close the pop-up menu
      */
-    close: function() {
+    close() {
         this.setState({ open: false });
         this.components.popUpMenu.close();
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var setters = this.components.setters;
         var handlers = {
             onOpen: this.handleOpen,
@@ -57,14 +49,14 @@ module.exports = React.createClass({
                 </menu>
             </PopUpMenu>
         );
-    },
+    }
 
     /**
      * Called when user opens the menu
      *
      * @param  {Object} evt
      */
-    handleOpen: function(evt) {
+    handleOpen = (evt) => {
         this.setState({ open: true });
         if (this.props.onOpen) {
             this.props.onOpen({
@@ -72,14 +64,14 @@ module.exports = React.createClass({
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Called when user closes the menu
      *
      * @param  {Object} evt
      */
-    handleClose: function(evt) {
+    handleClose = (evt) => {
         this.setState({ open: false });
         if (this.props.onClose) {
             this.props.onClose({
@@ -87,5 +79,19 @@ module.exports = React.createClass({
                 target: this,
             });
         }
-    },
-});
+    }
+}
+
+export {
+    CornerPopUp as default,
+    CornerPopUp,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    CornerPopUp.ropType = {
+        onOpen: PropTypes.func,
+        onClose: PropTypes.func,
+    };
+}

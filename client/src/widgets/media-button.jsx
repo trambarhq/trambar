@@ -1,9 +1,6 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-module.exports = MediaButton;
-module.exports.Direction = Direction;
-
-require('./media-button.scss');
+import './media-button.scss';
 
 function MediaButton(props) {
     if (props.hidden) {
@@ -17,13 +14,7 @@ function MediaButton(props) {
     );
 }
 
-Direction.propTypes = {
-    index: PropTypes.number,
-    count: PropTypes.number,
-    hidden: PropTypes.bool,
-    onBackwardClick: PropTypes.func,
-    onForwardClick: PropTypes.func,
-};
+MediaButton.Direction = Direction;
 
 function Direction(props) {
     if (props.hidden) {
@@ -43,15 +34,6 @@ function Direction(props) {
     );
 }
 
-Direction.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    highlighted: PropTypes.bool,
-    disabled: PropTypes.bool,
-    onChange: PropTypes.func,
-};
-
 function buttonClasses(props) {
     var classNames = [ 'media-button' ];
     if (props.className) {
@@ -69,4 +51,29 @@ function iconClasses(props) {
         classNames.push('fa', `fa-${props.icon}`);
     }
     return classNames.join(' ');
+}
+
+export {
+    MediaButton as default,
+    MediaButton,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MediaButton.propTypes = {
+        label: PropTypes.string,
+        icon: PropTypes.string,
+        hidden: PropTypes.bool,
+        highlighted: PropTypes.bool,
+        disabled: PropTypes.bool,
+        onChange: PropTypes.func,
+    };
+    Direction.propTypes = {
+        index: PropTypes.number,
+        count: PropTypes.number,
+        hidden: PropTypes.bool,
+        onBackwardClick: PropTypes.func,
+        onForwardClick: PropTypes.func,
+    };
 }

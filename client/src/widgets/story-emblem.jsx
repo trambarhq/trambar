@@ -1,10 +1,8 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var StoryTypes = require('objects/types/story-types');
+import _ from 'lodash';
+import React from 'react';
+import StoryTypes from 'objects/types/story-types';
 
-module.exports = StoryEmblem;
-
-require('./story-emblem.scss');
+import './story-emblem.scss';
 
 function StoryEmblem(props) {
     if (_.includes(props.story.tags, '#yippeekiyay')) {
@@ -37,6 +35,15 @@ function StoryEmblem(props) {
     );
 }
 
-StoryEmblem.propTypes = {
-    story: PropTypes.object.isRequired,
+export {
+    StoryEmblem as default,
+    StoryEmblem,
 };
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryEmblem.propTypes = {
+        story: PropTypes.object.isRequired,
+    };
+}

@@ -1,10 +1,6 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-var Locale = require('locale/locale');
-
-module.exports = EmptyMessage;
-
-require('./empty-message.scss');
+import './empty-message.scss';
 
 function EmptyMessage(props) {
     var t = props.locale.translate;
@@ -19,12 +15,23 @@ function EmptyMessage(props) {
     );
 }
 
-EmptyMessage.propTypes = {
-    locale: PropTypes.instanceOf(Locale).isRequired,
-    online: PropTypes.bool,
-    phrase: PropTypes.string.isRequired,
-};
-
 EmptyMessage.defaultProps = {
     online: true
 };
+
+export {
+    EmptyMessage as default,
+    EmptyMessage,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    EmptyMessage.propTypes = {
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        online: PropTypes.bool,
+        phrase: PropTypes.string.isRequired,
+    };
+}

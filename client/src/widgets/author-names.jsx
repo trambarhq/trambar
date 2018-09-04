@@ -1,16 +1,11 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var UserUtils = require('objects/utils/user-utils');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React from 'react';
+import UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var MultipleUserNames = require('widgets/multiple-user-names');
+import MultipleUserNames from 'widgets/multiple-user-names';
 
-module.exports = AuthorNames;
-
-require('./author-names.scss');
+import './author-names.scss';
 
 function AuthorNames(props) {
     var t = props.locale.translate;
@@ -48,8 +43,20 @@ function AuthorNames(props) {
     return <span className="author-names selectable">{contents}</span>;
 }
 
-AuthorNames.propTypes = {
-    authors: PropTypes.arrayOf(PropTypes.object),
-    locale: PropTypes.instanceOf(Locale).isRequired,
-    theme: PropTypes.instanceOf(Theme).isRequired,
+export {
+    AuthorNames as default,
+    AuthorNames,
 };
+
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    AuthorNames.propTypes = {
+        authors: PropTypes.arrayOf(PropTypes.object),
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+}

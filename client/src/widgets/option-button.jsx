@@ -1,8 +1,6 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-module.exports = OptionButton;
-
-require('./option-button.scss');
+import './option-button.scss';
 
 function OptionButton(props) {
     if (props.hidden) {
@@ -26,25 +24,6 @@ function OptionButton(props) {
         </a>
     )
 }
-
-OptionButton.propTypes = {
-    label: PropTypes.node,
-    id: PropTypes.string,
-    icon: PropTypes.string,
-    iconOn: PropTypes.string,
-    iconOff: PropTypes.string,
-    url: PropTypes.string,
-    target: PropTypes.string,
-    hidden: PropTypes.bool,
-    selected: PropTypes.bool,
-    disabled: PropTypes.bool,
-    onClick: PropTypes.func,
-};
-
-OptionButton.defaultProps = {
-    iconOn: 'check-circle',
-    iconOff: 'circle-o',
-};
 
 function buttonClasses(props) {
     var classNames = [ 'option-button' ];
@@ -72,4 +51,32 @@ function iconClasses(props) {
         }
     }
     return classNames.join(' ');
+}
+
+OptionButton.defaultProps = {
+    iconOn: 'check-circle',
+    iconOff: 'circle-o',
+};
+
+export {
+    OptionButton as default,
+    OptionButton,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    OptionButton.propTypes = {
+        label: PropTypes.node,
+        id: PropTypes.string,
+        icon: PropTypes.string,
+        iconOn: PropTypes.string,
+        iconOff: PropTypes.string,
+        url: PropTypes.string,
+        target: PropTypes.string,
+        hidden: PropTypes.bool,
+        selected: PropTypes.bool,
+        disabled: PropTypes.bool,
+        onClick: PropTypes.func,
+    };
 }

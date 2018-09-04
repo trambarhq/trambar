@@ -1,42 +1,19 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Moment = require('moment');
-var DateTracker = require('utils/date-tracker');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import DateTracker from 'utils/date-tracker';
 
-var Locale = require('locale/locale');
+import './calendar.scss';
 
-require('./calendar.scss');
-
-module.exports = React.createClass({
-    displayName: 'Calendar',
-    propTypes: {
-        year: PropTypes.number.isRequired,
-        month: PropTypes.number.isRequired,
-        showYear: PropTypes.bool,
-        selection: PropTypes.string,
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onDateURL: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            showYear: false
-        };
-    },
+class Calendar extends PureComponent {
+    static displayName = 'Calendar';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var localeCode = this.props.locale.localeCode;
         var localeData = Moment.localeData(localeCode);
         var year = this.props.year;
@@ -132,7 +109,7 @@ module.exports = React.createClass({
                 </tbody>
             </table>
         );
-    },
+    }
 
     /**
      * Get URL for a date
@@ -141,7 +118,7 @@ module.exports = React.createClass({
      *
      * @return {String|undefined}
      */
-    getDateURL: function(date) {
+    getDateURL(date) {
         if (this.props.onDateURL) {
             return this.props.onDateURL({
                 type: 'dateurl',
@@ -150,7 +127,7 @@ module.exports = React.createClass({
             });
         }
     }
-});
+}
 
 function date(year, month, day) {
     return `${year}-${pad(month)}-${pad(day)}`;
@@ -162,4 +139,30 @@ function pad(num) {
         s = '0' + s;
     }
     return s;
+}
+
+Calendar.defaultProps = {
+    showYear: false
+};
+
+export {
+    Calendar as default,
+    Calendar,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+    
+    Calendar.propTypes = {
+        year: PropTypes.number.isRequired,
+        month: PropTypes.number.isRequired,
+        showYear: PropTypes.bool,
+        selection: PropTypes.string,
+
+        locale: PropTypes.instanceOf(Locale).isRequired,
+
+        onDateURL: PropTypes.func,
+    }
 }

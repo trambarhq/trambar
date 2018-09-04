@@ -1,10 +1,7 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import React from 'react';
 
-module.exports = DeviceSelector;
-module.exports.choose = choose;
-
-require('./device-selector.scss');
+import './device-selector.scss';
 
 function DeviceSelector(props) {
     var t = props.locale.translate;
@@ -47,7 +44,7 @@ function DeviceSelector(props) {
     );
 }
 
-function choose(devices, direction) {
+DeviceSelector.choose = function(devices, direction) {
     return _.find(devices, (device) => {
         if (direction === 'front') {
             return /front/i.test(device.label);
@@ -55,4 +52,9 @@ function choose(devices, direction) {
             return /back/i.test(device.label);
         }
     })
-}
+};
+
+export {
+    DeviceSelector as default,
+    DeviceSelector,
+};

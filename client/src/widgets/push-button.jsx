@@ -1,9 +1,6 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-require('./push-button.scss');
-
-module.exports = PushButton;
-module.exports.File = FileButton;
+import './push-button.scss';
 
 function PushButton(props) {
     if (props.hidden) {
@@ -19,6 +16,8 @@ function PushButton(props) {
         </button>
     );
 }
+
+PushButton.File = FileButton;
 
 function FileButton(props) {
     if (props.hidden) {
@@ -44,11 +43,21 @@ function FileButton(props) {
     );
 }
 
-FileButton.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    disabled: PropTypes.bool,
-    multiple: PropTypes.bool,
-    onChange: PropTypes.func,
+export {
+    PushButton as default,
+    PushButton,
+    FileButton,
 };
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    FileButton.propTypes = {
+        label: PropTypes.string,
+        icon: PropTypes.string,
+        hidden: PropTypes.bool,
+        disabled: PropTypes.bool,
+        multiple: PropTypes.bool,
+        onChange: PropTypes.func,
+    };
+}

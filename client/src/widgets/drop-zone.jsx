@@ -1,44 +1,37 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React, { PureComponent } from 'react';
 
-require('./drop-zone.scss');
+import './drop-zone.scss';
 
-module.exports = React.createClass({
-    displayName: 'DropZone',
-    propTypes: {
-        onDrop: PropTypes.func,
-    },
+class DropZone extends PureComponent {
+    static displayName = 'DropZone';
 
-    /**
-     * Return initial state
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             active: false
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className="drop-zone" onDragEnter={this.handleDragEnter}>
                 {this.props.children}
                 {this.renderOverlay()}
             </div>
         );
-    },
+    }
 
     /**
      * Render border over zone when there's an item over it
      *
      * @return {ReactElement|null}
      */
-    renderOverlay: function() {
+    renderOverlay() {
         if (!this.state.active) {
             return null;
         }
@@ -48,41 +41,41 @@ module.exports = React.createClass({
             onDrop: this.handleDrop,
         };
         return <div className="overlay" {...handlers} />;
-    },
+    }
 
     /**
      * Called when user drag item into zone
      *
      * @param  {Event} evt
      */
-    handleDragEnter: function(evt) {
+    handleDragEnter = (evt) => {
         this.setState({ active: true });
-    },
+    }
 
     /**
      * Called when user drag item out of zone
      *
      * @param  {Event} evt
      */
-    handleDragLeave: function(evt) {
+    handleDragLeave = (evt) => {
         this.setState({ active: false });
-    },
+    }
 
     /**
      * Called when user moves the item within the zone
      *
      * @param  {Event} evt
      */
-    handleDragOver: function(evt) {
+    handleDragOver = (evt) => {
         evt.preventDefault();
-    },
+    }
 
     /**
      * Called when user releases the item
      *
      * @param  {Event} evt
      */
-    handleDrop: function(evt) {
+    handleDrop = (evt) => {
         evt.preventDefault();
         if (this.state.active) {
             if (this.props.onDrop) {
@@ -95,5 +88,18 @@ module.exports = React.createClass({
         }
         this.setState({ active: false });
         return null;
-    },
-});
+    }
+}
+
+export {
+    DropZone as default,
+    DropZone,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    DropZone.propTypes = {
+        onDrop: PropTypes.func,
+    };
+}

@@ -1,5 +1,5 @@
-var _ = require('lodash');
-var React = require('react');
+import _ from 'lodash';
+import React from 'react';
 
 module.exports = Scrollable;
 

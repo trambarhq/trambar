@@ -371,6 +371,7 @@ if (process.env.PLATFORM === 'browser') {
 export {
     BottomNavigation as default,
     BottomNavigation,
+    NewNotificationsBadge,
 };
 
 import Database from 'data/database';

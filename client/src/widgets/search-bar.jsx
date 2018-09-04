@@ -1,29 +1,16 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var ComponentRefs = require('utils/component-refs');
-var DateTracker = require('utils/date-tracker');
-var TagScanner = require('utils/tag-scanner');
-var StatisticsFinder = require('objects/finders/statistics-finder');
-var UserFinder = require('objects/finders/user-finder');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import ComponentRefs from 'utils/component-refs';
+import DateTracker from 'utils/date-tracker';
+import TagScanner from 'utils/tag-scanner';
+import StatisticsFinder from 'objects/finders/statistics-finder';
+import UserFinder from 'objects/finders/user-finder';
 
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
+import './search-bar.scss';
 
-// mixins
-var UpdateCheck = require('mixins/update-check');
-
-require('./search-bar.scss');
-
-module.exports = Relaks.createClass({
-    displayName: 'SearchBar',
-    propTypes: {
-        settings: PropTypes.object.isRequired,
-        database: PropTypes.instanceOf(Database),
-        route: PropTypes.instanceOf(Route),
-        locale: PropTypes.instanceOf(Locale),
-    },
+class SearchBar extends AsyncComponent {
+    static displayName = 'SearchBar';
 
     /**
      * Render component asynchronously
@@ -32,7 +19,7 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
+    renderAsync(meanwhile) {
         var params = this.props.route.parameters;
         var db = this.props.database.use({ schema: params.schema, by: this });
         var currentUserId;
@@ -59,25 +46,18 @@ module.exports = Relaks.createClass({
             props.dailyActivities = statistics;
             return <SearchBarSync {...props} />;
         });
-    },
-});
+    }
+}
 
-var SearchBarSync = module.exports.Sync = React.createClass({
-    displayName: 'SearchBar.Sync',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        settings: PropTypes.object.isRequired,
-        dailyActivities: PropTypes.object,
-        route: PropTypes.instanceOf(Route),
-        locale: PropTypes.instanceOf(Locale),
-    },
+class SearchBarSync extends PureComponent {
+    static displayName = 'SearchBar.Sync';
 
     /**
      * Return initial state of component
      *
      * @return {Object}
      */
-    getInitialState: function() {
+    getInitialState() {
         this.components = ComponentRefs({
             tags: HTMLDivElement,
         });
@@ -88,14 +68,14 @@ var SearchBarSync = module.exports.Sync = React.createClass({
             hashTags: extractTags(this.props.dailyActivities),
             selectedHashTags: findTags(keywords),
         };
-    },
+    }
 
     /**
      * Update keywords if necessary
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.route !== nextProps.route) {
             var route = nextProps.route;
             var keywordsBefore = this.state.keywords;
@@ -111,23 +91,23 @@ var SearchBarSync = module.exports.Sync = React.createClass({
             var hashTags = extractTags(nextProps.dailyActivities);
             this.setState({ hashTags });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className="search-bar">
                 {this.renderTextInput()}
                 {this.renderHashTags()}
             </div>
         );
-    },
+    }
 
-    renderTextInput: function() {
+    renderTextInput() {
         var t = this.props.locale.translate;
         var inputProps = {
             type: 'text',
@@ -142,21 +122,25 @@ var SearchBarSync = module.exports.Sync = React.createClass({
                 <input {...inputProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render list of hash tags
      *
      * @return {ReactElement}
      */
-    renderHashTags: function() {
+    renderHashTags() {
         var setters = this.components.setters;
         return (
             <div ref={setters.tags} className="tags">
-                {_.map(this.state.hashTags, this.renderHashTag)}
+            {
+                _.map(this.state.hashTags, (tag, index) => {
+                    return this.renderHashTag(tag, index);
+                })
+            }
             </div>
         );
-    },
+    }
 
     /**
      * Render a hash tag
@@ -166,7 +150,7 @@ var SearchBarSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderHashTag: function(tag, index) {
+    renderHashTag(tag, index) {
         var route = this.props.route;
         var params = _.assign({ search: tag.name }, this.props.settings.route);
         var url = route.find(route.component, params);
@@ -180,33 +164,33 @@ var SearchBarSync = module.exports.Sync = React.createClass({
             props.className += ' selected'
         }
         return <a key={index} {...props}>{tag.name}</a>;
-    },
+    }
 
     /**
      * Attach handler for resize
      */
-    componentDidMount: function() {
+    componentDidMount() {
         window.addEventListener('resize', this.handleWindowResize);
-    },
+    }
 
     /**
      * Adjust tags visibility based on popularity upon redraw
      */
-    componentDidUpdate: function() {
+    componentDidUpdate() {
         this.hideUnpopularTags();
-    },
+    }
 
     /**
      * Remove resize handler
      */
-    componentDidMount: function() {
+    componentDidMount() {
         window.addEventListener('resize', this.handleWindowResize);
-    },
+    }
 
     /**
      * Hide less popular tags until the remaining fit on one line
      */
-    hideUnpopularTags: function() {
+    hideUnpopularTags() {
         var container = this.components.tags;
         if (container) {
             // first, make all node visible
@@ -230,12 +214,12 @@ var SearchBarSync = module.exports.Sync = React.createClass({
                 }
             }
         }
-    },
+    }
 
     /**
      * Perform search by inserting search terms into URL
      */
-    performSearch: function() {
+    performSearch() {
         if (this.timeout) {
             clearTimeout(this.timeout);
             this.timeout = null;
@@ -244,14 +228,14 @@ var SearchBarSync = module.exports.Sync = React.createClass({
         var params = _.clone(route.parameters);
         params.search = normalize(this.state.keywords);
         route.push(route.component, params);
-    },
+    }
 
     /**
      * Called when user changes search string
      *
      * @param  {Event} evt
      */
-    handleTextChange: function(evt) {
+    handleTextChange = (evt) => {
         var text = evt.target.value;
         var tags = findTags(text);
         this.setState({
@@ -262,51 +246,51 @@ var SearchBarSync = module.exports.Sync = React.createClass({
             clearTimeout(this.timeout);
         }
         this.timeout = setTimeout(this.performSearch, 800);
-    },
+    }
 
     /**
      * Called when user press a key
      *
      * @param  {Evt} evt
      */
-    handleKeyDown: function(evt) {
+    handleKeyDown = (evt) => {
         if (evt.keyCode === 13) {
             this.performSearch();
         }
-    },
+    }
 
     /**
      * Called when input field received focus
      *
      * @param  {Event} evt
      */
-    handleFocus: function(evt) {
+    handleFocus = (evt) => {
         var target = evt.target;
         target.selectionStart = 0;
         target.selectionEnd = target.value.length;
-    },
+    }
 
     /**
      * Called when user clicks on a tag
      *
      * @param  {Event} evt
      */
-    handleHashTagClick: function(evt) {
+    handleHashTagClick = (evt) => {
         if (this.timeout) {
             clearTimeout(this.timeout);
             this.timeout = null;
         }
-    },
+    }
 
     /**
      * Called when user resizes the browser window
      *
      * @param  {Event} evt
      */
-    handleWindowResize: function(evt) {
+    handleWindowResize = (evt) => {
         this.hideUnpopularTags();
-    },
-});
+    }
+}
 
 function normalize(s) {
     s = _.replace(s, /\+/g, '');
@@ -388,4 +372,31 @@ function extractTags(dailyActivities) {
     }, []);
     // sort in case-sensitive manner, as it's done in Gitlab
     return _.sortBy(hashTags, 'name');
+}
+
+export {
+    SearchBar as default,
+    SearchBar,
+    SearchBarSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+    
+    SearchBar.propTypes = {
+        settings: PropTypes.object.isRequired,
+        database: PropTypes.instanceOf(Database),
+        route: PropTypes.instanceOf(Route),
+        locale: PropTypes.instanceOf(Locale),
+    };
+    SearchBarSync.propTypes = {
+        settings: PropTypes.object.isRequired,
+        dailyActivities: PropTypes.object,
+        route: PropTypes.instanceOf(Route),
+        locale: PropTypes.instanceOf(Locale),
+    };
 }

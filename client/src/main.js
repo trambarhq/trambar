@@ -66,7 +66,7 @@ function initialize(evt) {
     require('shims/iphone-image-reload');
 }
 
-window.addEventListener("unhandledrejection", function(evt) {
+window.addEventListener("unhandledrejection", (evt) => {
     var msg;
     if (evt.detail && evt.detail.reason) {
         var err = evt.detail.reason;
@@ -86,7 +86,7 @@ window.addEventListener("unhandledrejection", function(evt) {
     }
     evt.preventDefault();
 });
-window.addEventListener("error", function(evt) {
+window.addEventListener("error", (evt) => {
     var msg;
     if (evt.error) {
         if (process.env.NODE_ENV === 'production') {

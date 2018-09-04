@@ -287,7 +287,7 @@ class ImageEditor extends PureComponent {
      *
      * @param  {Object} evt
      */
-    handleClipRectChange(evt) {
+    handleClipRectChange = (evt) => {
         var res = _.clone(this.props.resource);
         res.clip = evt.rect;
         res.mosaic = evt.target.extractMosaic();
@@ -299,7 +299,7 @@ class ImageEditor extends PureComponent {
      *
      * @param  {Object} evt
      */
-    handleFullImageLoad(evt) {
+    handleFullImageLoad = (evt) => {
         var url = evt.target.props.url;
         this.setState({ loadedImageURL: url });
 

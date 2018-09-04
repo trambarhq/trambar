@@ -1,11 +1,11 @@
-var React = require('react');
+import React from 'react';
 
 require('./page-container.scss');
 
 module.exports = React.createClass({
     displayName: 'PageContainer',
 
-    setNode: function(node) {
+    setNode(node) {
         if (node) {
             var activeElement = document.activeElement;
             if (!activeElement || activeElement === document.body) {
@@ -14,7 +14,7 @@ module.exports = React.createClass({
         }
     },
 
-    render: function() {
+    render() {
         var className = 'page-container';
         if (this.props.className) {
             className += ' ' + this.props.className;

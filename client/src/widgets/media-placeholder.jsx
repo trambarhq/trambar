@@ -1,12 +1,7 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import React from 'react';
 
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-module.exports = MediaPlaceholder;
-
-require('./media-placeholder.scss');
+import './media-placeholder.scss';
 
 function MediaPlaceholder(props) {
     if (props.theme.mode === 'columns-1') {
@@ -39,8 +34,20 @@ function MediaPlaceholder(props) {
     );
 }
 
-MediaPlaceholder.propTypes = {
-    showHints: PropTypes.bool,
-    locale: PropTypes.instanceOf(Locale).isRequired,
-    theme: PropTypes.instanceOf(Theme).isRequired,
+export {
+    MediaPlaceholder as default,
+    MediaPlaceholder,
 };
+
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MediaPlaceholder.propTypes = {
+        showHints: PropTypes.bool,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+}

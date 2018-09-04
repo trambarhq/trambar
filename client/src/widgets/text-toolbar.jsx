@@ -1,22 +1,15 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var HeaderButton = require('widgets/header-button');
+import HeaderButton from 'widgets/header-button';
 
-require('./text-toolbar.scss');
+import './text-toolbar.scss';
 
-module.exports = React.createClass({
-    displayName: 'TextToolbar',
-    propTypes: {
-        story: PropTypes.object.isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onAction: PropTypes.func,
-    },
+class TextToolbar extends PureComponent {
+    static displayName = 'TextToolbar';
 
-    render: function() {
+    render() {
         var t = this.props.locale.translate;
         var story = this.props.story;
         var markdownProps = {
@@ -44,7 +37,7 @@ module.exports = React.createClass({
                 <HeaderButton {...surveyProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Inform parent component that certain action should occur
@@ -52,7 +45,7 @@ module.exports = React.createClass({
      * @param  {String} action
      * @param  {Object|undefined} props
      */
-    triggerActionEvent: function(action, props) {
+    triggerActionEvent(action, props) {
         if (this.props.onAction) {
             this.props.onAction(_.extend({
                 type: 'action',
@@ -60,38 +53,55 @@ module.exports = React.createClass({
                 action,
             }, props));
         }
-    },
+    }
 
     /**
      * Called when user clicks markdown button
      *
      * @param  {Event} evt
      */
-    handleMarkdownClick: function(evt) {
+    handleMarkdownClick = (evt) => {
         var story = this.props.story;
         var value = !story.details.markdown;
         this.triggerActionEvent('markdown-set', { value });
-    },
+    }
 
     /**
      * Called when user clicks task-list button
      *
      * @param  {Event} evt
      */
-    handleTaskListClick: function(evt) {
+    handleTaskListClick = (evt) => {
         var story = this.props.story;
         var value = (story.type !== 'task-list') ? 'task-list' : 'post';
         this.triggerActionEvent('story-type-set', { value });
-    },
+    }
 
     /**
      * Called when user clicks survey button
      *
      * @param  {Event} evt
      */
-    handleSurveyClick: function(evt) {
+    handleSurveyClick = (evt) => {
         var story = this.props.story;
         var value = (story.type !== 'survey') ? 'survey' : 'post';
         this.triggerActionEvent('story-type-set', { value });
-    },
-})
+    }
+}
+
+export {
+    TextToolbar as default,
+    TextToolbar,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    TextToolbar.propTypes = {
+        story: PropTypes.object.isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        onAction: PropTypes.func,
+    };
+}

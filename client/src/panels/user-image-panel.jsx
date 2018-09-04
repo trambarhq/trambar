@@ -14,7 +14,7 @@ import MediaImporter from 'editors/media-importer';
 import PhotoCaptureDialogBox from 'dialogs/photo-capture-dialog-box';
 import Icon from 'octicons/build/svg/person.svg';
 
-require('./user-image-panel.scss');
+import './user-image-panel.scss';
 
 class UserImagePanel extends PureComponent {
     static displayName = 'UserImagePanel';
@@ -24,7 +24,7 @@ class UserImagePanel extends PureComponent {
 
         this.components = ComponentRefs({
             importer: MediaImporter
-        })
+        });
         this.state = {
             action: null,
             image: null,

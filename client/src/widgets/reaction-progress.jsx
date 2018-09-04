@@ -1,14 +1,10 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var ReactionUtils = require('objects/utils/reaction-utils');
-
-var Locale = require('locale/locale');
+import React from 'react';
+import ReactionUtils from 'objects/utils/reaction-utils';
 
 // widgets
-var Time = require('widgets/time');
+import Time from 'widgets/time';
 
-module.exports = ReactionProgress;
-
-require('./reaction-progress.scss');
+import './reaction-progress.scss';
 
 function ReactionProgress(props) {
     var t = props.locale.translate;
@@ -27,8 +23,19 @@ function ReactionProgress(props) {
     return <span className="reaction-progress">{contents}</span>;
 }
 
-ReactionProgress.propTypes = {
-    status: PropTypes.object,
-    reaction: PropTypes.object.isRequired,
-    locale: PropTypes.instanceOf(Locale).isRequired,
+export {
+    ReactionProgress as default,
+    ReactionProgress,
 };
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ReactionProgress.propTypes = {
+        status: PropTypes.object,
+        reaction: PropTypes.object.isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+    };
+}

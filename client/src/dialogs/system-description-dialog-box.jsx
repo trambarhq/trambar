@@ -75,7 +75,7 @@ class SystemDescriptionDialogBox extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleCloseClick(evt) {
+    handleCloseClick = (evt) => {
         if (this.props.onClose) {
             this.props.onClose({ type: 'cancel', target: this });
         }

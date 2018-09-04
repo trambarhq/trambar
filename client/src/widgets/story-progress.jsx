@@ -1,14 +1,10 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var StoryUtils = require('objects/utils/story-utils');
-
-var Locale = require('locale/locale');
+import React from 'react';
+import StoryUtils from 'objects/utils/story-utils';
 
 // widgets
-var Time = require('widgets/time');
+import Time from 'widgets/time';
 
-module.exports = StoryProgress;
-
-require('./story-progress.scss');
+import './story-progress.scss';
 
 function StoryProgress(props) {
     var t = props.locale.translate;
@@ -36,8 +32,19 @@ function StoryProgress(props) {
     return <span className="story-progress">{contents}</span>;
 }
 
-StoryProgress.propTypes = {
-    status: PropTypes.object,
-    story: PropTypes.object.isRequired,
-    locale: PropTypes.instanceOf(Locale).isRequired,
+export {
+    StoryProgress as default,
+    StoryProgress,
 };
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryProgress.propTypes = {
+        status: PropTypes.object,
+        story: PropTypes.object.isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+    };
+}

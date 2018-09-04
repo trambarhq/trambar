@@ -1,44 +1,32 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var DeviceManager = require('media/device-manager');
-
-var Locale = require('locale/locale');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import DeviceManager from 'media/device-manager';
 
 // widgets
-var HeaderButton = require('widgets/header-button');
-var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
-var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
-var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
+import HeaderButton from 'widgets/header-button';
+import PhotoCaptureDialogBox from 'dialogs/photo-capture-dialog-box';
+import VideoCaptureDialogBox from 'dialogs/video-capture-dialog-box';
+import AudioCaptureDialogBox from 'dialogs/audio-capture-dialog-box';
 
-require('./reaction-media-toolbar.scss');
+import './reaction-media-toolbar.scss';
 
-module.exports = React.createClass({
-    displayName: 'ReactionMediaToolbar',
-    propTypes: {
-        reaction: PropTypes.object.isRequired,
-        capturing: PropTypes.oneOf([ 'image', 'video', 'audio' ]),
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onAction: PropTypes.func,
-    },
+class ReactionMediaToolbar extends PureComponent {
+    static displayName = 'ReactionMediaToolbar';
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             hasCamera: DeviceManager.hasDevice('videoinput'),
             hasMicrophone: DeviceManager.hasDevice('audioinput'),
         };
-    },
+    }
 
     /**
      * Count the type of resources attached to reaction
      *
      * @return {Object}
      */
-    getResourceCounts: function() {
+    getResourceCounts() {
         var counts = {
             photo: 0,
             video: 0,
@@ -58,14 +46,14 @@ module.exports = React.createClass({
             }
         });
         return counts;
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var t = this.props.locale.translate;
         var counts = this.getResourceCounts();
         var canCaptureStaticImage = this.state.hasCamera && PhotoCaptureDialogBox.isAvailable();
@@ -118,21 +106,21 @@ module.exports = React.createClass({
                 <HeaderButton {...markdownProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Add event listener on mount
      */
-    componentDidMount: function() {
+    componentDidMount() {
         DeviceManager.addEventListener('change', this.handleDeviceChange);
-    },
+    }
 
     /**
      * Remove handlers on unmount
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         DeviceManager.removeEventListener('change', this.handleDeviceChange);
-    },
+    }
 
     /**
      * Inform parent component that certain action should occur
@@ -140,7 +128,7 @@ module.exports = React.createClass({
      * @param  {String} action
      * @param  {Object|undefined} props
      */
-    triggerActionEvent: function(action, props) {
+    triggerActionEvent(action, props) {
         if (this.props.onAction) {
             this.props.onAction(_.extend({
                 type: 'action',
@@ -148,67 +136,85 @@ module.exports = React.createClass({
                 action,
             }, props));
         }
-    },
+    }
 
     /**
      * Called when user click on photo button
      *
      * @param  {Event} evt
      */
-    handlePhotoClick: function(evt) {
+    handlePhotoClick = (evt) => {
         this.triggerActionEvent('photo-capture');
-    },
+    }
 
     /**
      * Called when user click on video button
      *
      * @param  {Event} evt
      */
-    handleVideoClick: function(evt) {
+    handleVideoClick = (evt) => {
         this.triggerActionEvent('video-capture');
-    },
+    }
 
     /**
      * Called when user click on audio button
      *
      * @param  {Event} evt
      */
-    handleAudioClick: function(evt) {
+    handleAudioClick = (evt) => {
         this.triggerActionEvent('audio-capture');
-    },
+    }
 
     /**
      * Called after user has selected a file
      *
      * @param  {Event} evt
      */
-    handleFileSelect: function(evt) {
+    handleFileSelect = (evt) => {
         var files = evt.target.files;
         if (!_.isEmpty(files)) {
             this.triggerActionEvent('file-import', { files });
         }
-    },
+    }
 
     /**
      * Called when user clicks markdown button
      *
      * @param  {Event} evt
      */
-    handleMarkdownClick: function(evt) {
+    handleMarkdownClick = (evt) => {
         var reaction = this.props.reaction;
         var value = !reaction.details.markdown;
         this.triggerActionEvent('markdown-set', { value });
-    },
+    }
 
     /**
      * Called when the list of media devices changes
      *
      * @param  {Object} evt
      */
-    handleDeviceChange: function(evt) {
+    handleDeviceChange = (evt) => {
         this.setState({
             hasCamera: DeviceManager.hasDevice('videoinput'),
             hasMicrophone: DeviceManager.hasDevice('audioinput'),
         });
-    },
-})
+    }
+}
+
+export {
+    ReactionMediaToolbar as default,
+    ReactionMediaToolbar,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+    
+    ReactionMediaToolbar.propTypes = {
+        reaction: PropTypes.object.isRequired,
+        capturing: PropTypes.oneOf([ 'image', 'video', 'audio' ]),
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        onAction: PropTypes.func,
+    };
+}

@@ -180,7 +180,7 @@ class MembershipRequestDialogBox extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleJoinClick(evt) {
+    handleJoinClick = (evt) => {
         this.setState({ userJustJoined: true });
         if (this.props.onConfirm) {
             this.props.onConfirm({ type: 'confirm', target: this });
@@ -192,7 +192,7 @@ class MembershipRequestDialogBox extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleWithdrawClick(evt) {
+    handleWithdrawClick = (evt) => {
         if (this.props.onRevoke) {
             this.props.onRevoke({ type: 'revoke', target: this });
         }
@@ -203,7 +203,7 @@ class MembershipRequestDialogBox extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleCloseClick(evt) {
+    handleCloseClick = (evt) => {
         if (this.props.onClose) {
             this.props.onClose({ type: 'cancel', target: this });
         }
@@ -214,7 +214,7 @@ class MembershipRequestDialogBox extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleProceedClick(evt) {
+    handleProceedClick = (evt) => {
         if (this.props.onProceed) {
             this.props.onProceed({ type: 'proceed', target: this });
         }

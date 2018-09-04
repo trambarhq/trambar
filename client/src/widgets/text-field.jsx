@@ -1,49 +1,28 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var ComponentRefs = require('utils/component-refs');
-
-var Locale = require('locale/locale');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import ComponentRefs from 'utils/component-refs';
 
 // widgets
-var AutosizeTextArea = require('widgets/autosize-text-area');
+import AutosizeTextArea from 'widgets/autosize-text-area';
 
-require('./text-field.scss');
+import './text-field.scss';
 
-module.exports = React.createClass({
-    displayName: 'TextField',
-    propTypes: {
-        locale: PropTypes.instanceOf(Locale).isRequired,
-    },
+class TextField extends PureComponent {
+    static displayName = 'TextField';
 
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            type: 'text',
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             input: HTMLInputElement
         });
-        return {};
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var classNames = [ 'text-field'];
         var Input = 'input';
         var inputProps = _.omit(this.props, 'children', 'locale');
@@ -64,12 +43,31 @@ module.exports = React.createClass({
                 <Input ref={this.components.setters.input} {...inputProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Place focus on the text field
      */
-    focus: function() {
+    focus() {
         this.components.input.focus();
-    },
-});
+    }
+}
+
+TextField.defaultProps = {
+    type: 'text',
+};
+
+export {
+    TextField as default,
+    TextField,
+};
+
+import Locale from 'locale/locale';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    TextField.propTypes = {
+        locale: PropTypes.instanceOf(Locale).isRequired,
+    };
+}

@@ -1,59 +1,25 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var Link = require('widgets/link');
-var CollapsibleContainer = require('widgets/collapsible-container');
-var CalendarBar = require('widgets/calendar-bar');
-var RoleFilterBar = require('widgets/role-filter-bar');
-var SearchBar = require('widgets/search-bar');
+import Link from 'widgets/link';
+import CollapsibleContainer from 'widgets/collapsible-container';
+import CalendarBar from 'widgets/calendar-bar';
+import RoleFilterBar from 'widgets/role-filter-bar';
+import SearchBar from 'widgets/search-bar';
 
-require('./top-navigation.scss');
+import './top-navigation.scss';
 
-module.exports = React.createClass({
-    displayName: 'TopNavigation',
-    propTypes: {
-        settings: PropTypes.object.isRequired,
-        online: PropTypes.bool,
-        connected: PropTypes.bool,
-        searching: PropTypes.bool,
+class TopNavigation extends PureComponent {
+    static displayName = 'TopNavigation';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            online: true,
-            connected: true,
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        var hidden = !_.get(this.props.settings, 'navigation.top', true);
-        return {
+    constructor(props) {
+        super(props);
+        var hidden = !_.get(props.settings, 'navigation.top', true);
+        this.state = {
             height: (hidden) ? 0 : 'auto',
         };
-    },
+    }
 
     /**
      * Return true if top nav is supposed to be hidden
@@ -62,12 +28,12 @@ module.exports = React.createClass({
      *
      * @return {Boolean}
      */
-    isHidden: function(settings) {
+    isHidden(settings) {
         if (!settings) {
             settings = this.props.settings;
         }
         return !_.get(settings, 'navigation.top', true);
-    },
+    }
 
     /**
      * Return control required by route
@@ -76,7 +42,7 @@ module.exports = React.createClass({
      *
      * @return {String|null}
      */
-    getSelectedControl: function(route) {
+    getSelectedControl(route) {
         if (!route) {
             route = this.props.route;
         }
@@ -89,7 +55,7 @@ module.exports = React.createClass({
             return 'filter';
         }
         return null;
-    },
+    }
 
     /**
      * Return URL for activating/deactivating control
@@ -98,7 +64,7 @@ module.exports = React.createClass({
      *
      * @return {String|null}
      */
-    getControlURL: function(control) {
+    getControlURL(control) {
         var selected = this.getSelectedControl();
         var settings = _.get(this.props.settings, control);
         if (!settings) {
@@ -120,14 +86,14 @@ module.exports = React.createClass({
             }
         }
         return this.props.route.find(this.props.route.component, params);
-    },
+    }
 
     /**
      * Change this.state.height when this.props.hidden changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         var hiddenBefore = this.isHidden();
         var hiddenAfter = this.isHidden(nextProps.settings);
         if (hiddenBefore !== hiddenAfter) {
@@ -157,14 +123,14 @@ module.exports = React.createClass({
                 }, 1000);
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         var style = { height: this.state.height };
         return (
             <header className="top-navigation" style={style}>
@@ -174,14 +140,14 @@ module.exports = React.createClass({
                 </div>
             </header>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtonBar: function() {
+    renderButtonBar() {
         var selected = this.getSelectedControl();
         var calendarProps = {
             icon: 'calendar',
@@ -219,42 +185,42 @@ module.exports = React.createClass({
                 <ConnectionIndicator {...connectionProps}/>
             </div>
         );
-    },
+    }
 
     /**
      * Render collapsible UI controls
      *
      * @return {ReactElement}
      */
-    renderCollapsibleControl: function() {
+    renderCollapsibleControl() {
         var selected = this.getSelectedControl();
         return (
             <CollapsibleContainer open={!!selected}>
                 {this.renderControl()}
             </CollapsibleContainer>
         );
-    },
+    }
 
     /**
      * Render one of the controls
      *
      * @return {ReactElement}
      */
-    renderControl: function() {
+    renderControl() {
         var selected = this.getSelectedControl();
         switch (selected) {
             case 'calendar': return this.renderCalendarBar();
             case 'filter': return this.renderRoleFilterBar();
             case 'search': return this.renderSearchBar();
         }
-    },
+    }
 
     /**
      * Render a list of calendars covering the project period
      *
      * @return {ReactElement}
      */
-    renderCalendarBar: function() {
+    renderCalendarBar() {
         var props = {
             settings: this.props.settings.calendar,
             database: this.props.database,
@@ -262,14 +228,14 @@ module.exports = React.createClass({
             locale: this.props.locale,
         };
         return <CalendarBar {...props} />;
-    },
+    }
 
     /**
      * Render a list of roles
      *
      * @return {ReactElement}
      */
-    renderRoleFilterBar: function() {
+    renderRoleFilterBar() {
         var props = {
             settings: this.props.settings.filter,
             database: this.props.database,
@@ -278,14 +244,14 @@ module.exports = React.createClass({
             theme: this.props.theme,
         };
         return <RoleFilterBar {...props} />;
-    },
+    }
 
     /**
      * Render search bar
      *
      * @return {ReactElement}
      */
-    renderSearchBar: function() {
+    renderSearchBar() {
         var props = {
             settings: this.props.settings.search,
             database: this.props.database,
@@ -293,16 +259,16 @@ module.exports = React.createClass({
             locale: this.props.locale,
         };
         return <SearchBar {...props} />;
-    },
+    }
 
     /**
      * Called when user clicks one of the icons
      *
      * @param  {Event} evt
      */
-    handleButtonClick: function(evt) {
-    },
-});
+    handleButtonClick = (evt) => {
+    }
+}
 
 function Button(props) {
     var className = 'button';
@@ -358,4 +324,37 @@ function ConnectionIndicator(props) {
     } else {
         return null;
     }
+}
+
+TopNavigation.defaultProps = {
+    online: true,
+    connected: true,
+};
+
+export {
+    TopNavigation as default,
+    TopNavigation,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Locale from 'locale/locale';
+import Theme from 'theme/theme';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    TopNavigation.propTypes = {
+        settings: PropTypes.object.isRequired,
+        online: PropTypes.bool,
+        connected: PropTypes.bool,
+        searching: PropTypes.bool,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        locale: PropTypes.instanceOf(Locale).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
 }
