@@ -1,9 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 
-module.exports = Scrollable;
-
-require('./scrollable.scss');
+import './scrollable.scss';
 
 function Scrollable(props) {
     var className = 'scrollable';
@@ -14,3 +12,8 @@ function Scrollable(props) {
     props.className = className;
     return <div {...props}>{props.children}</div>;
 }
+
+export {
+    Scrollable as default,
+    Scrollable,
+};

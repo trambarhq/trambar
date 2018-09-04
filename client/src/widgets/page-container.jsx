@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { PureComponent } from 'react';
 
-require('./page-container.scss');
+import './page-container.scss';
 
-module.exports = React.createClass({
-    displayName: 'PageContainer',
+class PageContainer extends PureComponent {
+    static displayName = 'PageContainer';
 
     setNode(node) {
         if (node) {
@@ -12,7 +12,7 @@ module.exports = React.createClass({
                 node.focus();
             }
         }
-    },
+    }
 
     render() {
         var className = 'page-container';
@@ -26,5 +26,10 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
-});
+    }
+}
+
+export {
+    PageContainer as default,
+    PageContainer,
+};

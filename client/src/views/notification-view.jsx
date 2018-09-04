@@ -11,6 +11,53 @@ import './notification-view.scss';
 class NotificationView extends PureComponent {
     static displayName = 'NotificationView';
 
+    static getNotificationURL(notification, route) {
+        var params = _.clone(route.parameters);
+        switch (notification.type) {
+            case 'like':
+            case 'comment':
+            case 'issue':
+            case 'vote':
+            case 'task-completion':
+            case 'coauthor':
+            case 'note':
+            case 'assignment':
+            case 'push':
+            case 'merge':
+            case 'survey':
+            case 'issue':
+            case 'mention':
+                var components = [
+                    require('pages/news-page'),
+                    require('lists/story-list'),
+                    require('lists/reaction-list'),
+                ];
+                params.story = notification.story_id;
+                params.reaction = notification.reaction_id || undefined;
+                params.highlighting = true;
+                return route.find(components, params);
+            case 'bookmark':
+                var components = [
+                    require('pages/bookmarks-page'),
+                    require('lists/story-list'),
+                ];
+                params.story = notification.story_id;
+                params.highlighting = true;
+                return route.find(components, params);
+            case 'join-request':
+                var projectId = _.get(notification, 'details.project_id');
+                return `/admin/projects/${projectId}/members/`;
+        }
+    }
+
+    static getNotificationTarget(notification) {
+        switch (notification.type) {
+            case 'join-request':
+                return 'admin';
+        }
+        return '';
+    }
+
     /**
      * Render the component
      *
@@ -92,7 +139,7 @@ class NotificationView extends PureComponent {
      * @return {String}
      */
     getNotificationURL() {
-        return getNotificationURL(this.props.notification, this.props.route);
+        return NotificationView.getNotificationURL(this.props.notification, this.props.route);
     }
 
     /**
@@ -101,7 +148,7 @@ class NotificationView extends PureComponent {
      * @return {String|undefined}
      */
     getNotificationTarget() {
-        return getNotificationTarget(this.props.notification);
+        return NotificationView.getNotificationTarget(this.props.notification);
     }
 
     /**
@@ -189,57 +236,6 @@ class NotificationView extends PureComponent {
             });
         }
     }
-}
-
-// these functions are needed for handling web and push alerts
-module.exports.getNotificationURL = getNotificationURL;
-module.exports.getNotificationTarget = getNotificationTarget;
-
-function getNotificationURL(notification, route) {
-    var params = _.clone(route.parameters);
-    switch (notification.type) {
-        case 'like':
-        case 'comment':
-        case 'issue':
-        case 'vote':
-        case 'task-completion':
-        case 'coauthor':
-        case 'note':
-        case 'assignment':
-        case 'push':
-        case 'merge':
-        case 'survey':
-        case 'issue':
-        case 'mention':
-            var components = [
-                require('pages/news-page'),
-                require('lists/story-list'),
-                require('lists/reaction-list'),
-            ];
-            params.story = notification.story_id;
-            params.reaction = notification.reaction_id || undefined;
-            params.highlighting = true;
-            return route.find(components, params);
-        case 'bookmark':
-            var components = [
-                require('pages/bookmarks-page'),
-                require('lists/story-list'),
-            ];
-            params.story = notification.story_id;
-            params.highlighting = true;
-            return route.find(components, params);
-        case 'join-request':
-            var projectId = _.get(notification, 'details.project_id');
-            return `/admin/projects/${projectId}/members/`;
-    }
-}
-
-function getNotificationTarget(notification) {
-    switch (notification.type) {
-        case 'join-request':
-            return 'admin';
-    }
-    return '';
 }
 
 export {
