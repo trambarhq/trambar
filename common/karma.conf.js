@@ -10,7 +10,8 @@ module.exports = function(config) {
         autoWatch: true,
         singleRun: false,
         browsers: [ 'Chrome' ],
-        frameworks: [ 'chai', 'mocha' ],
+        concurrency: 1,
+        frameworks: [ 'chai', 'mocha', 'server-side' ],
         files: [
             'tests.bundle.js',
         ],
@@ -26,6 +27,7 @@ module.exports = function(config) {
             'karma-mocha',
             'karma-sourcemap-loader',
             'karma-webpack',
+            'karma-server-side',
         ],
         reporters: [ 'progress' ],
         webpack: {
