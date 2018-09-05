@@ -1,12 +1,15 @@
-require('moment/locale/zh-cn');
-require('moment/locale/zh-hk');
-require('moment/locale/zh-tw');
-require('moment').defineLocale('zh-sg', { parentLocale: 'zh-cn' });
-require('moment').defineLocale('zh-mo', { parentLocale: 'zh-hk' });
+import 'moment/locale/zh-cn';
+import 'moment/locale/zh-hk';
+import 'moment/locale/zh-tw';
+import { cardinalT, cardinalS } from 'locale/grammars/chinese';
+
+import Moment from 'moment';
+Moment.defineLocale('zh-sg', { parentLocale: 'zh-cn' });
+Moment.defineLocale('zh-mo', { parentLocale: 'zh-hk' });
 
 // remove white-spaces from relative time
 ['zh-cn', 'zh-hk', 'zh-tw'].forEach((locale) => {
-    var localeData = require('moment').localeData('zh-cn');
+    var localeData = Moment.localeData('zh-cn');
     var relativeTime = localeData._relativeTime;
     for (var key in relativeTime) {
         var value = relativeTime[key];
@@ -14,19 +17,14 @@ require('moment').defineLocale('zh-mo', { parentLocale: 'zh-hk' });
     }
 });
 
-module.exports = function(localeCode) {
-    var cantonese = false;
-    var traditional = false;
-    if (/\-(mo|hk)$/.test(localeCode)) {
-        cantonese = true;
-        traditional = true;
-    } else if (/\-(tw)$/.test(localeCode)) {
-        traditional = true;
-    }
-    if (traditional) {
-        return traditionalPhrases;
-    } else {
-        return simplifiedPhrases;
+function chooseVariant(countryCode) {
+    switch (countryCode) {
+        case 'mo':
+        case 'hk':
+        case 'tw':
+            return traditionalPhrases;
+        default:
+            return simplifiedPhrases;
     }
 };
 
@@ -1184,33 +1182,6 @@ var simplifiedPhrases = {
     'welcome': '欢迎!',
 };
 
-var chineseNumbers = [ '〇', '一', '二', '三', '四', '五', '六', '七', '八', '九' ];
-
-function cardinalT(num) {
-    return cardinal(num, true);
-}
-
-function cardinalS(num) {
-    return cardinal(num, false);
-}
-
-function cardinal(num, traditional) {
-    if (num === 2) {
-        return (traditional) ? '兩' : '两';
-    } else if (num < 10) {
-        return chineseNumbers[num];
-    } else if (num < 100) {
-        var text = '十';
-        var tens = Math.floor(num / 10);
-        var ones = Math.floor(num % 10);
-        if (tens > 1) {
-            text = chineseNumbers[tens] + text;
-        }
-        if (ones) {
-            text = text + chineseNumbers[ones];
-        }
-        return text;
-    } else {
-        return String(num);
-    }
-}
+export {
+    phrases: chooseVariant,
+};

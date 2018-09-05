@@ -1,61 +1,56 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks'); Relaks.createClass = require('relaks/create-class');
-var ComponentRefs = require('utils/component-refs');
-var HTTPError = require('errors/http-error');
-var CorsRewriter = require('routing/cors-rewriter');
-var SystemFinder = require('objects/finders/system-finder');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import React from 'react';
+import ComponentRefs from 'utils/component-refs';
+import HTTPError from 'errors/http-error';
+import CorsRewriter from 'routing/cors-rewriter';
+import SystemFinder from 'objects/finders/system-finder';
+
 
 // non-visual components
-var RemoteDataSource = require('data/remote-data-source');
-var Database = require('data/database');
-var RouteManager = require('routing/route-manager');
-var Route = require('routing/route');
-var PayloadManager = require('transport/payload-manager');
-var Payloads = require('transport/payloads');
-var ConnectivityMonitor = require('transport/connectivity-monitor');
-var LocaleManager = require('locale/locale-manager');
-var Locale = require('locale/locale');
-var ThemeManager = require('theme/theme-manager');
-var Theme = require('theme/theme');
-var SubscriptionManager = require('data/subscription-manager');
-var SessionManager = require('data/session-manager');
-var LinkManager = require('routing/link-manager');
-var CodePush = (process.env.PLATFORM === 'cordova') ? require('transport/code-push') : null;
+import RemoteDataSource from 'data/remote-data-source';
+import RouteManager from 'routing/route-manager';
+import PayloadManager from 'transport/payload-manager';
+import LocaleManager from 'locale/locale-manager';
+import ThemeManager from 'theme/theme-manager';
+import ConnectivityMonitor from 'transport/connectivity-monitor';
+import SubscriptionManager from 'data/subscription-manager';
+import SessionManager from 'data/session-manager';
+import LinkManager from 'routing/link-manager';
+import CodePush = from 'transport/code-push';
+
+// proxy objects
+import Database from 'data/database';
+import Route from 'routing/route';
+import Payloads from 'transport/payloads';
+import Theme from 'theme/theme';
+import Locale from 'locale/locale';
 
 // pages
-var StartPage = require('pages/start-page');
-var NewsPage = require('pages/news-page');
-var PeoplePage = require('pages/people-page');
-var NotificationsPage = require('pages/notifications-page');
-var BookmarksPage = require('pages/bookmarks-page');
-var SettingsPage = require('pages/settings-page');
-var ErrorPage = require('pages/error-page');
+import StartPage from 'pages/start-page';
+import NewsPage from 'pages/news-page';
+import PeoplePage from 'pages/people-page';
+import NotificationsPage from 'pages/notifications-page';
+import BookmarksPage from 'pages/bookmarks-page';
+import SettingsPage from 'pages/settings-page';
+import ErrorPage from 'pages/error-page';
 
 // widgets
-var TopNavigation = require('widgets/top-navigation');
-var BottomNavigation = require('widgets/bottom-navigation');
-var UploadProgress = require('widgets/upload-progress');
-var NotificationView = require('views/notification-view');
+import TopNavigation from 'widgets/top-navigation';
+import BottomNavigation from 'widgets/bottom-navigation';
+import UploadProgress from 'widgets/upload-progress';
+import NotificationView from 'views/notification-view';
 
 // cache
-var IndexedDBCache = require('data/indexed-db-cache');
-var LocalStorageCache = require('data/local-storage-cache');
-var LocalCache;
-if (IndexedDBCache.isAvailable()) {
-    LocalCache = IndexedDBCache;
-} else if (LocalStorageCache.isAvailable()) {
-    LocalCache = LocalStorageCache;
-}
+import IndexedDBCache from 'data/indexed-db-cache';
+import LocalStorageCache from 'data/local-storage-cache';
 
 // notifier
-var WebsocketNotifier = (process.env.PLATFORM === 'browser') ? require('transport/websocket-notifier') : null;
-var PushNotifier = (process.env.PLATFORM === 'cordova') ? require('transport/push-notifier') : null;
-var Notifier = WebsocketNotifier || PushNotifier;
+import WebsocketNotifier from 'transport/websocket-notifier';
+import PushNotifier from 'transport/push-notifier';
 
-var Keys = require('keys');
+import Keys from 'keys';
 
 var pageClasses = [
     StartPage,
@@ -148,27 +143,10 @@ module.exports = React.createClass({
     /**
      * Render the application
      *
-     * @return {ReactElement}
-     */
-    render: function() {
-        return (
-            <div onClick={this.handleClick}>
-                {this.renderUserInterface()}
-                {this.renderConfiguration()}
-            </div>
-        );
-    },
-
-    /**
-     * Render user interface
-     *
      * @return {ReactElement|null}
      */
-    renderUserInterface: function() {
-        if (!this.isReady()) {
-            return null;
-        }
-        var settings = this.state.route.component.configureUI(this.state.route);
+    render: function() {
+        var settings = this.;
         var topNavProps = {
             settings: settings,
             database: this.state.database,

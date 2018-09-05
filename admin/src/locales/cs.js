@@ -1,4 +1,11 @@
-require('moment/locale/cs');
+import 'moment/locale/cs';
+import {
+    plural,
+    cardinal,
+    gender,
+    genderize,
+    pastTenseEnding,
+} from 'locale/grammars/czech';
 
 module.exports = function(localeCode) {
     return {
@@ -855,14 +862,3 @@ module.exports = function(localeCode) {
         'welcome': 'Vítejte!',
     };
 };
-
-function singular(n) {
-    return n === 1;
-}
-
-function plural(n) {
-    if (n === 2 || n === 3 || n === 4) {
-        return true;
-    }
-    return false;
-}
