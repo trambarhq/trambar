@@ -17,11 +17,9 @@ module.exports = function(config) {
         client: {
             args: parseTestPattern(process.argv),
         },
-
         preprocessors: {
             'tests.bundle.js': [ 'webpack', 'sourcemap' ]
         },
-
         plugins: [
             'karma-chai',
             'karma-chrome-launcher',
@@ -29,9 +27,7 @@ module.exports = function(config) {
             'karma-sourcemap-loader',
             'karma-webpack',
         ],
-
         reporters: [ 'progress' ],
-
         webpack: {
             devtool: 'inline-source-map',
             module: {
@@ -41,8 +37,7 @@ module.exports = function(config) {
                         loader: 'babel-loader',
                         exclude: Path.resolve('./node_modules'),
                         query: {
-                            presets: [ 'es2015', 'react' ],
-                            plugins: [ 'syntax-dynamic-import' ],
+                            presets: [ 'env', 'stage-0', 'react' ],
                         },
                     },
                     {
@@ -52,15 +47,9 @@ module.exports = function(config) {
                     {
                         test: /\.scss$/,
                         use: [
-                            {
-                                loader: 'style-loader'
-                            },
-                            {
-                                loader: 'css-loader'
-                            },
-                            {
-                                loader: 'sass-loader',
-                            }
+                            'style-loader',
+                            'css-loader',
+                            'sass-loader',
                         ]
                     },
                 ]
@@ -87,7 +76,6 @@ module.exports = function(config) {
                 'react-test-renderer/shallow': true,
             }
         },
-
         webpackMiddleware: {
             noInfo: true,
         },
