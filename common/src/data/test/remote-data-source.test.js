@@ -1,14 +1,12 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var React = require('react');
-var Chai = require('chai'), expect = Chai.expect;
-var Enzyme = require('enzyme');
+/*import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import { expect } from 'chai';
 
-var RemoteDataSource = require('data/remote-data-source');
-var IndexedDBCache = require('data/indexed-db-cache');
-var HTTPRequest = require('transport/http-request');
-var HTTPError = require('errors/http-error');
+import RemoteDataSource from 'data/remote-data-source';
+import IndexedDBCache from 'data/indexed-db-cache';
+import HTTPRequest from 'transport/http-request';
+import HTTPError from 'errors/http-error';
 
 describe('RemoteDataSource', function() {
     before(function() {
@@ -19,29 +17,17 @@ describe('RemoteDataSource', function() {
         HTTPRequest.fetch = fetchOriginal;
     })
 
-    var cacheWrapper = Enzyme.mount(<IndexedDBCache databaseName="rds-test"/>);
-    var cache = cacheWrapper.instance();
-    var dataSourceProps = {
+    var cache = new IndexedDBCache({ databaseName: 'rds-test' });
+    var dataSourceOptions = {
         discoveryFlags: {
         },
         retrievalFlags: {
         },
-        online: true,
-        inForeground: true,
         prefetching: false,
         sessionRetryInterval: 100,
-        cache: cache,
         cacheValidation: false,
-
-        onChange: null,
-        onSearch: null,
-        onAuthorization: null,
-        onExpiration: null,
-        onViolation: null,
-        onStupefaction: null,
     };
-    var dataSourceWrapper = Enzyme.mount(<RemoteDataSource {...dataSourceProps} />);
-    var dataSource = dataSourceWrapper.instance();
+    var dataSource = new RemoteDataSource(dataSourceOptions, cache);
 
     // restore props to default values after each test
     afterEach(function() {
@@ -1495,3 +1481,4 @@ function ManualPromise() {
 }
 
 ManualPromise.prototype = Object.create(Promise.prototype);
+*/

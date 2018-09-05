@@ -1,52 +1,43 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var LocalSearch = require('data/local-search');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import LocalSearch from 'data/local-search';
 
-// mixins
-var UpdateCheck = require('mixins/update-check');
-
-// widgets
-var Diagnostics = require('widgets/diagnostics');
-var DiagnosticsSection = require('widgets/diagnostics-section');
-
-var openDatabase = window.openDatabase;
+let openDatabase = window.openDatabase;
 if (window.sqlitePlugin) {
     openDatabase = window.sqlitePlugin.openDatabase;
 }
 
-module.exports = React.createClass({
-    displayName: 'SQLiteCache',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        databaseName: PropTypes.string.isRequired,
-    },
+const defaultOptions = {
+    databaseName: 'database',
+};
 
-    statics: {
-        /**
-         * Return true if SQLite is available
-         *
-         * @return {Boolean}
-         */
-        isAvailable: function() {
-            return !!openDatabase;
-        },
-    },
-
+class SQLiteCache {
     /**
-     * Return initial state of component
+     * Return true if SQLite is available
      *
-     * @return {Object}
+     * @return {Boolean}
      */
-    getInitialState: function() {
+    static isAvailable() {
+        return !!openDatabase;
+    }
+
+    constructor(options) {
+        this.options = _.defaults({}, options, defaultOptions);
         this.tables = {};
-        return {
-            recordCounts: {},
-            writeCount: 0,
-            readCount: 0,
-            deleteCount: 0,
-        };
-    },
+        this.recordCounts = {};
+        this.writeCount = 0;
+        this.readCount = 0;
+        this.deleteCount = 0;
+    }
+
+    initialize() {
+        this.updateRecordCount('remote');
+        this.updateRecordCount('local');
+    }
+
+    shutdown() {
+        this.tables = {};
+    }
 
     /**
      * Look for objects in cache
@@ -57,16 +48,16 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Object>>}
      */
-    find: function(query) {
-        var address = query.address || '';
-        var schema = query.schema;
-        var table = query.table;
-        var criteria = query.criteria;
+    find(query) {
+        let { address, schema, table, criteria } = query;
+        if (address == undefined) {
+            address = '';
+        }
         return this.fetchTable(address, schema, table).then((objects) => {
-            var keyName = this.getObjectKeyName(schema);
-            var results = [];
+            let keyName = this.getObjectKeyName(schema);
+            let results = [];
             if (_.isEqual(_.keys(criteria), [ keyName ])) {
-                var keys = criteria[keyName];
+                let keys = criteria[keyName];
                 if (keys instanceof Array) {
                     keys = _.sortBy(_.slice(keys));
                 } else {
@@ -74,10 +65,10 @@ module.exports = React.createClass({
                 }
                 // look up by sorted key
                 _.each(keys, (key) => {
-                    var keyObj = {};
+                    let keyObj = {};
                     keyObj[keyName] = key;
-                    var index = _.sortedIndexBy(objects, keyObj, keyName);
-                    var object = objects[index];
+                    let index = _.sortedIndexBy(objects, keyObj, keyName);
+                    let object = objects[index];
                     if (object && object[keyName] === key) {
                         results.push(object);
                     }
@@ -93,12 +84,10 @@ module.exports = React.createClass({
             return results;
         }).then((objects) => {
             LocalSearch.limit(table, objects, query.criteria);
-            var readCount = this.state.readCount;
-            readCount += objects.length;
-            this.setState({ readCount });
+            this.readCount += objects.length;
             return objects;
         });
-    },
+    }
 
     /**
      * Save objects originating from specified location into cache
@@ -108,13 +97,14 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Object>>}
      */
-    save: function(location, objects) {
-        var address = location.address || '';
-        var schema = location.schema;
-        var table = location.table;
-        var statements = [], paramSets = [];
+    save(location, objects) {
+        let { address, schema, table } = location;
+        if (address == undefined) {
+            address = '';
+        }
+        let statements = [], paramSets = [];
         _.each(objects, (object) => {
-            var json = JSON.stringify(object);
+            let json = JSON.stringify(object);
             if (schema === 'local') {
                 statements.push(`
                     INSERT OR REPLACE INTO local_data
@@ -123,7 +113,7 @@ module.exports = React.createClass({
                 `);
                 paramSets.push([ table, object.key, json ]);
             } else {
-                var rtime = (new Date(object.rtime)).getTime();
+                let rtime = (new Date(object.rtime)).getTime();
                 statements.push(`
                     INSERT OR REPLACE INTO remote_data
                     (address, schema_name, table_name, id, json, rtime)
@@ -133,14 +123,12 @@ module.exports = React.createClass({
             }
         });
         return this.execute(statements, paramSets).then((affectedCount) => {
-            var writeCount = this.state.writeCount;
-            writeCount += affectedCount;
-            this.setState({ writeCount });
+            this.writeCount += affectedCount;
             this.updateTableEntry(address, schema, table, objects, false);
             this.updateRecordCount(schema, 500);
             return objects;
         });
-    },
+    }
 
     /**
      * Remove objects from cache that originated from specified location
@@ -150,11 +138,12 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Object>>}
      */
-    remove: function(location, objects) {
-        var address = location.address || '';
-        var schema = location.schema;
-        var table = location.table;
-        var statements = [], paramSets = [];
+    remove(location, objects) {
+        let { address, schema, table } = location;
+        if (address == undefined) {
+            address = '';
+        }
+        let statements = [], paramSets = [];
         _.each(objects, (object) => {
             if (schema === 'local') {
                 statements.push(`
@@ -174,15 +163,12 @@ module.exports = React.createClass({
             }
         });
         return this.execute(statements, paramSets).then((affectedCount) => {
-            var deleteCount = this.state.deleteCount;
-            deleteCount += affectedCount;
-            this.setState({ deleteCount });
+            this.deleteCount += affectedCount;
             this.updateTableEntry(address, schema, table, objects, true);
-
             this.updateRecordCount(schema, 500);
             return objects;
         });
-    },
+    }
 
     /**
      * Remove objects by one of three criteria:
@@ -197,8 +183,8 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    clean: function(criteria) {
-        var sql, params;
+    clean(criteria) {
+        let sql, params;
         if (criteria.address !== undefined) {
             if (!criteria.schema || criteria.schema === '*') {
                 sql = `
@@ -223,7 +209,7 @@ module.exports = React.createClass({
             `;
             params = [ criteria.count ];
         } else if (criteria.before !== undefined) {
-            var rtime = (new Date(criteria.before)).getTime();
+            let rtime = (new Date(criteria.before)).getTime();
             sql = `
                 DELETE FROM remote_data
                 WHERE rtime < ?
@@ -237,14 +223,12 @@ module.exports = React.createClass({
         }
         return this.execute(sql, params).then((affectedCount) => {
             if (affectedCount > 0) {
-                var deleteCount = this.state.deleteCount;
-                deleteCount += affectedCount;
-                this.setState({ deleteCount });
+                this.deleteCount += affectedCount;
                 this.updateRecordCount('remote_data');
                 this.tables['remote'] = {};
             }
         });
-    },
+    }
 
     /**
      * Run a query and return the resulting rows
@@ -254,15 +238,15 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Object>>}
      */
-    query: function(sql, params) {
+    query(sql, params) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
                 // annoyingly, SQLError isn't a subclass of Error
-                var rejectT = (err) => { reject(new Error(err.message)) };
+                let rejectT = (err) => { reject(new Error(err.message)) };
                 db.transaction((tx) => {
                     tx.executeSql(sql, params, (tx, rs) => {
-                        var rows = [];
-                        for (var i = 0; i < rs.rows.length; i++) {
+                        let rows = [];
+                        for (let i = 0; i < rs.rows.length; i++) {
                             rows.push(rs.rows.item(i));
                         }
                         resolve(rows);
@@ -270,7 +254,7 @@ module.exports = React.createClass({
                 }, rejectT);
             });
         });
-    },
+    }
 
     /**
      * Execute a SQL statement
@@ -280,18 +264,18 @@ module.exports = React.createClass({
      *
      * @return {Promise}
      */
-    execute: function(sql, params) {
+    execute(sql, params) {
         return this.open().then((db) => {
             return new Promise((resolve, reject) => {
-                var affected = 0;
-                var rejectT = (err) => { reject(new Error(err.message)) };
-                var resolveT = () => { resolve(affected) };
-                var callback = (tx, rs) => {
+                let affected = 0;
+                let rejectT = (err) => { reject(new Error(err.message)) };
+                let resolveT = () => { resolve(affected) };
+                let callback = (tx, rs) => {
                     affected += rs.rowsAffected ;
                 };
                 db.transaction((tx) => {
                     if (sql instanceof Array) {
-                        for (var i = 0; i < sql.length; i++) {
+                        for (let i = 0; i < sql.length; i++) {
                             tx.executeSql(sql[i], params[i], callback);
                         }
                     } else {
@@ -300,7 +284,7 @@ module.exports = React.createClass({
                 }, rejectT, resolveT);
             });
         });
-    },
+    }
 
     /**
      * Fetch cached rows of a table
@@ -311,8 +295,8 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Object>>}
      */
-    fetchTable: function(address, schema, table) {
-        var tbl = this.getTableEntry(address, schema, table);
+    fetchTable(address, schema, table) {
+        let tbl = this.getTableEntry(address, schema, table);
         if (!tbl.promise) {
             tbl.promise = this.loadTable(address, schema, table).then((objects) => {
                 tbl.objects = objects;
@@ -320,7 +304,7 @@ module.exports = React.createClass({
             });
         }
         return tbl.promise;
-    },
+    }
 
     /**
      * Load all rows for a table into memory
@@ -331,8 +315,8 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    loadTable: function(address, schema, table) {
-        var sql, params;
+    loadTable(address, schema, table) {
+        let sql, params;
         if (schema === 'local') {
             sql = `
                 SELECT json FROM local_data
@@ -351,23 +335,24 @@ module.exports = React.createClass({
             params = [ address, schema, table ];
         }
         return this.query(sql, params).then((rows) => {
-            var objects = _.map(rows, (row) => {
+            let objects = _.map(rows, (row) => {
                 return decodeJSON(row.json);
             });
             return objects;
         });
-    },
+    }
 
     /**
      * Open database, creating schema if it doesn't exist already
      *
      * @return {Promise<Database>}
      */
-    open: function() {
+    open() {
         if (!this.databasePromise) {
             this.databasePromise = Promise.try(() => {
-                var db = openDatabase(this.props.databaseName, '', '', 50 * 1048576);
-                var sql = [
+                let { databaseName } = this.options;
+                let db = openDatabase(databaseName, '', '', 50 * 1048576);
+                let sql = [
                     `
                         CREATE TABLE IF NOT EXISTS remote_data (
                             address text,
@@ -422,7 +407,7 @@ module.exports = React.createClass({
                     sql.unshift(`DROP TABLE IF EXISTS local_data`);
                 }
                 return new Promise((resolve, reject) => {
-                    var rejectS = (err) => { reject(new Error(err.message)) };
+                    let rejectS = (err) => { reject(new Error(err.message)) };
                     db.transaction((tx) => {
                         _.each(sql, (sql) => {
                             tx.executeSql(sql);
@@ -432,7 +417,7 @@ module.exports = React.createClass({
             });
         }
         return this.databasePromise;
-    },
+    }
 
     /**
      * Clear objects cached in memory
@@ -440,10 +425,15 @@ module.exports = React.createClass({
      * @param  {String|undefined} address
      * @param  {String|undefined} schema
      */
-    reset: function(address, schema) {
-        var path = (schema === 'local') ? [ 'local' ] : _.filter([ 'remote', address, schema ]);
+    reset(address, schema) {
+        let path;
+        if (schema === 'local') {
+            path = [ 'local' ];
+        } else {
+            path = _.filter([ 'remote', address, schema ]);
+        }
         _.unset(this.tables, path);
-    },
+    }
 
     /**
      * Return name of object key
@@ -452,13 +442,13 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    getObjectKeyName: function(schema) {
+    getObjectKeyName(schema) {
         if (schema === 'local') {
             return 'key';
         } else {
             return 'id';
         }
-    },
+    }
 
     /**
      * Return in-memory object for storing table rows
@@ -469,9 +459,14 @@ module.exports = React.createClass({
      *
      * @return {Object}
      */
-    getTableEntry: function(address, schema, table) {
-        var path = (schema === 'local') ? [ 'local', table ] : [ 'remote', address, schema, table ];
-        var tbl = _.get(this.tables, path);
+    getTableEntry(address, schema, table) {
+        let path;
+        if (schema === 'local') {
+            path = [ 'local', table ];
+        } else {
+            path = [ 'remote', address, schema, table ];
+        }
+        let tbl = _.get(this.tables, path);
         if (!tbl) {
             tbl = {
                 promise: null,
@@ -480,7 +475,7 @@ module.exports = React.createClass({
             _.set(this.tables, path, tbl);
         }
         return tbl;
-    },
+    }
 
     /**
      * Update list of objects that have been loaded
@@ -491,13 +486,13 @@ module.exports = React.createClass({
      * @param  {Array<Objects>} objects
      * @param  {Boolean} remove
      */
-    updateTableEntry: function(address, schema, table, objects, remove) {
-        var tbl = this.getTableEntry(address, schema, table);
+    updateTableEntry(address, schema, table, objects, remove) {
+        let tbl = this.getTableEntry(address, schema, table);
         if (tbl.objects) {
-            var keyName = this.getObjectKeyName(schema);
+            let keyName = this.getObjectKeyName(schema);
             _.each(objects, (object) => {
-                var index = _.sortedIndexBy(tbl.objects, object, keyName);
-                var target = tbl.objects[index];
+                let index = _.sortedIndexBy(tbl.objects, object, keyName);
+                let target = tbl.objects[index];
                 if (target && target[keyName] === object[keyName]) {
                     if (!remove) {
                         tbl.objects[index] = object;
@@ -511,7 +506,7 @@ module.exports = React.createClass({
                 }
             });
         }
-    },
+    }
 
     /**
      * Count the number of rows in the table (on a time delay)
@@ -519,59 +514,24 @@ module.exports = React.createClass({
      * @param  {String} schema
      * @param  {Number} delay
      */
-    updateRecordCount: function(schema, delay) {
-        var cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';
-        var timeoutPath = `updateRecordCountTimeouts.${cacheTableName}`;
-        var timeout = _.get(this, timeoutPath);
+    updateRecordCount(schema, delay) {
+        let cacheTableName = (schema === 'local') ? 'local_data' : 'remote_data';
+        let timeoutPath = `updateRecordCountTimeouts.${cacheTableName}`;
+        let timeout = _.get(this, timeoutPath);
         if (timeout) {
             clearTimeout(timeout);
         }
         timeout = setTimeout(() => {
-            var sql = `SELECT COUNT(*) as count FROM ${cacheTableName}`;
+            let sql = `SELECT COUNT(*) as count FROM ${cacheTableName}`;
             this.query(sql).then((rows) => {
-                var recordCounts = _.clone(this.state.recordCounts);
-                recordCounts[cacheTableName] = rows[0].count;
-                this.setState({ recordCounts });
+                this.recordCounts[cacheTableName] = rows[0].count;
             }).catch((err) => {
             });
             _.set(this, timeoutPath, 0);
         }, delay || 0);
         _.set(this, timeoutPath, timeout);
-    },
-
-    /**
-     * Count the number of rows in the object stores on mount
-     */
-    componentDidMount: function() {
-        this.updateRecordCount('remote');
-        this.updateRecordCount('local');
-    },
-
-    /**
-     * Render diagnostics
-     *
-     * @return {ReactElement}
-     */
-    render: function() {
-        var db = this.state.database;
-        var localRowCount = _.get(this.state.recordCounts, 'local_data');
-        var remoteRowCount = _.get(this.state.recordCounts, 'remote_data');
-        return (
-            <Diagnostics type="sqlite-cache">
-                <DiagnosticsSection label="Database details">
-                    <div>Name: {this.props.databaseName}</div>
-                </DiagnosticsSection>
-                <DiagnosticsSection label="Usage">
-                    <div>Local objects: {localRowCount}</div>
-                    <div>Remote objects: {remoteRowCount}</div>
-                    <div>Objects read: {this.state.readCount}</div>
-                    <div>Objects written: {this.state.writeCount}</div>
-                    <div>Objects deleted: {this.state.deleteCount}</div>
-                </DiagnosticsSection>
-            </Diagnostics>
-        );
-    },
-});
+    }
+}
 
 function decodeJSON(s) {
     try {
@@ -580,3 +540,8 @@ function decodeJSON(s) {
         return null;
     }
 }
+
+export {
+    SQLiteCache as default,
+    SQLiteCache,
+};

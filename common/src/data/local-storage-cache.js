@@ -1,59 +1,58 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import Promise from 'bluebird';
+import LocalSearch from 'data/local-search';
 
-var LocalSearch = require('data/local-search');
+const defaultOptions = {
+    databaseName: 'database'
+};
 
-module.exports = React.createClass({
-    displayName: 'LocalStorageCache',
-    propTypes: {
-        databaseName: PropTypes.string.isRequired,
-    },
+class LocalStorageCache {
+    static isAvailable() {
+        return !!window.localStorage;
+    }
 
-    statics: {
-        /**
-         * Return true if SQLite is available
-         *
-         * @return {Boolean}
-         */
-        isAvailable: function() {
-            return !!window.localStorage;
-        },
-    },
-
-    getInitialState: function() {
-        var json = localStorage.getItem(this.props.databaseName);
-        this.localData = decodeJSON(json) || {};
+    constructor(options) {
+        this.options = _.defaults({}, options, defaultOptions);
+        this.localData = {};
         this.remoteData = {};
-        return {};
-    },
+    }
 
-    getRows: function(server, schema, table) {
-        var store = (schema === 'local') ? this.localData : this.remoteData;
-        var path = _.filter([
-            server,
-            schema,
-            table,
-        ]);
-        var rows = _.get(store, path);
+    initialize() {
+        let { databaseName } = this.options;
+        let json = localStorage.getItem(databaseName);
+        let localData = decodeJSON(json);
+        if (localData instanceof Object) {
+            this.localData = localData;
+        }
+    }
+
+    shutdown() {
+    }
+
+    getRows(server, schema, table) {
+        let store = (schema === 'local') ? this.localData : this.remoteData;
+        let path = [ server, schema, table ];
+        let rows = _.get(store, path);
         if (!rows) {
             rows = [];
             _.set(store, path, rows);
         }
         return rows;
-    },
+    }
 
-    getKeyName: function(schema) {
+    getKeyName(schema) {
         return (schema === 'local') ? 'key' : 'id';
-    },
+    }
 
-    saveRows: function(server, schema, table) {
+    saveRows(server, schema, table) {
         if (schema !== 'local') {
+            // don't save remote data
             return;
         }
-        var json = JSON.stringify(this.localData);
-        localStorage.setItem(this.props.databaseName, json);
-    },
+        let { databaseName } = this.options;
+        let json = JSON.stringify(this.localData);
+        localStorage.setItem(databaseName, json);
+    }
 
     /**
      * Look for objects in cache
@@ -64,17 +63,17 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Object>>}
      */
-    find: function(query) {
-        var server = query.server || '';
-        var schema = query.schema;
-        var table = query.table;
-        var criteria = query.criteria;
-        var rows = this.getRows(server, schema, table);
-        var keyName = this.getKeyName(schema);
-        var objects;
+    find(query) {
+        let { server ,schema, table, criteria } = query;
+        if (server == undefined) {
+            server = 'localhost';
+        }
+        let rows = this.getRows(server, schema, table);
+        let keyName = this.getKeyName(schema);
+        let objects;
         if (criteria && criteria.id !== undefined && _.size(criteria) === 1) {
             // look up by id
-            var ids = criteria.id;
+            let ids = criteria.id;
             if (!(ids instanceof Array)) {
                 ids = [ ids ];
             }
@@ -88,7 +87,7 @@ module.exports = React.createClass({
         }
         LocalSearch.limit(table, objects, criteria);
         return Promise.resolve(objects);
-    },
+    }
 
     /**
      * Save objects originating from specified location into cache
@@ -98,18 +97,19 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Object>>}
      */
-    save: function(location, objects) {
-        var server = location.server || '';
-        var schema = location.schema;
-        var table = location.table;
-        var rows = this.getRows(server, schema, table);
-        var keyName = this.getKeyName(schema);
+    save(location, objects) {
+        let { server, schema, table } = location;
+        if (server == undefined) {
+            server = 'localhost';
+        }
+        let rows = this.getRows(server, schema, table);
+        let keyName = this.getKeyName(schema);
         _.each(objects, (object) => {
             replaceByKey(rows, _.cloneDeep(object), keyName);
         });
         this.saveRows(server, schema, table);
         return Promise.resolve(objects);
-    },
+    }
 
     /**
      * Remove objects from cache that originated from specified location
@@ -119,18 +119,19 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Object>>}
      */
-    remove: function(location, objects) {
-        var server = location.server || '';
-        var schema = location.schema;
-        var table = location.table;
-        var rows = this.getRows(server, schema, table);
-        var keyName = this.getKeyName(schema);
+    remove(location, objects) {
+        let { server, schema, table } = location;
+        if (server == undefined) {
+            server = 'localhost';
+        }
+        let rows = this.getRows(server, schema, table);
+        let keyName = this.getKeyName(schema);
         _.each(objects, (object) => {
             removeByKey(rows, object, keyName);
         });
         this.saveRows(server, schema, table);
         return Promise.resolve(objects);
-    },
+    }
 
     /**
      * Remove objects by one of three criteria:
@@ -145,13 +146,13 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    clean: function(criteria) {
-        var sql, params;
-        var store = this.remoteData;
-        var count = 0;
+    clean(criteria) {
+        let sql, params;
+        let store = this.remoteData;
+        let count = 0;
         if (criteria.server !== undefined) {
-            var server = criteria.server;
-            var schemas = _.get(store, server);
+            let server = criteria.server;
+            let schemas = _.get(store, server);
             _.each(schemas, (schema) => {
                 _.each(schema, (table) => {
                     count += table.length;
@@ -160,11 +161,11 @@ module.exports = React.createClass({
             _.set(store, server, undefined);
         } else if (criteria.count !== undefined) {
             // push all objects into a list
-            var candidates = [];
+            let candidates = [];
             _.each(store, (schemas) => {
                 _.each(schemas, (schema) => {
                     _.each(schema, (table) => {
-                        for (var i = 0; i < table.length; i++) {
+                        for (let i = 0; i < table.length; i++) {
                             candidates.push(table[i]);
                         }
                     });
@@ -186,8 +187,8 @@ module.exports = React.createClass({
             _.each(store, (schemas) => {
                 _.each(schemas, (schema) => {
                     _.each(schema, (table) => {
-                        for (var i = table.length - 1; i >= 0; i--) {
-                            var object = table[i];
+                        for (let i = table.length - 1; i >= 0; i--) {
+                            let object = table[i];
                             if (candidates.indexOf(object) !== -1) {
                                 table.splice(i, 1);
                                 count++;
@@ -201,8 +202,8 @@ module.exports = React.createClass({
             _.each(store, (schemas) => {
                 _.each(schemas, (schema) => {
                     _.each(schema, (table) => {
-                        for (var i = table.length - 1; i >= 0; i--) {
-                            var object = table[i];
+                        for (let i = table.length - 1; i >= 0; i--) {
+                            let object = table[i];
                             if (object.rtime < criteria.before) {
                                 table.splice(i, 1);
                                 count++;
@@ -213,7 +214,7 @@ module.exports = React.createClass({
             });
         }
         return Promise.resolve(count);
-    },
+    }
 
     /**
      * Clear objects cached in memory
@@ -221,22 +222,13 @@ module.exports = React.createClass({
      * @param  {String|undefined} address
      * @param  {String|undefined} schema
      */
-    reset: function(address, schema) {
+    reset(address, schema) {
         if (schema !== 'local') {
-            var path = _.filter([ address, schema ]);
+            let path = _.filter([ address, schema ]);
             _.unset(this.remoteData, path);
         }
-    },
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render: function() {
-        return <div />;
-    },
-});
+    }
+}
 
 function decodeJSON(s) {
     try {
@@ -247,18 +239,18 @@ function decodeJSON(s) {
 }
 
 function findByKey(rows, key, keyName) {
-    var criteria = {};
+    let criteria = {};
     criteria[keyName] = key;
-    var index = _.sortedIndexBy(rows, criteria, keyName);
-    var target = rows[index];
+    let index = _.sortedIndexBy(rows, criteria, keyName);
+    let target = rows[index];
     if (target && target[keyName] === key) {
         return target;
     }
 }
 
 function replaceByKey(rows, object, keyName) {
-    var index = _.sortedIndexBy(rows, object, keyName);
-    var target = rows[index];
+    let index = _.sortedIndexBy(rows, object, keyName);
+    let target = rows[index];
     if (target && target[keyName] === object[keyName]) {
         rows[index] = object;
     } else {
@@ -267,9 +259,14 @@ function replaceByKey(rows, object, keyName) {
 }
 
 function removeByKey(rows, object, keyName) {
-    var index = _.sortedIndexBy(rows, object, keyName);
-    var target = rows[index];
+    let index = _.sortedIndexBy(rows, object, keyName);
+    let target = rows[index];
     if (target && target[keyName] === object[keyName]) {
         rows.splice(index, 1);
     }
 }
+
+export {
+    LocalStorageCache as default,
+    LocalStorageCache,
+};
