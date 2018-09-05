@@ -201,4 +201,5 @@ class LocaleManagerEvent extends GenericEvent {
 export {
     LocaleManager as default,
     LocaleManager,
+    LocaleManagerEvent,
 };

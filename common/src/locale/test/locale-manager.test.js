@@ -70,6 +70,21 @@ describe('LocaleManager', function() {
                 expect(manager.translate('$num beers', 124)).to.equal('124 piw');
             });
         })
+        it('should correct detect that common Polish first names are feminine', function() {
+            return manager.change('pl-pl').then(() => {
+                let names = [ 'Ewa', 'Maria', 'Agnieszka' ];
+                _.each(names, (name) => {
+                    let phrase = manager.translate('$name drank too much and died', name);
+                    expect(phrase).to.equal(`${name} wypiła za dużo i umarła`);
+                });
+            });
+        })
+        it('should realize that Kuba is a dude', function() {
+            return manager.change('pl-pl').then(() => {
+                let phrase = manager.translate('$name drank too much and died', 'Kuba');
+                expect(phrase).to.equal(`Kuba wypił za dużo i umarł`);
+            });
+        })
         it('should produce the test phrase in Russian', function() {
             return manager.change('ru-ua').then(() => {
                 expect(manager.translate('hello')).to.equal('привет');
@@ -80,6 +95,39 @@ describe('LocaleManager', function() {
                 expect(manager.translate('$num beers', 1)).to.equal('1 пиво');
                 expect(manager.translate('$num beers', 4)).to.equal('4 пива');
                 expect(manager.translate('$num beers', 25)).to.equal('25 пив');
+            });
+        })
+        it('should correct detect that common Russian first names are feminine', function() {
+            return manager.change('ru-ru').then(() => {
+                let names = [ 'Анна', 'Ольга', 'Светлана' ];
+                _.each(names, (name) => {
+                    let phrase = manager.translate('$name drank too much and died', name);
+                    expect(phrase).to.equal(`${name} выпила слишком много и умерла`);
+                });
+            });
+        })
+        it('should correct detect that transliterated Russian names as feminine', function() {
+            return manager.change('ru-ru').then(() => {
+                let names = [ 'Anna', 'Olga', 'Svetlana' ];
+                _.each(names, (name) => {
+                    let phrase = manager.translate('$name drank too much and died', name);
+                    expect(phrase).to.equal(`${name} выпила слишком много и умерла`);
+                });
+            });
+        })
+        it('should assume that Sasha is a dude', function() {
+            return manager.change('ru-ru').then(() => {
+                let phrase1 = manager.translate('$name drank too much and died', 'Sasha');
+                let phrase2 = manager.translate('$name drank too much and died', 'Саша');
+                expect(phrase1).to.equal(`Sasha выпил слишком много и умер`);
+                expect(phrase2).to.equal(`Саша выпил слишком много и умер`);
+            });
+        })
+        it('should use patronymic to determine that a name is feminine', function() {
+            return manager.change('ru-ka').then(() => {
+                let name = 'Ani Ivanovna Sparsiashvili';
+                let phrase = manager.translate('$name drank too much and died', name);
+                expect(phrase).to.equal(`${name} выпила слишком много и умерла`);
             });
         })
     });

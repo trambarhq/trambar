@@ -1,3 +1,10 @@
+import {
+    cardinal,
+    gender,
+    genderize,
+    pastTenseEnding,
+} from 'locale/grammars/russian';
+
 let phrases = {
     'hello': 'привет',
     '$num beers': function(num) {
@@ -9,6 +16,10 @@ let phrases = {
             return `${num} пив`;
         }
     },
+    '$name drank too much and died': (name) => {
+        let e = pastTenseEnding(name);
+        return `${name} выпи${e} слишком много и умер${e.length > 1 ? e : ''}`;
+    }
 };
 
 function returnPhrases(countryCode) {
@@ -17,4 +28,5 @@ function returnPhrases(countryCode) {
 
 export {
     returnPhrases as phrases,
+    genderize,
 };
