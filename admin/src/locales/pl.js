@@ -1,6 +1,5 @@
 import 'moment/locale/pl';
 import {
-    plural,
     cardinal,
     gender,
     genderize,
@@ -142,25 +141,11 @@ let phrases = {
     'project-list-add': 'Dodaj nowy projekt',
     'project-list-cancel': 'Anuluj',
     'project-list-confirm-archive-$count': (count) => {
-        let projects;
-        if (singular(count)) {
-            projects = `wybrany projekt`;
-        } else if (plural(count)) {
-            projects = `te ${count} wybrane projekty`;
-        } else {
-            projects = `tych ${count} wybranych projektów`;
-        }
+        let projects = cardinal(count, 'wybrany projekt', [ 'te', 'wybrane projekty' ], [ 'tych', 'wybranych projektów' ], true);
         return `Czy na pewno chcesz zarchiwizować ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        let projects;
-        if (singular(count)) {
-            projects = `wybrany projekt`;
-        } else if (plural(count)) {
-            projects = `te ${count} wybrane projekty`;
-        } else {
-            projects = `tych ${count} wybranych projektów`;
-        }
+        let projects = cardinal(count, 'wybrany projekt', [ 'te', 'wybrane projekty' ], [ 'tych', 'wybranych projektów' ], true);
         return `Czy na pewno chcesz przywrócić ${projects}?`;
     },
     'project-list-deleted': 'Usunięty',
@@ -211,14 +196,7 @@ let phrases = {
 
     'repo-list-cancel': 'Anuluj',
     'repo-list-confirm-remove-$count': (count) => {
-        let repos;
-        if (singular(count)) {
-            repos = `wybrane repozytorium`;
-        } else if (plural(count)) {
-            repos = `te ${count} wybrane repozytoria`;
-        } else {
-            repos = `tych ${count} wybranych repozytoriów`;
-        }
+        let repos = cardinal(count, 'wybrane repozytorium', [ 'te', 'wybrane repozytoria' ], [ 'tych', 'wybranych repozytoriów' ], true);
         return `Czy na pewno chcesz odłączyć ${repos} od projektu?`;
     },
     'repo-list-edit': 'Zmodyfikuj listę repozytoriów',
@@ -256,25 +234,11 @@ let phrases = {
     'role-list-add': 'Dodaj nową rolę',
     'role-list-cancel': 'Anuluj',
     'role-list-confirm-disable-$count': (count) => {
-        let roles;
-        if (singular(count)) {
-            roles = `wybraną rolę`;
-        } else if (plural(count)) {
-            roles = `te ${count} wybrane role`;
-        } else {
-            roles = `tych ${count} wybranych ról`;
-        }
+        let roles = cardinal(count, 'wybraną rolę', [ 'te', 'wybrane role' ], [ 'tych', 'wybranych ról' ], true);
         return `Czy na pewno chcesz dezaktywować ${roles}?`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        let roles;
-        if (singular(count)) {
-            roles = `wybraną rolę`;
-        } else if (plural(count)) {
-            roles = `te ${count} wybrane role`;
-        } else {
-            roles = `tych ${count} wybranych ról`;
-        }
+        let roles = cardinal(count, 'wybraną rolę', [ 'te', 'wybrane role' ], [ 'tych', 'wybranych ról' ], true);
         return `Czy na pewno chcesz reaktywować ${roles}?`;
     },
     'role-list-edit': 'Zmodyfikuj listę ról',
@@ -321,25 +285,11 @@ let phrases = {
     'server-list-api-access-true': 'Uzyskany',
     'server-list-cancel': 'Anuluj',
     'server-list-confirm-disable-$count': (count) => {
-        let servers;
-        if (singular(count)) {
-            servers = `wybrany serwer`;
-        } else if (plural(count)) {
-            servers = `te ${count} wybrane serwery`;
-        } else {
-            servers = `tych ${count} wybranych serwerów`;
-        }
+        let servers = cardinal(count, 'wybrany serwer', [ 'te', 'wybrane serwery' ], [ 'tych', 'wybranych serwerów' ], true);
         return `Czy na pewno chcesz wyłączyć ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        let servers;
-        if (singular(count)) {
-            servers = `wybrany serwer`;
-        } else if (plural(count)) {
-            servers = `te ${count} wybrane serwery`;
-        } else {
-            servers = `tych ${count} wybranych serwerów`;
-        }
+        let servers = cardinal(count, 'wybrany serwer', [ 'te', 'wybrane serwery' ], [ 'tych', 'wybranych serwerów' ], true);
         return `Czy na pewno chcesz reaktywować ${servers}?`
     },
     'server-list-edit': 'Zmodyfikuj listę serwerów',
@@ -550,7 +500,7 @@ let phrases = {
     'tooltip-more': 'Więcej',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        let files = (count === 1) ? `1 płiku` : `${count} płików`;
+        let files = cardinal(count, 'płiku', 'płików', 'płików');
         return `Przesyłanie ${files}, pozostało ${size}`;
     },
 
@@ -558,26 +508,11 @@ let phrases = {
     'user-list-approve-all': 'Zatwierdź wszystkie prośby',
     'user-list-cancel': 'Anuluj',
     'user-list-confirm-disable-$count': (count) => {
-        let accounts;
-        if (singular(count)) {
-            accounts = `wybrane konto`;
-        } else if (plural(count)) {
-            accounts = `te ${count} wybrane konta`;
-        } else {
-            accounts = `tych ${count} wybranych kont`;
-        }
+        let accounts = cardinal(count, 'wybrane konto', [ 'te', 'wybrane konta' ], [ 'tych', 'wybranych kont' ], true);
         return `Czy na pewno chcesz wyłączyć ${accouns}?`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        return cardinal(count, '', '', '');
-        let accounts;
-        if (singular(count)) {
-            accounts = `wybrane konto`;
-        } else if (plural(count)) {
-            accounts = `te ${count} wybrane konta`;
-        } else {
-            accounts = `tych ${count} wybranych kont`;
-        }
+        let accounts = cardinal(count, 'wybrane konto', [ 'te', 'wybrane konta' ], [ 'tych', 'wybranych kont' ], true);
         return `Czy jesteś pewien, że chcesz reaktywować ${acounts}?`;
     },
     'user-list-edit': 'Zmodyfikuj listę użytkowników',

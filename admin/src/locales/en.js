@@ -140,11 +140,11 @@ let phrases = {
     'project-list-add': 'Add new project',
     'project-list-cancel': 'Cancel',
     'project-list-confirm-archive-$count': (count) => {
-        let projects = (count === 1) ? 'the selected project' : `these ${count} projects`;
+        let projects = cardinal(count, 'the selected project', [ 'these', 'projects' ], true);
         return `Are you sure you want to archive ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        let projects = (count === 1) ? 'the selected project' : `these ${count} projects`;
+        let projects = cardinal(count, 'the selected project', [ 'these', 'projects' ], true);
         return `Are you sure you want to restore ${projects}?`;
     },
     'project-list-deleted': 'Deleted',
@@ -195,7 +195,7 @@ let phrases = {
 
     'repo-list-cancel': 'Cancel',
     'repo-list-confirm-remove-$count': (count) => {
-        let repositories = (count === 1) ? `this repository` : `these ${count} repositories`;
+        let repositories = cardinal(count, 'this repository', [ 'these', 'repositories' ], true);
         return `Are you sure you want to remove ${repositories} from the project?`;
     },
     'repo-list-edit': 'Edit repository list',
@@ -233,11 +233,11 @@ let phrases = {
     'role-list-add': 'Add new role',
     'role-list-cancel': 'Cancel',
     'role-list-confirm-disable-$count': (count) => {
-        let roles = (count === 1) ? `this role` : `these ${count} roles`;
+        let roles = cardinal(count, 'this role', [ 'these', 'roles' ], true);
         return `Are you sure you want to disable ${roles}?`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        let roles = (count === 1) ? `this role` : `these ${count} roles`;
+        let roles = cardinal(count, 'this role', [ 'these', 'roles' ], true);
         return `Are you sure you want to reactivate ${roles}?`
     },
     'role-list-edit': 'Edit role list',
@@ -284,11 +284,11 @@ let phrases = {
     'server-list-api-access-true': 'Acquired',
     'server-list-cancel': 'Cancel',
     'server-list-confirm-disable-$count': (count) => {
-        let servers = (count === 1) ? `this server` : `these ${count} servers`;
+        let servers = cardinal(count, 'this server', [ 'these', 'servers' ], true);
         return `Are you sure you want to disable ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        let servers = (count === 1) ? `this server` : `these ${count} servers`;
+        let servers = cardinal(count, 'this server', [ 'these', 'servers' ], true);
         return `Are you sure you want to reactivate ${servers}?`
     },
     'server-list-edit': 'Edit server list',
@@ -507,11 +507,11 @@ let phrases = {
     'user-list-approve-all': 'Approve all requests',
     'user-list-cancel': 'Cancel',
     'user-list-confirm-disable-$count': (count) => {
-        let accounts = (count === 1) ? `this user account` : `these ${count} user accounts`;
+        let accounts = cardinal(count, 'this user account', [ 'these', 'user accounts' ], true);
         return `Are you sure you want to disable ${accounts}?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        let accounts = (count === 1) ? `this user account` : `these ${count} user accounts`;
+        let accounts = cardinal(count, 'this user account', [ 'these', 'user accounts' ], true);
         return `Are you sure you want to reactivate ${accounts}?`
     },
     'user-list-edit': 'Edit user List',

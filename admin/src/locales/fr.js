@@ -83,7 +83,7 @@ let phrases = {
                 return `${start}–`;
             }
         }
-        return '';
+        return "";
     },
 
     'image-album-cancel': "Annuler",
@@ -137,11 +137,11 @@ let phrases = {
     'project-list-add': "Ajouter un nouveau projet",
     'project-list-cancel': "Annuler",
     'project-list-confirm-archive-$count': (count) => {
-        var projects = (count === 1) ? `le projet sélectionné` : `ces ${count} projets`;
+        let projects = cardinal(count, "le projet sélectionné", [ "ces", "projets" ], true);
         return `Êtes-vous sûr de vouloir archiver ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        var projects = (count === 1) ? `le projet sélectionné` : `ces ${count} projets`;
+        let projects = cardinal(count, "le projet sélectionné", [ "ces", "projets" ], true);
         return `Êtes-vous sûr de vouloir restaurer ${projects}?`;
     },
     'project-list-deleted': "Supprimé",
@@ -152,7 +152,7 @@ let phrases = {
     'project-list-title': "Projets",
 
     'project-summary-$title': (title) => {
-        var text = 'Projet';
+        let text = "Projet";
         if (title) {
             text += `: ${title}`;
         }
@@ -192,7 +192,7 @@ let phrases = {
 
     'repo-list-cancel': "Annuler",
     'repo-list-confirm-remove-$count': (count) => {
-        var repositories = (count === 1) ? `ce dépôt` : `ces ${count} dépôts`;
+        let repositories = cardinal(count, "ce dépôt", [ "ces", "dépôts" ], true);
         return `Êtes-vous sûr de vouloir supprimer ${repositories} du projet?`;
     },
     'repo-list-edit': "Modifier la liste des dépôts",
@@ -202,7 +202,7 @@ let phrases = {
     'repo-list-title': "Dépôts",
 
     'repo-summary-$title': (title) => {
-        var text = `Dépôt`;
+        let text = `Dépôt`;
         if (title) {
             text += `: ${title}`;
         }
@@ -230,11 +230,11 @@ let phrases = {
     'role-list-add': "Ajouter un nouveau rôle",
     'role-list-cancel': "Annuler",
     'role-list-confirm-disable-$count': (count) => {
-        var roles = (count === 1) ? `ce rôle` : `ces ${count} rôle`;
+        let roles = cardinal(count, "ce rôle", [ "ces", "rôle" ], true);
         return `Êtes-vous sûr de vouloir désactiver ${roles}?`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        var roles = (count === 1) ? `ce rôle` : `ces ${count} rôle`;
+        let roles = cardinal(count, "ce rôle", [ "ces", "rôle" ], true);
         return `Êtes-vous sûr de vouloir réactiver ${roles}?`
     },
     'role-list-edit': "Modifier la liste des rôles",
@@ -244,7 +244,7 @@ let phrases = {
     'role-list-title': "Rôles",
 
     'role-summary-$title': (title) => {
-        var text = 'Rôle';
+        let text = "Rôle";
         if (title) {
             text += `: ${title}`;
         }
@@ -281,11 +281,11 @@ let phrases = {
     'server-list-api-access-true': "Acquis",
     'server-list-cancel': "Annuler",
     'server-list-confirm-disable-$count': (count) => {
-        var servers = (count === 1) ? `ce serveur` : `ces ${count} serveurs`;
+        let servers = cardinal(count, "ce serveur", [ "ces", "serveurs" ], true);
         return `Êtes-vous sûr de vouloir désactiver ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        var servers = (count === 1) ? `ce serveur` : `ces ${count} serveurs`;
+        let servers = cardinal(count, "ce serveur", [ "ces", "serveurs" ], true);
         return `Êtes-vous sûr de vouloir réactiver ${servers}?`
     },
     'server-list-edit': "Modifier la liste des serveurs",
@@ -374,7 +374,7 @@ let phrases = {
     'settings-title': "Paramètres",
 
     'sign-in-$title': (title) => {
-        var text = `Connexion`;
+        let text = `Connexion`;
         if (title) {
             text += `: ${title}`;
         }
@@ -417,31 +417,31 @@ let phrases = {
         return (seconds === 1) ? `1 seconde` : `${seconds} secondes`;
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        var comments = cardinal(count, 'commentaires sur un commit', 'commentaires sur un commit');
+        let comments = cardinal(count, 'commentaires sur un commit', 'commentaires sur un commit');
         return `Importé ${comments} from “${repo}”`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        var events = cardinal(count, 'événement', 'événements');
+        let events = cardinal(count, 'événement', 'événements');
         return `Importé ${events} from “${repo}”`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        var comments = cardinal(count, 'commentaire sur un problème', 'commentaires sur un problème');
+        let comments = cardinal(count, 'commentaire sur un problème', 'commentaires sur un problème');
         return `Importé ${comments} from “${repo}”`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        var comments = cardinal(count, 'commentaire sur une demande de fusion', 'commentaires sur une demande de fusion');
+        let comments = cardinal(count, 'commentaire sur une demande de fusion', 'commentaires sur une demande de fusion');
         return `Importé ${comments} from “${repo}”`;
     },
     'task-imported-$count-repos': (count) => {
-        var repos = cardinal(count, 'dépôt', 'dépôts');
+        let repos = cardinal(count, 'dépôt', 'dépôts');
         return `Importé ${repos}`;
     },
     'task-imported-$count-users': (count) => {
-        var users = cardinal(count, 'utilisateur', 'utilisateurs');
+        let users = cardinal(count, 'utilisateur', 'utilisateurs');
         return `Importé ${users}`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        var commits = cardinal(count, 'commit', 'commits');
+        let commits = cardinal(count, 'commit', 'commits');
         return `Importé une poussée avec ${commits} de la “${branch}” de “${repo}”`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
@@ -462,29 +462,29 @@ let phrases = {
     'task-importing-repos': "Importation de dépôts",
     'task-importing-users': "Importation de utilisateurs",
     'task-installed-$count-hooks': (count) => {
-        var hooks = cardinal(count, 'hook', 'hooks');
+        let hooks = cardinal(count, 'hook', 'hooks');
         return `Installée ${hooks}`;
     },
     'task-installing-hooks': "Installation de hooks",
     'task-removed-$count-hooks': (count) => {
-        var hooks = cardinal(count, 'hook', 'hooks');
+        let hooks = cardinal(count, 'hook', 'hooks');
         return `Désinstallé ${hooks}`;
     },
     'task-removed-$count-repos': (count) => {
-        var repos = cardinal(count, 'dépôt', 'dépôts');
+        let repos = cardinal(count, 'dépôt', 'dépôts');
         return `Supprimé ${repos}`;
     },
     'task-removed-$count-users': (count) => {
-        var users = cardinal(count, 'utilisateur', 'utilisateurs');
+        let users = cardinal(count, 'utilisateur', 'utilisateurs');
         return `Supprimé ${users}`;
     },
     'task-removing-hooks': "Désinstallation de hooks",
     'task-updated-$count-repos': (count) => {
-        var repos = cardinal(count, 'dépôt', 'dépôts');
+        let repos = cardinal(count, 'dépôt', 'dépôts');
         return `Actualisé ${repos}`;
     },
     'task-updated-$count-users': (count) => {
-        var users = cardinal(count, 'utilisateur', 'utilisateurs');
+        let users = cardinal(count, 'utilisateur', 'utilisateurs');
         return `Actualisé ${users}`;
     },
 
@@ -496,7 +496,7 @@ let phrases = {
     'tooltip-more': "Plus",
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        var files = cardinal(count, 'fichier', 'fichiers');
+        let files = cardinal(count, 'fichier', 'fichiers');
         return `Téléchargement de ${files}, ${size} restant`;
     },
 
@@ -504,11 +504,11 @@ let phrases = {
     'user-list-approve-all': "Approuver toutes les demandes",
     'user-list-cancel': "Annuler",
     'user-list-confirm-disable-$count': (count) => {
-        var accounts = (count === 1) ? `cet utilisateur` : `ces ${count} utilisateurs`;
+        let accounts = cardinal(count, "cet utilisateur", [ "ces", "utilisateurs" ], true);
         return `Êtes-vous sûr de vouloir désactiver ${accounts}?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        var accounts = (count === 1) ? `cet utilisateur` : `ces ${count} utilisateurs`;
+        let accounts = cardinal(count, "cet utilisateur", [ "ces", "utilisateurs" ], true);
         return `Êtes-vous sûr de vouloir réactiver ${accounts}?`
     },
     'user-list-edit': "Modifier la liste des utilisateurs",
@@ -523,7 +523,7 @@ let phrases = {
     'user-list-type-moderator': "Modérateur",
     'user-list-type-regular': "Utilisateur régulier",
     'user-summary-$name': (name) => {
-        var text = 'Utilisateur';
+        let text = "Utilisateur";
         if (name) {
             text += `: ${name}`;
         }
@@ -543,7 +543,7 @@ let phrases = {
     'user-summary-ichat': "Nom d'utilisateur iChat",
     'user-summary-linkedin': "URL du profil Linkedin",
     'user-summary-member-$name': (name) => {
-        var text = 'Membre';
+        let text = "Membre";
         if (name) {
             text += `: ${name}`;
         }

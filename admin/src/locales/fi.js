@@ -26,7 +26,6 @@ let phrases = {
 
     'activity-tooltip-$count': (count) => {
         return cardinal(count, 'tarina', 'tarinaa');
-        return cardinal(count, 'tarina', 'tarinaa');
     },
     'activity-tooltip-$count-branch': (count) => {
         return cardinal(count, 'haara', 'haaraa');
@@ -73,7 +72,7 @@ let phrases = {
 
     'confirmation-cancel': 'Peruutta',
     'confirmation-confirm': 'Vahvista',
-    'confirmation-data-loss': 'Haluatko varmasti hylätä tekemäsi muutokset?',
+    'confirmation-data-loss': 'Haluatko letmasti hylätä tekemäsi muutokset?',
 
     'date-range-$start-$end': (start, end) => {
         if (start) {
@@ -137,12 +136,12 @@ let phrases = {
     'project-list-add': 'Lisää uusi projekti',
     'project-list-cancel': 'Peruutta',
     'project-list-confirm-archive-$count': (count) => {
-        var projects = (count === 1) ? 'valitun projektin' : `nämä ${count} projektia`;
-        return `Haluatko varmasti arkistoida ${projects}?`;
+        let projects = cardinal(count, 'valitun projektin', [ 'nämä', 'projektia' ], true);
+        return `Haluatko letmasti arkistoida ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        var projects = (count === 1) ? 'valitun projektin' : `nämä ${count} projektia`;
-        return `Haluatko varmasti palauttaa ${projects}?`;
+        let projects = cardinal(count, 'valitun projektin', [ 'nämä', 'projektia' ], true);
+        return `Haluatko letmasti palauttaa ${projects}?`;
     },
     'project-list-deleted': 'Poistettu',
     'project-list-edit': 'Muokkaa projektiluetteloa',
@@ -152,7 +151,7 @@ let phrases = {
     'project-list-title': 'Projektit',
 
     'project-summary-$title': (title) => {
-        var text = 'Projekti';
+        let text = 'Projekti';
         if (title) {
             text += `: ${title}`;
         }
@@ -165,9 +164,9 @@ let phrases = {
     'project-summary-add': 'Lisää uusi projekti',
     'project-summary-archive': 'Arkistoi projektin',
     'project-summary-cancel': 'Peruutta',
-    'project-summary-confirm-archive': 'Haluatko varmasti arkistoida tämän projektin?',
-    'project-summary-confirm-delete': 'Haluatko varmasti poistaa tämän projektin?',
-    'project-summary-confirm-restore': 'Haluatko varmasti palauttaa tämän projektin?',
+    'project-summary-confirm-archive': 'Haluatko letmasti arkistoida tämän projektin?',
+    'project-summary-confirm-delete': 'Haluatko letmasti poistaa tämän projektin?',
+    'project-summary-confirm-restore': 'Haluatko letmasti palauttaa tämän projektin?',
     'project-summary-delete': 'Poista projekti',
     'project-summary-description': 'Kuvaus',
     'project-summary-edit': 'Muokkaa projektia',
@@ -192,8 +191,8 @@ let phrases = {
 
     'repo-list-cancel': 'Peruutta',
     'repo-list-confirm-remove-$count': (count) => {
-        var repositories = (count === 1) ? `tämän arkiston` : `nämä ${count} arkistoa`;
-        return `Haluatko varmasti poistaa ${repositories} projektista?`;
+        let repositories = cardinal(count, 'tämän arkiston', [ 'nämä', 'arkistoa' ], true);
+        return `Haluatko letmasti poistaa ${repositories} projektista?`;
     },
     'repo-list-edit': 'Muokkaa arkistoluetteloa',
     'repo-list-issue-tracker-enabled-false': '',
@@ -202,15 +201,15 @@ let phrases = {
     'repo-list-title': 'Arkistot',
 
     'repo-summary-$title': (title) => {
-        var text = `Arkisto`;
+        let text = `Arkisto`;
         if (title) {
             text += `: ${title}`;
         }
         return text;
     },
     'repo-summary-cancel': 'Peruutta',
-    'repo-summary-confirm-remove': 'Haluatko varmasti poistaa tämän arkiston projektista?',
-    'repo-summary-confirm-restore': 'Haluatko varmasti lisätä tämän arkiston projektiin uudelleen?',
+    'repo-summary-confirm-remove': 'Haluatko letmasti poistaa tämän arkiston projektista?',
+    'repo-summary-confirm-restore': 'Haluatko letmasti lisätä tämän arkiston projektiin uudelleen?',
     'repo-summary-edit': 'Muokkaa arkistoa',
     'repo-summary-gitlab-name': 'GitLab-projektin nimi',
     'repo-summary-issue-tracker': 'Raportointityökalu',
@@ -230,12 +229,12 @@ let phrases = {
     'role-list-add': 'Lisää uusi rooli',
     'role-list-cancel': 'Peruutta',
     'role-list-confirm-disable-$count': (count) => {
-        var roles = (count === 1) ? `tämän roolin` : `nämä ${count} roolia`;
-        return `Haluatko varmasti deaktivoida ${roles}?`
+        let roles = cardinal(count, 'tämän roolin', [ 'nämä', 'roolia' ], true);
+        return `Haluatko letmasti deaktivoida ${roles}?`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        var roles = (count === 1) ? `tämän roolin` : `nämä ${count} roolia`;
-        return `Haluatko varmasti reaktivoida ${roles}?`
+        let roles = cardinal(count, 'tämän roolin', [ 'nämä', 'roolia' ], true);
+        return `Haluatko letmasti reaktivoida ${roles}?`
     },
     'role-list-edit': 'Muokkaa rooliluetteloa',
     'role-list-save': 'Tallenna rooliluettelo',
@@ -244,7 +243,7 @@ let phrases = {
     'role-list-title': 'Roolit',
 
     'role-summary-$title': (title) => {
-        var text = 'Rooli';
+        let text = 'Rooli';
         if (title) {
             text += `: ${title}`;
         }
@@ -252,9 +251,9 @@ let phrases = {
     },
     'role-summary-add': 'Lisää uusi rooli',
     'role-summary-cancel': 'Peruutta',
-    'role-summary-confirm-delete': 'Haluatko varmasti poistaa tämän roolin?',
-    'role-summary-confirm-disable': 'Haluatko varmasti deaktivoida tämän roolin?',
-    'role-summary-confirm-reactivate': 'Haluatko varmasti reaktivoida tämän roolin?',
+    'role-summary-confirm-delete': 'Haluatko letmasti poistaa tämän roolin?',
+    'role-summary-confirm-disable': 'Haluatko letmasti deaktivoida tämän roolin?',
+    'role-summary-confirm-reactivate': 'Haluatko letmasti reaktivoida tämän roolin?',
     'role-summary-delete': 'Poista rooli',
     'role-summary-description': 'Kuvaus',
     'role-summary-disable': 'Deaktivoi roolin',
@@ -281,12 +280,12 @@ let phrases = {
     'server-list-api-access-true': 'Hankittu',
     'server-list-cancel': 'Peruutta',
     'server-list-confirm-disable-$count': (count) => {
-        var servers = (count === 1) ? `tämän palvelin` : `nämä ${count} palvelinta`;
-        return `Haluatko varmasti deaktivoida ${servers}?`
+        let servers = cardinal(count, 'tämän palvelin', [ 'nämä', 'palvelinta' ], true);
+        return `Haluatko letmasti deaktivoida ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        var servers = (count === 1) ? `tämän palvelin` : `nämä ${count} palvelinta`;
-        return `Haluatko varmasti reaktivoida ${servers}?`
+        let servers = cardinal(count, 'tämän palvelin', [ 'nämä', 'palvelinta' ], true);
+        return `Haluatko letmasti reaktivoida ${servers}?`
     },
     'server-list-edit': 'Muokkaa palvelinluetteloa',
     'server-list-oauth-false': '',
@@ -304,9 +303,9 @@ let phrases = {
     'server-summary-api-access-not-applicable': 'Ei sovellettavissa',
     'server-summary-api-access-pending': 'Odotetaan käyttäjän toimia',
     'server-summary-cancel': 'Peruutta',
-    'server-summary-confirm-delete': 'Haluatko varmasti poistaa tämän palvelin?',
-    'server-summary-confirm-disable': 'Haluatko varmasti deaktivoida tämän palvelin?',
-    'server-summary-confirm-reactivate': 'Haluatko varmasti reaktivoida tämän palvelin',
+    'server-summary-confirm-delete': 'Haluatko letmasti poistaa tämän palvelin?',
+    'server-summary-confirm-disable': 'Haluatko letmasti deaktivoida tämän palvelin?',
+    'server-summary-confirm-reactivate': 'Haluatko letmasti reaktivoida tämän palvelin',
     'server-summary-delete': 'Poista palvelin',
     'server-summary-disable': 'Deaktivoi palvelin',
     'server-summary-edit': 'Muokkaa palvelinta',
@@ -374,7 +373,7 @@ let phrases = {
     'settings-title': 'Asetukset',
 
     'sign-in-$title': (title) => {
-        var text = `Kirjaudu sisään`;
+        let text = `Kirjaudu sisään`;
         if (title) {
             text += `: ${title}`;
         }
@@ -417,31 +416,31 @@ let phrases = {
         return (seconds === 1) ? `1 sekunti` : `${seconds} sekuntia`;
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        var comments = cardinal(count, 'commitin kommentti', 'commitin kommenttia');
+        let comments = cardinal(count, 'commitin kommentti', 'commitin kommenttia');
         return `Tuotu ${comments} arkistosta “${repo}”`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        var events = cardinal(count, 'tapahtuma', 'tapahtumat');
+        let events = cardinal(count, 'tapahtuma', 'tapahtumat');
         return `Tuotu ${events} arkistosta “${repo}”`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        var comments = cardinal(count, 'asian kommentti', 'asian kommenttia');
+        let comments = cardinal(count, 'asian kommentti', 'asian kommenttia');
         return `Tuotu ${comments} arkistosta “${repo}”`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        var comments = cardinal(count, 'yhdistämispyynnön kommentti', 'yhdistämispyynnön kommenttia');
+        let comments = cardinal(count, 'yhdistämispyynnön kommentti', 'yhdistämispyynnön kommenttia');
         return `Tuotu ${comments} arkistosta “${repo}”`;
     },
     'task-imported-$count-repos': (count) => {
-        var repos = cardinal(count, 'arkisto', 'arkistoa');
+        let repos = cardinal(count, 'arkisto', 'arkistoa');
         return `Tuotu ${repos}`;
     },
     'task-imported-$count-users': (count) => {
-        var users = cardinal(count, 'käyttäjä', 'käyttäjää');
+        let users = cardinal(count, 'käyttäjä', 'käyttäjää');
         return `Tuotu ${users}`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        var commits = cardinal(count, 'commiti', 'commitia');
+        let commits = cardinal(count, 'commiti', 'commitia');
         return `Tuotu työntö jossa ${commits} haarasta “${branch}” arkiston “${repo}”`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
@@ -462,29 +461,29 @@ let phrases = {
     'task-importing-repos': 'Tuodaan arkistot',
     'task-importing-users': 'Tuodaan käyttäjät',
     'task-installed-$count-hooks': (count) => {
-        var hooks = cardinal(count, 'koukku', 'koukkua');
+        let hooks = cardinal(count, 'koukku', 'koukkua');
         return `Asennettu ${hooks}`;
     },
     'task-installing-hooks': 'Asentamalla koukut',
     'task-removed-$count-hooks': (count) => {
-        var hooks = cardinal(count, 'koukku', 'koukkua');
+        let hooks = cardinal(count, 'koukku', 'koukkua');
         return `Poistetut ${hooks}`;
     },
     'task-removed-$count-repos': (count) => {
-        var repos = cardinal(count, 'arkisto', 'arkistoa');
+        let repos = cardinal(count, 'arkisto', 'arkistoa');
         return `Poistetut ${repos}`;
     },
     'task-removed-$count-users': (count) => {
-        var users = cardinal(count, 'käyttäjä', 'käyttäjää');
+        let users = cardinal(count, 'käyttäjä', 'käyttäjää');
         return `Poistetut ${users}`;
     },
     'task-removing-hooks': 'Poistamalla koukut',
     'task-updated-$count-repos': (count) => {
-        var repos = cardinal(count, 'arkisto', 'arkistoa');
+        let repos = cardinal(count, 'arkisto', 'arkistoa');
         return `Päivitetty ${repos}`;
     },
     'task-updated-$count-users': (count) => {
-        var users = cardinal(count, 'käyttäjä', 'käyttäjää');
+        let users = cardinal(count, 'käyttäjä', 'käyttäjää');
         return `Päivitetty ${users}`;
     },
 
@@ -496,7 +495,7 @@ let phrases = {
     'tooltip-more': 'Lisää',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        var files = cardinal(count, 'tiedosto', 'tiedostoa');
+        let files = cardinal(count, 'tiedosto', 'tiedostoa');
         return `Lataaminen ${files}, ${size} jäljellä`;
     },
 
@@ -504,12 +503,12 @@ let phrases = {
     'user-list-approve-all': 'Hyväksy kaikki pyynnöt',
     'user-list-cancel': 'Peruutta',
     'user-list-confirm-disable-$count': (count) => {
-        var accounts = (count === 1) ? `tämän käyttäjätili` : `nämä ${count} käyttäjätilejä`;
-        return `Haluatko varmasti deaktivoida ${accounts}?`
+        let accounts = cardinal(count, 'tämän käyttäjätili', [ 'nämä', 'käyttäjätilejä' ], true);
+        return `Haluatko letmasti deaktivoida ${accounts}?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        var accounts = (count === 1) ? `tämän käyttäjätili` : `nämä ${count} käyttäjätilejä`;
-        return `Haluatko varmasti reaktivoida ${accounts}?`
+        let accounts = cardinal(count, 'tämän käyttäjätili', [ 'nämä', 'käyttäjätilejä' ], true);
+        return `Haluatko letmasti reaktivoida ${accounts}?`
     },
     'user-list-edit': 'Muokkaa käyttäjäluetteloa',
     'user-list-reject-all': 'Hylkää kaikki pyynnöt',
@@ -523,7 +522,7 @@ let phrases = {
     'user-list-type-moderator': 'Sovittelija',
     'user-list-type-regular': 'Tavallinen käyttäjä',
     'user-summary-$name': (name) => {
-        var text = 'Käyttäjä';
+        let text = 'Käyttäjä';
         if (name) {
             text += `: ${name}`;
         }
@@ -531,9 +530,9 @@ let phrases = {
     },
     'user-summary-add': 'Lisää uusi käyttäjä',
     'user-summary-cancel': 'Peruutta',
-    'user-summary-confirm-delete': 'Haluatko varmasti poistaa tämän käyttäjätili?',
-    'user-summary-confirm-disable': 'Haluatko varmasti deaktivoida tämän käyttäjätili?',
-    'user-summary-confirm-reactivate': 'Haluatko varmasti reaktivoida tämän käyttäjätili?',
+    'user-summary-confirm-delete': 'Haluatko letmasti poistaa tämän käyttäjätili?',
+    'user-summary-confirm-disable': 'Haluatko letmasti deaktivoida tämän käyttäjätili?',
+    'user-summary-confirm-reactivate': 'Haluatko letmasti reaktivoida tämän käyttäjätili?',
     'user-summary-delete': 'Poista käyttäjätili',
     'user-summary-disable': 'Deaktivoi käyttäjätili',
     'user-summary-edit': 'Muokkaa käyttäjää',
@@ -543,7 +542,7 @@ let phrases = {
     'user-summary-ichat': 'iChat-käyttäjänimi',
     'user-summary-linkedin': 'LinkedIn-profiilin URL-osoite',
     'user-summary-member-$name': (name) => {
-        var text = 'Jäsen';
+        let text = 'Jäsen';
         if (name) {
             text += `: ${name}`;
         }

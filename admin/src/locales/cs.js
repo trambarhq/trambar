@@ -32,130 +32,46 @@ module.exports = function(localeCode) {
         'activity-chart-legend-wiki': 'Úpravy wiki',
 
         'activity-tooltip-$count': (count) => {
-            if (singular(count)) {
-                return `1 příběh`;
-            } else if (plural(count)) {
-                return `${count} příběhy`;
-            } else {
-                return `${count} příběhů`;
-            }
+            return cardinal(count, 'příběh', 'příběhy', 'příběhů');
         },
         'activity-tooltip-$count-branch': (count) => {
-            if (singular(count)) {
-                return `1 větev`;
-            } else if (plural(count)) {
-                return `${count} větve`;
-            } else {
-                return `${count} větví`;
-            }
+            return cardinal(count, 'větev', 'větve', 'větví');
         },
         'activity-tooltip-$count-issue': (count) => {
-            if (singular(count)) {
-                return `1 problém`;
-            } else if (plural(count)) {
-                return `${count} problémy`;
-            } else {
-                return `${count} problémů`;
-            }
+            return cardinal(count, 'problém', 'problémy', 'problémů');
         },
         'activity-tooltip-$count-member': (count) => {
-            if (singular(count)) {
-                return `1 změna členství`;
-            } else if (plural(count)) {
-                return `${count} změny členství`;
-            } else {
-                return `${count} změn členství`;
-            }
+            return cardinal(count, 'změna členství', 'změny členství', 'změn členství');
         },
         'activity-tooltip-$count-merge': (count) => {
-            if (singular(count)) {
-                return `1 sloučení`;
-            } else if (plural(count)) {
-                return `${count} sloučení`;
-            } else {
-                return `${count} sloučeních`;
-            }
+            return cardinal(count, 'sloučení', 'sloučení', 'sloučeních');
         },
         'activity-tooltip-$count-merge-request': (count) => {
-            if (singular(count)) {
-                return `1 žádost o sloučení`;
-            } else if (plural(count)) {
-                return `${count} žádosti o sloučení`;
-            } else {
-                return `${count} žádostí o sloučení`;
-            }
+            return cardinal(count, 'žádost o sloučení', 'žádosti o sloučení', 'žádostí o sloučení');
         },
         'activity-tooltip-$count-milestone': (count) => {
-            if (singular(count)) {
-                return `1 milník`;
-            } else if (plural(count)) {
-                return `${count} milníky`;
-            } else {
-                return `${count} milníků`;
-            }
+            return cardinal(count, 'milník', 'milníky', 'milníků');
         },
         'activity-tooltip-$count-post': (count) => {
-            if (singular(count)) {
-                return `1 příspěvek`;
-            } else if (plural(count)) {
-                return `${count} příspěvky`;
-            } else {
-                return `${count} příspěvků`;
-            }
+            return cardinal(count, 'příspěvek', 'příspěvky', 'příspěvků');
         },
         'activity-tooltip-$count-push': (count) => {
-            if (singular(count)) {
-                return `1 přesun`;
-            } else if (plural(count)) {
-                return `${count} přesuny`;
-            } else {
-                return `${count} přesunů`;
-            }
+            return cardinal(count, 'přesun', 'přesuny', 'přesunů');
         },
         'activity-tooltip-$count-repo': (count) => {
-            if (singular(count)) {
-                return `1 změna repozitáře`;
-            } else if (plural(count)) {
-                return `${count} změny repozitářů`;
-            } else {
-                return `${count} změn repozitářů`;
-            }
+            return cardinal(count, 'změna repozitáře', 'změny repozitářů', 'změn repozitářů');
         },
         'activity-tooltip-$count-survey': (count) => {
-            if (singular(count)) {
-                return `1 anketa`;
-            } else if (plural(count)) {
-                return `${count} ankety`;
-            } else {
-                return `${count} anket`;
-            }
+            return cardinal(count, 'anketa', 'ankety', 'anket');
         },
         'activity-tooltip-$count-tag': (count) => {
-            if (singular(count)) {
-                return `1 tag`;
-            } else if (plural(count)) {
-                return `${count} tagy`;
-            } else {
-                return `${count} tagů`;
-            }
+            return cardinal(count, 'tag', 'tagy', 'tagů');
         },
         'activity-tooltip-$count-task-list': (count) => {
-            if (singular(count)) {
-                return `1 seznam úkolů`;
-            } else if (plural(count)) {
-                return `${count} seznamy úkolů`;
-            } else {
-                return `${count} seznamů úkolů`;
-            }
+            return cardinal(count, 'seznam úkolů', 'seznamy úkolů', 'seznamů úkolů');
         },
         'activity-tooltip-$count-wiki': (count) => {
-            if (singular(count)) {
-                return `1 úprava stránky wiki`;
-            } else if (plural(count)) {
-                return `${count} úpravy stránek wiki`;
-            } else {
-                return `${count} úprav stránek wiki`;
-            }
+            return cardinal(count, 'úprava stránky wiki', 'úpravy stránek wiki', 'úprav stránek wiki');
         },
 
         'app-name': 'Trambar',
@@ -227,23 +143,11 @@ module.exports = function(localeCode) {
         'project-list-add': 'Přidat nový projekt',
         'project-list-cancel': 'Zrušit',
         'project-list-confirm-archive-$count': (count) => {
-            if (singular(count)) {
-                projects = `vybraný projekt`;
-            } else if (plural(count)) {
-                projects = `tyto ${count} projekty`;
-            } else {
-                projects = `těchto ${count} projektů`;
-            }
+            let projects = cardinal(count, 'vybraný projekt', [ 'tyto', 'projekty' ], [ 'těchto', 'projektů' ], true);
             return `Opravdu chcete ${projects} archivovat?`;
         },
         'project-list-confirm-restore-$count': (count) => {
-            if (singular(count)) {
-                projects = `vybraný projekt`;
-            } else if (plural(count)) {
-                projects = `tyto ${count} projekty`;
-            } else {
-                projects = `těchto ${count} projektů`;
-            }
+            let projects = cardinal(count, 'vybraný projekt', [ 'tyto', 'projekty' ], [ 'těchto', 'projektů' ], true);
             return `Opravdu chcete ${projects} obnovit?`;
         },
         'project-list-deleted': 'Smazány',
@@ -254,7 +158,7 @@ module.exports = function(localeCode) {
         'project-list-title': 'Projekty',
 
         'project-summary-$title': (title) => {
-            var text = 'Projekt';
+            let text = 'Projekt';
             if (title) {
                 text += `: ${title}`;
             }
@@ -289,25 +193,12 @@ module.exports = function(localeCode) {
         'project-summary-title': 'Název',
 
         'project-tooltip-$count-others': (count) => {
-            if (singular(count)) {
-                return `1 další`;
-            } else if (plural(count)) {
-                return `${count} další`;
-            } else {
-                return `${count} dalších`;
-            }
+            return cardinal(count, 'další', 'další', 'dalších');
         },
 
         'repo-list-cancel': 'Zrušit',
         'repo-list-confirm-remove-$count': (count) => {
-            var repositories;
-            if (singular(count)) {
-                repositories = `tento repozitář`;
-            } else if (plural(count)) {
-                repositories = `tyto ${count} repozitáře`;
-            } else {
-                repositories = `těchto ${count} repozitářů`;
-            }
+            let repositories = cardinal(count, 'tento repozitář', [ 'tyto', 'repozitáře' ], [ 'těchto', 'repozitářů' ], true);
             return `Opravdu chcete ${repositories} odstranit z projektu?`;
         },
         'repo-list-edit': 'Upravit seznam repozitářů',
@@ -317,7 +208,7 @@ module.exports = function(localeCode) {
         'repo-list-title': 'Úložiště',
 
         'repo-summary-$title': (title) => {
-            var text = `Úložiště`;
+            let text = `Úložiště`;
             if (title) {
                 text += `: ${title}`;
             }
@@ -339,37 +230,17 @@ module.exports = function(localeCode) {
         'repo-summary-title': 'Název',
 
         'repository-tooltip-$count': (count) => {
-            if (singular(count)) {
-                return `1 repozitář`;
-            } else if (plural(count)) {
-                return `${count} repozitáře`;
-            } else {
-                return `${count} repozitářů`;
-            }
+            return cardinal(count, 'repozitář', 'repozitáře', 'repozitářů');
         },
 
         'role-list-add': 'Přidat novou roli',
         'role-list-cancel': 'Zrušit',
         'role-list-confirm-disable-$count': (count) => {
-            var roles;
-            if (singular(count)) {
-                roles = `tuto roli`;
-            } else if (plural(count)) {
-                roles = `tyto ${count} role`;
-            } else {
-                roles = `těchto ${count} rolí`;
-            }
+            let roles = cardinal(count, 'tuto roli', [ 'tyto', 'role' ], [ 'těchto', 'rolí' ], true);
             return `Opravdu chcete ${roles} deaktivovat?`;
         },
         'role-list-confirm-reactivate-$count': (count) => {
-            var roles;
-            if (singular(count)) {
-                roles = `tuto roli`;
-            } else if (plural(count)) {
-                roles = `tyto ${count} role`;
-            } else {
-                roles = `těchto ${count} rolí`;
-            }
+            let roles = cardinal(count, 'tuto roli', [ 'tyto', 'role' ], [ 'těchto', 'rolí' ], true);
             return `Opravdu chcete ${roles} reaktivovat?`;
         },
         'role-list-edit': 'Upravit seznam rolí',
@@ -379,7 +250,7 @@ module.exports = function(localeCode) {
         'role-list-title': 'Role',
 
         'role-summary-$title': (title) => {
-            var text = 'Role';
+            let text = 'Role';
             if (title) {
                 text += `: ${title}`;
             }
@@ -408,13 +279,7 @@ module.exports = function(localeCode) {
         'role-summary-users': 'Uživatelé',
 
         'role-tooltip-$count-others': (count) => {
-            if (singular(count)) {
-                return `1 další`;
-            } else if (plural(count)) {
-                return `${count} další`;
-            } else {
-                return `${count} dalších`;
-            }
+            return cardinal(count, 'další', 'další', 'dalších');
         },
 
         'server-list-add': 'Přidat nový server',
@@ -422,25 +287,11 @@ module.exports = function(localeCode) {
         'server-list-api-access-true': 'Získaný',
         'server-list-cancel': 'Zrušit',
         'server-list-confirm-disable-$count': (count) => {
-            var servers;
-            if (singular(count)) {
-                servers = `tento server`;
-            } else if (plural(count)) {
-                servers = `tyto ${count} servery`;
-            } else {
-                servers = `těchto ${count} serverů`;
-            }
+            let servers = cardinal(count, 'tento server', [ 'tyto', 'servery' ], [ 'těchto', 'serverů' ], true);
             return `Opravdu chcete ${servers} deaktivovat?`;
         },
         'server-list-confirm-reactivate-$count': (count) => {
-            var servers;
-            if (singular(count)) {
-                servers = `tento server`;
-            } else if (plural(count)) {
-                servers = `tyto ${count} servery`;
-            } else {
-                servers = `těchto ${count} serverů`;
-            }
+            let servers = cardinal(count, 'tento server', [ 'tyto', 'servery' ], [ 'těchto', 'serverů' ], true);
             return `Opravdu chcete ${servers} reaktivovat?`;
         },
         'server-list-edit': 'Upravit seznam serverů',
@@ -529,7 +380,7 @@ module.exports = function(localeCode) {
         'settings-title': 'Nastavení',
 
         'sign-in-$title': (title) => {
-            var text = `Přihlásit se`;
+            let text = `Přihlásit se`;
             if (title) {
                 text += `: ${title}`;
             }
@@ -569,89 +420,34 @@ module.exports = function(localeCode) {
         'table-heading-users': 'Uživatelé',
 
         'task-$seconds': (seconds) => {
-            if (singular(count)) {
-                return `1 sekunda`;
-            } else if (plural(count)) {
-                return `${count} sekundy`;
-            } else {
-                return `${count} sekund`;
-            }
+            return cardinal(count, 'sekunda', 'sekundy', 'sekund');
         },
         'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-            var comments;
-            if (singular(count)) {
-                comments = `1 komentář`;
-            } else if (plural(count)) {
-                comments = `${count} komentáře`;
-            } else {
-                comments = `${count} komentářů`;
-            }
+            let comments = cardinal(count, 'komentář', 'komentáře', 'komentářů');
             return `Importováno ${comments} k commitu z repozitářu „${repo}”`;
         },
         'task-imported-$count-events-from-$repo': (count, repo) => {
-            var events;
-            if (singular(count)) {
-                events = `1 událost`;
-            } else if (plural(count)) {
-                events = `${count} události`;
-            } else {
-                events = `${count} událostí`;
-            }
+            let events = cardinal(count, 'událost', 'události', 'událostí');
             return `Importováno ${events} z repozitářu „${repo}”`;
         },
         'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-            var comments;
-            if (singular(count)) {
-                comments = `1 komentář`;
-            } else if (plural(count)) {
-                comments = `${count} komentáře`;
-            } else {
-                comments = `${count} komentářů`;
-            }
+            let comments = cardinal(count, 'komentář', 'komentáře', 'komentářů');
             return `Importováno ${comments} k problému from „${repo}”`;
         },
         'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-            var comments;
-            if (singular(count)) {
-                comments = `1 komentář`;
-            } else if (plural(count)) {
-                comments = `${count} komentáře`;
-            } else {
-                comments = `${count} komentářů`;
-            }
+            let comments = cardinal(count, 'komentář', 'komentáře', 'komentářů');
             return `Importováno ${comments} k požadavku na sloučení z repozitářu „${repo}”`;
         },
         'task-imported-$count-repos': (count) => {
-            var repos;
-            if (singular(count)) {
-                repos = `1 repozitář`;
-            } else if (plural(count)) {
-                repos = `${count} repozitáře`;
-            } else {
-                repos = `${count} repozitářů`;
-            }
+            let repos = cardinal(count, 'repozitář', 'repozitáře', 'repozitářů');
             return `Importováno ${repos}`;
         },
         'task-imported-$count-users': (count) => {
-            var users;
-            if (singular(count)) {
-                users = `1 uživatel`;
-            } else if (plural(count)) {
-                users = `${count} uživatelé`;
-            } else {
-                users = `${count} uživatelů`;
-            }
+            let users = cardinal(count, 'uživatel', 'uživatelé', 'uživatelů');
             return `Importováno ${users}`;
         },
         'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-            var commits;
-            if (singular(count)) {
-                commits = `1 commitu`;
-            } else if (plural(count)) {
-                commits = `${count} commitů`;
-            } else {
-                commits = `${count} commitů`;
-            }
+            let commits = cardinal(count, 'commitu', 'commity', 'commitů');
             return `Importováno přesun ${commits} z větve „${branch}” repozitářu „${repo}”`;
         },
         'task-importing-commit-comments-from-$repo': (repo) => {
@@ -672,71 +468,29 @@ module.exports = function(localeCode) {
         'task-importing-repos': 'Importování repozitářů',
         'task-importing-users': 'Importování uživatelů',
         'task-installed-$count-hooks': (count) => {
-            var hooks;
-            if (singular(count)) {
-                hooks = `1 hák`;
-            } else if (plural(count)) {
-                hooks = `${count} háki`;
-            } else {
-                hooks = `${count} háků`;
-            }
+            let hooks = cardinal(count, 'hák', 'háki', 'háků');
             return `Instalováno ${hooks}`;
         },
         'task-installing-hooks': 'Instalování háků',
         'task-removed-$count-hooks': (count) => {
-            var hooks;
-            if (singular(count)) {
-                hooks = `1 hák`;
-            } else if (plural(count)) {
-                hooks = `${count} háki`;
-            } else {
-                hooks = `${count} háků`;
-            }
+            let hooks = cardinal(count, 'hák', 'háki', 'háků');
             return `Odinstalováno ${hooks}`;
         },
         'task-removed-$count-repos': (count) => {
-            var repos;
-            if (singular(count)) {
-                repos = `1 repozitář`;
-            } else if (plural(count)) {
-                repos = `${count} repozitáře`;
-            } else {
-                repos = `${count} repozitářů`;
-            }
+            let repos = cardinal(count, 'repozitář', 'repozitáře', 'repozitářů');
             return `Odstraněno ${repos}`;
         },
         'task-removed-$count-users': (count) => {
-            var users;
-            if (singular(count)) {
-                users = `1 uživatel`;
-            } else if (plural(count)) {
-                users = `${count} uživatelé`;
-            } else {
-                users = `${count} uživatelů`;
-            }
+            let users = cardinal(count, 'uživatel', 'uživatelé', 'uživatelů');
             return `Odstraněno ${users}`;
         },
         'task-removing-hooks': 'Odinstalování háků',
         'task-updated-$count-repos': (count) => {
-            var repos;
-            if (singular(count)) {
-                repos = `1 repozitář`;
-            } else if (plural(count)) {
-                repos = `${count} repozitáře`;
-            } else {
-                repos = `${count} repozitářů`;
-            }
+            let repos = cardinal(count, 'repozitář', 'repozitáře', 'repozitářů');
             return `Aktualizováno ${repos}`;
         },
         'task-updated-$count-users': (count) => {
-            var users;
-            if (singular(count)) {
-                users = `1 uživatel`;
-            } else if (plural(count)) {
-                users = `${count} uživatelé`;
-            } else {
-                users = `${count} uživatelů`;
-            }
+            let users = cardinal(count, 'uživatel', 'uživatelé', 'uživatelů');
             return `Aktualizováno ${users}`;
         },
 
@@ -748,7 +502,7 @@ module.exports = function(localeCode) {
         'tooltip-more': 'Více',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-            var files = (count === 1) ? `1 souboru` : `${count} souborů`;
+            let files = cardinal(count, 'souboru', 'souborů', 'souborů');
             return `Nahrávání ${files}, zbývá ${size}`;
         },
 
@@ -756,25 +510,11 @@ module.exports = function(localeCode) {
         'user-list-approve-all': 'Schválit všechny požadavky',
         'user-list-cancel': 'Zrušit',
         'user-list-confirm-disable-$count': (count) => {
-            var accounts;
-            if (singular(count)) {
-                accounts = `tohoto uživatele`;
-            } else if (plural(count)) {
-                accounts = `tyto ${count} uživatele`;
-            } else {
-                accounts = `těchto ${count} uživatelů`;
-            }
+            let accounts = cardinal(count, 'tohoto uživatele', [ 'tyto', 'uživatele' ], [ 'těchto', 'uživatelů' ], true);
             return `Opravdu chcete ${accounts} deaktivovat?`
         },
         'user-list-confirm-reactivate-$count': (count) => {
-            var accounts;
-            if (singular(count)) {
-                accounts = `tohoto uživatele`;
-            } else if (plural(count)) {
-                accounts = `tyto ${count} uživatele`;
-            } else {
-                accounts = `těchto ${count} uživatelů`;
-            }
+            let accounts = cardinal(count, 'tohoto uživatele', [ 'tyto', 'uživatele' ], [ 'těchto', 'uživatelů' ], true);
             return `Opravdu chcete ${accounts} reaktivovat?`
         },
         'user-list-edit': 'Upravit seznam uživatelů',
@@ -789,7 +529,7 @@ module.exports = function(localeCode) {
         'user-list-type-moderator': 'Moderátor',
         'user-list-type-regular': 'Běžný uživatel',
         'user-summary-$name': (name) => {
-            var text = 'Uživatel';
+            let text = 'Uživatel';
             if (name) {
                 text += `: ${name}`;
             }
@@ -809,7 +549,7 @@ module.exports = function(localeCode) {
         'user-summary-ichat': 'Uživatelské jméno iChat',
         'user-summary-linkedin': 'URL profilu Linkedin',
         'user-summary-member-$name': (name) => {
-            var text = 'Člen';
+            let text = 'Člen';
             if (name) {
                 text += `: ${name}`;
             }
@@ -841,13 +581,7 @@ module.exports = function(localeCode) {
         'user-summary-username': 'Uživatelské jméno',
 
         'user-tooltip-$count': (count) => {
-            if (singular(count)) {
-                return `1 uživatel`;
-            } else if (plural(count)) {
-                return `${count} uživatelé`;
-            } else {
-                return `${count} uživatelů`;
-            }
+            return cardinal(count, 'uživatel', 'uživatelé', 'uživatelů');
         },
 
         'validation-duplicate-project-name': 'Projekt s tímto identifikátorem již existuje',

@@ -136,11 +136,11 @@ let phrases = {
     'project-list-add': 'Legg til nytt prosjekt',
     'project-list-cancel': 'Avbryt',
     'project-list-confirm-archive-$count': (count) => {
-        var projects = (count === 1) ? 'det valgte prosjektet' : `de valgte prosjektene`;
+        let projects = cardinal(count, 'det valgte prosjektet', [ 'disse', 'prosjektene' ], true);
         return `Er du sikker på at du vil arkivere ${projects}?`
     },
     'project-list-confirm-restore-$count': (count) => {
-        var projects = (count === 1) ? 'det valgte prosjektet' : `de valgte prosjektene`;
+        let projects = cardinal(count, 'det valgte prosjektet', [ 'disse', 'prosjektene' ], true);
         return `Er du sikker på at du vil gjenopprette ${projects}?`
     },
     'project-list-deleted': 'Slettet',
@@ -151,7 +151,7 @@ let phrases = {
     'project-list-title': 'Prosjekter',
 
     'project-summary-$title': (title) => {
-        var text = 'Prosjekt';
+        let text = 'Prosjekt';
         if (title) {
             text += `: ${title}`;
         }
@@ -191,7 +191,7 @@ let phrases = {
 
     'repo-list-cancel': 'Avbryt',
     'repo-list-confirm-remove-$count': (count) => {
-        var repositories = (count === 1) ? `denne repoen` : `disse repoene`;
+        let repositories = cardinal(count, 'denne repoen', [ 'disse', 'repoene' ], true);
         return `Er du sikker på at du vil fjerne ${repositories} fra prosjektet?`;
     },
     'repo-list-edit': 'Rediger repo listen',
@@ -201,7 +201,7 @@ let phrases = {
     'repo-list-title': 'Repoer',
 
     'repo-summary-$title': (title) => {
-        var text = `Repo`;
+        let text = `Repo`;
         if (title) {
             text += `: ${title}`;
         }
@@ -229,11 +229,11 @@ let phrases = {
     'role-list-add': 'Legg til ny rolle',
     'role-list-cancel': 'Avbryt',
     'role-list-confirm-disable-$count': (count) => {
-        var roles = (count === 1) ? `denne rollen` : `disse ${count} rollene`;
+        let roles = cardinal(count, 'denne rollen', [ 'disse', 'rollene' ], true);
         return `Er du sikker på at du vil slette ${roles}?`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        var roles = (count === 1) ? `denne rollen` : `disse ${count} rollene`;
+        let roles = cardinal(count, 'denne rollen', [ 'disse', 'rollene' ], true);
         return `Er du sikker på at du vil reaktivere ${roles}?`
     },
     'role-list-edit': 'Rediger rollelisten',
@@ -243,7 +243,7 @@ let phrases = {
     'role-list-title': 'Roller',
 
     'role-summary-$title': (title) => {
-        var text = 'Rolle';
+        let text = 'Rolle';
         if (title) {
             text += `: ${title}`;
         }
@@ -280,11 +280,11 @@ let phrases = {
     'server-list-api-access-true': 'Fikk',
     'server-list-cancel': 'Avbryt',
     'server-list-confirm-disable-$count': (count) => {
-        var servers = (count === 1) ? `denne serveren` : `disse ${count} serverene`;
+        let servers = cardinal(count, 'denne serveren', [ 'disse', 'serverene' ], true);
         return `Er du sikker på at du vil slette ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        var servers = (count === 1) ? `denne serveren` : `disse ${count} serverene`;
+        let servers = cardinal(count, 'denne serveren', [ 'disse', 'serverene' ], true);
         return `Er du sikker på at du vil reaktivere ${servers}?`
     },
     'server-list-edit': 'Rediger serverlisten',
@@ -373,7 +373,7 @@ let phrases = {
     'settings-title': 'Innstillinger',
 
     'sign-in-$title': (title) => {
-        var text = `Logg inn`;
+        let text = `Logg inn`;
         if (title) {
             text += `: ${title}`;
         }
@@ -416,31 +416,31 @@ let phrases = {
         return (seconds === 1) ? `1 sekund` : `${seconds} sekunder`;
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        var comments = cardinal(count, 'commit kommentar', 'commit kommentarer');
+        let comments = cardinal(count, 'commit kommentar', 'commit kommentarer');
         return `Importert ${comments} fra “${repo}”`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        var events = cardinal(count, 'hendelse', 'hendelser');
+        let events = cardinal(count, 'hendelse', 'hendelser');
         return `Importert ${events} fra “${repo}”`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        var comments = cardinal(count, 'issue kommentar', 'issue kommentarer');
+        let comments = cardinal(count, 'issue kommentar', 'issue kommentarer');
         return `Importert ${comments} fra “${repo}”`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        var comments = cardinal(count, 'merge-request kommentar', 'merge-request kommentarer');
+        let comments = cardinal(count, 'merge-request kommentar', 'merge-request kommentarer');
         return `Importert ${comments} fra “${repo}”`;
     },
     'task-imported-$count-repos': (count) => {
-        var repos = cardinal(count, 'repo', 'repoer');
+        let repos = cardinal(count, 'repo', 'repoer');
         return `Importert ${repos}`;
     },
     'task-imported-$count-users': (count) => {
-        var users = cardinal(count, 'bruker', 'brukere');
+        let users = cardinal(count, 'bruker', 'brukere');
         return `Importert ${users}`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        var commits = cardinal(count, 'commit', 'commiter');
+        let commits = cardinal(count, 'commit', 'commiter');
         return `Importert en push med ${commits} fra “${branch}” av “${repo}”`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
@@ -461,29 +461,29 @@ let phrases = {
     'task-importing-repos': 'Importerer repoer',
     'task-importing-users': 'Importerer brukere',
     'task-installed-$count-hooks': (count) => {
-        var hooks = cardinal(count, 'krok', 'kroker');
+        let hooks = cardinal(count, 'krok', 'kroker');
         return `Installert ${hooks}`;
     },
     'task-installing-hooks': 'Installere kroker',
     'task-removed-$count-hooks': (count) => {
-        var hooks = cardinal(count, 'krok', 'kroker');
+        let hooks = cardinal(count, 'krok', 'kroker');
         return `Avinstallert ${hooks}`;
     },
     'task-removed-$count-repos': (count) => {
-        var repos = cardinal(count, 'repo', 'repoer');
+        let repos = cardinal(count, 'repo', 'repoer');
         return `Fjernet ${repos}`;
     },
     'task-removed-$count-users': (count) => {
-        var users = cardinal(count, 'bruker', 'brukere');
+        let users = cardinal(count, 'bruker', 'brukere');
         return `Fjernet ${users}`;
     },
     'task-removing-hooks': 'Avinstallere kroker',
     'task-updated-$count-repos': (count) => {
-        var repos = cardinal(count, 'repo', 'repoer');
+        let repos = cardinal(count, 'repo', 'repoer');
         return `Oppdatert ${repos}`;
     },
     'task-updated-$count-users': (count) => {
-        var users = cardinal(count, 'bruker', 'brukere');
+        let users = cardinal(count, 'bruker', 'brukere');
         return `Oppdatert ${users}`;
     },
 
@@ -495,7 +495,7 @@ let phrases = {
     'tooltip-more': 'Flere',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        var files = cardinal(count, 'fil', 'filer');
+        let files = cardinal(count, 'fil', 'filer');
         return `Laster opp ${files}, ${size} gjenværende`;
     },
 
@@ -503,11 +503,11 @@ let phrases = {
     'user-list-approve-all': 'Godkjenn alle forespørsler',
     'user-list-cancel': 'Avbryt',
     'user-list-confirm-disable-$count': (count) => {
-        var accounts = (count === 1) ? `denne brukerkontoen` : `disse ${count} brukerkontoene`;
+        let accounts = cardinal(count, 'denne brukerkontoen', [ 'disse', 'brukerkontoene' ], true);
         return `Er du sikker på at du vil slette ${accounts}?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        var accounts = (count === 1) ? `denne brukerkontoen` : `disse ${count} brukerkontoene`;
+        let accounts = cardinal(count, 'denne brukerkontoen', [ 'disse', 'brukerkontoene' ], true);
         return `Er du sikker på at du vil reaktivere ${accounts}?`
     },
     'user-list-edit': 'Rediger brukerlisten',
@@ -522,7 +522,7 @@ let phrases = {
     'user-list-type-moderator': 'Moderator',
     'user-list-type-regular': 'Vanlig bruker',
     'user-summary-$name': (name) => {
-        var text = 'Bruker';
+        let text = 'Bruker';
         if (name) {
             text += `: ${name}`;
         }
@@ -542,7 +542,7 @@ let phrases = {
     'user-summary-ichat': 'iChat brukernavn',
     'user-summary-linkedin': 'Linkedin profil URL',
     'user-summary-member-$name': (name) => {
-        var text = 'Medlem';
+        let text = 'Medlem';
         if (name) {
             text += `: ${name}`;
         }

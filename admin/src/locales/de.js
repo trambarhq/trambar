@@ -138,11 +138,11 @@ let phrases = {
     'project-list-add': 'Neues Projekt hinzufügen',
     'project-list-cancel': 'Abbrechen',
     'project-list-confirm-archive-$count': (count) => {
-        let projects = (count === 1) ? 'das ausgewählte Projekt' : `diese ${count} Projekte`;
+        let projects = cardinal(count, 'das ausgewählte Projekt', [ 'diese', 'Projekte' ], true);
         return `Möchten Sie ${project} wirklich archivieren?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        let projects = (count === 1) ? 'das ausgewählte Projekt' : `diese ${count} Projekte`;
+        let projects = cardinal(count, 'das ausgewählte Projekt', [ 'diese', 'Projekte' ], true);
         return `Möchten Sie ${project} wirklich wiederherstellen?`;
     },
     'project-list-deleted': 'Gelöscht',
@@ -193,7 +193,7 @@ let phrases = {
 
     'repo-list-cancel': 'Abbrechen',
     'repo-list-confirm-remove-$count': (count) => {
-        let repositories = (count === 1) ? `dieses Repository` : `diese ${count} Repositorys`;
+        let repositories = cardinal(count, 'dieses Repository', [ 'diese', 'Repositorys' ], true);
         return `Möchten Sie ${repositories} wirklich aus dem Projekt entfernen?`;
     },
     'repo-list-edit': 'Repository-Liste bearbeiten',
@@ -231,11 +231,11 @@ let phrases = {
     'role-list-add': 'Neue Rolle hinzufügen',
     'role-list-cancel': 'Abbrechen',
     'role-list-confirm-disable-$count': (count) => {
-        let roles = (count === 1) ? `diese Rolle` : `diese ${count} Rollen`;
+        let roles = cardinal(count, 'diese Rolle', [ 'diese', 'Rollen' ], true);
         return `Möchten Sie ${roles} wirklich deaktivieren?`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        let roles = (count === 1) ? `diese Rolle` : `diese ${count} Rollen`;
+        let roles = cardinal(count, 'diese Rolle', [ 'diese', 'Rollen' ], true);
         return `Möchten Sie ${roles} wirklich reaktivieren?`
     },
     'role-list-edit': 'Rollenliste bearbeiten',
@@ -282,11 +282,11 @@ let phrases = {
     'server-list-api-access-true': 'Erworben',
     'server-list-cancel': 'Abbrechen',
     'server-list-confirm-disable-$count': (count) => {
-        let servers = (count === 1) ? `diesen Server` : `diese ${count} Server`;
+        let servers = cardinal(count, 'diesen Server', [ 'diese', 'Server' ], true);
         return `Möchten Sie ${servers} wirklich deaktivieren?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        let servers = (count === 1) ? `diesen Server` : `diese ${count} Server`;
+        let servers = cardinal(count, 'diesen Server', [ 'diese', 'Server' ], true);
         return `Möchten Sie ${servers} wirklich reaktivieren?`
     },
     'server-list-edit': 'Serverliste bearbeiten',
@@ -415,7 +415,7 @@ let phrases = {
     'table-heading-users': 'Benutzer',
 
     'task-$seconds': (seconds) => {
-        return (seconds === 1) ? `1 Sekunde` : `${seconds} Sekunden`;
+        return cardinal(count, 'Sekunde', 'Sekunden');
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
         let comments = cardinal(count, 'Commit-Kommentar', 'Commit-Kommentare');
@@ -443,7 +443,7 @@ let phrases = {
         return `${repos} ${were} importiert`;
     },
     'task-imported-$count-users': (count) => {
-        let users = cardinal(count, 'user', 'users');
+        let users = `${count} Benutzer`;
         let were = (count === 1) ? `wurde` : `wurden`;
         return `${users} ${were} importiert`;
     },
@@ -517,11 +517,11 @@ let phrases = {
     'user-list-approve-all': 'Alle Anfragen genehmigen',
     'user-list-cancel': 'Abbrechen',
     'user-list-confirm-disable-$count': (count) => {
-        let accounts = (count === 1) ? `diesen Benutzer` : `diese ${count} Benutzer`;
+        let accounts = cardinal(count, 'diesen Benutzer', [ 'diese', 'Benutzer' ], true);
         return `Möchten Sie ${accounts} wirklich deaktivieren?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        let accounts = (count === 1) ? `diesen Benutzer` : `diese ${count} Benutzer`;
+        let accounts = cardinal(count, 'diesen Benutzer', [ 'diese', 'Benutzer' ], true);
         return `Möchten Sie ${accounts} wirklich reaktivieren?`
     },
     'user-list-edit': 'Benutzerliste bearbeiten',

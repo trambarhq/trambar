@@ -82,7 +82,7 @@ let phrases = {
                 return `${start}–`;
             }
         }
-        return '';
+        return "";
     },
 
     'image-album-cancel': "Annulla",
@@ -136,11 +136,11 @@ let phrases = {
     'project-list-add': "Aggiungi un nuovo progetto",
     'project-list-cancel': "Annulla",
     'project-list-confirm-archive-$count': (count) => {
-        var projects = (count === 1) ? 'il progetto selezionato' : `questi ${count} progetti`;
+        let projects = cardinal(count, "il progetto selezionato", [ "questi", "progetti" ], true);
         return `Sei sicuro di voler archiviare ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        var projects = (count === 1) ? 'il progetto selezionato' : `questi ${count} progetti`;
+        let projects = cardinal(count, "il progetto selezionato", [ "questi", "progetti" ], true);
         return `Sei sicuro di voler ripristinare ${projects}?`;
     },
     'project-list-deleted': "Eliminato",
@@ -151,7 +151,7 @@ let phrases = {
     'project-list-title': "Progetti",
 
     'project-summary-$title': (title) => {
-        var text = 'Progetto';
+        let text = "Progetto";
         if (title) {
             text += `: ${title}`;
         }
@@ -191,7 +191,7 @@ let phrases = {
 
     'repo-list-cancel': "Annulla",
     'repo-list-confirm-remove-$count': (count) => {
-        var repositories = (count === 1) ? `il repository selezionato` : `questoi ${count} repository`;
+        let repositories = cardinal(count, "il repository selezionato", [ "questoi", "repository" ], true);
         return `Sei sicuro di voler rimuovere ${repositories} dal progetto?`;
     },
     'repo-list-edit': "Modifica la lista dei repository",
@@ -201,7 +201,7 @@ let phrases = {
     'repo-list-title': "Repositories",
 
     'repo-summary-$title': (title) => {
-        var text = `Repository`;
+        let text = `Repository`;
         if (title) {
             text += `: ${title}`;
         }
@@ -229,11 +229,11 @@ let phrases = {
     'role-list-add': "Aggiungi un nuovo ruolo",
     'role-list-cancel': "Annulla",
     'role-list-confirm-disable-$count': (count) => {
-        var roles = (count === 1) ? `il ruolo selezionato` : `questi ${count} ruoli`;
+        let roles = cardinal(count, "il ruolo selezionato", [ "questi", "ruoli" ], true);
         return `Sei sicuro di voler disattivare ${roles}?`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        var roles = (count === 1) ? `il ruolo selezionato` : `questi ${count} ruoli`;
+        let roles = cardinal(count, "il ruolo selezionato", [ "questi", "ruoli" ], true);
         return `Sei sicuro di voler riattivare questo ${roles}?`
     },
     'role-list-edit': "Modifica la lista dei ruoli",
@@ -243,7 +243,7 @@ let phrases = {
     'role-list-title': "Ruoli",
 
     'role-summary-$title': (title) => {
-        var text = 'Ruolo';
+        let text = "Ruolo";
         if (title) {
             text += `: ${title}`;
         }
@@ -280,11 +280,11 @@ let phrases = {
     'server-list-api-access-true': "Acquisito",
     'server-list-cancel': "Annulla",
     'server-list-confirm-disable-$count': (count) => {
-        var servers = (count === 1) ? `il server selezionato` : `questi ${count} server`;
+        let servers = cardinal(count, "il server selezionato", [ "questi", "server" ], true);
         return `Sei sicuro di voler disattivare ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        var servers = (count === 1) ? `il server selezionato` : `questi ${count} server`;
+        let servers = cardinal(count, "il server selezionato", [ "questi", "server" ], true);
         return `Sei sicuro di voler riattivare ${servers}?`
     },
     'server-list-edit': "Modifica la lista dei server",
@@ -373,7 +373,7 @@ let phrases = {
     'settings-title': "Impostazioni",
 
     'sign-in-$title': (title) => {
-        var text = `Accedi`;
+        let text = `Accedi`;
         if (title) {
             text += `: ${title}`;
         }
@@ -458,7 +458,7 @@ let phrases = {
         }
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        var commits = `${count} commit`;
+        let commits = `${count} commit`;
         return `Si un push con ${commits} è importato dal branch «${branch}» del repository «${repo}»`
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
@@ -538,11 +538,11 @@ let phrases = {
     'user-list-approve-all': "Approva tutte le richieste",
     'user-list-cancel': "Annulla",
     'user-list-confirm-disable-$count': (count) => {
-        var accounts = (count === 1) ? `l'account utente selezionato` : `questi ${count} account utente`;
+        let accounts = cardinal(count, "l'account utente selezionato", [ "questi", "account utente" ], true);
         return `Sei sicuro di voler disabilitare ${accounts}?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        var accounts = (count === 1) ? `l'account utente selezionato` : `questi ${count} account utente`;
+        let accounts = cardinal(count, "l'account utente selezionato", [ "questi", "account utente" ], true);
         return `Sei sicuro di voler riattivare questo ${accounts}?`
     },
     'user-list-edit': "Modifica la lista degli utenti",
@@ -557,7 +557,7 @@ let phrases = {
     'user-list-type-moderator': "Moderatore",
     'user-list-type-regular': "Utente normale",
     'user-summary-$name': (name) => {
-        var text = 'Utente';
+        let text = "Utente";
         if (name) {
             text += `: ${name}`;
         }
@@ -577,7 +577,7 @@ let phrases = {
     'user-summary-ichat': "Nome utente iChat",
     'user-summary-linkedin': "URL del profilo LinkedIn",
     'user-summary-member-$name': (name) => {
-        var text = 'Membro';
+        let text = "Membro";
         if (name) {
             text += `: ${name}`;
         }

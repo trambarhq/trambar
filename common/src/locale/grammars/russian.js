@@ -14,11 +14,32 @@ function plural(n) {
 
 function cardinal(num, sg, sgGenitive, plGenitive, omitDigitOne) {
     if (singular(num)) {
+        if (omitDigitOne) {
+            if (sg instanceof Array) {
+                return sg[0] + ' ' + sg[1];
+            } else {
+                return sg;
+            }
+        }  else {
+            if (sg instanceof Array) {
+                return sg[0] + ' 1 ' + sg[1];
+            } else {
+                return '1 ' + sg;
+            }
+        }
         return (omitDigitOne) ? sg : `1 ${sg}`;
     } else if (plural(num)) {
-        return `${num} ${sgGenitive}`;
+        if (sgGenitive instanceof Array) {
+            return sgGenitive[0] + ' ' + num + ' ' + sgGenitive[1];
+        } else {
+            return num + ' ' + sgGenitive;
+        }
     } else {
-        return `${num} ${plGenitive}`;
+        if (plGenitive instanceof Array) {
+            return plGenitive[0] + ' ' + num + ' ' + plGenitive[1];
+        } else {
+            return num + ' ' + plGenitive;
+        }
     }
 }
 

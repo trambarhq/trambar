@@ -9,6 +9,43 @@ function plural(n) {
     return false;
 }
 
+function cardinal(num, sg, pl, plGenitive, omitDigitOne) {
+    if (singular(num)) {
+        if (omitDigitOne) {
+            if (sg instanceof Array) {
+                return sg[0] + ' ' + sg[1];
+            } else {
+                return sg;
+            }
+        }  else {
+            if (sg instanceof Array) {
+                return sg[0] + ' 1 ' + sg[1];
+            } else {
+                return '1 ' + sg;
+            }
+        }
+        return (omitDigitOne) ? sg : `1 ${sg}`;
+    } else if (plural(num)) {
+        if (pl instanceof Array) {
+            return pl[0] + ' ' + num + ' ' + pl[1];
+        } else {
+            return num + ' ' + pl;
+        }
+    } else {
+        if (plGenitive instanceof Array) {
+            return plGenitive[0] + ' ' + num + ' ' + plGenitive[1];
+        } else {
+            return num + ' ' + plGenitive;
+        }
+    }
+}
+
+var nameGenders = {};
+
+function genderize(name, gender) {
+    nameGenders[name] = gender;
+}
+
 function gender(name) {
     // handle multiple names
     if (name instanceof Array) {
