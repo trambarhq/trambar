@@ -3,7 +3,6 @@ import EventEmitter, { GenericEvent } from 'utils/event-emitter';
 
 const defaultOptions = {
     defaultLocale: 'en',
-    initialLocale: undefined,
 };
 
 class LocaleManager extends EventEmitter {
@@ -21,21 +20,25 @@ class LocaleManager extends EventEmitter {
         this.missingPhrases = [];
     }
 
-    initialize() {
+    activate() {
         // check for locale change in browser settings
         window.addEventListener('visibilitychange', this.handleVisibilityChange);
 
-        let { initialLocale, defaultLocale } = this.options;
-        let localeCode = initialLocale || this.browserLocaleCode;
-        return this.change(localeCode).catch((err) => {
-            return this.change(defaultLocale);
-        });
     }
 
-    shutdown() {
+    deactivate() {
         window.removeEventListener('visibilitychange', this.handleVisibilityChange);
         this.module = null;
         this.entry = null;
+    }
+
+    start(locale) {
+        if (!locale) {
+            locale = this.browserLocaleCode;
+        }
+        return this.change(locale).catch((err) => {
+            return this.change(this.options.defaultLocale);
+        });
     }
 
     /**

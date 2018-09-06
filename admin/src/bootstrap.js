@@ -35,18 +35,12 @@ function initialize(evt) {
     }
     importFuncs['app'] = () => import('application' /* webpackChunkName: "app" */);
     BootstrapLoader.load(importFuncs, progress).then((modules) => {
+        var AppCore = modules['app-core'];
         var Application = modules['app'];
         var React = modules['react'];
         var ReactDOM = modules['react-dom'];
-        var RelaksRouteManager = modules['relaks-route-manager'];
 
-        var routeManager = new RelaksRouteManager({
-            basePath: '/admin',
-            routes: Application.routes,
-            rewrites: Application.rewrites,
-        });
-        routeManager.initialize().then(() => {
-            var appProps = { routeManager };
+        AppCore.start('admin').then((appProps) => {
             var appElement = React.createElement(Application, appProps);
             ReactDOM.render(appElement, appContainer);
         });
