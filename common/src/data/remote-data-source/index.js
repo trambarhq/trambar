@@ -2,8 +2,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React from 'react';
 import Moment from 'moment';
-
-import EventEmitter from 'utils/event-emitter';
+import EventEmitter, { GenericEvent } from 'utils/event-emitter';
 import HTTPRequest from 'transport/http-request';
 import HTTPError from 'errors/http-error';
 import LocalSearch from 'data/local-search';
@@ -12,35 +11,10 @@ import Change from 'data/remote-data-source/change';
 import Storage from 'data/remote-data-source/storage';
 import Removal from 'data/remote-data-source/removal';
 
-/*
-basePath: PropTypes.string,
-discoveryFlags: PropTypes.object,
-retrievalFlags: PropTypes.object,
-online: PropTypes.bool,
-connected: PropTypes.bool,
-inForeground: PropTypes.bool,
-prefetching: PropTypes.bool,
-cache: PropTypes.object,
-cacheValidation: PropTypes.bool,
-refreshInterval: PropTypes.number,
-sessionRetryInterval: PropTypes.number,
-
-onChange: PropTypes.func,
-onSearch: PropTypes.func,
-onAuthorization: PropTypes.func,
-onExpiration: PropTypes.func,
-onViolation: PropTypes.func,
-onStupefaction: PropTypes.func,
-
- */
-
-var defaultOptions {
+const defaultOptions = {
     basePath: '/srv/data',
     discoveryFlags: {},
     retrievalFlags: {},
-    online: true,
-    connected: false,
-    inForeground: true,
     prefetching: true,
     cacheValidation: true,
     refreshInterval: 15 * 60,   // 15 minutes
@@ -50,19 +24,50 @@ var defaultOptions {
 class RemoteDataSource extends EventEmitter {
     constructor(options) {
         super();
-
+        this.active = false;
         this.options = _.defaults({}, options, defaultOptions);
-
-        this.searching = false;
         this.disconnected = false;
         this.idMappings = {};
-        this.cacheValidation = {};
+        this.cache = this.options.cache;
+        this.cacheValidations = {};
         this.cacheClearing = {};
         this.changeMonitors = [];
         this.recentSearchResults = [];
         this.recentStorageResults = [];
         this.recentRemovalResults = [];
         this.changeQueue = [];
+        this.sessionCheckInterval = 0;
+    }
+
+    activate() {
+        if (!this.active) {
+            this.sessionCheckInterval = setInterval(() => {
+                let soon = Moment().add(5, 'minute').toISOString();
+                let expired = findSessions((session) => {
+                    if (session.etime < soon) {
+                        return true;
+                    }
+                });
+                if (!_.isEmpty(expired)) {
+                    _.each(expired, (session) => {
+                        if (!session.token) {
+                            // recreate session if we haven't gain authorization yet
+                            destroySession(session);
+                        }
+                    });
+                    this.triggerEvent(new RemoteDataSourceEvent('change', this));
+                }
+            }, 60 * 1000);
+            this.active = true;
+        }
+    }
+
+    deactivate() {
+        if (this.active) {
+            clearInterval(this.sessionCheckInterval);
+            this.sessionCheckInterval = 0;
+            this.active = false;
+        }
     }
 
     /**
@@ -75,31 +80,35 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Object>}
      */
     beginSession(location, area) {
-        var address = location.address;
-        var session = getSession(address);
-        if (!session.promise) {
-            var url = `${address}/srv/session/`;
-            var options = { responseType: 'json', contentType: 'json' };
-            session.promise = HTTPRequest.fetch('POST', url, { area }, options).then((res) => {
-                _.assign(session, res.session);
-                if (session.handle) {
-                    // return login information to caller
-                    return {
-                        system: res.system,
-                        servers: res.servers,
-                    };
-                } else {
-                    throw new HTTPError(session.error);
-                }
-            }).catch((err) => {
-                // clear the promise if it fails
-                session.promise = null;
-                // trigger a change event after a delay, which should cause the
-                // caller to try again
-                setTimeout(this.triggerChangeEvent, this.props.sessionRetryInterval);
-                throw err;
-            });
+        let address = location.address;
+        let session = getSession(address);
+        if (session.promise) {
+            return session.promise;
         }
+        let url = `${address}/srv/session/`;
+        let options = { responseType: 'json', contentType: 'json' };
+        session.promise = HTTPRequest.fetch('POST', url, { area }, options).then((res) => {
+            _.assign(session, res.session);
+            if (session.handle) {
+                // return login information to caller
+                return {
+                    system: res.system,
+                    servers: res.servers,
+                };
+            } else {
+                throw new HTTPError(session.error);
+            }
+        }).catch((err) => {
+            // clear the promise if it fails
+            session.promise = null;
+            // trigger a change event after a delay, which should cause the
+            // caller to try again
+            let { sessionRetryInterval } = this.options;
+            setTimeout(() => {
+                this.triggerEvent(new RemoteDataSourceEvent('change', this));
+            }, sessionRetryInterval);
+            throw err;
+        });
         return session.promise;
     }
 
@@ -112,20 +121,20 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Boolean>}
      */
     checkSession(location) {
-        var address = location.address;
-        var session = getSession(address);
-        var handle = session.handle;
+        let address = location.address;
+        let session = getSession(address);
+        let handle = session.handle;
         if (!handle) {
             return Promise.resolve(false);
         }
-        var url = `${address}/srv/session/`;
-        var options = { responseType: 'json' };
+        let url = `${address}/srv/session/`;
+        let options = { responseType: 'json' };
         return HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
             if (res && res.session) {
                 _.assign(session, res.session);
             }
             if (session.token) {
-                this.triggerAuthorizationEvent(session);
+                this.triggerEvent(new RemoteDataSourceEvent('authorization', this, { session }));
                 return true;
             } else if (!session.error) {
                 return false;
@@ -135,7 +144,7 @@ class RemoteDataSource extends EventEmitter {
         }).catch((err) => {
             // clear the promise if the session is no longer valid
             session.promise = null;
-            this.triggerChangeEvent();
+            this.triggerEvent(new RemoteDataSourceEvent('change', this));
             throw err;
         });
     }
@@ -149,25 +158,25 @@ class RemoteDataSource extends EventEmitter {
      *
      * @return {Promise}
      */
-    submitPassword: function(location, username, password) {
-        var address = location.address;
-        var session = getSession(address);
-        var handle = session.handle;
+    submitPassword(location, username, password) {
+        let address = location.address;
+        let session = getSession(address);
+        let handle = session.handle;
         if (!handle) {
             return Promise.resolve(false);
         }
-        var url = `${address}/srv/session/htpasswd/`;
-        var payload = { handle, username, password };
-        var options = { responseType: 'json', contentType: 'json' };
+        let url = `${address}/srv/session/htpasswd/`;
+        let payload = { handle, username, password };
+        let options = { responseType: 'json', contentType: 'json' };
         return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
             _.assign(session, res.session);
-            this.triggerAuthorizationEvent(session);
+            this.triggerEvent(new RemoteDataSourceEvent('authorization', this, { session }));
             return null;
         }).catch((err) => {
             if (err.statusCode !== 401) {
                 // clear the promise if the session is no longer valid
                 session.promise = null;
-                this.triggerChangeEvent();
+                this.triggerEvent(new RemoteDataSourceEvent('change', this));
             }
             throw err;
         });
@@ -181,15 +190,15 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise}
      */
     endSession(location) {
-        var address = location.address;
-        var session = getSession(address);
-        var handle = session.handle;
+        let address = location.address;
+        let session = getSession(address);
+        let handle = session.handle;
         if (!handle) {
             return Promise.resolve(null);
         }
         return Promise.resolve(session.promise).then(() => {
-            var url = `${address}/srv/session/`;
-            var options = { responseType: 'json', contentType: 'json' };
+            let url = `${address}/srv/session/`;
+            let options = { responseType: 'json', contentType: 'json' };
             return HTTPRequest.fetch('DELETE', url, { handle }, options).catch((err) => {
                 // clean cached information anyway, given when we failed to
                 // remove the session in the backend
@@ -198,7 +207,7 @@ class RemoteDataSource extends EventEmitter {
                 destroySession(session);
                 this.clearRecentOperations(address);
                 this.clearCachedSchemas(address);
-                this.triggerExpirationEvent(session);
+                this.triggerEvent(new RemoteDataSourceEvent('expiration', this, { session }));
                 return null;
             });
         });
@@ -212,26 +221,27 @@ class RemoteDataSource extends EventEmitter {
      *
      * @return {Promise<String>}
      */
-    beginMobileSession: function(location, area) {
-        var address = location.address;
-        var session = getSession(address, 'mobile');
-        if (!session.promise) {
-            var parentSession = getSession(address);
-            var handle = parentSession.handle;
-            var url = `${address}/srv/session/`;
-            var options = { responseType: 'json', contentType: 'json' };
-            session.promise = HTTPRequest.fetch('POST', url, { area, handle }, options).then((res) => {
-                _.assign(session, res.session);
-                if (session.handle) {
-                    return session.handle;
-                } else {
-                    throw HTTPError(session.error);
-                }
-            }).catch((err) => {
-                session.promise = null;
-                throw err;
-            });
+    beginMobileSession(location, area) {
+        let address = location.address;
+        let session = getSession(address, 'mobile');
+        if (session.promise) {
+            return session.promise;
         }
+        let parentSession = getSession(address);
+        let handle = parentSession.handle;
+        let url = `${address}/srv/session/`;
+        let options = { responseType: 'json', contentType: 'json' };
+        session.promise = HTTPRequest.fetch('POST', url, { area, handle }, options).then((res) => {
+            _.assign(session, res.session);
+            if (session.handle) {
+                return session.handle;
+            } else {
+                throw HTTPError(session.error);
+            }
+        }).catch((err) => {
+            session.promise = null;
+            throw err;
+        });
         return session.promise;
     }
 
@@ -244,31 +254,32 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Number>}
      */
     acquireMobileSession(location, handle) {
-        var address = location.address;
-        var session = getSession(address);
+        let address = location.address;
+        let session = getSession(address);
         if (session.handle !== handle) {
             session.promise = null;
             session.handle = handle;
         }
-        if (!session.promise) {
-            var url = `${address}/srv/session/`;
-            var options = { responseType: 'json', contentType: 'json' };
-            session.promise = HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
-                _.assign(session, res.session);
-                if (session.token) {
-                    this.triggerAuthorizationEvent(session);
-                    return session.user_id;
-                } else {
-                    throw new HTTPError(session.error);
-                }
-            }).catch((err) => {
-                setTimeout(() => {
-                    session.promise = null;
-                    session.handle = null;
-                }, 5000);
-                throw err;
-            });
+        if (session.promise) {
+            return session.promise;
         }
+        let url = `${address}/srv/session/`;
+        let options = { responseType: 'json', contentType: 'json' };
+        session.promise = HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
+            _.assign(session, res.session);
+            if (session.token) {
+                this.triggerEvent(new RemoteDataSourceEvent('authorization', this, { session }));
+                return session.user_id;
+            } else {
+                throw new HTTPError(session.error);
+            }
+        }).catch((err) => {
+            setTimeout(() => {
+                session.promise = null;
+                session.handle = null;
+            }, 5000);
+            throw err;
+        });
         return session.promise;
     }
 
@@ -281,8 +292,8 @@ class RemoteDataSource extends EventEmitter {
      */
     releaseMobileSession(location) {
         // just clear the promise--let unused authentication object expire on its own
-        var address = location.address;
-        var session = getSession(address, 'mobile');
+        let address = location.address;
+        let session = getSession(address, 'mobile');
         if (session.promise) {
             return session.promise.then(() => {
                 destroySession(session);
@@ -301,9 +312,9 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise}
      */
     endMobileSession(location, handle) {
-        var address = location.address;
-        var url = `${address}/srv/session/`;
-        var options = { responseType: 'json', contentType: 'json' };
+        let address = location.address;
+        let url = `${address}/srv/session/`;
+        let options = { responseType: 'json', contentType: 'json' };
         return HTTPRequest.fetch('DELETE', url, { handle }, options).then(() => {
             return null;
         });
@@ -318,20 +329,20 @@ class RemoteDataSource extends EventEmitter {
      *
      * @return {String}
      */
-    getOAuthURL: function(location, oauthServer, type) {
-        var address = location.address;
-        var session = getSession(address);
-        var handle = session.handle;
+    getOAuthURL(location, oauthServer, type) {
+        let address = location.address;
+        let session = getSession(address);
+        let handle = session.handle;
         if (!handle) {
             return '';
         }
-        var query = `sid=${oauthServer.id}&handle=${handle}`;
+        let query = `sid=${oauthServer.id}&handle=${handle}`;
         if (type === 'activation') {
             query += '&activation=1';
         } else if (type === 'test') {
             query += '&test=1';
         }
-        var url = `${address}/srv/session/${oauthServer.type}/?${query}`;
+        let url = `${address}/srv/session/${oauthServer.type}/?${query}`;
         return url;
     }
 
@@ -343,8 +354,8 @@ class RemoteDataSource extends EventEmitter {
      * @return {Boolean}
      */
     hasAuthorization(location) {
-        var address = location.address;
-        var session = getSession(address);
+        let address = location.address;
+        let session = getSession(address);
         if (session.token) {
             return true;
         } else {
@@ -362,7 +373,7 @@ class RemoteDataSource extends EventEmitter {
         if (Moment(session.etime) > Moment()) {
             // don't restore broken session
             if (session.handle && session.token) {
-                var existing = getSession(session.address);
+                let existing = getSession(session.address);
                 _.assign(existing, session);
             }
         }
@@ -382,8 +393,8 @@ class RemoteDataSource extends EventEmitter {
             if (location.schema === 'local') {
                 return 0;
             }
-            var address = location.address;
-            var session = getSession(address);
+            let address = location.address;
+            let session = getSession(address);
             if (session.token) {
                 return session.user_id;
             } else {
@@ -400,16 +411,16 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Array<Object>>}
      */
     find(query) {
-        var newSearch = new Search(query);
+        let newSearch = new Search(query);
         if (newSearch.isLocal()) {
             return this.searchLocalCache(newSearch).then(() => {
                 return newSearch.results;
             });
         } else {
-            var byComponent = _.get(query, 'by.constructor.displayName');
-            var required = query.required;
-            var committed = query.committed;
-            var blocking;
+            let byComponent = _.get(query, 'by.constructor.displayName');
+            let required = query.required;
+            let committed = query.committed;
+            let blocking;
             if (query.blocking === true) {
                 blocking = 'insufficient';
             } else if (query.blocking === false) {
@@ -425,8 +436,8 @@ class RemoteDataSource extends EventEmitter {
                     blocking = 'incomplete'
                 }
             }
-            var search;
-            var existingSearch = this.findExistingSearch(newSearch);
+            let search;
+            let existingSearch = this.findExistingSearch(newSearch);
             if (existingSearch) {
                 // don't reuse search if it has failed
                 if (existingSearch.promise.isRejected()) {
@@ -441,9 +452,10 @@ class RemoteDataSource extends EventEmitter {
                         existingSearch.by.push(byComponent);
                     }
                 }
-                var status;
+                let status;
                 if (existingSearch.promise.isFulfilled()) {
-                    if (existingSearch.isFresh(this.props.refreshInterval)) {
+                    let { refreshInterval } = this.options;
+                    if (existingSearch.isFresh(refreshInterval)) {
                         status = 'complete';
                     } else {
                         if (existingSearch.updating) {
@@ -457,15 +469,15 @@ class RemoteDataSource extends EventEmitter {
                 }
                 if (status === 'expired') {
                     // search is perhaps out-of-date--check with the server
-                    var remoteSearchPromise = this.searchRemoteDatabase(existingSearch).then((changed) => {
+                    let remoteSearchPromise = this.searchRemoteDatabase(existingSearch).then((changed) => {
                         if (changed) {
                             // data returned earlier wasn't entirely correct
                             // trigger a new search through a onChange event
-                            this.triggerChangeEvent();
+                            this.triggerEvent(new RemoteDataSourceEvent('change', this));
                         }
                         return existingSearch.results;
                     });
-                    var waitForRemoteSearch = true;
+                    let waitForRemoteSearch = true;
                     if (blocking !== 'expired') {
                         waitForRemoteSearch = false;
                     }
@@ -480,10 +492,11 @@ class RemoteDataSource extends EventEmitter {
                 // look for records in cache first
                 newSearch.promise = this.searchLocalCache(newSearch).then(() => {
                     // see what's the status is after scanning the local cache
-                    var status;
+                    let status;
                     if (newSearch.isMeetingExpectation()) {
                         // local search yield the expected number of objects
-                        if (newSearch.isSufficientlyRecent(this.props.refreshInterval)) {
+                        let { refreshInterval } = this.options;
+                        if (newSearch.isSufficientlyRecent(refreshInterval)) {
                             // we got everything we need
                             status = 'complete';
                         } else {
@@ -507,13 +520,13 @@ class RemoteDataSource extends EventEmitter {
                     }
 
                     // perform search on remote server
-                    var remoteSearchPromise = this.searchRemoteDatabase(newSearch).then((changed) => {
+                    let remoteSearchPromise = this.searchRemoteDatabase(newSearch).then((changed) => {
                         if (changed) {
-                            this.triggerChangeEvent();
+                            this.triggerEvent(new RemoteDataSourceEvent('change', this));
                         };
                         return search.results;
                     });
-                    var waitForRemoteSearch = true;
+                    let waitForRemoteSearch = true;
 
                     // see if we should wait for the remote search to complete
                     // that depends on what we have from the cache
@@ -546,14 +559,17 @@ class RemoteDataSource extends EventEmitter {
                 search = newSearch;
             }
             return search.promise.then((results) => {
-                var includeUncommitted = _.get(this.props.discoveryFlags, 'include_uncommitted');
+                let includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
                 if (includeUncommitted && committed !== true) {
                     // apply changes that haven't been saved yet
                     search = this.applyUncommittedChanges(search);
                 }
                 if (required) {
                     if (!search.isMeetingExpectation()) {
-                        this.triggerStupefactionEvent(query, newSearch.results);
+                        this.triggerEvent(new RemoteDataSourceEvent('stupefaction', this, {
+                            query,
+                            results: newSearch.results
+                        }));
                         throw new HTTPError(404);
                     }
                 }
@@ -573,10 +589,10 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Array<Object>>}
      */
     save(location, objects, options) {
-        var storage = this.addStorage(new Storage(location, objects, options));
+        let storage = this.addStorage(new Storage(location, objects, options));
         if (storage.isLocal()) {
             return this.updateLocalDatabase(storage).then(() => {
-                this.triggerChangeEvent();
+                this.triggerEvent(new RemoteDataSourceEvent('change', this));
                 return storage.results;
             });
         } else {
@@ -586,7 +602,7 @@ class RemoteDataSource extends EventEmitter {
                 }
                 this.updateLocalCache(storage);
                 this.updateRecentSearchResults(storage);
-                this.triggerChangeEvent();
+                this.triggerEvent(new RemoteDataSourceEvent('change', this));
                 return storage.results;
             });
         }
@@ -601,22 +617,22 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Array<Object>>}
      */
     remove(location, objects) {
-        var removal = this.addRemoval(new Removal(location, objects));
+        let removal = this.addRemoval(new Removal(location, objects));
         if (removal.isLocal()) {
             return this.updateLocalDatabase(removal).then(() => {
-                this.triggerChangeEvent();
+                this.triggerEvent(new RemoteDataSourceEvent('change', this));
                 return removal.results;
             });
         } else {
             if (process.env.NODE_ENV !== 'production') {
-                if (_.get(this.props.discoveryFlags, 'include_deleted')) {
+                if (_.get(this.options.discoveryFlags, 'include_deleted')) {
                     console.warn('remove() should not be used when deleted objects are not automatically filtered out');
                 }
             }
             return this.updateRemoteDatabase(removal).then(() => {
                 this.updateLocalCache(removal);
                 this.updateRecentSearchResults(removal);
-                this.triggerChangeEvent();
+                this.triggerEvent(new RemoteDataSourceEvent('change', this));
                 return removal.results;
             });
         }
@@ -632,13 +648,13 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Boolean>}
      */
     await(location, object, timeout) {
-        var monitor = {
+        let monitor = {
             location: _.pick(location, 'address', 'schema', 'table'),
             id: object.id,
             promise: null,
             resolve: null,
         };
-        var promise = new Promise((resolve) => {
+        let promise = new Promise((resolve) => {
             monitor.resolve = resolve;
         });
         monitor.promise = promise.timeout(timeout).then(() => {
@@ -662,12 +678,12 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Boolean>}
      */
     refresh(location, object) {
-        var relevantSearches = this.getRelevantRecentSearches(location);
+        let relevantSearches = this.getRelevantRecentSearches(location);
         _.each(relevantSearches, (search) => {
-            var results = search.results;
-            var dirty = false;
-            var index = _.sortedIndexBy(results, object, 'id');
-            var target = results[index];
+            let results = search.results;
+            let dirty = false;
+            let index = _.sortedIndexBy(results, object, 'id');
+            let target = results[index];
             if (target && target.id === object.id) {
                 dirty = true;
             }
@@ -684,21 +700,17 @@ class RemoteDataSource extends EventEmitter {
      * @param  {String|undefined} schema
      */
     abandon(address, schema) {
-        this.updateList('recentSearchResults', (before) => {
-            var after = _.slice(before);
-            _.each(after, (search) => {
-                if (!search.isLocal()) {
-                    if (search.address === address) {
-                        if (!schema || search.schema === schema) {
-                            search.dirty = true;
-                        }
+        _.each(this.recentSearchResults, (search) => {
+            if (!search.isLocal()) {
+                if (search.address === address) {
+                    if (!schema || search.schema === schema) {
+                        search.dirty = true;
                     }
                 }
-            });
-            return after;
+            }
         });
-        if (this.props.cache) {
-            this.props.cache.reset(address, schema);
+        if (this.cache) {
+            this.cache.reset(address, schema);
         }
     }
 
@@ -717,56 +729,52 @@ class RemoteDataSource extends EventEmitter {
             }
         }
         return this.reconcileChanges(changes).then(() => {
-            var invalidated = [];
-            this.updateList('recentSearchResults', (before) => {
-                var after = _.slice(before);
-                _.each(after, (search) => {
-                    if (search.dirty) {
-                        return;
-                    }
-                    var dirty;
-                    if (changes) {
-                        dirty = _.some(changes, (their) => {
-                            if (search.matchLocation(their)) {
-                                if (search.isMeetingExpectation()) {
-                                    // we have all the possible results
-                                    // see if the changed object is among them
-                                    var index = _.sortedIndexBy(search.results, { id: their.id }, 'id');
-                                    var object = search.results[index];
-                                    if (object && object.id === their.id) {
-                                        return true;
-                                    }
-                                } else {
-                                    // an open-ended search--the changed object
-                                    // we can't tell if new objects won't show up
-                                    // in the results
+            let invalidated = [];
+            _.each(this.recentSearchResults, (search) => {
+                if (search.dirty) {
+                    return;
+                }
+                let dirty;
+                if (changes) {
+                    dirty = _.some(changes, (their) => {
+                        if (search.matchLocation(their)) {
+                            if (search.isMeetingExpectation()) {
+                                // we have all the possible results
+                                // see if the changed object is among them
+                                let index = _.sortedIndexBy(search.results, { id: their.id }, 'id');
+                                let object = search.results[index];
+                                if (object && object.id === their.id) {
                                     return true;
                                 }
+                            } else {
+                                // an open-ended search--the changed object
+                                // we can't tell if new objects won't show up
+                                // in the results
+                                return true;
                             }
-                        });
-                    } else {
-                        // invalidate all results
-                        dirty = true;
-                    }
-                    if (dirty) {
-                        search.dirty = true;
-                        invalidated.push(search);
-                    }
-                });
-                return after;
+                        }
+                    });
+                } else {
+                    // invalidate all results
+                    dirty = true;
+                }
+                if (dirty) {
+                    search.dirty = true;
+                    invalidated.push(search);
+                }
             });
             if (_.isEmpty(invalidated)) {
                 return false;
             }
-            if (this.props.online && this.props.connected) {
+            if (this.active) {
                 // tell data consuming components to rerun their queries
                 // initially, they'd all get the data they had before
                 // another change event will occur if new objects are
                 // actually retrieved from the remote server
-                this.triggerChangeEvent();
+                this.triggerEvent(new RemoteDataSourceEvent('change', this));
 
                 // update recent searches that aren't being used currently
-                if (this.props.prefetching) {
+                if (this.options.prefetching) {
                     this.schedulePrefetch(invalidated);
                 }
             }
@@ -780,7 +788,7 @@ class RemoteDataSource extends EventEmitter {
      * @param  {Object|null} revalidation
      */
     revalidate(revalidation) {
-        this.cacheValidation = _.mapValues(this.cacheValidation, (promises, address) => {
+        this.cacheValidations = _.mapValues(this.cacheValidations, (promises, address) => {
             return _.omitBy(promises, (promise, schema) => {
                 if (revalidation) {
                     if (revalidation.address === address) {
@@ -824,7 +832,7 @@ class RemoteDataSource extends EventEmitter {
         }
         return _.filter(changes, (their) => {
             // examine changes that have been sent earlier
-            var relevantChanges = _.filter(this.changeQueue, (change) => {
+            let relevantChanges = _.filter(this.changeQueue, (change) => {
                 if (change.dispatched && !change.failed) {
                     if (change.matchLocation(their)) {
                         return true;
@@ -865,7 +873,7 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise}
      */
     reconcileChanges(changes) {
-        return Promise.each(this.state.changeQueue, (change) => {
+        return Promise.each(this.changeQueue, (change) => {
             if (change.onConflict === false) {
                 // don't need to reconcile object removal
                 // we still want the object deleted even if it has changed
@@ -875,12 +883,12 @@ class RemoteDataSource extends EventEmitter {
                 // it's in-flight already
                 return;
             }
-            var relevantChanges = _.filter(changes, (their) => {
+            let relevantChanges = _.filter(changes, (their) => {
                 return change.matchLocation(their);
             });
 
             // look for uncommitted objects that were changed remotely
-            var affectedObjects = _.filter(change.objects, (own, index) => {
+            let affectedObjects = _.filter(change.objects, (own, index) => {
                 if (!change.removed[index]) {
                     if (!changes) {
                         // we're dealing with a reconnection scenario
@@ -900,13 +908,13 @@ class RemoteDataSource extends EventEmitter {
                 return null;
             }
             // load the (possibly) new objects
-            var affectedIds = _.map(affectedObjects, 'id');
+            let affectedIds = _.map(affectedObjects, 'id');
             return this.retrieveRemoteObjects(change.location, affectedIds, true).then((remoteObjects) => {
                 _.each(affectedObjects, (own) => {
-                    var their = _.find(remoteObjects, { id: own.id });
+                    let their = _.find(remoteObjects, { id: own.id });
                     if (their) {
                         if (their.gn > own.gn) {
-                            var preserve = false;
+                            let preserve = false;
                             if (change.onConflict) {
                                 // use the onConflict handler supplied by caller of
                                 // save() to resolve the conflict
@@ -921,7 +929,7 @@ class RemoteDataSource extends EventEmitter {
                             // if preventDefault() wasn't called, then the change
                             // is cancelled
                             if (!preserve) {
-                                var index = _.indexOf(change.objects, own);
+                                let index = _.indexOf(change.objects, own);
                                 change.removed[index] = true;
                             }
                         }
@@ -943,18 +951,14 @@ class RemoteDataSource extends EventEmitter {
      * @return {Search|null}
      */
     findExistingSearch(newSearch) {
-        var index = _.findIndex(this.recentSearchResults, (existingSearch) => {
+        let index = _.findIndex(this.recentSearchResults, (existingSearch) => {
             return newSearch.match(existingSearch);
         });
         if (index !== -1) {
             // move the matching search to the top
-            var existingSearch = this.recentSearchResults[index];
-            this.updateList('recentSearchResults', (before) => {
-                var after = _.slice(before);
-                after.splice(index, 1);
-                after.unshift(existingSearch);
-                return after;
-            });
+            let existingSearch = this.recentSearchResults[index];
+            this.recentSearchResults.splice(index, 1);
+            this.recentSearchResults.unshift(existingSearch);
             return existingSearch;
         } else {
             return null;
@@ -968,14 +972,10 @@ class RemoteDataSource extends EventEmitter {
      */
     addSearch(newSearch) {
         // save the search
-        this.updateList('recentSearchResults', (before) => {
-            var after = _.slice(before);
-            after.unshift(newSearch);
-            while (after.length > 1024) {
-                after.pop();
-            }
-            return after;
-        });
+        this.recentSearchResults.unshift(newSearch);
+        while (this.recentSearchResults.length > 1024) {
+            after.pop();
+        }
         return newSearch;
     }
 
@@ -987,15 +987,11 @@ class RemoteDataSource extends EventEmitter {
      * @return {Storage}
      */
     addStorage(newStorage) {
-        this.updateList('recentStorageResults', (before) => {
-            var after = _.slice(before);
-            after.unshift(newStorage);
-            _.remove(after, { canceled: true });
-            while (after.length > 32) {
-                after.pop();
-            }
-            return after;
-        });
+        this.recentStorageResults.unshift(newStorage);
+        _.remove(this.recentStorageResults, { canceled: true });
+        while (this.recentStorageResults.length > 32) {
+            this.recentStorageResults.pop();
+        }
         return newStorage;
     }
 
@@ -1007,14 +1003,10 @@ class RemoteDataSource extends EventEmitter {
      * @return {Removal}
      */
     addRemoval(newRemoval) {
-        this.updateList('recentRemovalResults', (before) => {
-            var after = _.clone(before);
-            after.unshift(newRemoval);
-            while (after.length > 32) {
-                after.pop();
-            }
-            return after;
-        });
+        this.recentRemovalResults.unshift(newRemoval);
+        while (this.recentRemovalResults.length > 32) {
+            this.recentRemovalResults.pop();
+        }
         return newRemoval;
     }
 
@@ -1029,8 +1021,7 @@ class RemoteDataSource extends EventEmitter {
         if (search.isLocal()) {
             return Promise.resolve(false);
         }
-        if (!this.props.online) {
-            // don't search remotely when there's no connection
+        if (!this.active) {
             return Promise.resolve(false);
         }
         if (search.updating) {
@@ -1038,35 +1029,31 @@ class RemoteDataSource extends EventEmitter {
         }
         search.updating = true;
         search.scheduled = false;
-        if (!this.searching) {
-            this.searching = true;
-            this.triggerSearchEvent(true);
-        }
-        var location = search.getLocation();
-        var criteria = search.criteria;
+        let location = search.getLocation();
+        let criteria = search.criteria;
         search.start();
         return this.discoverRemoteObjects(location, criteria).then((discovery) => {
             return this.searchLocalCache(search, discovery).return(discovery);
         }).then((discovery) => {
             // use the list of ids and gns (generation number) to determine
             // which objects have changed and which have gone missing
-            var ids = discovery.ids;
-            var gns = discovery.gns;
-            var idsUpdated = search.getUpdateList(ids, gns);
-            var idsRemoved = search.getRemovalList(ids);
+            let ids = discovery.ids;
+            let gns = discovery.gns;
+            let idsUpdated = search.getUpdateList(ids, gns);
+            let idsRemoved = search.getRemovalList(ids);
             if (!_.isEmpty(idsUpdated)) {
                 // retrieve the updated (or new) objects from server
                 return this.retrieveRemoteObjects(location, idsUpdated).then((retrieval) => {
                     // then add them to the list and remove missing ones
-                    var newObjects = retrieval;
-                    var newResults = insertObjects(search.results, newObjects);
+                    let newObjects = retrieval;
+                    let newResults = insertObjects(search.results, newObjects);
                     newResults = removeObjects(newResults, idsRemoved);
 
                     // wait for any storage operation currently in flight to finish so
                     // we don't end up with both the committed and the uncommitted copy
-                    var includeUncommitted = _.get(this.props.discoveryFlags, 'include_uncommitted');
+                    let includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
                     if (includeUncommitted) {
-                        var relatedChanges = _.filter(this.changeQueue, (change) => {
+                        let relatedChanges = _.filter(this.changeQueue, (change) => {
                             if (change.dispatched && !change.committed) {
                                 if (change.matchLocation(location)) {
                                     return true;
@@ -1074,7 +1061,7 @@ class RemoteDataSource extends EventEmitter {
                             }
                         });
                         if (!_.isEmpty(relatedChanges)) {
-                            var promises = _.map(relatedChanges, 'promise');
+                            let promises = _.map(relatedChanges, 'promise');
                             return Promise.all(promises).reflect().then(() => {
                                 return newResults;
                             });
@@ -1084,18 +1071,13 @@ class RemoteDataSource extends EventEmitter {
                 });
             } else if (!_.isEmpty(idsRemoved)) {
                 // update the result set by removing objects
-                var newResults = removeObjects(search.results, idsRemoved);
+                let newResults = removeObjects(search.results, idsRemoved);
                 return newResults;
             } else {
                 return null;
             }
         }).then((newResults) => {
             search.finish(newResults);
-
-            // update recentSearchResults to force rerender
-            this.updateList('recentSearchResults', (before) => {
-                return _.slice(before);
-            });
 
             // save to cache
             this.updateLocalCache(search);
@@ -1109,14 +1091,9 @@ class RemoteDataSource extends EventEmitter {
                 clearTimeout(this.searchingEndTimeout);
             }
             this.searchingEndTimeout = setTimeout(() => {
-                var nextPrefetch = _.find(this.recentSearchResults, { scheduled: true });
+                let nextPrefetch = _.find(this.recentSearchResults, { scheduled: true });
                 if (nextPrefetch) {
                     this.searchRemoteDatabase(nextPrefetch);
-                } else {
-                    if (this.searching) {
-                        this.searching = false;
-                        this.triggerSearchEvent(false);
-                    }
                 }
                 this.searchingEndTimeout = 0;
             }, 250);
@@ -1156,7 +1133,7 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise>}
      */
     updateRemoteDatabase(storage) {
-        var change = new Change(storage.getLocation(), storage.objects, storage.options);
+        let change = new Change(storage.getLocation(), storage.objects, storage.options);
         _.each(this.changeQueue, (earlierOp) => {
             if (!earlierOp.committed && !earlierOp.canceled) {
                 change.merge(earlierOp);
@@ -1168,8 +1145,8 @@ class RemoteDataSource extends EventEmitter {
             return Promise.resolve();
         }
         change.onDispatch = (change) => {
-            var objects = change.deliverables();
-            var location = change.location;
+            let objects = change.deliverables();
+            let location = change.location;
             storage.start();
             return this.performRemoteAction(location, 'storage', { objects }).then((objects) => {
                 this.saveIDMapping(location, change.objects, objects);
@@ -1177,11 +1154,11 @@ class RemoteDataSource extends EventEmitter {
             });
         };
         this.queueChange(change);
-        if (this.props.online) {
+        if (this.active) {
             // send it if we've connectivity
             change.dispatch();
         }
-        this.triggerChangeEvent();
+        this.triggerEvent(new RemoteDataSourceEvent('change', this));
         return change.promise.then((objects) => {
             if (!change.canceled) {
                 storage.finish(objects);
@@ -1190,7 +1167,7 @@ class RemoteDataSource extends EventEmitter {
             }
         }).catch((err) => {
             // signal that the change was removed
-            this.triggerChangeEvent();
+            this.triggerEvent(new RemoteDataSourceEvent('change', this));
             throw err;
         });
     }
@@ -1201,30 +1178,27 @@ class RemoteDataSource extends EventEmitter {
      * @param  {Change} change
      */
     queueChange(change) {
-        this.updateList('changeQueue', (before) => {
-            // get rid of entries that's no longer needed
-            var delay = (process.env.PLATFORM === 'CORDOVA') ? 10 : 1;
-            var someTimeAgo = Moment().subtract(delay, 'minute').toISOString();
-            var after = _.reject(before, (oldChange) => {
-                if (oldChange.committed) {
-                    // keep entry in queue until we're certain we won't receive
-                    // notification about it
-                    if (oldChange.time < someTimeAgo) {
-                        return true;
-                    }
-                } else if (oldChange.dispatched) {
-                    if (oldChange.error) {
-                        // dispatched but failed
-                        return true;
-                    }
-                } else if (oldChange.canceled) {
-                    // undispatched and canceled
+        // get rid of entries that's no longer needed
+        let delay = (process.env.PLATFORM === 'CORDOVA') ? 10 : 1;
+        let someTimeAgo = Moment().subtract(delay, 'minute').toISOString();
+        _.remove(this.changeQueue, (oldChange) => {
+            if (oldChange.committed) {
+                // keep entry in queue until we're certain we won't receive
+                // notification about it
+                if (oldChange.time < someTimeAgo) {
                     return true;
                 }
-            });
-            after.push(change);
-            return after;
+            } else if (oldChange.dispatched) {
+                if (oldChange.error) {
+                    // dispatched but failed
+                    return true;
+                }
+            } else if (oldChange.canceled) {
+                // undispatched and canceled
+                return true;
+            }
         });
+        this.changeQueue.push(change);
     }
 
     /**
@@ -1238,15 +1212,15 @@ class RemoteDataSource extends EventEmitter {
         if (localObjects.length !== remoteObjects.length) {
             return;
         }
-        var path = [ location.address, location.schema, location.table ];
-        var list = _.get(this.idMappings, path);
+        let path = [ location.address, location.schema, location.table ];
+        let list = _.get(this.idMappings, path);
         if (!list) {
             list = [];
             _.set(this.idMappings, path, list);
         }
         _.each(localObjects, (localObject, index) => {
             if (localObject.id < 1) {
-                var remoteObject = remoteObjects[index];
+                let remoteObject = remoteObjects[index];
                 _.remove(list, { permanent: remoteObject.id });
                 list.push({
                     temporary: localObject.id,
@@ -1266,9 +1240,9 @@ class RemoteDataSource extends EventEmitter {
      * @return {Number|undefined}
      */
     findTemporaryID(location, permanentID) {
-        var path = [ location.address, location.schema, location.table ];
-        var list = _.get(this.idMappings, path);
-        var entry = _.find(list, { permanent: permanentID });
+        let path = [ location.address, location.schema, location.table ];
+        let list = _.get(this.idMappings, path);
+        let entry = _.find(list, { permanent: permanentID });
         if (entry) {
             return entry.temporary;
         }
@@ -1283,9 +1257,9 @@ class RemoteDataSource extends EventEmitter {
      * @return {Number|undefined}
      */
     findPermanentID(location, temporaryID) {
-        var path = [ location.address, location.schema, location.table ];
-        var list = _.get(this.idMappings, path);
-        var entry = _.find(list, { temporary: temporaryID });
+        let path = [ location.address, location.schema, location.table ];
+        let list = _.get(this.idMappings, path);
+        let entry = _.find(list, { temporary: temporaryID });
         if (entry) {
             return entry.permanent;
         }
@@ -1298,14 +1272,14 @@ class RemoteDataSource extends EventEmitter {
      *
      * @return {Object}
      */
-    function applyUncommittedChanges(search) {
-        var uncommittedChanges = _.filter(this.changeQueue, {
+    applyUncommittedChanges(search) {
+        let uncommittedChanges = _.filter(this.changeQueue, {
             committed: false,
             canceled: false,
             error: null
         });
         if (!_.isEmpty(uncommittedChanges)) {
-            var includeDeleted = _.get(this.props.discoveryFlags, 'include_deleted');
+            let includeDeleted = _.get(this.options.discoveryFlags, 'include_deleted');
             search = _.clone(search);
             search.results = _.slice(search.results);
             _.each(uncommittedChanges, (change) => {
@@ -1326,26 +1300,24 @@ class RemoteDataSource extends EventEmitter {
      * @return {Prmise}
      */
     performRemoteAction(location, action, payload) {
-        var address = location.address;
-        var basePath = this.props.basePath;
-        var schema = location.schema;
-        var table = location.table;
+        let { address, schema, table } = location;
+        let { basePath } = this.options;
         if (!schema) {
             return Promise.reject(new Error('No schema specified'));
         }
         if (!table) {
             return Promise.reject(new Error('No table specified'));
         }
-        var flags;
+        let flags;
         if (action === 'retrieval' || action === 'storage') {
-            flags = this.props.retrievalFlags;
+            flags = this.options.retrievalFlags;
         } else if (action === 'discovery') {
-            flags = _.omit(this.props.discoveryFlags, 'include_uncommitted');
+            flags = _.omit(this.options.discoveryFlags, 'include_uncommitted');
         }
-        var url = `${address}${basePath}/${action}/${schema}/${table}/`;
-        var session = getSession(address);
-        var req = _.assign({}, payload, flags, { auth_token: session.token });
-        var options = {
+        let url = `${address}${basePath}/${action}/${schema}/${table}/`;
+        let session = getSession(address);
+        let req = _.assign({}, payload, flags, { auth_token: session.token });
+        let options = {
             contentType: 'json',
             responseType: 'json',
         };
@@ -1357,11 +1329,11 @@ class RemoteDataSource extends EventEmitter {
                 this.clearCachedSchemas(address);
                 if (err.statusCode === 401) {
                     destroySession(session);
-                    this.triggerExpirationEvent(session);
+                    this.triggerEvent(new RemoteDataSourceEvent('expiration', this, { session }));
                 } else if (err.statusCode == 403) {
-                    this.triggerViolationEvent(address, schema);
+                    this.triggerEvent(new RemoteDataSourceEvent('violation', this, { address, schema }));
                 }
-                this.triggerChangeEvent();
+                this.triggerEvent(new RemoteDataSourceEvent('change', this));
             }
             throw err;
         });
@@ -1376,13 +1348,12 @@ class RemoteDataSource extends EventEmitter {
      */
     updateLocalDatabase(op) {
         return Promise.try(() => {
-            var cache = this.props.cache;
-            var location = op.getLocation();
+            let location = op.getLocation();
             op.start();
             if (op instanceof Removal) {
-                op.promise = cache.remove(location, op.objects);
+                op.promise = this.cache.remove(location, op.objects);
             } else {
-                op.promise = cache.save(location, op.objects);
+                op.promise = this.cache.save(location, op.objects);
             }
             return op.promise.then((objects) => {
                 op.finish(objects);
@@ -1398,20 +1369,19 @@ class RemoteDataSource extends EventEmitter {
      *
      * @return {Promise<Boolean>}
      */
-    searchLocalCache: function(search, discovery) {
+    searchLocalCache(search, discovery) {
         return this.validateCache(search.address, search.schema).then((signature) => {
             search.validateResults(signature);
 
-            var cache = this.props.cache;
             if (!discovery) {
                 // pre-discovery search of cache
                 if (search.remote) {
                     // don't scan cache initially if we must perform the search
-                    // on the remote server (i.e. the criteria is too complex)
+                    // on the remote server (i.e. the criteria are too complex)
                     return false;
                 }
-                var query = search.getQuery();
-                return cache.find(query).then((objects) => {
+                let query = search.getQuery();
+                return this.cache.find(query).then((objects) => {
                     search.results = objects;
                     return true;
                 });
@@ -1421,11 +1391,11 @@ class RemoteDataSource extends EventEmitter {
                 if (!search.remote) {
                     return false;
                 }
-                var ids = search.getFetchList(discovery.ids);
+                let ids = search.getFetchList(discovery.ids);
                 if (_.isEmpty(ids)) {
                     return false;
                 }
-                var query = _.assign({ criteria: { id: ids } }, search.getLocation());
+                let query = _.assign({ criteria: { id: ids } }, search.getLocation());
                 return cache.find(query).then((objects) => {
                     search.results = insertObjects(search.results, objects);
                     return true;
@@ -1435,14 +1405,7 @@ class RemoteDataSource extends EventEmitter {
             console.error(err);
             return false;
         });
-    },
-
-}
-
-
-
-module.exports = React.createClass({
-
+    }
 
     /**
      * Compare signature stored previous with current signature; if they do
@@ -1453,44 +1416,44 @@ module.exports = React.createClass({
      *
      * @return {Promise<String>}
      */
-    validateCache: function(address, schema) {
-        if (schema === 'local' || !this.props.cacheValidation) {
+    validateCache(address, schema) {
+        if (schema === 'local' || !this.options.cacheValidation) {
             return Promise.resolve('none');
         }
-        var cache = this.props.cache;
-        var path = [ address, schema ];
-        var promise = _.get(this.cacheValidation, path);
-        if (!promise) {
-            promise = this.getRemoteSignature(address, schema).then((remoteSignature) => {
-                return this.getCacheSignature(address, schema).then((cacheSignature) => {
-                    if (!remoteSignature) {
-                        return cacheSignature || 'none';
-                    }
-                    if (cacheSignature) {
-                        if (cacheSignature === remoteSignature) {
-                            return remoteSignature;
-                        } else {
-                            return this.clearCachedObjects(address, schema).then(() => {
-                                this.setCacheSignature(address, schema, remoteSignature);
-                                return remoteSignature;
-                            });
-                        }
+        let path = [ address, schema ];
+        let promise = _.get(this.cacheValidations, path);
+        if (promise) {
+            return promise;
+        }
+        promise = this.getRemoteSignature(address, schema).then((remoteSignature) => {
+            return this.getCacheSignature(address, schema).then((cacheSignature) => {
+                if (!remoteSignature) {
+                    return cacheSignature || 'none';
+                }
+                if (cacheSignature) {
+                    if (cacheSignature === remoteSignature) {
+                        return remoteSignature;
                     } else {
-                        // wait for any cache clearing operation to complete
-                        return this.waitForCacheClearing(address, schema).then(() => {
+                        return this.clearCachedObjects(address, schema).then(() => {
                             this.setCacheSignature(address, schema, remoteSignature);
                             return remoteSignature;
                         });
                     }
-                });
-            }).catch((err) => {
-                console.error(err);
-                _.unset(this.cacheValidation, path);
+                } else {
+                    // wait for any cache clearing operation to complete
+                    return this.waitForCacheClearing(address, schema).then(() => {
+                        this.setCacheSignature(address, schema, remoteSignature);
+                        return remoteSignature;
+                    });
+                }
             });
-            _.set(this.cacheValidation, path, promise);
-        }
+        }).catch((err) => {
+            console.error(err);
+            _.unset(this.cacheValidations, path);
+        });
+        _.set(this.cacheValidations, path, promise);
         return promise;
-    },
+    }
 
     /**
      * Clear cached schema at given address
@@ -1499,26 +1462,25 @@ module.exports = React.createClass({
      *
      * @return {Promise}
      */
-    clearCachedSchemas: function(address) {
+    clearCachedSchemas(address) {
         // remove all validation results for address
-        _.unset(this.cacheValidation, [ address ]);
+        _.unset(this.cacheValidations, [ address ]);
 
         // clear the objects first
         return this.clearCachedObjects(address, '*').then(() => {
             // remove the signatures
-            var cache = this.props.cache;
-            var location = {
+            let location = {
                 schema: 'local',
                 table: 'remote_schema',
             };
-            var prefix = `${address}/`;
-            return cache.find(location).filter((row) => {
+            let prefix = `${address}/`;
+            return this.cache.find(location).filter((row) => {
                 return _.startsWith(row.key, prefix);
             }).then((rows) => {
-                return cache.remove(location, rows);
+                return this.cache.remove(location, rows);
             })
         });
-    },
+    }
 
     /**
      * Fetch signature of schema
@@ -1528,18 +1490,19 @@ module.exports = React.createClass({
      *
      * @return {Promise<String>}
      */
-    getRemoteSignature: function(address, schema) {
-        if (!this.props.online) {
+    getRemoteSignature(address, schema) {
+        if (!this.active) {
             return Promise.resolve('');
         }
-        var url = `${address}${this.props.basePath}/signature/${schema}`;
-        var session = getSession(address);
-        var options = { responseType: 'json', contentType: 'json' };
-        var payload = { auth_token: session.token };
+        let { basePath } = this.options;
+        let url = `${address}${basePath}/signature/${schema}`;
+        let session = getSession(address);
+        let options = { responseType: 'json', contentType: 'json' };
+        let payload = { auth_token: session.token };
         return HTTPRequest.fetch('POST', url, payload, options).then((result) => {
             return _.get(result, 'signature');
         });
-    },
+    }
 
     /**
      * Load signature of cached schema
@@ -1549,19 +1512,18 @@ module.exports = React.createClass({
      *
      * @return {Promise<String>}
      */
-    getCacheSignature: function(address, schema) {
-        var cache = this.props.cache;
-        var query = {
+    getCacheSignature(address, schema) {
+        let query = {
             schema: 'local',
             table: 'remote_schema',
             criteria: {
                 key: `${address}/${schema}`
             }
         };
-        return cache.find(query).get(0).then((result) => {
+        return this.cache.find(query).get(0).then((result) => {
             return _.get(result, 'signature');
         });
-    },
+    }
 
     /**
      * Save signature of cached schema
@@ -1572,18 +1534,17 @@ module.exports = React.createClass({
      *
      * @return {Promise}
      */
-    setCacheSignature: function(address, schema, signature) {
-        var cache = this.props.cache;
-        var location = {
+    setCacheSignature(address, schema, signature) {
+        let location = {
             schema: 'local',
             table: 'remote_schema',
         };
-        var entry = {
+        let entry = {
             key: `${address}/${schema}`,
             signature
         };
-        return cache.save(location, [ entry ]);
-    },
+        return this.cache.save(location, [ entry ]);
+    }
 
     /**
      * Update objects in local cache with remote copies
@@ -1592,18 +1553,17 @@ module.exports = React.createClass({
      *
      * @return {Promise<Boolean>}
      */
-    updateLocalCache: function(op) {
+    updateLocalCache(op) {
         return Promise.try(() => {
-            var cache = this.props.cache;
-            var location = op.getLocation();
+            let location = op.getLocation();
             if (op instanceof Search) {
-                return cache.save(location, op.results).then(() => {
-                    return cache.remove(location, op.missingResults);
+                return this.cache.save(location, op.results).then(() => {
+                    return this.cache.remove(location, op.missingResults);
                 });
             } else if (op instanceof Removal) {
-                return cache.remove(location, op.results);
+                return this.cache.remove(location, op.results);
             } else if (op instanceof Storage) {
-                return cache.save(location, op.results);
+                return this.cache.save(location, op.results);
             }
         }).then(() => {
             return true;
@@ -1611,7 +1571,7 @@ module.exports = React.createClass({
             console.error(err);
             return false;
         });
-    },
+    }
 
     /**
      * Deleted all cached objects originating from given server
@@ -1621,19 +1581,18 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    clearCachedObjects: function(address, schema) {
+    clearCachedObjects(address, schema) {
         return Promise.try(() => {
-            var cache = this.props.cache;
             // see if we're in the middle of clearing everything from address
-            var clearingAllPromise = _.get(this.cacheClearing, [ address, '*' ]);
+            let clearingAllPromise = _.get(this.cacheClearing, [ address, '*' ]);
             if (clearingAllPromise) {
                 return clearingAllPromise;
             }
 
-            var path = [ address, schema ];
-            var clearingSchemaPromise = _.get(this.cacheClearing, path);
+            let path = [ address, schema ];
+            let clearingSchemaPromise = _.get(this.cacheClearing, path);
             if (!clearingSchemaPromise) {
-                clearingSchemaPromise = cache.clean({ address, schema }).then((count) => {
+                clearingSchemaPromise = this.cache.clean({ address, schema }).then((count) => {
                     _.unset(this.cacheClearing, path);
                     return count;
                 });
@@ -1641,7 +1600,7 @@ module.exports = React.createClass({
             }
             return clearingSchemaPromise;
         });
-    },
+    }
 
     /**
      * If a schema is in the middle of being cleared, return the promise from
@@ -1652,17 +1611,17 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    waitForCacheClearing: function(address, schema) {
-        var clearingAllPromise = _.get(this.cacheClearing, [ address, '*' ]);
+    waitForCacheClearing(address, schema) {
+        let clearingAllPromise = _.get(this.cacheClearing, [ address, '*' ]);
         if (clearingAllPromise) {
             return clearingAllPromise;
         }
-        var clearingSchemaPromise = _.get(this.cacheClearing, [ address, schema ]);
+        let clearingSchemaPromise = _.get(this.cacheClearing, [ address, schema ]);
         if (clearingSchemaPromise) {
             return clearingSchemaPromise;
         }
         return Promise.resolve(0);
-    },
+    }
 
     /**
      * Update recent search results; if a storage operation was performed,
@@ -1671,15 +1630,15 @@ module.exports = React.createClass({
      *
      * @param  {Storage|Removal} op
      */
-    updateRecentSearchResults: function(op) {
-        var relevantSearches = this.getRelevantRecentSearches(op.getLocation());
+    updateRecentSearchResults(op) {
+        let relevantSearches = this.getRelevantRecentSearches(op.getLocation());
         _.each(relevantSearches, (search) => {
-            var resultsBefore = search.results;
-            var resultsAfter = resultsBefore;
+            let resultsBefore = search.results;
+            let resultsAfter = resultsBefore;
             _.each(op.results, (object) => {
-                var index = _.sortedIndexBy(resultsAfter, object, 'id');
-                var target = resultsAfter[index];
-                var present = (target && target.id === object.id);
+                let index = _.sortedIndexBy(resultsAfter, object, 'id');
+                let target = resultsAfter[index];
+                let present = (target && target.id === object.id);
                 // note: Removal is a subclass of Storage
                 if (op instanceof Removal) {
                     if (present) {
@@ -1689,7 +1648,7 @@ module.exports = React.createClass({
                         resultsAfter.splice(index, 1);
                     }
                 } else if (op instanceof Storage) {
-                    var match = LocalSearch.match(search.table, object, search.criteria);
+                    let match = LocalSearch.match(search.table, object, search.criteria);
                     if (match || present) {
                         if (resultsAfter === resultsBefore) {
                             // create new array so memoized functions won't return old results
@@ -1715,7 +1674,7 @@ module.exports = React.createClass({
                 search.promise = Promise.resolve(resultsAfter);
             }
         });
-    },
+    }
 
     /**
      * Return recent searches that were done at the given location
@@ -1724,119 +1683,47 @@ module.exports = React.createClass({
      *
      * @return {Array<Object>}
      */
-    getRelevantRecentSearches: function(location) {
+    getRelevantRecentSearches(location) {
         return _.filter(this.recentSearchResults, (search) => {
             if (search.matchLocation(location)) {
                 return true;
             }
         });
-    },
+    }
 
     /**
      * Remove recent search performed on given server
      *
      * @param  {String} address
      */
-    clearRecentOperations: function(address) {
-        var listNames = [
-            'recentSearchResults',
-            'recentStorageResults',
-            'recentRemovalResults'
+    clearRecentOperations(address) {
+        let lists = [
+            this.recentSearchResults,
+            this.recentStorageResults,
+            this.recentRemovalResults
         ];
-        _.each(listNames, (listName) => {
-            this.updateList(listName, (before) => {
-                var after = _.filter(before, (op) => {
-                    if (op.address === address) {
-                        return false;
-                    }
-                    return true;
-                });
-                return after;
+        _.each(lists, (list) => {
+            _.remove(list, (op) => {
+                return (op.address === address);
             });
         });
-    },
-
-    /**
-     * Creation interval function to check for expiration of sessions
-     */
-    componentWillMount: function() {
-        this.sessionCheckTimeout = setInterval(() => {
-            var soon = Moment().add(5, 'minute').toISOString();
-            var expired = findSessions((session) => {
-                if (session.etime < soon) {
-                    return true;
-                }
-            });
-            if (!_.isEmpty(expired)) {
-                _.each(expired, (session) => {
-                    if (!session.token) {
-                        // recreate session if we haven't gain authorization yet
-                        destroySession(session);
-                    }
-                });
-                this.triggerChangeEvent();
-            }
-        }, 60 * 1000);
-    },
-
-    /**
-     * Signal that the component is ready
-     */
-    componentDidMount: function() {
-        this.triggerChangeEvent();
-    },
-
-    /**
-     * Monitor connectivity
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps: function(nextProps) {
-        var onlineNow = !this.props.online && nextProps.online;
-        var connectedNow = !this.props.connected && nextProps.connected;
-        if (onlineNow || connectedNow) {
-            if (this.disconnected) {
-                // reconcile changes and invalidate all searches
-                // if connection was lost
-                this.invalidate().then(() => {
-                    // send pending changes
-                    _.each(this.changeQueue, (change) => {
-                        change.dispatch();
-                    });
-                });
-                this.disconnected = false;
-            }
-        } else {
-            var offlineNow = this.props.online && !nextProps.online;
-            var disconnectedNow = this.props.connected && !nextProps.connected;
-            if (offlineNow || disconnectedNow) {
-                this.disconnected = true;
-            }
-        }
-    },
-
-    /**
-     * Clear session check interval function
-     */
-    componentWillUnmount: function() {
-        clearInterval(this.sessionExpirationCheckInterval);
-    },
+    }
 
     /**
      * Start updating recent searches that are dirty
      *
      * @param  {Array<Object>} dirtySearches
      */
-    schedulePrefetch: function(dirtySearches) {
-        var selected = [];
+    schedulePrefetch(dirtySearches) {
+        let selected = [];
         _.each(dirtySearches, (search) => {
             if (!search.prefetch) {
                 return;
             }
             // don't prefetch a search if the same component has done a
             // search with the same shape more recently
-            var shape = search.getCriteriaShape();
-            var similar = _.some(selected, (f) => {
+            let shape = search.getCriteriaShape();
+            let similar = _.some(selected, (f) => {
                 if (_.includes(search.by, f.component)) {
                     if (_.isEqual(shape, f.shape)) {
                         return true;
@@ -1857,40 +1744,16 @@ module.exports = React.createClass({
         // if searching hasn't start after a while, trigger prefetching
         setTimeout(() => {
             if (!this.searching) {
-                var search = _.find(this.recentSearchResults, { scheduled: true, updating: false });
+                let search = _.find(this.recentSearchResults, { scheduled: true, updating: false });
                 if (search) {
                     this.searchRemoteDatabase(search);
                 }
             }
         }, 50);
-    },
+    }
+}
 
-    /**
-     * Render diagnostics
-     *
-     * @return {ReactElement}
-     */
-    render: function() {
-        var searches = this.state.recentSearchResults;
-        var stores = this.state.recentStorageResults;
-        var removals = this.state.recentRemovalResults;
-        return (
-            <Diagnostics type="remote-data-source">
-                <DiagnosticsSection label="Recent searches">
-                    <RecentSearchTable searches={searches} />
-                </DiagnosticsSection>
-                <DiagnosticsSection label="Recent storage" hidden={_.isEmpty(stores)}>
-                    <RecentStorageTable stores={stores} />
-                </DiagnosticsSection>
-                <DiagnosticsSection label="Recent removal" hidden={_.isEmpty(removals)}>
-                    <RecentStorageTable stores={removals} />
-                </DiagnosticsSection>
-            </Diagnostics>
-        );
-    },
-});
-
-var authCache = {};
+let authCache = {};
 
 /**
  * Remove objects matching a list of ids from a sorted array, returning a
@@ -1907,8 +1770,8 @@ function removeObjects(objects, ids) {
     }
     objects = _.slice(objects);
     _.each(ids, (id) => {
-        var index = _.sortedIndexBy(objects, { id }, 'id');
-        var object = (objects) ? objects[index] : null;
+        let index = _.sortedIndexBy(objects, { id }, 'id');
+        let object = (objects) ? objects[index] : null;
         if (object && object.id === id) {
             objects.splice(index, 1);
         }
@@ -1927,8 +1790,8 @@ function removeObjects(objects, ids) {
 function insertObjects(objects, newObjects) {
     objects = _.slice(objects);
     _.each(newObjects, (newObject) => {
-        var index = _.sortedIndexBy(objects, newObject, 'id');
-        var object = objects[index];
+        let index = _.sortedIndexBy(objects, newObject, 'id');
+        let object = objects[index];
         if (object && object.id === newObject.id) {
             objects[index] = newObject;
         } else {
@@ -1938,7 +1801,7 @@ function insertObjects(objects, newObjects) {
     return objects;
 }
 
-var sessions = [];
+let sessions = [];
 
 /**
  * Obtain object where authorization info for a server is stored
@@ -1952,7 +1815,7 @@ function getSession(address, type) {
     if (!type) {
         type = 'primary';
     }
-    var session = _.find(sessions, { address, type });
+    let session = _.find(sessions, { address, type });
     if (!session) {
         session = { address, type };
         sessions.push(session);
@@ -1979,3 +1842,11 @@ function findSessions(predicate) {
 function destroySession(session) {
     _.pull(sessions, session);
 }
+
+class RemoteDataSourceEvent extends GenericEvent {
+}
+
+export {
+    RemoteDataSource as default,
+    RemoteDataSource,
+};

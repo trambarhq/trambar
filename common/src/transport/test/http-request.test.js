@@ -3,8 +3,8 @@ import TestServer from './lib/test-server';
 
 import HTTPRequest from 'transport/http-request';
 
-var port = 7878;
-var baseURL = `http://localhost:${port}`;
+let port = 7878;
+let baseURL = `http://localhost:${port}`;
 
 describe('HTTPRequest', function() {
     before(function() {

@@ -17,6 +17,10 @@ class EventEmitter {
         });
     }
 
+    clearEventListeners() {
+        this.listeners.splice(0);
+    }
+
     triggerEvent(evt) {
         this.listeners.forEach((listener) => {
             if (listener.type === evt.type) {
