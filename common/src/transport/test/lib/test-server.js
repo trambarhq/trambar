@@ -13,6 +13,12 @@ let serverProxy = {
             return TestServer.stop();
         });
     },
+    send: function(token, payload) {
+        return Server.run(token, payload, function(token, payload) {
+            var TestServer = serverRequire('./src/transport/test/lib/test-server-node');
+            return TestServer.send(token, payload);
+        });
+    },
     reset: function(options) {
         return Server.run(options || {}, function(options) {
             var TestServer = serverRequire('./src/transport/test/lib/test-server-node');
