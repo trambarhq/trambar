@@ -2,6 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Express = require('express');
 var BodyParser = require('body-parser');
+var Multer = require('multer');
 var CORS = require('cors');
 var SockJS = require('sockjs');
 var Crypto = Promise.promisifyAll(require('crypto'));
@@ -21,9 +22,15 @@ function start(port, options) {
     var app = Express();
     app.use(BodyParser.json());
     app.use(CORS());
+    var storage = Multer.memoryStorage()
+    var upload = Multer({ storage: storage });
     app.set('json spaces', 2);
     app.route('/echo').all(handleEchoRequest);
     app.route('/delay/:delay').all(handleDelayEchoRequest);
+
+    app.route('/stream/:id').post(upload.single('file'), handleStreamUpload);
+    app.route('/upload/:id/:part').post(upload.single('file'), handleFileUpload);
+    app.route('/download/:id/:part').get(handleFileRetrieval);
 
     // set up SockJS server
     var sockJS = SockJS.createServer({
@@ -113,5 +120,68 @@ function handleDelayEchoRequest(req, res) {
         }, delay);
     } catch (err) {
         res.sendStatus(500);
+    }
+}
+
+var files = {};
+
+function handleFileUpload(req, res) {
+    try {
+        var payloadID = req.params.id;
+        var part = req.params.part;
+        var key = payloadID + '/' + part;
+        if (req.file) {
+            var buffer = req.file.buffer;
+            files[key] = buffer;
+        } else if (req.body.stream) {
+            files[key] = req.body.stream;
+        }
+        res.json({
+            url: `/download/${key}`
+        });
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(400);
+    }
+}
+
+var streams = {};
+
+function handleStreamUpload(req, res) {
+    try {
+        var streamID = req.params.id;
+        if (req.file) {
+            var buffer = req.file.buffer;
+            var stream = streams[streamID];
+            if (stream) {
+                streams[streamID] = Buffer.concat([ stream, buffer ]);
+            } else {
+                streams[streamID] = buffer;
+            }
+        }
+        res.json({});
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(400);
+    }
+}
+
+function handleFileRetrieval(req, res) {
+    try {
+        var payloadID = req.params.id;
+        var part = req.params.part;
+        var key = payloadID + '/' + part;
+        var buffer = files[key];
+        if (typeof(buffer) === 'string') {
+            buffer = streams[buffer];
+        }
+        if (buffer) {
+            res.send(buffer);
+        } else {
+            res.sendStatus(404);
+        }
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(400);
     }
 }

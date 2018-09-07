@@ -54,7 +54,14 @@ class GenericEvent {
     }
 
     waitForDecision() {
-        return this.decisionPromise || Promise.resolve();
+        if (!this.decisionPromise) {
+            return Promise.resolve();
+        }
+        return this.decisionPromise.then((decision) => {
+            if (decision === false) {
+                this.defaultPrevented = true;
+            }
+        });
     }
 }
 
