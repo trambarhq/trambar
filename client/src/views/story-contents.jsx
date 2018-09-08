@@ -673,6 +673,9 @@ module.exports = React.createClass({
                 var color = _.get(repo.details.label_colors, index);
                 if (color) {
                     style = { backgroundColor: color };
+                    if (isBright(color)) {
+                        style.color = '#000000';
+                    }
                 }
             }
             return <span key={i} className="tag" style={style}>{label}</span>;
@@ -1156,3 +1159,18 @@ var sortComponents = Memoize(function(components, locale) {
         return _.toLower(p(component.text));
     });
 });
+
+function isBright(color) {
+    var r, g, b;
+    if (color.length === 4) {
+        r = parseInt(color.substr(1, 1), 16) * (1 / 15);
+        g = parseInt(color.substr(2, 1), 16) * (1 / 15);
+        b = parseInt(color.substr(3, 1), 16) * (1 / 15);
+    } else if (color.length === 7) {
+        r = parseInt(color.substr(1, 2), 16) * (1 / 255);
+        g = parseInt(color.substr(3, 2), 16) * (1 / 255);
+        b = parseInt(color.substr(5, 2), 16) * (1 / 255);
+    }
+    var b = Math.sqrt(0.299 * r*r + 0.587 * g*g + 0.114 * b*b);
+    return (b > 0.80);
+}
