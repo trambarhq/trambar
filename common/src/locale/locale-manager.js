@@ -2,7 +2,7 @@ import _ from 'lodash';
 import EventEmitter, { GenericEvent } from 'utils/event-emitter';
 
 const defaultOptions = {
-    defaultLocale: 'en',
+    defaultLocale: 'en-US',
 };
 
 class LocaleManager extends EventEmitter {

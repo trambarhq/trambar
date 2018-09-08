@@ -6,26 +6,6 @@ function initialize(evt) {
         throw new Error('Unable to find app element in DOM');
     }
 
-    var progress;
-    var progressBar = document.getElementById('bootstrap-progress-bar');
-    var progressBarFilled = document.getElementById('bootstrap-progress-bar-filled');
-    if (progressBar && progressBarFilled) {
-        var finished = false;
-        setTimeout(() => {
-            // don't show progress bar when loading finishes quickly
-            if (!finished) {
-                progressBar.className = 'show';
-            }
-        }, 500);
-        progress = (loaded, total) => {
-            if (loaded === total) {
-                progressBar.className = '';
-                finished = true;
-            }
-            progressBarFilled.style.width = Math.round(loaded / total * 100) + '%';
-        };
-    }
-
     // load application code and support libraries
     var BootstrapLoader = require('utils/bootstrap-loader');
     var importFuncs = {};
@@ -34,15 +14,48 @@ function initialize(evt) {
         importFuncs[key] = libraries[key];
     }
     importFuncs['app'] = () => import('application' /* webpackChunkName: "app" */);
-    BootstrapLoader.load(importFuncs, progress).then((modules) => {
+    BootstrapLoader.load(importFuncs, showProgress).then((modules) => {
         var AppCore = modules['app-core'];
         var Application = modules['app'];
         var React = modules['react'];
         var ReactDOM = modules['react-dom'];
 
-        AppCore.start('admin').then((appProps) => {
+        AppCore.start(Application).then((appProps) => {
             var appElement = React.createElement(Application, appProps);
             ReactDOM.render(appElement, appContainer);
+            hideSplashScreen();
         });
     });
+}
+
+function hideSplashScreen() {
+    var screen = document.getElementById('splash-screen');
+    var style = document.getElementById('splash-screen-style');
+    if (screen) {
+        screen.className = 'transition-out';
+        setTimeout(() => {
+            if (screen.parentNode) {
+                screen.parentNode.removeChild(screen);
+            }
+            if (style && style.parentNode) {
+                style.parentNode.removeChild(style);
+            }
+        }, 1000);
+    }
+}
+
+function showProgress(loaded, total) {
+    let progressBar = document.getElementById('bootstrap-progress-bar');
+    let progressBarFilled = document.getElementById('bootstrap-progress-bar-filled');
+
+    if (progressBar && progressBarFilled) {
+        if (loaded < total) {
+            if (progressBar.className !== 'show') {
+                progressBar.className = 'show';
+            }
+        } else {
+            progressBar.className = '';
+        }
+        progressBarFilled.style.width = Math.round(loaded / total * 100) + '%';
+    }
 }

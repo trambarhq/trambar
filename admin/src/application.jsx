@@ -1,45 +1,26 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks'); Relaks.createClass = require('relaks/create-class');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React from 'react';
+import Relaks from 'relaks';
 
-var ComponentRefs = require('utils/component-refs');
-var HTTPError = require('errors/http-error');
+import ComponentRefs from 'utils/component-refs';
+import HTTPError from 'errors/http-error';
 
-var RelaksRouteManager = require('relaks-route-manager');
-var Routing = require('routing'), Route = Routing.Route, routes = Routing.routes, rewrites = Routing.rewrites;
+import { routes } from 'routing';
 
-// non-visual components
-var RemoteDataSource = require('data/remote-data-source');
-var Database = require('data/database');
-var PayloadManager = require('transport/payload-manager');
-var Payloads = require('transport/payloads');
-var LocaleManager = require('locale/locale-manager');
-var Locale = require('locale/locale');
-var ThemeManager = require('theme/theme-manager');
-var Theme = require('theme/theme');
-var SubscriptionManager = require('data/subscription-manager');
-var SessionManager = require('data/session-manager');
+// proxy objects
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Environment from 'env/environment';
+import Locale from 'locale/locale';
 
-var SignInPage = require('pages/sign-in-page');
+import SignInPage from 'pages/sign-in-page';
+import ErrorPage from 'pages/error-page';
 
 // widgets
-var SideNavigation = require('widgets/side-navigation');
-var TaskAlertBar = require('widgets/task-alert-bar');
-var UploadProgress = require('widgets/upload-progress');
-
-// cache
-var IndexedDBCache = require('data/indexed-db-cache');
-var LocalStorageCache = require('data/local-storage-cache');
-var LocalCache;
-if (IndexedDBCache.isAvailable()) {
-    LocalCache = IndexedDBCache;
-} else if (LocalStorageCache.isAvailable()) {
-    LocalCache = LocalStorageCache;
-}
-
-// notifier
-var WebsocketNotifier = require('transport/websocket-notifier');
+import SideNavigation from 'widgets/side-navigation';
+import TaskAlertBar from 'widgets/task-alert-bar';
+import UploadProgress from 'widgets/upload-progress';
 
 require('setimmediate');
 require('utils/lodash-extra');
@@ -47,84 +28,51 @@ require('application.scss');
 require('colors.scss');
 require('font-awesome-webpack');
 
-module.exports = React.createClass({
-    displayName: 'Application',
-    propTypes: {
-        routeManager: PropTypes.instanceOf(RelaksRouteManager),
-    },
-    statics: { routes, rewrites },
+class Application extends PureComponent {
+    static displayName = 'Application';
+    static routes = routes;
+    static basePath = '/admin';
+    static area = 'admin';
+    static discoveryFlags: {
+        include_deleted: true,
+    };
+    static retrievalFlags: {
+        include_ctime: true,
+        include_mtime: true,
+    };
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        this.components = ComponentRefs({
-            remoteDataSource: RemoteDataSource,
-            localeManager: LocaleManager,
-            themeManager: ThemeManager,
-            payloadManager: PayloadManager,
-            cache: LocalCache,
-            notifier: WebsocketNotifier,
-            subscriptionManager: SubscriptionManager,
-            sessionManager: SessionManager,
-        });
-        return {
-            database: null,
-            payloads: null,
-            route: new Route(this.props.routeManager),
-            locale: null,
-            theme: null,
+    constructor(props) {
+        let {
+            dataSource,
+            routeManager,
+            payloadManager,
+            envMonitor,
+            localeManager,
+        } = this.props;
 
-            canAccessServer: false,
-            connection: null,
+        this.state = {
+            database: new Database(dataSource, { address }),
+            payloads: new Payloads(payloadManager),
+            route: new Route(routeManager),
+            env: new Environment(envMonitor, localeManager),
+
+            showingSignInPage: false,
+            showingErrorPage: false,
             showingUploadProgress: false,
         };
-    },
-
-    /**
-     * Return true once all plumbings are ready
-     *
-     * @return {Boolean}
-     */
-    isReady: function() {
-        return !!this.state.database
-            && !!this.state.payloads
-            && !!this.state.route
-            && !!this.state.locale
-            && !!this.state.theme;
-    },
-
-    /**
-     * Render the application
-     *
-     * @return {ReactElement}
-     */
-    render: function() {
-        return (
-            <div onClick={this.handleClick}>
-                {this.renderUserInterface()}
-                {this.renderConfiguration()}
-            </div>
-        );
-    },
+    }
 
     /**
      * Render user interface
      *
      * @return {ReactElement|null}
      */
-    renderUserInterface: function() {
-        if (!this.isReady()) {
-            return null;
-        }
-        var navProps = {
+    render() {
+        let navProps = {
             database: this.state.database,
             route: this.state.route,
             locale: this.state.locale,
             theme: this.state.theme,
-            disabled: !this.state.canAccessServer,
         };
         return (
             <div className="application" id="application">
@@ -138,7 +86,7 @@ module.exports = React.createClass({
                 </section>
             </div>
         );
-    },
+    }
 
     /**
      * Render the current page, as indicated by the route--or the login page
@@ -146,397 +94,201 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderCurrentPage: function() {
-        var CurrentPage = this.state.route.component;
-        var pageProps = {
+    renderCurrentPage () {
+        let { route, showingSignInPage, showingErrorPage } = this.state;
+        let { module } = route.params;
+        let CurrentPAge = module.default;
+
+        let CurrentPage = this.state.route.component;
+        let pageProps = {
             database: this.state.database,
             route: this.state.route,
             payloads: this.state.payloads,
-            locale: this.state.locale,
-            theme: this.state.theme,
+            env: this.state.env,
         };
-        if (!this.state.canAccessServer) {
-            //if (CurrentPage !== ErrorPage) {
-                CurrentPage = SignInPage;
-            //}
+        if (showingErrorPage) {
+            CurrentPage = ErrorPage;
+        } else if (showingSignInPage) {
+            CurrentPage = SignInPage;
         }
         return <CurrentPage {...pageProps} />;
-    },
+    }
 
     /**
      * Render alert message in pop-up bar at bottom of page
      *
      * @return {ReactElement|null}
      */
-    renderTaskAlert: function() {
-        if (!this.state.canAccessServer) {
-            return null;
-        }
-        var props = {
+    renderTaskAlert () {
+        let props = {
             database: this.state.database,
             route: this.state.route,
             payloads: this.state.payloads,
-            locale: this.state.locale,
-            theme: this.state.theme,
+            env: this.state.env,
         };
         return <TaskAlertBar {...props} />;
-    },
-
-    /**
-     * Render non-visual components
-     *
-     * @return {ReactElement}
-     */
-    renderConfiguration: function() {
-        var setters = this.components.setters;
-        var route = this.state.route;
-        var serverAddress = (route) ? route.context.address : null;
-        var remoteDataSourceProps = {
-            ref: setters.remoteDataSource,
-            basePath: '/srv/admin-data',
-            online: this.state.online,
-            connected: (this.state.connection) ? true : undefined,
-            retrievalFlags: {
-                include_ctime: true,
-                include_mtime: true,
-            },
-            discoveryFlags: {
-                include_deleted: true,
-            },
-            onChange: this.handleDatabaseChange,
-            onAuthorization: this.handleAuthorization,
-            onExpiration: this.handleExpiration,
-            onStupefaction: this.handleStupefaction,
-        };
-        var payloadManagerProps = {
-            ref: setters.payloadManager,
-            online: this.state.online,
-            database: this.state.database,
-            route: this.state.route,
-            onChange: this.handlePayloadsChange,
-        };
-        var localeManagerProps = {
-            ref: setters.localeManager,
-            database: this.state.database,
-            directory: require('languages'),
-            onChange: this.handleLocaleChange,
-        };
-        var themeManagerProps = {
-            ref: setters.themeManager,
-            database: this.state.database,
-            modes: {
-                'ultra-narrow': 0,
-                'narrow': 700,
-                'standard': 1000,
-                'wide': 1400,
-                'super-wide': 1700,
-                'ultra-wide': 2000,
-            },
-            serverAddress: serverAddress,
-            onChange: this.handleThemeChange,
-        };
-        var cacheProps = {
-            ref: setters.cache,
-            databaseName: 'trambar-admin',
-        };
-        var notifierProps = {
-            ref: setters.notifier,
-            serverAddress: serverAddress,
-            online: this.state.online,
-            locale: this.state.locale,
-            onNotify: this.handleChangeNotification,
-            onConnect: this.handleConnection,
-            onDisconnect: this.handleDisconnection,
-        };
-        var subscriptionManagerProps = {
-            ref: setters.subscriptionManager,
-            area: 'admin',
-            connection: this.state.connection || null,
-            schema: '*',
-            database: this.state.database,
-            locale: this.state.locale,
-        };
-        var sessionManagerProps = {
-            ref: setters.sessionManager,
-            database: this.state.database,
-        };
-        return (
-            <div>
-                <LocalCache {...cacheProps} />
-                <WebsocketNotifier {...notifierProps} />
-                <RemoteDataSource {...remoteDataSourceProps} cache={this.components.cache} />
-                <PayloadManager {...payloadManagerProps} />
-                <LocaleManager {...localeManagerProps} />
-                <ThemeManager {...themeManagerProps} />
-                <SubscriptionManager {...subscriptionManagerProps} />
-                <SessionManager {...sessionManagerProps} />
-            </div>
-        );
-    },
+    }
 
     /**
      * Render upload progress pop-up if it's activated
      *
      * @return {ReactElement|null}
      */
-    renderUploadProgress: function() {
+    renderUploadProgress () {
         if (!this.state.showingUploadProgress) {
             return null;
         }
-        var props = {
+        let props = {
             payloads: this.state.payloads,
             locale: this.state.locale,
         };
         return <UploadProgress {...props} />;
-    },
+    }
 
     /**
      * Attach beforeUnload event handler
      */
-    componentDidMount: function() {
+    componentDidMount () {
+        let {
+            dataSource,
+            routeManager,
+            payloadManager,
+            envMonitor,
+            localeManager,
+            notifier,
+        } = this.props;
+        dataSource.addEventListener('change', this.handleDatabaseChange);
+        dataSource.addEventListener('authenication', this.handleAuthentication);
+        dataSource.addEventListener('authorization', this.handleAuthorization);
+        routeManager.addEventListener('change', this.handleRouteChange);
+        payloadManager.addEventListener('change', this.handlePayloadsChange);
+        envMonitor.addEventListener('change', this.handleEnvironmentChange);
+        localeManager.addEventListener('change', this.handleLocaleChange);
+
         window.addEventListener('beforeunload', this.handleBeforeUnload);
-    },
-
-    /**
-     * Hide the splash screen once app is ready
-     */
-    componentDidUpdate: function(prevProps, prevState) {
-        if (!this.splashScreenHidden && this.isReady()) {
-            this.splashScreenHidden = true;
-            setTimeout(() => {
-                this.hideSplashScreen();
-            }, 100);
-        }
-    },
-
-    /**
-     * Remove beforeUnload event handler
-     */
-    componentWillUnmount: function() {
-        window.removeEventListener('beforeunload', this.handleBeforeUnload);
-    },
+    }
 
     /**
      * Called when the database queries might yield new results
      *
      * @param  {Object} evt
      */
-    handleDatabaseChange: function(evt) {
-        var context;
-        if (this.state.route) {
-            context = {
-                address: this.state.route.context.address,
-                schema: this.state.route.params.schema,
-            };
-        }
-        var database = new Database(evt.target, context);
+    handleDatabaseChange = (evt) => {
+        let { route } = this.state;
+        let context = {
+            address: route.context.address,
+            schema: route.params.schema,
+        };
+        let database = new Database(evt.target, context);
         this.setState({ database });
-    },
+    }
 
     /**
-     * Called when sign-in was successful
+     * Called when sign-in is necessary
      *
      * @param  {Object} evt
      */
-    handleAuthorization: function(evt) {
-        this.components.sessionManager.saveToCache(evt.session);
+    handleAuthentication = (evt) => {
+        this.setState({ authenticating: true });
+    }
 
-        var address = this.state.route.context.address;
-        if (evt.session.address === address) {
-            this.setState({
-                canAccessServer: true
-            });
-        }
-    },
-
-    /**
-     * Called if user credentials aren't valid anymore
-     *
-     * @param  {Object} evt
-     */
-    handleExpiration: function(evt) {
-        this.components.sessionManager.removeFromCache(evt.session);
-
-        var address = this.state.route.context.address;
-        if (evt.session.address === address) {
-            this.setState({
-                canAccessServer: false
-            });
-        }
-    },
+    handleAuthorization = (evt) => {
+        this.setState({ authenticating: false });
+    }
 
     /**
      * Called if a data query fails to yield the required object
      *
      * @param  {Object} evt
      */
-    handleStupefaction: function(evt) {
-        var route = this.state.route;
-        route.replace('pages/error-page', { code: 404 });
-    },
+    handleStupefaction = (evt) => {
+        this.setState({ showingErrorPage: true });
+    }
 
     /**
      * Called when upload payloads changes
      *
      * @param  {Object} evt
      */
-    handlePayloadsChange: function(evt) {
-        var payloads = new Payloads(evt.target);
-        var showingUploadProgress = this.state.showingUploadProgress;
+    handlePayloadsChange = (evt) => {
+        let payloads = new Payloads(evt.target);
+        let showingUploadProgress = this.state.showingUploadProgress;
         if (!payloads.uploading) {
             // stop showing it once it's done
             showingUploadProgress = false;
         }
         this.setState({ payloads, showingUploadProgress });
-    },
+    }
 
     /**
      * Called when the locale changes
      *
      * @param  {Object} evt
      */
-    handleLocaleChange: function(evt) {
-        var locale = new Locale(evt.target);
-        this.setState({ locale });
-        document.title = locale.translate('app-title');
-    },
+    handleLocaleChange = (evt) => {
+        let { envMonitor, localeManager } = this.props;
+        let env = new Environment(envMonitor, localeManager);
+        this.setState({ env });
+        document.title = env.locale.translate('app-title');
+    }
+
+    /**
+     * Called when the locale changes
+     *
+     * @param  {Object} evt
+     */
+    handleEnvironmentChange = (evt) => {
+        let { envMonitor, localeManager } = this.props;
+        let env = new Environment(envMonitor, localeManager);
+        this.setState({ env });
+    }
 
     /**
      * Called when the route changes
      *
      * @param  {Object} evt
      */
-    handleRouteChange: function(evt) {
-        var route = new Route(evt.target);
-        var address = route.context.address;
-        var database = this.state.database;
-        if (address != this.state.database.context.address) {
-            var dataSource = this.components.remoteDataSource;
-            database = new Database(dataSource, { address })
+    handleRouteChange = (evt) => {
+        let { routeManager, dataSource } = this.props;
+        let route = new Route(routeManager);
+        let address = route.context.address;
+        let schema = route.params.schema;
+        let { database } = this.state;
+        if (address != database.context.address) {
+            database = new Database(dataSource, { address, schema });
         }
-        if (database.hasAuthorization()) {
-            // route is accessible
-            this.setState({
-                route,
-                database,
-                canAccessServer: true,
-            });
-        } else {
-            // see if user credentials are stored locally
-            this.components.sessionManager.loadFromCache(address).then((session) => {
-                if (session) {
-                    database.restoreSession(session);
-                }
-                if (database.hasAuthorization()) {
-                    // route is now accessible
-                    this.setState({
-                        route,
-                        database,
-                        canAccessServer: true,
-                    });
-                } else {
-                    // show login page
-                    this.setState({
-                        route,
-                        database,
-                        canAccessServer: false,
-                    });
-                }
-            });
-        }
-    },
-
-    /**
-     * Called when RouteManager fails to find a route
-     *
-     * @param  {Object} evt
-     *
-     */
-    handleRedirectionRequest: function(evt) {
-        // TODO
-    },
-
-    /**
-     * Called when the UI theme changes
-     *
-     * @param  {Object} evt
-     */
-    handleThemeChange: function(evt) {
-        var theme = new Theme(evt.target);
-        this.setState({ theme });
-    },
-
-    /**
-     * Called when notifier has made a connection
-     *
-     * @param  {Object} evt
-     */
-    handleConnection: function(evt) {
-        this.setState({ connection: evt.connection });
-    },
-
-    /**
-     * Called when notifier reports a lost of connection
-     *
-     * @param  {Object} evt
-     */
-    handleDisconnection: function(evt) {
-        this.setState({ connection: null });
-    },
-
-    /**
-     * Called upon the arrival of a notification message, delivered through
-     * websocket or push
-     *
-     * @param  {Object} evt
-     */
-    handleChangeNotification: function(evt) {
-        if (process.env.NODE_ENV !== 'production') {
-            _.each(evt.changes, (change) => {
-                console.log(`Change notification: ${change.schema}.${change.table} ${change.id}`);
-            });
-        }
-
-        var dataSource = this.components.remoteDataSource;
-        dataSource.invalidate(evt.changes);
-    },
+        this.setState({ route, database, showingErrorPage: false });
+    }
 
     /**
      * Called when user navigate to another site or hit refresh
      *
      * @param  {Event} evt
      */
-    handleBeforeUnload: function(evt) {
+    handleBeforeUnload = (evt) => {
         if (this.state.payloads && this.state.payloads.uploading) {
             // Chrome will repaint only after the modal dialog is dismissed
             this.setState({ showingUploadProgress: true });
             return (evt.returnValue = 'Are you sure?');
         }
-    },
-
-    /**
-     * Fade out and then remove splash screen
-     */
-    hideSplashScreen: function() {
-        var screen = document.getElementById('splash-screen');
-        var style = document.getElementById('splash-screen-style');
-        if (screen) {
-            screen.className = 'transition-out';
-            setTimeout(() => {
-                if (screen.parentNode) {
-                    screen.parentNode.removeChild(screen);
-                }
-                if (style && style.parentNode) {
-                    style.parentNode.removeChild(style);
-                }
-            }, 1000);
-        }
     }
 });
 
-function getAnchor(element) {
-    while (element && element.tagName !== 'A') {
-        element = element.parentNode;
-    }
-    return element;
+import EnvironmentMonitor from 'environment-monitor';
+import RouteManager from 'relaks-route-manager';
+import RemoteDataSource from 'data/remote-data-source';
+import PayloadManager from 'transport/payload-manager';
+import LocaleManager from 'locale/locale-manager';
+import WebsocketNotifier from 'transport/websocket-notifier';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    Application.propTypes = {
+        envMonitor: PropTypes.instanceof(EnvironmentMonitor).isRequired,
+        dataSource: PropTypes.instanceof(RemoteDataSource).isRequired,
+        localeManager: PropTypes.instanceof(LocaleManager).isRequired,
+        payloadManager: PropTypes.instanceof(PayloadManager).isRequired,
+        //notifier: PropTypes.instanceof(Notifier),
+    };
 }

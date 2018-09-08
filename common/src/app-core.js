@@ -8,18 +8,27 @@ import RemoteDataSource from 'data/remote-data-source';
 import IndexedDBCache from 'data/indexed-db-cache';
 import LocalStorageCache from 'data/local-storage-cache';
 import BlobManager from 'transport/blob-manager';
+import CORSRewriter from 'routing/cors-rewriter';
 
-function start(app) {
-    let environmentMonitorOptions = {
-    };
-    let environmentMonitor = new EnvironmentMonitor(environmentMonitorOptions);
+const SettingsLocation = {
+    schema: 'local',
+    table: 'settings'
+};
+
+const SessionLocation = {
+    schema: 'local',
+    table: 'session',
+}
+
+function start(App) {
+    let environmentMonitor = new EnvironmentMonitor();
     let routeManagerOptions = {
+        basePath: App.basePath,
+        routes: App.routes,
+        rewrites: CORSRewriter,
     };
     let routeManager = new RouteManager(routeManagerOptions);
-    let localeManagerOptions = {
-
-    };
-    let localeManager = new LocaleManager(localeManagerOptions);
+    let localeManager = new LocaleManager();
     let cache;
     if (IndexedDBCache.isAvailable()) {
         cache = new IndexedDBCache()
@@ -27,6 +36,8 @@ function start(app) {
         cache = new LocalStorageCache();
     }
     let dataSourceOptions = {
+        discoveryFlags: App.discoveryFlags,
+        retrievalFlags: App.retrievalFlags,
         cache,
     };
     let dataSource = new RemoteDataSource(dataSourceOptions);
@@ -36,9 +47,9 @@ function start(app) {
         };
         notifier = new PushNotifier();
     } else {
-        let pushNotifierOptions = {
+        let websocketNotifierOptions = {
         };
-        notifier = new WebsocketNotifier();
+        notifier = new WebsocketNotifier(websocketNotifierOptions);
     }
     let payloadManagerOptions = {
         uploadURL: getUploadURL,
@@ -66,29 +77,69 @@ function start(app) {
         }
     });
     routeManager.addEventListener('beforechange', (evt) => {
-
+        // see if a page requires authentication
+        let { public } = routeManager.params;
+        if (!public) {
+            let promsie = dataSource.requestAuthentication();
+            evt.postponeDefault(promise);
+        }
     });
     dataSource.addEventListener('beforeauthentication', (evt) => {
+        // check if a session is saved, thereby removing the need for authentication
+        let { address } = evt;
+        let loadSession(address).then((session) => {
+            if (session) {
+                return dataSource.authorize(address, session);
+            }
+        });
+        evt.postponeDefault(promise);
+    });
+    dataSource.addEventListener('expiration', (evt) => {
 
     });
     notifier.addEventListener('notify', (evt) => {
+        if (process.env.NODE_ENV !== 'production') {
+            _.each(evt.changes, (change) => {
+                console.log(`Change notification: ${change.schema}.${change.table} ${change.id}`);
+            });
+        }
+
+        // invalidate database queries
         dataSource.invalidate(evt.changes);
     });
     notifier.addEventListener('revalidation', (evt) => {
-
+        // force cache revalidation
     });
     localeManager.addEventListener('change', (evt) => {
-        saveLocale(localeManager.localeCode);
+        // save the selected locale after it's been changed
+        let { localeCode, browserLocaleCode } = localeManager;
+        if (localeCode == browserLocaleCode) {
+            removeLocale();
+        } else {
+            saveLocale(localeCode);
+        }
     });
     payloadManager.addEventListener('permission', (evt) => {
+        // add a task object in the backend so upload would be accepted
         let promise = addPayloadTasks(evt.destination, evt.payloads)
         evt.postponeDefault(promise);
     });
     payloadManager.addEventListener('update', (evt) => {
+        // update payloads using information from the backend
         let promise = updateBackendProgress(evt.destination, evt.payloads);
         evt.postponeDefault(promise);
     });
-    payloadManager.addEventListener('uploadpart', (evt) => {        
+    payloadManager.addEventListener('uploadpart', (evt) => {
+        // associate a remote URL with a blob after it's been uploaded, so we
+        // don't need to download the file again when the need arises
+        let { destination, part, response } = evt;
+        if (response && response.url) {
+            if (part.file) {
+                let { address } = destination;
+                let url = url + response.url;
+                BlobManager.associate(part.file, url);
+            }
+        }
     });
 
     return loadLocale().then((savedLocale) => {
@@ -107,11 +158,64 @@ function start(app) {
     });
 
     function loadLocale() {
-
+        let criteria = { key: 'language' };
+        let query = Object.assign({ criteria }, SettingsLocation);
+        return dataSource.find(query).then((records) => {
+            let record = records[0];
+            if (record) {
+                return record.selectedLocale;
+            }
+        });
     }
 
-    function saveLocale() {
+    function saveLocale(localeCode) {
+        var record = {
+            key: 'language',
+            selectedLocale: localeCode
+        };
+        return dataSource.save(SettingsLocation, [ record ]);
+    }
 
+    function removeLocale(localeCode) {
+        var record = {
+            key: 'language',
+        };
+        return dataSource.remove(SettingsLocation, [ record ]);
+    }
+
+    function loadSession(address) {
+        let criteria = { key: address };
+        let query = Object.assign({ criteria }, SessionLocation);
+        return dataSource.find(query).then((records) => {
+            var record = records[0];
+            if (record) {
+                return {
+                    address: record.key,
+                    handle: record.handle,
+                    token: record.token,
+                    user_id: record.user_id,
+                    etime: record.etime,
+                };
+            }
+        });
+    }
+
+    function saveSession(session) {
+        let record = {
+            key: session.address,
+            handle: session.handle,
+            token: session.token,
+            user_id: session.user_id,
+            etime: session.etime,
+        };
+        return dataSource.save(SessionLocation, [ record ]).return();
+    }
+
+    function removeSession(address) {
+        let record = {
+            key: address,
+        };
+        return dataSource.remove(SessionLocation, [ record ]).return();
     }
 
     function getUploadURL(destination, id, type, part) {
@@ -215,5 +319,3 @@ function start(app) {
         });
     }
 }
-
-this.associateRemoteURL(res.url, payload.destination.address, blob);

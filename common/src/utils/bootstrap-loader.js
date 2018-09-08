@@ -7,6 +7,9 @@ function load(importFuncs, progress) {
         var keys = Object.keys(importFuncs);
         var modules = {};
         var loaded = 0;
+        if (progress) {
+            progress(loaded, keys.length);
+        }
         keys.forEach((key) => {
             var load = importFuncs[key];
             load().then((module) => {

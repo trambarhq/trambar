@@ -324,7 +324,7 @@ class PayloadManager extends EventEmitter {
         }
         let event = new PayloadManagerEvent('permission', this, {
             destination,
-            payloads
+            payloads: unapprovedPayloads
         });
         this.triggerEvent(event);
         return event.waitForDecision().then(() => {
@@ -360,7 +360,8 @@ class PayloadManager extends EventEmitter {
             completed: false,
         });
         let event = new PayloadManagerEvent('backendprogress', this, {
-            destination
+            destination,
+            payloads: inProgressPayloads
         });
         this.triggerEvent(event);
         return event.waitForDecision().then(() => {
@@ -411,6 +412,7 @@ class PayloadManager extends EventEmitter {
                     return this.sendPayloadPart(payload, part).then((response) => {
                         sent = part.sent = true;
                         this.triggerEvent(new PayloadManagerEvent('uploadpart', this, {
+                            destination: payload.destination,
                             payload,
                             part,
                             response,
@@ -437,9 +439,12 @@ class PayloadManager extends EventEmitter {
             payload.sent = true;
             payload.uploadEndTime = Moment().toISOString();
             if (payload.onComplete) {
-                payload.onComplete(new PayloadManagerEvent('complete', payload));
+                payload.onComplete(new PayloadManagerEvent('complete', payload, {
+                    destination: payload.destination,
+                }));
             }
             this.triggerEvent(new PayloadManagerEvent('uploadcomplete', this, {
+                destination: payload.destination,
                 payload
             }));
             this.triggerEvent(new PayloadManagerEvent('change', this));
