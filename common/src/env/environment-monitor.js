@@ -45,8 +45,8 @@ class EnvironmentMonitor extends EventEmitter {
 
         getBattery().then((battery) => {
             if (battery) {
-                toggleEventListener.addEventListener(battery, 'levelchange', this.handleBatteryChange, enabled);
-                toggleEventListener.addEventListener(battery, 'chargingchange', this.handleBatteryChange, enabled);
+                toggleEventListener(battery, 'levelchange', this.handleBatteryChange, enabled);
+                toggleEventListener(battery, 'chargingchange', this.handleBatteryChange, enabled);
 
                 let { charging, level } = battery;
                 this.battery = { charging, level };
@@ -54,8 +54,8 @@ class EnvironmentMonitor extends EventEmitter {
         });
 
         if (process.env.PLATFORM === 'cordova') {
-            toggleEventListener.addEventListener(document, 'pause', this.handlePause);
-            toggleEventListener.addEventListener(document, 'resume', this.handleResume);
+            toggleEventListener(document, 'pause', this.handlePause, enabled);
+            toggleEventListener(document, 'resume', this.handleResume, enabled);
         }
     }
 

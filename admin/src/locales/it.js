@@ -25,25 +25,25 @@ let phrases = {
     'activity-chart-legend-wiki': "Modifiche wiki",
 
     'activity-tooltip-$count': (count) => {
-        return cardinal(count, 'storia', 'storie');
+        return cardinal(count, "storia", "storie");
     },
     'activity-tooltip-$count-branch': (count) => {
         return `${count} branch`;
     },
     'activity-tooltip-$count-issue': (count) => {
-        return cardinal(count, 'problema', 'problemi');
+        return cardinal(count, "problema", "problemi");
     },
     'activity-tooltip-$count-member': (count) => {
-        return cardinal(count, 'cambiamento di appartenenza', 'cambiamenti di appartenenza');
+        return cardinal(count, "cambiamento di appartenenza", "cambiamenti di appartenenza");
     },
     'activity-tooltip-$count-merge': (count) => {
         return `${count} merge`;
     },
     'activity-tooltip-$count-merge-request': (count) => {
-        return cardinal(count, 'merge richiesta', 'merge richieste');
+        return cardinal(count, "merge richiesta", "merge richieste");
     },
     'activity-tooltip-$count-milestone': (count) => {
-        return cardinal(count, 'traguardo', 'traguardi');
+        return cardinal(count, "traguardo", "traguardi");
     },
     'activity-tooltip-$count-post': (count) => {
         return `${count} post`;
@@ -52,19 +52,19 @@ let phrases = {
         return `${count} push`;
     },
     'activity-tooltip-$count-repo': (count) => {
-        return cardinal(count, 'cambiamento del repository', 'cambiamenti del repository');
+        return cardinal(count, "cambiamento del repository", "cambiamenti del repository");
     },
     'activity-tooltip-$count-survey': (count) => {
-        return cardinal(count, 'sondaggio', 'sondaggi');
+        return cardinal(count, "sondaggio", "sondaggi");
     },
     'activity-tooltip-$count-tag': (count) => {
         return `${count} tag`;
     },
     'activity-tooltip-$count-task-list': (count) => {
-        return cardinal(count, 'elenco di attività', 'elenchi di attività');
+        return cardinal(count, "elenco di attività", "elenchi di attività");
     },
     'activity-tooltip-$count-wiki': (count) => {
-        return cardinal(count, 'modifica wiki', 'modifiche Wiki');
+        return cardinal(count, "modifica wiki", "modifiche Wiki");
     },
 
     'app-name': "Trambar",
@@ -326,7 +326,7 @@ let phrases = {
     'server-summary-oauth-callback-url': "URL di callback",
     'server-summary-oauth-client-id': "ID client",
     'server-summary-oauth-client-secret': "Segreto client",
-    'server-summary-oauth-deauthorize-callback-url': 'URL di callback di deauthorization',
+    'server-summary-oauth-deauthorize-callback-url': "URL di callback di deauthorization",
     'server-summary-oauth-gitlab-url': "URL del server GitLab",
     'server-summary-oauth-redirect-uri': "URI di reindirizzamento",
     'server-summary-oauth-redirect-url': "URL di reindirizzamento",
@@ -351,7 +351,7 @@ let phrases = {
     'server-summary-user-type-guest': "Utente ospite",
     'server-summary-user-type-moderator': "Moderatore",
     'server-summary-user-type-regular': "Utente normale",
-    'server-summary-whitelist': 'Lista bianca indirizzo email',
+    'server-summary-whitelist': "Lista bianca indirizzo email",
 
     'server-type-dropbox': "Dropbox",
     'server-type-facebook': "Facebook",
@@ -409,7 +409,7 @@ let phrases = {
     'table-heading-title': "Nome",
     'table-heading-to-date': "Ad oggi",
     'table-heading-type': "Tipo",
-    'table-heading-username': 'Nome utente',
+    'table-heading-username': "Nome utente",
     'table-heading-users': "Utenti",
 
     'task-$seconds': (seconds) => {
@@ -609,7 +609,7 @@ let phrases = {
     'user-summary-username': "Nome utente",
 
     'user-tooltip-$count': (count) => {
-        return cardinal(count, 'utente', 'untenti');
+        return cardinal(count, "utente", "untenti");
     },
 
     'validation-duplicate-project-name': "Esiste già un progetto con quell'identificatore",

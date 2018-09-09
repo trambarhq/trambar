@@ -3,6 +3,7 @@ import EventEmitter, { GenericEvent } from 'utils/event-emitter';
 
 const defaultOptions = {
     defaultLocale: 'en-US',
+    directory: [],
 };
 
 class LocaleManager extends EventEmitter {
@@ -10,7 +11,7 @@ class LocaleManager extends EventEmitter {
         super();
 
         this.options = _.defaults({}, options, defaultOptions);
-        this.directory = options.directory || [];
+        this.directory = this.options.directory;
         this.browserLocaleCode = getBrowserLocale();
         this.localeCode = '';
         this.countryCode = '';

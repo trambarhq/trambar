@@ -1183,5 +1183,5 @@ var simplifiedPhrases = {
 };
 
 export {
-    phrases: chooseVariant,
+    chooseVariant as phrases,
 };

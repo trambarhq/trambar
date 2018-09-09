@@ -16,7 +16,7 @@ function initialize(evt) {
     importFuncs['app'] = () => import('application' /* webpackChunkName: "app" */);
     BootstrapLoader.load(importFuncs, showProgress).then((modules) => {
         var AppCore = modules['app-core'];
-        var Application = modules['app'];
+        var Application = modules['app'].default;
         var React = modules['react'];
         var ReactDOM = modules['react-dom'];
 

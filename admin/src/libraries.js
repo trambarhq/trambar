@@ -9,5 +9,5 @@ module.exports = {
     'sockjs-client': () => import('sockjs-client' /* webpackChunkName: "sockjs-client" */),
     'react': () => import('react' /* webpackChunkName: "react" */),
     'react-dom': () => import('react-dom' /* webpackChunkName: "react-dom" */),
-    'app-core': () => import('app-core' /* webpackChunkName: "app-core" */);
+    'app-core': () => import('app-core' /* webpackChunkName: "app-core" */),
 };

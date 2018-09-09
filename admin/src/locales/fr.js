@@ -26,46 +26,46 @@ let phrases = {
     'activity-chart-legend-wiki': "Éditions wiki",
 
     'activity-tooltip-$count': (count) => {
-        return cardinal(count, 'histoire', 'histoires');
+        return cardinal(count, "histoire", "histoires");
     },
     'activity-tooltip-$count-branch': (count) => {
-        return cardinal(count, 'branche', 'branches');
+        return cardinal(count, "branche", "branches");
     },
     'activity-tooltip-$count-issue': (count) => {
-        return cardinal(count, 'problème', 'problèmes');
+        return cardinal(count, "problème", "problèmes");
     },
     'activity-tooltip-$count-member': (count) => {
-        return cardinal(count, 'changement d'adhésion', 'changements d'adhésion');
+        return cardinal(count, "changement d'adhésion", "changements d'adhésion");
     },
     'activity-tooltip-$count-merge': (count) => {
-        return cardinal(count, 'fusion', 'fusions');
+        return cardinal(count, "fusion", "fusions");
     },
     'activity-tooltip-$count-merge-request': (count) => {
-        return cardinal(count, 'demande de fusion', 'demandes de fusion');
+        return cardinal(count, "demande de fusion", "demandes de fusion");
     },
     'activity-tooltip-$count-milestone': (count) => {
-        return cardinal(count, 'jalon', 'jalons');
+        return cardinal(count, "jalon", "jalons");
     },
     'activity-tooltip-$count-post': (count) => {
-        return cardinal(count, 'message', 'messages');
+        return cardinal(count, "message", "messages");
     },
     'activity-tooltip-$count-push': (count) => {
-        return cardinal(count, 'poussée', 'poussées');
+        return cardinal(count, "poussée", "poussées");
     },
     'activity-tooltip-$count-repo': (count) => {
-        return cardinal(count, 'modification de dépôt', 'modifications de dépôt');
+        return cardinal(count, "modification de dépôt", "modifications de dépôt");
     },
     'activity-tooltip-$count-survey': (count) => {
-        return cardinal(count, 'sondage', 'sondages');
+        return cardinal(count, "sondage", "sondages");
     },
     'activity-tooltip-$count-tag': (count) => {
-        return cardinal(count, 'étiquette', 'étiquettes');
+        return cardinal(count, "étiquette", "étiquettes");
     },
     'activity-tooltip-$count-task-list': (count) => {
-        return cardinal(count, 'liste de tâches', 'listes de tâches');
+        return cardinal(count, "liste de tâches", "listes de tâches");
     },
     'activity-tooltip-$count-wiki': (count) => {
-        return cardinal(count, 'édition wiki', 'éditions wiki');
+        return cardinal(count, "édition wiki", "éditions wiki");
     },
 
     'app-name': "Trambar",
@@ -187,7 +187,7 @@ let phrases = {
     'project-summary-title': "Nom",
 
     'project-tooltip-$count-others': (count) => {
-        return cardinal(count, 'autre', 'autres');
+        return cardinal(count, "autre", "autres");
     },
 
     'repo-list-cancel': "Annuler",
@@ -224,7 +224,7 @@ let phrases = {
     'repo-summary-title': "Nom",
 
     'repository-tooltip-$count': (count) => {
-        return cardinal(count, 'dépôt', 'dépôts');
+        return cardinal(count, "dépôt", "dépôts");
     },
 
     'role-list-add': "Ajouter un nouveau rôle",
@@ -273,7 +273,7 @@ let phrases = {
     'role-summary-users': "Utilisateurs",
 
     'role-tooltip-$count-others': (count) => {
-        return cardinal(count, 'autre', 'autres');
+        return cardinal(count, "autre", "autres");
     },
 
     'server-list-add': "Ajouter un nouveau serveur",
@@ -417,31 +417,31 @@ let phrases = {
         return (seconds === 1) ? `1 seconde` : `${seconds} secondes`;
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'commentaires sur un commit', 'commentaires sur un commit');
+        let comments = cardinal(count, "commentaires sur un commit", "commentaires sur un commit");
         return `Importé ${comments} from “${repo}”`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        let events = cardinal(count, 'événement', 'événements');
+        let events = cardinal(count, "événement", "événements");
         return `Importé ${events} from “${repo}”`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'commentaire sur un problème', 'commentaires sur un problème');
+        let comments = cardinal(count, "commentaire sur un problème", "commentaires sur un problème");
         return `Importé ${comments} from “${repo}”`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'commentaire sur une demande de fusion', 'commentaires sur une demande de fusion');
+        let comments = cardinal(count, "commentaire sur une demande de fusion", "commentaires sur une demande de fusion");
         return `Importé ${comments} from “${repo}”`;
     },
     'task-imported-$count-repos': (count) => {
-        let repos = cardinal(count, 'dépôt', 'dépôts');
+        let repos = cardinal(count, "dépôt", "dépôts");
         return `Importé ${repos}`;
     },
     'task-imported-$count-users': (count) => {
-        let users = cardinal(count, 'utilisateur', 'utilisateurs');
+        let users = cardinal(count, "utilisateur", "utilisateurs");
         return `Importé ${users}`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        let commits = cardinal(count, 'commit', 'commits');
+        let commits = cardinal(count, "commit", "commits");
         return `Importé une poussée avec ${commits} de la “${branch}” de “${repo}”`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
@@ -462,41 +462,41 @@ let phrases = {
     'task-importing-repos': "Importation de dépôts",
     'task-importing-users': "Importation de utilisateurs",
     'task-installed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'hook', 'hooks');
+        let hooks = cardinal(count, "hook", "hooks");
         return `Installée ${hooks}`;
     },
     'task-installing-hooks': "Installation de hooks",
     'task-removed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'hook', 'hooks');
+        let hooks = cardinal(count, "hook", "hooks");
         return `Désinstallé ${hooks}`;
     },
     'task-removed-$count-repos': (count) => {
-        let repos = cardinal(count, 'dépôt', 'dépôts');
+        let repos = cardinal(count, "dépôt", "dépôts");
         return `Supprimé ${repos}`;
     },
     'task-removed-$count-users': (count) => {
-        let users = cardinal(count, 'utilisateur', 'utilisateurs');
+        let users = cardinal(count, "utilisateur", "utilisateurs");
         return `Supprimé ${users}`;
     },
     'task-removing-hooks': "Désinstallation de hooks",
     'task-updated-$count-repos': (count) => {
-        let repos = cardinal(count, 'dépôt', 'dépôts');
+        let repos = cardinal(count, "dépôt", "dépôts");
         return `Actualisé ${repos}`;
     },
     'task-updated-$count-users': (count) => {
-        let users = cardinal(count, 'utilisateur', 'utilisateurs');
+        let users = cardinal(count, "utilisateur", "utilisateurs");
         return `Actualisé ${users}`;
     },
 
     'text-field-placeholder-none': "Aucun",
 
     'tooltip-$first-and-$tooltip': (first, tooltip) => {
-        return [ first, ' et ', tooltip ];
+        return [ first, " et ", tooltip ];
     },
     'tooltip-more': "Plus",
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        let files = cardinal(count, 'fichier', 'fichiers');
+        let files = cardinal(count, "fichier", "fichiers");
         return `Téléchargement de ${files}, ${size} restant`;
     },
 
@@ -575,7 +575,7 @@ let phrases = {
     'user-summary-username': "Nom d'utilisateur",
 
     'user-tooltip-$count': (count) => {
-        return cardinal(count, 'utilisateur', 'utilisateurs');
+        return cardinal(count, "utilisateur", "utilisateurs");
     },
 
     'validation-duplicate-project-name': "Un projet avec cet identifiant existe déjà",

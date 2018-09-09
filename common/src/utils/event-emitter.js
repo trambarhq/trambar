@@ -48,9 +48,12 @@ class GenericEvent {
     }
 
     postponeDefault(promise) {
-        if (!promise || !(promise.then instanceof Function)) {
-            this.decisionPromise = promise;
+        if (process.env.NODE_ENV !== 'production') {
+            if (!promise || !(promise.then instanceof Function)) {
+                console.warn('Non-promise passed to postponeDefault()');
+            }
         }
+        this.decisionPromise = promise;
     }
 
     waitForDecision() {

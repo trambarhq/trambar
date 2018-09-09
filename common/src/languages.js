@@ -1,4 +1,4 @@
-module.exports = [
+const directory = [
     {
         name: 'Čeština',
         code: 'cz',
@@ -327,3 +327,7 @@ module.exports = [
         module: () => import('locales/zh' /* webpackChunkName: "locale-zh" */),
     },
 ];
+
+export {
+    directory as default
+};

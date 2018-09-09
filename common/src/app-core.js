@@ -10,6 +10,8 @@ import LocalStorageCache from 'data/local-storage-cache';
 import BlobManager from 'transport/blob-manager';
 import CORSRewriter from 'routing/cors-rewriter';
 
+import languages from 'languages';
+
 const SettingsLocation = {
     schema: 'local',
     table: 'settings'
@@ -21,52 +23,48 @@ const SessionLocation = {
 }
 
 function start(App) {
-    let environmentMonitor = new EnvironmentMonitor();
-    let routeManagerOptions = {
+    let envMonitor = new EnvironmentMonitor({});
+    let routeManager = new RouteManager({
         basePath: App.basePath,
         routes: App.routes,
         rewrites: CORSRewriter,
-    };
-    let routeManager = new RouteManager(routeManagerOptions);
-    let localeManager = new LocaleManager();
+    });
+    let localeManager = new LocaleManager({
+        directory: languages
+    });
     let cache;
     if (IndexedDBCache.isAvailable()) {
         cache = new IndexedDBCache()
     } else {
         cache = new LocalStorageCache();
     }
-    let dataSourceOptions = {
+    let dataSource = new RemoteDataSource({
         discoveryFlags: App.discoveryFlags,
         retrievalFlags: App.retrievalFlags,
         cache,
-    };
-    let dataSource = new RemoteDataSource(dataSourceOptions);
+    });
     let notifier;
     if (process.env.PLATFORM === 'cordova') {
-        let pushNotifierOptions = {
-        };
-        notifier = new PushNotifier();
+        notifier = new PushNotifier({
+        });
     } else {
-        let websocketNotifierOptions = {
-        };
-        notifier = new WebsocketNotifier(websocketNotifierOptions);
+        notifier = new WebsocketNotifier({
+        });
     }
-    let payloadManagerOptions = {
+    let payloadManager = new PayloadManager({
         uploadURL: getUploadURL,
         streamURL: getStreamURL,
-    };
-    let payloadManager = new PayloadManager(payloadManagerOptions)
-
-    environmentMonitor.activate();
+    });
+    envMonitor.activate();
     routeManager.activate();
-    if (environmentMonitor.online) {
+    if (envMonitor.online) {
         dataSource.activate();
         payloadManager.activate();
         notifier.activate();
     }
 
-    environmentMonitor.addEventListener('change', (evt) => {
-        if (environmentMonitor.online) {
+    envMonitor.addEventListener('change', (evt) => {
+        if (envMonitor.online) {
             dataSource.activate();
             payloadManager.activate();
             notifier.activate();
@@ -78,19 +76,27 @@ function start(App) {
     });
     routeManager.addEventListener('beforechange', (evt) => {
         // see if a page requires authentication
-        let { public } = routeManager.params;
-        if (!public) {
-            let promsie = dataSource.requestAuthentication();
+        let { authentication } = routeManager.params;
+        let { address } = routeManager.context;
+        if (authentication !== false) {
+            let location = { address };
+            let promise = dataSource.authenticate(location);
             evt.postponeDefault(promise);
         }
     });
     dataSource.addEventListener('beforeauthentication', (evt) => {
-        // check if a session is saved, thereby removing the need for authentication
+        // check if a session is saved; if so, then there's no need to authenticate
         let { address } = evt;
-        let loadSession(address).then((session) => {
-            if (session) {
-                return dataSource.authorize(address, session);
+        let promise = loadSession(address).then((session) => {
+            if (!session) {
+                return;
             }
+            return dataSource.restoreSession(session).then((result) => {
+                if (result) {
+                    // cancel default behavior
+                    return false;
+                }
+            });
         });
         evt.postponeDefault(promise);
     });
@@ -148,10 +154,10 @@ function start(App) {
         return routeManager.start();
     }).then(() => {
         return {
-            environmentMonitor,
-            payloadManager,
-            localeManager,
+            envMonitor,
             routeManager,
+            localeManager,
+            payloadManager,
             dataSource,
             notifier,
         };
@@ -319,3 +325,7 @@ function start(App) {
         });
     }
 }
+
+export {
+    start,
+};

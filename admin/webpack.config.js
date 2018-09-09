@@ -54,7 +54,7 @@ while (m = re.exec(code)) {
 
 module.exports = {
     context: folders.src,
-    entry: './bootstrap',
+    entry: './main',
     output: {
         path: folders.www,
         filename: '[name].js?[hash]',
@@ -75,12 +75,12 @@ module.exports = {
                 exclude: /node_modules/,
                 query: {
                     presets: [
-                        'babel-preset-es2015',
-                        'babel-preset-react',
-                    ].map(require.resolve),
+                        'env',
+                        'stage-0',
+                        'react',
+                    ],
                     plugins: [
-                        'babel-plugin-syntax-dynamic-import'
-                    ].map(require.resolve),
+                    ],
                 }
             },
             {
@@ -199,6 +199,8 @@ function resolve(path) {
     if (_.isArray(path)) {
         return _.map(path, resolve);
     } else {
-        return Path.resolve(`${__dirname}/${path}`);
+        return `${__dirname}/${path}`;
     }
 }
+
+require('./webpack.resolve.js')(module.exports);

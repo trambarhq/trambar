@@ -346,6 +346,31 @@ class RemoteDataSource extends EventEmitter {
         return url;
     }
 
+    authenticate(location) {
+        if (this.hasAuthorization(location)) {
+            return Promise.resolve(true);
+        }
+        let event1 = new RemoteDataSourceEvent('beforeauthentication', this, {
+            location
+        });
+        this.triggerEvent(event1);
+        return event1.waitForDecision().then(() => {
+            if (event1.defaultPrevented) {
+                // maybe a saved session was provided by event listener
+                return this.hasAuthorization(location);
+            }
+            let event2 = new RemoteDataSourceEvent('authentication', this);
+            this.triggerEvent(event2);
+            return event2.waitForDecision().then(() => {
+                if (event1.defaultPrevented) {
+                    return this.hasAuthorization(location);
+                }
+                // default behavior is failure
+                return false;
+            });
+        });
+    }
+
     /**
      * Return true if the current user has access to the specified server
      *
@@ -375,8 +400,10 @@ class RemoteDataSource extends EventEmitter {
             if (session.handle && session.token) {
                 let existing = getSession(session.address);
                 _.assign(existing, session);
+                return true;
             }
         }
+        return false;
     }
 
     /**

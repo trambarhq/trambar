@@ -1,7 +1,9 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import React from 'react';
+import React, { PureComponent } from 'react';
 import Relaks from 'relaks';
+import createClass from 'relaks/create-class';
+Relaks.createClass = createClass;
 
 import ComponentRefs from 'utils/component-refs';
 import HTTPError from 'errors/http-error';
@@ -10,6 +12,7 @@ import { routes } from 'routing';
 
 // proxy objects
 import Database from 'data/database';
+import Route from 'routing/route';
 import Payloads from 'transport/payloads';
 import Environment from 'env/environment';
 import Locale from 'locale/locale';
@@ -42,6 +45,7 @@ class Application extends PureComponent {
     };
 
     constructor(props) {
+        super(props);
         let {
             dataSource,
             routeManager,
@@ -49,9 +53,10 @@ class Application extends PureComponent {
             envMonitor,
             localeManager,
         } = this.props;
-
+        let { address } = routeManager.context;
+        let { schema } = routeManager.params;
         this.state = {
-            database: new Database(dataSource, { address }),
+            database: new Database(dataSource, { address, schema }),
             payloads: new Payloads(payloadManager),
             route: new Route(routeManager),
             env: new Environment(envMonitor, localeManager),
@@ -272,9 +277,9 @@ class Application extends PureComponent {
             return (evt.returnValue = 'Are you sure?');
         }
     }
-});
+}
 
-import EnvironmentMonitor from 'environment-monitor';
+import EnvironmentMonitor from 'env/environment-monitor';
 import RouteManager from 'relaks-route-manager';
 import RemoteDataSource from 'data/remote-data-source';
 import PayloadManager from 'transport/payload-manager';
@@ -285,10 +290,15 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     Application.propTypes = {
-        envMonitor: PropTypes.instanceof(EnvironmentMonitor).isRequired,
-        dataSource: PropTypes.instanceof(RemoteDataSource).isRequired,
-        localeManager: PropTypes.instanceof(LocaleManager).isRequired,
-        payloadManager: PropTypes.instanceof(PayloadManager).isRequired,
-        //notifier: PropTypes.instanceof(Notifier),
+        envMonitor: PropTypes.instanceOf(EnvironmentMonitor).isRequired,
+        dataSource: PropTypes.instanceOf(RemoteDataSource).isRequired,
+        localeManager: PropTypes.instanceOf(LocaleManager).isRequired,
+        payloadManager: PropTypes.instanceOf(PayloadManager).isRequired,
+        //notifier: PropTypes.instanceOf(Notifier),
     };
 }
+
+export {
+    Application as default,
+    Application
+};
