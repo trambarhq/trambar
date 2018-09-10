@@ -1,45 +1,28 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var Tooltip = require('widgets/tooltip');
+import Tooltip from 'widgets/tooltip';
 
-require('./repository-tooltip.scss');
+import './repository-tooltip.scss';
 
-module.exports = React.createClass({
-    displayName: 'RepositoryTooltip',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        repos: PropTypes.arrayOf(PropTypes.object),
-        project: PropTypes.object.isRequired,
-        route: PropTypes.object.isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        disabled: PropTypes.bool,
-    },
+class RepositoryTooltip extends PureComponent {
+    static displayName = 'RepositoryTooltip';
 
-    render: function() {
-        if (this.props.repos == null) {
+    render() {
+        let { route, env, repos, project, disabled } = this.props;
+        let { t, p } = env.locale;
+        if (!repos) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var route = this.props.route;
-        var label = t('repository-tooltip-$count', this.props.repos.length);
-        var list = _.map(this.props.repos, (repo, i) => {
-            var url = route.find('repo-summary-page', {
-                project: this.props.project.id,
+        let label = t('repository-tooltip-$count', repos.length);
+        let list = _.map(repos, (repo, i) => {
+            let url = route.find('repo-summary-page', {
+                project: project.id,
                 repo: repo.id,
             });
-            var iconName = repo.type;
-            var name = p(repo.details.title) || t(`server-type-${repo.type}`);
+            let iconName = repo.type;
+            let name = p(repo.details.title) || t(`server-type-${repo.type}`);
             return (
                 <div className="item" key={i}>
                     <a href={url}>
@@ -50,11 +33,9 @@ module.exports = React.createClass({
                 </div>
             );
         });
-        var listURL = route.find('repo-list-page', {
-            project: this.props.project.id,
-        });
+        let listURL = route.find('repo-list-page', { project: project.id });
         return (
-            <Tooltip className="repository" disabled={this.props.disabled || list.length === 0}>
+            <Tooltip className="repository" disabled={disabled || list.length === 0}>
                 <inline>{label}</inline>
                 <window>
                     {list}
@@ -66,3 +47,23 @@ module.exports = React.createClass({
         );
     }
 });
+
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    RepositoryTooltip.propTypes = {
+        repos: PropTypes.arrayOf(PropTypes.object),
+        project: PropTypes.object.isRequired,
+        route: PropTypes.object.isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        disabled: PropTypes.bool,
+    };
+}
+
+export {
+    RepositoryTooltip as default,
+    RepositoryTooltip,
+};

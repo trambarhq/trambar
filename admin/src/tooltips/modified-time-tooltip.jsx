@@ -1,80 +1,74 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Moment = require('moment');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import Moment from 'moment';
 
-var Locale = require('locale/locale');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import Environment from 'env/environment';
 
 // widgets
-var Tooltip = require('widgets/tooltip');
+import Tooltip from 'widgets/tooltip';
 
-module.exports = React.createClass({
-    displayName: 'ModifiedTimeTooltip',
-    propTypes: {
-        time: PropTypes.string,
-        disabled: PropTypes.bool,
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-    },
+class ModifiedTimeTooltip extends PureComponent {
+    static displayName = 'ModifiedTimeTooltip';
 
     /**
      * Set the text labels on mount
      */
-    componentWillMount: function() {
+    componentWillMount() {
         this.updateLabels();
-    },
+    }
 
     /**
      * Update text labels on receiving new props
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         this.updateLabels(nextProps);
-    },
+    }
 
     /**
      * Parse time string and format relative and absolute dates
      *
      * @param  {Object} props
      */
-    updateLabels: function(props) {
-        props = props || this.props;
-        var m;
-        if (props.time) {
-            m = Moment(props.time);
-            m.locale(props.locale.localeCode);
+    updateLabels(props) {
+        let { env, time } = props || this.props;
+        let { localeCode } = env.locale;
+        let m;
+        if (time) {
+            m = Moment(time);
+            m.locale(localeCode);
         };
-        var state = {
+        let state = {
             relativeTime: m ? m.fromNow() : null,
             absoluteTime: m ? m.format('lll') : null,
         };
         if (!_.isEqual(state, this.state)) {
             this.setState(state);
         }
-    },
+    }
 
-    render: function() {
+    render() {
+        let { disabled } = this.props;
+        let { relativeTime, absoluteTime } = this.state;
         return (
-            <Tooltip disabled={this.props.disabled}>
-                <inline>{this.state.relativeTime}</inline>
-                <window>{this.state.absoluteTime}</window>
+            <Tooltip disabled={disabled}>
+                <inline>{relativeTime}</inline>
+                <window>{absoluteTime}</window>
             </Tooltip>
         );
-    },
+    }
 
-    componentDidMount: function() {
+    componentDidMount() {
         instances.push(this);
-    },
+    }
 
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         _.pull(instances, this);
     }
-});
+}
 
-var instances = [];
+let instances = [];
 
 // refresh the labels every minute
 setInterval(() => {
@@ -82,3 +76,18 @@ setInterval(() => {
         instance.updateLabels();
     });
 }, 30 * 1000);
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ModifiedTimeTooltip.propTypes = {
+        time: PropTypes.string,
+        disabled: PropTypes.bool,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}
+
+export {
+    ModifiedTimeTooltip as default,
+    ModifiedTimeTooltip,
+};

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import Relaks from 'relaks';
+import { AsyncComponent } from 'react';
 import createClass from 'relaks/create-class';
 Relaks.createClass = createClass;
 
@@ -15,7 +15,6 @@ import Database from 'data/database';
 import Route from 'routing/route';
 import Payloads from 'transport/payloads';
 import Environment from 'env/environment';
-import Locale from 'locale/locale';
 
 import SignInPage from 'pages/sign-in-page';
 import ErrorPage from 'pages/error-page';
@@ -25,11 +24,11 @@ import SideNavigation from 'widgets/side-navigation';
 import TaskAlertBar from 'widgets/task-alert-bar';
 import UploadProgress from 'widgets/upload-progress';
 
-require('setimmediate');
-require('utils/lodash-extra');
-require('application.scss');
-require('colors.scss');
-require('font-awesome-webpack');
+import 'setimmediate';
+import 'utils/lodash-extra';
+import 'application.scss';
+import 'colors.scss';
+import 'font-awesome-webpack';
 
 class Application extends PureComponent {
     static displayName = 'Application';

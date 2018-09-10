@@ -1,49 +1,32 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var Tooltip = require('widgets/tooltip');
-var ProfileImage = require('widgets/profile-image');
+import Tooltip from 'widgets/tooltip';
+import ProfileImage from 'widgets/profile-image';
 
-require('./user-tooltip.scss');
+import './user-tooltip.scss';
 
-module.exports = React.createClass({
-    displayName: 'UserTooltip',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        users: PropTypes.arrayOf(PropTypes.object),
-        project: PropTypes.object,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        disabled: PropTypes.bool,
-    },
+class X extends PureComponent {
+    static displayName = 'UserTooltip';
 
-    render: function() {
-        if (this.props.users == null) {
+    render() {
+        let { route, env, users, project, disabled } = this.props;
+        let { t } = env.locale;
+        if (!users) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var route = this.props.route;
-        var label = t('user-tooltip-$count', this.props.users.length);
-        var users = this.props.users;
-        var ellipsis;
+        let label = t('user-tooltip-$count', users.length);
+        let ellipsis;
         if (users.length > 10) {
             users = _.slice(users, 0, 10);
             ellipsis = <div className="ellipsis"><i className="fa fa-ellipsis-v" /></div>;
         }
-        var list = _.map(users, (user, i) => {
-            var url;
-            if (this.props.project) {
+        let list = _.map(users, (user, i) => {
+            let url;
+            if (project) {
                 url = route.find('user-summary-page', {
-                    project: this.props.project.id,
+                    project: project.id,
                     user: user.id,
                 });
             } else {
@@ -54,23 +37,21 @@ module.exports = React.createClass({
             return (
                 <div className="item" key={i}>
                     <a href={url}>
-                        <ProfileImage user={user} theme={this.props.theme} />
+                        <ProfileImage user={user} env={env} />
                         {' '}
                         {user.details.name}
                     </a>
                 </div>
             );
         });
-        var listURL;
-        if (this.props.project) {
-            listURL = route.find('member-list-page', {
-                project: this.props.project.id,
-            });
+        let listURL;
+        if (project) {
+            listURL = route.find('member-list-page', { project: project.id });
         } else {
             listURL = route.find('user-list-page');
         }
         return (
-            <Tooltip className="user" disabled={list.length === 0}>
+            <Tooltip className="user" disabled={disabled || list.length === 0}>
                 <inline>{label}</inline>
                 <window>
                     {list}
@@ -83,3 +64,18 @@ module.exports = React.createClass({
         );
     }
 });
+
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UserTooltip.propTypes = {
+        users: PropTypes.arrayOf(PropTypes.object),
+        project: PropTypes.object,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        disabled: PropTypes.bool,
+    };
+}
