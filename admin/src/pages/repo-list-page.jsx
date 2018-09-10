@@ -1,40 +1,29 @@
-var _ = require('lodash');
-var Moment = require('moment');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
-var ProjectFinder = require('objects/finders/project-finder');
-var RepoFinder = require('objects/finders/repo-finder');
-var ServerFinder = require('objects/finders/server-finder');
-var StatisticsFinder = require('objects/finders/statistics-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import Memoize from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import ExternalDataUtils from 'objects/utils/external-data-utils';
+import ProjectFinder from 'objects/finders/project-finder';
+import RepoFinder from 'objects/finders/repo-finder';
+import ServerFinder from 'objects/finders/server-finder';
+import StatisticsFinder from 'objects/finders/statistics-finder';
 
 // widgets
-var PushButton = require('widgets/push-button');
-var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
-var ActivityTooltip = require('tooltips/activity-tooltip');
-var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
-var ActionBadge = require('widgets/action-badge');
-var ActionConfirmation = require('widgets/action-confirmation');
-var DataLossWarning = require('widgets/data-loss-warning');
-var UnexpectedError = require('widgets/unexpected-error');
+import PushButton from 'widgets/push-button';
+import SortableTable from 'widgets/sortable-table', TH = SortableTable.TH;
+import ActivityTooltip from 'tooltips/activity-tooltip';
+import ModifiedTimeTooltip from 'tooltips/modified-time-tooltip'
+import ActionBadge from 'widgets/action-badge';
+import ActionConfirmation from 'widgets/action-confirmation';
+import DataLossWarning from 'widgets/data-loss-warning';
+import UnexpectedError from 'widgets/unexpected-error';
 
-require('./repo-list-page.scss');
+import './repo-list-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'RepoListPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class RepoListPage extends AsyncComponent {
+    static displayName = 'RepoListPage';
 
     /**
      * Render the component asynchronously
@@ -43,23 +32,22 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let props = {
             project: null,
             repos: null,
             servers: null,
             statistics: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
         };
         meanwhile.show(<RepoListPageSync {...props} />);
-        return db.start().then((currentUserId) => {
-            return ProjectFinder.findProject(db, params.project).then((project) => {
+        return db.start().then((currentUserID) => {
+            return ProjectFinder.findProject(db, route.params.project).then((project) => {
                 props.project = project;
             });
         }).then(() => {
@@ -73,7 +61,7 @@ module.exports = Relaks.createClass({
             });
         }).then(() => {
             meanwhile.show(<RepoListPageSync {...props} />);
-            var repos = findRepos(props.repos, props.project);
+            let repos = findRepos(props.repos, props.project);
             return StatisticsFinder.findDailyActivitiesOfRepos(db, props.project, repos).then((statistics) => {
                 props.statistics = statistics;
             });
@@ -81,40 +69,25 @@ module.exports = Relaks.createClass({
             return <RepoListPageSync {...props} />;
         });
     }
-});
+}
 
-var RepoListPageSync = module.exports.Sync = React.createClass({
-    displayName: 'RepoListPage.Sync',
-    propTypes: {
-        repos: PropTypes.arrayOf(PropTypes.object),
-        project: PropTypes.object,
-        servers: PropTypes.arrayOf(PropTypes.object),
-        statistics: PropTypes.objectOf(PropTypes.object),
+class RepoListPageSync extends PureComponent {
+    static displayName = 'RepoListPage.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
         });
-        return {
+        this.state = {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
-            selectedRepoIds: [],
+            selectedRepoIDs: [],
             hasChanges: false,
             renderingFullList: this.isEditing(),
             problems: {},
         };
-    },
+    }
 
     /**
      * Return true when the URL indicate edit mode
@@ -123,10 +96,10 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Boolean}
      */
-    isEditing: function(props) {
-        props = props || this.props;
-        return props.route.parameters.edit;
-    },
+    isEditing(props) {
+        let { route } = props || this.props;
+        return route.params.edit;
+    }
 
     /**
      * Change editability of page
@@ -135,25 +108,25 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    setEditability: function(edit) {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
+    setEditability(edit) {
+        let { route } = this.props;
+        let params = _.clone(route.params);
         params.edit = edit;
-        return this.props.route.replace(module.exports, params);
-    },
+        return this.props.route.replace(route.name, params);
+    }
 
     /**
      * Check if we're switching into edit mode
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
                 // initial list of ids to the current list
                 this.setState({
                     renderingFullList: true,
-                    selectedRepoIds: _.get(nextProps.project, 'repo_ids', []),
+                    selectedRepoIDs: _.get(nextProps.project, 'repo_ids', []),
                     hasChanges: false,
                 });
             } else {
@@ -165,48 +138,53 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             }
         }
         if (this.props.project !== nextProps.project && nextProps.project) {
-            var selectedRepoIds = this.state.selectedRepoIds;
-            var originalRepoIds = _.get(this.props.project, 'repo_ids', []);
-            var incomingRepoIds = _.get(nextProps.project, 'repo_ids', []);
-            if (selectedRepoIds === originalRepoIds) {
+            let selectedRepoIDs = this.state.selectedRepoIDs;
+            let originalRepoIDs = _.get(this.props.project, 'repo_ids', []);
+            let incomingRepoIDs = _.get(nextProps.project, 'repo_ids', []);
+            if (selectedRepoIDs === originalRepoIDs) {
                 // use the list from the incoming object if no change has been made yet
-                selectedRepoIds = incomingRepoIds;
+                selectedRepoIDs = incomingRepoIDs;
             } else {
-                if (!_.isEqual(originalRepoIds, incomingRepoIds)) {
+                if (!_.isEqual(originalRepoIDs, incomingRepoIDs)) {
                     // merge the list when a change has been made (by someone else presumably)
-                    selectedRepoIds = _.union(selectedRepoIds, incomingRepoIds);
+                    selectedRepoIDs = _.union(selectedRepoIDs, incomingRepoIDs);
                 }
             }
-            this.setState({ selectedRepoIds });
+            this.setState({ selectedRepoIDs });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
+    render() {
+        let { route, env } = this.props;
+        let { hasChanges, problems } = this.state;
+        let { setters } = this.components;
+        let { t } = env.locale;
         return (
             <div className="repo-list-page">
                 {this.renderButtons()}
                 <h2>{t('repo-list-title')}</h2>
-                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
+                <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderTable()}
-                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
-                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                <ActionConfirmation ref={setters.confirmation} env={env} />
+                <DataLossWarning changes={hasChanges} env={env} route={route} />
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons in top right corner
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
+    renderButtons() {
+        let { env, repos } = this.props;
+        let { hasChanges } = this.state;
+        let { t } = env.locale;
         if (this.isEditing()) {
             return (
                 <div className="buttons">
@@ -214,13 +192,13 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                         {t('repo-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('repo-list-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            var empty = _.isEmpty(this.props.repos);
+            let empty = _.isEmpty(repos);
             return (
                 <div className="buttons">
                     <PushButton className="emphasis" disabled={empty} onClick={this.handleEditClick}>
@@ -229,20 +207,21 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render a table
      *
      * @return {ReactElement}
      */
-    renderTable: function() {
-        var tableProps = {
-            sortColumns: this.state.sortColumns,
-            sortDirections: this.state.sortDirections,
+    renderTable() {
+        let { renderingFullList, sortColumns, sortDirections } = this.state;
+        let tableProps = {
+            sortColumns,
+            sortDirections,
             onSort: this.handleSort,
         };
-        if (this.state.renderingFullList) {
+        if (renderingFullList) {
             tableProps.expandable = true;
             tableProps.selectable = true;
             tableProps.expanded = this.isEditing();
@@ -257,14 +236,14 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 </tbody>
             </SortableTable>
         );
-    },
+    }
 
     /**
      * Render table headings
      *
      * @return {ReactElement}
      */
-    renderHeadings: function() {
+    renderHeadings() {
         return (
             <tr>
                 {this.renderTitleColumn()}
@@ -277,45 +256,42 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 {this.renderModifiedTimeColumn()}
             </tr>
         );
-    },
+    }
 
     /**
      * Render rows
      *
      * @return {Array<ReactElement>}
      */
-    renderRows: function() {
-        var repos = this.props.repos;
-        if (!this.state.renderingFullList) {
-            repos = findRepos(repos, this.props.project);
+    renderRows() {
+        let { env, project, repos, servers, statistics } = this.props;
+        let { renderingFullList, sortColumns, sortDirections } = this.state;
+        if (!renderingFullList) {
+            repos = findRepos(repos, project);
         }
-        repos = sortRepos(
-            repos,
-            this.props.servers,
-            this.props.statistics,
-            this.props.locale,
-            this.state.sortColumns,
-            this.state.sortDirections
-        );
-        return _.map(repos, this.renderRow);
-    },
+        repos = sortRepos(repos, servers, statistics, env, sortColumns, sortDirections);
+        return _.map(repos, (repo) => {
+            return this.renderRow(repo);
+        });
+    }
 
     /**
      * Render a table row
      *
      * @param  {Object} repo
-     * @param  {Number} i
      *
      * @return {ReactElement}
      */
-    renderRow: function(repo, i) {
-        var props = {};
-        if (this.state.renderingFullList) {
-            var originalRepoIds = _.get(this.props.project, 'repo_ids', []);
-            if (_.includes(originalRepoIds, repo.id)) {
+    renderRow(repo) {
+        let { project } = this.props;
+        let { renderingFullList, selectedRepoIDs } = this.state;
+        let props = {};
+        if (renderingFullList) {
+            let originalRepoIDs = _.get(project, 'repo_ids', []);
+            if (_.includes(originalRepoIDs, repo.id)) {
                 props.className = 'fixed';
             }
-            if (_.includes(this.state.selectedRepoIds, repo.id)) {
+            if (_.includes(selectedRepoIDs, repo.id)) {
                 props.className += ' selected';
             }
             props.onClick = this.handleRowClick;
@@ -333,7 +309,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 {this.renderModifiedTimeColumn(repo)}
             </tr>
         );
-    },
+    }
 
     /**
      * Render name column, either the heading or a data cell
@@ -342,32 +318,32 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderTitleColumn: function(repo) {
-        var t = this.props.locale.translate;
+    renderTitleColumn(repo) {
+        let { route, env, project } = this.props;
+        let { renderingFullList, selectedRepoIDs } = this.state;
+        let { t, p } = env.locale;
         if (!repo) {
             return <TH id="title">{t('table-heading-title')}</TH>;
         } else {
-            var p = this.props.locale.pick;
-            var title = p(repo.details.title) || repo.name;
-            var url;
-            var badge;
-            if (this.state.renderingFullList) {
+            let title = p(repo.details.title) || repo.name;
+            let url;
+            let badge;
+            if (renderingFullList) {
                 // compare against original project object to see if the repo
                 // will be added or removed
-                var originalRepoIds = _.get(this.props.project, 'repo_ids', []);
-                var includedBefore = _.includes(originalRepoIds, repo.id);
-                var includedAfter = _.includes(this.state.selectedRepoIds, repo.id);
+                let originalRepoIDs = _.get(project, 'repo_ids', []);
+                let includedBefore = _.includes(originalRepoIDs, repo.id);
+                let includedAfter = _.includes(selectedRepoIDs, repo.id);
                 if (includedBefore !== includedAfter) {
                     if (includedAfter) {
-                        badge = <ActionBadge type="add" locale={this.props.locale} />;
+                        badge = <ActionBadge type="add" env={env} />;
                     } else {
-                        badge = <ActionBadge type="remove" locale={this.props.locale} />;
+                        badge = <ActionBadge type="remove" env={env} />;
                     }
                 }
             } else {
                 // don't create the link when we're editing the list
-                var route = this.props.route;
-                var params = _.clone(route.parameters);
+                let params = _.clone(route.parameters);
                 params.repo = repo.id;
                 url = route.find('repo-summary-page', params);
             }
@@ -377,7 +353,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
                 </td>
             );
         }
-    },
+    }
 
     /**
      * Render server column, either the heading or a data cell
@@ -386,19 +362,18 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderServerColumn: function(repo) {
-        var t = this.props.locale.translate;
+    renderServerColumn(repo) {
+        let { route, env, servers } = this.props;
+        let { t, p } = env.locale;
         if (!repo) {
             return <TH id="server">{t('table-heading-server')}</TH>
         } else {
-            var p = this.props.locale.pick;
-            var server = findServer(this.props.servers, repo);
-            var contents;
+            let server = findServer(servers, repo);
+            let contents;
             if (server) {
-                var title = p(server.details.title) || t(`server-type-${server.type}`);
-                var route = this.props.route;
-                var params = { server: server.id };
-                var url = route.find('server-summary-page', params);
+                let title = p(server.details.title) || t(`server-type-${server.type}`);
+                let params = { server: server.id };
+                let url = route.find('server-summary-page', params);
                 contents =(
                     <a href={url}>
                         <i className={`fa fa-${server.type} fa-fw`} />
@@ -409,7 +384,7 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
             }
             return <td>{contents}</td>;
         }
-    },
+    }
 
     /**
      * Render issue tracker column, either the heading or a data cell
@@ -418,19 +393,19 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderIssueTrackerColumn: function(repo) {
-        if (this.props.theme.isBelowMode('ultra-wide')) {
+    renderIssueTrackerColumn(repo) {
+        let { env } = this.props;
+        let { t, p } = env.locale;
+        if (env.isBelowMode('ultra-wide')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!repo) {
             return <TH id="issue_tracker">{t('table-heading-issue-tracker')}</TH>
         } else {
-            var p = this.props.locale.pick;
-            var enabled = !!repo.details.issues_enabled;
+            let enabled = !!repo.details.issues_enabled;
             return <td>{t(`repo-list-issue-tracker-enabled-${enabled}`)}</td>;
         }
-    },
+    }
 
     /**
      * Render active period column, either the heading or a data cell
@@ -439,24 +414,24 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderDateRangeColumn: function(repo) {
-        if (this.props.theme.isBelowMode('wide')) {
+    renderDateRangeColumn(repo) {
+        let { env, statistics } = this.props;
+        let { t, localeCode } = env.locale;
+        if (env.isBelowMode('wide')) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var lc = this.props.locale.localeCode;
         if (!repo) {
             return <TH id="range">{t('table-heading-date-range')}</TH>
         } else {
-            var start, end;
-            var range = _.get(this.props.statistics, [ repo.id, 'range' ]);
+            let start, end;
+            let range = _.get(statistics, [ repo.id, 'range' ]);
             if (range) {
-                start = Moment(range.start).locale(lc).format('ll');
-                end = Moment(range.end).locale(lc).format('ll');
+                start = Moment(range.start).locale(localeCode).format('ll');
+                end = Moment(range.end).locale(localeCode).format('ll');
             }
             return <td>{t('date-range-$start-$end', start, end)}</td>;
         }
-    },
+    }
 
     /**
      * Render column showing the number of stories last month
@@ -465,22 +440,22 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderLastMonthColumn: function(repo) {
-        if (this.props.theme.isBelowMode('super-wide')) {
+    renderLastMonthColumn(repo) {
+        let { env, statistics } = this.props;
+        let { t } = env.locale;
+        if (env.isBelowMode('super-wide')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!repo) {
             return <TH id="last_month">{t('table-heading-last-month')}</TH>
         } else {
-            var props = {
-                statistics: _.get(this.props.statistics, [ repo.id, 'last_month' ]),
-                locale: this.props.locale,
-                theme: this.props.theme,
+            let props = {
+                statistics: _.get(statistics, [ repo.id, 'last_month' ]),
+                env,
             };
             return <td><ActivityTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Render column showing the number of stories this month
@@ -489,22 +464,22 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderThisMonthColumn: function(repo) {
-        if (this.props.theme.isBelowMode('super-wide')) {
+    renderThisMonthColumn(repo) {
+        let { env, statistics } = this.props;
+        let { t } = env.locale;
+        if (env.isBelowMode('super-wide')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!repo) {
             return <TH id="this_month">{t('table-heading-this-month')}</TH>
         } else {
-            var props = {
+            let props = {
                 statistics: _.get(this.props.statistics, [ repo.id, 'this_month' ]),
-                locale: this.props.locale,
-                theme: this.props.theme,
+                env,
             };
             return <td><ActivityTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Render column showing the number of stories to date
@@ -513,22 +488,22 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderToDateColumn: function(repo) {
-        if (this.props.theme.isBelowMode('super-wide')) {
+    renderToDateColumn(repo) {
+        let { env, statistics } = this.props;
+        let { t } = env.locale;
+        if (env.isBelowMode('super-wide')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!repo) {
             return <TH id="to_date">{t('table-heading-to-date')}</TH>
         } else {
-            var props = {
-                statistics: _.get(this.props.statistics, [ repo.id, 'to_date' ]),
-                locale: this.props.locale,
-                theme: this.props.theme,
+            let props = {
+                statistics: _.get(statistics, [ repo.id, 'to_date' ]),
+                env,
             };
             return <td><ActivityTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Render column showing the last modified time
@@ -537,118 +512,121 @@ var RepoListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderModifiedTimeColumn: function(repo) {
-        if (this.props.theme.isBelowMode('standard')) {
+    renderModifiedTimeColumn(repo) {
+        let { env } = this.props;
+        let { t } = env.locale;
+        if (env.isBelowMode('standard')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!repo) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            var props = {
+            let props = {
                 time: repo.mtime,
-                locale: this.props.locale,
+                env,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Called when user clicks a table heading
      *
      * @param  {Object} evt
      */
-    handleSort: function(evt) {
+    handleSort = (evt) => {
         this.setState({
             sortColumns: evt.columns,
             sortDirections: evt.directions
         });
-    },
+    }
 
     /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
+    handleEditClick = (evt) => {
         this.setEditability(true);
-    },
+    }
 
     /**
      * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         this.setEditability(false);
-    },
+    }
 
     /**
      * Called when user clicks save button
      *
      * @param  {Event} evt
      */
-    handleSaveClick: function(evt) {
-        var t = this.props.locale.translate;
-        var originalRepoIds = _.get(this.props.project, 'repo_ids', []);
-        var removing = _.difference(originalRepoIds, this.state.selectedRepoIds);
-        var message = t('repo-list-confirm-remove-$count', removing.length);
-        var confirmation = this.components.confirmation;
-        return confirmation.ask(message, _.isEmpty(removing) || undefined).then((confirmed) => {
+    handleSaveClick = (evt) => {
+        let { database, env, project, repos } = this.props;
+        let { selectedRepoIDs } = this.state;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let originalRepoIDs = _.get(project, 'repo_ids', []);
+        let removing = _.difference(originalRepoIDs, selectedRepoIDs);
+        let message = t('repo-list-confirm-remove-$count', removing.length);
+        let bypass = _.isEmpty(removing) ? true : undefined;
+        return confirmation.ask(message, bypass).then((confirmed) => {
             if (!confirmed) {
                 return;
             }
             this.setState({ problems: {} });
-            var db = this.props.database.use({ schema: 'global', by: this });
-            return db.start().then((userId) => {
+            let db = database.use({ schema: 'global', by: this });
+            return db.start().then((userID) => {
                 // remove ids of repo that no longer exist
-                var existingRepoIds = _.map(this.props.repos, 'id');
-                var project = {
-                    id: this.props.project.id,
-                    repo_ids: _.intersection(this.state.selectedRepoIds, existingRepoIds)
+                let existingRepoIDs = _.map(repos, 'id');
+                let project = {
+                    id: project.id,
+                    repo_ids: _.intersection(selectedRepoIDs, existingRepoIDs)
                 };
                 return db.saveOne({ table: 'project' }, project).then((project) => {
                     this.setState({ hasChanges: false }, () => {
                         this.setEditability(false);
                     });
                 }).catch((err) => {
-                    var problems = { unexpected: err.message };
+                    let problems = { unexpected: err.message };
                     this.setState({ problems });
                 });
             });
         });
-    },
+    }
 
     /**
      * Called when user clicks a row in edit mode
      *
      * @param  {Event} evt
      */
-    handleRowClick: function(evt) {
-        var repoId = parseInt(evt.currentTarget.getAttribute('data-repo-id'));
-        var repoIds = this.props.project.repo_ids;
-        var selectedRepoIds = _.slice(this.state.selectedRepoIds);
-        var hasChanges = true;
-        if (_.includes(selectedRepoIds, repoId)) {
-            _.pull(selectedRepoIds, repoId);
+    handleRowClick = (evt) => {
+        let { project } = this.props;
+        let { selectedRepoIDs } = this.state;
+        let repoID = parseInt(evt.currentTarget.getAttribute('data-repo-id'));
+        let hasChanges = true;
+        if (_.includes(selectedRepoIDs, repoID)) {
+            selectedRepoIDs = _.without(selectedRepoIDs, repoID);
         } else {
-            selectedRepoIds.push(repoId);
+            selectedRepoIDs = _.concat(selectedRepoIDs, repoID);
         }
-        if (selectedRepoIds.length === repoIds.length) {
+        if (selectedRepoIDs.length === project.repo_ids.length) {
             // if the new list has the same element as the old, use the latter so
             // to avoid a mere change in order of the ids
-            if (_.difference(selectedRepoIds, repoIds).length === 0) {
-                selectedRepoIds = repoIds;
+            if (_.difference(selectedRepoIDs, project.repo_ids).length === 0) {
+                selectedRepoIDs = project.repo_ids;
                 hasChanges = false;
             }
         }
-        this.setState({ selectedRepoIds, hasChanges });
+        this.setState({ selectedRepoIDs, hasChanges });
     }
-});
+}
 
-var sortRepos = Memoize(function(repos, servers, statistics, locale, columns, directions) {
-    var t = locale.translate;
-    var p = locale.pick;
+let sortRepos = Memoize(function(repos, servers, statistics, env, columns, directions) {
+    let { t, p } = env.locale;
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'title':
@@ -657,7 +635,7 @@ var sortRepos = Memoize(function(repos, servers, statistics, locale, columns, di
                 };
             case 'server':
                 return (repo) => {
-                    var server = findServer(servers, repo);
+                    let server = findServer(servers, repo);
                     if (server)  {
                         return p(server.details.title) || t(`server-type-${server.type}`);
                     }
@@ -688,16 +666,16 @@ var sortRepos = Memoize(function(repos, servers, statistics, locale, columns, di
     return _.orderBy(repos, columns, directions);
 });
 
-var findServer = Memoize(function(servers, repo) {
+let findServer = Memoize(function(servers, repo) {
     return _.find(servers, (server) => {
-        var link = ExternalDataUtils.findLink(repo, server);
+        let link = ExternalDataUtils.findLink(repo, server);
         return !!link;
     });
 });
 
-var findRepos = Memoize(function(repos, project) {
+let findRepos = Memoize(function(repos, project) {
     if (project) {
-        var hash = _.keyBy(repos, 'id');
+        let hash = _.keyBy(repos, 'id');
         return _.filter(_.map(project.repo_ids, (id) => {
             return hash[id];
         }));
@@ -705,3 +683,33 @@ var findRepos = Memoize(function(repos, project) {
         return [];
     }
 });
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    RepoListPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    RepoListPageSync.propTypes = {
+        repos: PropTypes.arrayOf(PropTypes.object),
+        project: PropTypes.object,
+        servers: PropTypes.arrayOf(PropTypes.object),
+        statistics: PropTypes.objectOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}
+
+export {
+    RepoListPage as default,
+    RepoListPage,
+    RepoListPageSync,
+};

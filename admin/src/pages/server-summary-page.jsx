@@ -1,46 +1,35 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var ReactDOM = require('react-dom');
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
-var RoleFinder = require('objects/finders/role-finder');
-var ServerFinder = require('objects/finders/server-finder');
-var ServerTypes = require('objects/types/server-types');
-var ServerSettings = require('objects/settings/server-settings');
-var SystemFinder = require('objects/finders/system-finder');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import ReactDOM from 'react-dom';
+import { AsyncComponent } from 'relaks';
+import Memoize from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import RoleFinder from 'objects/finders/role-finder';
+import ServerFinder from 'objects/finders/server-finder';
+import ServerTypes from 'objects/types/server-types';
+import ServerSettings from 'objects/settings/server-settings';
+import SystemFinder from 'objects/finders/system-finder';
 
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-var SlugGenerator = require('utils/slug-generator');
+import SlugGenerator from 'utils/slug-generator';
 
 // widgets
-var PushButton = require('widgets/push-button');
-var ComboButton = require('widgets/combo-button');
-var InstructionBlock = require('widgets/instruction-block');
-var TextField = require('widgets/text-field');
-var MultilingualTextField = require('widgets/multilingual-text-field');
-var OptionList = require('widgets/option-list');
-var CollapsibleContainer = require('widgets/collapsible-container');
-var TaskList = require('widgets/task-list');
-var InputError = require('widgets/input-error');
-var ActionConfirmation = require('widgets/action-confirmation');
-var DataLossWarning = require('widgets/data-loss-warning');
-var UnexpectedError = require('widgets/unexpected-error');
+import PushButton from 'widgets/push-button';
+import ComboButton from 'widgets/combo-button';
+import InstructionBlock from 'widgets/instruction-block';
+import TextField from 'widgets/text-field';
+import MultilingualTextField from 'widgets/multilingual-text-field';
+import OptionList from 'widgets/option-list';
+import CollapsibleContainer from 'widgets/collapsible-container';
+import TaskList from 'widgets/task-list';
+import InputError from 'widgets/input-error';
+import ActionConfirmation from 'widgets/action-confirmation';
+import DataLossWarning from 'widgets/data-loss-warning';
+import UnexpectedError from 'widgets/unexpected-error';
 
-require('./server-summary-page.scss');
+import './server-summary-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'ServerSummaryPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class ServerSummaryPage extends AsyncComponent {
+    static displayName = 'ServerSummaryPage';
 
     /**
      * Render the component asynchronously
@@ -49,27 +38,26 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let props = {
             system: null,
             server: null,
             roles: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
         };
         meanwhile.show(<ServerSummaryPageSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((userID) => {
             return SystemFinder.findSystem(db).then((system) => {
-                props.system = system || undefined;
+                props.system = system;
             });
         }).then(() => {
             if (params.server !== 'new') {
-                return ServerFinder.findServer(db, params.server).then((server) => {
+                return ServerFinder.findServer(db, route.params.server).then((server) => {
                     props.server = server;
                 });
             }
@@ -82,31 +70,17 @@ module.exports = Relaks.createClass({
             return <ServerSummaryPageSync {...props} />;
         });
     }
-});
+}
 
-var ServerSummaryPageSync = module.exports.Sync = React.createClass({
-    displayName: 'ServerSummaryPage.Sync',
-    propTypes: {
-        system: PropTypes.object,
-        server: PropTypes.object,
-        roles: PropTypes.arrayOf(PropTypes.object),
+class ServerSummaryPageSync extends PureComponent {
+    static displayName = 'ServerSummaryPage.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
         });
-        return {
+        this.state = {
             newServer: null,
             hasChanges: false,
             saving: false,
@@ -114,7 +88,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             credentialsChanged: false,
             problems: {},
         };
-    },
+    }
 
     /**
      * Return edited copy of server object or the original object
@@ -123,13 +97,15 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Object}
      */
-    getServer: function(state) {
+    getServer(state) {
+        let { server } = this.props;
+        let { newServer } = this.state;
         if (this.isEditing() && (!state || state === 'current')) {
-            return this.state.newServer || this.props.server || emptyServer;
+            return newServer || server || emptyServer;
         } else {
-            return this.props.server || emptyServer;
+            return server || emptyServer;
         }
-    },
+    }
 
     /**
      * Return a property of the server object
@@ -139,10 +115,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {*}
      */
-    getServerProperty: function(path, state) {
-        var server = this.getServer(state);
+    getServerProperty(path, state) {
+        let server = this.getServer(state);
         return _.get(server, path);
-    },
+    }
 
     /**
      * Modify a property of the server object
@@ -150,60 +126,59 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setServerProperty: function(path, value) {
-        var server = this.getServer();
-        var newServer = _.decoupleSet(server, path, value);
+    setServerProperty(path, value) {
+        let { env, server } = this.props;
+        let { t, p, languageCode } = env.locale;
+        let newServer = this.getServer();
+        let newServerAfter = _.decoupleSet(newServer, path, value);
         if (path === 'type') {
             // derive title from type
-            var t = this.props.locale.translate;
-            var p = this.props.locale.pick;
-            var autoTitleBefore = t(`server-type-${server.type}`);
-            var autoTitleAfter = t(`server-type-${newServer.type}`);
-            var title = p(server.details.title);
+            let autoTitleBefore = t(`server-type-${newServer.type}`);
+            let autoTitleAfter = t(`server-type-${newServerAfter.type}`);
+            let title = p(newServer.details.title);
             if (!title || title === autoTitleBefore) {
-                var lang = this.props.locale.languageCode;
-                newServer = _.decoupleSet(newServer, `details.title.${lang}`, autoTitleAfter);
+                newServerAfter = _.decoupleSet(newServerAfter, `details.title.${languageCode}`, autoTitleAfter);
             }
         }
         if (path === 'details.title' || path === 'type') {
             // derive name from title
-            var autoNameBefore = SlugGenerator.fromTitle(server.details.title);
-            var autoNameAfter = SlugGenerator.fromTitle(newServer.details.title);
-            if (!server.name || server.name === autoNameBefore) {
-                newServer.name = autoNameAfter;
+            let autoNameBefore = SlugGenerator.fromTitle(newServer.details.title);
+            let autoNameAfter = SlugGenerator.fromTitle(newServerAfter.details.title);
+            if (!newServer.name || newServer.name === autoNameBefore) {
+                newServerAfter.name = autoNameAfter;
             }
         }
         if (path === 'settings.user.type') {
             if (!value) {
-                newServer = _.decoupleSet(newServer, 'settings.user.role_ids', undefined);
+                newServerAfter = _.decoupleSet(newServerAfter, 'settings.user.role_ids', undefined);
             }
         }
-        if(_.size(newServer.name) > 128) {
-            newServer.name = newServer.name.substr(0, 128);
+        if(_.size(newServerAfter.name) > 128) {
+            newServerAfter.name = newServerAfter.name.substr(0, 128);
         }
-        var hasChanges = true;
-        if (_.isEqual(newServer, this.props.server)) {
-            newServer = null;
+        let hasChanges = true;
+        if (_.isEqual(newServerAfter, server)) {
+            newServerAfter = null;
             hasChanges = false;
         }
-        this.setState({ newServer, hasChanges });
-    },
+        this.setState({ newServer: newServerAfter, hasChanges });
+    }
 
     /**
      * Look for problems in server object
      *
      * @return {Object}
      */
-    findProblems: function() {
-        var problems = {};
-        var server = this.getServer();
-        if (!server.name) {
+    findProblems() {
+        let problems = {};
+        let newServer = this.getServer();
+        if (!newServer.name) {
             problems.name = 'validation-required';
         }
-        if (!server.type) {
+        if (!newServer.type) {
             problems.type = 'validation-required';
         }
-        var oauth = server.settings.oauth;
+        let oauth = newServer.settings.oauth;
         if (oauth) {
             if (oauth.client_id && !oauth.client_secret) {
                 problems.client_secret = 'validation-required';
@@ -212,13 +187,13 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 problems.client_id = 'validation-required';
             }
             if ((oauth.client_id || oauth.client_secret) && !oauth.base_url) {
-                if (server.type === 'gitlab') {
+                if (newServer.type === 'gitlab') {
                     problems.base_url = 'validation-required';
                 }
             }
         }
         return problems;
-    },
+    }
 
     /**
      * Return true when the URL indicate we're creating a new user
@@ -227,10 +202,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Boolean}
      */
-    isCreating: function(props) {
-        props = props || this.props;
-        return (props.route.parameters.server === 'new');
-    },
+    isCreating(props) {
+        let { route } = props || this.props;
+        return (route.params.server === 'new');
+    }
 
     /**
      * Return true when the URL indicate edit mode
@@ -239,10 +214,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Boolean}
      */
-    isEditing: function(props) {
-        props = props || this.props;
-        return this.isCreating(props) || props.route.parameters.edit;
-    },
+    isEditing(props) {
+        let { route } = props || this.props;
+        return this.isCreating(props) || route.params.edit;
+    }
 
     /**
      * Change editability of page
@@ -252,59 +227,60 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    setEditability: function(edit, newServer) {
+    setEditability(edit, newServer) {
+        let { route } = this.props;
         if (this.isCreating() && !edit && !newServer) {
             // return to list when cancelling server creation
             return this.returnToList();
         } else {
-            var route = this.props.route;
-            var params = _.clone(route.parameters);
+            let params = _.clone(route.params);
             params.edit = edit;
             if (newServer) {
                 // use id of newly created server
                 params.server = newServer.id;
             }
-            return route.replace(module.exports, params);
+            return route.replace(route.name, params);
         }
-    },
+    }
 
     /**
      * Return to repo list
      *
      * @return {Promise}
      */
-    returnToList: function() {
-        var route = this.props.route;
+    returnToList() {
+        let { route } = this.props;
         return route.push('server-list-page');
-    },
+    }
 
     /**
      * Start creating a new role
      *
      * @return {Promise}
      */
-    startNew: function() {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
+    startNew() {
+        let { route } = this.props;
+        let params = _.clone(route.parameters);
         params.server = 'new';
-        return route.replace(module.exports, params);
-    },
+        return route.replace(route.name, params);
+    }
 
     /**
      * Return list of language codes
      *
      * @return {Array<String>}
      */
-    getInputLanguages: function() {
-        return _.get(this.props.system, 'settings.input_languages', [])
-    },
+    getInputLanguages() {
+        let { system } = this.props;
+        return _.get(system, 'settings.input_languages', [])
+    }
 
     /**
      * Reset edit state when edit starts
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
                 this.setState({
@@ -315,18 +291,20 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 this.setState({ problems: {} });
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var server = this.getServer();
-        var title = p(_.get(server, 'details.title'));
+    render() {
+        let { route, env } = this.props;
+        let { hasChanges, problems } = this.state;
+        let { setters } = this.components;
+        let { t, p } = env.locale;
+        let server = this.getServer();
+        let title = p(_.get(server, 'details.title'));
         if (!title && server.type) {
             title = t(`server-type-${server.type}`);
         }
@@ -334,23 +312,25 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
             <div className="server-summary-page">
                 {this.renderButtons()}
                 <h2>{t('server-summary-member-$name', title)}</h2>
-                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
+                <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderForm()}
                 {this.renderInstructions()}
                 {this.renderTaskList()}
-                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
-                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                <ActionConfirmation ref={setters.confirmation} env={env} />
+                <DataLossWarning changes={this.state.hasChanges} env={env} route={route} />
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons in top right corner
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
+    renderButtons() {
+        let { env } = this.props;
+        let { hasChanges, adding, credentialsChanged } = this.state;
+        let { t } = env.locale;
         if (this.isEditing()) {
             return (
                 <div key="edit" className="buttons">
@@ -358,19 +338,18 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                         {t('server-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('server-summary-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            var server = this.getServer();
-            var active = !server.deleted && !server.disabled;
-            var hasIntegration = _.includes(ServerTypes.integrated, server.type);
-            var hasAccessToken = !!_.get(server, 'settings.api.access_token');
-            var hasOAuthCredentials = !!(_.get(server, 'settings.oauth.client_id') && _.get(server, 'settings.oauth.client_secret'));
-            var credentialsChanged = this.state.credentialsChanged;
-            var preselected, alert;
+            let server = this.getServer();
+            let active = !server.deleted && !server.disabled;
+            let hasIntegration = _.includes(ServerTypes.integrated, server.type);
+            let hasAccessToken = !!_.get(server, 'settings.api.access_token');
+            let hasOAuthCredentials = !!(_.get(server, 'settings.oauth.client_id') && _.get(server, 'settings.oauth.client_secret'));
+            let preselected, alert;
             if (active) {
                 if (hasIntegration && !hasAccessToken) {
                     preselected = 'acquire';
@@ -378,7 +357,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 } else if (hasOAuthCredentials && credentialsChanged) {
                     preselected = 'test';
                 } else {
-                    preselected = (this.state.adding) ? 'add' : 'return';
+                    preselected = (adding) ? 'add' : 'return';
                 }
             } else {
                 preselected = 'reactivate';
@@ -415,14 +394,14 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render form for entering server details
      *
      * @return {ReactElement}
      */
-    renderForm: function() {
+    renderForm() {
         return (
             <div className="form">
                 {this.renderTypeSelector()}
@@ -437,24 +416,26 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderPrivacyPolicyURL()}
                 {this.renderTermsAndConditionsURL()}
                 {this.renderGitlabURLInput()}
-                {this.renderOAuthClientIdInput()}
+                {this.renderOAuthClientIDInput()}
                 {this.renderOAuthClientSecretInput()}
                 {this.renderAPIStatus()}
             </div>
         );
-    },
+    }
 
     /**
      * Render type selector
      *
      * @return {ReactElement}
      */
-    renderTypeSelector: function() {
-        var t = this.props.locale.translate;
-        var typeCurr = this.getServerProperty('type', 'current');
-        var typePrev = this.getServerProperty('type', 'original');
-        var optionProps = _.map(ServerTypes, (type) => {
-            var icon = getServerIcon(type);
+    renderTypeSelector() {
+        let { env } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let typeCurr = this.getServerProperty('type', 'current');
+        let typePrev = this.getServerProperty('type', 'original');
+        let optionProps = _.map(ServerTypes, (type) => {
+            let icon = getServerIcon(type);
             return {
                 name: type,
                 selected: typeCurr === type,
@@ -466,11 +447,10 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 ],
             };
         });
-        var listProps = {
-            onOptionClick: this.handleTypeOptionClick,
+        let listProps = {
             readOnly: !this.isEditing(),
+            onOptionClick: this.handleTypeOptionClick,
         };
-        var problems = this.state.problems;
         return (
             <OptionList {...listProps}>
                 <label>
@@ -480,78 +460,81 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
-    },
+    }
 
     /**
      * Render title input
      *
      * @return {ReactElement}
      */
-    renderTitleInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderTitleInput() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'title',
             value: this.getServerProperty('details.title'),
             availableLanguageCodes: this.getInputLanguages(),
-            locale: this.props.locale,
-            onChange: this.handleTitleChange,
             readOnly: !this.isEditing(),
+            env,
+            onChange: this.handleTitleChange,
         };
         return (
             <MultilingualTextField {...props}>
                 {t('server-summary-title')}
             </MultilingualTextField>
         );
-    },
+    }
 
     /**
      * Render name input
      *
      * @return {ReactElement}
      */
-    renderNameInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderNameInput() {
+        let { env } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let props = {
             id: 'name',
             value: this.getServerProperty('name'),
-            locale: this.props.locale,
-            onChange: this.handleNameChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleNameChange,
         };
-        var problems = this.state.problems;
         return (
             <TextField {...props}>
                 {t('server-summary-name')}
                 <InputError>{t(problems.name)}</InputError>
             </TextField>
         );
-    },
+    }
 
     /**
      * Render user creation options
      *
      * @return {ReactElement}
      */
-    renderUserOptions: function() {
-        var serverType = this.getServerProperty('type');
+    renderUserOptions() {
+        let serverType = this.getServerProperty('type');
         switch (serverType) {
             case 'gitlab': return this.renderGitlabUserOptions();
             default: return this.renderOAuthUserOptions();
         }
-    },
+    }
 
     /**
      * Render user creation options for Gitlab
      *
      * @return {ReactElement}
      */
-    renderGitlabUserOptions: function() {
-        var t = this.props.locale.translate;
-        var userOptsCurr = this.getServerProperty('settings.user', 'current') || {};
-        var userOptsPrev = this.getServerProperty('settings.user', 'original') || {};
-        var newServer = !!this.getServerProperty('id');
-        var optionProps = [
+    renderGitlabUserOptions() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let userOptsCurr = this.getServerProperty('settings.user', 'current') || {};
+        let userOptsPrev = this.getServerProperty('settings.user', 'original') || {};
+        let newServer = !!this.getServerProperty('id');
+        let optionProps = [
             {
                 name: 'import-admin-disabled',
                 selected: !_.get(userOptsCurr, 'mapping.admin'),
@@ -619,9 +602,9 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 children: <span>{t('server-summary-gitlab-external-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-guest`)}</span>
             },
         ];
-        var listProps = {
-            onOptionClick: this.handleGitlabUserOptionClick,
+        let listProps = {
             readOnly: !this.isEditing(),
+            onOptionClick: this.handleGitlabUserOptionClick,
         };
         return (
             <OptionList {...listProps}>
@@ -631,19 +614,20 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
-    },
+    }
 
     /**
      * Render user creation options for basic OAuth provider
      *
      * @return {ReactElement}
      */
-    renderOAuthUserOptions: function() {
-        var t = this.props.locale.translate;
-        var userOptsCurr = this.getServerProperty('settings.user', 'current') || {};
-        var userOptsPrev = this.getServerProperty('settings.user', 'original') || {};
-        var newServer = !!this.getServerProperty('id');
-        var optionProps = [
+    renderOAuthUserOptions() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let userOptsCurr = this.getServerProperty('settings.user', 'current') || {};
+        let userOptsPrev = this.getServerProperty('settings.user', 'original') || {};
+        let newServer = !!this.getServerProperty('id');
+        let optionProps = [
             {
                 name: 'import-disabled',
                 selected: !userOptsCurr.type,
@@ -663,9 +647,9 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 children: <span>{t('server-summary-new-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-regular`)}</span>
             },
         ];
-        var listProps = {
-            onOptionClick: this.handleOAuthUserOptionClick,
+        let listProps = {
             readOnly: !this.isEditing(),
+            onOptionClick: this.handleOAuthUserOptionClick,
         };
         return (
             <OptionList {...listProps}>
@@ -675,69 +659,71 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
-    },
+    }
 
     /**
      * Render user white list
      *
      * @return {ReactElement}
      */
-    renderWhitelist: function() {
-        var serverType = this.getServerProperty('type');
+    renderWhitelist() {
+        let { env } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let serverType = this.getServerProperty('type');
         if (serverType === 'gitlab') {
             return null;
         }
-        var userOpts = this.getServerProperty('settings.user', 'current') || {};
+        let userOpts = this.getServerProperty('settings.user', 'current') || {};
         if (!userOpts.type) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var props = {
+        let props = {
             id: 'whitelist',
             value: this.getServerProperty('settings.user.whitelist'),
-            locale: this.props.locale,
-            onChange: this.handleWhitelistChange,
             readOnly: !this.isEditing(),
             type: 'textarea',
             spellCheck: false,
+            env,
+            onChange: this.handleWhitelistChange,
         };
-        var problems = this.state.problems;
         return (
             <TextField {...props}>
                 {t('server-summary-whitelist')}
             </TextField>
         );
-    },
+    }
 
     /**
      * Render role selector
      *
      * @return {ReactElement}
      */
-    renderRoleSelector: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var userRolesCurr = this.getServerProperty('settings.user.role_ids', 'current') || [];
-        var userRolesPrev = this.getServerProperty('settings.user.role_ids', 'original') || [];
-        var newServer = !!this.getServerProperty('id');
-        var roles = sortRoles(this.props.roles, this.props.locale);
-        var optionProps = _.concat({
-            name: 'none',
-            selected: _.isEmpty(userRolesCurr),
-            previous: (newServer) ? _.isEmpty(userRolesPrev) : undefined,
-            children: t('server-summary-role-none')
-        }, _.map(roles, (role) => {
-            var name = p(role.details.title) || p.name;
+    renderRoleSelector() {
+        let { env, roles } = this.props;
+        let { t } = env.locale;
+        let userRolesCurr = this.getServerProperty('settings.user.role_ids', 'current') || [];
+        let userRolesPrev = this.getServerProperty('settings.user.role_ids', 'original') || [];
+        let newServer = !!this.getServerProperty('id');
+        roles = sortRoles(roles, env);
+        let optionProps = _.map(roles, (role) => {
+            let name = p(role.details.title) || p.name;
             return {
                 name: String(role.id),
                 selected: _.includes(userRolesCurr, role.id),
                 previous: _.includes(userRolesPrev, role.id),
                 children: <span>{t('server-summary-new-user')} <i className="fa fa-arrow-right" /> {name}</span>
             };
-        }));
-        var listProps = {
-            onOptionClick: this.handleRoleOptionClick,
+        });
+        optionProps.unshift({
+            name: 'none',
+            selected: _.isEmpty(userRolesCurr),
+            previous: (newServer) ? _.isEmpty(userRolesPrev) : undefined,
+            children: t('server-summary-role-none')
+        });
+        let listProps = {
             readOnly: !this.isEditing(),
+            onOptionClick: this.handleRoleOptionClick,
         };
         return (
             <OptionList {...listProps}>
@@ -745,28 +731,29 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         )
-    },
+    }
 
     /**
      * Render read-only input for site URL
      *
      * @return {ReactElement}
      */
-    renderSiteURL: function() {
-        var t = this.props.locale.translate;
-        var address = _.get(this.props.system, 'settings.address');
-        var warning;
+    renderSiteURL() {
+        let { env, system } = this.props;
+        let { t } = env.locale;
+        let address = _.get(system, 'settings.address');
+        let warning;
         if (!address) {
-            if (this.props.system === undefined) {
+            if (system === undefined) {
                 warning = t('server-summary-system-address-missing');
             }
             address = window.location.origin;
         }
-        var props = {
+        let props = {
             id: 'oauth_callback',
             value: address,
-            locale: this.props.locale,
             readOnly: true,
+            env,
         };
         return (
             <TextField {...props}>
@@ -774,29 +761,30 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 <InputError type="warning">{warning}</InputError>
             </TextField>
         );
-    },
+    }
 
     /**
      * Render read-only input for OAuth callback URL
      *
      * @return {ReactElement|null}
      */
-    renderOAuthCallbackURL: function() {
-        var t = this.props.locale.translate;
-        var serverType = this.getServerProperty('type');
-        var address = _.get(this.props.system, 'settings.address');
+    renderOAuthCallbackURL() {
+        let { env, system } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let serverType = this.getServerProperty('type');
+        let address = _.get(system, 'settings.address');
         if (!address) {
             address = window.location.origin;
         }
-        var url = `${address}/srv/session/${serverType || '...'}/callback/`;
-        var props = {
+        let url = `${address}/srv/session/${serverType || '...'}/callback/`;
+        let props = {
             id: 'oauth_callback',
             value: url,
-            locale: this.props.locale,
             readOnly: true,
+            env,
         };
-        var problems = this.state.problems;
-        var phrase = 'server-summary-oauth-callback-url';
+        let phrase = 'server-summary-oauth-callback-url';
         switch (serverType) {
             case 'dropbox':
                 phrase = 'server-summary-oauth-redirect-uri';
@@ -822,63 +810,65 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 {t(phrase)}
             </TextField>
         );
-    },
+    }
 
     /**
      * Render read-only input for deauthorize callback URL
      *
      * @return {ReactElement|null}
      */
-    renderDeauthorizeCallbackURL: function() {
-        var t = this.props.locale.translate;
-        var serverType = this.getServerProperty('type');
-        var needed = [ 'facebook' ];
+    renderDeauthorizeCallbackURL() {
+        let { env, system } = this.props;
+        let { t } = env.locale;
+        let serverType = this.getServerProperty('type');
+        let needed = [ 'facebook' ];
         if (!_.includes(needed, serverType)) {
             return null;
         }
-        var address = _.get(this.props.system, 'settings.address');
+        let address = _.get(system, 'settings.address');
         if (!address) {
             address = window.location.origin;
         }
-        var url = `${address}/srv/session/${serverType || '...'}/deauthorize/`;
-        var props = {
+        let url = `${address}/srv/session/${serverType || '...'}/deauthorize/`;
+        let props = {
             id: 'deauthize_callback',
             value: url,
-            locale: this.props.locale,
             readOnly: true,
+            env,
         };
         return (
             <TextField {...props}>
                 {t('server-summary-oauth-deauthorize-callback-url')}
             </TextField>
         );
-    },
+    }
 
     /**
      * Render read-only input for generic privacy policy URL
      *
      * @return {ReactElement|null}
      */
-    renderPrivacyPolicyURL: function() {
-        var t = this.props.locale.translate;
-        var serverType = this.getServerProperty('type');
-        var needed = [ 'facebook', 'google', 'windows' ];
+    renderPrivacyPolicyURL() {
+        let { env, system } = this.props;
+        let { t } = env.locale;
+        let serverType = this.getServerProperty('type');
+        let needed = [ 'facebook', 'google', 'windows' ];
         if (!_.includes(needed, serverType)) {
             return null;
         }
-        var warning;
-        var address = _.get(this.props.system, 'settings.address');
-        var warning;
+        let warning;
+        let address = _.get(system, 'settings.address');
+        let warning;
         if (!address) {
             warning = t('server-summary-system-address-missing');
             address = window.location.origin;
         }
-        var url = `${address}/srv/session/privacy/`;
-        var props = {
+        let url = `${address}/srv/session/privacy/`;
+        let props = {
             id: 'oauth_privacy',
             value: url,
-            locale: this.props.locale,
             readOnly: true,
+            env,
         };
         return (
             <TextField {...props}>
@@ -886,33 +876,34 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 <InputError type="warning">{warning}</InputError>
             </TextField>
         );
-    },
+    }
 
     /**
      * Render read-only input for terms and conditions URL
      *
      * @return {ReactElement|null}
      */
-    renderTermsAndConditionsURL: function() {
-        var t = this.props.locale.translate;
-        var serverType = this.getServerProperty('type');
-        var needed = [ 'facebook', 'google', 'windows' ];
+    renderTermsAndConditionsURL() {
+        let { env, system } = this.props;
+        let { t } = env.locale;
+        let serverType = this.getServerProperty('type');
+        let needed = [ 'facebook', 'google', 'windows' ];
         if (!_.includes(needed, serverType)) {
             return null;
         }
-        var warning;
-        var address = _.get(this.props.system, 'settings.address');
-        var warning;
+        let warning;
+        let address = _.get(system, 'settings.address');
+        let warning;
         if (!address) {
             warning = t('server-summary-system-address-missing');
             address = window.location.origin;
         }
-        var url = `${address}/srv/session/terms/`;
-        var props = {
+        let url = `${address}/srv/session/terms/`;
+        let props = {
             id: 'oauth_terms',
             value: url,
-            locale: this.props.locale,
             readOnly: true,
+            env,
         };
         return (
             <TextField {...props}>
@@ -920,26 +911,27 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 <InputError type="warning">{warning}</InputError>
             </TextField>
         );
-    },
+    }
 
     /**
      * Render input for OAuth base URL (Gitlab only)
      *
      * @return {ReactElement}
      */
-    renderGitlabURLInput: function() {
-        var t = this.props.locale.translate;
-        var serverType = this.getServerProperty('type');
-        var props = {
+    renderGitlabURLInput() {
+        let { env, system } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let serverType = this.getServerProperty('type');
+        let props = {
             id: 'oauth_token',
             type: 'url',
             value: this.getServerProperty('settings.oauth.base_url'),
-            locale: this.props.locale,
-            onChange: this.handleOAuthURLChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleOAuthURLChange,
         };
-        var problems = this.state.problems;
         return (
             <CollapsibleContainer open={serverType === 'gitlab'}>
                 <TextField {...props}>
@@ -948,25 +940,26 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 </TextField>
             </CollapsibleContainer>
         );
-    },
+    }
 
     /**
      * Render input for OAuth client id
      *
      * @return {ReactElement}
      */
-    renderOAuthClientIdInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderOAuthClientIDInput() {
+        let { env } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let props = {
             id: 'oauth_id',
             value: this.getServerProperty('settings.oauth.client_id'),
-            locale: this.props.locale,
-            onChange: this.handleOAuthIdChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleOAuthIDChange,
         };
-        var problems = this.state.problems;
-        var phrase = 'server-summary-oauth-client-id';
+        let phrase = 'server-summary-oauth-client-id';
         switch (this.getServerProperty('type')) {
             case 'dropbox':
                 phrase = 'server-summary-oauth-app-key';
@@ -993,25 +986,26 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 <InputError>{t(problems.client_id)}</InputError>
             </TextField>
         );
-    },
+    }
 
     /**
      * Render input for OAuth client secret
      *
      * @return {ReactElement}
      */
-    renderOAuthClientSecretInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderOAuthClientSecretInput() {
+        let { env } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let props = {
             id: 'oauth_secret',
             value: this.getServerProperty('settings.oauth.client_secret'),
-            locale: this.props.locale,
-            onChange: this.handleOAuthSecretChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleOAuthSecretChange,
         };
-        var problems = this.state.problems;
-        var phrase = 'server-summary-oauth-client-secret';
+        let phrase = 'server-summary-oauth-client-secret';
         switch (this.getServerProperty('type')) {
             case 'dropbox':
                 phrase = 'server-summary-oauth-app-secret';
@@ -1038,19 +1032,20 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 <InputError>{t(problems.client_secret)}</InputError>
             </TextField>
         );
-    },
+    }
 
     /**
      * Render API integration status
      *
      * @return {ReactElement}
      */
-    renderAPIStatus: function() {
-        var t = this.props.locale.translate;
-        var serverType = this.getServerProperty('type');
-        var apiAccess;
+    renderAPIStatus() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let serverType = this.getServerProperty('type');
+        let apiAccess;
         if (_.includes(ServerTypes.integrated, serverType)) {
-            var token = this.getServerProperty('settings.api.access_token');
+            let token = this.getServerProperty('settings.api.access_token');
             if (token) {
                 apiAccess = t('server-summary-api-access-acquired');
             } else {
@@ -1059,32 +1054,33 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
         } else {
             apiAccess = t('server-summary-api-access-not-applicable');
         }
-        var props = {
+        let props = {
             id: 'access',
             value: apiAccess,
-            locale: this.props.locale,
-            readOnly: true
+            readOnly: true,
+            env,
         };
         return (
             <TextField {...props}>
                 {t('server-summary-api-access')}
             </TextField>
         );
-    },
+    }
 
     /**
      * Render instruction box
      *
      * @return {ReactElement}
      */
-    renderInstructions: function() {
-        var instructionProps = {
+    renderInstructions() {
+        let { env } = this.props;
+        let instructionProps = {
             folder: 'server',
             topic: 'server-summary',
             hidden: !this.isEditing(),
-            locale: this.props.locale,
+            env,
         };
-        var serverType = this.getServerProperty('type');
+        let serverType = this.getServerProperty('type');
         if (serverType) {
             instructionProps.topic += `-${serverType}`;
         }
@@ -1093,25 +1089,24 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 <InstructionBlock {...instructionProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render task history
      *
      * @return {ReactElement|null}
      */
-    renderTaskList: function() {
-        if (!this.props.server) {
+    renderTaskList() {
+        let { database, route, env, server } = this.props;
+        let { t } = env.locale;
+        if (!server) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var params = this.props.route.parameters;
-        var historyProps = {
-            server: this.props.server,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+        let historyProps = {
+            server,
+            database,
+            route,
+            env,
             onSelectionClear: this.handleTaskSelectionClear,
         };
         return (
@@ -1120,7 +1115,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 <TaskList {...historyProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Save user with new flags
@@ -1129,24 +1124,26 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise<Role>}
      */
-    changeFlags: function(flags) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var serverAfter = _.assign({}, this.props.server, flags);
+    changeFlags(flags) {
+        let { database, server } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let serverAfter = _.assign({}, server, flags);
         return db.saveOne({ table: 'server' }, serverAfter).catch((err) => {
-            var problems = { unexpected: err.message };
+            let problems = { unexpected: err.message };
             this.setState({ problems });
         });
-    },
+    }
 
     /**
      * Called when user clicks disable button
      *
      * @param  {Event} evt
      */
-    handleDisableClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('server-summary-confirm-disable');
-        var confirmation = this.components.confirmation;
+    handleDisableClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('server-summary-confirm-disable');
         return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ disabled: true }).then((server) => {
@@ -1156,17 +1153,18 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 });
             }
         });
-    },
+    }
 
     /**
      * Called when user clicks delete button
      *
      * @param  {Event} evt
      */
-    handleDeleteClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('server-summary-confirm-delete');
-        var confirmation = this.components.confirmation;
+    handleDeleteClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('server-summary-confirm-delete');
         return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ deleted: true }).then((server) => {
@@ -1176,126 +1174,129 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 });
             }
         });
-    },
+    }
 
     /**
      * Called when user clicks reactive button
      *
      * @param  {Event} evt
      */
-    handleReactivateClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('server-summary-confirm-reactivate');
-        var confirmation = this.components.confirmation;
+    handleReactivateClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('server-summary-confirm-reactivate');
         return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ disabled: false, deleted: false });
             }
         });
-    },
+    }
 
     /**
      * Open a pop-window to OAuth redirection URL
      *
      * @param  {String} type
      */
-    openOAuthPopup: function(type) {
-        var db = this.props.database.use({ by: this });
-        var server = this.getServer();
-        var url = db.getOAuthURL(server, type);
-
-        var width = 800;
-        var height = 600;
-        var options = {
+    openOAuthPopup(type) {
+        let { database, env } = this.props;
+        let server = this.getServer();
+        let url = database.getOAuthURL(server, type);
+        let width = 800;
+        let height = 600;
+        let { screenLeft, screenTop, outerWidth, outerHeight } = window;
+        let options = {
             width,
             height,
-            left: window.screenLeft + Math.round((window.outerWidth - width) / 2),
-            top: window.screenTop + Math.round((window.outerHeight - height) / 2),
+            left: screenLeft + Math.round((outerWidth - width) / 2),
+            top: screenTop + Math.round((outerHeight - height) / 2),
             toolbar: 'no',
             menubar: 'no',
             status: 'no',
         };
-        var pairs = _.map(options, (value, name) => {
+        let pairs = _.map(options, (value, name) => {
             return `${name}=${value}`;
         });
         window.open(url, 'api-access-oauth', pairs.join(','));
-    },
+    }
 
     /**
      * Called when user clicks on "Acquire API access" button
      *
      * @param  {Event} evt
      */
-    handleAcquireClick: function(evt) {
+    handleAcquireClick = (evt) => {
         this.openOAuthPopup('activation');
-    },
+    }
 
     /**
      * Called when user clicks on "Test OAuth" button
      *
      * @param  {Event} evt
      */
-    handleTestClick: function(evt) {
+    handleTestClick = (evt) => {
         this.openOAuthPopup('test');
-    },
+    }
 
     /**
      * Called when user click return button
      *
      * @param  {Event} evt
      */
-    handleReturnClick: function(evt) {
+    handleReturnClick = (evt) => {
         return this.returnToList();
-    },
+    }
 
     /**
      * Called when user click add button
      *
      * @param  {Event} evt
      */
-    handleAddClick: function(evt) {
+    handleAddClick = (evt) => {
         return this.startNew();
-    },
+    }
 
     /**
      * Called when server clicks edit button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
+    handleEditClick = (evt) => {
         return this.setEditability(true);
-    },
+    }
 
     /**
      * Called when server clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         return this.setEditability(false);
-    },
+    }
 
     /**
      * Called when server clicks save button
      *
      * @param  {Event} evt
      */
-    handleSaveClick: function(evt) {
-        if (this.state.saving) {
+    handleSaveClick = (evt) => {
+        let { database } = this.props;
+        let { saving } = this.state;
+        if (saving) {
             return;
         }
-        var problems = this.findProblems();
+        let problems = this.findProblems();
         if (_.some(problems)) {
             this.setState({ problems });
             return;
         }
-        var server = this.getServer();
-        var oauthBefore = this.getServerProperty('settings.oauth', 'original');
-        var oauthAfter = this.getServerProperty('settings.oauth', 'current');
-        var credentialsChanged = !_.isEqual(oauthBefore, oauthAfter);
+        let server = this.getServer();
+        let oauthBefore = this.getServerProperty('settings.oauth', 'original');
+        let oauthAfter = this.getServerProperty('settings.oauth', 'current');
+        let credentialsChanged = !_.isEqual(oauthBefore, oauthAfter);
         this.setState({ saving: true, adding: !server.id, credentialsChanged, problems: {} }, () => {
-            var db = this.props.database.use({ schema: 'global', by: this });
-            return db.start().then((serverId) => {
+            let db = database.use({ schema: 'global', by: this });
+            return db.start().then((serverID) => {
                 return db.saveOne({ table: 'server' }, server).then((server) => {
                     this.setState({ hasChanges: false, saving: false }, () => {
                         return this.setEditability(false, server);
@@ -1303,7 +1304,7 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                     return null;
                 });
             }).catch((err) => {
-                var problems;
+                let problems;
                 if (err.statusCode === 409) {
                     problems = { name: 'validation-duplicate-server-name' };
                 } else {
@@ -1312,99 +1313,101 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 this.setState({ problems, saving: false });
             });
         });
-    },
+    }
 
     /**
      * Called when user changes server title
      *
      * @param  {Object} evt
      */
-    handleTitleChange: function(evt) {
+    handleTitleChange = (evt) => {
         this.setServerProperty(`details.title`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes server name
      *
      * @param  {Object} evt
      */
-    handleNameChange: function(evt) {
-        var name = _.toLower(evt.target.value).replace(/\W+/g, '');
+    handleNameChange = (evt) => {
+        let name = _.toLower(evt.target.value).replace(/\W+/g, '');
         this.setServerProperty(`name`, name);
-    },
+    }
 
     /**
      * Called when user changes server type
      *
      * @param  {Object} evt
      */
-    handleTypeOptionClick: function(evt) {
+    handleTypeOptionClick = (evt) => {
         this.setServerProperty(`type`, evt.name);
-    },
+    }
 
     /**
      * Called when user changes the white list
      *
      * @param  {Object} evt
      */
-    handleWhitelistChange: function(evt) {
-        var whitelist = evt.target.value.replace(/\s*[;,]\s*/g, '\n');
+    handleWhitelistChange = (evt) => {
+        let whitelist = evt.target.value.replace(/\s*[;,]\s*/g, '\n');
         this.setServerProperty(`settings.user.whitelist`, whitelist);
-    },
+    }
 
     /**
      * Called when user changes API token
      *
      * @param  {Event} evt
      */
-    handleApiTokenChange: function(evt) {
+    handleApiTokenChange = (evt) => {
         this.setServerProperty(`settings.api.token`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes OAuth base URL
      *
      * @param  {Event} evt
      */
-    handleOAuthURLChange: function(evt) {
-        var url = evt.target.value;
+    handleOAuthURLChange = (evt) => {
+        let { problems } = this.state;
+        let url = evt.target.value;
         this.setServerProperty(`settings.oauth.base_url`, url);
 
         // make sure the URL isn't localhost, which points to the Docker container
-        var problems = _.clone(this.state)
         if (/https?:\/\/localhost\b/.test(url)) {
-            problems.base_url = 'validation-localhost-is-wrong';
+            problems = _.assign({}, problems, {
+                base_url: 'validation-localhost-is-wrong'
+            });
         } else {
-            delete problems.base_url;
+            problems = _.omit(problems, 'base_url');
         }
-        this.setState({ problems })
-    },
+        this.setState({ problems });
+    }
 
     /**
      * Called when user changes OAuth client id
      *
      * @param  {Event} evt
      */
-    handleOAuthIdChange: function(evt) {
+    handleOAuthIDChange = (evt) => {
         this.setServerProperty(`settings.oauth.client_id`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes OAuth client secret
      *
      * @param  {Event} evt
      */
-    handleOAuthSecretChange: function(evt) {
+    handleOAuthSecretChange = (evt) => {
         this.setServerProperty(`settings.oauth.client_secret`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user clicks one of the user options
      *
      * @param  {Object} evt
      */
-    handleGitlabUserOptionClick: function(evt) {
-        var mapping = this.getServerProperty('settings.user.mapping') || {};
+    handleGitlabUserOptionClick = (evt) => {
+        let mapping = this.getServerProperty('settings.user.mapping') || {};
         switch (evt.name) {
             case 'import-admin-disabled':
                 mapping.admin = undefined;
@@ -1441,15 +1444,15 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 break;
         }
         this.setServerProperty('settings.user.mapping', mapping);
-    },
+    }
 
     /**
      * Called when user clicks one of the user options
      *
      * @param  {Object} evt
      */
-    handleOAuthUserOptionClick: function(evt) {
-        var type = this.getServerProperty('settings.user.type');
+    handleOAuthUserOptionClick = (evt) => {
+        let type = this.getServerProperty('settings.user.type');
         switch (evt.name) {
             case 'import-disabled':
                 type = undefined;
@@ -1462,38 +1465,38 @@ var ServerSummaryPageSync = module.exports.Sync = React.createClass({
                 break;
         }
         this.setServerProperty('settings.user.type', type);
-    },
+    }
 
     /**
      * Called when user clicks on a role
      *
      * @param  {Object} evt
      */
-    handleRoleOptionClick: function(evt) {
-        var server = this.getServer();
-        var roleIds = _.slice(_.get(server, 'settings.user.role_ids', []));
+    handleRoleOptionClick = (evt) => {
+        let server = this.getServer();
+        let roleIDs = _.get(server, 'settings.user.role_ids', []);
         if (evt.name === 'none') {
-            roleIds = [];
+            roleIDs = [];
         } else {
-            var roleId = parseInt(evt.name);
-            if (_.includes(roleIds, roleId)) {
-                _.pull(roleIds, roleId);
+            let roleID = parseInt(evt.name);
+            if (_.includes(roleIDs, roleID)) {
+                roleIDs = _.without(roleIDs, roleID);
             } else {
-                roleIds.push(roleId);
+                roleIDs = _.concat(roleIDs, roleID);
             }
         }
-        this.setServerProperty('settings.user.role_ids', roleIds);
-    },
+        this.setServerProperty('settings.user.role_ids', roleIDs);
+    }
 
     /**
      * Called when user has scrolled away from selected task
      */
-    handleTaskSelectionClear: function() {
+    handleTaskSelectionClear() {
         this.props.route.unanchor();
-    },
-});
+    }
+}
 
-var emptyServer = {
+const emptyServer = {
     details: {},
     settings: ServerSettings.default,
 };
@@ -1511,10 +1514,39 @@ function getServerIcon(type) {
     }
 }
 
-var sortRoles = Memoize(function(roles, locale) {
-    var p = locale.pick;
-    var name = (role) => {
+let sortRoles = Memoize(function(roles, locale) {
+    let p = locale.pick;
+    let name = (role) => {
         return p(role.details.title) || role.name;
     };
     return _.sortBy(roles, name);
 });
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ServerSummaryPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    ServerSummaryPageSync.propTypes = {
+        system: PropTypes.object,
+        server: PropTypes.object,
+        roles: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}
+
+export {
+    ServerSummaryPage as default,
+    ServerSummaryPage,
+    ServerSummaryPageSync,
+};

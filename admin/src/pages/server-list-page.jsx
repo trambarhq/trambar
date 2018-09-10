@@ -1,38 +1,27 @@
-var _ = require('lodash');
-var Moment = require('moment');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
-var ServerFinder = require('objects/finders/server-finder');
-var UserFinder = require('objects/finders/user-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import Memoize from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import ServerFinder from 'objects/finders/server-finder';
+import UserFinder from 'objects/finders/user-finder';
 
 // widgets
-var PushButton = require('widgets/push-button');
-var ComboButton = require('widgets/combo-button');
-var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
-var UserTooltip = require('tooltips/user-tooltip');
-var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
-var ActionBadge = require('widgets/action-badge');
-var ActionConfirmation = require('widgets/action-confirmation');
-var DataLossWarning = require('widgets/data-loss-warning');
-var UnexpectedError = require('widgets/unexpected-error');
+import PushButton from 'widgets/push-button';
+import ComboButton from 'widgets/combo-button';
+import SortableTable from 'widgets/sortable-table', TH = SortableTable.TH;
+import UserTooltip from 'tooltips/user-tooltip';
+import ModifiedTimeTooltip from 'tooltips/modified-time-tooltip'
+import ActionBadge from 'widgets/action-badge';
+import ActionConfirmation from 'widgets/action-confirmation';
+import DataLossWarning from 'widgets/data-loss-warning';
+import UnexpectedError from 'widgets/unexpected-error';
 
-require('./server-list-page.scss');
+import './server-list-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'ServerListPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class ServerListPage extends AsyncComponent {
+    static displayName = 'ServerListPage';
 
     /**
      * Render the component asynchronously
@@ -41,19 +30,19 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let props = {
             servers: null,
             users: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
         };
         meanwhile.show(<ServerListPageSync {...props} />);
-        return db.start().then((currentUserId) => {
+        return db.start().then((currentUserID) => {
             return ServerFinder.findAllServers(db).then((servers) => {
                 props.servers = servers;
             });
@@ -66,39 +55,26 @@ module.exports = Relaks.createClass({
             return <ServerListPageSync {...props} />;
         });
     }
-});
+}
 
-var ServerListPageSync = module.exports.Sync = React.createClass({
-    displayName: 'ServerListPage.Sync',
-    propTypes: {
-        servers: PropTypes.arrayOf(PropTypes.object),
-        users: PropTypes.arrayOf(PropTypes.object),
+class ServerListPageSync extends PureComponent {
+    static displayName = 'ServerListPage.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
         });
-        return {
+        this.state = {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
-            restoringServerIds: [],
-            disablingServerIds: [],
+            restoringServerIDs: [],
+            disablingServerIDs: [],
             hasChanges: false,
             renderingFullList: this.isEditing(),
             problems: {},
         };
-    },
+    }
 
     /**
      * Return true when the URL indicate edit mode
@@ -107,10 +83,10 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Boolean}
      */
-    isEditing: function(props) {
-        props = props || this.props;
-        return props.route.parameters.edit;
-    },
+    isEditing(props) {
+        let { route } = props || this.props;
+        return route.params.edit;
+    }
 
     /**
      * Change editability of page
@@ -119,26 +95,26 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    setEditability: function(edit) {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
+    setEditability(edit) {
+        let { route } = this.props;
+        let params = _.clone(route.params);
         params.edit = edit;
-        return this.props.route.replace(module.exports, params);
-    },
+        return route.replace(route.name, params);
+    }
 
     /**
      * Check if we're switching into edit mode
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
                 // initial list of ids to the current list
                 this.setState({
                     renderingFullList: true,
-                    restoringServerIds: [],
-                    disablingServerIds: [],
+                    restoringServerIDs: [],
+                    disablingServerIDs: [],
                     hasChanges: false,
                 });
             } else {
@@ -149,34 +125,39 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
                 }, 500);
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
+    render() {
+        let { route, env } = this.props;
+        let { hasChanges, problems } = this.state;
+        let { setters } = this.components;
+        let { t } = env.locale;
         return (
             <div className="server-list-page">
                 {this.renderButtons()}
                 <h2>{t('server-list-title')}</h2>
-                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
+                <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderTable()}
-                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
-                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                <ActionConfirmation ref={setters.confirmation} env={env} />
+                <DataLossWarning changes={hasChanges} env={env} route={route} />
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons in top right corner
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
+    renderButtons() {
+        let { env, servers } = this.props;
+        let { hasChanges } = this.state;
+        let { t } = env.locale;
         if (this.isEditing()) {
             return (
                 <div className="buttons">
@@ -184,14 +165,14 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
                         {t('server-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('server-list-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            var preselected = 'add';
-            var empty = _.isEmpty(this.props.servers);
+            let preselected = 'add';
+            let empty = _.isEmpty(servers);
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
@@ -206,20 +187,21 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render a table
      *
      * @return {ReactElement}
      */
-    renderTable: function() {
-        var tableProps = {
-            sortColumns: this.state.sortColumns,
-            sortDirections: this.state.sortDirections,
+    renderTable() {
+        let { renderingFullList, sortColumns, sortDirections } = this.state;
+        let tableProps = {
+            sortColumns,
+            sortDirections,
             onSort: this.handleSort,
         };
-        if (this.state.renderingFullList) {
+        if (renderingFullList) {
             tableProps.expandable = true;
             tableProps.selectable = true;
             tableProps.expanded = this.isEditing();
@@ -235,14 +217,14 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
                 </tbody>
             </SortableTable>
         );
-    },
+    }
 
     /**
      * Render table headings
      *
      * @return {ReactElement}
      */
-    renderHeadings: function() {
+    renderHeadings() {
         return (
             <tr>
                 {this.renderTitleColumn()}
@@ -253,26 +235,24 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
                 {this.renderModifiedTimeColumn()}
             </tr>
         );
-    },
+    }
 
     /**
      * Render table rows
      *
      * @return {Array<ReactElement>}
      */
-    renderRows: function() {
-        var servers = this.props.servers;
-        if (!this.state.renderingFullList) {
+    renderRows() {
+        let { env, servers, users } = this.props;
+        let { renderingFullList } = this.state;
+        if (!renderingFullList) {
             servers = filterServers(servers);
         }
-        servers = sortServers(servers,
-            this.props.users,
-            this.props.locale,
-            this.state.sortColumns,
-            this.state.sortDirections
-        );
-        return _.map(servers, this.renderRow);
-    },
+        servers = sortServers(servers, users, env, sortColumns, sortDirections);
+        return _.map(servers, (server) => {
+            return this.renderRow(server);
+        });
+    }
 
     /**
      * Render a table row
@@ -281,10 +261,12 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderRow: function(server) {
-        var t = this.props.locale.translate;
-        var classes = [];
-        var onClick, title;
+    renderRow(server) {
+        let { env } = this.props;
+        let { renderingFullList, restoringServerIDs, disablingServerIDs } = this.state;
+        let { t } = env.locale;
+        let classes = [];
+        let onClick, title;
         if (server.deleted) {
             classes.push('deleted');
             title = t('server-list-status-deleted');
@@ -292,20 +274,20 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
             classes.push('disabled');
             title = t('server-list-status-disabled');
         }
-        if (this.state.renderingFullList) {
+        if (renderingFullList) {
             if (server.deleted || server.disabled) {
-                if (_.includes(this.state.restoringServerIds, server.id)) {
+                if (_.includes(restoringServerIDs, server.id)) {
                     classes.push('selected');
                 }
             } else {
                 classes.push('fixed');
-                if (!_.includes(this.state.disablingServerIds, server.id)) {
+                if (!_.includes(disablingServerIDs, server.id)) {
                     classes.push('selected');
                 }
             }
             onClick = this.handleRowClick;
         }
-        var props = {
+        let props = {
             className: classes.join(' '),
             'data-server-id': server.id,
             title,
@@ -321,7 +303,7 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
                 {this.renderModifiedTimeColumn(server)}
             </tr>
         );
-    },
+    }
 
     /**
      * Render title column, either the heading or a data cell
@@ -330,46 +312,46 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderTitleColumn: function(server) {
-        var t = this.props.locale.translate;
+    renderTitleColumn(server) {
+        let { route, env } = this.props;
+        let { renderingFullList, restoringServerIDs, disablingServerIDs } = this.state;
+        let { t, p } = env.locale;
         if (!server) {
             return <TH id="title">{t('table-heading-title')}</TH>;
         } else {
-            var p = this.props.locale.pick;
-            var title = p(server.details.title) || t(`server-type-${server.type}`);
-            var url, badge;
-            if (this.state.renderingFullList) {
+            let title = p(server.details.title) || t(`server-type-${server.type}`);
+            let url, badge;
+            if (renderingFullList) {
                 // add a badge next to the name if we're disabling or
                 // restoring a server
-                var includedBefore, includedAfter;
+                let includedBefore, includedAfter;
                 if (server.deleted || server.disabled) {
                     includedBefore = false;
-                    includedAfter = _.includes(this.state.restoringServerIds, server.id);
+                    includedAfter = _.includes(restoringServerIDs, server.id);
                 } else {
                     includedBefore = true;
-                    includedAfter = !_.includes(this.state.disablingServerIds, server.id);
+                    includedAfter = !_.includes(disablingServerIDs, server.id);
                 }
                 if (includedBefore !== includedAfter) {
                     if (includedAfter) {
-                        badge = <ActionBadge type="reactivate" locale={this.props.locale} />;
+                        badge = <ActionBadge type="reactivate" env={env} />;
                     } else {
-                        badge = <ActionBadge type="disable" locale={this.props.locale} />;
+                        badge = <ActionBadge type="disable" env={env} />;
                     }
                 }
             } else {
-                var route = this.props.route;
-                var params = { server: server.id };
+                let params = { server: server.id };
                 url = route.find('server-summary-page', params);
             }
-            var iconName = getServerIcon(server.type);
-            var icon = <i className={`fa fa-${iconName} fa-fw`} />;
+            let iconName = getServerIcon(server.type);
+            let icon = <i className={`fa fa-${iconName} fa-fw`} />;
             return (
                 <td>
                     <a href={url}>{icon} {title}</a>{badge}
                 </td>
             );
         }
-    },
+    }
 
     /**
      * Render type column, either the heading or a data cell
@@ -378,14 +360,15 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderTypeColumn: function(server) {
-        var t = this.props.locale.translate;
+    renderTypeColumn(server) {
+        let { env } = this.props;
+        let { t } = env.locale;
         if (!server) {
             return <TH id="type">{t('table-heading-type')}</TH>;
         } else {
             return <td>{t(`server-type-${server.type}`)}</td>
         }
-    },
+    }
 
     /**
      * Render column indicating whether oauth authentication is active
@@ -394,18 +377,19 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOAuthColumn: function(server) {
-        if (this.props.theme.isBelowMode('wide')) {
+    renderOAuthColumn(server) {
+        let { env } = this.props;
+        let { t } = env.locale;
+        if (env.isBelowMode('wide')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!server) {
             return <TH id="oauth">{t('table-heading-oauth')}</TH>;
         } else {
-            var active = hasOAuthCredentials(server);
+            let active = hasOAuthCredentials(server);
             return <td>{t(`server-list-oauth-${active}`)}</td>
         }
-    },
+    }
 
     /**
      * Render column indicating whether oauth authentication is active
@@ -414,18 +398,19 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderAPIColumn: function(server) {
-        if (this.props.theme.isBelowMode('wide')) {
+    renderAPIColumn(server) {
+        let { env } = this.props;
+        let { t } = env.locale;
+        if (env.isBelowMode('wide')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!server) {
             return <TH id="api">{t('table-heading-api-access')}</TH>;
         } else {
-            var active = hasAPICredentials(server);
+            let active = hasAPICredentials(server);
             return <td>{t(`server-list-api-access-${active}`)}</td>
         }
-    },
+    }
 
     /**
      * Render users column, either the heading or a data cell
@@ -434,23 +419,23 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderUsersColumn: function(server) {
-        if (this.props.theme.isBelowMode('standard')) {
+    renderUsersColumn(server) {
+        let { route, env, users } = this.props;
+        let { t } = env.locale;
+        if (env.isBelowMode('standard')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!server) {
             return <TH id="users">{t('table-heading-users')}</TH>;
         } else {
-            var props = {
-                users: findUsers(this.props.users, server),
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
+            let props = {
+                users: findUsers(users, server),
+                route,
+                env,
             };
             return <td><UserTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Render column showing the last modified time
@@ -459,100 +444,99 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderModifiedTimeColumn: function(server) {
-        if (this.props.theme.isBelowMode('standard')) {
+    renderModifiedTimeColumn(server) {
+        let { env } = this.props;
+        let { t } = env.locale;
+        if (env.isBelowMode('standard')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!server) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            var props = {
+            let props = {
                 time: server.mtime,
-                locale: this.props.locale,
+                env,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Called when user clicks a table heading
      *
      * @param  {Object} evt
      */
-    handleSort: function(evt) {
+    handleSort = (evt) => {
         this.setState({
             sortColumns: evt.columns,
             sortDirections: evt.directions
         });
-    },
+    }
 
     /**
      * Called when user clicks new button
      *
      * @param  {Event} evt
      */
-    handleAddClick: function(evt) {
-        var route = this.props.route;
-        return route.push('server-summary-page', {
-            server: 'new'
-        });
-    },
+    handleAddClick = (evt) => {
+        let { route } = this.props;
+        return route.push('server-summary-page', { server: 'new' });
+    }
 
     /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
+    handleEditClick = (evt) => {
         this.setEditability(true);
-    },
+    }
 
     /**
      * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         this.setEditability(false);
-    },
+    }
 
     /**
      * Called when user clicks save button
      *
      * @param  {Event} evt
      */
-    handleSaveClick: function(evt) {
-        var t = this.props.locale.translate;
-        var disabling = this.state.disablingServerIds;
-        var restoring = this.state.restoringServerIds;
-        var messages = [
-            t('server-list-confirm-disable-$count', disabling.length),
-            t('server-list-confirm-reactivate-$count', restoring.length),
+    handleSaveClick = (evt) => {
+        let { database, env, servers } = this.props;
+        let { disablingServerIDs, restoringServerIDs } = this.state;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let messages = [
+            t('server-list-confirm-disable-$count', disablingServerIDs.length),
+            t('server-list-confirm-reactivate-$count', restoringServerIDs.length),
         ];
-        var bypass = [
-            _.isEmpty(disabling) || undefined,
-            _.isEmpty(restoring) || undefined,
+        let bypass = [
+            _.isEmpty(disablingServerIDs) ? true : undefined,
+            _.isEmpty(restoringServerIDs) ? true : undefined,
         ];
-        var confirmation = this.components.confirmation;
         return confirmation.askSeries(messages, bypass).then((confirmed) => {
             if (!confirmed) {
                 return;
             }
             this.setState({ problems: {} });
-            var db = this.props.database.use({ schema: 'global', by: this });
-            return db.start().then((userId) => {
-                var serversAfter = [];
-                _.each(this.props.servers, (server) => {
-                    var flags = {};
-                    if (_.includes(disabling, server.id)) {
+            let db = database.use({ schema: 'global', by: this });
+            return db.start().then((currentUserID) => {
+                let serversAfter = [];
+                _.each(servers, (server) => {
+                    let flags = {};
+                    if (_.includes(disablingServerIDs, server.id)) {
                         flags.disabled = true;
-                    } else if (_.includes(restoring, server.id)) {
+                    } else if (_.includes(restoringServerIDs, server.id)) {
                         flags.disabled = flags.deleted = false;
                     } else {
                         return;
                     }
-                    var serverAfter = _.assign({}, server, flags);
+                    let serverAfter = _.assign({}, server, flags);
                     serversAfter.push(serverAfter);
                 });
                 return db.save({ table: 'server' }, serversAfter).then((servers) => {
@@ -561,50 +545,48 @@ var ServerListPageSync = module.exports.Sync = React.createClass({
                     });
                     return null;
                 }).catch((err) => {
-                    var problems = { unexpected: err.message };
+                    let problems = { unexpected: err.message };
                     this.setState({ problems });
                 });
             });
         });
-    },
+    }
 
     /**
      * Called when user clicks a row in edit mode
      *
      * @param  {Event} evt
      */
-    handleRowClick: function(evt) {
-        var serverId = parseInt(evt.currentTarget.getAttribute('data-server-id'));
-        var server = _.find(this.props.servers, { id: serverId });
-        var restoringServerIds = _.slice(this.state.restoringServerIds);
-        var disablingServerIds = _.slice(this.state.disablingServerIds);
+    handleRowClick = (evt) => {
+        let { servers } = this.props;
+        let { disablingServerIDs, restoringServerIDs } = this.state;
+        let serverID = parseInt(evt.currentTarget.getAttribute('data-server-id'));
         if (server.deleted || server.disabled) {
-            if (_.includes(restoringServerIds, server.id)) {
-                _.pull(restoringServerIds, server.id);
+            if (_.includes(restoringServerIDs, server.id)) {
+                restoringServerIDs = _.without(restoringServerIDs, server.id);
             } else {
-                restoringServerIds.push(server.id);
+                restoringServerIDs = _.concat(restoringServerIDs, server.id);
             }
         } else {
-            if (_.includes(disablingServerIds, server.id)) {
-                _.pull(disablingServerIds, server.id);
+            if (_.includes(disablingServerIDs, server.id)) {
+                disablingServerIDs = _.without(disablingServerIDs, server.id);
             } else {
-                disablingServerIds.push(server.id);
+                disablingServerIDs = _concat(disablingServerIDs, server.id);
             }
         }
-        var hasChanges = !_.isEmpty(restoringServerIds) || !_.isEmpty(disablingServerIds);
-        this.setState({ restoringServerIds, disablingServerIds, hasChanges });
-    },
-});
+        let hasChanges = !_.isEmpty(restoringServerIDs) || !_.isEmpty(disablingServerIDs);
+        this.setState({ restoringServerIDs, disablingServerIDs, hasChanges });
+    }
+}
 
-var filterServers = Memoize(function(servers) {
+let filterServers = Memoize(function(servers) {
     return _.filter(servers, (server) => {
         return !server.deleted && !server.disabled;
     });
 });
 
-var sortServers = Memoize(function(servers, users, locale, columns, directions) {
-    var t = locale.translate;
-    var p = locale.pick;
+let sortServers = Memoize(function(servers, users, env, columns, directions) {
+    let { t, p } = env.locale;
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'title':
@@ -636,7 +618,7 @@ function getServerIcon(type) {
 }
 
 function hasOAuthCredentials(server) {
-    var oauth = server.settings.oauth;
+    let oauth = server.settings.oauth;
     if (oauth) {
         if (oauth.client_id && oauth.client_secret) {
             return true;
@@ -646,7 +628,7 @@ function hasOAuthCredentials(server) {
 }
 
 function hasAPICredentials(server) {
-    var api = server.settings.api;
+    let api = server.settings.api;
     if (api) {
         if (api.access_token) {
             return true;
@@ -655,7 +637,7 @@ function hasAPICredentials(server) {
     return false;
 }
 
-var findUsers = Memoize(function(users, server) {
+let findUsers = Memoize(function(users, server) {
     return _.filter(users, (user) => {
         return _.some(user.external, (link) => {
             if (link.server_id === server.id) {
@@ -664,3 +646,33 @@ var findUsers = Memoize(function(users, server) {
         });
     });
 });
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ServerListPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+    ServerListPageSync.propTypes = {
+        servers: PropTypes.arrayOf(PropTypes.object),
+        users: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        theme: PropTypes.instanceOf(Theme).isRequired,
+    };
+}
+
+export {
+    ServerListPage as default,
+    ServerListPage,
+    ServerListPageSync,
+};

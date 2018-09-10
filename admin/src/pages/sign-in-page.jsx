@@ -1,28 +1,17 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Moment = require('moment');
-var HTTPRequest = require('transport/http-request');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import Moment from 'moment';
+import HTTPRequest from 'transport/http-request';
 
 // widgets
-var PushButton = require('widgets/push-button');
-var TextField = require('widgets/text-field');
+import PushButton from 'widgets/push-button';
+import TextField from 'widgets/text-field';
 
-require('./sign-in-page.scss');
+import './sign-in-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'SignInPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class SignInPage extends AsyncComponent {
+    static displayName = 'SignInPage';
 
     /**
      * Render the component asynchronously
@@ -31,16 +20,16 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let db = database.use({ by: this });
+        let props = {
             system: null,
             servers: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
         };
         // start authorization process--will receive system description
         // and list of OAuth providers along with links
@@ -50,28 +39,15 @@ module.exports = Relaks.createClass({
             props.servers = info.servers;
             return <SignInPageSync {...props} />;
         });
-    },
-});
+    }
+}
 
-var SignInPageSync = module.exports.Sync = React.createClass({
-    displayName: 'SignInPage.Sync',
-    propTypes: {
-        system: PropTypes.object,
-        servers: PropTypes.arrayOf(PropTypes.object),
+class SignInPageSync extends PureComponent {
+    static displayName = 'SignInPage.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             username: '',
             password: '',
             savedCredentials: false,
@@ -79,33 +55,33 @@ var SignInPageSync = module.exports.Sync = React.createClass({
             problem: null,
             errors: {},
         };
-    },
+    }
 
     /**
      * Return true if username and password are non-empty
      *
      * @return {Boolean}
      */
-    canSubmitForm: function() {
-        if (!_.trim(this.state.username)) {
+    canSubmitForm() {
+        let { username, password } = this.state;
+        if (!_.trim(username)) {
             return false;
         }
-        if (!_.trim(this.state.password)) {
+        if (!_.trim(password)) {
             return false;
         }
         return true;
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var system = this.props.system;
-        var title = p(_.get(system, 'details.title'));
+    render() {
+        let { env, system } = this.props;
+        let { t, p } = env.locale;
+        let title = p(_.get(system, 'details.title'));
         return (
             <div className="sign-in-page">
                 <h2>{t('sign-in-$title', title)}</h2>
@@ -118,39 +94,41 @@ var SignInPageSync = module.exports.Sync = React.createClass({
                 </section>
             </div>
         );
-    },
+    }
 
     /**
      * Render login/password form
      *
      * @return {ReactElement}
      */
-    renderForm: function() {
-        var t = this.props.locale.translate;
-        var valid = this.canSubmitForm();
-        var usernameProps = {
+    renderForm() {
+        let { env } = this.props;
+        let { username, password, submitting, savedCredentials } = this.state;
+        let { t } = env.locale;
+        let valid = this.canSubmitForm();
+        let usernameProps = {
             id: 'username',
             type: 'text',
-            value: this.state.username,
-            disabled: this.state.submitting,
-            locale: this.props.locale,
+            value: username,
+            disabled: submitting,
+            env,
             onChange: this.handleUsernameChange,
         };
-        var passwordProps = {
+        let passwordProps = {
             id: 'password',
             type: 'password',
-            value: this.state.password,
-            disabled: this.state.submitting,
-            locale: this.props.locale,
+            value: password,
+            disabled: submitting,
+            env,
             onChange: this.handlePasswordChange,
         };
-        var buttonDisabled = !valid;
-        if (this.state.savedCredentials) {
+        let buttonDisabled = !valid;
+        if (savedCredentials) {
             // don't disable the button, since the browser will immediately
             // set the password on user action
             buttonDisabled = false;
         }
-        if (this.state.submitting) {
+        if (submitting) {
             buttonDisabled = true;
         }
         return (
@@ -165,69 +143,75 @@ var SignInPageSync = module.exports.Sync = React.createClass({
                 </div>
             </form>
         );
-    },
+    }
 
     /**
      * Render error message
      *
      * @return {ReactElement|null}
      */
-    renderProblem: function() {
-        if (!this.state.problem) {
+    renderProblem() {
+        let { env } = this.props;
+        let { problem } = this.state;
+        let { t } = env.locale;
+        if (!problem) {
             return null;
         }
-        var t = this.props.locale.translate;
         return (
             <div className="error">
                 <i className="fa fa-exclamation-circle" />
                 {' '}
-                {t(`sign-in-problem-${this.state.problem}`)}
+                {t(`sign-in-problem-${problem}`)}
             </div>
         );
-    },
+    }
 
     /**
      * Render list of options
      *
      * @return {ReactElement}
      */
-    renderOAuthButtons: function() {
-        var t = this.props.locale.translate;
-        var servers = _.sortBy(this.props.servers, [ 'type' ]);
+    renderOAuthButtons() {
+        let { env, servers } = this.props;
+        let { t } = env.locale;
+        servers = _.sortBy(servers, [ 'type' ]);
         return (
             <div className="oauth-buttons">
-                {_.map(servers, this.renderOAuthButton)}
+            {
+                _.map(servers, (server) => {
+                    return this.renderOAuthButton(server);
+                })
+            }
             </div>
         );
-    },
+    }
 
     /**
      * Render an OAuth option
      *
      * @param  {Object} server
-     * @param  {Number} i
      *
      * @return {ReactElement}
      */
-    renderOAuthButton: function(server, i) {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var name = p(server.details.title) || t(`server-type-${server.type}`);
-        var icon = getServerIcon(server.type);
-        var url = this.props.database.getOAuthURL(server);
-        var props = {
+    renderOAuthButton(server) {
+        let { database, env } = this.props;
+        let { errors } = this.state;
+        let { t, p } = env.locale;
+        let name = p(server.details.title) || t(`server-type-${server.type}`);
+        let icon = getServerIcon(server.type);
+        let url = database.getOAuthURL(server);
+        let props = {
             className: 'oauth-button',
             href: url,
             onClick: this.handleOAuthButtonClick,
             'data-id': server.id,
         };
-        var error = this.state.errors[server.id];
+        let error = errors[server.id];
         if (error) {
-            var t = this.props.locale.translate;
-            var text = t(`sign-in-error-${error.reason}`);
+            let text = t(`sign-in-error-${error.reason}`);
             props.className += ' error';
             return (
-                <a key={i} {...props}>
+                <a key={server.id} {...props}>
                     <span className="icon">
                         <i className={`fa fa-fw fa-${icon}`}></i>
                     </span>
@@ -236,7 +220,7 @@ var SignInPageSync = module.exports.Sync = React.createClass({
             );
         } else {
             return (
-                <a key={i} {...props}>
+                <a key={server.id} {...props}>
                     <span className="icon">
                         <i className={`fa fa-fw fa-${icon}`}></i>
                     </span>
@@ -244,14 +228,14 @@ var SignInPageSync = module.exports.Sync = React.createClass({
                 </a>
             );
         }
-    },
+    }
 
     /**
      * Remember when the component is loaded
      */
-    componentDidMount: function() {
+    componentDidMount() {
         this.mountTime = Moment();
-    },
+    }
 
     /**
      * Open a popup window to OAuth provider
@@ -260,26 +244,27 @@ var SignInPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    openPopUpWindow: function(url) {
+    openPopUpWindow(url) {
         return new Promise((resolve, reject) => {
-            var width = 800;
-            var height = 600;
-            var options = {
+            let width = 800;
+            let height = 600;
+            let { screenLeft, screenTop, outerWidth, outerHeight } = window;
+            let options = {
                 width,
                 height,
-                left: window.screenLeft + Math.round((window.outerWidth - width) / 2),
-                top: window.screenTop + Math.round((window.outerHeight - height) / 2),
+                left: screenLeft + Math.round((outerWidth - width) / 2),
+                top: screenTop + Math.round((outerHeight - height) / 2),
                 toolbar: 'no',
                 menubar: 'no',
                 status: 'no',
             };
-            var pairs = _.map(options, (value, name) => {
+            let pairs = _.map(options, (value, name) => {
                 return `${name}=${value}`;
             });
-            var win = window.open(url, 'sign-in', pairs.join(','));
+            let win = window.open(url, 'sign-in', pairs.join(','));
             if (win) {
                 win.location = url;
-                var interval = setInterval(() => {
+                let interval = setInterval(() => {
                     if (win.closed) {
                         clearInterval(interval);
                         resolve();
@@ -289,72 +274,76 @@ var SignInPageSync = module.exports.Sync = React.createClass({
                 reject(new Error('Unable to open popup'))
             }
         });
-    },
+    }
 
     /**
      * Called when user clicks on one of the OAuth buttons
      *
      * @param  {Event} evt
      */
-    handleOAuthButtonClick: function(evt) {
-        var url = evt.currentTarget.getAttribute('href');
-        var serverID = parseInt(evt.currentTarget.getAttribute('data-id'))
+    handleOAuthButtonClick = (evt) => {
+        let { database } = this.props;
+        let { errors } = this.state;
+        let url = evt.currentTarget.getAttribute('href');
+        let serverID = parseInt(evt.currentTarget.getAttribute('data-id'))
         evt.preventDefault();
         return this.openPopUpWindow(url).then(() => {
             // retrieve authorization object from server
-            var db = this.props.database.use({ by: this });
+            let db = database.use({ by: this });
             return db.checkSession().catch((err) => {
-                var errors = _.clone(this.state.errors);
+                let errors = _.clone(errors);
                 errors[serverID] = err;
                 this.setState({ errors });
             });
         });
-    },
+    }
 
     /**
      * Called when user changes the username
      *
      * @param  {Event} evt
      */
-    handleUsernameChange: function(evt) {
+    handleUsernameChange = (evt) => {
         // if a username shows up within half a second, it's set by the
         // browser's saved password feature
-        var now = Moment();
-        var username = evt.target.value;
-        var savedCredentials = false;
+        let now = Moment();
+        let username = evt.target.value;
+        let savedCredentials = false;
         if (username.length > 3) {
             if ((now - this.mountTime) < 500) {
                 savedCredentials = true;
             }
         }
         this.setState({ username, savedCredentials });
-    },
+    }
 
     /**
      * Called when user changes the password
      *
      * @param  {Event} evt
      */
-    handlePasswordChange: function(evt) {
-        var password = evt.target.value;
-        var savedCredentials = false;
+    handlePasswordChange = (evt) => {
+        let password = evt.target.value;
+        let savedCredentials = false;
         this.setState({ password, savedCredentials });
-    },
+    }
 
     /**
      * Called when user presses enter or clicks on submit button
      *
      * @param  {Event} evt
      */
-    handleFormSubmit: function(evt) {
+    handleFormSubmit = (evt) => {
+        let { database } = this.props;
+        let { username, password } = this.state;
         evt.preventDefault();
         if (!this.canSubmitForm()) {
             return;
         }
         this.setState({ submitting: true }, () => {
-            var db = this.props.database.use({ by: this });
-            db.submitPassword(this.state.username, this.state.password).catch((err) => {
-                var problem;
+            let db = database.use({ by: this });
+            db.submitPassword(username, password).catch((err) => {
+                let problem;
                 switch (err.statusCode) {
                     case 401: problem = 'incorrect-username-password'; break;
                     case 403: problem = 'no-support-for-username-password'; break;
@@ -363,8 +352,8 @@ var SignInPageSync = module.exports.Sync = React.createClass({
                 this.setState({ problem, submitting: false });
             });
         });
-    },
-});
+    }
+}
 
 function getServerIcon(type) {
     switch (type) {
@@ -374,3 +363,31 @@ function getServerIcon(type) {
             return type;
     }
 }
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    SignInPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    SignInPageSync.propTypes = {
+        system: PropTypes.object,
+        servers: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}
+
+export {
+    SignInPage as default,
+    SignInPage,
+    SignInPageSync,
+};

@@ -1,49 +1,36 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
-var ProjectFinder = require('objects/finders/project-finder');
-var RoleFinder = require('objects/finders/role-finder');
-var UserFinder = require('objects/finders/user-finder');
-var UserTypes = require('objects/types/user-types');
-var UserSettings = require('objects/settings/user-settings');
-var StatisticsFinder = require('objects/finders/statistics-finder');
-var SystemFinder = require('objects/finders/system-finder');
-var SlugGenerator = require('utils/slug-generator');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-var Payloads = require('transport/payloads');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import Memoize from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import ProjectFinder from 'objects/finders/project-finder';
+import RoleFinder from 'objects/finders/role-finder';
+import UserFinder from 'objects/finders/user-finder';
+import UserTypes from 'objects/types/user-types';
+import UserSettings from 'objects/settings/user-settings';
+import StatisticsFinder from 'objects/finders/statistics-finder';
+import SystemFinder from 'objects/finders/system-finder';
+import SlugGenerator from 'utils/slug-generator';
 
 // widgets
-var PushButton = require('widgets/push-button');
-var ComboButton = require('widgets/combo-button');
-var InstructionBlock = require('widgets/instruction-block');
-var TextField = require('widgets/text-field');
-var MultilingualTextField = require('widgets/multilingual-text-field');
-var OptionList = require('widgets/option-list');
-var ImageSelector = require('widgets/image-selector');
-var CollapsibleContainer = require('widgets/collapsible-container');
-var ActivityChart = require('widgets/activity-chart');
-var InputError = require('widgets/input-error');
-var ActionConfirmation = require('widgets/action-confirmation');
-var DataLossWarning = require('widgets/data-loss-warning');
-var UnexpectedError = require('widgets/unexpected-error');
+import PushButton from 'widgets/push-button';
+import ComboButton from 'widgets/combo-button';
+import InstructionBlock from 'widgets/instruction-block';
+import TextField from 'widgets/text-field';
+import MultilingualTextField from 'widgets/multilingual-text-field';
+import OptionList from 'widgets/option-list';
+import ImageSelector from 'widgets/image-selector';
+import CollapsibleContainer from 'widgets/collapsible-container';
+import ActivityChart from 'widgets/activity-chart';
+import InputError from 'widgets/input-error';
+import ActionConfirmation from 'widgets/action-confirmation';
+import DataLossWarning from 'widgets/data-loss-warning';
+import UnexpectedError from 'widgets/unexpected-error';
 
-require('./user-summary-page.scss');
+import './user-summary-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'UserSummaryPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-    },
+class UserSummaryPage extends AsyncComponent {
+    static displayName = 'UserSummaryPage';
 
     /**
      * Render the component asynchronously
@@ -52,24 +39,23 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env, payloads } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let props = {
             system: null,
             user: null,
             roles: null,
             project: null,
             statistics: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
+            database,
+            route,
+            env,
+            payloads,
         };
         meanwhile.show(<UserSummaryPageSync {...props} />);
-        return db.start().then((currentUserId) => {
+        return db.start().then((currentUserID) => {
             return SystemFinder.findSystem(db).then((system) => {
                 props.system = system;
             });
@@ -86,10 +72,10 @@ module.exports = Relaks.createClass({
                 props.roles = roles;
             })
         }).then(() => {
-            // load project if project id is provider (i.e. member summary)
-            if (params.project) {
+            // load project if project id is provided (i.e. member summary)
+            if (route.params.project) {
                 meanwhile.show(<UserSummaryPageSync {...props} />);
-                return ProjectFinder.findProject(db, params.project).then((project) => {
+                return ProjectFinder.findProject(db, route.params.project).then((project) => {
                     props.project = project;
                 });
             }
@@ -104,34 +90,17 @@ module.exports = Relaks.createClass({
             return <UserSummaryPageSync {...props} />;
         });
     }
-});
+}
 
-var UserSummaryPageSync = module.exports.Sync = React.createClass({
-    displayName: 'UserSummaryPage.Sync',
-    propTypes: {
-        system: PropTypes.object,
-        user: PropTypes.object,
-        roles: PropTypes.arrayOf(PropTypes.object),
-        project: PropTypes.object,
-        statistics: PropTypes.object,
+class UserSummaryPageSync extends PureComponent {
+    static displayName = 'UserSummaryPage.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructors(props) {
+        super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
         });
-        return {
+        this.state = {
             newUser: null,
             hasChanges: false,
             showingSocialLinks: false,
@@ -139,7 +108,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             adding: false,
             problems: {},
         };
-    },
+    }
 
     /**
      * Return edited copy of user object or the original object
@@ -148,13 +117,15 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Object}
      */
-    getUser: function(state) {
+    getUser(state) {
+        let { user } = this.props;
+        let { newUser } = this.state;
         if (this.isEditing() && (!state || state === 'current')) {
-            return this.state.newUser || this.props.user || emptyUser;
+            return newUser || user || emptyUser;
         } else {
-            return this.props.user || emptyUser;
+            return user || emptyUser;
         }
-    },
+    }
 
     /**
      * Return a property of the user object
@@ -164,10 +135,10 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {*}
      */
-    getUserProperty: function(path, state) {
-        var user = this.getUser(state);
+    getUserProperty(path, state) {
+        let user = this.getUser(state);
         return _.get(user, path);
-    },
+    }
 
     /**
      * Modify a property of the user object
@@ -175,35 +146,36 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setUserProperty: function(path, value) {
-        var user = this.getUser('current');
-        var newUser = _.decoupleSet(user, path, value);
+    setUserProperty(path, value) {
+        let { user } = this.props;
+        let newUser = this.getUser('current');
+        let newUserAfter = _.decoupleSet(newUser, path, value);
         if (path === 'details.name') {
-            var autoNameBefore = SlugGenerator.fromPersonalName(user.details.name);
-            var autoNameAfter = SlugGenerator.fromPersonalName(newUser.details.name);
-            if (!user.username || user.username === autoNameBefore) {
-                newUser.username = autoNameAfter;
+            let autoNameBefore = SlugGenerator.fromPersonalName(newUser.details.name);
+            let autoNameAfter = SlugGenerator.fromPersonalName(newUserAfter.details.name);
+            if (!newUser.username || newUser.username === autoNameBefore) {
+                newUserAfter.username = autoNameAfter;
             }
         }
-        if(_.size(newUser.username) > 128) {
-            newUser.username = newUser.username.substr(0, 128);
+        if(_.size(newUserAfter.username) > 128) {
+            newUserAfter.username = newUserAfter.username.substr(0, 128);
         }
-        var hasChanges = true;
-        if (_.isEqual(newUser, this.props.user)) {
-            newUser = null;
+        let hasChanges = true;
+        if (_.isEqual(newUserAfter, user)) {
+            newUserAfter = null;
             hasChanges = false;
         }
-        this.setState({ newUser, hasChanges });
-    },
+        this.setState({ newUser: newUserAfter, hasChanges });
+    }
 
     /**
      * Look for problems in user object
      *
      * @return {Object}
      */
-    findProblems: function() {
-        var problems = {};
-        var user = this.getUser();
+    findProblems() {
+        let problems = {};
+        let user = this.getUser();
         if (!user.username) {
             problems.username = 'validation-required';
         }
@@ -211,7 +183,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
             problems.type = 'validation-required';
         }
         return problems;
-    },
+    }
 
     /**
      * Return true when the URL indicate we're creating a new user
@@ -220,10 +192,10 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Boolean}
      */
-    isCreating: function(props) {
-        props = props || this.props;
-        return (props.route.parameters.user === 'new');
-    },
+    isCreating(props) {
+        let { route } = props || this.props;
+        return (route.params.user === 'new');
+    }
 
     /**
      * Return true when the URL indicate edit mode
@@ -232,10 +204,10 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Boolean}
      */
-    isEditing: function(props) {
-        props = props || this.props;
-        return this.isCreating(props) || props.route.parameters.edit;
-    },
+    isEditing(props) {
+        let { route } = props || this.props;
+        return this.isCreating(props) || route.params.edit;
+    }
 
     /**
      * Return true when the URL includes project id
@@ -244,10 +216,10 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Boolean}
      */
-    isProjectMember: function(props) {
-        props = props || this.props;
-        return !!props.route.parameters.project;
-    },
+    isProjectMember(props) {
+        let { route } = props || this.props;
+        return !!route.params.project;
+    }
 
     /**
      * Change editability of page
@@ -257,64 +229,65 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    setEditability: function(edit, newUser) {
-        var route = this.props.route;
+    setEditability(edit, newUser) {
+        let { route } = this.props;
         if (this.isCreating() && !edit && !newUser) {
             // return to list when cancelling user creation
             return this.returnToList();
         } else {
-            var params = _.clone(route.parameters);
+            let params = _.clone(route.params);
             params.edit = edit;
             if (newUser) {
                 // use id of newly created user
                 params.user = newUser.id;
             }
-            return route.replace(module.exports, params);
+            return route.replace(route.name, params);
         }
-    },
+    }
 
     /**
      * Return to user or member list
      *
      * @return {Promise}
      */
-    returnToList: function() {
-        var route = this.props.route;
-        if (route.parameters.project) {
-            var params = { project: route.parameters.project };
+    returnToList() {
+        let { route } = this.props;
+        if (route.params.project) {
+            let params = { project: route.params.project };
             return route.push('member-list-page', params);
         } else {
             return route.push('user-list-page');
         }
-    },
+    }
 
     /**
      * Start creating a new role
      *
      * @return {Promise}
      */
-    startNew: function() {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
+    startNew() {
+        let { route } = this.props;
+        let params = _.clone(route.params);
         params.user = 'new';
-        return route.replace(module.exports, params);
-    },
+        return route.replace(route.name, params);
+    }
 
     /**
      * Return list of language codes
      *
      * @return {Array<String>}
      */
-    getInputLanguages: function() {
-        return _.get(this.props.system, 'settings.input_languages', [])
-    },
+    getInputLanguages() {
+        let { system } = this.props;
+        return _.get(system, 'settings.input_languages', [])
+    }
 
     /**
      * Reset the edit state when edit starts
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
                 this.setState({
@@ -325,43 +298,46 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 this.setState({ problems: {} });
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var member = this.isProjectMember();
-        var user = this.getUser();
-        var name = p(user.details.name);
+    render() {
+        let { route, env } = this.props;
+        let { hasChanges, problems } = this.state;
+        let { setters } = this.components;
+        let member = this.isProjectMember();
+        let user = this.getUser();
+        let name = p(user.details.name);
         return (
             <div className="user-summary-page">
                 {this.renderButtons()}
                 <h2>{t(member ? 'user-summary-member-$name' : 'user-summary-$name', name)}</h2>
-                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
+                <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderForm()}
                 {this.renderSocialLinksToggle()}
                 {this.renderSocialLinksForm()}
                 {this.renderInstructions()}
                 {this.renderChart()}
-                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
-                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                <ActionConfirmation ref={setters.confirmation} env={env} />
+                <DataLossWarning changes={hasChanges} env={env} route={route} />
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons in top right corner
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var member = this.isProjectMember();
+    renderButtons() {
+        let { env, user } = this.props;
+        let { hasChanges, adding } = this.state;
+        let { t } = env.locale;
+        let member = this.isProjectMember();
         if (this.isEditing()) {
             return (
                 <div className="buttons">
@@ -369,17 +345,16 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                         {t('user-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t(member ? 'user-summary-member-save' : 'user-summary-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            var user = this.props.user;
-            var active = (user) ? !user.deleted && !user.disabled : true;
-            var preselected;
+            let active = (user) ? !user.deleted && !user.disabled : true;
+            let preselected;
             if (active) {
-                preselected = (this.state.adding) ? 'add' : 'return';
+                preselected = (adding) ? 'add' : 'return';
             } else {
                 preselected = 'reactivate';
             }
@@ -409,14 +384,14 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render form for entering user details
      *
      * @return {ReactElement}
      */
-    renderForm: function() {
+    renderForm() {
         return (
             <div className="form">
                 {this.renderNameInput()}
@@ -428,141 +403,146 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderRoleSelector()}
             </div>
         );
-    },
+    }
 
     /**
      * Render name input
      *
      * @return {ReactElement}
      */
-    renderNameInput: function() {
+    renderNameInput() {
+        let { env } = this.props;
+        let { t, p } = env.locale;
         // not supporting multilingual name yet
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var name = p(this.getUserProperty('details.name'));
-        var props = {
+        let name = p(this.getUserProperty('details.name'));
+        let props = {
             id: 'name',
             value: name,
-            locale: this.props.locale,
-            onChange: this.handleNameChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleNameChange,
         };
         return (
             <TextField {...props}>
                 {t('user-summary-name')}
             </TextField>
         );
-    },
+    }
 
     /**
      * Render username input
      *
      * @return {ReactElement}
      */
-    renderUsernameInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderUsernameInput() {
+        let { env } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let props = {
             id: 'username',
             value: this.getUserProperty('username'),
-            locale: this.props.locale,
-            onChange: this.handleUsernameChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleUsernameChange,
         };
-        var problems = this.state.problems;
         return (
             <TextField {...props}>
                 {t('user-summary-username')}
                 <InputError>{t(problems.username)}</InputError>
             </TextField>
         );
-    },
+    }
 
     /**
      * Render e-mail input
      *
      * @return {ReactElement}
      */
-    renderEmailInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderEmailInput() {
+        let { env } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let props = {
             id: 'email',
             type: 'email',
             value: this.getUserProperty('details.email'),
-            locale: this.props.locale,
-            onChange: this.handleEmailChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleEmailChange,
         };
-        var problems = this.state.problems;
         return (
             <TextField {...props}>
                 {t('user-summary-email')}
                 <InputError>{t(problems.email)}</InputError>
             </TextField>
         );
-    },
+    }
 
     /**
      * Render phone input
      *
      * @return {ReactElement}
      */
-    renderPhoneInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderPhoneInput() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'phone',
             type: 'tel',
             value: this.getUserProperty('details.phone'),
-            locale: this.props.locale,
-            onChange: this.handlePhoneChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handlePhoneChange,
         };
         return (
             <TextField {...props}>
                 {t('user-summary-phone')}
             </TextField>
         );
-    },
+    }
 
     /**
      * Render profile image selector
      *
      * @return {ReactElement}
      */
-    renderProfileImageSelector: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderProfileImageSelector() {
+        let { database, env, payloads } = this.props;
+        let { t } = env.locale;
+        let props = {
             purpose: 'profile-image',
             desiredWidth: 500,
             desiredHeight: 500,
             resources: this.getUserProperty('details.resources'),
-            database: this.props.database,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
-            onChange: this.handleProfileImageChange,
             readOnly: !this.isEditing(),
+            database,
+            env,
+            payloads,
+            onChange: this.handleProfileImageChange,
         };
         return (
             <ImageSelector {...props}>
                 {t('user-summary-profile-image')}
             </ImageSelector>
         );
-    },
+    }
 
     /**
      * Render user type selector
      *
      * @return {ReactElement}
      */
-    renderTypeSelector: function() {
-        var t = this.props.locale.translate;
-        var userTypeCurr = this.getUserProperty('type', 'current');
-        var userTypePrev = this.getUserProperty('type', 'original');
-        var optionProps = _.map(UserTypes, (type) => {
+    renderTypeSelector() {
+        let { env } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let userTypeCurr = this.getUserProperty('type', 'current');
+        let userTypePrev = this.getUserProperty('type', 'original');
+        let optionProps = _.map(UserTypes, (type) => {
             return {
                 name: type,
                 selected: userTypeCurr === type,
@@ -570,11 +550,10 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 children: t(`user-summary-type-${type}`),
             };
         });
-        var listProps = {
-            onOptionClick: this.handleTypeOptionClick,
+        let listProps = {
             readOnly: !this.isEditing(),
+            onOptionClick: this.handleTypeOptionClick,
         };
-        var problems = this.state.problems;
         return (
             <OptionList {...listProps}>
                 <label>
@@ -584,36 +563,37 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
-    },
+    }
 
     /**
      * Render role selector
      *
      * @return {ReactElement}
      */
-    renderRoleSelector: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var userRolesCurr = this.getUserProperty('role_ids', 'current') || [];
-        var userRolesPrev = this.getUserProperty('role_ids', 'original') || [];
-        var newUser = !!this.getUserProperty('id');
-        var roles = sortRoles(this.props.roles, this.props.locale);
-        var optionProps = _.concat({
-            name: 'none',
-            selected: _.isEmpty(userRolesCurr),
-            previous: (newUser) ? _.isEmpty(userRolesPrev) : undefined,
-            children: t('user-summary-role-none')
-        }, _.map(roles, (role) => {
+    renderRoleSelector() {
+        let { env, roles } = this.props;
+        let { t, p } = env.locale;
+        let userRolesCurr = this.getUserProperty('role_ids', 'current') || [];
+        let userRolesPrev = this.getUserProperty('role_ids', 'original') || [];
+        let newUser = !!this.getUserProperty('id');
+        roles = sortRoles(roles, env);
+        let optionProps = _.map(roles, (role) => {
             return {
                 name: String(role.id),
                 selected: _.includes(userRolesCurr, role.id),
                 previous: _.includes(userRolesPrev, role.id),
-                children: p(role.details.title) || p.name
+                children: p(role.details.title) || role.name
             }
-        }));
-        var listProps = {
-            onOptionClick: this.handleRoleOptionClick,
+        });
+        optionProps.unshift({
+            name: 'none',
+            selected: _.isEmpty(userRolesCurr),
+            previous: (newUser) ? _.isEmpty(userRolesPrev) : undefined,
+            children: t('user-summary-role-none')
+        });
+        let listProps = {
             readOnly: !this.isEditing(),
+            onOptionClick: this.handleRoleOptionClick,
         };
         return (
             <OptionList {...listProps}>
@@ -621,18 +601,18 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
-    },
+    }
 
     /**
      * Render heading that expands the social links section when clicked
      *
      * @return {ReactElement}
      */
-    renderSocialLinksToggle: function() {
-        var t = this.props.locale.translate;
-        var iconName = (!this.state.showingSocialLinks)
-                     ? 'angle-double-down'
-                     : 'angle-double-up';
+    renderSocialLinksToggle() {
+        let { env } = this.props;
+        let { showingSocialLinks } = this.state;
+        let { t } = env.locale;
+        let iconName = (showingSocialLinks) ? 'angle-double-up' : 'angle-double-down';
         return (
             <h2 className="social-toggle" onClick={this.handleSocialLinksToggleClick}>
                 {t('user-summary-social-links')}
@@ -640,20 +620,22 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 <i className={`fa fa-${iconName}`} />
             </h2>
         );
-    },
+    }
 
     /**
      * Render text fields for entering social network accounts
      *
      * @return {ReactElement}
      */
-    renderSocialLinksForm: function() {
-        var t = this.props.locale.translate;
-        var user = this.getUser();
-        var readOnly = !this.isEditing();
+    renderSocialLinksForm() {
+        let { env } = this.props;
+        let { showingSocialLinks } = this.state;
+        let { t } = env.locale;
+        let user = this.getUser();
+        let readOnly = !this.isEditing();
         return (
             <div className="form social">
-                <CollapsibleContainer open={this.state.showingSocialLinks}>
+                <CollapsibleContainer open={showingSocialLinks}>
                     {this.renderSkypeNameInput()}
                     {this.renderIChatInput()}
                     {this.renderTwitterInput()}
@@ -664,174 +646,182 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 </CollapsibleContainer>
             </div>
         );
-    },
+    }
 
     /**
      * Render input for Skype username
      *
      * @return {ReactElement}
      */
-    renderSkypeNameInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderSkypeNameInput() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'skype',
             value: this.getUserProperty('details.skype_username'),
-            locale: this.props.locale,
-            onChange: this.handleSkypeUsernameChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleSkypeUsernameChange,
         };
         return <TextField {...props}>{t('user-summary-skype')}</TextField>;
-    },
+    }
 
     /**
      * Render input for iChat username
      *
      * @return {ReactElement}
      */
-    renderIChatInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderIChatInput() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'ichat',
             value: this.getUserProperty('details.ichat_username'),
-            locale: this.props.locale,
-            onChange: this.handleIchatUsernameChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleIchatUsernameChange,
         };
         return <TextField {...props}>{t('user-summary-ichat')}</TextField>;
-    },
+    }
 
     /**
      * Render input for Twitter username
      *
      * @return {ReactElement}
      */
-    renderTwitterInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderTwitterInput() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'twitter',
             value: this.getUserProperty('details.twitter_username'),
-            locale: this.props.locale,
-            onChange: this.handleTwitterUsernameChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleTwitterUsernameChange,
         };
         return <TextField {...props}>{t('user-summary-twitter')}</TextField>;
-    },
+    }
 
     /**
      * Render input for Github URL
      *
      * @return {ReactElement}
      */
-    renderGithubURLInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderGithubURLInput() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'github',
             type: 'url',
             value: this.getUserProperty('details.github_url'),
-            locale: this.props.locale,
-            onChange: this.handleGitHubURLChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleGitHubURLChange,
         };
         return <TextField {...props}>{t('user-summary-github')}</TextField>;
-    },
+    }
 
     /**
      * Render input for Gitlab URL
      *
      * @return {ReactElement}
      */
-    renderGitlabURLInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderGitlabURLInput() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'github',
             type: 'url',
             value: this.getUserProperty('details.gitlab_url'),
-            locale: this.props.locale,
-            onChange: this.handleGitlabURLChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleGitlabURLChange,
         };
         return <TextField {...props}>{t('user-summary-gitlab')}</TextField>;
-    },
+    }
 
     /**
      * Render input for Linkedin URL
      *
      * @return {ReactElement}
      */
-    renderLinkedInURLInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderLinkedInURLInput() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'linkedin',
             type: 'url',
             value: this.getUserProperty('details.linkedin_url'),
-            locale: this.props.locale,
-            onChange: this.handleLinkedinURLChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleLinkedinURLChange,
         };
         return <TextField {...props}>{t('user-summary-linkedin')}</TextField>;
-    },
+    }
 
     /**
      * Render input for Stackoverflow URL
      *
      * @return {ReactElement}
      */
-    renderStackoverflowURLInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderStackoverflowURLInput() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'stackoverflow',
             type: 'url',
             value: this.getUserProperty('details.stackoverflow_url'),
-            locale: this.props.locale,
-            onChange: this.handleStackoverflowURLChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleStackoverflowURLChange,
         };
         return <TextField {...props}>{t('user-summary-stackoverflow')}</TextField>;
-    },
+    }
 
     /**
      * Render instruction box
      *
      * @return {ReactElement}
      */
-    renderInstructions: function() {
-        var instructionProps = {
+    renderInstructions() {
+        let { env } = this.props;
+        let instructionProps = {
             folder: 'user',
             topic: 'user-summary',
             hidden: !this.isEditing(),
-            locale: this.props.locale,
+            env,
         };
         return (
             <div className="instructions">
                 <InstructionBlock {...instructionProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render activity chart
      *
      * @return {ReactElement|null}
      */
-    renderChart: function() {
+    renderChart() {
+        let { env, statistics } = this.props;
+        let { t } = env.locale;
         if (!this.isProjectMember()) {
             return null;
         }
         if (this.isCreating()) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var chartProps = {
-            statistics: this.props.statistics,
-            locale: this.props.locale,
-            theme: this.props.theme,
+        let chartProps = {
+            statistics,
+            env,
         };
         return (
             <div className="statistics">
@@ -840,7 +830,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 </ActivityChart>
             </div>
         );
-    },
+    }
 
     /**
      * Save user with new flags
@@ -849,24 +839,26 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise<User>}
      */
-    changeFlags: function(flags) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var userAfter = _.assign({}, this.props.user, flags);
+    changeFlags(flags) {
+        let { database, env, user } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let userAfter = _.assign({}, user, flags);
         return db.saveOne({ table: 'user' }, userAfter).catch((err) => {
-            var problems = { unexpected: err.message };
+            let problems = { unexpected: err.message };
             this.setState({ problems });
         });
-    },
+    }
 
     /**
      * Called when user clicks disable button
      *
      * @param  {Event} evt
      */
-    handleDisableClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('user-summary-confirm-disable');
-        var confirmation = this.components.confirmation;
+    handleDisableClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('user-summary-confirm-disable');
         return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ disabled: true }).then((user) => {
@@ -876,17 +868,18 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 });
             }
         });
-    },
+    }
 
     /**
      * Called when user clicks delete button
      *
      * @param  {Event} evt
      */
-    handleDeleteClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('user-summary-confirm-delete');
-        var confirmation = this.components.confirmation;
+    handleDeleteClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('user-summary-confirm-delete');
         return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ deleted: true }).then((user) => {
@@ -896,92 +889,95 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 });
             }
         });
-    },
+    }
 
     /**
      * Called when user clicks disable button
      *
      * @param  {Event} evt
      */
-    handleReactivateClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('user-summary-confirm-reactivate');
-        var confirmation = this.components.confirmation;
+    handleReactivateClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('user-summary-confirm-reactivate');
         return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ disabled: false, deleted: false });
             }
         });
-    },
+    }
 
     /**
      * Called when user click return button
      *
      * @param  {Event} evt
      */
-    handleReturnClick: function(evt) {
+    handleReturnClick = (evt) => {
         return this.returnToList();
-    },
+    }
 
     /**
      * Called when user click add button
      *
      * @param  {Event} evt
      */
-    handleAddClick: function(evt) {
+    handleAddClick = (evt) => {
         return this.startNew();
-    },
+    }
 
     /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
+    handleEditClick = (evt) => {
         return this.setEditability(true);
-    },
+    }
 
     /**
      * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         return this.setEditability(false);
-    },
+    }
 
     /**
      * Called when user clicks save button
      *
      * @param  {Event} evt
      */
-    handleSaveClick: function(evt) {
-        if (this.state.saving) {
+    handleSaveClick = (evt) => {
+        let { database, env, payloads, project } = this.props;
+        let { saving } = this.state;
+        if (saving) {
             return;
         }
-        var problems = this.findProblems();
+        let problems = this.findProblems();
         if (_.some(problems)) {
             this.setState({ problems });
             return;
         }
-        var user = this.getUser();
+        let user = this.getUser();
         this.setState({ saving: true, adding: !user.id, problems: {} }, () => {
-            var schema = 'global';
-            var db = this.props.database.use({ schema, by: this });
-            return db.start().then((userId) => {
+            let schema = 'global';
+            let db = database.use({ schema, by: this });
+            return db.start().then((currentUserID) => {
                 return db.saveOne({ table: 'user' }, user).then((user) => {
-                    this.props.payloads.dispatch(user);
+                    payloads.dispatch(user);
                     this.setState({ hasChanges: false, saving: false }, () => {
                         return this.setEditability(false, user);
                     });
-                    if (this.props.project) {
+                    if (project) {
                         // add user to member list if he's not there yet
-                        var userIds = this.props.project.user_ids;
-                        if (!_.includes(userIds, user.id)) {
-                            var userIdsAfter = _.union(userIds, [ user.id ]);
-                            var columns = {
+                        let userIDs = project.user_ids;
+                        if (!_.includes(userIDs, user.id)) {
+                            let userIDsAfter = _.union(userIDs, [ user.id ]);
+                            let columns = {
                                 id: this.props.project.id,
-                                user_ids: userIdsAfter
+                                user_ids: userIDsAfter
                             };
                             return db.saveOne({ table: 'project' }, columns);
                         }
@@ -989,7 +985,7 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                     return null;
                 });
             }).catch((err) => {
-                var problems;
+                let problems;
                 if (err.statusCode === 409) {
                     problems = { username: 'validation-duplicate-user-name' };
                 } else {
@@ -998,180 +994,180 @@ var UserSummaryPageSync = module.exports.Sync = React.createClass({
                 this.setState({ problems, saving: false });
             });
         });
-    },
+    }
 
     /**
      * Called when user changes the title
      *
      * @param  {Event} evt
      */
-    handleNameChange: function(evt) {
+    handleNameChange = (evt) => {
         this.setUserProperty(`details.name`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes username
      *
      * @param  {Event} evt
      */
-    handleUsernameChange: function(evt) {
-        var username = _.toLower(evt.target.value).replace(/\W+/g, '');
+    handleUsernameChange = (evt) => {
+        let username = _.toLower(evt.target.value).replace(/\W+/g, '');
         this.setUserProperty(`username`, username);
-    },
+    }
 
     /**
      * Called when user changes email address
      *
      * @param  {Event} evt
      */
-    handleEmailChange: function(evt) {
+    handleEmailChange = (evt) => {
         this.setUserProperty(`details.email`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes phone number
      *
      * @param  {Event} evt
      */
-    handlePhoneChange: function(evt) {
+    handlePhoneChange = (evt) => {
         this.setUserProperty(`details.phone`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes profile image
      *
      * @param  {Object} evt
      */
-    handleProfileImageChange: function(evt) {
+    handleProfileImageChange = (evt) => {
         this.setUserProperty(`details.resources`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes user type
      *
      * @param  {Object} evt
      */
-    handleTypeOptionClick: function(evt) {
+    handleTypeOptionClick = (evt) => {
         this.setUserProperty('type', evt.name);
-    },
+    }
 
     /**
      * Called when user clicks on a role
      *
      * @param  {Object} evt
      */
-    handleRoleOptionClick: function(evt) {
-        var user = this.getUser();
-        var roleIds = _.slice(user.role_ids);
+    handleRoleOptionClick = (evt) => {
+        let user = this.getUser();
+        let roleIDs = user.role_ids;
         if (evt.name === 'none') {
-            roleIds = [];
+            roleIDs = [];
         } else {
-            var roleId = parseInt(evt.name);
-            if (_.includes(roleIds, roleId)) {
-                _.pull(roleIds, roleId);
+            let roleID = parseInt(evt.name);
+            if (_.includes(roleIDs, roleID)) {
+                roleIDs = _.without(roleIDs, roleID);
             } else {
-                roleIds.push(roleId);
+                roleIDs = _.concat(roleIDs, roleID);
             }
         }
-        this.setUserProperty('role_ids', roleIds);
-    },
+        this.setUserProperty('role_ids', roleIDs);
+    }
 
     /**
      * Called when user clicks on social link heading
      *
      * @param  {Event} evt
      */
-    handleSocialLinksToggleClick: function(evt) {
+    handleSocialLinksToggleClick = (evt) => {
         this.setState({ showingSocialLinks: !this.state.showingSocialLinks });
-    },
+    }
 
     /**
      * Called when user changes Skype username
      *
      * @param  {Event} evt
      */
-    handleSkypeUsernameChange: function(evt) {
-        var username = _.trim(evt.target.value);
+    handleSkypeUsernameChange = (evt) => {
+        let username = _.trim(evt.target.value);
         this.setUserProperty(`details.skype_username`, username);
-    },
+    }
 
     /**
      * Called when user changes iChat username
      *
      * @param  {Event} evt
      */
-    handleIchatUsernameChange: function(evt) {
-        var username = _.trim(evt.target.value);
+    handleIchatUsernameChange = (evt) => {
+        let username = _.trim(evt.target.value);
         this.setUserProperty(`details.ichat_username`, username);
-    },
+    }
 
     /**
      * Called when user changes Twitter username
      *
      * @param  {Event} evt
      */
-    handleTwitterUsernameChange: function(evt) {
-        var username = extractUsername(evt.target.value);
+    handleTwitterUsernameChange = (evt) => {
+        let username = extractUsername(evt.target.value);
         this.setUserProperty(`details.twitter_username`, username);
-    },
+    }
 
     /**
      * Called when user changes Linkedin username
      *
      * @param  {Event} evt
      */
-    handleLinkedinURLChange: function(evt) {
-        var url = _.trim(evt.target.value);
+    handleLinkedinURLChange = (evt) => {
+        let url = _.trim(evt.target.value);
         this.setUserProperty(`details.linkedin_url`, url);
-    },
+    }
 
     /**
      * Called when user changes Github username
      *
      * @param  {Event} evt
      */
-    handleGitHubURLChange: function(evt) {
-        var url = _.trim(evt.target.value);
+    handleGitHubURLChange = (evt) => {
+        let url = _.trim(evt.target.value);
         this.setUserProperty(`details.github_url`, url);
-    },
+    }
 
     /**
      * Called when user changes Gitlab username
      *
      * @param  {Event} evt
      */
-    handleGitlabURLChange: function(evt) {
-        var url = _.trim(evt.target.value);
+    handleGitlabURLChange = (evt) => {
+        let url = _.trim(evt.target.value);
         this.setUserProperty(`details.gitlab_url`, url);
-    },
+    }
 
     /**
      * Called when user changes StackOverflow username
      *
      * @param  {Event} evt
      */
-    handleStackoverflowURLChange: function(evt) {
-        var url = _.trim(evt.target.value);
+    handleStackoverflowURLChange = (evt) => {
+        let url = _.trim(evt.target.value);
         this.setUserProperty(`details.stackoverflow_url`, url);
-    },
-});
+    }
+}
 
-var emptyUser = {
+let emptyUser = {
     details: {},
     settings: UserSettings.default,
 };
 
-var sortRoles = Memoize(function(roles, locale) {
-    var p = locale.pick;
-    var name = (role) => {
+let sortRoles = Memoize(function(roles, locale) {
+    let p = locale.pick;
+    let name = (role) => {
         return p(role.details.title) || role.name;
     };
     return _.sortBy(roles, name);
 });
 
-var findRoles = Memoize(function(roles, user) {
+let findRoles = Memoize(function(roles, user) {
     if (user.role_ids) {
-        var hash = _.keyBy(roles, 'id');
+        let hash = _.keyBy(roles, 'id');
         return _.filter(_.map(user.role_ids, (id) => {
             return hash[id];
         }));
@@ -1182,8 +1178,42 @@ function extractUsername(text, type) {
     if (/https?:/.test(text)) {
         // remove query string
         text = _.trim(text.replace(/\?.*/, ''));
-        var parts = _.filter(text.split('/'));
+        let parts = _.filter(text.split('/'));
         return parts[parts.length - 1];
     }
     return text;
 }
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+import Payloads from 'transport/payloads';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UserSummaryPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+    };
+    UserSummaryPageSync.propTypes = {
+        system: PropTypes.object,
+        user: PropTypes.object,
+        roles: PropTypes.arrayOf(PropTypes.object),
+        project: PropTypes.object,
+        statistics: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+    };
+}
+
+export {
+    UserSummaryPage as default,
+    UserSummaryPage,
+    UserSummaryPageSync,
+};

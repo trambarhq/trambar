@@ -1,41 +1,30 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
-var RoleFinder = require('objects/finders/role-finder');
-var SystemFinder = require('objects/finders/system-finder');
-var UserFinder = require('objects/finders/user-finder');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import Memoize from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import RoleFinder from 'objects/finders/role-finder';
+import SystemFinder from 'objects/finders/system-finder';
+import UserFinder from 'objects/finders/user-finder';
 
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-var SlugGenerator = require('utils/slug-generator');
+import SlugGenerator from 'utils/slug-generator';
 
 // widgets
-var PushButton = require('widgets/push-button');
-var ComboButton = require('widgets/combo-button');
-var InstructionBlock = require('widgets/instruction-block');
-var TextField = require('widgets/text-field');
-var MultilingualTextField = require('widgets/multilingual-text-field');
-var OptionList = require('widgets/option-list');
-var InputError = require('widgets/input-error');
-var ActionConfirmation = require('widgets/action-confirmation');
-var DataLossWarning = require('widgets/data-loss-warning');
-var UnexpectedError = require('widgets/unexpected-error');
+import PushButton from 'widgets/push-button';
+import ComboButton from 'widgets/combo-button';
+import InstructionBlock from 'widgets/instruction-block';
+import TextField from 'widgets/text-field';
+import MultilingualTextField from 'widgets/multilingual-text-field';
+import OptionList from 'widgets/option-list';
+import InputError from 'widgets/input-error';
+import ActionConfirmation from 'widgets/action-confirmation';
+import DataLossWarning from 'widgets/data-loss-warning';
+import UnexpectedError from 'widgets/unexpected-error';
 
-require('./role-summary-page.scss');
+import './role-summary-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'RoleSummaryPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class RoleSummaryPage extends AsyncComponent {
+    static displayName = 'RoleSummaryPage';
 
     /**
      * Render the component asynchronously
@@ -44,27 +33,26 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let db = database.use({ by: this });
+        let props = {
             system: null,
             role: null,
             users: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
         };
         meanwhile.show(<RoleSummaryPageSync {...props} />);
-        return db.start().then((currentUserId) => {
+        return db.start().then((currentUserID) => {
             return SystemFinder.findSystem(db).then((system) => {
                 props.system = system;
             });
         }).then(() => {
             if (params.role !== 'new') {
-                return RoleFinder.findRole(db, params.role).then((role) => {
+                return RoleFinder.findRole(db, route.params.role).then((role) => {
                     props.role = role;
                 });
             }
@@ -77,40 +65,26 @@ module.exports = Relaks.createClass({
             return <RoleSummaryPageSync {...props} />;
         });
     }
-});
+}
 
-var RoleSummaryPageSync = module.exports.Sync = React.createClass({
-    displayName: 'RoleSummaryPage.Sync',
-    propTypes: {
-        system: PropTypes.object,
-        role: PropTypes.object,
-        users: PropTypes.arrayOf(PropTypes.object),
+class RoleSummaryPageSync extends PureComponent {
+    static displayName = 'RoleSummaryPage.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
         });
-        return {
+        this.state = {
             newRole: null,
             hasChanges: false,
             saving: false,
             adding: false,
-            removeList: [],
-            addList: [],
+            removingUserIDs: [],
+            addingUserIDs: [],
             problems: {},
         };
-    },
+    }
 
     /**
      * Return edited copy of role object or the original object
@@ -119,13 +93,15 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Object}
      */
-    getRole: function(state) {
+    getRole(state) {
+        let { role } = this.props;
+        let { newRole } = this.state;
         if (this.isEditing() && (!state || state === 'current')) {
-            return this.state.newRole || this.props.role || emptyRole;
+            return newRole || role || emptyRole;
         } else {
-            return this.props.role || emptyRole;
+            return role || emptyRole;
         }
-    },
+    }
 
     /**
      * Return a property of the role object
@@ -135,10 +111,10 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {*}
      */
-    getRoleProperty: function(path, state) {
-        var role = this.getRole(state);
+    getRoleProperty(path, state) {
+        let role = this.getRole(state);
         return _.get(role, path);
-    },
+    }
 
     /**
      * Modify a property of the role object
@@ -146,40 +122,42 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setRoleProperty: function(path, value) {
-        var role = this.getRole('current');
-        var newRole = _.decoupleSet(role, path, value);
+    setRoleProperty(path, value) {
+        let { role } = this.props;
+        let { addingUserIDs, removingUserIDs } = this.state;
+        let newRole = this.getRole('current');
+        let newRoleAfter = _.decoupleSet(role, path, value);
         if (path === 'details.title') {
-            var autoNameBefore = SlugGenerator.fromTitle(role.details.title);
-            var autoNameAfter = SlugGenerator.fromTitle(newRole.details.title);
-            if (!role.name || role.name === autoNameBefore) {
-                newRole.name = autoNameAfter;
+            let autoNameBefore = SlugGenerator.fromTitle(newRole.details.title);
+            let autoNameAfter = SlugGenerator.fromTitle(newRoleAfter.details.title);
+            if (!newRole.name || newRole.name === autoNameBefore) {
+                newRoleAfter.name = autoNameAfter;
             }
         }
-        if(_.size(newRole.name) > 128) {
-            newRole.name = newRole.name.substr(0, 128);
+        if(_.size(newRoleAfter.name) > 128) {
+            newRoleAfter.name = newRoleAfter.name.substr(0, 128);
         }
-        var hasChanges = true;
-        if (_.isEqual(newRole, this.props.role)) {
-            newRole = null;
-            hasChanges = !_.isEmpty(this.state.addList) || !_.isEmpty(this.state.removeList);
+        let hasChanges = true;
+        if (_.isEqual(newRoleAfter, role)) {
+            newRoleAfter = null;
+            hasChanges = !_.isEmpty(addingUserIDs) || !_.isEmpty(removingUserIDs);
         }
-        this.setState({ newRole, hasChanges });
-    },
+        this.setState({ newRole: newRoleAfter, hasChanges });
+    }
 
     /**
      * Look for problems in role object
      *
      * @return {Object}
      */
-    findProblems: function() {
-        var problems = {};
-        var role = this.getRole();
-        if (!role.name) {
+    findProblems() {
+        let problems = {};
+        let newRole = this.getRole();
+        if (!newRole.name) {
             problems.name = 'validation-required';
         }
         return problems;
-    },
+    }
 
     /**
      * Return true when the URL indicate we're creating a new user
@@ -188,10 +166,10 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Boolean}
      */
-    isCreating: function(props) {
-        props = props || this.props;
-        return (props.route.parameters.role === 'new');
-    },
+    isCreating(props) {
+        let { route } = props || this.props;
+        return (route.params.role === 'new');
+    }
 
     /**
      * Return true when the URL indicate edit mode
@@ -200,10 +178,10 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Boolean}
      */
-    isEditing: function(props) {
-        props = props || this.props;
-        return this.isCreating(props) || props.route.parameters.edit;
-    },
+    isEditing(props) {
+        let { role } = props || this.props;
+        return this.isCreating(props) || route.params.edit;
+    }
 
     /**
      * Change editability of page
@@ -213,102 +191,107 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    setEditability: function(edit, newRole) {
+    setEditability(edit, newRole) {
+        let { route } = this.props;
         if (this.isCreating() && !edit && !newRole) {
             return this.returnToList();
         } else {
-            var route = this.props.route;
-            var params = _.clone(route.parameters);
+            let params = _.clone(route.params);
             params.edit = edit;
             if (newRole) {
                 // use id of newly created role
                 params.role = newRole.id;
             }
-            return route.replace(module.exports, params);
+            return route.replace(route.name, params);
         }
-    },
+    }
 
     /**
      * Return to repo list
      *
      * @return {Promise}
      */
-    returnToList: function() {
-        var route = this.props.route;
+    returnToList() {
+        let { route } = this.props;
         return route.push('role-list-page');
-    },
+    }
 
     /**
      * Start creating a new role
      *
      * @return {Promise}
      */
-    startNew: function() {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
+    startNew() {
+        let { route } = this.props;
+        let params = _.clone(route.params);
         params.role = 'new';
-        return route.replace(module.exports, params);
-    },
+        return route.replace(route.name, params);
+    }
 
     /**
      * Return list of language codes
      *
      * @return {Array<String>}
      */
-    getInputLanguages: function() {
-        return _.get(this.props.system, 'settings.input_languages', [])
-    },
+    getInputLanguages() {
+        let { system } = this.props;
+        return _.get(system, 'settings.input_languages', [])
+    }
 
     /**
      * Reset edit state when edit starts
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
                 this.setState({
                     newRole: null,
                     hasChanges: false,
-                    addList: [],
-                    removeList: [],
+                    addingUserIDs: [],
+                    removingUserIDs: [],
                 });
             } else {
                 this.setState({ problems: {} });
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var role = this.getRole();
-        var title = p(_.get(role, 'details.title')) || role.name;
+    render() {
+        let { route, env } = this.props;
+        let { problems } = this.state;
+        let { setters } = this.components;
+        let { t, p } = env.locale;
+        let role = this.getRole();
+        let title = p(_.get(role, 'details.title')) || role.name;
         return (
             <div className="role-summary-page">
                 {this.renderButtons()}
                 <h2>{t('role-summary-$title', title)}</h2>
-                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
+                <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderForm()}
                 {this.renderInstructions()}
-                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
-                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                <ActionConfirmation ref={setters.confirmation} env={env} />
+                <DataLossWarning changes={this.state.hasChanges} env={env} route={route} />
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons in top right corner
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
+    renderButtons() {
+        let { env, role } = this.props;
+        let { hasChanges, adding } = this.state;
+        let { t } = env.locale;
         if (this.isEditing()) {
             return (
                 <div className="buttons">
@@ -316,17 +299,16 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                         {t('role-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('role-summary-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            var role = this.props.role;
-            var active = (role) ? !role.deleted && !role.disabled : true;
-            var preselected;
+            let active = (role) ? !role.deleted && !role.disabled : true;
+            let preselected;
             if (active) {
-                preselected = (this.state.adding) ? 'add' : 'return';
+                preselected = (adding) ? 'add' : 'return';
             } else {
                 preselected = 'reactivate';
             }
@@ -356,14 +338,14 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render form for entering role details
      *
      * @return {ReactElement}
      */
-    renderForm: function() {
+    renderForm() {
         return (
             <div className="form">
                 {this.renderTitleInput()}
@@ -373,87 +355,90 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderUserSelector()}
             </div>
         );
-    },
+    }
 
     /**
      * Render title input
      *
      * @return {ReactElement}
      */
-    renderTitleInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderTitleInput() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'title',
             value: this.getRoleProperty('details.title'),
             availableLanguageCodes: this.getInputLanguages(),
-            locale: this.props.locale,
             onChange: this.handleTitleChange,
             readOnly: !this.isEditing(),
+            env,
         };
         return (
             <MultilingualTextField {...props}>
                 {t('role-summary-title')}
             </MultilingualTextField>
         );
-    },
+    }
 
     /**
      * Render name input
      *
      * @return {ReactElement}
      */
-    renderNameInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderNameInput() {
+        let { env } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let props = {
             id: 'name',
             value: this.getRoleProperty('name'),
-            locale: this.props.locale,
-            onChange: this.handleNameChange,
             readOnly: !this.isEditing(),
             spellCheck: false,
+            env,
+            onChange: this.handleNameChange,
         };
-        var problems = this.state.problems;
         return (
             <TextField {...props}>
                 {t('role-summary-name')}
                 <InputError>{t(problems.name)}</InputError>
             </TextField>
         );
-    },
+    }
 
     /**
      * Render description input
      *
      * @return {ReactElement}
      */
-    renderDescriptionInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderDescriptionInput() {
+        let { env } = this.props;
+        let props = {
             id: 'description',
             value: this.getRoleProperty('details.description'),
             availableLanguageCodes: this.getInputLanguages(),
             type: 'textarea',
-            locale: this.props.locale,
-            onChange: this.handleDescriptionChange,
             readOnly: !this.isEditing(),
+            env,
+            onChange: this.handleDescriptionChange,
         };
         return (
             <MultilingualTextField {...props}>
                 {t('role-summary-description')}
             </MultilingualTextField>
         );
-    },
+    }
 
     /**
      * Render message rating selector
      *
      * @return {ReactElement}
      */
-    renderRatingSelector: function() {
-        var t = this.props.locale.translate;
-        var ratingCurr = this.getRoleProperty('settings.rating', 'current') || 0;
-        var ratingPrev = this.getRoleProperty('settings.rating', 'original') || 0;
-        var optionProps = _.map(messageRatings, (rating, key) => {
+    renderRatingSelector() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let ratingCurr = this.getRoleProperty('settings.rating', 'current') || 0;
+        let ratingPrev = this.getRoleProperty('settings.rating', 'original') || 0;
+        let optionProps = _.map(messageRatings, (rating, key) => {
             return {
                 name: key,
                 selected: ratingCurr === rating,
@@ -461,7 +446,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 children: t(`role-summary-rating-${key}`),
             };
         });
-        var listProps = {
+        let listProps = {
             onOptionClick: this.handleRatingOptionClick,
             readOnly: !this.isEditing(),
         };
@@ -473,25 +458,26 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
-    },
+    }
 
     /**
      * Render user selector
      *
      * @return {ReactElement}
      */
-    renderUserSelector: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var roleId = this.getRoleProperty('id');
-        var users = sortUsers(this.props.users, this.props.locale);
-        var optionProps = _.map(users, (user) => {
-            var selectedBefore = _.includes(user.role_ids, roleId);
-            var selectedAfter;
+    renderUserSelector() {
+        let { env, users } = this.props;
+        let { removingUserIDs, addingUserIDs } = this.state;
+        let { t, p } = env.locale;
+        let roleID = this.getRoleProperty('id');
+        users = sortUsers(users, env);
+        let optionProps = _.map(users, (user) => {
+            let selectedBefore = _.includes(user.role_ids, roleID);
+            let selectedAfter;
             if (selectedBefore) {
-                selectedAfter = !_.includes(this.state.removeList, user.id);
+                selectedAfter = !_.includes(removingUserIDs, user.id);
             } else {
-                selectedAfter = _.includes(this.state.addList, user.id);
+                selectedAfter = _.includes(addingUserIDs, user.id);
             }
             return {
                 name: String(user.id),
@@ -500,9 +486,9 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 children: p(user.details.name) || p.username
             }
         });
-        var listProps = {
-            onOptionClick: this.handleUserOptionClick,
+        let listProps = {
             readOnly: !this.isEditing(),
+            onOptionClick: this.handleUserOptionClick,
         };
         return (
             <OptionList {...listProps}>
@@ -510,26 +496,27 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
-    },
+    }
 
     /**
      * Render instruction box
      *
      * @return {ReactElement}
      */
-    renderInstructions: function() {
-        var instructionProps = {
+    renderInstructions() {
+        let { env } = this.props;
+        let instructionProps = {
             folder: 'role',
             topic: 'role-summary',
             hidden: !this.isEditing(),
-            locale: this.props.locale,
+            env,
         };
         return (
             <div className="instructions">
                 <InstructionBlock {...instructionProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Save user with new flags
@@ -538,24 +525,26 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise<Role>}
      */
-    changeFlags: function(flags) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var roleAfter = _.assign({}, this.props.role, flags);
+    changeFlags(flags) {
+        let { database, role } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let roleAfter = _.assign({}, role, flags);
         return db.saveOne({ table: 'role' }, roleAfter).catch((err) => {
-            var problems = { unexpected: err.message };
+            let problems = { unexpected: err.message };
             this.setState({ problems });
         });
-    },
+    }
 
     /**
      * Called when user clicks disable button
      *
      * @param  {Event} evt
      */
-    handleDisableClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('role-summary-confirm-disable');
-        var confirmation = this.components.confirmation;
+    handleDisableClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('role-summary-confirm-disable');
         return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ disabled: true }).then((role) => {
@@ -565,17 +554,18 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 });
             }
         });
-    },
+    }
 
     /**
      * Called when user clicks delete button
      *
      * @param  {Event} evt
      */
-    handleDeleteClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('role-summary-confirm-delete');
-        var confirmation = this.components.confirmation;
+    handleDeleteClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('role-summary-confirm-delete');
         return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ deleted: true }).then((role) => {
@@ -585,90 +575,93 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 });
             }
         });
-    },
+    }
 
     /**
      * Called when user clicks disable button
      *
      * @param  {Event} evt
      */
-    handleReactivateClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('role-summary-confirm-reactivate');
-        var confirmation = this.components.confirmation;
+    handleReactivateClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('role-summary-confirm-reactivate');
         return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ disabled: false, deleted: false });
             }
         });
-    },
+    }
 
     /**
      * Called when user click return button
      *
      * @param  {Event} evt
      */
-    handleReturnClick: function(evt) {
+    handleReturnClick = (evt) => {
         return this.returnToList();
-    },
+    }
 
     /**
      * Called when user click add button
      *
      * @param  {Event} evt
      */
-    handleAddClick: function(evt) {
+    handleAddClick = (evt) => {
         return this.startNew();
-    },
+    }
 
     /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
+    handleEditClick = (evt) => {
         return this.setEditability(true);
-    },
+    }
 
     /**
      * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         return this.setEditability(false);
-    },
+    }
 
     /**
      * Called when user clicks save button
      *
      * @param  {Event} evt
      */
-    handleSaveClick: function(evt) {
-        if (this.state.saving) {
+    handleSaveClick = (evt) => {
+        let { database, users } = this.props;
+        let { saving, removingUserIDs, addingUserIDs } = this.state;
+        if (saving) {
             return;
         }
-        var problems = this.findProblems();
+        let problems = this.findProblems();
         if (_.some(problems)) {
             this.setState({ problems });
             return;
         }
-        var role = this.getRole();
+        let role = this.getRole();
         this.setState({ saving: true, adding: !role.id, problems: {} }, () => {
-            var db = this.props.database.use({ schema: 'global', by: this });
-            return db.start().then((userId) => {
+            let db = database.use({ schema: 'global', by: this });
+            return db.start().then((userID) => {
                 return db.saveOne({ table: 'role' }, role).then((role) => {
                     // change role_ids of selected/deselected users
-                    var userChanges = [];
-                    _.each(this.state.addList, (userId) => {
-                        var user = _.find(this.props.users, { id: userId });
+                    let userChanges = [];
+                    _.each(addingUserIDs, (userID) => {
+                        let user = _.find(users, { id: userID });
                         userChanges.push({
                             id: user.id,
                             role_ids: _.union(user.role_ids, [ role.id ]),
                         });
                     });
-                    _.each(this.state.removeList, (userId) => {
-                        var user = _.find(this.props.users, { id: userId });
+                    _.each(removingUserIDs, (userID) => {
+                        let user = _.find(users, { id: userID });
                         userChanges.push({
                             id: user.id,
                             role_ids: _.difference(user.role_ids, [ role.id ]),
@@ -685,7 +678,7 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                     return null;
                 });
             }).catch((err) => {
-                var problems;
+                let problems;
                 if (err.statusCode === 409) {
                     problems = { name: 'validation-duplicate-role-name' };
                 } else {
@@ -694,95 +687,124 @@ var RoleSummaryPageSync = module.exports.Sync = React.createClass({
                 this.setState({ problems, saving: false });
             });
         });
-    },
+    }
 
     /**
      * Called when user changes the title
      *
      * @param  {Object} evt
      */
-    handleTitleChange: function(evt) {
+    handleTitleChange = (evt) => {
         this.setRoleProperty(`details.title`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes the name
      *
      * @param  {Event} evt
      */
-    handleNameChange: function(evt) {
-        var name = _.toLower(evt.target.value).replace(/\W+/g, '');
+    handleNameChange = (evt) => {
+        let name = _.toLower(evt.target.value).replace(/\W+/g, '');
         this.setRoleProperty(`name`, name);
-    },
+    }
 
     /**
      * Called when user changes the description
      *
      * @param  {Object} evt
      */
-    handleDescriptionChange: function(evt) {
+    handleDescriptionChange = (evt) => {
         this.setRoleProperty(`details.description`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user clicks on one of the rating option
      *
      * @param  {Object} evt
      */
-    handleRatingOptionClick: function(evt) {
-        var key = evt.name;
-        var rating = messageRatings[key];
+    handleRatingOptionClick = (evt) => {
+        let key = evt.name;
+        let rating = messageRatings[key];
         this.setRoleProperty(`settings.rating`, rating);
-    },
+    }
 
     /**
      * Called when user clicks on one of the users in list
      *
      * @param  {Object} evt
      */
-    handleUserOptionClick: function(evt) {
-        var userId = parseInt(evt.name);
-        var user = _.find(this.props.users, { id: userId });
-        var roleId = this.getRoleProperty('id');
-        var addList = _.slice(this.state.addList);
-        var removeList = _.slice(this.state.removeList);
-        if (_.includes(user.role_ids, roleId)) {
-            if (_.includes(removeList, user.id)) {
-                _.pull(removeList, user.id);
+    handleUserOptionClick = (evt) => {
+        let { users } = this.props;
+        let { addingUserIDs, removingUserIDs, newRole } = this.state;
+        let userID = parseInt(evt.name);
+        let user = _.find(this.props.users, { id: userID });
+        let roleID = this.getRoleProperty('id');
+        if (_.includes(user.role_ids, roleID)) {
+            if (_.includes(removingUserIDs, user.id)) {
+                removingUserIDs = _.without(removingUserIDs, user.id);
             } else {
-                removeList.push(user.id);
+                removingUserIDs = _.concat(removingUserIDs, user.id);
             }
         } else {
-            if (_.includes(addList, user.id)) {
-                _.pull(addList, user.id);
+            if (_.includes(addingUserIDs, user.id)) {
+                addingUserIDs = _.without(addingUserIDs, user.id);
             } else {
-                addList.push(user.id);
+                addingUserIDs = _.concat(addingUserIDs, user.id);
             }
         }
-        var hasChanges = true;
-        if (!this.state.newRole) {
-            hasChanges = !_.isEmpty(addList) || !_.isEmpty(removeList);
+        let hasChanges = true;
+        if (!newRole) {
+            hasChanges = !_.isEmpty(addingUserIDs) || !_.isEmpty(removingUserIDs);
         }
-        this.setState({ addList, removeList, hasChanges });
-    },
-});
+        this.setState({ addingUserIDs, removingUserIDs, hasChanges });
+    }
+}
 
-var sortUsers = Memoize(function(users, locale) {
-    var p = locale.pick;
-    var name = (user) => {
+let sortUsers = Memoize(function(users, env) {
+    let { p } = env.locale;
+    let name = (user) => {
         return p(user.details.name) || user.username;
     };
     return _.sortBy(users, name);
 });
 
-var emptyRole = {
+const emptyRole = {
     details: {}
 };
 
-var messageRatings = {
+const messageRatings = {
     'very-high': 50,
     'high': 20,
     'normal': 0,
     'low': -20,
     'very-low': -50,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    RoleSummaryPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    RoleSummaryPageSync.propTypes = {
+        system: PropTypes.object,
+        role: PropTypes.object,
+        users: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}
+
+export {
+    RoleSummaryPage as default,
+    RoleSummaryPage,
+    RoleSummaryPageSync,
 };
