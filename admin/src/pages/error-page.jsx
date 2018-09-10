@@ -40,3 +40,8 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
+
+export {
+    ErrorPage as default,
+    ErrorPage,
+};
