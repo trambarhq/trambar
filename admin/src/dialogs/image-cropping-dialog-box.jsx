@@ -172,7 +172,7 @@ class ImageCroppingDialogBox extends PureComponent {
      *
      * @param  {Object} evt
      */
-    handleChange = (evt) =>
+    handleChange = (evt) => {
         let { image } = this.props;
         let clippingRect = _.mapValues(evt.rect, (value) => {
             return Math.round(value);
@@ -189,7 +189,7 @@ class ImageCroppingDialogBox extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleCancelClick = (evt) =>
+    handleCancelClick = (evt) => {
         let { onCancel } = this.props;
         if (onCancel) {
             onCancel({
@@ -204,7 +204,7 @@ class ImageCroppingDialogBox extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleSelectClick = (evt) =>
+    handleSelectClick = (evt) => {
         let { onSelect } = this.props;
         let { clippingRect } = this.state;
         if (onSelect) {
@@ -221,7 +221,7 @@ class ImageCroppingDialogBox extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleZoomInClick = (evt) =>
+    handleZoomInClick = (evt) => {
         this.zoom(0.9);
     }
 
@@ -230,7 +230,7 @@ class ImageCroppingDialogBox extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleZoomOutClick = (evt) =>
+    handleZoomOutClick = (evt) => {
         this.zoom(1 / 0.9);
     }
 }

@@ -95,7 +95,7 @@ class UserSummaryPage extends AsyncComponent {
 class UserSummaryPageSync extends PureComponent {
     static displayName = 'UserSummaryPage.Sync';
 
-    constructors(props) {
+    constructor(props) {
         super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation

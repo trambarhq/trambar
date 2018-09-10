@@ -12,7 +12,7 @@ import UserTypes from 'objects/types/user-types';
 // widgets
 import PushButton from 'widgets/push-button';
 import ComboButton from 'widgets/combo-button';
-import SortableTable from 'widgets/sortable-table', TH = SortableTable.TH;
+import SortableTable, { TH } from 'widgets/sortable-table';
 import ProfileImage from 'widgets/profile-image';
 import ProjectTooltip from 'tooltips/project-tooltip';
 import RoleTooltip from 'tooltips/role-tooltip';

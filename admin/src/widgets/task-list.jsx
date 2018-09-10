@@ -70,11 +70,13 @@ class TaskListSync extends PureComponent {
         let { env } = this.props;
         let { t } = env.locale;
         if (task.completion === 100) {
+            let repo = task.options.repo;
+            let branch = task.options.branch;
+            let added = _.size(task.details.added);
+            let deleted = _.size(task.details.deleted);
+            let modified = _.size(task.details.modified);
             switch (task.action) {
                 case 'gitlab-repo-import':
-                    let added = _.size(task.details.added);
-                    let deleted = _.size(task.details.deleted);
-                    let modified = _.size(task.details.modified);
                     if (added) {
                         return t('task-imported-$count-repos', added);
                     } else if (deleted) {
@@ -84,9 +86,6 @@ class TaskListSync extends PureComponent {
                     }
                     break;
                 case 'gitlab-user-import':
-                    let added = _.size(task.details.added);
-                    let deleted = _.size(task.details.deleted);
-                    let modified = _.size(task.details.modified);
                     if (added) {
                         return t('task-imported-$count-users', added);
                     } else if (deleted) {
@@ -96,34 +95,22 @@ class TaskListSync extends PureComponent {
                     }
                     break;
                 case 'gitlab-hook-install':
-                    let added = _.size(task.details.added);
                     return t('task-installed-$count-hooks', added);
                 case 'gitlab-hook-remove':
-                    let deleted = _.size(task.details.deleted);
                     return t('task-removed-$count-hooks', deleted);
                 case 'gitlab-event-import':
-                    let added = _.size(task.details.added);
-                    let repo = task.options.repo;
                     return t('task-imported-$count-events-from-$repo', added, repo);
                 case 'gitlab-push-import':
-                    let added = _.size(task.details.added);
-                    let repo = task.options.repo;
-                    let branch = task.options.branch;
                     return t('task-imported-push-with-$count-commits-from-$repo-$branch', added, repo, branch);
                 case 'gitlab-commit-comment-import':
-                    let added = _.size(task.details.added);
-                    let repo = task.options.repo;
                     return t('task-imported-$count-commit-comments-from-$repo', added, repo);
                 case 'gitlab-issue-comment-import':
-                    let added = _.size(task.details.added);
-                    let repo = task.options.repo;
                     return t('task-imported-$count-issue-comments-from-$repo', added, repo);
                 case 'gitlab-merge-request-comment-import':
-                    let added = _.size(task.details.added);
-                    let repo = task.options.repo;
                     return t('task-imported-$count-merge-request-comments-from-$repo', added, repo);
             }
         } else {
+            let repo = task.options.repo;
             switch (task.action) {
                 case 'gitlab-repo-import':
                     return t('task-importing-repos');
@@ -134,19 +121,14 @@ class TaskListSync extends PureComponent {
                 case 'gitlab-hook-remove':
                     return t('task-removing-hooks');
                 case 'gitlab-event-import':
-                    let repo = task.options.repo;
                     return t('task-importing-events-from-$repo', repo);
                 case 'gitlab-push-import':
-                    let repo = task.options.repo;
                     return t('task-importing-push-from-$repo', repo);
                 case 'gitlab-commit-comment-import':
-                    let repo = task.options.repo;
                     return t('task-importing-commit-comments-from-$repo', repo);
                 case 'gitlab-issue-comment-import':
-                    let repo = task.options.repo;
                     return t('task-importing-issue-comments-from-$repo', repo);
                 case 'gitlab-merge-request-comment-import':
-                    let repo = task.options.repo;
                     return t('task-importing-merge-request-comments-from-$repo', repo);
             }
         }
@@ -398,7 +380,7 @@ class TaskListSync extends PureComponent {
         let { route } = this.props;
         route.reanchor('');
     }
-});
+}
 
 let sortTasks = Memoize(function(tasks) {
     return _.orderBy(tasks, 'id', 'desc');

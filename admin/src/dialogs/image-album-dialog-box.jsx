@@ -331,7 +331,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleImageClick = (evt) =>
+    handleImageClick = (evt) => {
         let { pictures, image } = this.props;
         let { managingImages, deletionCandidateIDs } = this.state;
         let pictureID = parseInt(evt.currentTarget.getAttribute('data-picture-id'));
@@ -359,7 +359,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleManageClick = (evt) =>
+    handleManageClick = (evt) => {
         this.setState({ managingImages: true });
     }
 
@@ -368,7 +368,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDoneClick = (evt) =>
+    handleDoneClick = (evt) => {
         this.setState({
             managingImages: false,
             deletionCandidateIDs: []
@@ -380,7 +380,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleCancelClick = (evt) =>
+    handleCancelClick = (evt) => {
         let { onCancel } = this.props;
         if (onCancel) {
             onCancel({
@@ -395,7 +395,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleSelectClick = (evt) =>
+    handleSelectClick = (evt) => {
         let { pictures, onSelect } = this.props;
         let { selectedPictureID } = this.state;
         if (onSelect) {
@@ -413,7 +413,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleBackgroundClick = (evt) =>
+    handleBackgroundClick = (evt) => {
         let { onCancel } = this.props;
         if (onCancel) {
             onCancel({
@@ -428,7 +428,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleUploadChange = (evt) =>
+    handleUploadChange = (evt) => {
         let files = evt.target.files;
         if (files.length) {
             return this.uploadPictures(files);
@@ -440,7 +440,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDragEnter = (evt) =>
+    handleDragEnter = (evt) => {
         this.setState({ isDropTarget: true });
     }
 
@@ -449,7 +449,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDragLeave = (evt) =>
+    handleDragLeave = (evt) => {
         this.setState({ isDropTarget: false });
     }
 
@@ -458,7 +458,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDragOver = (evt) =>
+    handleDragOver = (evt) => {
         // allow drop
         evt.preventDefault();
     }
@@ -468,7 +468,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDrop = (evt) =>
+    handleDrop = (evt) => {
         let { files } = evt.dataTransfer;
         evt.preventDefault();
         if (files.length > 0) {
@@ -482,7 +482,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleRemoveClick = (evt) =>
+    handleRemoveClick = (evt) => {
         let { deletionCandidateIDs } = this.state;
         this.setState({ deletionCandidateIDs: [] }, () => {
             this.removePictures(deletionCandidateIDs);

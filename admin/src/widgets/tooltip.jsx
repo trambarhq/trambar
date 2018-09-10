@@ -175,13 +175,13 @@ class Tooltip extends PureComponent {
             this.setState({ open: false });
         }
     }
-});
+}
 
 function hasContents(props) {
-    let children = React.Children.toArray(props.children);
-    let window = _.find(children, { type: 'window' });
-    if (window) {
-        if (React.Children.count(window.props.children) > 0) {
+    let children = Children.toArray(props.children);
+    let win = _.find(children, { type: 'window' });
+    if (win) {
+        if (Children.count(window.props.children) > 0) {
             return true;
         }
     }

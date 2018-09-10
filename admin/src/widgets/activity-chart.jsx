@@ -144,7 +144,7 @@ class ActivityChart extends PureComponent {
             }
         }
     }
-});
+}
 
 let getDateStrings = Memoize(function(startDate, endDate) {
     let dates = [];

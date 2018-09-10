@@ -10,7 +10,7 @@ import UserFinder from 'objects/finders/user-finder';
 // widgets
 import PushButton from 'widgets/push-button';
 import ComboButton from 'widgets/combo-button';
-import SortableTable from 'widgets/sortable-table', TH = SortableTable.TH;
+import SortableTable, { TH } from 'widgets/sortable-table';
 import UserTooltip from 'tooltips/user-tooltip';
 import ModifiedTimeTooltip from 'tooltips/modified-time-tooltip'
 import ActionBadge from 'widgets/action-badge';

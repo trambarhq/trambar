@@ -1,9 +1,3 @@
-/**
- * ProjectListPage - React component
- *
- * Displays a table listing all active projects in the system.
- *
- */
 import _ from 'lodash';
 import Promise from 'bluebird';
 import Moment from 'moment';
@@ -19,7 +13,7 @@ import StatisticsFinder from 'objects/finders/statistics-finder';
 // widgets
 import PushButton from 'widgets/push-button';
 import ComboButton from 'widgets/combo-button';
-import SortableTable from 'widgets/sortable-table', TH = SortableTable.TH;
+import SortableTable, { TH } from 'widgets/sortable-table';
 import UserTooltip from 'tooltips/user-tooltip';
 import RepositoryTooltip from 'tooltips/repository-tooltip';
 import ActivityTooltip from 'tooltips/activity-tooltip';
@@ -76,7 +70,7 @@ class ProjectListPage extends AsyncComponent {
             return <ProjectListPageSync {...props} />;
         });
     }
-});
+}
 
 class ProjectListPageSync extends PureComponent {
     static displayName = 'ProjectListPage.Sync';

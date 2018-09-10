@@ -67,7 +67,7 @@ class RepoSummaryPage extends AsyncComponent {
             return <RepoSummaryPageSync {...props} />;
         });
     }
-});
+}
 
 class RepoSummaryPageSync extends PureComponent {
     static displayName = 'RepoSummaryPage.Sync';

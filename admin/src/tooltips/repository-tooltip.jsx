@@ -46,7 +46,7 @@ class RepositoryTooltip extends PureComponent {
             </Tooltip>
         );
     }
-});
+}
 
 export {
     RepositoryTooltip as default,

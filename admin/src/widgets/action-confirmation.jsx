@@ -9,6 +9,7 @@ class ActionConfirmation extends PureComponent {
     static displayName = 'ActionConfirmation';
 
     constructor(props) {
+        super(props);
         this.state = {
             showing: false,
             rendering: false,
@@ -142,7 +143,7 @@ class ActionConfirmation extends PureComponent {
             })
         });
     }
-});
+}
 
 export {
     ActionConfirmation as default,

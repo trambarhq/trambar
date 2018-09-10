@@ -858,7 +858,6 @@ class ServerSummaryPageSync extends PureComponent {
         }
         let warning;
         let address = _.get(system, 'settings.address');
-        let warning;
         if (!address) {
             warning = t('server-summary-system-address-missing');
             address = window.location.origin;
@@ -893,7 +892,6 @@ class ServerSummaryPageSync extends PureComponent {
         }
         let warning;
         let address = _.get(system, 'settings.address');
-        let warning;
         if (!address) {
             warning = t('server-summary-system-address-missing');
             address = window.location.origin;

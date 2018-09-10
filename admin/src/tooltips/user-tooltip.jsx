@@ -63,7 +63,7 @@ class UserTooltip extends PureComponent {
             </Tooltip>
         );
     }
-});
+}
 
 export {
     UserTooltip as default,

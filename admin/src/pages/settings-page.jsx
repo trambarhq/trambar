@@ -46,7 +46,7 @@ class SettingsPage extends AsyncComponent {
             return <SettingsPageSync {...props} />;
         });
     }
-});
+}
 
 class SettingsPageSync extends PureComponent {
     static displayName = 'SettingsPage.Sync';

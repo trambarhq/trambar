@@ -67,7 +67,7 @@ class NavigationTree extends AsyncComponent {
             }
         });
     }
-});
+}
 
 class NavigationTreeSync extends PureComponent {
     static displayName = 'NavigationTree.Sync';

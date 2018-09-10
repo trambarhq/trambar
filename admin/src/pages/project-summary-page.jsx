@@ -69,7 +69,7 @@ class ProjectSummaryPage extends AsyncComponent {
             return <ProjectSummaryPageSync {...props} />;
         });
     }
-});
+}
 
 class ProjectSummaryPageSync extends PureComponent {
     static displayName = 'ProjectSummaryPage.Sync';
@@ -223,7 +223,7 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {Promise}
      */
     returnToList() {
-        let route = { this.props };
+        let { route } = this.props;
         return route.push('project-list-page');
     }
 
@@ -233,7 +233,7 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {Promise}
      */
     startNew() {
-        let route = { this.props };
+        let { route } = this.props;
         let params = _.clone(route.params);
         params.project = 'new';
         return route.replace(route.name, params);

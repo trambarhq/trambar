@@ -9,7 +9,7 @@ import UserFinder from 'objects/finders/user-finder';
 // widgets
 import PushButton from 'widgets/push-button';
 import ComboButton from 'widgets/combo-button';
-import SortableTable from 'widgets/sortable-table', TH = SortableTable.TH;
+import SortableTable, { TH } from 'widgets/sortable-table';
 import UserTooltip from 'tooltips/user-tooltip';
 import ModifiedTimeTooltip from 'tooltips/modified-time-tooltip'
 import ActionBadge from 'widgets/action-badge';
@@ -54,7 +54,7 @@ class RolesPage extends AsyncComponent {
             return <RoleListPageSync {...props} />;
         });
     }
-});
+}
 
 class RoleListPageSync extends PureComponent {
     static displayName = 'RoleListPage.Sync';
@@ -352,7 +352,7 @@ class RoleListPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderUsersColumn(role) {
-        let { role, env, users } = this.props;
+        let { env, users } = this.props;
         let { t } = env.locale;
         if (env.isBelowMode('narrow')) {
             return null;

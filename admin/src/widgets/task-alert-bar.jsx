@@ -80,7 +80,7 @@ class TaskAlertBar extends AsyncComponent {
     }
 }
 
-let TaskAlertBarSync = module.exports.Sync = React.createClass({
+class TaskAlertBarSync extends PureComponent {
     static displayName = 'TaskAlertBar.Sync';
 
     constructor(props) {
@@ -103,6 +103,7 @@ let TaskAlertBarSync = module.exports.Sync = React.createClass({
         let { env } = this.props;
         let { selectedTask } = this.state;
         let { t } = env.locale;
+        let repo = selectedTask.options.repo;
         switch (selectedTask.action) {
             case 'gitlab-repo-import':
                 return t('task-importing-repos');
@@ -113,19 +114,14 @@ let TaskAlertBarSync = module.exports.Sync = React.createClass({
             case 'gitlab-hook-remove':
                 return t('task-removing-hooks');
             case 'gitlab-event-import':
-                let repo = selectedTask.options.repo;
                 return t('task-importing-events-from-$repo', repo);
             case 'gitlab-push-import':
-                let repo = selectedTask.options.repo;
                 return t('task-importing-push-from-$repo', repo);
             case 'gitlab-commit-comment-import':
-                let repo = selectedTask.options.repo;
                 return t('task-importing-commit-comments-from-$repo', repo);
             case 'gitlab-issue-comment-import':
-                let repo = selectedTask.options.repo;
                 return t('task-importing-issue-comments-from-$repo', repo);
             case 'gitlab-merge-request-comment-import':
-                let repo = selectedTask.options.repo;
                 return t('task-importing-merge-request-comments-from-$repo', repo);
             default:
                 return '';

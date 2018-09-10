@@ -61,7 +61,7 @@ class ConfirmationDialogBox extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleCancelClick = (evt) =>
+    handleCancelClick = (evt) => {
         let { onCancel } = this.props;
         if (onCancel) {
             onCancel({
@@ -76,7 +76,7 @@ class ConfirmationDialogBox extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleConfirmClick = (evt) =>
+    handleConfirmClick = (evt) => {
         let { onConfirm } = this.props;
         if (onConfirm) {
             onConfirm({

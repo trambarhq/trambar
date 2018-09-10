@@ -11,7 +11,7 @@ import StatisticsFinder from 'objects/finders/statistics-finder';
 // widgets
 import PushButton from 'widgets/push-button';
 import ComboButton from 'widgets/combo-button';
-import SortableTable from 'widgets/sortable-table', TH = SortableTable.TH;
+import SortableTable, { TH } from 'widgets/sortable-table';
 import ProfileImage from 'widgets/profile-image';
 import ActivityTooltip from 'tooltips/activity-tooltip';
 import RoleTooltip from 'tooltips/role-tooltip';
@@ -68,7 +68,7 @@ class MemberListPage extends AsyncComponent {
             return <MemberListPageSync {...props} />;
         });
     }
-});
+}
 
 class MemberListPageSync extends PureComponent {
     static displayName = 'MemberListPage.Sync';

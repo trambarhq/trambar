@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import HTTPError from 'erros/http-error';
+import HTTPError from 'errors/http-error';
 
 import Unicorn from 'unicorn.svg';
 

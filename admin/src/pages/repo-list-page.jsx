@@ -12,7 +12,7 @@ import StatisticsFinder from 'objects/finders/statistics-finder';
 
 // widgets
 import PushButton from 'widgets/push-button';
-import SortableTable from 'widgets/sortable-table', TH = SortableTable.TH;
+import SortableTable, { TH } from 'widgets/sortable-table';
 import ActivityTooltip from 'tooltips/activity-tooltip';
 import ModifiedTimeTooltip from 'tooltips/modified-time-tooltip'
 import ActionBadge from 'widgets/action-badge';
