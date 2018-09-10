@@ -1,52 +1,48 @@
-var _ = require('lodash');
-var Promise = require('promise');
-var React = require('react'), PropTypes = React.PropTypes;
-var Chartist = require('widgets/chartist');
-var Moment = require('moment');
-var DateTracker = require('utils/date-tracker');
-var Memoize = require('utils/memoize');
+import _ from 'lodash';
+import Promise from 'promise';
+import React, { PureComponent } from 'react';
+import Chartist from 'widgets/chartist';
+import Moment from 'moment';
+import DateTracker from 'utils/date-tracker';
+import Memoize from 'utils/memoize';
 
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import Environment from 'env/environment';
+import Theme from 'theme/theme';
 
-var StoryTypes = require('objects/types/story-types');
+import StoryTypes from 'objects/types/story-types';
 
-require('./activity-chart.scss');
+import './activity-chart.scss';
 
-module.exports = React.createClass({
-    displayName: 'ActivityChart',
-    propTypes: {
-        statistics: PropTypes.object,
+class ActivityChart extends PureComponent {
+    static displayName = 'ActivityChart';
 
-        locale: PropTypes.instanceOf(Locale),
-        theme: PropTypes.instanceOf(Theme),
-    },
-
-    render: function() {
+    render() {
+        let { children } = this.props;
         return (
             <div className="activity-chart">
-                <h2>{this.props.children}</h2>
+                <h2>{children}</h2>
                 {this.renderLegend()}
                 {this.renderChart()}
             </div>
         );
-    },
+    }
 
-    renderChart: function() {
-        if (!this.props.statistics) {
+    renderChart() {
+        let { statistics } = this.props;
+        if (!statistics) {
             return (
                 <div className="scroll-container">
                     <div className="contents no-data" />
                 </div>
             );
         }
-        var today = Moment(DateTracker.today);
-        var rangeStart = Moment(this.props.statistics.range.start);
-        var rangeEnd = Moment(this.props.statistics.range.end);
+        let today = Moment(DateTracker.today);
+        let rangeStart = Moment(statistics.range.start);
+        let rangeEnd = Moment(statistics.range.end);
 
-        var endOfThisMonth = today.clone().endOf('month');
-        var startDate = rangeStart.clone().startOf('month');
-        var endDate = rangeEnd.clone().endOf('month');
+        let endOfThisMonth = today.clone().endOf('month');
+        let startDate = rangeStart.clone().startOf('month');
+        let endDate = rangeEnd.clone().endOf('month');
 
         if (endOfThisMonth.diff(endDate, 'month') <= 1) {
             // use the current month when there were activities in this or
@@ -57,11 +53,11 @@ module.exports = React.createClass({
             endDate.add(1, 'month');
         }
 
-        var dates = getDateStrings(startDate, endDate);
-        var series = getActivitySeries(this.props.statistics.daily, dates);
-        var upperRange = getUpperRange(series, true);
-        var labels = getDateStrings(startDate, endDate);
-        var chartProps = {
+        let dates = getDateStrings(startDate, endDate);
+        let series = getActivitySeries(statistics.daily, dates);
+        let upperRange = getUpperRange(series, true);
+        let labels = getDateStrings(startDate, endDate);
+        let chartProps = {
             type: 'bar',
             data: { labels, series },
             options: {
@@ -75,8 +71,8 @@ module.exports = React.createClass({
                 high: upperRange,
                 low: 0,
                 axisX: {
-                    labelInterpolationFnc: function(date) {
-                        var day = getDay(date);
+                    labelInterpolationFnc(date) {
+                        let day = getDay(date);
                         if (day === 1) {
                             return date;
                         } else if (day > 10 && date == DateTracker.today){
@@ -88,7 +84,7 @@ module.exports = React.createClass({
             },
             onDraw: this.handleDraw,
         };
-        var width = Math.round(labels.length * 0.75) + 'em';
+        let width = Math.round(labels.length * 0.75) + 'em';
         return (
             <div className="scroll-container">
                 <div className="contents" style={{ width }}>
@@ -96,27 +92,28 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render legend for data series
      *
      * @return {ReactElement}
      */
-    renderLegend: function() {
-        if (!this.props.statistics) {
+    renderLegend() {
+        let { env, statistics } = this.props;
+        let { t } = env.locale;
+        if (!statistics) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var stats = this.props.statistics.to_date;
-        var indices = {};
+        let stats = statistics.to_date;
+        let indices = {};
         _.each(StoryTypes, (type, index) => {
             if (stats[type] > 0) {
                 indices[type] = index;
             }
         });
-        var items = _.map(indices, (index, type) => {
-            var props = {
+        let items = _.map(indices, (index, type) => {
+            let props = {
                 series: String.fromCharCode('a'.charCodeAt(0) + index),
                 label: t(`activity-chart-legend-${type}`),
             };
@@ -126,9 +123,9 @@ module.exports = React.createClass({
             items = '\u00a0';
         }
         return <div className="legend">{items}</div>;
-    },
+    }
 
-    handleDraw: function(cxt) {
+    handleDraw = (cxt) => {
         // move y-axis to the right side
         if(cxt.type === 'label' && cxt.axis.units.pos === 'y') {
             cxt.element.attr({
@@ -138,44 +135,44 @@ module.exports = React.createClass({
         // style grid line differently when it's the first day
         // of the month or today
         if (cxt.type === 'grid' && cxt.axis.units.pos === 'x') {
-            var date = cxt.axis.ticks[cxt.index];
-            var day = getDay(date);
+            let date = cxt.axis.ticks[cxt.index];
+            let day = getDay(date);
             if (day === 1) {
                 cxt.element.addClass('month-start');
             } else if (date === DateTracker.today) {
                 cxt.element.addClass('today');
             }
         }
-    },
+    }
 });
 
-var getDateStrings = Memoize(function(startDate, endDate) {
-    var dates = [];
-    for (var d = startDate.clone(); d <= endDate; d.add(1, 'day')) {
+let getDateStrings = Memoize(function(startDate, endDate) {
+    let dates = [];
+    for (let d = startDate.clone(); d <= endDate; d.add(1, 'day')) {
         dates.push(d.format('YYYY-MM-DD'));
     }
     return dates;
 });
 
-var getDateLabels = Memoize(function(startDate, endDate) {
-    var labels = [];
-    for (var d = startDate.clone(); d <= endDate; d.add(1, 'month')) {
+let getDateLabels = Memoize(function(startDate, endDate) {
+    let labels = [];
+    for (let d = startDate.clone(); d <= endDate; d.add(1, 'month')) {
         labels.push(d.format('ll'));
 
-        var days = d.daysInMonth();
-        for (var i = 1; i < days; i++) {
+        let days = d.daysInMonth();
+        for (let i = 1; i < days; i++) {
             labels.push(null);
         }
     }
     return labels;
 });
 
-var getActivitySeries = Memoize(function(activities, dates) {
+let getActivitySeries = Memoize(function(activities, dates) {
     return _.map(StoryTypes, (type) => {
         // don't include series that are completely empty
-        var empty = true;
-        var series = _.map(dates, (date) => {
-            var value = _.get(activities, [ date, type ], 0);
+        let empty = true;
+        let series = _.map(dates, (date) => {
+            let value = _.get(activities, [ date, type ], 0);
             if (value) {
                 empty = false;
             }
@@ -185,10 +182,10 @@ var getActivitySeries = Memoize(function(activities, dates) {
     });
 });
 
-var getUpperRange = Memoize(function(series, additive) {
-    var highest = 0;
+let getUpperRange = Memoize(function(series, additive) {
+    let highest = 0;
     if (additive) {
-        var sums = [];
+        let sums = [];
         _.each(series, (values) => {
             _.each(values, (value, index) => {
                 sums[index] = (sums[index]) ? sums[index] + value : value;
@@ -199,7 +196,7 @@ var getUpperRange = Memoize(function(series, additive) {
         }
     } else {
         _.each(series, (values) => {
-            var max = _.max(values);
+            let max = _.max(values);
             if (max > highest) {
                 highest = max;
             }
@@ -231,4 +228,19 @@ function LegendItem(props) {
             </span>
         </div>
     )
+}
+
+export {
+    ActivityChart as default,
+    ActivityChart,
+    LegendItem,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ActivityChart.propTypes = {
+        statistics: PropTypes.object,
+        env: PropTypes.instanceOf(Environment),
+    };
 }

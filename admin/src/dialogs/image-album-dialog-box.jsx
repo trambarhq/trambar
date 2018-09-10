@@ -336,7 +336,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
         let { managingImages, deletionCandidateIDs } = this.state;
         let pictureID = parseInt(evt.currentTarget.getAttribute('data-picture-id'));
         if (managingImages) {
-            if (_.includes(this.state.deletionCandidateIDs, pictureID)) {
+            if (_.includes(deletionCandidateIDs, pictureID)) {
                 deletionCandidateIDs = _.without(deletionCandidateIDs, pictureID);
             } else {
                 deletionCandidateIDs = _.concat(deletionCandidateIDs, pictureID);
@@ -396,10 +396,10 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      * @param  {Event} evt
      */
     handleSelectClick = (evt) =>
-        let { onSelect } = this.props;
+        let { pictures, onSelect } = this.props;
         let { selectedPictureID } = this.state;
         if (onSelect) {
-            let selectedPicture = _.find(this.props.pictures, { id: selectedPictureID });
+            let selectedPicture = _.find(pictures, { id: selectedPictureID });
             onSelect({
                 type: 'select',
                 target: this,
@@ -494,6 +494,12 @@ let sortPictures = Memoize(function(pictures) {
     return _.orderBy(pictures, 'mtime', 'desc');
 });
 
+export {
+    ImageAlbumDialogBox as default,
+    ImageAlbumDialogBox,
+    ImageAlbumDialogBoxSync,
+};
+
 import Database from 'data/database';
 import Environment from 'env/environment';
 import Payloads from 'transport/payloads';
@@ -524,9 +530,3 @@ if (process.env.NODE_ENV !== 'production') {
         onCancel: PropTypes.func,
     };
 }
-
-export {
-    ImageAlbumDialogBox as default,
-    ImageAlbumDialogBox,
-    ImageAlbumDialogBoxSync,
-};

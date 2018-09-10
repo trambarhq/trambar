@@ -7,7 +7,7 @@ import ProfileImage from 'widgets/profile-image';
 
 import './user-tooltip.scss';
 
-class X extends PureComponent {
+class UserTooltip extends PureComponent {
     static displayName = 'UserTooltip';
 
     render() {
@@ -64,6 +64,11 @@ class X extends PureComponent {
         );
     }
 });
+
+export {
+    UserTooltip as default,
+    UserTooltip,
+};
 
 import Route from 'routing/route';
 import Environment from 'env/environment';

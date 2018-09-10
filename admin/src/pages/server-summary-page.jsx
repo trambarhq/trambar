@@ -317,7 +317,7 @@ class ServerSummaryPageSync extends PureComponent {
                 {this.renderInstructions()}
                 {this.renderTaskList()}
                 <ActionConfirmation ref={setters.confirmation} env={env} />
-                <DataLossWarning changes={this.state.hasChanges} env={env} route={route} />
+                <DataLossWarning changes={hasChanges} env={env} route={route} />
             </div>
         );
     }
@@ -1492,7 +1492,8 @@ class ServerSummaryPageSync extends PureComponent {
      * Called when user has scrolled away from selected task
      */
     handleTaskSelectionClear() {
-        this.props.route.unanchor();
+        let { route } = this.props;
+        route.unanchor();
     }
 }
 
@@ -1522,6 +1523,12 @@ let sortRoles = Memoize(function(roles, locale) {
     return _.sortBy(roles, name);
 });
 
+export {
+    ServerSummaryPage as default,
+    ServerSummaryPage,
+    ServerSummaryPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -1544,9 +1551,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
-
-export {
-    ServerSummaryPage as default,
-    ServerSummaryPage,
-    ServerSummaryPageSync,
-};

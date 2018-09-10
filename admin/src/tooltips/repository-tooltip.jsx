@@ -48,6 +48,11 @@ class RepositoryTooltip extends PureComponent {
     }
 });
 
+export {
+    RepositoryTooltip as default,
+    RepositoryTooltip,
+};
+
 import Route from 'routing/route';
 import Environment from 'env/environment';
 
@@ -62,8 +67,3 @@ if (process.env.NODE_ENV !== 'production') {
         disabled: PropTypes.bool,
     };
 }
-
-export {
-    RepositoryTooltip as default,
-    RepositoryTooltip,
-};

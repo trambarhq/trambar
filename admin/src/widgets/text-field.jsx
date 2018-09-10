@@ -1,33 +1,30 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var AutosizeTextArea = require('widgets/autosize-text-area');
+import AutosizeTextArea from 'widgets/autosize-text-area';
 
-require('./text-field.scss');
-
-module.exports = TextField;
+import './text-field.scss';
 
 function TextField(props) {
-    var classNames = [ 'text-field' ];
-    var Input = 'input';
-    var inputProps = _.omit(props, 'children', 'locale');
+    let { env, children, readOnly } = props;
+    let { t } = env.locale;
+    let classNames = [ 'text-field' ];
+    let Input = 'input';
+    let inputProps = _.omit(props, 'children', 'env');
     if (props.type === 'textarea') {
         Input = AutosizeTextArea;
         inputProps = _.omit(inputProps, 'type');
     }
-    if (props.readOnly) {
+    if (readOnly) {
         classNames.push('readonly');
-        var t = props.locale.translate;
         inputProps.placeholder = t('text-field-placeholder-none');
         inputProps.spellCheck = false;
     }
     inputProps.value = inputProps.value || '';
     return (
         <div className={classNames.join(' ')}>
-            <label htmlFor={props.id}>{props.children}</label>
+            <label htmlFor={props.id}>{children}</label>
             <Input {...inputProps} />
         </div>
     );
@@ -37,6 +34,17 @@ TextField.defaultProps = {
     type: 'text',
 };
 
-TextField.propTypes = {
-    locale: PropTypes.instanceOf(Locale).isRequired,
+export {
+    TextField as default,
+    TextField,
 };
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    TextField.propTypes = {
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

@@ -22,12 +22,12 @@ const SessionLocation = {
     table: 'session',
 }
 
-function start(App) {
+function start(cfg) {
     let envMonitor = new EnvironmentMonitor({});
     let routeManager = new RouteManager({
-        basePath: App.basePath,
-        routes: App.routes,
-        rewrites: CORSRewriter,
+        basePath: cfg.basePath,
+        routes: cfg.routes,
+        rewrites: [ CORSRewriter ],
     });
     let localeManager = new LocaleManager({
         directory: languages
@@ -39,8 +39,8 @@ function start(App) {
         cache = new LocalStorageCache();
     }
     let dataSource = new RemoteDataSource({
-        discoveryFlags: App.discoveryFlags,
-        retrievalFlags: App.retrievalFlags,
+        discoveryFlags: cfg.discoveryFlags,
+        retrievalFlags: cfg.retrievalFlags,
         cache,
     });
     let notifier;

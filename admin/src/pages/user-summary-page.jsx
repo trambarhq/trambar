@@ -976,7 +976,7 @@ class UserSummaryPageSync extends PureComponent {
                         if (!_.includes(userIDs, user.id)) {
                             let userIDsAfter = _.union(userIDs, [ user.id ]);
                             let columns = {
-                                id: this.props.project.id,
+                                id: project.id,
                                 user_ids: userIDsAfter
                             };
                             return db.saveOne({ table: 'project' }, columns);
@@ -1078,7 +1078,8 @@ class UserSummaryPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleSocialLinksToggleClick = (evt) => {
-        this.setState({ showingSocialLinks: !this.state.showingSocialLinks });
+        let { showingSocialLinks } = this.state;
+        this.setState({ showingSocialLinks: !showingSocialLinks });
     }
 
     /**
@@ -1184,6 +1185,12 @@ function extractUsername(text, type) {
     return text;
 }
 
+export {
+    UserSummaryPage as default,
+    UserSummaryPage,
+    UserSummaryPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -1211,9 +1218,3 @@ if (process.env.NODE_ENV !== 'production') {
         payloads: PropTypes.instanceOf(Payloads).isRequired,
     };
 }
-
-export {
-    UserSummaryPage as default,
-    UserSummaryPage,
-    UserSummaryPageSync,
-};

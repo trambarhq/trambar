@@ -265,7 +265,7 @@ class RoleSummaryPageSync extends PureComponent {
      */
     render() {
         let { route, env } = this.props;
-        let { problems } = this.state;
+        let { hasChanges, problems } = this.state;
         let { setters } = this.components;
         let { t, p } = env.locale;
         let role = this.getRole();
@@ -278,7 +278,7 @@ class RoleSummaryPageSync extends PureComponent {
                 {this.renderForm()}
                 {this.renderInstructions()}
                 <ActionConfirmation ref={setters.confirmation} env={env} />
-                <DataLossWarning changes={this.state.hasChanges} env={env} route={route} />
+                <DataLossWarning changes={hasChanges} env={env} route={route} />
             </div>
         );
     }
@@ -737,7 +737,7 @@ class RoleSummaryPageSync extends PureComponent {
         let { users } = this.props;
         let { addingUserIDs, removingUserIDs, newRole } = this.state;
         let userID = parseInt(evt.name);
-        let user = _.find(this.props.users, { id: userID });
+        let user = _.find(users, { id: userID });
         let roleID = this.getRoleProperty('id');
         if (_.includes(user.role_ids, roleID)) {
             if (_.includes(removingUserIDs, user.id)) {
@@ -780,6 +780,12 @@ const messageRatings = {
     'very-low': -50,
 };
 
+export {
+    RoleSummaryPage as default,
+    RoleSummaryPage,
+    RoleSummaryPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -802,9 +808,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
-
-export {
-    RoleSummaryPage as default,
-    RoleSummaryPage,
-    RoleSummaryPageSync,
-};

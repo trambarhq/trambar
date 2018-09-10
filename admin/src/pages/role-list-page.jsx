@@ -539,6 +539,12 @@ let findUsers = Memoize(function(users, role) {
     })
 });
 
+export {
+    RoleListPage as default,
+    RoleListPage,
+    RoleListPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -560,9 +566,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
-
-export {
-    RoleListPage as default,
-    RoleListPage,
-    RoleListPageSync,
-};

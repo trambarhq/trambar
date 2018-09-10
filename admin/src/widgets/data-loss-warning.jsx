@@ -1,78 +1,78 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var ComponentRefs = require('utils/component-refs');
-
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import React, { PureComponent } from 'react';
+import ComponentRefs from 'utils/component-refs';
 
 // widgets
-var ActionConfirmation = require('widgets/action-confirmation');
+import ActionConfirmation from 'widgets/action-confirmation';
 
-module.exports = React.createClass({
-    displayName: 'DataLossWarning',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
+class DataLossWarning extends PureComponent {
+    static displayName = 'DataLossWarning';
 
-        changes: PropTypes.bool,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
         });
-        return {};
-    },
+    }
 
     /**
      * Put a hook on the current route when there're changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.changes !== nextProps.changes) {
+    componentWillReceiveProps(nextProps) {
+        let { changes } = this.props;
+        if (nextProps.changes !== changes) {
             if (nextProps.changes) {
                 nextProps.route.keep(this.confirmRouteChange);
             } else {
                 nextProps.route.free(this.confirmRouteChange);
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return  {ReactElement|null}
      */
-    render: function() {
-        var setters = this.components.setters;
-        var props = {
+    render() {
+        let { env } = this.props;
+        let { setters } = this.components;
+        let props = {
             ref: setters.confirmation,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            env,
         };
         return <ActionConfirmation {...props} />
-    },
+    }
 
     /**
      * Called just before a route change occurs
      *
      * @return {Promise<Boolean>}
      */
-    confirmRouteChange: function() {
-        var t = this.props.locale.translate;
-        var message = t('confirmation-data-loss');
-        return this.components.confirmation.ask(message);
-    },
-});
+    confirmRouteChange() {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('confirmation-data-loss');
+        return confirmation.ask(message);
+    }
+}
+
+export {
+    DataLossWarning as default,
+    DataLossWarning,
+};
+
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    DataLossWarning.propTypes = {
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        changes: PropTypes.bool,
+    };
+}

@@ -54,6 +54,11 @@ class ActivityTooltip extends PureComponent {
     }
 }
 
+export {
+    ActivityTooltip as default,
+    ActivityTooltip,
+};
+
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
@@ -62,8 +67,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment),
     };
 }
-
-export {
-    ActivityTooltip as default,
-    ActivityTooltip,
-};

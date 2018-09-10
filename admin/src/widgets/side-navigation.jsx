@@ -1,50 +1,22 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var NavigationTree = require('widgets/navigation-tree');
-var Tooltip = require('widgets/tooltip');
-var SignOffMenu = require('widgets/sign-off-menu');
+import NavigationTree from 'widgets/navigation-tree';
+import Tooltip from 'widgets/tooltip';
+import SignOffMenu from 'widgets/sign-off-menu';
 
-require('./side-navigation.scss');
+import './side-navigation.scss';
 
-module.exports = React.createClass({
-    displayName: 'SideNavigation',
-    propTypes: {
-        disabled: PropTypes.bool,
+class SideNavigation extends PureComponent {
+    static displayName = 'SideNavigation';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            disabled: false
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             ready: false
         };
-    },
+    }
 
     /**
      * Return language object from directory
@@ -53,22 +25,24 @@ module.exports = React.createClass({
      *
      * @return {Object}
      */
-    getLanguage: function(code) {
+    getLanguage(code) {
+        let { env } = this.props;
+        let { languageCode, directory } = env.locale;
         if (!code) {
-            code = this.props.locale.languageCode;
+            code = languageCode;
         }
-        var languages = this.props.locale.directory;
-        return _.find(languages, { code });
-    },
+        return _.find(directory, { code });
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var className = 'side-navigation';
-        if (!this.state.ready) {
+    render() {
+        let { ready } = this.state;
+        let className = 'side-navigation';
+        if (!ready) {
             className += ' hidden';
         }
         return (
@@ -78,30 +52,23 @@ module.exports = React.createClass({
                 {this.renderBottomButtons()}
             </nav>
         );
-    },
+    }
 
     /**
      * Render navigation tree
      *
      * @return {ReactElement}
      */
-    renderNavTree: function() {
-        var navProps = {
-            disabled: this.props.disabled,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
-        return <NavigationTree {...navProps} />;
-    },
+    renderNavTree() {
+        return <NavigationTree {...this.props} />;
+    }
 
     /**
      * Render language and user button
      *
      * @return {ReactElement}
      */
-    renderBottomButtons: function() {
+    renderBottomButtons() {
         return (
             <div className="bottom-buttons">
                 {this.renderLanguageButton()}
@@ -109,20 +76,22 @@ module.exports = React.createClass({
                 {this.renderUserButton()}
             </div>
         );
-    },
+    }
 
     /**
      * Render language button
      *
      * @return {ReactElement}
      */
-    renderLanguageButton: function() {
-        var selected = this.getLanguage(this.props.locale.languageCode);
-        var languages = _.filter(this.props.locale.directory, (language) => {
+    renderLanguageButton() {
+        let { env } = this.props;
+        let { languageCode, directory } = env.locale;
+        let selected = this.getLanguage();
+        let languages = _.filter(directory, (language) => {
             return !!language.module;
         });
-        var items = _.map(languages, (language, i) => {
-            var props = {
+        let items = _.map(languages, (language, i) => {
+            let props = {
                 className: 'item',
                 'data-code': language.code,
                 onClick: this.handleLanguageClick,
@@ -151,25 +120,26 @@ module.exports = React.createClass({
                 </Tooltip>
             </div>
         );
-    },
+    }
 
     /**
      * Render country button
      *
      * @return {ReactElement}
      */
-    renderCountryButton: function() {
-        var language = this.getLanguage();
-        if (_.size(language.countries) <= 1) {
+    renderCountryButton() {
+        let { env } = this.props;
+        let { countryCode } = env.locale;
+        let selected = this.getLanguage();
+        if (_.size(selected.countries) <= 1) {
             return null;
         }
-        var countryCode = this.props.locale.countryCode;
         if (!countryCode) {
-            countryCode = language.defaultCountry;
+            countryCode = selected.defaultCountry;
         }
-        var countryName = language.countries[countryCode];
-        var items = _.map(language.countries, (name, code) => {
-            var props = {
+        let countryName = selected.countries[countryCode];
+        let items = _.map(selected.countries, (name, code) => {
+            let props = {
                 className: 'item',
                 'data-code': code,
                 onClick: this.handleCountryClick,
@@ -196,24 +166,24 @@ module.exports = React.createClass({
                 </Tooltip>
             </div>
         );
-    },
+    }
 
     /**
      * Render user button
      *
      * @return {ReactElement}
      */
-    renderUserButton: function() {
-        var t = this.props.locale.translate;
-        var menuProps = {
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+    renderUserButton() {
+        let { database, route, env, disabled } = this.props;
+        let { t } = env.locale;
+        let menuProps = {
+            database,
+            route,
+            env,
         };
         return (
             <div className="button user">
-                <Tooltip upward leftward disabled={this.props.disabled}>
+                <Tooltip upward leftward disabled={disabled}>
                     <inline>
                         <i className="fa fa-user-circle-o" />
                     </inline>
@@ -223,40 +193,41 @@ module.exports = React.createClass({
                 </Tooltip>
             </div>
         )
-    },
+    }
 
     /**
      * Render logo and app name
      *
      * @return {ReactElement}
      */
-    renderHeader: function() {
+    renderHeader() {
         return (
             <header>
                 {this.renderLogo()}
                 {this.renderAppName()}
             </header>
         );
-    },
+    }
 
     /**
      * Render app name
      *
      * @return {ReactElement}
      */
-    renderAppName: function() {
-        var t = this.props.locale.translate;
+    renderAppName() {
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <h2 className="app-name">{t('app-name')}</h2>
         );
-    },
+    }
 
     /**
      * Render logo
      *
      * @return {ReactElement}
      */
-    renderLogo: function() {
+    renderLogo() {
         return (
             <svg className="logo" xmlns="http://www.w3.org/2000/svg" viewBox="1000 1000 5080 6299" preserveAspectRatio="xMidYMid" style={{ strokeLinejoin: 'round', strokeWidth: 30 }}>
               <defs className="ClipPathGroup">
@@ -289,36 +260,64 @@ module.exports = React.createClass({
               </g>
             </svg>
         );
-    },
+    }
 
     /**
      * Initiate transition on mount
      */
-    componentDidMount: function() {
+    componentDidMount() {
         setTimeout(() => {
             this.setState({ ready: true });
         }, 100);
-    },
+    }
 
     /**
      * Called when user select a language
      *
      * @param  {Event} evt
      */
-    handleLanguageClick: function(evt) {
-        var code = evt.currentTarget.getAttribute('data-code');
-        var language = this.getLanguage(code);
-        return this.props.locale.change(`${language.code}-${language.defaultCountry}`);
-    },
+    handleLanguageClick = (evt) => {
+        let { env } = this.props;
+        let code = evt.currentTarget.getAttribute('data-code');
+        let language = this.getLanguage(code);
+        let localeCode = `${language.code}-${language.defaultCountry}`;
+        return env.locale.change(localeCode);
+    }
 
     /**
      * Called when user select a country
      *
      * @param  {Event} evt
      */
-    handleCountryClick: function(evt) {
-        var code = evt.currentTarget.getAttribute('data-code');
-        var language = this.getLanguage();
-        return this.props.locale.change(`${language.code}-${code}`);
-    },
-});
+    handleCountryClick = (evt) => {
+        let { env } = this.props;
+        let code = evt.currentTarget.getAttribute('data-code');
+        let language = this.getLanguage();
+        let localeCode = `${language.code}-${code}`;
+        return env.locale.change(localeCode);
+    }
+}
+
+SideNavigation.defaultProps = {
+    disabled: false
+};
+
+export {
+    SideNavigation as default,
+    SideNavigation,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    SideNavigation.propTypes = {
+        disabled: PropTypes.bool,
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

@@ -112,7 +112,7 @@ class RepoListPageSync extends PureComponent {
         let { route } = this.props;
         let params = _.clone(route.params);
         params.edit = edit;
-        return this.props.route.replace(route.name, params);
+        return route.replace(route.name, params);
     }
 
     /**
@@ -121,6 +121,8 @@ class RepoListPageSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
+        let { project } = this.props;
+        let { selectedRepoIDs } = this.state;
         if (this.isEditing() !== this.isEditing(nextProps)) {
             if (this.isEditing(nextProps)) {
                 // initial list of ids to the current list
@@ -137,9 +139,8 @@ class RepoListPageSync extends PureComponent {
                 }, 500);
             }
         }
-        if (this.props.project !== nextProps.project && nextProps.project) {
-            let selectedRepoIDs = this.state.selectedRepoIDs;
-            let originalRepoIDs = _.get(this.props.project, 'repo_ids', []);
+        if (nextProps.project !== project && nextProps.project) {
+            let originalRepoIDs = _.get(project, 'repo_ids', []);
             let incomingRepoIDs = _.get(nextProps.project, 'repo_ids', []);
             if (selectedRepoIDs === originalRepoIDs) {
                 // use the list from the incoming object if no change has been made yet
@@ -474,7 +475,7 @@ class RepoListPageSync extends PureComponent {
             return <TH id="this_month">{t('table-heading-this-month')}</TH>
         } else {
             let props = {
-                statistics: _.get(this.props.statistics, [ repo.id, 'this_month' ]),
+                statistics: _.get(statistics, [ repo.id, 'this_month' ]),
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -684,6 +685,12 @@ let findRepos = Memoize(function(repos, project) {
     }
 });
 
+export {
+    RepoListPage as default,
+    RepoListPage,
+    RepoListPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -707,9 +714,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
-
-export {
-    RepoListPage as default,
-    RepoListPage,
-    RepoListPageSync,
-};

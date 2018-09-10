@@ -1,54 +1,41 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var ProjectFinder = require('objects/finders/project-finder');
-var RepoFinder = require('objects/finders/repo-finder');
-var RoleFinder = require('objects/finders/role-finder');
-var ServerFinder = require('objects/finders/server-finder');
-var UserFinder = require('objects/finders/user-finder');
-var ComponentRefs = require('utils/component-refs');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'react';
+import ProjectFinder from 'objects/finders/project-finder';
+import RepoFinder from 'objects/finders/repo-finder';
+import RoleFinder from 'objects/finders/role-finder';
+import ServerFinder from 'objects/finders/server-finder';
+import UserFinder from 'objects/finders/user-finder';
+import ComponentRefs from 'utils/component-refs';
 
 // widgets
-var CollapsibleContainer = require('widgets/collapsible-container');
+import CollapsibleContainer from 'widgets/collapsible-container';
 
-require('./navigation-tree.scss');
+import './navigation-tree.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'NavigationTree',
-    propTypes: {
-        disabled: PropTypes.bool,
+class NavigationTree extends AsyncComponent {
+    static displayName = 'NavigationTree';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env, disabled } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let props = {
             project: null,
             user: null,
             role: null,
             repo: null,
             server: null,
 
-            disabled: this.props.disabled,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            disabled,
+            database,
+            route,
+            env,
         };
         meanwhile.show(<NavigationTreeSync {...props} />);
-        return db.start().then((currentUserId) => {
-            var promises = {};
+        return db.start().then((currentUserID) => {
+            let params = route.params;
+            let promises = {};
             if (typeof(params.project) === 'number') {
                 promises.project = ProjectFinder.findProject(db, params.project);
             }
@@ -79,42 +66,31 @@ module.exports = Relaks.createClass({
                 throw err;
             }
         });
-    },
+    }
 });
 
-var NavigationTreeSync = module.exports.Sync = React.createClass({
-    displayName: 'NavigationTree.Sync',
-    propTypes: {
-        disabled: PropTypes.bool,
-        project: PropTypes.object,
-        user: PropTypes.object,
-        role: PropTypes.object,
-        repo: PropTypes.object,
-        server: PropTypes.object,
+class NavigationTreeSync extends PureComponent {
+    static displayName = 'NavigationTree.Sync';
 
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             activeLink: HTMLAnchorElement,
             container: HTMLElement,
             arrow: HTMLElement,
         });
-        return {
+        this.state = {
             arrowPosition: 0,
             arrowCount: 0,
             arrowAction: '',
 
-            project: this.props.project || emptyObject,
-            user: this.props.user || emptyObject,
-            role: this.props.role || emptyObject,
-            repo: this.props.repo || emptyObject,
-            server: this.props.server || emptyObject,
+            project: props.project || emptyObject,
+            user: props.user || emptyObject,
+            role: props.role || emptyObject,
+            repo: props.repo || emptyObject,
+            server: props.server || emptyObject,
         };
-    },
+    }
 
     /**
      * Save copies of objects so we can still render their names while
@@ -122,73 +98,75 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        var keys = _.keys(this.state);
-        var objects = _.pickBy(_.pick(nextProps, keys), Boolean);
+    componentWillReceiveProps(nextProps) {
+        let keys = _.keys(this.state);
+        let objects = _.pickBy(_.pick(nextProps, keys), Boolean);
         if (!_.isEmpty(objects)) {
             this.setState(objects);
         }
-    },
+    }
 
-    render: function() {
-        var setters = this.components.setters;
-        var classNames = [ 'navigation-tree' ];
-        if (this.props.disabled) {
+    render() {
+        let { disabled } = this.props;
+        let { setters } = this.components;
+        let classNames = [ 'navigation-tree' ];
+        if (disabled) {
             classNames.push('disabled');
         }
-        var rootNodes = this.getRootNodes();
+        let rootNodes = this.getRootNodes();
         return (
             <div ref={setters.container} className={classNames.join(' ')}>
-                {_.map(rootNodes, this.renderRootNode)}
+                {
+                    _.map(rootNodes, (node, key) => {
+                        return this.renderNode(node, 1, key);
+                    })
+                }
                 {this.renderArrow()}
             </div>
         );
-    },
+    }
 
-    renderRootNode: function(node, key) {
-        return this.renderNode(node, 1, key);
-    },
-
-    renderNode: function(node, level, key) {
+    renderNode(node, level, key) {
+        let { disabled } = this.props;
+        let { setters } = this.components;
         if (!node) {
             return;
         }
-        var ref;
+        let ref;
         if (this.isActive(node)) {
-            ref = this.components.setters.activeLink;
+            ref = setters.activeLink;
         }
-        var url;
-        if (!this.props.disabled) {
-            url = node.url
-        }
-        var subtree;
+        let url = (!disabled) ? node.url : undefined;
+        let subtree;
         return (
             <div key={key} className={`level${level}`}>
                 <a ref={ref} href={url}>{node.label}</a>
                 {this.renderChildNodes(node, level + 1)}
             </div>
         );
-    },
+    }
 
-    renderChildNodes: function(node, level) {
+    renderChildNodes(node, level) {
         if (_.isEmpty(node.children)) {
             return null;
         }
-        var props = {
+        let props = {
             open: node.showChildren || this.hasActiveChild(node),
             children: _.map(node.children, (childNode, i) => {
                 return this.renderNode(childNode, level, i)
             })
         }
         return <CollapsibleContainer {...props} />;
-    },
+    }
 
-    renderArrow: function() {
-        var numbers = [ 'zero', 'one', 'two', 'three', 'four' ];
-        var arrowProps = {
-            ref: this.components.setters.arrow,
-            className: `arrow ${numbers[this.state.arrowCount]} ${this.state.arrowAction}`,
-            style: { top: this.state.arrowPosition },
+    renderArrow() {
+        let { arrowPosition, arrowCount, arrowAction } = this.state;
+        let { setters } = this.components;
+        let numbers = [ 'zero', 'one', 'two', 'three', 'four' ];
+        let arrowProps = {
+            ref: setters.arrow,
+            className: `arrow ${numbers[arrowCount]} ${arrowAction}`,
+            style: { top: arrowPosition },
         };
         return (
             <div {...arrowProps}>
@@ -198,36 +176,38 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
                 <i className="fa fa-play fourth" />
             </div>
         );
-    },
+    }
 
-    componentDidMount: function() {
+    componentDidMount() {
         setTimeout(() => {
             this.repositionArrow();
         }, 100);
-    },
+    }
 
-    componentDidUpdate: function(prevProps, prevState) {
-        if (prevProps.route !== this.props.route) {
+    componentDidUpdate(prevProps, prevState) {
+        let { route } = this.props;
+        if (prevProps.route !== route) {
             this.repositionArrow();
         }
-    },
+    }
 
-    isActive: function(node) {
-        return node.url === this.props.route.path;
-    },
+    isActive(node) {
+        let { route } = this.props;
+        return node.url === route.path;
+    }
 
-    hasActiveChild: function(node) {
+    hasActiveChild(node) {
         return _.some(node.children, (node) => {
             return this.isActive(node) || this.hasActiveChild(node);
         });
-    },
+    }
 
     /**
      * Return root-level nav nodes
      *
      * @return {Object}
      */
-    getRootNodes: function() {
+    getRootNodes() {
         return [
             this.getProjectListNode(),
             this.getUserListNode(),
@@ -235,256 +215,230 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
             this.getServerListNode(),
             this.getSettingsNode(),
         ]
-    },
+    }
 
     /**
      * Return nav node pointing to project list
      *
      * @return {Object}
      */
-    getProjectListNode: function() {
-        var t = this.props.locale.translate;
-        var route = this.props.route;
-        var label = t('nav-projects');
-        var url = route.find('project-list-page');
-        var children = [
+    getProjectListNode() {
+        let { route, env } = this.props;
+        let { t } = env.locale;
+        let label = t('nav-projects');
+        let url = route.find('project-list-page');
+        let children = [
             this.getProjectNode(),
         ];
         return { label, url, children };
-    },
+    }
 
     /**
      * Return nav node pointing to a project
      *
      * @return {Object}
      */
-    getProjectNode: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var route = this.props.route;
-        var params = route.parameters;
-        var project = this.state.project;
-        var label;
-        if (params.project === 'new') {
+    getProjectNode() {
+        let { route, env } = this.props;
+        let { project } = this.state;
+        let { t, p } = env.locale;
+        let label;
+        if (route.params.project === 'new') {
             label = <i>{t('nav-project-new')}</i>;
         } else {
             label = p(project.details.title) || project.name || '-';
         }
-        var url = route.find('project-summary-page', {
-            project: params.project
-        });
+        let url = route.find('project-summary-page', route.params);
         // show children when there's actually a project
-        var showChildren = (typeof(params.project) === 'number');
-        var children = [
+        let showChildren = (typeof(route.params.project) === 'number');
+        let children = [
             this.getMemberListNode(),
             this.getRepoListNode(),
         ];
         return { label, url, children, showChildren };
-    },
+    }
 
     /**
      * Return nav node pointing to project member list
      *
      * @return {Object}
      */
-    getMemberListNode: function() {
-        var t = this.props.locale.translate;
-        var route = this.props.route;
-        var params = route.parameters;
-        var label = t('nav-members');
-        var url;
-        if (typeof(params.project) === 'number') {
+    getMemberListNode() {
+        let { route, env } = this.props;
+        let { t } = env.locale;
+        let label = t('nav-members');
+        let url;
+        if (typeof(route.params.project) === 'number') {
             url = route.find('member-list-page', {
-                project: params.project
+                project: route.params.project
             });
         }
-        var children = [
+        let children = [
             this.getMemberNode(),
         ];
         return { label, url, children };
-    },
+    }
 
     /**
      * Return nav node pointing to a project member
      *
      * @return {Object}
      */
-    getMemberNode: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var route = this.props.route;
-        var params = route.parameters;
-        var user = this.state.user;
-        var label, url;
-        if (params.user === 'new') {
+    getMemberNode() {
+        let { route, env } = this.props;
+        let { user } = this.state;
+        let { t, p } = env.locale;
+        let label, url;
+        if (route.params.user === 'new') {
             label = <i>{t('nav-member-new')}</i>;
         } else {
             label = p(user.details.name) || user.username || '-';
         }
-        if (typeof(params.project) === 'number') {
-            url = route.find('user-summary-page', {
-                project: params.project,
-                user: params.user,
-            });
+        if (route.params.project && route.params.user) {
+            url = route.find('user-summary-page', route.params);
         }
         return { label, url };
-    },
+    }
 
     /**
      * Return nav node pointing to project repo list
      *
      * @return {Object}
      */
-    getRepoListNode: function() {
-        var t = this.props.locale.translate;
-        var route = this.props.route;
-        var params = route.parameters;
-        var label = t('nav-repositories');
-        var url;
-        if (typeof(params.project) === 'number') {
+    getRepoListNode() {
+        let { route, env } = this.props;
+        let { t } = env.locale;
+        let label = t('nav-repositories');
+        let url;
+        if (typeof(route.params.project) === 'number') {
             url = route.find('repo-list-page', {
-                project: params.project
+                project: route.params.project
             });
         }
-        var children = [
+        let children = [
             this.getRepoNode(),
         ];
         return { label, url, children };
-    },
+    }
 
     /**
      * Return nav node pointing to a repo
      *
      * @return {Object}
      */
-    getRepoNode: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var route = this.props.route;
-        var params = route.parameters;
-        var repo = this.state.repo;
-        var label = p(repo.details.title) || repo.name || '-';
-        var url;
-        if (params.project && params.repo) {
-            url = route.find('repo-summary-page', {
-                project: params.project,
-                repo: params.repo,
-            });
+    getRepoNode() {
+        let { route, env } = this.props;
+        let { repo } = this.state;
+        let { t, p } = env.locale;
+        let label = p(repo.details.title) || repo.name || '-';
+        let url;
+        if (route.params.project && route.params.repo) {
+            url = route.find('repo-summary-page', route.params);
         }
         return { label, url };
-    },
+    }
 
     /**
      * Return nav node pointing to user list
      *
      * @return {Object}
      */
-    getUserListNode: function() {
-        var t = this.props.locale.translate;
-        var label = t('nav-users');
-        var route = this.props.route;
-        var url = route.find('user-list-page');
-        var children = [
+    getUserListNode() {
+        let { route, env } = this.props;
+        let { t } = env.locale;
+        let label = t('nav-users');
+        let url = route.find('user-list-page');
+        let children = [
             this.getUserNode(),
         ];
         return { label, url, children };
-    },
+    }
 
     /**
      * Return nav node pointing to a user
      *
      * @return {Object}
      */
-    getUserNode: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var route = this.props.route;
-        var params = route.parameters;
-        var user = this.state.user;
-        var label, url;
-        if (params.user === 'new') {
+    getUserNode() {
+        let { route, env } = this.props;
+        let { user } = this.state;
+        let { t, p } = env.locale;
+        let label, url;
+        if (route.params.user === 'new') {
             label = <i>{t('nav-user-new')}</i>;
         } else {
             label = p(user.details.name) || user.username || '-';
         }
-        if (params.user) {
-            url = route.find('user-summary-page', {
-                user: params.user
-            });
+        if (route.params.user) {
+            url = route.find('user-summary-page', route.params);
         }
         return { label, url };
-    },
+    }
 
     /**
      * Return nav node pointing to role list
      *
      * @return {Object}
      */
-    getRoleListNode: function() {
-        var t = this.props.locale.translate;
-        var route = this.props.route;
-        var label = t('nav-roles');
-        var url = route.find('role-list-page');
-        var children = [
+    getRoleListNode() {
+        let { route, env } = this.props;
+        let { t } = env.locale;
+        let label = t('nav-roles');
+        let url = route.find('role-list-page');
+        let children = [
             this.getRoleNode(),
         ];
         return { label, url, children };
-    },
+    }
 
     /**
      * Return nav node pointing to a role
      *
      * @return {Object}
      */
-    getRoleNode: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var route = this.props.route;
-        var params = route.parameters;
-        var role = this.state.role;
-        var label, url;
-        if (params.role === 'new') {
+    getRoleNode() {
+        let { route, env } = this.props;
+        let { role } = this.state;
+        let { t, p } = env.locale;
+        let label, url;
+        if (route.params.role === 'new') {
             label = <i>{t('nav-role-new')}</i>;
         } else {
             label = p(role.details.title) || role.name || '-';
         }
-        if (params.role) {
-            url = route.find('role-summary-page', {
-                role: params.role
-            });
+        if (route.params.role) {
+            url = route.find('role-summary-page', route.params);
         }
         return { label, url };
-    },
+    }
 
     /**
      * Return nav node pointing to server list
      *
      * @return {Object}
      */
-    getServerListNode: function() {
-        var t = this.props.locale.translate;
-        var route = this.props.route;
-        var label = t('nav-servers');
-        var url = route.find('server-list-page');
-        var children = [
+    getServerListNode() {
+        let { route, env } = this.props;
+        let { t } = env.locale;
+        let label = t('nav-servers');
+        let url = route.find('server-list-page');
+        let children = [
             this.getServerNode(),
         ];
         return { label, url, children };
-    },
+    }
 
     /**
      * Return nav node pointing to a server
      *
      * @return {Object}
      */
-    getServerNode: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var route = this.props.route;
-        var params = route.parameters;
-        var server = this.state.server;
-        var label, url;
-        if (params.server === 'new') {
+    getServerNode() {
+        let { route, env } = this.props;
+        let { server } = this.state;
+        let { t, p } = env.locale;
+        let label, url;
+        if (route.params.server === 'new') {
             label = <i>{t('nav-server-new')}</i>;
         } else {
             label = p(server.details.title);
@@ -492,40 +446,39 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
                 label = (server.type) ? t(`server-type-${server.type}`) : '-';
             }
         }
-        if (params.server) {
-            url = route.find('server-summary-page', {
-                server: params.server
-            });
+        if (route.params.server) {
+            url = route.find('server-summary-page', route.params);
         }
         return { label, url };
-    },
+    }
 
     /**
      * Return nav node pointing to settings page
      *
      * @return {Object}
      */
-    getSettingsNode: function() {
-        var t = this.props.locale.translate;
-        var route = this.props.route;
-        var label = t('nav-settings');
-        var url = route.find('settings-page');
+    getSettingsNode() {
+        let { route, env } = this.props;
+        let { t, p } = env.locale;
+        let label = t('nav-settings');
+        let url = route.find('settings-page');
         return { label, url };
-    },
+    }
 
     /**
      * Move the arrow to the active link
      *
      * @return {Object}
      */
-    repositionArrow: function() {
+    repositionArrow() {
         setTimeout(() => {
+            let { arrowCount } = this.state;
+            let { activeLink } = this.components;
             // find the link level
-            var level = 0;
-            var active = this.components.activeLink;
-            if (active) {
-                for (var n = active; n; n = n.parentNode) {
-                    var m;
+            let level = 0;
+            if (activeLink) {
+                for (let n = activeLink; n; n = n.parentNode) {
+                    let m;
                     if (m = /level(\d)/.exec(n.className)) {
                         level = parseInt(m[1]);
                         break;
@@ -533,36 +486,66 @@ var NavigationTreeSync = module.exports.Sync = React.createClass({
                 }
             }
 
-            var action = '';
-            if (level > this.state.arrowCount) {
+            let action = '';
+            if (level > arrowCount) {
                 action = 'extending';
-            } else if (level < this.state.arrowCount) {
+            } else if (level < arrowCount) {
                 action = 'retracting';
             }
             this.setState({ arrowAction: action, arrowCount: level })
         }, 50);
 
-        var arrow = this.components.arrow;
-        var container = this.components.container;
-        var interval = setInterval(() => {
+        let interval = setInterval(() => {
+            let { arrowPosition } = this.state;
+            let { arrow, container, activeLink } = this.components;
             // calculate the position of the arrow
             // happens in an interval function since the link will
             // move during transition
-            var pos = 0;
-            var active = this.components.activeLink;
-            if (active) {
-                var arrowRect = arrow.getBoundingClientRect();
-                var linkRect = active.getBoundingClientRect();
-                var containerRect = container.getBoundingClientRect();
+            let pos = 0;
+            if (activeLink) {
+                let arrowRect = arrow.getBoundingClientRect();
+                let linkRect = activeLink.getBoundingClientRect();
+                let containerRect = container.getBoundingClientRect();
                 pos = Math.floor(linkRect.top + ((linkRect.height - arrowRect.height) / 2) - containerRect.top) + 1;
             }
-            if (pos !== this.state.arrowPosition) {
+            if (pos !== arrowPosition) {
                 this.setState({ arrowPosition: pos });
             } else {
                 clearInterval(interval);
             }
         }, 50);
-    },
-});
+    }
+}
 
-var emptyObject = { details: {} };
+const emptyObject = { details: {} };
+
+export {
+    NavigationTree as default,
+    NavigationTree,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    NavigationTree.propTypes = {
+        disabled: PropTypes.bool,
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    NavigationTreeSync.propTypes = {
+        project: PropTypes.object,
+        user: PropTypes.object,
+        role: PropTypes.object,
+        repo: PropTypes.object,
+        server: PropTypes.object,
+
+        disabled: PropTypes.bool,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

@@ -1,27 +1,28 @@
+import BootstrapLoader from 'utils/bootstrap-loader';
+import libraries from 'libraries';
+
 window.addEventListener('load', initialize);
 
 function initialize(evt) {
-    var appContainer = document.getElementById('app-container');
+    let appContainer = document.getElementById('app-container');
     if (!appContainer) {
         throw new Error('Unable to find app element in DOM');
     }
 
     // load application code and support libraries
-    var BootstrapLoader = require('utils/bootstrap-loader');
-    var importFuncs = {};
-    var libraries = require('libraries');
-    for (var key in libraries) {
+    let importFuncs = {};
+    for (let key in libraries) {
         importFuncs[key] = libraries[key];
     }
     importFuncs['app'] = () => import('application' /* webpackChunkName: "app" */);
     BootstrapLoader.load(importFuncs, showProgress).then((modules) => {
-        var AppCore = modules['app-core'];
-        var Application = modules['app'].default;
-        var React = modules['react'];
-        var ReactDOM = modules['react-dom'];
+        let AppCore = modules['app-core'];
+        let Application = modules['app'].default;
+        let React = modules['react'];
+        let ReactDOM = modules['react-dom'];
 
-        AppCore.start(Application).then((appProps) => {
-            var appElement = React.createElement(Application, appProps);
+        AppCore.start(Application.coreConfiguration).then((appProps) => {
+            let appElement = React.createElement(Application, appProps);
             ReactDOM.render(appElement, appContainer);
             hideSplashScreen();
         });
@@ -29,8 +30,8 @@ function initialize(evt) {
 }
 
 function hideSplashScreen() {
-    var screen = document.getElementById('splash-screen');
-    var style = document.getElementById('splash-screen-style');
+    let screen = document.getElementById('splash-screen');
+    let style = document.getElementById('splash-screen-style');
     if (screen) {
         screen.className = 'transition-out';
         setTimeout(() => {

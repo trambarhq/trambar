@@ -87,6 +87,11 @@ class ConfirmationDialogBox extends PureComponent {
     }
 }
 
+export {
+    ConfirmationDialogBox as default,
+    ConfirmationDialogBox,
+};
+
 import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
@@ -100,8 +105,3 @@ if (process.env.NODE_ENV !== 'production') {
         onCancel: PropTypes.func,
     };
 }
-
-export {
-    ConfirmationDialogBox as default,
-    ConfirmationDialogBox,
-};

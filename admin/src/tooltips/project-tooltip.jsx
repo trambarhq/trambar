@@ -70,7 +70,12 @@ class ProjectTooltip extends PureComponent {
         }
         return <span>{contents}</span>;
     }
-});
+}
+
+export {
+    ProjectTooltip as default,
+    ProjectTolltip,
+};
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

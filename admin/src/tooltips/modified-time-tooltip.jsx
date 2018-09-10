@@ -77,6 +77,11 @@ setInterval(() => {
     });
 }, 30 * 1000);
 
+export {
+    ModifiedTimeTooltip as default,
+    ModifiedTimeTooltip,
+};
+
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
@@ -86,8 +91,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
-
-export {
-    ModifiedTimeTooltip as default,
-    ModifiedTimeTooltip,
-};

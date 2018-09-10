@@ -1,14 +1,11 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-var Locale = require('locale/locale');
-
-module.exports = ActionBadge;
-
-require('./action-badge.scss')
+import './action-badge.scss'
 
 function ActionBadge(props) {
-    var t = props.locale.translate;
-    var className = 'action-badge', icon;
+    let { env, type } = props;
+    let { t } = env.locale;
+    let className = 'action-badge', icon;
     switch (props.type) {
         case 'add':
         case 'approve':
@@ -24,7 +21,7 @@ function ActionBadge(props) {
             icon = 'times';
             break;
     }
-    var label = t(`action-badge-${props.type}`);
+    let label = t(`action-badge-${type}`);
     return (
         <div className={className}>
             <i className={`fa fa-${icon}`} /> {label}
@@ -32,7 +29,18 @@ function ActionBadge(props) {
     );
 }
 
-ActionBadge.propTypes = {
-    type: PropTypes.string.isRequired,
-    locale: PropTypes.instanceOf(Locale).isRequired,
+export {
+    ActionBadge as default,
+    ActionBadge
 };
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ActionBadge.propTypes = {
+        type: PropTypes.string.isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

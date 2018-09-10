@@ -38,8 +38,9 @@ class ImageCroppingDialogBox extends PureComponent {
      * @return {Boolean}
      */
     canZoom(amount) {
-        let clippingRect = this.resizeClippingRect(amount);
-        return !_.isEqual(clippingRect, this.state.clippingRect);
+        let { clippingRect } = this.state;
+        let rect = this.resizeClippingRect(amount);
+        return !_.isEqual(rect, clippingRect);
     }
 
     /**
@@ -130,6 +131,7 @@ class ImageCroppingDialogBox extends PureComponent {
      */
     renderButtons() {
         let { env } = this.props;
+        let { hasChanged } = this.state;
         let { t } = env.locale;
         let zoomOutProps = {
             className: 'zoom',
@@ -147,7 +149,7 @@ class ImageCroppingDialogBox extends PureComponent {
         };
         let selectProps = {
             className: 'select',
-            disabled: !this.state.hasChanged,
+            disabled: !hasChanged,
             onClick: this.handleSelectClick,
         };
         return (
@@ -172,7 +174,6 @@ class ImageCroppingDialogBox extends PureComponent {
      */
     handleChange = (evt) =>
         let { image } = this.props;
-        let image = this.props.image;
         let clippingRect = _.mapValues(evt.rect, (value) => {
             return Math.round(value);
         });
@@ -243,6 +244,11 @@ function parseJSONEncodedURL(url) {
     return JSON.parse(json);
 }
 
+export {
+    ImageCroppingDialogBox as default,
+    ImageCroppingDialogBox,
+};
+
 import Database from 'data/database';
 import Environment from 'env/environment';
 
@@ -258,8 +264,3 @@ if (process.env.NODE_ENV !== 'production') {
         onCancel: PropTypes.func,
     };
 }
-
-export {
-    ImageCroppingDialogBox as default,
-    ImageCroppingDialogBox,
-};

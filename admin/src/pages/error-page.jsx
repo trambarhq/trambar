@@ -25,7 +25,12 @@ class ErrorPage extends PureComponent {
             </div>
         );
     }
-});
+}
+
+export {
+    ErrorPage as default,
+    ErrorPage,
+};
 
 import Database from 'data/database';
 import Route from 'routing/route';
@@ -40,8 +45,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
-
-export {
-    ErrorPage as default,
-    ErrorPage,
-};

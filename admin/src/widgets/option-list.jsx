@@ -1,34 +1,31 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import React, { PureComponent, Children } from 'react';
 
-var SortableTable = require('widgets/sortable-table');
+import SortableTable from 'widgets/sortable-table';
 
-require('./option-list.scss');
+import './option-list.scss';
 
-module.exports = React.createClass({
-    displayName: 'OptionList',
-    propTypes: {
-        readOnly: PropTypes.bool,
-        onOptionClick: PropTypes.func,
-    },
+class OptionList extends PureComponent {
+    static displayName = 'OptionList';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var children = React.Children.toArray(this.props.children);
-        var options = _.filter(children, { type: 'option' });
-        var label = _.find(children, { type: 'label' });
-        var classNames = [ 'option-list' ];
-        if (this.props.readOnly) {
+    render() {
+        let { children, readOnly } = this.props;
+        children = Children.toArray(children);
+        let options = _.filter(children, { type: 'option' });
+        let label = _.find(children, { type: 'label' });
+        let classNames = [ 'option-list' ];
+        if (readOnly) {
             classNames.push('readonly');
         }
-        var tableProps = {
+        let tableProps = {
             expandable: true,
-            selectable: !this.props.readOnly,
-            expanded: !this.props.readOnly,
+            selectable: !readOnly,
+            expanded: !readOnly,
             sortColumns: [],
         };
         return (
@@ -39,59 +36,80 @@ module.exports = React.createClass({
                 <div className="container">
                     <SortableTable {...tableProps}>
                         <tbody>
-                            {_.map(options, this.renderRow)}
+                        {
+                            _.map(options, (option, i) => {
+                                return this.renderRow(option, i);
+                            })
+                        }
                         </tbody>
                     </SortableTable>
                 </div>
             </div>
         );
-    },
+    }
 
-    renderRow: function(option, i) {
-        if (option.props.hidden) {
+    renderRow(option, i) {
+        let { readOnly } = this.props;
+        let { name, hidden, selected, previous, children } = option.props;
+        if (hidden) {
             return null;
         }
-        var classNames = [ 'option' ];
-        if (option.props.selected) {
+        let classNames = [ 'option' ];
+        if (selected) {
             classNames.push('fixed');
-            if (!this.props.readOnly) {
+            if (!readOnly) {
                 classNames.push('selected');
             }
         }
-        var badge;
-        if (!this.props.readOnly) {
-            if (option.props.selected && !option.props.previous) {
+        let badge;
+        if (!readOnly) {
+            if (selected && !previous) {
                 badge = <i className="fa fa-check-circle-o badge add" />;
-            } else if (!option.props.selected && option.props.previous) {
+            } else if (!selected && previous) {
                 badge = <i className="fa fa-times-circle-o badge remove" />;
             }
         }
-        var props = {
+        let props = {
             className: classNames.join(' '),
-            'data-name': option.props.name,
+            'data-name': name,
             onClick: this.handleClick,
         };
-        if (this.props.readOnly) {
+        if (readOnly) {
             props.onClick = undefined;
         }
         return (
             <tr key={i} {...props}>
                 <td>
-                    {option.props.children}
+                    {children}
                     {badge}
                 </td>
             </tr>
         );
-    },
+    }
 
-    handleClick: function(evt) {
-        var name = evt.currentTarget.getAttribute('data-name');
-        if (this.props.onOptionClick) {
-            this.props.onOptionClick({
+    handleClick = (evt) => {
+        let { onOptionClick } = this.props;
+        let name = evt.currentTarget.getAttribute('data-name');
+        if (onOptionClick) {
+            onOptionClick({
                 type: 'optionclick',
                 target: this,
                 name,
             });
         }
-    },
-})
+    }
+}
+
+export {
+    OptionList as default,
+    OptionList,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    OptionList.propTypes = {
+        readOnly: PropTypes.bool,
+        onOptionClick: PropTypes.func,
+    };
+}

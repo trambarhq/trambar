@@ -728,7 +728,7 @@ class ProjectSummaryPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleSaveClick = (evt) => {
-        let { payloads } = this.props;
+        let { database, payloads } = this.props;
         let { saving } = this.state;
         if (saving) {
             return;
@@ -741,7 +741,7 @@ class ProjectSummaryPageSync extends PureComponent {
         let newProject = _.omit(this.getProject(), 'user_ids', 'repo_ids');
         this.setState({ saving: true, adding: !newProject.id, problems: {} }, () => {
             let schema = 'global';
-            let db = this.props.database.use({ schema, by: this });
+            let db = database.use({ schema, by: this });
             return db.start().then((currentUserID) => {
                 return db.saveOne({ table: 'project' }, newProject).then((project) => {
                     payloads.dispatch(project);
@@ -879,6 +879,12 @@ const emptyProject = {
     settings: ProjectSettings.default,
 };
 
+export {
+    ProjectSummaryPage as default,
+    ProjectSummaryPage,
+    ProjectSummaryPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -904,9 +910,3 @@ if (process.env.NODE_ENV !== 'production') {
         payloads: PropTypes.instanceOf(Payloads).isRequired,
     }
 }
-
-export {
-    ProjectSummaryPage as default,
-    ProjectSummaryPage,
-    ProjectSummaryPageSync,
-};

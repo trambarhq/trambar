@@ -364,6 +364,12 @@ function getServerIcon(type) {
     }
 }
 
+export {
+    SignInPage as default,
+    SignInPage,
+    SignInPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -385,9 +391,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
-
-export {
-    SignInPage as default,
-    SignInPage,
-    SignInPageSync,
-};

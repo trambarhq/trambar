@@ -647,6 +647,12 @@ let findUsers = Memoize(function(users, server) {
     });
 });
 
+export {
+    ServerListPage as default,
+    ServerListPage,
+    ServerListPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -670,9 +676,3 @@ if (process.env.NODE_ENV !== 'production') {
         theme: PropTypes.instanceOf(Theme).isRequired,
     };
 }
-
-export {
-    ServerListPage as default,
-    ServerListPage,
-    ServerListPageSync,
-};

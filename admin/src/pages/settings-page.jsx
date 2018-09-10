@@ -365,14 +365,14 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderBackgroundSelector() {
-        let { env } = this.props;
+        let { database, env, payloads } = this.props;
         let { t } = env.locale;
         let props = {
             purpose: 'background',
             resources: this.getSystemProperty('details.resources'),
-            database: this.props.database,
-            payloads: this.props.payloads,
             readOnly: !this.isEditing(),
+            database,
+            payloads,
             env,
             onChange: this.handleBackgroundImageChange,
         };
@@ -584,6 +584,12 @@ function renderOption(props, i) {
     return <option key={i} {...props} />;
 }
 
+export {
+    SettingsPage as default,
+    SettingsPage,
+    SettingsPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -607,9 +613,3 @@ if (process.env.NODE_ENV !== 'production') {
         payloads: PropTypes.instanceOf(Payloads).isRequired,
     };
 }
-
-export {
-    SettingsPage as default,
-    SettingsPage,
-    SettingsPageSync,
-};

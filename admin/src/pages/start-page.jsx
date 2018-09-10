@@ -17,7 +17,7 @@ class StartPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, env } = this.props;
+        let { database, route, env } = this.props;
         let db = database.use({ by: this });
         let props = {
             env,
@@ -27,11 +27,11 @@ class StartPage extends AsyncComponent {
                 if (_.isEmpty(system)) {
                     if (!this.redirectTimeout) {
                         this.redirectTimeout = setTimeout(() => {
-                            this.props.route.replace('settings-page', { edit: true });
+                            route.replace('settings-page', { edit: true });
                         }, 2500);
                     }
                 } else {
-                    return this.props.route.replace('project-list-page');
+                    return route.replace('project-list-page');
                 }
             });
         }).then((system) => {
@@ -51,15 +51,21 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { env } = this.props;
+        let { env, stage } = this.props;
         let { t } = env.locale;
         return (
-            <div className={`start-page ${this.props.stage}`}>
+            <div className={`start-page ${stage}`}>
                 <h2>{t('welcome')}</h2>
             </div>
         );
     }
 }
+
+export {
+    StartPage as default,
+    StartPage,
+    StartPageSync,
+};
 
 import Database from 'data/database';
 import Route from 'routing/route';
@@ -78,9 +84,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
-
-export {
-    StartPage as default,
-    StartPage,
-    StartPageSync,
-};

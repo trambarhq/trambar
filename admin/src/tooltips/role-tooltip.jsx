@@ -71,6 +71,11 @@ class RoleTooltip extends PureComponent {
     }
 }
 
+export {
+    RoleTooltip as default,
+    RoleTooltip,
+};
+
 import Route from 'routing/route';
 import Environment from 'env/environment';
 

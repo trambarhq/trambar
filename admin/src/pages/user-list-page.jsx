@@ -347,7 +347,7 @@ class UserListPageSync extends PureComponent {
                 let params = { user: user.id }
                 url = route.find('user-summary-page', params);
             }
-            let image = <ProfileImage user={user} theme={this.props.theme} />;
+            let image = <ProfileImage user={user} env={env} />;
             return (
                 <td>
                     <a href={url}>{image} {name}</a>{badge}
@@ -556,7 +556,7 @@ class UserListPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleSaveClick = (evt) => {
-        let { database, env } = this.props;
+        let { database, env, users } = this.props;
         let { disablingUserIDs, restoringUserIDs } = this.state;
         let { confirmation } = this.components;
         let { t } = env.locale;
@@ -576,7 +576,7 @@ class UserListPageSync extends PureComponent {
             let db = database.use({ schema: 'global', by: this });
             return db.start().then((currentUserID) => {
                 let usersAfter = [];
-                _.each(this.props.users, (user) => {
+                _.each(users, (user) => {
                     let flags = {};
                     if (_.includes(disablingUserIDs, user.id)) {
                         flags.disabled = true;
@@ -689,6 +689,12 @@ let findRoles = Memoize(function(roles, user) {
     }));
 });
 
+export {
+    UserListPage as default,
+    UserListPage,
+    UserListPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -711,9 +717,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
-
-export {
-    UserListPage as default,
-    UserListPage,
-    UserListPageSync,
-};

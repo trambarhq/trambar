@@ -264,7 +264,7 @@ class MemberListPageSync extends PureComponent {
     renderRows() {
         let { env, project, users, roles, statistics } = this.props;
         let { renderingFullList, sortColumns, sortDirections } = this.state;
-        if (this.state.renderingFullList) {
+        if (renderingFullList) {
             // list all users when we're editing the list
         } else {
             // list only those who're in the project--or are trying to join
@@ -372,7 +372,7 @@ class MemberListPageSync extends PureComponent {
                 // don't create the link when we're editing the list
                 url = route.find('user-summary-page', {
                     user: user.id,
-                    project: this.props.project.id,
+                    project: project.id,
                 });
             }
             let image = <ProfileImage user={user} env={env} />;
@@ -646,7 +646,7 @@ class MemberListPageSync extends PureComponent {
             let userIDs = project.user_ids;
             let userIDsAfter = _.union(_.difference(userIDs, removingUserIDs), addingUserIDs);
             let columns = {
-                id: this.props.project.id,
+                id: project.id,
                 user_ids: userIDsAfter,
             };
             return db.saveOne({ table: 'project' }, columns).then((project) => {
@@ -681,7 +681,7 @@ class MemberListPageSync extends PureComponent {
             let userIDs = project.user_ids;
             let userIDsAfter = _.union(userIDs, adding);
             let columns = {
-                id: this.props.project.id,
+                id: project.id,
                 user_ids: userIDsAfter,
             };
             return db.saveOne({ table: 'project' }, columns);
@@ -799,6 +799,12 @@ let findRoles = Memoize(function(roles, user) {
     }));
 });
 
+export {
+    MemberListPage as default,
+    MemberListPage,
+    MemberListPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -822,9 +828,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
-
-export {
-    MemberListPage as default,
-    MemberListPage,
-    MemberListPageSync,
-};

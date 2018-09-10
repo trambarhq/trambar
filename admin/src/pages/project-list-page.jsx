@@ -121,10 +121,10 @@ class ProjectListPageSync extends PureComponent {
      * @return {Promise}
      */
     setEditability(edit) {
-        let route = this.props.route;
-        let params = _.clone(route.parameters);
+        let { route } = this.props;
+        let params = _.clone(route.params);
         params.edit = edit;
-        return this.props.route.replace(module.exports, params);
+        return route.replace(route.name, params);
     }
 
     /**
@@ -158,15 +158,18 @@ class ProjectListPageSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { route, env } = this.props;
+        let { hasChanges, problems } = this.state;
+        let { setters } = this.components;
+        let { t } = env.locale;
         return (
             <div className="project-list-page">
                 {this.renderButtons()}
                 <h2>{t('project-list-title')}</h2>
-                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
+                <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderTable()}
-                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
-                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                <ActionConfirmation ref={setters.confirmation} env={env} />
+                <DataLossWarning changes={hasChanges} env={env} route={route} />
             </div>
         );
     }
@@ -177,7 +180,9 @@ class ProjectListPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env, projects } = this.props;
+        let { hasChanges } = this.state;
+        let { t } = env.locale;
         if (this.isEditing()) {
             return (
                 <div className="buttons">
@@ -185,14 +190,14 @@ class ProjectListPageSync extends PureComponent {
                         {t('project-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('project-list-save')}
                     </PushButton>
                 </div>
             );
         } else {
             let preselected;
-            let empty = _.isEmpty(this.props.projects);
+            let empty = _.isEmpty(projects);
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
@@ -215,12 +220,13 @@ class ProjectListPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTable() {
+        let { renderingFullList, sortColumns, sortDirections } = this.state;
         let tableProps = {
-            sortColumns: this.state.sortColumns,
-            sortDirections: this.state.sortDirections,
+            sortColumns,
+            sortDirections,
             onSort: this.handleSort,
         };
-        if (this.state.renderingFullList) {
+        if (renderingFullList) {
             tableProps.expandable = true;
             tableProps.selectable = true;
             tableProps.expanded = this.isEditing();
@@ -499,7 +505,7 @@ class ProjectListPageSync extends PureComponent {
             return <TH id="this_month">{t('table-heading-this-month')}</TH>
         } else {
             let props = {
-                statistics: _.get(this.props.statistics, [ project.id, 'this_month' ]),
+                statistics: _.get(statistics, [ project.id, 'this_month' ]),
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -691,19 +697,19 @@ let sortProjects = Memoize(function(projects, users, repos, statistics, env, col
                 };
             case 'range':
                 return (project) => {
-                    return _.get(this.props.statistics, [ project.id, 'range', 'start' ], '');
+                    return _.get(statistics, [ project.id, 'range', 'start' ], '');
                 };
             case 'last_month':
                 return (project) => {
-                    return _.get(this.props.statistics, [ project.id, 'last_month', 'total' ], 0);
+                    return _.get(statistics, [ project.id, 'last_month', 'total' ], 0);
                 };
             case 'this_month':
                 return (project) => {
-                    return _.get(this.props.statistics, [ project.id, 'this_month', 'total' ], 0);
+                    return _.get(statistics, [ project.id, 'this_month', 'total' ], 0);
                 };
             case 'to_date':
                 return (project) => {
-                    return _.get(this.props.statistics, [ project.id, 'to_date', 'total' ], 0);
+                    return _.get(statistics, [ project.id, 'to_date', 'total' ], 0);
                 };
             default:
                 return column;
@@ -732,6 +738,12 @@ let findUsers = Memoize(function(users, project) {
     }));
 });
 
+export {
+    ProjectListPage as default,
+    ProjectListPage,
+    ProjectListPageSync,
+};
+
 import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
@@ -757,9 +769,3 @@ if (process.env.NODE_ENV !== 'production') {
         theme: PropTypes.instanceOf(Theme).isRequired,
     };
 }
-
-export {
-    ProjectListPage as default,
-    ProjectListPage,
-    ProjectListPageSync,
-};

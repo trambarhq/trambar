@@ -32,15 +32,17 @@ import 'font-awesome-webpack';
 
 class Application extends PureComponent {
     static displayName = 'Application';
-    static routes = routes;
-    static basePath = '/admin';
-    static area = 'admin';
-    static discoveryFlags: {
-        include_deleted: true,
-    };
-    static retrievalFlags: {
-        include_ctime: true,
-        include_mtime: true,
+    static coreConfiguration = {
+        basePath: '/admin',
+        area: 'admin',
+        discoveryFlags: {
+            include_deleted: true,
+        },
+        retrievalFlags: {
+            include_ctime: true,
+            include_mtime: true,
+        },
+        routes,
     };
 
     constructor(props) {
@@ -72,12 +74,8 @@ class Application extends PureComponent {
      * @return {ReactElement|null}
      */
     render() {
-        let navProps = {
-            database: this.state.database,
-            route: this.state.route,
-            locale: this.state.locale,
-            theme: this.state.theme,
-        };
+        let { database, route, env } = this.state;
+        let navProps = { database, route, env };
         return (
             <div className="application" id="application">
                 <SideNavigation {...navProps} />
@@ -99,17 +97,10 @@ class Application extends PureComponent {
      * @return {ReactElement}
      */
     renderCurrentPage () {
-        let { route, showingSignInPage, showingErrorPage } = this.state;
+        let { database, route, env, payloads } = this.state;
         let { module } = route.params;
-        let CurrentPAge = module.default;
-
-        let CurrentPage = this.state.route.component;
-        let pageProps = {
-            database: this.state.database,
-            route: this.state.route,
-            payloads: this.state.payloads,
-            env: this.state.env,
-        };
+        let CurrentPage = module.default;
+        let pageProps = { database, route, env, payloads };
         if (showingErrorPage) {
             CurrentPage = ErrorPage;
         } else if (showingSignInPage) {
@@ -124,12 +115,8 @@ class Application extends PureComponent {
      * @return {ReactElement|null}
      */
     renderTaskAlert () {
-        let props = {
-            database: this.state.database,
-            route: this.state.route,
-            payloads: this.state.payloads,
-            env: this.state.env,
-        };
+        let { database, route, env } = this.state;
+        let props = { database, route, env };
         return <TaskAlertBar {...props} />;
     }
 
@@ -139,12 +126,13 @@ class Application extends PureComponent {
      * @return {ReactElement|null}
      */
     renderUploadProgress () {
-        if (!this.state.showingUploadProgress) {
+        let { env, payloads, showingUploadProgress } = this.state;
+        if (!showingUploadProgress) {
             return null;
         }
         let props = {
-            payloads: this.state.payloads,
-            locale: this.state.locale,
+            payloads,
+            env,
         };
         return <UploadProgress {...props} />;
     }
@@ -215,8 +203,8 @@ class Application extends PureComponent {
      * @param  {Object} evt
      */
     handlePayloadsChange = (evt) => {
+        let { showingUploadProgress } = this.state;
         let payloads = new Payloads(evt.target);
-        let showingUploadProgress = this.state.showingUploadProgress;
         if (!payloads.uploading) {
             // stop showing it once it's done
             showingUploadProgress = false;
@@ -270,13 +258,19 @@ class Application extends PureComponent {
      * @param  {Event} evt
      */
     handleBeforeUnload = (evt) => {
-        if (this.state.payloads && this.state.payloads.uploading) {
+        let { payloads } = this.state;
+        if (payloads.uploading) {
             // Chrome will repaint only after the modal dialog is dismissed
             this.setState({ showingUploadProgress: true });
             return (evt.returnValue = 'Are you sure?');
         }
     }
 }
+
+export {
+    Application as default,
+    Application
+};
 
 import EnvironmentMonitor from 'env/environment-monitor';
 import RouteManager from 'relaks-route-manager';
@@ -296,8 +290,3 @@ if (process.env.NODE_ENV !== 'production') {
         //notifier: PropTypes.instanceOf(Notifier),
     };
 }
-
-export {
-    Application as default,
-    Application
-};

@@ -40,10 +40,9 @@ class RepoSummaryPage extends AsyncComponent {
             repo: null,
             statistics: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
         };
         meanwhile.show(<RepoSummaryPageSync {...props} />);
         return db.start().then((currentUserID) => {
@@ -122,14 +121,15 @@ class RepoSummaryPageSync extends PureComponent {
      * @param  {*} value
      */
     setRepoProperty(path, value) {
-        let repo = this.getRepo();
-        let newRepo = _.decoupleSet(repo, path, value);
+        let { repo } = this.props;
+        let newRepo = this.getRepo();
+        let newRepoAfter = _.decoupleSet(newRepo, path, value);
         let hasChanges = true;
-        if (_.isEqual(newRepo, this.props.repo)) {
-            newRepo = null;
+        if (_.isEqual(newRepoAfter, repo)) {
+            newRepoAfter = null;
             hasChanges = false;
         }
-        this.setState({ newRepo, hasChanges });
+        this.setState({ newRepo: newRepoAfter, hasChanges });
     }
 
     /**
@@ -520,15 +520,17 @@ class RepoSummaryPageSync extends PureComponent {
     handleTitleChange = (evt) => {
         this.setRepoProperty(`details.title`, evt.target.value);
     }
-});
+}
 
 const emptyRepo = {
     details: {}
 };
 
-function renderOption(props, i) {
-    return <option key={i} {...props} />;
-}
+export {
+    RepoSummaryPage as default,
+    RepoSummaryPage,
+    RepoSummaryPageSync,
+};
 
 import Database from 'data/database';
 import Route from 'routing/route';
@@ -552,9 +554,3 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
-
-export {
-    RepoSummaryPage as default,
-    RepoSummaryPage,
-    RepoSummaryPageSync,
-};
