@@ -3,7 +3,7 @@ import 'moment/locale/de-at';
 import 'moment/locale/de-ch';
 import { cardinal } from 'locale/grammars/english';
 
-let phrases = {
+const phrases = {
     'action-badge-add': 'hinzufügen',
     'action-badge-approve': 'genehmigen',
     'action-badge-archive': 'archivieren',

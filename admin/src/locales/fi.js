@@ -1,7 +1,7 @@
 import 'moment/locale/fi';
 import { cardinal } from 'locale/grammars/finnish';
 
-let phrases = {
+const phrases = {
     'action-badge-add': 'lisätään',
     'action-badge-approve': 'hyväksytään',
     'action-badge-archive': 'arkistoidaan',

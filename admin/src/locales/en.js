@@ -5,7 +5,7 @@ import 'moment/locale/en-ie';
 import 'moment/locale/en-nz';
 import { cardinal } from 'locale/grammars/english';
 
-let phrases = {
+const phrases = {
     'action-badge-add': 'add',
     'action-badge-approve': 'approve',
     'action-badge-archive': 'archive',

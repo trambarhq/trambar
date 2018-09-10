@@ -2,7 +2,7 @@ import 'moment/locale/fr';
 import 'moment/locale/fr-ca';
 import 'moment/locale/fr-ch';
 
-let phrases = {
+const phrases = {
     'action-badge-add': "ajouter",
     'action-badge-approve': "approuver",
     'action-badge-archive': "archiver",

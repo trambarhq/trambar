@@ -1,7 +1,7 @@
 import 'moment/locale/nb';
 import { cardinal } from 'locale/grammars/norwegian';
 
-let phrases = {
+const phrases = {
     'action-badge-add': 'legge til',
     'action-badge-approve': 'godkjenne',
     'action-badge-archive': 'arkiverer',

@@ -9,10 +9,10 @@ Moment.defineLocale('zh-mo', { parentLocale: 'zh-hk' });
 
 // remove white-spaces from relative time
 ['zh-cn', 'zh-hk', 'zh-tw'].forEach((locale) => {
-    var localeData = Moment.localeData('zh-cn');
-    var relativeTime = localeData._relativeTime;
-    for (var key in relativeTime) {
-        var value = relativeTime[key];
+    let localeData = Moment.localeData('zh-cn');
+    let relativeTime = localeData._relativeTime;
+    for (let key in relativeTime) {
+        let value = relativeTime[key];
         relativeTime[key] = value.replace(/\s+/g, '');
     }
 });
@@ -28,7 +28,7 @@ function chooseVariant(countryCode) {
     }
 };
 
-var traditionalPhrases = {
+const traditionalPhrases = {
     'action-badge-add': '會添加',
     'action-badge-approve': '會批准',
     'action-badge-archive': '會歸檔',
@@ -163,11 +163,11 @@ var traditionalPhrases = {
     'project-list-add': '添加項目',
     'project-list-cancel': '取消',
     'project-list-confirm-archive-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你確定要存檔這${num}個項目？`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你確定要恢復這${num}個項目？`;
     },
     'project-list-deleted': '已刪除',
@@ -178,7 +178,7 @@ var traditionalPhrases = {
     'project-list-title': '項目',
 
     'project-summary-$title': (title) => {
-        var text = '項目';
+        let text = '項目';
         if (title) {
             text += `： ${title}`;
         }
@@ -213,13 +213,13 @@ var traditionalPhrases = {
     'project-summary-title': '名稱',
 
     'project-tooltip-$count-others': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `還有${num}個`;
     },
 
     'repo-list-cancel': '取消',
     'repo-list-confirm-remove-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你確定要從項目解除這${num}個數據庫？`
     },
     'repo-list-edit': '編輯數據庫列表',
@@ -229,7 +229,7 @@ var traditionalPhrases = {
     'repo-list-title': '數據庫',
 
     'repo-summary-$title': (title) => {
-        var text = `數據庫`;
+        let text = `數據庫`;
         if (title) {
             text += `： ${title}`;
         }
@@ -257,11 +257,11 @@ var traditionalPhrases = {
     'role-list-add': '添加角色',
     'role-list-cancel': '取消',
     'role-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你確定要停用這${num}個角色？`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你確定要啟用這${num}個角色？`
     },
     'role-list-edit': '編輯角色列表',
@@ -271,7 +271,7 @@ var traditionalPhrases = {
     'role-list-title': '角色',
 
     'role-summary-$title': (title) => {
-        var text = '角色';
+        let text = '角色';
         if (title) {
             text += `： ${title}`;
         }
@@ -300,7 +300,7 @@ var traditionalPhrases = {
     'role-summary-users': '用戶',
 
     'role-tooltip-$count-others': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `還有${num}個`;
     },
 
@@ -309,11 +309,11 @@ var traditionalPhrases = {
     'server-list-api-access-true': '已取得',
     'server-list-cancel': '取消',
     'server-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你確定要停用這${num}個服務器？`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你確定要啟用這${num}個服務器？`
     },
     'server-list-edit': '編輯服務器列表',
@@ -402,7 +402,7 @@ var traditionalPhrases = {
     'settings-title': '設置',
 
     'sign-in-$title': (title) => {
-        var text = `登錄`;
+        let text = `登錄`;
         if (title) {
             text += `： ${title}`;
         }
@@ -511,7 +511,7 @@ var traditionalPhrases = {
     'tooltip-more': '更多',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `上傳${num}個文件，剩下${size}`;
     },
 
@@ -519,11 +519,11 @@ var traditionalPhrases = {
     'user-list-approve-all': '批准所有請求',
     'user-list-cancel': '取消',
     'user-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你確定要關閉這${num}個用戶？`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你確定要恢復這${num}個用戶？`
     },
     'user-list-edit': '編輯用戶列表',
@@ -538,7 +538,7 @@ var traditionalPhrases = {
     'user-list-type-moderator': '檢查員',
     'user-list-type-regular': '普通用戶',
     'user-summary-$name': (name) => {
-        var text = '用戶';
+        let text = '用戶';
         if (name) {
             text += `： ${name}`;
         }
@@ -558,7 +558,7 @@ var traditionalPhrases = {
     'user-summary-ichat': 'iChat用戶名',
     'user-summary-linkedin': 'LinkedIn個人資料網址',
     'user-summary-member-$name': (name) => {
-        var text = '成員';
+        let text = '成員';
         if (name) {
             text += `： ${name}`;
         }
@@ -605,7 +605,7 @@ var traditionalPhrases = {
     'welcome': '歡迎!',
 };
 
-var simplifiedPhrases = {
+const simplifiedPhrases = {
     'action-badge-add': '会添加',
     'action-badge-approve': '会批准',
     'action-badge-archive': '会归档',
@@ -740,11 +740,11 @@ var simplifiedPhrases = {
     'project-list-add': '添加项目',
     'project-list-cancel': '取消',
     'project-list-confirm-archive-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你确定要存档这${num}个项目？`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你确定要恢复这${num}个项目？`;
     },
     'project-list-deleted': '已删除',
@@ -755,7 +755,7 @@ var simplifiedPhrases = {
     'project-list-title': '项目',
 
     'project-summary-$title': (title) => {
-        var text = '项目';
+        let text = '项目';
         if (title) {
             text += `： ${title}`;
         }
@@ -790,13 +790,13 @@ var simplifiedPhrases = {
     'project-summary-title': '名称',
 
     'project-tooltip-$count-others': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `还有${num}个`;
     },
 
     'repo-list-cancel': '取消',
     'repo-list-confirm-remove-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你确定要从项目解除这${num}个数据库？`
     },
     'repo-list-edit': '编辑数据库列表',
@@ -806,7 +806,7 @@ var simplifiedPhrases = {
     'repo-list-title': '数据库',
 
     'repo-summary-$title': (title) => {
-        var text = `数据库`;
+        let text = `数据库`;
         if (title) {
             text += `： ${title}`;
         }
@@ -834,11 +834,11 @@ var simplifiedPhrases = {
     'role-list-add': '添加角色',
     'role-list-cancel': '取消',
     'role-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你确定要停用这${num}个角色？`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你确定要启用这${num}个角色？`
     },
     'role-list-edit': '编辑角色列表',
@@ -848,7 +848,7 @@ var simplifiedPhrases = {
     'role-list-title': '角色',
 
     'role-summary-$title': (title) => {
-        var text = '角色';
+        let text = '角色';
         if (title) {
             text += `： ${title}`;
         }
@@ -877,7 +877,7 @@ var simplifiedPhrases = {
     'role-summary-users': '用户',
 
     'role-tooltip-$count-others': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `还有${num}个`;
     },
 
@@ -886,11 +886,11 @@ var simplifiedPhrases = {
     'server-list-api-access-true': '已取得',
     'server-list-cancel': '取消',
     'server-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你确定要停用这${num}个服务器？`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你确定要启用这${num}个服务器？`
     },
     'server-list-edit': '编辑服务器列表',
@@ -979,7 +979,7 @@ var simplifiedPhrases = {
     'settings-title': '设置',
 
     'sign-in-$title': (title) => {
-        var text = `登录`;
+        let text = `登录`;
         if (title) {
             text += `： ${title}`;
         }
@@ -1088,7 +1088,7 @@ var simplifiedPhrases = {
     'tooltip-more': '更多',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `上传${num}个文件，剩下${size}`;
     },
 
@@ -1096,11 +1096,11 @@ var simplifiedPhrases = {
     'user-list-approve-all': '批准所有请求',
     'user-list-cancel': '取消',
     'user-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你确定要关闭这${num}个用户？`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
+        let num = cardinalT(count);
         return `你确定要恢复这${num}个用户？`
     },
     'user-list-edit': '编辑用户列表',
@@ -1115,7 +1115,7 @@ var simplifiedPhrases = {
     'user-list-type-moderator': '检查员',
     'user-list-type-regular': '普通用户',
     'user-summary-$name': (name) => {
-        var text = '用户';
+        let text = '用户';
         if (name) {
             text += `： ${name}`;
         }
@@ -1135,7 +1135,7 @@ var simplifiedPhrases = {
     'user-summary-ichat': 'iChat用户名',
     'user-summary-linkedin': 'LinkedIn个人资料网址',
     'user-summary-member-$name': (name) => {
-        var text = '成员';
+        let text = '成员';
         if (name) {
             text += `： ${name}`;
         }

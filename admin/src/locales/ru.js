@@ -7,7 +7,7 @@ import {
     pastTenseEnding,
 } from 'locale/grammars/russian';
 
-let phrases = {
+const phrases = {
     'action-badge-add': 'добавить',
     'action-badge-approve': 'утверждать',
     'action-badge-archive': 'архивировать',
@@ -226,7 +226,7 @@ let phrases = {
     'project-list-add': 'Добавить проект',
     'project-list-cancel': 'Отмена',
     'project-list-confirm-archive-$count': (count) => {
-        var projects;
+        let projects;
         if (singularN(count)) {
             projects = `выбранный проект`;
         } else if (singularG(count)) {
@@ -237,7 +237,7 @@ let phrases = {
         return `Вы действительно хотите архивировать ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        var projects;
+        let projects;
         if (singularN(count)) {
             projects = `выбранный проект`;
         } else if (singularG(count)) {
@@ -255,7 +255,7 @@ let phrases = {
     'project-list-title': 'Проекты',
 
     'project-summary-$title': (title) => {
-        var text = 'Проект';
+        let text = 'Проект';
         if (title) {
             text += `: ${title}`;
         }
@@ -301,7 +301,7 @@ let phrases = {
 
     'repo-list-cancel': 'Отмена',
     'repo-list-confirm-remove-$count': (count) => {
-        var repositories;
+        let repositories;
         if (singularN(count)) {
             repositories = `выбранный репозиторий`;
         } else if (singularG(count)) {
@@ -318,7 +318,7 @@ let phrases = {
     'repo-list-title': 'Репозитория',
 
     'repo-summary-$title': (title) => {
-        var text = `Репозиторий`;
+        let text = `Репозиторий`;
         if (title) {
             text += `: ${title}`;
         }
@@ -352,7 +352,7 @@ let phrases = {
     'role-list-add': 'Добавить роль',
     'role-list-cancel': 'Отмена',
     'role-list-confirm-disable-$count': (count) => {
-        var roles;
+        let roles;
         if (singularN(count)) {
             roles = `эту роль`;
         } else if (singularG(count)) {
@@ -363,7 +363,7 @@ let phrases = {
         return `Вы действительно хотите отключить ${roles}?`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        var roles;
+        let roles;
         if (singularN(count)) {
             roles = `эту роль`;
         } else if (singularG(count)) {
@@ -380,7 +380,7 @@ let phrases = {
     'role-list-title': 'Роли',
 
     'role-summary-$title': (title) => {
-        var text = 'Роль';
+        let text = 'Роль';
         if (title) {
             text += `: ${title}`;
         }
@@ -423,7 +423,7 @@ let phrases = {
     'server-list-api-access-true': 'Получен',
     'server-list-cancel': 'Отмена',
     'server-list-confirm-disable-$count': (count) => {
-        var servers;
+        let servers;
         if (singularN(count)) {
             servers = `выбранный сервер`;
         } else if (singularG(count)) {
@@ -434,7 +434,7 @@ let phrases = {
         return `Вы действительно хотите отключить ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        var servers;
+        let servers;
         if (singularN(count)) {
             servers = `выбранный сервер`;
         } else if (singularG(count)) {
@@ -530,7 +530,7 @@ let phrases = {
     'settings-title': 'Настройки',
 
     'sign-in-$title': (title) => {
-        var text = `Войти`;
+        let text = `Войти`;
         if (title) {
             text += `: ${title}`;
         }
@@ -579,7 +579,7 @@ let phrases = {
         }
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        var comments;
+        let comments;
         if (singularN(count)) {
             comments = `${count} комментарий`;
         } else if (singularG(count)) {
@@ -590,7 +590,7 @@ let phrases = {
         return `Импортировано из репозитория «${repo}» ${comments} к коммиту`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        var events;
+        let events;
         if (singularN(count)) {
             events = `${count} событие`;
         } else if (singularG(count)) {
@@ -601,7 +601,7 @@ let phrases = {
         return `Импортировано из репозитория «${repo}» ${events}`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        var comments;
+        let comments;
         if (singularN(count)) {
             comments = `${count} комментарий`;
         } else if (singularG(count)) {
@@ -612,7 +612,7 @@ let phrases = {
         return `Импортировано из репозитория «${repo}» ${comments} к отчёту об ошибке`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        var comments;
+        let comments;
         if (singularN(count)) {
             comments = `${count} комментарий`;
         } else if (singularG(count)) {
@@ -623,7 +623,7 @@ let phrases = {
         return `Импортировано из репозитория «${repo}» ${comments} к запросу слияния`;
     },
     'task-imported-$count-repos': (count) => {
-        var repos;
+        let repos;
         if (singularN(count)) {
             repos = `${count} репозиторий`;
         } else if (singularG(count)) {
@@ -634,7 +634,7 @@ let phrases = {
         return `Импортировано ${repos}`;
     },
     'task-imported-$count-users': (count) => {
-        var users;
+        let users;
         if (singularN(count)) {
             users = `${count} пользователь`;
         } else if (singularG(count)) {
@@ -645,7 +645,7 @@ let phrases = {
         return `Импортировано ${users}`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        var commits;
+        let commits;
         if (singularN(count)) {
             commits = `${count} коммитом`;
         } else if (singularG(count)) {
@@ -673,7 +673,7 @@ let phrases = {
     'task-importing-repos': 'Импортирования репозиториев',
     'task-importing-users': 'Импортирования пользователей',
     'task-installed-$count-hooks': (count) => {
-        var hooks;
+        let hooks;
         if (singularN(count)) {
             hooks = `обратный вызов`;
         } else if (singularG(count)) {
@@ -685,7 +685,7 @@ let phrases = {
     },
     'task-installing-hooks': 'Установка обратных вызовов',
     'task-removed-$count-hooks': (count) => {
-        var hooks;
+        let hooks;
         if (singularN(count)) {
             hooks = `обратный вызов`;
         } else if (singularG(count)) {
@@ -696,7 +696,7 @@ let phrases = {
         return `Удален ${hooks}`;
     },
     'task-removed-$count-repos': (count) => {
-        var repos;
+        let repos;
         if (singularN(count)) {
             repos = `${count} репозиторий`;
         } else if (singularG(count)) {
@@ -707,7 +707,7 @@ let phrases = {
         return `Удален ${repos}`;
     },
     'task-removed-$count-users': (count) => {
-        var users;
+        let users;
         if (singularN(count)) {
             users = `${count} пользователя`;
         } else if (singularG(count)) {
@@ -719,7 +719,7 @@ let phrases = {
     },
     'task-removing-hooks': 'Удаление обратных вызовов',
     'task-updated-$count-repos': (count) => {
-        var repos;
+        let repos;
         if (singularN(count)) {
             repos = `${count} репозиторий`;
         } else if (singularG(count)) {
@@ -730,7 +730,7 @@ let phrases = {
         return `Обновлено ${repos}`;
     },
     'task-updated-$count-users': (count) => {
-        var users;
+        let users;
         if (singularN(count)) {
             users = `${count} пользователя`;
         } else if (singularG(count)) {
@@ -749,7 +749,7 @@ let phrases = {
     'tooltip-more': 'Более',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        var files;
+        let files;
         if (singularN(count)) {
             files = `${count} файл`;
         } else if (singularG(count)) {
@@ -764,7 +764,7 @@ let phrases = {
     'user-list-approve-all': 'Утвердить все запросы',
     'user-list-cancel': 'Отмена',
     'user-list-confirm-disable-$count': (count) => {
-        var users;
+        let users;
         if (singularN(count)) {
             users = `выбранного пользователя`;
         } else if (singularG(count)) {
@@ -775,7 +775,7 @@ let phrases = {
         return `Вы действительно хотите отключить ${users}?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        var users;
+        let users;
         if (singularN(count)) {
             users = `выбранного пользователя`;
         } else if (singularG(count)) {
@@ -797,7 +797,7 @@ let phrases = {
     'user-list-type-moderator': 'Модератор',
     'user-list-type-regular': 'Постоянный пользователь',
     'user-summary-$name': (name) => {
-        var text = 'Пользователь';
+        let text = 'Пользователь';
         if (name) {
             text += `: ${name}`;
         }
@@ -817,7 +817,7 @@ let phrases = {
     'user-summary-ichat': 'Имя пользователя iChat',
     'user-summary-linkedin': 'URL профиля LinkedIn',
     'user-summary-member-$name': (name) => {
-        var text = 'Член';
+        let text = 'Член';
         if (name) {
             text += `: ${name}`;
         }

@@ -1,7 +1,7 @@
 import 'moment/locale/it';
 import { cardinal } from 'locale/grammars/italian';
 
-let phrases = {
+const phrases = {
     'action-badge-add': "aggiungere",
     'action-badge-approve': "approvare",
     'action-badge-archive': "archiviare",

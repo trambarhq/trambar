@@ -6,7 +6,7 @@ import {
     pastTenseEnding,
 } from 'locale/grammars/polish';
 
-let phrases = {
+const phrases = {
     'action-badge-add': 'dodaj',
     'action-badge-approve': 'zatwierdź',
     'action-badge-archive': 'zarchiwizuj',
