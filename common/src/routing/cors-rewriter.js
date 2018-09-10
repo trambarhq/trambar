@@ -38,5 +38,5 @@ const CORSRewriter = {
 };
 
 export {
-    CORSRewriter
+    CORSRewriter as default,
 };

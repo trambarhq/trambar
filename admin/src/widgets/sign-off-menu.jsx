@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'react';
+import { AsyncComponent } from 'relaks';
 import UserFinder from 'objects/finders/user-finder';
 
 // widgets

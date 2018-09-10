@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'react';
+import { AsyncComponent } from 'relaks';
 import SessionStartTime from 'data/session-start-time';
 import TaskFinder from 'objects/finders/task-finder';
 
@@ -53,6 +53,7 @@ class TaskAlertBar extends AsyncComponent {
         }).catch((err) => {
             if (err.statusCode === 401) {
                 // user is logging out, presumably
+                return null;
             } else {
                 throw err;
             }

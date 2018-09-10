@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'react';
+import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
 import TaskFinder from 'objects/finders/task-finder';
 

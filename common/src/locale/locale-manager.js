@@ -34,11 +34,15 @@ class LocaleManager extends EventEmitter {
     }
 
     start(locale) {
+        let { defaultLocale } = this.options;
         if (!locale) {
             locale = this.browserLocaleCode;
+            if (!locale) {
+                locale = defaultLocale;
+            }
         }
         return this.change(locale).catch((err) => {
-            return this.change(this.options.defaultLocale);
+            return this.change(defaultLocale);
         });
     }
 
@@ -184,10 +188,6 @@ function getBrowserLocale() {
     // check navigator.languages
     _.each(navigator.languages, check);
 
-    // check other fields
-    let keys = [ 'language', 'browserLanguage', 'systemLanguage', 'userLanguage' ];
-    _.each(keys, (key) => { check(navigator[key]) })
-
     let code;
     function check(lang) {
         if (code === undefined) {
@@ -196,6 +196,10 @@ function getBrowserLocale() {
             }
         }
     }
+
+    // check other fields
+    let keys = [ 'language', 'browserLanguage', 'systemLanguage', 'userLanguage' ];
+    _.each(keys, (key) => { check(navigator[key]) })
     return code;
 }
 

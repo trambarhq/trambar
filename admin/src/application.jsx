@@ -1,9 +1,8 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'react';
+import { AsyncComponent } from 'relaks';
 import createClass from 'relaks/create-class';
-Relaks.createClass = createClass;
 
 import ComponentRefs from 'utils/component-refs';
 import HTTPError from 'errors/http-error';
@@ -99,6 +98,16 @@ class Application extends PureComponent {
     renderCurrentPage () {
         let { database, route, env, payloads } = this.state;
         let { module } = route.params;
+        if (!module) {
+            if (process.env.NODE_ENV !== 'production') {
+                if (!route.name) {
+                    console.log('No routing information');
+                } else {
+                    console.log('No component for route: ' + route.name);
+                }
+            }
+            return null;
+        }
         let CurrentPage = module.default;
         let pageProps = { database, route, env, payloads };
         if (showingErrorPage) {

@@ -7,16 +7,12 @@ import './tooltip.scss';
 class Tooltip extends PureComponent {
     static displayName = 'Tooltip';
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             container: HTMLElement,
         });
-        return {
+        this.state = {
             open: false,
             live: hasContents(this.props),
         };
@@ -181,7 +177,7 @@ function hasContents(props) {
     let children = Children.toArray(props.children);
     let win = _.find(children, { type: 'window' });
     if (win) {
-        if (Children.count(window.props.children) > 0) {
+        if (Children.count(win.props.children) > 0) {
             return true;
         }
     }

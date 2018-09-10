@@ -75,16 +75,12 @@ class ProjectListPage extends AsyncComponent {
 class ProjectListPageSync extends PureComponent {
     static displayName = 'ProjectListPage.Sync';
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
         });
-        return {
+        this.state = {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
             restoringProjectIDs: [],
