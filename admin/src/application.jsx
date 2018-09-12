@@ -61,8 +61,6 @@ class Application extends PureComponent {
             route: new Route(routeManager),
             env: new Environment(envMonitor, localeManager),
 
-            showingSignInPage: false,
-            showingErrorPage: false,
             showingUploadProgress: false,
         };
     }
@@ -74,7 +72,12 @@ class Application extends PureComponent {
      */
     render() {
         let { database, route, env } = this.state;
-        let navProps = { database, route, env };
+        let navProps = { 
+            database,
+            route,
+            env,
+            disabled: route.public,
+        };
         return (
             <div className="application" id="application">
                 <SideNavigation {...navProps} />
@@ -110,12 +113,7 @@ class Application extends PureComponent {
         }
         let CurrentPage = module.default;
         let pageProps = { database, route, env, payloads };
-        if (showingErrorPage) {
-            CurrentPage = ErrorPage;
-        } else if (showingSignInPage) {
-            CurrentPage = SignInPage;
-        }
-        return <CurrentPage {...pageProps} />;
+        return <CurrentPage key={route.url} {...pageProps} />;
     }
 
     /**

@@ -146,7 +146,16 @@ var routes = {
             import('pages/start-page' /* webpackChunkName: "page-start" */).then((module) => {
                 params.module = module;
             });
-        }
+        },
+    },
+    'sign-in-page': {
+        load: (params, context) => {
+            import('pages/sign-in-page' /* webpackChunkName: "page-sign-in" */).then((module) => {
+                params.module = module;
+            });
+        },
+        public: true,
+        signIn: true,
     },
     'user-list-page': {
         path: '/users/',

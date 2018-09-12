@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import EnvironmentMonitor from 'env/environment-monitor';
 import LocaleManager from 'locale/locale-manager';
 import RouteManager from 'relaks-route-manager';
@@ -27,6 +28,9 @@ function start(cfg) {
     let routeManager = new RouteManager({
         basePath: cfg.basePath,
         routes: cfg.routes,
+        // CORSRewriter will extract site address from the URL when there's one
+        // and default to the site address of the page when there isn't; the
+        // address will appear in .context
         rewrites: [ CORSRewriter ],
     });
     let localeManager = new LocaleManager({
@@ -63,6 +67,11 @@ function start(cfg) {
         notifier.activate();
     }
 
+    // look for sign in page
+    let signInPageName = _.findKey(cfg.routes, (route) => {
+        return route.public && route.signIn;
+    });
+
     envMonitor.addEventListener('change', (evt) => {
         if (envMonitor.online) {
             dataSource.activate();
@@ -76,29 +85,35 @@ function start(cfg) {
     });
     routeManager.addEventListener('beforechange', (evt) => {
         // see if a page requires authentication
-        let { authentication } = routeManager.params;
-        let { address } = routeManager.context;
-        if (authentication !== false) {
+        let { name, context, route } = evt;
+        if (route.public !== true) {
+            // page requires authorization--see if it's been acquired already
+            let { address } = context;
             let location = { address };
-            let promise = dataSource.authenticate(location);
-            evt.postponeDefault(promise);
+            if (!dataSource.hasAuthorization(location)) {
+                // nope, we need to postpone the page switch
+                // first, see if there's a saved session
+                let promise = loadSession(address).then((session) => {
+                    if (!dataSource.restoreAuthorization(location, session)) {
+                        // there was none or it's expired--show the sign-in page
+                        return evt.substitute(signInPageName).then(() => {
+                            // ask the data-source to request authentication
+                            return dataSource.requestAuthentication(location);
+                        });
+                    }
+                });
+                evt.postponeDefault(promise);
+            }
         }
     });
-    dataSource.addEventListener('beforeauthentication', (evt) => {
-        // check if a session is saved; if so, then there's no need to authenticate
-        let { address } = evt;
-        let promise = loadSession(address).then((session) => {
-            if (!session) {
-                return;
-            }
-            return dataSource.restoreSession(session).then((result) => {
-                if (result) {
-                    // cancel default behavior
-                    return false;
-                }
-            });
-        });
-        evt.postponeDefault(promise);
+    dataSource.addEventListener('authentication', (evt) => {
+        // go to the sign-in page if we aren't there already
+        if (routeManager.name !== signInPageName) {
+            routeManager.substitute(signInPageName);
+        }
+    });
+    dataSource.addEventListener('authorization', (evt) => {
+
     });
     dataSource.addEventListener('expiration', (evt) => {
 

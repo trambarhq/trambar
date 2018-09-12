@@ -2,7 +2,9 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React from 'react';
 import Moment from 'moment';
+import Async from 'async-do-while';
 import EventEmitter, { GenericEvent } from 'utils/event-emitter';
+import ManualPromise from 'utils/manual-promise';
 import HTTPRequest from 'transport/http-request';
 import HTTPError from 'errors/http-error';
 import LocalSearch from 'data/local-search';
@@ -13,12 +15,13 @@ import Removal from 'data/remote-data-source/removal';
 
 const defaultOptions = {
     basePath: '/srv/data',
+    area: 'client',
     discoveryFlags: {},
     retrievalFlags: {},
     prefetching: true,
     cacheValidation: true,
     refreshInterval: 15 * 60,   // 15 minutes
-    sessionRetryInterval: 5000,
+    sessionRetryInterval: 5000 * 10, // TODO: make it five seconds again
 };
 
 class RemoteDataSource extends EventEmitter {
@@ -35,6 +38,7 @@ class RemoteDataSource extends EventEmitter {
         this.recentSearchResults = [];
         this.recentStorageResults = [];
         this.recentRemovalResults = [];
+        this.sessions = [];
         this.changeQueue = [];
         this.sessionCheckInterval = 0;
     }
@@ -42,21 +46,7 @@ class RemoteDataSource extends EventEmitter {
     activate() {
         if (!this.active) {
             this.sessionCheckInterval = setInterval(() => {
-                let soon = Moment().add(5, 'minute').toISOString();
-                let expired = findSessions((session) => {
-                    if (session.etime < soon) {
-                        return true;
-                    }
-                });
-                if (!_.isEmpty(expired)) {
-                    _.each(expired, (session) => {
-                        if (!session.token) {
-                            // recreate session if we haven't gain authorization yet
-                            destroySession(session);
-                        }
-                    });
-                    this.triggerEvent(new RemoteDataSourceEvent('change', this));
-                }
+                this.clearExpiredSessions();
             }, 60 * 1000);
             this.active = true;
         }
@@ -70,144 +60,197 @@ class RemoteDataSource extends EventEmitter {
         }
     }
 
+    obtainSession(location, type) {
+        let { address } = location;
+        if (!address) {
+            throw new HTTPError(400);
+        }
+        let { area } = this.options;
+        if (!type) {
+            type = 'primary';
+        }
+        let session = _.find(this.sessions, { address, area, type });
+        if (!session) {
+            session = {
+                address,
+                area,
+                type,
+                handle: '',
+                token: '',
+                user_id: 0,
+                info: {},
+                establishmentPromise: null,
+                authenticationPromise: null,
+                authorizationPromise: null,
+            };
+            this.sessions.push(session);
+        }
+        return session;
+    }
+
+    discardSession(session) {
+        if (_.includes(this.sessions, session)) {
+            _.pull(this.sessions, session);
+            this.triggerEvent(new RemoteDataSourceEvent('change', this));
+        }
+    }
+
     /**
      * Create a login session and retrieve information about the remote server,
      * including a list of OAuth providers
      *
      * @param  {Object} location
-     * @param  {String} area
      *
      * @return {Promise<Object>}
      */
-    beginSession(location, area) {
-        let address = location.address;
-        let session = getSession(address);
-        if (session.promise) {
-            return session.promise;
+    beginSession(location) {
+        let { sessionRetryInterval } = this.options;
+        let session = this.obtainSession(location);
+        if (session.establishmentPromise) {
+            return session.establishmentPromise;
         }
-        let url = `${address}/srv/session/`;
-        let options = { responseType: 'json', contentType: 'json' };
-        session.promise = HTTPRequest.fetch('POST', url, { area }, options).then((res) => {
-            _.assign(session, res.session);
-            if (session.handle) {
-                // return login information to caller
-                return {
+        let loginInformation;
+        Async.do(() => {
+            if (!this.active) {
+                return;
+            }
+            console.log(session.address);
+            let url = `${session.address}/srv/session/`;
+            let options = { responseType: 'json', contentType: 'json' };
+            let payload = {
+                area: session.area,
+            };
+            return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
+                session.handle = res.session.handle;
+                session.info  = {
                     system: res.system,
                     servers: res.servers,
                 };
-            } else {
-                throw new HTTPError(session.error);
-            }
-        }).catch((err) => {
-            // clear the promise if it fails
-            session.promise = null;
-            // trigger a change event after a delay, which should cause the
-            // caller to try again
-            let { sessionRetryInterval } = this.options;
-            setTimeout(() => {
-                this.triggerEvent(new RemoteDataSourceEvent('change', this));
-            }, sessionRetryInterval);
-            throw err;
+            }).catch((err) => {
+                console.error(err.message);
+            });
         });
-        return session.promise;
+        Async.while(() => {
+            if (session.handle) {
+                return false;
+            } else {
+                return Promise.delay(sessionRetryInterval).return(true);
+            }
+        });
+        Async.return(() => {
+            return session.info;
+        });
+        session.establishmentPromise = Async.end();
+        return session.establishmentPromise;
     }
 
     /**
-     * Query server to see if authorization has been granted and if so,
-     * trigger the onAuthorization event
+     * Query server to see if authorization has been granted
      *
      * @param  {Object} location
      *
      * @return {Promise<Boolean>}
      */
-    checkSession(location) {
-        let address = location.address;
-        let session = getSession(address);
-        let handle = session.handle;
-        if (!handle) {
-            return Promise.resolve(false);
+    checkAuthentication(location) {
+        let session = this.obtainSession(location);
+        if (session.authenticationPromise) {
+            return session.authenticationPromise;
         }
-        let url = `${address}/srv/session/`;
-        let options = { responseType: 'json' };
-        return HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
-            if (res && res.session) {
-                _.assign(session, res.session);
-            }
-            if (session.token) {
-                this.triggerEvent(new RemoteDataSourceEvent('authorization', this, { session }));
+        let promise = session.establishmentPromise.then(() => {
+            let url = `${session.address}/srv/session/`;
+            let options = { responseType: 'json' };
+            let payload = {
+                handle: session.handle
+            };
+            return HTTPRequest.fetch('GET', url, payload, options).then((res) => {
+                this.grantAuthorization(session, res.session);
                 return true;
-            } else if (!session.error) {
+            }).catch((err) => {
+                if (err.statusCode === 401) {
+                    session.authenticationPromise = null;
+                } else {
+                    this.discardSession(session);
+                }
                 return false;
-            } else {
-                throw new HTTPError(session.error);
-            }
-        }).catch((err) => {
-            // clear the promise if the session is no longer valid
-            session.promise = null;
-            this.triggerEvent(new RemoteDataSourceEvent('change', this));
-            throw err;
+            });
         });
+        session.authenticationPromise = promise;
+        return promise;
     }
 
     /**
      * Authenticate user through username and password
      *
      * @param  {Object} location
-     * @param  {String} username
-     * @param  {String} password
+     * @param  {Object} credentials
      *
      * @return {Promise}
      */
-    submitPassword(location, username, password) {
-        let address = location.address;
-        let session = getSession(address);
-        let handle = session.handle;
-        if (!handle) {
-            return Promise.resolve(false);
+    authenticate(location, credentials) {
+        let session = this.obtainSession(location);
+        if (session.authenticationPromise) {
+            // already authenticating
+            return session.authenticationPromise;
         }
-        let url = `${address}/srv/session/htpasswd/`;
-        let payload = { handle, username, password };
-        let options = { responseType: 'json', contentType: 'json' };
-        return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
-            _.assign(session, res.session);
-            this.triggerEvent(new RemoteDataSourceEvent('authorization', this, { session }));
-            return null;
-        }).catch((err) => {
-            if (err.statusCode !== 401) {
-                // clear the promise if the session is no longer valid
-                session.promise = null;
-                this.triggerEvent(new RemoteDataSourceEvent('change', this));
+        let promise = session.establishmentPromise.then(() => {
+            let url, payload;
+            if (credentials.type === 'password') {
+                let { username, password } = credentials;
+                url = `${address}/srv/session/htpasswd/`;
+                payload = {
+                    handle: session.handle,
+                    username,
+                    password
+                };
             }
-            throw err;
+            let options = { responseType: 'json', contentType: 'json' };
+            return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
+                this.grantAuthorization(session, res.session);
+                return null;
+            }).catch((err) => {
+                if (err.statusCode === 401) {
+                    // credentials aren't valid
+                    session.authenticationPromise = null;
+                } else {
+                    // discard the session if it's any other error
+                    this.discardSession(session);
+                }
+                throw err;
+            });
         });
+        session.authenticationPromise = promise;
+        return promise;
     }
 
     /**
-     * Remove authorization
+     * End session at location
      *
      * @param  {Object} location
      *
      * @return {Promise}
      */
     endSession(location) {
-        let address = location.address;
-        let session = getSession(address);
-        let handle = session.handle;
-        if (!handle) {
-            return Promise.resolve(null);
+        let session = this.obtainSession(location);
+        if (!session.establishmentPromise) {
+            this.discardSession(session);
+            return Promise.resolve();
         }
-        return Promise.resolve(session.promise).then(() => {
-            let url = `${address}/srv/session/`;
+        return session.establishmentPromise.then(() => {
+            let url = `${session.address}/srv/session/`;
             let options = { responseType: 'json', contentType: 'json' };
-            return HTTPRequest.fetch('DELETE', url, { handle }, options).catch((err) => {
-                // clean cached information anyway, given when we failed to
+            let payload = {
+                handle: session.handle
+            };
+            return HTTPRequest.fetch('DELETE', url, payload, options).catch((err) => {
+                // clean cached information anyway, even through we failed to
                 // remove the session in the backend
                 console.error(err);
             }).then(() => {
-                destroySession(session);
+                this.discardSession(session);
                 this.clearRecentOperations(address);
                 this.clearCachedSchemas(address);
                 this.triggerEvent(new RemoteDataSourceEvent('expiration', this, { session }));
+                this.triggerEvent(new RemoteDataSourceEvent('change', this));
                 return null;
             });
         });
@@ -217,32 +260,32 @@ class RemoteDataSource extends EventEmitter {
      * Start the device activation process (on browser side)
      *
      * @param  {Object} location
-     * @param  {String} area
      *
      * @return {Promise<String>}
      */
-    beginMobileSession(location, area) {
-        let address = location.address;
-        let session = getSession(address, 'mobile');
-        if (session.promise) {
-            return session.promise;
+    beginMobileSession(location) {
+        let mobileSession = this.obtainSession(location, 'mobile');
+        if (mobileSession.establishmentPromise) {
+            return mobileSession.establishmentPromise;
         }
-        let parentSession = getSession(address);
-        let handle = parentSession.handle;
-        let url = `${address}/srv/session/`;
-        let options = { responseType: 'json', contentType: 'json' };
-        session.promise = HTTPRequest.fetch('POST', url, { area, handle }, options).then((res) => {
-            _.assign(session, res.session);
-            if (session.handle) {
+        let parentSession = this.obtainSession(location);
+        let promise = parentSession.establishmentPromise.then(() => {
+            let url = `${parentSession.address}/srv/session/`;
+            let options = { responseType: 'json', contentType: 'json' };
+            let payload = {
+                handle: parentSession.handle,
+                area,
+            };
+            return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
+                session.handle = res.session.handle;
                 return session.handle;
-            } else {
-                throw HTTPError(session.error);
-            }
-        }).catch((err) => {
-            session.promise = null;
-            throw err;
+            }).catch((err) => {
+                this.discardSession(mobileSession);
+                throw err;
+            });
         });
-        return session.promise;
+        mobileSession.establishmentPromise = promise;
+        return promise;
     }
 
     /**
@@ -254,33 +297,33 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Number>}
      */
     acquireMobileSession(location, handle) {
-        let address = location.address;
-        let session = getSession(address);
-        if (session.handle !== handle) {
-            session.promise = null;
-            session.handle = handle;
+        let session = this.obtainSession(location);
+        // discard any other sessions
+        while (session.handle && session.handle !== handle) {
+            this.discardSession(session);
+            session = this.obtainSession(location);
         }
-        if (session.promise) {
-            return session.promise;
+        if (session.authenticationPromise) {
+            return session.authenticationPromise;
         }
+        // the session has been established already by the web-client
+        session.handle = handle;
+        session.establishmentPromise = Promise.resolve({});
+
         let url = `${address}/srv/session/`;
         let options = { responseType: 'json', contentType: 'json' };
-        session.promise = HTTPRequest.fetch('GET', url, { handle }, options).then((res) => {
-            _.assign(session, res.session);
-            if (session.token) {
-                this.triggerEvent(new RemoteDataSourceEvent('authorization', this, { session }));
-                return session.user_id;
-            } else {
-                throw new HTTPError(session.error);
-            }
+        let payload = {
+            handle
+        };
+        let promise = HTTPRequest.fetch('GET', url, payload, options).then((res) => {
+            this.grantAuthorization(session, res.session);
+            return session.user_id;
         }).catch((err) => {
-            setTimeout(() => {
-                session.promise = null;
-                session.handle = null;
-            }, 5000);
+            this.discardSession(session);
             throw err;
         });
-        return session.promise;
+        session.authenticationPromise = promise;
+        return promise;
     }
 
     /**
@@ -291,20 +334,12 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise}
      */
     releaseMobileSession(location) {
-        // just clear the promise--let unused authentication object expire on its own
-        let address = location.address;
-        let session = getSession(address, 'mobile');
-        if (session.promise) {
-            return session.promise.then(() => {
-                destroySession(session);
-            });
-        } else {
-            return Promise.resolve();
-        }
+        let mobileSession = this.obtainSession(location, 'mobile');
+        this.discardSession(mobileSession);
     }
 
     /**
-     * Remove authorization
+     * Remove authorization from mobile device
      *
      * @param  {Object} location
      * @param  {String} handle
@@ -312,12 +347,34 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise}
      */
     endMobileSession(location, handle) {
-        let address = location.address;
+        let { address } = location;
         let url = `${address}/srv/session/`;
         let options = { responseType: 'json', contentType: 'json' };
-        return HTTPRequest.fetch('DELETE', url, { handle }, options).then(() => {
+        let payload = {
+            handle
+        };
+        return HTTPRequest.fetch('DELETE', url, payload, options).then(() => {
             return null;
         });
+    }
+
+    /**
+     * Destroy expired sessions. Also remove those that haven't received
+     * authorization yet and will be expiring soon so they'd be recreated
+     */
+    clearExpiredSessions() {
+        let changed = false;
+        let now = Moment().toISOString();
+        let soon = Moment().add(5, 'minute').toISOString();
+        _.remove(this.sessions, (session) => {
+            if (session.etime < now || (session.etime < soon && !session.token)) {
+                changed = true;
+                return true;
+            }
+        });
+        if (changed) {
+            this.triggerEvent(new RemoteDataSourceEvent('change', this));
+        }
     }
 
     /**
@@ -330,45 +387,109 @@ class RemoteDataSource extends EventEmitter {
      * @return {String}
      */
     getOAuthURL(location, oauthServer, type) {
-        let address = location.address;
-        let session = getSession(address);
-        let handle = session.handle;
-        if (!handle) {
+        let session = this.obtainSession(location);
+        if (!session.handle) {
             return '';
         }
-        let query = `sid=${oauthServer.id}&handle=${handle}`;
+        let query = `sid=${oauthServer.id}&handle=${session.handle}`;
         if (type === 'activation') {
             query += '&activation=1';
         } else if (type === 'test') {
             query += '&test=1';
         }
-        let url = `${address}/srv/session/${oauthServer.type}/?${query}`;
+        let url = `${session.address}/srv/session/${oauthServer.type}/?${query}`;
         return url;
     }
 
-    authenticate(location) {
-        if (this.hasAuthorization(location)) {
+    /**
+     * Trigger an authentication event, then wait for authorization be to
+     * granted. This can happen due to either a call to checkAuthentication()
+     * or authenticate() is called.
+     *
+     * @param  {Object} location
+     *
+     * @return {Promise<Boolean>}
+     */
+    requestAuthentication(location) {
+        let session = this.obtainSession(location);
+        if (session.token) {
+            // user is already authenticated
             return Promise.resolve(true);
         }
-        let event1 = new RemoteDataSourceEvent('beforeauthentication', this, {
+        // emit an event so a user-interface for authentication is shown
+        let event = new RemoteDataSourceEvent('authentication', this, {
             location
         });
-        this.triggerEvent(event1);
-        return event1.waitForDecision().then(() => {
-            if (event1.defaultPrevented) {
-                // maybe a saved session was provided by event listener
-                return this.hasAuthorization(location);
+        this.triggerEvent(event);
+        return event.waitForDecision().then(() => {
+            if (event.defaultPrevented) {
+                // maybe the event listener restored a saved session
+                return !!session.token;
             }
-            let event2 = new RemoteDataSourceEvent('authentication', this);
-            this.triggerEvent(event2);
-            return event2.waitForDecision().then(() => {
-                if (event1.defaultPrevented) {
-                    return this.hasAuthorization(location);
-                }
-                // default behavior is failure
-                return false;
-            });
+            return this.waitForAuthorization(session);
         });
+    }
+
+    /**
+     * Indicate that the user has declined to authenticate himself and
+     * authorization will not be gained.
+     *
+     * @param  {Object} location
+     */
+    cancelAuthentication(location) {
+        let session = this.obtainSession(location);
+        if (session.authorizationPromise && session.authorizationPromise.resolve) {
+            session.authorizationPromise.resolve(false);
+        }
+    }
+
+    /**
+     * Return a promise that fulfills when authorization has been granted
+     *
+     * @param  {[type]} session
+     *
+     * @return {[type]}
+     */
+    waitForAuthorization(session) {
+        if (!session.authorizationPromise) {
+            session.authorizationPromise = new ManualPromise;
+        }
+        return session.authorizationPromise;
+    }
+
+    grantAuthorization(session, sessionInfo) {
+        let now = Moment().toISOString();
+        if (!sessionInfo) {
+            throw HTTPError(500);
+        }
+        if (sessionInfo.error) {
+            throw HTTPError(sessionInfo.error);
+        }
+        if (!sessionInfo.token || !sessioInfo.user_id || !(sessionInfo.etime > now)) {
+            throw HTTPError(401);
+        }
+        if (sessionInfo.area && sessionInfo.area !== session.area) {
+            throw HTTPError(500);
+        }
+        session.token = sessionInfo.token;
+        session.user_id = sessioInfo.user_id;
+        if (session.authorizationPromise && session.authorizationPromise.resolve) {
+            session.authorizationPromise.resolve(true);
+        }
+        this.triggerEvent(new RemoteDataSourceEvent('authorization', this, {
+            session
+        }));
+    }
+
+    restoreAuthorization(location, sessionInfo) {
+        let session = this.obtainSession(location);
+        try {
+            this.grantAuthorization(session, sessionInfo);
+            return true;
+        } catch (err) {
+            this.discardSession(session);
+            return false;
+        }
     }
 
     /**
@@ -379,31 +500,8 @@ class RemoteDataSource extends EventEmitter {
      * @return {Boolean}
      */
     hasAuthorization(location) {
-        let address = location.address;
-        let session = getSession(address);
-        if (session.token) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Restore session info that was retrieved earlier
-     *
-     * @param  {Object} session
-     */
-    restoreSession(session) {
-        // only if the session hasn't expired
-        if (Moment(session.etime) > Moment()) {
-            // don't restore broken session
-            if (session.handle && session.token) {
-                let existing = getSession(session.address);
-                _.assign(existing, session);
-                return true;
-            }
-        }
-        return false;
+        let session = this.obtainSession(location);
+        return (session.token) ? true : false;
     }
 
     /**
@@ -414,18 +512,17 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Number>}
      */
     start(location) {
-        // Promise.resolve() ensures that the callback won't get called
-        // within render(), where an exception can cause a cascade of other failures
-        return Promise.resolve().then(() => {
+        return Promise.try(() => {
             if (location.schema === 'local') {
                 return 0;
             }
-            let address = location.address;
-            let session = getSession(address);
+            let session = this.obtainSession(location);
             if (session.token) {
                 return session.user_id;
             } else {
-                throw new HTTPError(401);
+                return this.requestAuthentication(location).then(() => {
+                    return this.start(location);
+                });
             }
         });
     }
@@ -1355,7 +1452,7 @@ class RemoteDataSource extends EventEmitter {
                 this.clearRecentOperations(address);
                 this.clearCachedSchemas(address);
                 if (err.statusCode === 401) {
-                    destroySession(session);
+                    this.discardSession(session);
                     this.triggerEvent(new RemoteDataSourceEvent('expiration', this, { session }));
                 } else if (err.statusCode == 403) {
                     this.triggerEvent(new RemoteDataSourceEvent('violation', this, { address, schema }));
@@ -1780,8 +1877,6 @@ class RemoteDataSource extends EventEmitter {
     }
 }
 
-let authCache = {};
-
 /**
  * Remove objects matching a list of ids from a sorted array, returning a
  * new array
@@ -1826,48 +1921,6 @@ function insertObjects(objects, newObjects) {
         }
     });
     return objects;
-}
-
-let sessions = [];
-
-/**
- * Obtain object where authorization info for a server is stored
- *
- * @param  {String} address
- * @param  {String|undefined} type
- *
- * @return {Object}
- */
-function getSession(address, type) {
-    if (!type) {
-        type = 'primary';
-    }
-    let session = _.find(sessions, { address, type });
-    if (!session) {
-        session = { address, type };
-        sessions.push(session);
-    }
-    return session;
-}
-
-/**
- * Return list of sessions
- *
- * @param  {*} predicate
- *
- * @return {Array<Object>}
- */
-function findSessions(predicate) {
-    return _.filter(sessions, predicate);
-}
-
-/**
- * Remove authorization to a server
- *
- * @param  {Object} session
- */
-function destroySession(session) {
-    _.pull(sessions, session);
 }
 
 class RemoteDataSourceEvent extends GenericEvent {

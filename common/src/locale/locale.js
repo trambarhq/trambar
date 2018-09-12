@@ -13,19 +13,19 @@ class Locale {
     }
 
     translate(phrase) {
-        this.localeManager.translate(phrase);
+        return this.localeManager.translate(phrase);
     }
 
     pick(versions, overridingLanguageCode) {
-        this.localeManager.pick(versions, overridingLanguageCode);
+        return this.localeManager.pick(versions, overridingLanguageCode);
     }
 
     genderize(name, gender) {
-        this.localeManager.genderize(name, gender);
+        return this.localeManager.genderize(name, gender);
     }
 
     change(localeCode) {
-        this.localeManager.change(localeCode);
+        return this.localeManager.change(localeCode);
     }
 }
 

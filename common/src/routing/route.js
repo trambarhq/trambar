@@ -6,9 +6,7 @@ class Route {
         this.parameters = routeManager.params;
         this.context = routeManager.context;
         this.url = routeManager.url;
-        this.path = routeManager.path;
-        this.query = routeManager.query;
-        this.hash = routeManager.hash;
+        this.public = routeManager.route.public;
         this.callbacks = [];
     }
 

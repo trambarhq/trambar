@@ -79,19 +79,10 @@ class SignInPageSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { env, system } = this.props;
-        let { t, p } = env.locale;
-        let title = p(_.get(system, 'details.title'));
         return (
             <div className="sign-in-page">
-                <h2>{t('sign-in-$title', title)}</h2>
-                <section>
-                    {this.renderForm()}
-                </section>
-                <h2>{t('sign-in-oauth')}</h2>
-                <section>
-                    {this.renderOAuthButtons()}
-                </section>
+                {this.renderForm()}
+                {this.renderOAuthButtons()}
             </div>
         );
     }
@@ -102,10 +93,11 @@ class SignInPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderForm() {
-        let { env } = this.props;
+        let { env, system } = this.props;
         let { username, password, submitting, savedCredentials } = this.state;
-        let { t } = env.locale;
+        let { t, p } = env.locale;
         let valid = this.canSubmitForm();
+        let title = p(_.get(system, 'details.title'));
         let usernameProps = {
             id: 'username',
             type: 'text',
@@ -132,16 +124,19 @@ class SignInPageSync extends PureComponent {
             buttonDisabled = true;
         }
         return (
-            <form onSubmit={this.handleFormSubmit}>
-                {this.renderProblem()}
-                <TextField {...usernameProps}>{t('sign-in-username')}</TextField>
-                <TextField {...passwordProps}>{t('sign-in-password')}</TextField>
-                <div className="button-row">
-                    <PushButton disabled={buttonDisabled}>
-                        {t('sign-in-submit')}
-                    </PushButton>
-                </div>
-            </form>
+            <section>
+                <h2>{t('sign-in-$title', title)}</h2>
+                <form onSubmit={this.handleFormSubmit}>
+                    {this.renderProblem()}
+                    <TextField {...usernameProps}>{t('sign-in-username')}</TextField>
+                    <TextField {...passwordProps}>{t('sign-in-password')}</TextField>
+                    <div className="button-row">
+                        <PushButton disabled={buttonDisabled}>
+                            {t('sign-in-submit')}
+                        </PushButton>
+                    </div>
+                </form>
+            </section>
         );
     }
 
@@ -175,14 +170,20 @@ class SignInPageSync extends PureComponent {
         let { env, servers } = this.props;
         let { t } = env.locale;
         servers = _.sortBy(servers, [ 'type' ]);
+        if (_.isEmpty(servers)) {
+            return null;
+        }
         return (
-            <div className="oauth-buttons">
-            {
-                _.map(servers, (server) => {
-                    return this.renderOAuthButton(server);
-                })
-            }
-            </div>
+            <section>
+                <h2>{t('sign-in-oauth')}</h2>
+                <div className="oauth-buttons">
+                {
+                    _.map(servers, (server) => {
+                        return this.renderOAuthButton(server);
+                    })
+                }
+                </div>
+            </section>
         );
     }
 
@@ -342,7 +343,12 @@ class SignInPageSync extends PureComponent {
         }
         this.setState({ submitting: true }, () => {
             let db = database.use({ by: this });
-            db.submitPassword(username, password).catch((err) => {
+            let credentials = {
+                type: 'password',
+                username,
+                password,
+            };
+            db.authenticate(credentials).catch((err) => {
                 let problem;
                 switch (err.statusCode) {
                     case 401: problem = 'incorrect-username-password'; break;
