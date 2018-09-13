@@ -74,7 +74,7 @@ class ProjectTooltip extends PureComponent {
 
 export {
     ProjectTooltip as default,
-    ProjectTolltip,
+    ProjectTooltip,
 };
 
 if (process.env.NODE_ENV !== 'production') {

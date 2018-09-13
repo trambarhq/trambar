@@ -193,7 +193,7 @@ class NavigationTreeSync extends PureComponent {
 
     isActive(node) {
         let { route } = this.props;
-        return node.url === route.path;
+        return node.url === route.url;
     }
 
     hasActiveChild(node) {

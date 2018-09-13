@@ -19,8 +19,8 @@ import UnexpectedError from 'widgets/unexpected-error';
 
 import './role-list-page.scss';
 
-class RolesPage extends AsyncComponent {
-    static displayName = 'RolesPage';
+class RoleListPage extends AsyncComponent {
+    static displayName = 'RoleListPage';
 
     /**
      * Render the component asynchronously

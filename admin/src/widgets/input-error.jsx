@@ -34,7 +34,7 @@ export {
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
-    InpurtError.propTypes = {
+    InputError.propTypes = {
         type: PropTypes.oneOf([ 'error', 'warning' ]),
     };
 }
