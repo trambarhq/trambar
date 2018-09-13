@@ -5,12 +5,15 @@ import EventEmitter, { GenericEvent } from 'utils/event-emitter';
 class EnvironmentMonitor extends EventEmitter {
     constructor(options) {
         super();
+        let viewport = document.body.parentNode;
         this.visible = true;
         this.online = isOnline();
         this.connectionType = getConnectionType();
         this.battery = {};
         this.screenWidth = screen.width;
         this.screenHeight = screen.height;
+        this.viewportWidth = viewport.offsetWidth;
+        this.viewportHeight = viewport.offsetHeight;
         this.devicePixelRatio = window.devicePixelRatio;
         this.webpSupport = isWebpSupported(),
         this.browser = detectBrowser();
@@ -110,8 +113,11 @@ class EnvironmentMonitor extends EventEmitter {
     }
 
     handleWindowResize = (evt) => {
+        let viewport = document.body.parentNode;
         this.screenWidth = screen.width;
         this.screenHeight = screen.height;
+        this.viewportWidth = viewport.offsetWidth;
+        this.viewportHeight = viewport.offsetHeight;
         this.devicePixelRatio = window.devicePixelRatio;
         this.triggerEvent(new EnvironmentMonitorEvent('change', this));
     }

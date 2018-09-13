@@ -381,7 +381,7 @@ class ProjectListPageSync extends PureComponent {
     renderUsersColumn(project) {
         let { route, env, users } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('narrow')) {
+        if (!env.isWiderThan('narrow')) {
             return null;
         }
         if (!project) {
@@ -407,7 +407,7 @@ class ProjectListPageSync extends PureComponent {
     renderRepositoriesColumn(project) {
         let { route, env, repos } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('narrow')) {
+        if (!env.isWiderThan('narrow')) {
             return null;
         }
         if (!project) {
@@ -433,7 +433,7 @@ class ProjectListPageSync extends PureComponent {
     renderDateRangeColumn(project) {
         let { env, statistics } = this.props;
         let { t, localeCode } = env.locale;
-        if (env.isBelowMode('ultra-wide')) {
+        if (!env.isWiderThan('ultra-wide')) {
             return null;
         }
         if (!project) {
@@ -464,7 +464,7 @@ class ProjectListPageSync extends PureComponent {
         let { env, statistics } = this.props;
         let { renderingFullList } = this.state;
         let { t } = env.locale;
-        if (env.isBelowMode('super-wide')) {
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!project) {
@@ -488,7 +488,7 @@ class ProjectListPageSync extends PureComponent {
     renderThisMonthColumn(project) {
         let { env, statistics } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('super-wide')) {
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!project) {
@@ -512,7 +512,7 @@ class ProjectListPageSync extends PureComponent {
     renderToDateColumn(project) {
         let { env, statistics } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('super-wide')) {
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!project) {
@@ -536,7 +536,7 @@ class ProjectListPageSync extends PureComponent {
     renderModifiedTimeColumn(project) {
         let { env } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('standard')) {
+        if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!project) {

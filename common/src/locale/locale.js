@@ -13,7 +13,7 @@ class Locale {
     }
 
     translate(phrase) {
-        return this.localeManager.translate(phrase);
+        return this.localeManager.translate.apply(this.localeManager, arguments);
     }
 
     pick(versions, overridingLanguageCode) {

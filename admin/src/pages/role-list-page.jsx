@@ -354,7 +354,7 @@ class RoleListPageSync extends PureComponent {
     renderUsersColumn(role) {
         let { route, env, users } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('narrow')) {
+        if (!env.isWiderThan('narrow')) {
             return null;
         }
         if (!role) {
@@ -379,7 +379,7 @@ class RoleListPageSync extends PureComponent {
     renderModifiedTimeColumn(role) {
         let { env } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('standard')) {
+        if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!role) {

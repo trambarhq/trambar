@@ -394,7 +394,7 @@ class MemberListPageSync extends PureComponent {
     renderTypeColumn(user) {
         let { env } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('narrow')) {
+        if (!env.isWiderThan('narrow')) {
             return null;
         }
         if (!user) {
@@ -415,7 +415,7 @@ class MemberListPageSync extends PureComponent {
         let { env, route, roles } = this.props;
         let { renderingFullList } = this.state;
         let { t } = env.locale;
-        if (env.isBelowMode('standard')) {
+        if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!user) {
@@ -442,7 +442,7 @@ class MemberListPageSync extends PureComponent {
         let { env } = this.props;
         let { renderingFullList } = this.state;
         let { t } = env.locale;
-        if (env.isBelowMode('wide')) {
+        if (!env.isWiderThan('wide')) {
             return null;
         }
         if (!user) {
@@ -469,7 +469,7 @@ class MemberListPageSync extends PureComponent {
         let { env, statistics } = this.props;
         let { renderingFullList } = this.state;
         let { t, localeCode } = env.locale;
-        if (env.isBelowMode('ultra-wide')) {
+        if (!env.isWiderThan('ultra-wide')) {
             return null;
         }
         if (!user) {
@@ -496,7 +496,7 @@ class MemberListPageSync extends PureComponent {
         let { env, statistics } = this.props;
         let { renderingFullList } = this.state;
         let { t } = env.locale;
-        if (env.isBelowMode('super-wide')) {
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!user) {
@@ -522,7 +522,7 @@ class MemberListPageSync extends PureComponent {
         let { env, statistics } = this.props;
         let { renderingFullList } = this.state;
         let { t } = env.locale;
-        if (env.isBelowMode('super-wide')) {
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!user) {
@@ -548,7 +548,7 @@ class MemberListPageSync extends PureComponent {
         let { env, statistics } = this.props;
         let { renderingFullList } = this.state;
         let { t } = env.locale;
-        if (env.isBelowMode('super-wide')) {
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!user) {
@@ -574,7 +574,7 @@ class MemberListPageSync extends PureComponent {
         let { env, statistics } = this.props;
         let { renderingFullList } = this.state;
         let { t } = env.locale;
-        if (env.isBelowMode('standard')) {
+        if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!user) {

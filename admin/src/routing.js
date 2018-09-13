@@ -68,7 +68,7 @@ var routes = {
             });
         }
     },
-    'repo-sumary-page': {
+    'repo-summary-page': {
         path: '/projects/${project}/repos/${repo}/',
         query: {
             edit: '${edit}',

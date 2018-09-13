@@ -380,7 +380,7 @@ class ServerListPageSync extends PureComponent {
     renderOAuthColumn(server) {
         let { env } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('wide')) {
+        if (!env.isWiderThan('wide')) {
             return null;
         }
         if (!server) {
@@ -401,7 +401,7 @@ class ServerListPageSync extends PureComponent {
     renderAPIColumn(server) {
         let { env } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('wide')) {
+        if (!env.isWiderThan('wide')) {
             return null;
         }
         if (!server) {
@@ -422,7 +422,7 @@ class ServerListPageSync extends PureComponent {
     renderUsersColumn(server) {
         let { route, env, users } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('standard')) {
+        if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!server) {
@@ -447,7 +447,7 @@ class ServerListPageSync extends PureComponent {
     renderModifiedTimeColumn(server) {
         let { env } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('standard')) {
+        if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!server) {

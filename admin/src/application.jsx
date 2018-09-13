@@ -30,6 +30,14 @@ import 'application.scss';
 import 'colors.scss';
 import 'font-awesome-webpack';
 
+const widthDefinitions = {
+    'narrow': 700,
+    'standard': 1000,
+    'wide': 1400,
+    'super-wide': 1700,
+    'ultra-wide': 2000,
+};
+
 class Application extends PureComponent {
     static displayName = 'Application';
     static coreConfiguration = {
@@ -67,7 +75,7 @@ class Application extends PureComponent {
             database: new Database(dataSource, context),
             payloads: new Payloads(payloadManager),
             route: new Route(routeManager),
-            env: new Environment(envMonitor, locale),
+            env: new Environment(envMonitor, { locale, address, widthDefinitions }),
 
             showingUploadProgress: false,
         };
@@ -212,7 +220,6 @@ class Application extends PureComponent {
      * @param  {Object} evt
      */
     handleStupefaction = (evt) => {
-        this.setState({ showingErrorPage: true });
     }
 
     /**
@@ -236,10 +243,12 @@ class Application extends PureComponent {
      * @param  {Object} evt
      */
     handleLocaleChange = (evt) => {
-        let { envMonitor, localeManager } = this.props;
-        let env = new Environment(envMonitor, localeManager);
+        let { envMonitor, localeManager, routeManager } = this.props;
+        let { address } = routeManager.context;
+        let locale = new Locale(localeManager);
+        let env = new Environment(envMonitor, { locale, address, widthDefinitions });
         this.setState({ env });
-        document.title = env.locale.translate('app-title');
+        document.title = locale.t('app-title');
     }
 
     /**
@@ -248,9 +257,10 @@ class Application extends PureComponent {
      * @param  {Object} evt
      */
     handleEnvironmentChange = (evt) => {
-        let { envMonitor } = this.props;
+        let { envMonitor, routeManager } = this.props;
+        let { address } = routeManager.context;
         let { locale } = this.state.env;
-        let env = new Environment(envMonitor, locale);
+        let env = new Environment(envMonitor, { locale, address, widthDefinitions });
         this.setState({ env });
     }
 
@@ -262,13 +272,16 @@ class Application extends PureComponent {
     handleRouteChange = (evt) => {
         let { routeManager, dataSource } = this.props;
         let route = new Route(routeManager);
-        let address = route.context.address;
-        let schema = route.params.schema;
-        let { database } = this.state;
-        if (address != database.context.address) {
+        let { address } = route.context;
+        let { schema } = route.params;
+        let { database, env } = this.state;
+        if (address !== database.context.address || schema !== database.context.schema) {
             database = new Database(dataSource, { address, schema });
         }
-        this.setState({ route, database, showingErrorPage: false });
+        if (address !== env.address) {
+            env = new Environment(envMonitor, { locale, address, widthDefinitions });
+        }
+        this.setState({ route, database, env });
     }
 
     /**

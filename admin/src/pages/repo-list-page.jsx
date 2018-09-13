@@ -397,7 +397,7 @@ class RepoListPageSync extends PureComponent {
     renderIssueTrackerColumn(repo) {
         let { env } = this.props;
         let { t, p } = env.locale;
-        if (env.isBelowMode('ultra-wide')) {
+        if (!env.isWiderThan('ultra-wide')) {
             return null;
         }
         if (!repo) {
@@ -418,7 +418,7 @@ class RepoListPageSync extends PureComponent {
     renderDateRangeColumn(repo) {
         let { env, statistics } = this.props;
         let { t, localeCode } = env.locale;
-        if (env.isBelowMode('wide')) {
+        if (!env.isWiderThan('wide')) {
             return null;
         }
         if (!repo) {
@@ -444,7 +444,7 @@ class RepoListPageSync extends PureComponent {
     renderLastMonthColumn(repo) {
         let { env, statistics } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('super-wide')) {
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!repo) {
@@ -468,7 +468,7 @@ class RepoListPageSync extends PureComponent {
     renderThisMonthColumn(repo) {
         let { env, statistics } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('super-wide')) {
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!repo) {
@@ -492,7 +492,7 @@ class RepoListPageSync extends PureComponent {
     renderToDateColumn(repo) {
         let { env, statistics } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('super-wide')) {
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!repo) {
@@ -516,7 +516,7 @@ class RepoListPageSync extends PureComponent {
     renderModifiedTimeColumn(repo) {
         let { env } = this.props;
         let { t } = env.locale;
-        if (env.isBelowMode('standard')) {
+        if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!repo) {
