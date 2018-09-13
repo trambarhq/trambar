@@ -234,7 +234,7 @@ class ServerSummaryPageSync extends PureComponent {
             return this.returnToList();
         } else {
             let params = _.clone(route.params);
-            params.edit = edit;
+            params.edit = edit || undefined;
             if (newServer) {
                 // use id of newly created server
                 params.server = newServer.id;

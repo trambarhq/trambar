@@ -98,7 +98,7 @@ class ServerListPageSync extends PureComponent {
     setEditability(edit) {
         let { route } = this.props;
         let params = _.clone(route.params);
-        params.edit = edit;
+        params.edit = edit || undefined;
         return route.replace(route.name, params);
     }
 

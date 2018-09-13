@@ -204,11 +204,12 @@ class ProjectSummaryPageSync extends PureComponent {
             this.returnToList();
         } else {
             let params = _.clone(route.params);
-            params.edit = edit;
+            params.edit = edit || undefined;
             if (newProject) {
                 // use id of newly created project
                 params.project = newProject.id;
             }
+            debugger;
             return route.replace(route.name, params).then((replaced) => {
                 if (replaced) {
                     this.setState({ problems: {} });

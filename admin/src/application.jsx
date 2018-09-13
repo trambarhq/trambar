@@ -101,7 +101,7 @@ class Application extends PureComponent {
                     <div className="scroll-box">
                         {this.renderCurrentPage()}
                     </div>
-                    {/*this.renderTaskAlert()*/}
+                    {this.renderTaskAlert()}
                     {this.renderUploadProgress()}
                 </section>
             </div>
@@ -132,7 +132,8 @@ class Application extends PureComponent {
         }
         let CurrentPage = module.default;
         let pageProps = { database, route, env, payloads };
-        return <CurrentPage key={route.url} {...pageProps} />;
+        let key = route.path;
+        return <CurrentPage key={key} {...pageProps} />;
     }
 
     /**

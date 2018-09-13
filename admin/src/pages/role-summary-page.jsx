@@ -197,7 +197,7 @@ class RoleSummaryPageSync extends PureComponent {
             return this.returnToList();
         } else {
             let params = _.clone(route.params);
-            params.edit = edit;
+            params.edit = edit || undefined;
             if (newRole) {
                 // use id of newly created role
                 params.role = newRole.id;

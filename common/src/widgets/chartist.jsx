@@ -100,7 +100,7 @@ class Chartist extends PureComponent {
      * Update data series
      */
     updateChart() {
-        let { data, option, responsiveOptions } = this.props;
+        let { data, options, responsiveOptions } = this.props;
         this.chartist.update(data, options, responsiveOptions);
     }
 

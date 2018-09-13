@@ -1,10 +1,10 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
 require('./smart-list.scss');
 
-class SmartList extends PureComponent {
+class SmartList extends Component {
     static displayName = 'SmartList';
 
     /**

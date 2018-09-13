@@ -108,7 +108,7 @@ class MemberListPageSync extends PureComponent {
     setEditability(edit) {
         let { route } = this.props;
         let params = _.clone(route.params);
-        params.edit = edit;
+        params.edit = edit || undefined;
         return route.replace(route.name, params);
     }
 
@@ -273,7 +273,7 @@ class MemberListPageSync extends PureComponent {
         }
         users = sortUsers(users, roles, statistics, env, sortColumns, sortDirections);
         return _.map(users, (user) => {
-            return this.renderRow;
+            return this.renderRow(user);
         });
     }
 
@@ -371,7 +371,7 @@ class MemberListPageSync extends PureComponent {
                 }
             } else {
                 // don't create the link when we're editing the list
-                url = route.find('user-summary-page', {
+                url = route.find('member-summary-page', {
                     user: user.id,
                     project: project.id,
                 });

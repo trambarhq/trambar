@@ -138,11 +138,11 @@ class TaskAlertBarSync extends PureComponent {
         let { route } = this.props;
         let { selectedTask } = this.state;
         let url = null;
-        let serverID = _.get(task, 'options.server_id');
+        let serverID = _.get(selectedTask, 'options.server_id');
         if (serverID) {
             let params = {
                 server: serverID,
-                task: task.id,
+                task: selectedTask.id,
             };
             url = route.find('server-summary-page', params);
         }

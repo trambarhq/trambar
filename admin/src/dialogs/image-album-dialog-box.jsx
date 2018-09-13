@@ -67,7 +67,7 @@ class ImageAlbumDialogBox extends AsyncComponent {
      * @param  {Object} prevState
      */
     componentDidUpdate(prevProps, prevState) {
-        if (nextProps.show) {
+        if (prevProps.show) {
             this.setState({ shown: true });
         }
     }

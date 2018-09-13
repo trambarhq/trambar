@@ -67,12 +67,17 @@ class MultilingualTextField extends PureComponent {
         }));
     }
 
+    /**
+     * Check for locale changes
+     *
+     * @param  {Object} nextProps
+     */
     componentWillReceiveProps(nextProps) {
         let { env, availableLanguageCodes } = this.props;
         if (nextProps.env.locale !== env.locale) {
             // switch to the language of the new locale if it's
             // one of the available languages
-            let languageCode = nextProps.locale.languageCode;
+            let languageCode = nextProps.env.locale.languageCode;
             if (_.includes(availableLanguageCodes, languageCode)) {
                 this.setState({ selectedLanguageCode: languageCode });
             }
@@ -217,7 +222,7 @@ class MultilingualTextField extends PureComponent {
             } else {
                 value = {};
             }
-            value[lang] = text;
+            value[selectedLanguageCode] = text;
         } else {
             if (value instanceof Object) {
                 value = _.omit(value, selectedLanguageCode);

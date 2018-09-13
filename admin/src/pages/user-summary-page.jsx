@@ -236,7 +236,7 @@ class UserSummaryPageSync extends PureComponent {
             return this.returnToList();
         } else {
             let params = _.clone(route.params);
-            params.edit = edit;
+            params.edit = edit || undefined;
             if (newUser) {
                 // use id of newly created user
                 params.user = newUser.id;
