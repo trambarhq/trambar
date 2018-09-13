@@ -24,6 +24,11 @@ const defaultOptions = {
     sessionRetryInterval: 5000 * 10, // TODO: make it five seconds again
 };
 
+const signatureLocation = {
+    schema: 'local',
+    table: 'remote_schema',
+};
+
 class RemoteDataSource extends EventEmitter {
     constructor(options) {
         super();
@@ -114,7 +119,6 @@ class RemoteDataSource extends EventEmitter {
             if (!this.active) {
                 return;
             }
-            console.log(session.address);
             let url = `${session.address}/srv/session/`;
             let options = { responseType: 'json', contentType: 'json' };
             let payload = {
@@ -196,7 +200,7 @@ class RemoteDataSource extends EventEmitter {
             let url, payload;
             if (credentials.type === 'password') {
                 let { username, password } = credentials;
-                url = `${address}/srv/session/htpasswd/`;
+                url = `${session.address}/srv/session/htpasswd/`;
                 payload = {
                     handle: session.handle,
                     username,
@@ -205,8 +209,7 @@ class RemoteDataSource extends EventEmitter {
             }
             let options = { responseType: 'json', contentType: 'json' };
             return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
-                this.grantAuthorization(session, res.session);
-                return null;
+                return this.grantAuthorization(session, res.session);
             }).catch((err) => {
                 if (err.statusCode === 401) {
                     // credentials aren't valid
@@ -247,8 +250,8 @@ class RemoteDataSource extends EventEmitter {
                 console.error(err);
             }).then(() => {
                 this.discardSession(session);
-                this.clearRecentOperations(address);
-                this.clearCachedSchemas(address);
+                this.clearRecentOperations(session);
+                this.clearCachedSchemas(session);
                 this.triggerEvent(new RemoteDataSourceEvent('expiration', this, { session }));
                 this.triggerEvent(new RemoteDataSourceEvent('change', this));
                 return null;
@@ -457,7 +460,16 @@ class RemoteDataSource extends EventEmitter {
         return session.authorizationPromise;
     }
 
-    grantAuthorization(session, sessionInfo) {
+    /**
+     * Attach authorization token to session and trigger authorization event
+     *
+     * @param  {Object} session
+     * @param  {Object} sessionInfo
+     * @param  {Boolean} noEvent
+     *
+     * @return {null}
+     */
+    grantAuthorization(session, sessionInfo, noEvent) {
         let now = Moment().toISOString();
         if (!sessionInfo) {
             throw HTTPError(500);
@@ -465,26 +477,30 @@ class RemoteDataSource extends EventEmitter {
         if (sessionInfo.error) {
             throw HTTPError(sessionInfo.error);
         }
-        if (!sessionInfo.token || !sessioInfo.user_id || !(sessionInfo.etime > now)) {
+        if (!sessionInfo.token || !sessionInfo.user_id || !(sessionInfo.etime > now)) {
             throw HTTPError(401);
         }
         if (sessionInfo.area && sessionInfo.area !== session.area) {
             throw HTTPError(500);
         }
         session.token = sessionInfo.token;
-        session.user_id = sessioInfo.user_id;
+        session.user_id = sessionInfo.user_id;
+        session.etime = sessionInfo.etime;
         if (session.authorizationPromise && session.authorizationPromise.resolve) {
             session.authorizationPromise.resolve(true);
         }
-        this.triggerEvent(new RemoteDataSourceEvent('authorization', this, {
-            session
-        }));
+        if (!noEvent) {
+            this.triggerEvent(new RemoteDataSourceEvent('authorization', this, {
+                session
+            }));
+        }
+        return null;
     }
 
     restoreAuthorization(location, sessionInfo) {
         let session = this.obtainSession(location);
         try {
-            this.grantAuthorization(session, sessionInfo);
+            this.grantAuthorization(session, sessionInfo, true);
             return true;
         } catch (err) {
             this.discardSession(session);
@@ -1424,7 +1440,8 @@ class RemoteDataSource extends EventEmitter {
      * @return {Prmise}
      */
     performRemoteAction(location, action, payload) {
-        let { address, schema, table } = location;
+        let session = this.obtainSession(location);
+        let { schema, table } = location;
         let { basePath } = this.options;
         if (!schema) {
             return Promise.reject(new Error('No schema specified'));
@@ -1438,8 +1455,7 @@ class RemoteDataSource extends EventEmitter {
         } else if (action === 'discovery') {
             flags = _.omit(this.options.discoveryFlags, 'include_uncommitted');
         }
-        let url = `${address}${basePath}/${action}/${schema}/${table}/`;
-        let session = getSession(address);
+        let url = `${session.address}${basePath}/${action}/${schema}/${table}/`;
         let req = _.assign({}, payload, flags, { auth_token: session.token });
         let options = {
             contentType: 'json',
@@ -1449,8 +1465,8 @@ class RemoteDataSource extends EventEmitter {
             return result;
         }).catch((err) => {
             if (err.statusCode === 401 || err.statusCode == 403) {
-                this.clearRecentOperations(address);
-                this.clearCachedSchemas(address);
+                this.clearRecentOperations(session);
+                this.clearCachedSchemas(session);
                 if (err.statusCode === 401) {
                     this.discardSession(session);
                     this.triggerEvent(new RemoteDataSourceEvent('expiration', this, { session }));
@@ -1494,7 +1510,7 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Boolean>}
      */
     searchLocalCache(search, discovery) {
-        return this.validateCache(search.address, search.schema).then((signature) => {
+        return this.validateCache(search).then((signature) => {
             search.validateResults(signature);
 
             if (!discovery) {
@@ -1535,12 +1551,12 @@ class RemoteDataSource extends EventEmitter {
      * Compare signature stored previous with current signature; if they do
      * not match, clean the cache
      *
-     * @param  {String} address
-     * @param  {String} schema
+     * @param  {Object} location
      *
      * @return {Promise<String>}
      */
-    validateCache(address, schema) {
+    validateCache(location) {
+        let { address, schema } = location;
         if (schema === 'local' || !this.options.cacheValidation) {
             return Promise.resolve('none');
         }
@@ -1549,8 +1565,8 @@ class RemoteDataSource extends EventEmitter {
         if (promise) {
             return promise;
         }
-        promise = this.getRemoteSignature(address, schema).then((remoteSignature) => {
-            return this.getCacheSignature(address, schema).then((cacheSignature) => {
+        promise = this.getRemoteSignature(location).then((remoteSignature) => {
+            return this.getCacheSignature(location).then((cacheSignature) => {
                 if (!remoteSignature) {
                     return cacheSignature || 'none';
                 }
@@ -1558,15 +1574,15 @@ class RemoteDataSource extends EventEmitter {
                     if (cacheSignature === remoteSignature) {
                         return remoteSignature;
                     } else {
-                        return this.clearCachedObjects(address, schema).then(() => {
-                            this.setCacheSignature(address, schema, remoteSignature);
+                        return this.clearCachedObjects(location).then(() => {
+                            this.setCacheSignature(location, remoteSignature);
                             return remoteSignature;
                         });
                     }
                 } else {
                     // wait for any cache clearing operation to complete
                     return this.waitForCacheClearing(address, schema).then(() => {
-                        this.setCacheSignature(address, schema, remoteSignature);
+                        this.setCacheSignature(location, remoteSignature);
                         return remoteSignature;
                     });
                 }
@@ -1582,23 +1598,20 @@ class RemoteDataSource extends EventEmitter {
     /**
      * Clear cached schema at given address
      *
-     * @param  {String} address
+     * @param  {Object} session
      *
      * @return {Promise}
      */
-    clearCachedSchemas(address) {
+    clearCachedSchemas(session) {
         // remove all validation results for address
-        _.unset(this.cacheValidations, [ address ]);
+        _.unset(this.cacheValidations, [ session.address ]);
 
         // clear the objects first
-        return this.clearCachedObjects(address, '*').then(() => {
+        let location = { address: session.address, schema: '*' };
+        return this.clearCachedObjects(location).then(() => {
             // remove the signatures
-            let location = {
-                schema: 'local',
-                table: 'remote_schema',
-            };
-            let prefix = `${address}/`;
-            return this.cache.find(location).filter((row) => {
+            let prefix = `${session.address}/`;
+            return this.cache.find(signatureLocation).filter((row) => {
                 return _.startsWith(row.key, prefix);
             }).then((rows) => {
                 return this.cache.remove(location, rows);
@@ -1609,18 +1622,18 @@ class RemoteDataSource extends EventEmitter {
     /**
      * Fetch signature of schema
      *
-     * @param  {String} address
-     * @param  {String} schema
+     * @param  {Object} location
      *
      * @return {Promise<String>}
      */
-    getRemoteSignature(address, schema) {
+    getRemoteSignature(location) {
         if (!this.active) {
             return Promise.resolve('');
         }
+        let { schema } = location;
         let { basePath } = this.options;
-        let url = `${address}${basePath}/signature/${schema}`;
-        let session = getSession(address);
+        let session = this.obtainSession(location)
+        let url = `${session.address}${basePath}/signature/${schema}`;
         let options = { responseType: 'json', contentType: 'json' };
         let payload = { auth_token: session.token };
         return HTTPRequest.fetch('POST', url, payload, options).then((result) => {
@@ -1631,19 +1644,14 @@ class RemoteDataSource extends EventEmitter {
     /**
      * Load signature of cached schema
      *
-     * @param  {String} address
-     * @param  {String} schema
+     * @param  {Object} location
      *
      * @return {Promise<String>}
      */
-    getCacheSignature(address, schema) {
-        let query = {
-            schema: 'local',
-            table: 'remote_schema',
-            criteria: {
-                key: `${address}/${schema}`
-            }
-        };
+    getCacheSignature(location) {
+        let { address, schema } = location;
+        let key = `${address}/${schema}`;
+        let query = _.assign({}, signatureLocation, { criteria: { key } });
         return this.cache.find(query).get(0).then((result) => {
             return _.get(result, 'signature');
         });
@@ -1652,22 +1660,16 @@ class RemoteDataSource extends EventEmitter {
     /**
      * Save signature of cached schema
      *
-     * @param  {String} address
-     * @param  {String} schema
+     * @param  {Object} location
      * @param  {String} signature
      *
      * @return {Promise}
      */
-    setCacheSignature(address, schema, signature) {
-        let location = {
-            schema: 'local',
-            table: 'remote_schema',
-        };
-        let entry = {
-            key: `${address}/${schema}`,
-            signature
-        };
-        return this.cache.save(location, [ entry ]);
+    setCacheSignature(location, signature) {
+        let { address, schema } = location;
+        let key = `${address}/${schema}`;
+        let entry = { key, signature };
+        return this.cache.save(signatureLocation, [ entry ]);
     }
 
     /**
@@ -1700,13 +1702,13 @@ class RemoteDataSource extends EventEmitter {
     /**
      * Deleted all cached objects originating from given server
      *
-     * @param  {String} address
-     * @param  {String} schema
+     * @param  {Object} location
      *
      * @return {Promise<Number>}
      */
-    clearCachedObjects(address, schema) {
+    clearCachedObjects(location) {
         return Promise.try(() => {
+            let { address, schema } = location;
             // see if we're in the middle of clearing everything from address
             let clearingAllPromise = _.get(this.cacheClearing, [ address, '*' ]);
             if (clearingAllPromise) {
@@ -1818,9 +1820,9 @@ class RemoteDataSource extends EventEmitter {
     /**
      * Remove recent search performed on given server
      *
-     * @param  {String} address
+     * @param  {Object} session
      */
-    clearRecentOperations(address) {
+    clearRecentOperations(session) {
         let lists = [
             this.recentSearchResults,
             this.recentStorageResults,
@@ -1828,7 +1830,7 @@ class RemoteDataSource extends EventEmitter {
         ];
         _.each(lists, (list) => {
             _.remove(list, (op) => {
-                return (op.address === address);
+                return (op.address === session.address);
             });
         });
     }

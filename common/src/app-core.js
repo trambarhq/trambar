@@ -18,7 +18,7 @@ const SettingsLocation = {
     table: 'settings'
 };
 
-const SessionLocation = {
+const sessionLocation = {
     schema: 'local',
     table: 'session',
 }
@@ -113,10 +113,12 @@ function start(cfg) {
         }
     });
     dataSource.addEventListener('authorization', (evt) => {
-
+        // save the session
+        saveSession(evt.session);
     });
     dataSource.addEventListener('expiration', (evt) => {
-
+        // remove the expired session
+        removeSession(evt.session);
     });
     notifier.addEventListener('notify', (evt) => {
         if (process.env.NODE_ENV !== 'production') {
@@ -206,7 +208,7 @@ function start(cfg) {
 
     function loadSession(address) {
         let criteria = { key: address };
-        let query = Object.assign({ criteria }, SessionLocation);
+        let query = Object.assign({ criteria }, sessionLocation);
         return dataSource.find(query).then((records) => {
             var record = records[0];
             if (record) {
@@ -229,14 +231,14 @@ function start(cfg) {
             user_id: session.user_id,
             etime: session.etime,
         };
-        return dataSource.save(SessionLocation, [ record ]).return();
+        return dataSource.save(sessionLocation, [ record ]).return();
     }
 
     function removeSession(address) {
         let record = {
             key: address,
         };
-        return dataSource.remove(SessionLocation, [ record ]).return();
+        return dataSource.remove(sessionLocation, [ record ]).return();
     }
 
     function getUploadURL(destination, id, type, part) {

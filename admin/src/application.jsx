@@ -55,8 +55,9 @@ class Application extends PureComponent {
         } = this.props;
         let { address } = routeManager.context;
         let { schema } = routeManager.params;
+        let context = { address, schema };
         this.state = {
-            database: new Database(dataSource, { address, schema }),
+            database: new Database(dataSource, context),
             payloads: new Payloads(payloadManager),
             route: new Route(routeManager),
             env: new Environment(envMonitor, localeManager),
@@ -72,7 +73,7 @@ class Application extends PureComponent {
      */
     render() {
         let { database, route, env } = this.state;
-        let navProps = { 
+        let navProps = {
             database,
             route,
             env,
@@ -178,6 +179,7 @@ class Application extends PureComponent {
             address: route.context.address,
             schema: route.params.schema,
         };
+        console.log(context);
         let database = new Database(evt.target, context);
         this.setState({ database });
     }

@@ -26,7 +26,7 @@ const CORSRewriter = {
     },
     to: (urlParts, context) => {
         if (context.cors) {
-            var address = params.address;
+            var address = context.address;
             if (address) {
                 var colonIndex = address.indexOf('://');
                 var prefix = address.substr(0, colonIndex);
