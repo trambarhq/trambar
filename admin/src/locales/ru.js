@@ -1,8 +1,6 @@
 import 'moment/locale/ru';
 import {
-    plural,
     cardinal,
-    gender,
     genderize,
     pastTenseEnding,
 } from 'locale/grammars/russian';
@@ -31,130 +29,46 @@ const phrases = {
     'activity-chart-legend-wiki': 'Правки wiki',
 
     'activity-tooltip-$count': (count) => {
-        if (singularN(count)) {
-            return `${count} рассказ`;
-        } else if (singularG(count)) {
-            return `${count} рассказа`;
-        } else {
-            return `${count} рассказов`;
-        }
+        return cardinal(count, 'рассказ', 'рассказа', 'рассказов');
     },
     'activity-tooltip-$count-branch': (count) => {
-        if (singularN(count)) {
-            return `${count} ветка`;
-        } else if (singularG(count)) {
-            return `${count} ветки`;
-        } else {
-            return `${count} веток`;
-        }
+        return cardinal(count, 'ветка', 'ветки', 'веток');
     },
     'activity-tooltip-$count-issue': (count) => {
-        if (singularN(count)) {
-            return `${count} отчёт`;
-        } else if (singularG(count)) {
-            return `${count} отчёта`;
-        } else {
-            return `${count} отчётов`;
-        }
+        return cardinal(count, 'отчёт', 'отчёта', 'отчётов');
     },
     'activity-tooltip-$count-member': (count) => {
-        if (singularN(count)) {
-            return `${count} изменение членства`;
-        } else if (singularG(count)) {
-            return `${count} изменения членства`;
-        } else {
-            return `${count} изменений членства`;
-        }
+        return cardinal(count, 'изменение членства', 'изменения членства', 'изменений членства');
     },
     'activity-tooltip-$count-merge': (count) => {
-        if (singularN(count)) {
-            return `${count} слияние`;
-        } else if (singularG(count)) {
-            return `${count} слияния`;
-        } else {
-            return `${count} слияний`;
-        }
+        return cardinal(count, 'слияние', 'слияния', 'слияний');
     },
     'activity-tooltip-$count-merge-request': (count) => {
-        if (singularN(count)) {
-            return `${count} запрос слияния`;
-        } else if (singularG(count)) {
-            return `${count} запроса слияния`;
-        } else {
-            return `${count} запросов слияния`;
-        }
+        return cardinal(count, 'запрос слияния', 'запроса слияния', 'запросов слияния');
     },
     'activity-tooltip-$count-milestone': (count) => {
-        if (singularN(count)) {
-            return `${count} веха`;
-        } else if (singularG(count)) {
-            return `${count} вехи`;
-        } else {
-            return `${count} вех`;
-        }
+        return cardinal(count, 'веха', 'вехи', 'вех');
     },
     'activity-tooltip-$count-post': (count) => {
-        if (singularN(count)) {
-            return `${count} сообщение`;
-        } else if (singularG(count)) {
-            return `${count} сообщений`;
-        } else {
-            return `${count} сообщений`;
-        }
+        return cardinal(count, 'сообщение', 'сообщений', 'сообщений');
     },
     'activity-tooltip-$count-push': (count) => {
-        if (singularN(count)) {
-            return `${count} помещение`;
-        } else if (singularG(count)) {
-            return `${count} помещения`;
-        } else {
-            return `${count} помещений`;
-        }
+        return cardinal(count, 'помещение', 'помещения', 'помещений');
     },
     'activity-tooltip-$count-repo': (count) => {
-        if (singularN(count)) {
-            return `${count} изменение репозитория`;
-        } else if (singularG(count)) {
-            return `${count} изменения репозитория`;
-        } else {
-            return `${count} изменений репозитория`;
-        }
+        return cardinal(count, 'изменение репозитория', 'изменения репозитория', 'изменений репозитория');
     },
     'activity-tooltip-$count-survey': (count) => {
-        if (singularN(count)) {
-            return `${count} опрос`;
-        } else if (singularG(count)) {
-            return `${count} опроса`;
-        } else {
-            return `${count} опросов`;
-        }
+        return cardinal(count, 'опрос', 'опроса', 'опросов');
     },
     'activity-tooltip-$count-tag': (count) => {
-        if (singularN(count)) {
-            return `${count} тег`;
-        } else if (singularG(count)) {
-            return `${count} теги`;
-        } else {
-            return `${count} тегов`;
-        }
+        return cardinal(count, 'тег', 'теги', 'тегов');
     },
     'activity-tooltip-$count-task-list': (count) => {
-        if (singularN(count)) {
-            return `${count} список задач`;
-        } else if (singularG(count)) {
-            return `${count} списка задач`;
-        } else {
-            return `${count} списков задач`;
-        }
+        return cardinal(count, 'список задач', 'списка задач', 'списков задач');
     },
     'activity-tooltip-$count-wiki': (count) => {
-        if (singularN(count)) {
-            return `${count} правка wiki`;
-        } else if (singularG(count)) {
-            return `${count} правки wiki`;
-        } else {
-            return `${count} правок wiki`;
-        }
+        return cardinal(count, 'правка wiki', 'правки wiki', 'правок wiki');
     },
 
     'app-name': 'Трамбар',
@@ -226,25 +140,11 @@ const phrases = {
     'project-list-add': 'Добавить проект',
     'project-list-cancel': 'Отмена',
     'project-list-confirm-archive-$count': (count) => {
-        let projects;
-        if (singularN(count)) {
-            projects = `выбранный проект`;
-        } else if (singularG(count)) {
-            projects = `эти ${count} проекта`;
-        } else {
-            projects = `эти ${count} проектов`;
-        }
+        let projects = cardinal(count, 'выбранный проект', [ 'эти', 'проекта' ], [ 'эти', 'проектов' ], true);
         return `Вы действительно хотите архивировать ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        let projects;
-        if (singularN(count)) {
-            projects = `выбранный проект`;
-        } else if (singularG(count)) {
-            projects = `эти ${count} проекта`;
-        } else {
-            projects = `эти ${count} проектов`;
-        }
+        let projects = cardinal(count, 'выбранный проект', [ 'эти', 'проекта' ], [ 'эти', 'проектов' ], true);
         return `Вы действительно хотите восстановить ${projects}?`;
     },
     'project-list-deleted': 'Удаленный',
@@ -290,25 +190,12 @@ const phrases = {
     'project-summary-title': 'Название',
 
     'project-tooltip-$count-others': (count) => {
-        if (singularN(count)) {
-            return `${count} другой`;
-        } else if (singularG(count)) {
-            return `${count} других`;
-        } else {
-            return `${count} других`;
-        }
+        return cardinal(count, 'другой', 'других', 'других');
     },
 
     'repo-list-cancel': 'Отмена',
     'repo-list-confirm-remove-$count': (count) => {
-        let repositories;
-        if (singularN(count)) {
-            repositories = `выбранный репозиторий`;
-        } else if (singularG(count)) {
-            repositories = `эти ${count} репозитория`;
-        } else {
-            repositories = `эти ${count} репозиториев`;
-        }
+        let repositories = cardinal(count, 'выбранный репозиторий', [ 'эти', 'репозитория' ], [ 'эти', 'репозиториев' ], true);
         return `Вы действительно хотите удалить ${repositories} из проекта?`;
     },
     'repo-list-edit': 'Редактировать список репозитория',
@@ -340,37 +227,17 @@ const phrases = {
     'repo-summary-title': 'Название',
 
     'repository-tooltip-$count': (count) => {
-        if (singularN(count)) {
-            return `${count} репозиторий`;
-        } else if (singularG(count)) {
-            return `${count} репозитория`;
-        } else {
-            return `${count} репозиториев`;
-        }
+        return cardinal(count, 'репозиторий', 'репозитория', 'репозиториев');
     },
 
     'role-list-add': 'Добавить роль',
     'role-list-cancel': 'Отмена',
     'role-list-confirm-disable-$count': (count) => {
-        let roles;
-        if (singularN(count)) {
-            roles = `эту роль`;
-        } else if (singularG(count)) {
-            roles = `эти ${count} роли`;
-        } else {
-            roles = `эти ${count} ролей`;
-        }
+        let roles = cardinal(count, 'эту роль', [ 'эти', 'роли' ], [ 'эти', 'ролей' ], true);
         return `Вы действительно хотите отключить ${roles}?`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        let roles;
-        if (singularN(count)) {
-            roles = `эту роль`;
-        } else if (singularG(count)) {
-            roles = `эти ${count} роли`;
-        } else {
-            roles = `эти ${count} ролей`;
-        }
+        let roles = cardinal(count, 'эту роль', [ 'эти', 'роли' ], [ 'эти', 'ролей' ], true);
         return `Вы действительно хотите реактивировать ${roles}?`
     },
     'role-list-edit': 'Редактировать список ролей',
@@ -409,13 +276,7 @@ const phrases = {
     'role-summary-users': 'Пользователи',
 
     'role-tooltip-$count-others': (count) => {
-        if (singularN(count)) {
-            return `${count} другая`;
-        } else if (singularG(count)) {
-            return `${count} другие`;
-        } else {
-            return `${count} других`;
-        }
+        return cardinal(count, 'другая', 'другие', 'других');
     },
 
     'server-list-add': 'Добавить сервер',
@@ -423,25 +284,11 @@ const phrases = {
     'server-list-api-access-true': 'Получен',
     'server-list-cancel': 'Отмена',
     'server-list-confirm-disable-$count': (count) => {
-        let servers;
-        if (singularN(count)) {
-            servers = `выбранный сервер`;
-        } else if (singularG(count)) {
-            servers = `эти ${count} сервера`;
-        } else {
-            servers = `эти ${count} серверов`;
-        }
+        let servers = cardinal(count, 'выбранный сервер', [ 'эти', 'сервера' ], [ 'эти', 'серверов' ], true);
         return `Вы действительно хотите отключить ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        let servers;
-        if (singularN(count)) {
-            servers = `выбранный сервер`;
-        } else if (singularG(count)) {
-            servers = `эти ${count} сервера`;
-        } else {
-            servers = `эти ${count} серверов`;
-        }
+        let servers = cardinal(count, 'выбранный сервер', [ 'эти', 'сервера' ], [ 'эти', 'серверов' ], true);
         return `Вы действительно хотите реактивировать ${servers}?`
     },
     'server-list-edit': 'Редактировать список серверов',
@@ -570,89 +417,34 @@ const phrases = {
     'table-heading-users': 'Пользователи',
 
     'task-$seconds': (seconds) => {
-        if (singularN(seconds)) {
-            return `${seconds} секунда`;
-        } else if (singularG(seconds)) {
-            return `${seconds} секунды`;
-        } else {
-            return `${seconds} секунд`;
-        }
+        return cardinal(seconds, 'секунда', 'секунды', 'секунд');
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        let comments;
-        if (singularN(count)) {
-            comments = `${count} комментарий`;
-        } else if (singularG(count)) {
-            comments = `${count} комментария`;
-        } else {
-            comments = `${count} комментариев`;
-        }
+        let comments = cardinal(count, 'комментарий', 'комментария', 'комментариев');
         return `Импортировано из репозитория «${repo}» ${comments} к коммиту`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        let events;
-        if (singularN(count)) {
-            events = `${count} событие`;
-        } else if (singularG(count)) {
-            events = `${count} события`;
-        } else {
-            events = `${count} событий`;
-        }
+        let events = cardinal(count, 'событие', 'события', 'событий');
         return `Импортировано из репозитория «${repo}» ${events}`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        let comments;
-        if (singularN(count)) {
-            comments = `${count} комментарий`;
-        } else if (singularG(count)) {
-            comments = `${count} комментария`;
-        } else {
-            comments = `${count} комментариев`;
-        }
+        let comments = cardinal(count, 'комментарий', 'комментария', 'комментариев');
         return `Импортировано из репозитория «${repo}» ${comments} к отчёту об ошибке`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        let comments;
-        if (singularN(count)) {
-            comments = `${count} комментарий`;
-        } else if (singularG(count)) {
-            comments = `${count} комментария`;
-        } else {
-            comments = `${count} комментариев`;
-        }
+        let comments = cardinal(count, 'комментарий', 'комментария', 'комментариев');
         return `Импортировано из репозитория «${repo}» ${comments} к запросу слияния`;
     },
     'task-imported-$count-repos': (count) => {
-        let repos;
-        if (singularN(count)) {
-            repos = `${count} репозиторий`;
-        } else if (singularG(count)) {
-            repos = `${count} репозитория`;
-        } else {
-            repos = `${count} репозиториев`;
-        }
+        let repos = cardinal(count, 'репозиторий', 'репозитория', 'репозиториев');
         return `Импортировано ${repos}`;
     },
     'task-imported-$count-users': (count) => {
-        let users;
-        if (singularN(count)) {
-            users = `${count} пользователь`;
-        } else if (singularG(count)) {
-            users = `${count} пользователя`;
-        } else {
-            users = `${count} пользователей`;
-        }
+        let users = cardinal(count, 'пользователь', 'пользователя', 'пользователей');
         return `Импортировано ${users}`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        let commits;
-        if (singularN(count)) {
-            commits = `${count} коммитом`;
-        } else if (singularG(count)) {
-            commits = `${count} коммитами`;
-        } else {
-            commits = `${count} коммитами`;
-        }
+        let commits = cardinal(count, 'коммитом', 'коммитами', 'коммитами');
         return `Импортировано из ветки «${branch}» репозитория «${repo}» помещения с ${commits}`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
@@ -673,71 +465,29 @@ const phrases = {
     'task-importing-repos': 'Импортирования репозиториев',
     'task-importing-users': 'Импортирования пользователей',
     'task-installed-$count-hooks': (count) => {
-        let hooks;
-        if (singularN(count)) {
-            hooks = `обратный вызов`;
-        } else if (singularG(count)) {
-            hooks = `обратных вызова`;
-        } else {
-            hooks = `обратных вызовов`;
-        }
+        let hooks = cardinal(count, 'обратный вызов', 'обратного вызова', 'обратных вызовов');
         return `Установлен ${hooks}`;
     },
     'task-installing-hooks': 'Установка обратных вызовов',
     'task-removed-$count-hooks': (count) => {
-        let hooks;
-        if (singularN(count)) {
-            hooks = `обратный вызов`;
-        } else if (singularG(count)) {
-            hooks = `обратных вызова`;
-        } else {
-            hooks = `обратных вызовов`;
-        }
+        let hooks = cardinal(count, 'обратный вызов', 'обратного вызова', 'обратных вызовов');
         return `Удален ${hooks}`;
     },
     'task-removed-$count-repos': (count) => {
-        let repos;
-        if (singularN(count)) {
-            repos = `${count} репозиторий`;
-        } else if (singularG(count)) {
-            repos = `${count} репозитория`;
-        } else {
-            repos = `${count} репозиториев`;
-        }
+        let repos = cardinal(count, 'репозиторий', 'репозитория', 'репозиториев');
         return `Удален ${repos}`;
     },
     'task-removed-$count-users': (count) => {
-        let users;
-        if (singularN(count)) {
-            users = `${count} пользователя`;
-        } else if (singularG(count)) {
-            users = `${count} пользователя`;
-        } else {
-            users = `${count} пользователей`;
-        }
+        let users = cardinal(count, 'пользователь', 'пользователя', 'пользователей');
         return `Удален ${users}`;
     },
     'task-removing-hooks': 'Удаление обратных вызовов',
     'task-updated-$count-repos': (count) => {
-        let repos;
-        if (singularN(count)) {
-            repos = `${count} репозиторий`;
-        } else if (singularG(count)) {
-            repos = `${count} репозитория`;
-        } else {
-            repos = `${count} репозиториев`;
-        }
+        let repos = cardinal(count, 'репозиторий', 'репозитория', 'репозиториев');
         return `Обновлено ${repos}`;
     },
     'task-updated-$count-users': (count) => {
-        let users;
-        if (singularN(count)) {
-            users = `${count} пользователя`;
-        } else if (singularG(count)) {
-            users = `этих ${count} пользователей`;
-        } else {
-            users = `этих ${count} пользователей`;
-        }
+        let users = cardinal(count, 'пользователь', 'пользователя', 'пользователей');
         return `Обновлено ${users}`;
     },
 
@@ -749,14 +499,7 @@ const phrases = {
     'tooltip-more': 'Более',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        let files;
-        if (singularN(count)) {
-            files = `${count} файл`;
-        } else if (singularG(count)) {
-            files = `${count} файлов`;
-        } else {
-            files = `${count} файлов`;
-        }
+        let files = cardinal(count, 'файла', 'файлов', 'файлов');
         return `Загрузка ${files}, оставшихся ${size}`;
     },
 
@@ -764,25 +507,11 @@ const phrases = {
     'user-list-approve-all': 'Утвердить все запросы',
     'user-list-cancel': 'Отмена',
     'user-list-confirm-disable-$count': (count) => {
-        let users;
-        if (singularN(count)) {
-            users = `выбранного пользователя`;
-        } else if (singularG(count)) {
-            users = `этих ${count} пользователей`;
-        } else {
-            users = `этих ${count} пользователей`;
-        }
+        let users = cardinal(count, 'выбранного пользователя', [ 'этих', 'пользователей' ], [ 'этих', 'пользователей' ], true);
         return `Вы действительно хотите отключить ${users}?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        let users;
-        if (singularN(count)) {
-            users = `выбранного пользователя`;
-        } else if (singularG(count)) {
-            users = `этих ${count} пользователей`;
-        } else {
-            users = `этих ${count} пользователей`;
-        }
+        let users = cardinal(count, 'выбранного пользователя', [ 'этих', 'пользователей' ], [ 'этих', 'пользователей' ], true);
         return `Вы действительно хотите реактивировать ${users}?`
     },
     'user-list-edit': 'Редактировать список пользователей',
@@ -849,13 +578,7 @@ const phrases = {
     'user-summary-username': 'Имя пользователя',
 
     'user-tooltip-$count': (count) => {
-        if (singularN(count)) {
-            return `${count} пользователь`;
-        } else if (singularG(count)) {
-            return `${count} пользователя`;
-        } else {
-            return `${count} пользователей`;
-        }
+        return cardinal(count, 'пользователь', 'пользователя', 'пользователей');
     },
 
     'validation-duplicate-project-name': 'Проект с этим идентификатором уже существует',

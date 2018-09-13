@@ -1,7 +1,6 @@
 import 'moment/locale/pl';
 import {
     cardinal,
-    gender,
     genderize,
     pastTenseEnding,
 } from 'locale/grammars/polish';
