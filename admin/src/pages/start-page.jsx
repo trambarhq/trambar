@@ -78,7 +78,6 @@ if (process.env.NODE_ENV !== 'production') {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
     };
     StartPage.propType = {
         env: PropTypes.instanceOf(Environment).isRequired,

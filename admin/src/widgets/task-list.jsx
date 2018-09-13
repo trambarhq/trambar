@@ -5,11 +5,6 @@ import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
 import TaskFinder from 'objects/finders/task-finder';
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-import Theme from 'theme/theme';
-
 // widgets
 import SmartList from 'widgets/smart-list';
 
@@ -414,6 +409,10 @@ export {
     TaskList,
     TaskListSync,
 };
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

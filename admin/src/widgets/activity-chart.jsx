@@ -6,9 +6,6 @@ import Moment from 'moment';
 import DateTracker from 'utils/date-tracker';
 import Memoize from 'utils/memoize';
 
-import Environment from 'env/environment';
-import Theme from 'theme/theme';
-
 import StoryTypes from 'objects/types/story-types';
 
 import './activity-chart.scss';
@@ -235,6 +232,8 @@ export {
     ActivityChart,
     LegendItem,
 };
+
+import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
