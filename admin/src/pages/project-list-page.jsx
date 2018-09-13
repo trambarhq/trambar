@@ -99,8 +99,8 @@ class ProjectListPageSync extends PureComponent {
      * @return {Boolean}
      */
     isEditing(props) {
-        props = props || this.props;
-        return props.route.parameters.edit;
+        let { route } = props || this.props;
+        return route.params.edit;
     }
 
     /**

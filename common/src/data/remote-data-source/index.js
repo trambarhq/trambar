@@ -480,8 +480,10 @@ class RemoteDataSource extends EventEmitter {
         if (!sessionInfo.token || !sessionInfo.user_id || !(sessionInfo.etime > now)) {
             throw HTTPError(401);
         }
-        if (sessionInfo.area && sessionInfo.area !== session.area) {
-            throw HTTPError(500);
+        if (sessionInfo.area !== session.area) {
+            if (sessionInfo.hasOwnProperty('area')) {
+                throw HTTPError(500);
+            }
         }
         session.token = sessionInfo.token;
         session.user_id = sessionInfo.user_id;
@@ -1464,6 +1466,10 @@ class RemoteDataSource extends EventEmitter {
         return HTTPRequest.fetch('POST', url, req, options).then((result) => {
             return result;
         }).catch((err) => {
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(err.message)
+                console.log(req);
+            }
             if (err.statusCode === 401 || err.statusCode == 403) {
                 this.clearRecentOperations(session);
                 this.clearCachedSchemas(session);

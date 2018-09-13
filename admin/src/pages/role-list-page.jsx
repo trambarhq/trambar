@@ -239,7 +239,7 @@ class RoleListPageSync extends PureComponent {
      * @return {Array<ReactElement>}
      */
     renderRows() {
-        let { roles, users } = this.props;
+        let { env, roles, users } = this.props;
         let { renderingFullList, sortColumns, sortDirections } = this.state;
         if (!renderingFullList) {
             roles = filterRoles(roles);
@@ -352,7 +352,7 @@ class RoleListPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderUsersColumn(role) {
-        let { env, users } = this.props;
+        let { route, env, users } = this.props;
         let { t } = env.locale;
         if (env.isBelowMode('narrow')) {
             return null;

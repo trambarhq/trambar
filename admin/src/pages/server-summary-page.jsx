@@ -260,7 +260,7 @@ class ServerSummaryPageSync extends PureComponent {
      */
     startNew() {
         let { route } = this.props;
-        let params = _.clone(route.parameters);
+        let params = _.clone(route.params);
         params.server = 'new';
         return route.replace(route.name, params);
     }

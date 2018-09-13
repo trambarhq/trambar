@@ -26,8 +26,8 @@ const sessionLocation = {
 function start(cfg) {
     let envMonitor = new EnvironmentMonitor({});
     let routeManager = new RouteManager({
-        basePath: cfg.basePath,
-        routes: cfg.routes,
+        basePath: cfg.routeManager.basePath,
+        routes: cfg.routeManager.routes,
         // CORSRewriter will extract site address from the URL when there's one
         // and default to the site address of the page when there isn't; the
         // address will appear in .context
@@ -43,8 +43,10 @@ function start(cfg) {
         cache = new LocalStorageCache();
     }
     let dataSource = new RemoteDataSource({
-        discoveryFlags: cfg.discoveryFlags,
-        retrievalFlags: cfg.retrievalFlags,
+        basePath: cfg.dataSource.basePath,
+        area: cfg.dataSource.area,
+        discoveryFlags: cfg.dataSource.discoveryFlags,
+        retrievalFlags: cfg.dataSource.retrievalFlags,
         cache,
     });
     let notifier;
@@ -68,7 +70,7 @@ function start(cfg) {
     }
 
     // look for sign in page
-    let signInPageName = _.findKey(cfg.routes, (route) => {
+    let signInPageName = _.findKey(routeManager.routes, (route) => {
         return route.public && route.signIn;
     });
 
@@ -214,6 +216,7 @@ function start(cfg) {
             if (record) {
                 return {
                     address: record.key,
+                    area: record.area,
                     handle: record.handle,
                     token: record.token,
                     user_id: record.user_id,
@@ -226,6 +229,7 @@ function start(cfg) {
     function saveSession(session) {
         let record = {
             key: session.address,
+            area: session.area,
             handle: session.handle,
             token: session.token,
             user_id: session.user_id,
@@ -234,9 +238,9 @@ function start(cfg) {
         return dataSource.save(sessionLocation, [ record ]).return();
     }
 
-    function removeSession(address) {
+    function removeSession(session) {
         let record = {
-            key: address,
+            key: session.address,
         };
         return dataSource.remove(sessionLocation, [ record ]).return();
     }

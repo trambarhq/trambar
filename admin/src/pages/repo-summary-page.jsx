@@ -141,7 +141,7 @@ class RepoSummaryPageSync extends PureComponent {
      */
     isEditing(props) {
         let { route } = props || this.props;
-        return route.parameters.edit;
+        return route.params.edit;
     }
 
     /**

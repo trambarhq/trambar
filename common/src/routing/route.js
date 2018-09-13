@@ -3,7 +3,6 @@ class Route {
         this.routeManager = routeManager;
         this.name = routeManager.name;
         this.params = routeManager.params;
-        this.parameters = routeManager.params;
         this.context = routeManager.context;
         this.url = routeManager.url;
         this.path = routeManager.path;

@@ -13,6 +13,7 @@ import { routes } from 'routing';
 import Database from 'data/database';
 import Route from 'routing/route';
 import Payloads from 'transport/payloads';
+import Locale from 'locale/locale';
 import Environment from 'env/environment';
 
 import SignInPage from 'pages/sign-in-page';
@@ -32,16 +33,21 @@ import 'font-awesome-webpack';
 class Application extends PureComponent {
     static displayName = 'Application';
     static coreConfiguration = {
-        basePath: '/admin',
-        area: 'admin',
-        discoveryFlags: {
-            include_deleted: true,
+        routeManager: {
+            basePath: '/admin',
+            routes,
         },
-        retrievalFlags: {
-            include_ctime: true,
-            include_mtime: true,
-        },
-        routes,
+        dataSource: {
+            basePath: '/srv/admin-data',
+            area: 'admin',
+            discoveryFlags: {
+                include_deleted: true,
+            },
+            retrievalFlags: {
+                include_ctime: true,
+                include_mtime: true,
+            },
+        }
     };
 
     constructor(props) {
@@ -56,11 +62,12 @@ class Application extends PureComponent {
         let { address } = routeManager.context;
         let { schema } = routeManager.params;
         let context = { address, schema };
+        let locale = new Locale(localeManager);
         this.state = {
             database: new Database(dataSource, context),
             payloads: new Payloads(payloadManager),
             route: new Route(routeManager),
-            env: new Environment(envMonitor, localeManager),
+            env: new Environment(envMonitor, locale),
 
             showingUploadProgress: false,
         };
@@ -86,7 +93,7 @@ class Application extends PureComponent {
                     <div className="scroll-box">
                         {this.renderCurrentPage()}
                     </div>
-                    {this.renderTaskAlert()}
+                    {/*this.renderTaskAlert()*/}
                     {this.renderUploadProgress()}
                 </section>
             </div>
@@ -102,15 +109,18 @@ class Application extends PureComponent {
     renderCurrentPage () {
         let { database, route, env, payloads } = this.state;
         let { module } = route.params;
-        if (!module) {
-            if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== 'production') {
+            if (!module) {
                 if (!route.name) {
                     console.log('No routing information');
                 } else {
                     console.log('No component for route: ' + route.name);
                 }
+                return null;
+            } else if (!module.default) {
+                console.log('Component not exported as default: ' + route.name);
+                return null;
             }
-            return null;
         }
         let CurrentPage = module.default;
         let pageProps = { database, route, env, payloads };
@@ -179,7 +189,6 @@ class Application extends PureComponent {
             address: route.context.address,
             schema: route.params.schema,
         };
-        console.log(context);
         let database = new Database(evt.target, context);
         this.setState({ database });
     }
@@ -239,8 +248,9 @@ class Application extends PureComponent {
      * @param  {Object} evt
      */
     handleEnvironmentChange = (evt) => {
-        let { envMonitor, localeManager } = this.props;
-        let env = new Environment(envMonitor, localeManager);
+        let { envMonitor } = this.props;
+        let { locale } = this.state.env;
+        let env = new Environment(envMonitor, locale);
         this.setState({ env });
     }
 

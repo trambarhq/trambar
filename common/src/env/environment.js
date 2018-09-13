@@ -1,10 +1,15 @@
-import Locale from 'locale/locale';
-
 class Environment {
-    constructor(envMonitor, localeManager) {
+    constructor(envMonitor, locale) {
         this.envMonitor = envMonitor;
+        this.locale = locale;
+    }
 
-        this.locale = new Locale(localeManager);
+    isBelowMode() {
+        return false;
+    }
+
+    isAboveMode() {
+        return true;
     }
 }
 

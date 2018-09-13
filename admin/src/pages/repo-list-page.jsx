@@ -344,7 +344,7 @@ class RepoListPageSync extends PureComponent {
                 }
             } else {
                 // don't create the link when we're editing the list
-                let params = _.clone(route.parameters);
+                let params = _.clone(route.params);
                 params.repo = repo.id;
                 url = route.find('repo-summary-page', params);
             }

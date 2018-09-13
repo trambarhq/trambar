@@ -15,7 +15,7 @@ var routes = {
         },
         params: { project: Number, edit: Boolean },
         load: (params, context) => {
-            import('pages/member-list-page' /* webpackChunkName: "page-member-list" */).then((module) => {
+            return import('pages/member-list-page' /* webpackChunkName: "page-member-list" */).then((module) => {
                 params.module = module;
             });
         }
@@ -27,7 +27,7 @@ var routes = {
         },
         params: { project:Number, user: NumberOrNew, edit: Boolean },
         load: (params, context) => {
-            import('pages/user-summary-page' /* webpackChunkName: "page-user-summary" */).then((module) => {
+            return import('pages/user-summary-page' /* webpackChunkName: "page-user-summary" */).then((module) => {
                 params.module = module;
             });
         }
@@ -39,7 +39,7 @@ var routes = {
         },
         params: { edit: Boolean },
         load: (params, context) => {
-            import('pages/project-list-page' /* webpackChunkName: "page-project-list" */).then((module) => {
+            return import('pages/project-list-page' /* webpackChunkName: "page-project-list" */).then((module) => {
                 params.module = module;
             });
         }
@@ -51,7 +51,7 @@ var routes = {
         },
         params: { project: NumberOrNew, edit: Boolean },
         load: (params, context) => {
-            import('pages/project-summary-page' /* webpackChunkName: "page-project-summary" */).then((module) => {
+            return import('pages/project-summary-page' /* webpackChunkName: "page-project-summary" */).then((module) => {
                 params.module = module;
             });
         }
@@ -63,7 +63,7 @@ var routes = {
         },
         params: { project: Number, edit: Boolean },
         load: (params, context) => {
-            import('pages/repo-list-page' /* webpackChunkName: "page-repo-list" */).then((module) => {
+            return import('pages/repo-list-page' /* webpackChunkName: "page-repo-list" */).then((module) => {
                 params.module = module;
             });
         }
@@ -75,7 +75,7 @@ var routes = {
         },
         params: { project: Number, repo: Number, edit: Boolean },
         load: (params, context) => {
-            import('pages/repo-summary-page' /* webpackChunkName: "page-repo-summary" */).then((module) => {
+            return import('pages/repo-summary-page' /* webpackChunkName: "page-repo-summary" */).then((module) => {
                 params.module = module;
             });
         }
@@ -87,7 +87,7 @@ var routes = {
         },
         params: { edit: Boolean },
         load: (params, context) => {
-            import('pages/role-list-page' /* webpackChunkName: "page-role-list" */).then((module) => {
+            return import('pages/role-list-page' /* webpackChunkName: "page-role-list" */).then((module) => {
                 params.module = module;
             });
         }
@@ -99,7 +99,7 @@ var routes = {
         },
         params: { role: NumberOrNew, edit: Boolean },
         load: (params, context) => {
-            import('pages/role-summary-page' /* webpackChunkName: "page-role-summary" */).then((module) => {
+            return import('pages/role-summary-page' /* webpackChunkName: "page-role-summary" */).then((module) => {
                 params.module = module;
             });
         }
@@ -111,7 +111,7 @@ var routes = {
         },
         params: { edit: Boolean },
         load: (params, context) => {
-            import('pages/server-list-page' /* webpackChunkName: "page-server-list" */).then((module) => {
+            return import('pages/server-list-page' /* webpackChunkName: "page-server-list" */).then((module) => {
                 params.module = module;
             });
         }
@@ -123,7 +123,7 @@ var routes = {
         },
         params: { server: NumberOrNew, edit: Boolean },
         load: (params, context) => {
-            import('pages/server-summary-page' /* webpackChunkName: "page-server-summary" */).then((module) => {
+            return import('pages/server-summary-page' /* webpackChunkName: "page-server-summary" */).then((module) => {
                 params.module = module;
             });
         }
@@ -135,7 +135,7 @@ var routes = {
         },
         params: { edit: Boolean },
         load: (params, context) => {
-            import('pages/settings-page' /* webpackChunkName: "page-settings" */).then((module) => {
+            return import('pages/settings-page' /* webpackChunkName: "page-settings" */).then((module) => {
                 params.module = module;
             });
         }
@@ -143,14 +143,14 @@ var routes = {
     'start': {
         path: '/',
         load: (params, context) => {
-            import('pages/start-page' /* webpackChunkName: "page-start" */).then((module) => {
+            return import('pages/start-page' /* webpackChunkName: "page-start" */).then((module) => {
                 params.module = module;
             });
         },
     },
     'sign-in-page': {
         load: (params, context) => {
-            import('pages/sign-in-page' /* webpackChunkName: "page-sign-in" */).then((module) => {
+            return import('pages/sign-in-page' /* webpackChunkName: "page-sign-in" */).then((module) => {
                 params.module = module;
             });
         },
@@ -164,7 +164,7 @@ var routes = {
         },
         params: { edit: Boolean },
         load: (params, context) => {
-            import('pages/user-list-page' /* webpackChunkName: "page-user-list" */).then((module) => {
+            return import('pages/user-list-page' /* webpackChunkName: "page-user-list" */).then((module) => {
                 params.module = module;
             });
         }
@@ -176,14 +176,14 @@ var routes = {
         },
         params: { user: NumberOrNew, edit: Boolean },
         load: (params, context) => {
-            import('pages/user-summary-page' /* webpackChunkName: "page-user-summary" */).then((module) => {
+            return import('pages/user-summary-page' /* webpackChunkName: "page-user-summary" */).then((module) => {
                 params.module = module;
             });
         }
     },
     'error-page': {
         load: (params, context) => {
-            import('pages/error-page' /* webpackChunkName: "page-error" */).then((module) => {
+            return import('pages/error-page' /* webpackChunkName: "page-error" */).then((module) => {
                 params.module = module;
             });
         }

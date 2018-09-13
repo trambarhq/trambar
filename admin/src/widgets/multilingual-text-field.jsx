@@ -21,13 +21,13 @@ class MultilingualTextField extends PureComponent {
         // choose initial language
         let existingLanguageCodes = _.keys(value);
         let selected;
-        if (_.includes(existing, current)) {
+        if (_.includes(existingLanguageCodes, languageCode)) {
             // if there's existing text of the current language, use it
             selected = languageCode;
-        } else if (!_.isEmpty(existing)) {
+        } else if (!_.isEmpty(existingLanguageCodes)) {
             // otherwise choose the first language of any existing text
             selected = existingLanguageCodes[0];
-        } else if (_.includes(availableLanguageCodes, current)) {
+        } else if (_.includes(availableLanguageCodes, languageCode)) {
             // if there's no text, use the current language if it's in the list
             // of available languages
             selected = languageCode;
@@ -38,7 +38,7 @@ class MultilingualTextField extends PureComponent {
             // if all else failed, use current language
             selected = languageCode;
         }
-        return {
+        this.state = {
             selectedLanguageCode: selected,
             hoverLanguageCode: null,
             expandedByMouseOver: false,
@@ -90,7 +90,7 @@ class MultilingualTextField extends PureComponent {
         let { t } = env.locale;
         let classNames = [ 'multilingual-text-field' ];
         let Input = 'input';
-        let inputProps = _.omit(this.props, 'children', 'availableLanguageCodes', 'locale');
+        let inputProps = _.omit(this.props, 'children', 'availableLanguageCodes', 'env');
         if (type === 'textarea') {
             Input = AutosizeTextArea;
             inputProps = _.omit(inputProps, 'type');
@@ -114,7 +114,7 @@ class MultilingualTextField extends PureComponent {
         } else {
             inputProps.value = '';
         }
-        inputProps.lang = selectedLangaugeCode;
+        inputProps.lang = selectedLanguageCode;
         inputProps.onChange = this.handleTextChange;
         return (
             <div className={classNames.join(' ')}>

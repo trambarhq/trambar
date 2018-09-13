@@ -244,7 +244,7 @@ class ServerListPageSync extends PureComponent {
      */
     renderRows() {
         let { env, servers, users } = this.props;
-        let { renderingFullList } = this.state;
+        let { renderingFullList, sortColumns, sortDirections } = this.state;
         if (!renderingFullList) {
             servers = filterServers(servers);
         }
