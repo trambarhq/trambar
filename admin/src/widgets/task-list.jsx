@@ -3,6 +3,7 @@ import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
 import TaskFinder from 'objects/finders/task-finder';
 
 // widgets
@@ -48,8 +49,11 @@ class TaskListSync extends PureComponent {
     constructor(props) {
         super(props);
         let { route } = props;
-        let taskID = props.params.task;
-        return {
+        this.components = ComponentRefs({
+            container: HTMLDivElement,
+        });
+        let taskID = route.params.task;
+        this.state = {
             expandedTaskIDs: (taskID) ? [ taskID ] : [],
         };
     }
@@ -156,21 +160,13 @@ class TaskListSync extends PureComponent {
     }
 
     /**
-     * Set container node
-     *
-     * @param  {HTMLDivElement} node
-     */
-    setContainerNode(node) {
-        this.containerNode = node;
-    }
-
-    /**
      * Render component if it's active
      *
      * @return {ReactElement|null}
      */
     render() {
         let { route, tasks } = this.props;
+        let { setters } = this.components;
         let taskID = route.params.task;
         let smartListProps = {
             items: sortTasks(tasks),
@@ -184,7 +180,7 @@ class TaskListSync extends PureComponent {
             onAnchorChange: this.handleAnchorChange,
         };
         return (
-            <div className="task-list" ref={this.setContainerNode}>
+            <div className="task-list" ref={setters.container}>
                 <SmartList {...smartListProps} />
             </div>
         );
@@ -317,9 +313,10 @@ class TaskListSync extends PureComponent {
      */
     componentDidMount() {
         let { route } = this.props;
+        let { container } = this.components;
         if (route.params.task) {
-            if (this.containerNode) {
-                this.containerNode.scrollIntoView();
+            if (container) {
+                container.scrollIntoView();
             }
         }
     }

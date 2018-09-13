@@ -61,8 +61,8 @@ class UserSummaryPage extends AsyncComponent {
             });
         }).then(() => {
             // load selected user
-            if (params.user !== 'new') {
-                return UserFinder.findUser(db, params.user).then((user) => {
+            if (route.params.user !== 'new') {
+                return UserFinder.findUser(db, route.params.user).then((user) => {
                     props.user = user;
                 });
             }
@@ -309,6 +309,7 @@ class UserSummaryPageSync extends PureComponent {
         let { route, env } = this.props;
         let { hasChanges, problems } = this.state;
         let { setters } = this.components;
+        let { t, p } = env.locale;
         let member = this.isProjectMember();
         let user = this.getUser();
         let name = p(user.details.name);
@@ -1158,8 +1159,8 @@ let emptyUser = {
     settings: UserSettings.default,
 };
 
-let sortRoles = Memoize(function(roles, locale) {
-    let p = locale.pick;
+let sortRoles = Memoize(function(roles, env) {
+    let { p } = env.locale;
     let name = (role) => {
         return p(role.details.title) || role.name;
     };

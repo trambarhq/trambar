@@ -212,7 +212,8 @@ class MemberListPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTable() {
-        let { renderingFullList, sortColumns, sortDirections, } = this.state;
+        let { env } = this.props;
+        let { renderingFullList, sortColumns, sortDirections } = this.state;
         let { t } = env.locale;
         let tableProps = {
             sortColumns,

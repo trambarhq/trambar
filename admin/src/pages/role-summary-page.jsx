@@ -51,7 +51,7 @@ class RoleSummaryPage extends AsyncComponent {
                 props.system = system;
             });
         }).then(() => {
-            if (params.role !== 'new') {
+            if (route.params.role !== 'new') {
                 return RoleFinder.findRole(db, route.params.role).then((role) => {
                     props.role = role;
                 });
@@ -179,7 +179,7 @@ class RoleSummaryPageSync extends PureComponent {
      * @return {Boolean}
      */
     isEditing(props) {
-        let { role } = props || this.props;
+        let { route } = props || this.props;
         return this.isCreating(props) || route.params.edit;
     }
 
@@ -412,6 +412,7 @@ class RoleSummaryPageSync extends PureComponent {
      */
     renderDescriptionInput() {
         let { env } = this.props;
+        let { t } = env.locale;
         let props = {
             id: 'description',
             value: this.getRoleProperty('details.description'),

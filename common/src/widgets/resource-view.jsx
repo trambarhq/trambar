@@ -1,52 +1,23 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var MediaLoader = require('media/media-loader');
-var ImageCropping = require('media/image-cropping');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import MediaLoader from 'media/media-loader';
+import ImageCropping from 'media/image-cropping';
 
-var Payload = require('transport/payload');
-var Theme = require('theme/theme');
-var BitmapView = require('media/bitmap-view');
-var VectorView = require('media/vector-view');
+import BitmapView from 'media/bitmap-view';
+import VectorView from 'media/vector-view';
 
 require('./resource-view.scss');
 
-module.exports = React.createClass({
-    displayName: 'ResourceView',
-    propTypes: {
-        clip: PropTypes.bool,
-        animation: PropTypes.bool,
-        mosaic: PropTypes.bool,
-        resource: PropTypes.object,
-        url: PropTypes.string,
-        width: PropTypes.number,
-        height: PropTypes.number,
-        theme: PropTypes.instanceOf(Theme),
-    },
+class ResourceView extends PureComponent {
+    static displayName = 'ResourceView';
 
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            clip: true,
-            animation: false,
-            mosaic: false,
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             waitingForRemoteImage: false,
             remoteImageLoaded: false,
         };
-    },
+    }
 
     /**
      * Return URL of image
@@ -55,32 +26,32 @@ module.exports = React.createClass({
      *
      * @return {String|undefined}
      */
-    getURL: function(props) {
-        props = props || this.props;
-        if (props.resource) {
-            var params = {};
-            if (props.animation && props.resource.format === 'gif') {
+    getURL(props) {
+        let { env, animation, resource, url, clip, width, height } = props || this.props;
+        if (resource) {
+            let params = {};
+            if (animation && resource.format === 'gif') {
                 // use the original file when it's a gif and we wish to show animation
                 params.original = true;
             } else {
-                if (!props.clip) {
+                if (!clip) {
                     // don't apply clip rectangle
                     params.clip = null;
                 }
-                if (props.width) {
+                if (width) {
                     // resize source image
-                    params.width = props.width;
+                    params.width = width;
                 }
-                if (props.height) {
+                if (height) {
                     // ditto
-                    params.height = props.height;
+                    params.height = height;
                 }
             }
-            return props.theme.getImageURL(props.resource, params);
+            return env.getImageURL(resource, params);
         } else {
-            return props.url;
+            return url;
         }
-    },
+    }
 
     /**
      * Return image dimensions
@@ -89,13 +60,11 @@ module.exports = React.createClass({
      *
      * @return {Object}
      */
-    getDimensions: function(props) {
-        props = props || this.props;
-        var width = props.width;
-        var height = props.height;
-        if (props.resource) {
-            var dims = props.theme.getImageDimensions(props.resource, {
-                original: !this.props.clip
+    getDimensions(props) {
+        let { env, resource, width, height, clip } = props || this.props;
+        if (resource) {
+            let dims = env.getImageDimensions(resource, {
+                original: !clip
             });
             if (width) {
                 height = Math.round(width * dims.height / dims.width);
@@ -107,17 +76,18 @@ module.exports = React.createClass({
             }
         }
         return { width, height };
-    },
+    }
 
     /**
      * Check if we're switching for showing blob to showing remote file
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.resource !== nextProps.resource) {
-            var urlBefore = this.getURL();
-            var urlAfter = this.getURL(nextProps);
+    componentWillReceiveProps(nextProps) {
+        let { resource } = this.props;
+        if (nextProps.resource !== resource) {
+            let urlBefore = this.getURL();
+            let urlAfter = this.getURL(nextProps);
             if (isJSONEncoded(urlBefore) && !isJSONEncoded(urlAfter)) {
                 this.setState({ waitingForRemoteImage: true });
                 MediaLoader.loadImage(urlAfter).catch((err) => {
@@ -126,7 +96,7 @@ module.exports = React.createClass({
                 });
             }
         }
-    },
+    }
 
     /**
      * Suppress update while remote image is loading
@@ -136,26 +106,28 @@ module.exports = React.createClass({
      *
      * @return {Boolean}
      */
-    shouldComponentUpdate: function(nextProps, nextState) {
+    shouldComponentUpdate(nextProps, nextState) {
         if (nextState.waitingForRemoteImage) {
             return false;
         }
         return true;
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var url = this.getURL();
+    render() {
+        let { resource, width, height, clip, showMosaic, children } = this.props;
+        let { remoteImageLoaded } = this.state;
+        let url = this.getURL();
         if (!url) {
-            return this.props.children || null;
+            return children || null;
         }
-        var props = _.omit(this.props, 'clip', 'animation', 'mosaic', 'resource', 'url', 'width', 'height', 'theme');
+        let props = _.omit(this.props, 'clip', 'animation', 'showMosaic', 'resource', 'url', 'width', 'height', 'env');
         if (isJSONEncoded(url)) {
-            var image = parseJSONEncodedURL(url);
+            let image = parseJSONEncodedURL(url);
             props.url = image.url;
             props.clippingRect = image.clip;
             if (image.format === 'svg') {
@@ -164,29 +136,29 @@ module.exports = React.createClass({
                 return <BitmapView {...props} />;
             }
         } else {
-            var containerProps = {
+            let containerProps = {
                 className: 'resource-view'
             };
-            var dims = this.getDimensions();
+            let dims = this.getDimensions();
             props.src = url;
             props.width = dims.width;
             props.height = dims.height;
-            if (!this.state.remoteImageLoaded && this.props.mosaic) {
+            if (!remoteImageLoaded && showMosaic) {
                 props.onLoad = this.handleRemoteImageLoad;
 
-                var heightToWidthRatio = props.height / props.width;
+                let heightToWidthRatio = height / width;
                 containerProps.className += ' loading';
                 containerProps.style = {
                     paddingTop: (heightToWidthRatio * 100) + '%'
                 };
-                var mosaic = _.get(this.props.resource, 'mosaic');
-                if (this.props.clip && _.size(mosaic) === 16) {
-                    var scanlines = _.chunk(mosaic, 4);
-                    var gradients  = _.map(scanlines, (pixels) => {
-                        var [ c1, c2, c3, c4 ] = _.map(pixels, formatColor);
+                let mosaic = _.get(resource, 'mosaic');
+                if (clip && _.size(mosaic) === 16) {
+                    let scanlines = _.chunk(mosaic, 4);
+                    let gradients  = _.map(scanlines, (pixels) => {
+                        let [ c1, c2, c3, c4 ] = _.map(pixels, formatColor);
                         return `linear-gradient(90deg, ${c1} 0%, ${c1} 25%, ${c2} 25%, ${c2} 50%, ${c3} 50%, ${c3} 75%, ${c4} 75%, ${c4} 100%)`;
                     });
-                    var positions = [ `0 0%`, `0 ${100 / 3}%`, `0 ${200 / 3}%`, `0 100%` ];
+                    let positions = [ `0 0%`, `0 ${100 / 3}%`, `0 ${200 / 3}%`, `0 100%` ];
                     containerProps.style.backgroundRepeat = 'no-repeat';
                     containerProps.style.backgroundSize = `100% 25.5%`;
                     containerProps.style.backgroundImage = gradients.join(', ');
@@ -199,24 +171,24 @@ module.exports = React.createClass({
                 </span>
             );
         }
-    },
+    }
 
     /**
      * Called when remote image is done loading
      *
      * @param  {Event} Evt
      */
-    handleRemoteImageLoad: function(Evt) {
+    handleRemoteImageLoad(Evt) {
         this.setState({ remoteImageLoaded: true });
     }
-});
+}
 
 function isJSONEncoded(url) {
     return _.startsWith(url, 'json:');
 }
 
 function parseJSONEncodedURL(url) {
-    var json = url.substr(5);
+    let json = url.substr(5);
     return JSON.parse(json);
 }
 
@@ -225,4 +197,32 @@ function formatColor(color) {
         color = '000000'.substr(color.length) + color;
     }
     return '#' + color;
+}
+
+ResourceView.defaultProps = {
+    clip: true,
+    animation: false,
+    showMosaic: false,
+};
+
+export {
+    ResourceView as default,
+    ResourceView,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ResourceView.propTypes = {
+        clip: PropTypes.bool,
+        animation: PropTypes.bool,
+        showMosaic: PropTypes.bool,
+        resource: PropTypes.object,
+        url: PropTypes.string,
+        width: PropTypes.number,
+        height: PropTypes.number,
+        env: PropTypes.instanceOf(Environment),
+    };
 }

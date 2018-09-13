@@ -1,4 +1,5 @@
 import BlobManager from 'transport/blob-manager';
+import ImageCropping from 'media/image-cropping';
 
 class Environment {
     constructor(envMonitor, extra) {

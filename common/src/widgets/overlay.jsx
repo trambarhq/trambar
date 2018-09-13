@@ -1,86 +1,68 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var ReactDOM = require('react-dom');
+import React, { PureComponent } from 'react';
+import ReactDOM from 'react-dom';
 
-var Theme = require('theme/theme');
+import './overlay.scss';
 
-require('./overlay.scss');
+class OverlayProxy extends PureComponent {
+    static displayName = 'OverlayProxy';
 
-module.exports = React.createClass({
-    displayName: 'OverlayProxy',
-    propTypes: {
-        className: PropTypes.string,
-        show: PropTypes.bool,
-        onBackgroundClick: PropTypes.func,
-    },
-
-    statics: {
-        active: false,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            show: false
-        };
-    },
+    static active = false;
 
     /**
      * Don't render anything
      */
-    render: function() {
+    render() {
         return null;
-    },
+    }
 
     /**
      * Insert overlay element into document body on mount
      */
-    componentDidMount: function() {
-        if (this.props.show) {
+    componentDidMount() {
+        let { show } = this.props;
+        if (show) {
             this.show();
         }
-    },
+    }
 
     /**
      * Redraw the overlay element when props change
      *
      * @param  {Object} prevProps
      */
-    componentDidUpdate: function(prevProps) {
-        if (prevProps.show !== this.props.show) {
-            if (this.props.show) {
+    componentDidUpdate(prevProps) {
+        let { show, children } = this.props;
+        if (prevProps.show !== show) {
+            if (show) {
                 this.show();
             } else {
                 this.hide();
             }
-        } else if (prevProps.children !== this.props.children) {
-            if (this.props.show) {
+        } else if (prevProps.children !== children) {
+            if (show) {
                 this.redraw(this.shown);
             }
         }
-    },
+    }
 
     /**
      * Remove overlay element on unmount
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         this.hide();
-    },
+    }
 
     /**
      * Insert overlay element into document body
      */
-    show: function() {
+    show() {
         if (!this.containerNode) {
-            var app = document.getElementById('application');
+            let app = document.getElementById('application');
             this.containerNode = document.createElement('DIV');
             app.appendChild(this.containerNode);
             app.addEventListener('keydown', this.handleKeyDown);
 
-            var el = document.activeElement;
+            let el = document.activeElement;
             if (el && el !== document.body) {
                 this.originalFocusElement = el;
                 el.blur();
@@ -99,34 +81,34 @@ module.exports = React.createClass({
             this.shown = true;
             this.redraw(this.shown);
         }, 10);
-        this.constructor.active = true;
-    },
+        OverlayProxy.active = true;
+    }
 
     /**
      * Redraw overlay element
      *
      * @param  {Boolean} shown
      */
-    redraw: function(shown) {
-        var props = {
+    redraw(shown) {
+        let props = {
             show: shown,
             onClick: this.handleClick,
             onTouchMove: this.handleTouchMove,
             children: this.props.children
         };
         ReactDOM.render(<Overlay {...props} />, this.containerNode);
-    },
+    }
 
     /**
      * Transition out, then remove overlay element
      */
-    hide: function() {
+    hide() {
         if (!this.containerNode) {
             return;
         }
         if (!this.containerRemovalTimeout) {
             this.containerRemovalTimeout = setTimeout(() => {
-                var app = document.getElementById('application');
+                let app = document.getElementById('application');
                 ReactDOM.unmountComponentAtNode(this.containerNode);
                 app.removeChild(this.containerNode);
                 app.removeEventListener('keydown', this.handleKeyDown);
@@ -141,37 +123,38 @@ module.exports = React.createClass({
         }
         this.shown = false;
         this.redraw(this.shown);
-        this.constructor.active = false;
-    },
+        OverlayProxy.active = false;
+    }
 
     /**
      * Called when user clicks somewhere
      *
      * @param  {Event} evt
      */
-    handleClick: function(evt) {
+    handleClick = (evt) => {
         if (evt.button !== 0) {
             return;
         }
-        var targetClass = evt.target.className;
+        let { onBackgroundClick } = this.props;
+        let targetClass = evt.target.className;
         if (targetClass === 'foreground' || targetClass === 'background') {
-            if (this.props.onBackgroundClick) {
-                this.props.onBackgroundClick(evt);
+            if (onBackgroundClick) {
+                onBackgroundClick(evt);
             }
         }
-    },
+    }
 
     /**
      * Called when user moves finger across touch screen
      *
      * @param  {Event} evt
      */
-    handleTouchMove: function(evt) {
+    handleTouchMove = (evt) => {
         // prevent scrolling of contents underneath
-        var targetNode = evt.target;
-        var scrollableNode = null;
-        for (var p = targetNode; p && p !== this.containerNode; p = p.parentNode) {
-            var style = getComputedStyle(p);
+        let targetNode = evt.target;
+        let scrollableNode = null;
+        for (let p = targetNode; p && p !== this.containerNode; p = p.parentNode) {
+            let style = getComputedStyle(p);
             if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
                 if (p.scrollHeight > p.clientHeight) {
                     scrollableNode = p;
@@ -182,24 +165,25 @@ module.exports = React.createClass({
         if (!scrollableNode) {
             evt.preventDefault();
         }
-    },
+    }
 
     /**
      * Called when user hits a key on the keyboard
      *
      * @param  {Event} evt
      */
-    handleKeyDown: function(evt) {
+    handleKeyDown = (evt) => {
+        let { onBackgroundClick } = this.props;
         if (evt.keyCode === 27) {
-            if (this.props.onBackgroundClick) {
-                this.props.onBackgroundClick(evt);
+            if (onBackgroundClick) {
+                onBackgroundClick(evt);
             }
         }
-    },
-});
+    }
+}
 
 function Overlay(props) {
-    var containerProps = _.omit(props, 'className', 'children', 'show');
+    let containerProps = _.omit(props, 'className', 'children', 'show');
     containerProps.className = 'overlay';
     if (props.show) {
         containerProps.className += ' show';
@@ -215,4 +199,25 @@ function Overlay(props) {
             <div className="foreground">{props.children}</div>
         </div>
     );
+}
+
+OverlayProxy.defaultProps = {
+    show: false
+};
+
+export {
+    OverlayProxy as default,
+    OverlayProxy as Overlay,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    OverlayProxy.propTypes = {
+        className: PropTypes.string,
+        show: PropTypes.bool,
+        onBackgroundClick: PropTypes.func,
+    };
 }

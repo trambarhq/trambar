@@ -41,7 +41,7 @@ class InstructionBlock extends PureComponent {
         if (nextProps.topic !== topic || nextProps.env.locale !== env.locale) {
             let folder = nextProps.folder;
             let topic = nextProps.topic;
-            let languageCode = nextProps.locale.languageCode;
+            let languageCode = nextProps.env.locale.languageCode;
             loadMarkdown(folder, topic, languageCode).then((contents) => {
                 this.setState({ contents });
             });

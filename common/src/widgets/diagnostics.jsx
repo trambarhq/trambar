@@ -1,14 +1,12 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React, { PureComponent } from 'react';
 
-var diagnosticsContents = {};
-var listeners = [];
-var immediate = 0;
-
-module.exports = Diagnostics;
+let diagnosticsContents = {};
+let listeners = [];
+let immediate = 0;
 
 function Diagnostics(props) {
-    var type = props.type;
-    var contents = props.children;
+    let type = props.type;
+    let contents = props.children;
     diagnosticsContents[type] = contents;
     if (!immediate) {
         immediate = setImmediate(() => {
@@ -24,10 +22,6 @@ function Diagnostics(props) {
     return null;
 }
 
-Diagnostics.propTypes = {
-    type: PropTypes.string.isRequired,
-};
-
 Diagnostics.get = function(type) {
     return diagnosticsContents[type];
 };
@@ -41,3 +35,16 @@ Diagnostics.addListener = function(listener) {
 Diagnostics.removeListener = function(listener) {
     _.pull(listeners, listener);
 };
+
+export {
+    Diagnostics as default,
+    Diagnostics,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    Diagnostics.propTypes = {
+        type: PropTypes.string.isRequired,
+    };
+}

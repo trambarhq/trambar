@@ -1,35 +1,40 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
-var Locale = require('locale/locale');
-var Payloads = require('transport/payloads');
+import './upload-progress.scss';
 
-require('./upload-progress.scss');
-
-module.exports = React.createClass({
-    displayName: 'UploadProgress',
-    propTypes: {
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-    },
+class UploadProgress extends PureComponent {
+    static displayName = 'UploadProgress';
 
     /**
      * Render component if uploading is in progress
      *
      * @return {ReactElement|null}
      */
-    render: function() {
-        var t = this.props.locale.translate;
-        var uploading = this.props.payloads.uploading;
-        if (!uploading) {
+    render() {
+        let { env, payloads } = this.props;
+        let { t } = env.locale;
+        if (!payloads.uploading) {
             return null;
         }
-        var size = _.fileSize(uploading.bytes);
-        var count = uploading.files;
+        var size = _.fileSize(payloads.uploading.bytes);
+        var count = payloads.uploading.files;
         return (
             <div className="upload-progress">
                 {t('upload-progress-uploading-$count-files-$size-remaining', count, size)}
             </div>
         );
-    },
-})
+    }
+}
+
+import Environment from 'env/environment';
+import Payloads from 'transport/payloads';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+    
+    UploadProgress.propTypes = {
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

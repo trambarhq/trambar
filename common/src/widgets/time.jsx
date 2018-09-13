@@ -1,53 +1,32 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Moment = require('moment');
-var DateTracker = require('utils/date-tracker');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import Moment from 'moment';
+import DateTracker from 'utils/date-tracker';
 
-var Locale = require('locale/locale');
+import Locale from 'locale/locale';
 
-module.exports = React.createClass({
-    displayName: 'Time',
-    propTypes: {
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        time: PropTypes.string,
-        compact: PropTypes.bool,
-    },
+class Time extends PureComponent {
+    static displayName = 'Time';
 
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            compact: false,
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        var time = Moment(this.props.time);
-        var nextState = {
+    constructor(props) {
+        super(props);
+        let time = Moment(this.props.time);
+        this.state = {
             time: time,
             date: getDate(time),
         };
-        this.updateClassName(nextState, this.props);
-        this.updateText(nextState, this.props);
-        return nextState;
-    },
+        this.updateClassName(props, this.state);
+        this.updateText(props, this.state);
+    }
 
     /**
      * Update class name stored in state
      *
-     * @param  {Object} nextState
      * @param  {Object} nextProps
+     * @param  {Object} nextState
      */
-    updateClassName: function(nextState, nextProps) {
-        var className;
+    updateClassName(nextProps, nextState) {
+        let className;
         if (nextState.time.isValid()) {
             if (nextState.date === DateTracker.today) {
                 className = 'today';
@@ -60,33 +39,33 @@ module.exports = React.createClass({
             className = 'invalid';
         }
         nextState.className = className;
-    },
+    }
 
     /**
      * Update text stored in state
      *
-     * @param  {Object} nextState
      * @param  {Object} nextProps
+     * @param  {Object} nextState
      */
-    updateText: function(nextState, nextProps) {
-        var t = nextProps.locale.translate;
-        var locale = nextProps.locale.localeCode;
-        var time = nextState.time.clone().locale(locale);
-        var text;
+    updateText(nextProps, nextState) {
+        let t = nextProps.locale.translate;
+        let locale = nextProps.locale.localeCode;
+        let time = nextState.time.clone().locale(locale);
+        let text;
         if (nextState.className === 'today') {
-            var now = Moment();
-            var elapsed = (now - time) * 0.001;
+            let now = Moment();
+            let elapsed = (now - time) * 0.001;
             if (elapsed < 60) {
                 text = t('time-just-now');
             } else if (elapsed < 60 * 60) {
-                var minutes = Math.floor(elapsed * (1 / 60));
+                let minutes = Math.floor(elapsed * (1 / 60));
                 if (nextProps.compact) {
                     text = t('time-$min-ago', minutes);
                 } else {
                     text = t('time-$minutes-ago', minutes);
                 }
             } else {
-                var hours = Math.floor(elapsed * (1 / 3600));
+                let hours = Math.floor(elapsed * (1 / 3600));
                 if (nextProps.compact) {
                     text = t('time-$hr-ago', hours);
                 } else {
@@ -105,81 +84,79 @@ module.exports = React.createClass({
             text = '';
         }
         nextState.text = text;
-    },
+    }
 
     /**
      * Update text after passage of time
      */
-    update: function() {
-        var nextState = _.clone(this.state);
-        this.updateClassName(nextState, this.props);
-        this.updateText(nextState, this.props);
-        var diff = _.shallowDiff(nextState, this.state);
+    update() {
+        let nextState = _.clone(this.state);
+        this.updateClassName(this.props, nextState);
+        this.updateText(this.props, nextState);
+        let diff = _.shallowDiff(nextState, this.state);
         if (!_.isEmpty(diff)) {
             this.setState(diff);
         }
-    },
+    }
 
     /**
      * Update state on prop changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        var nextState = _.clone(this.state);
-        var time = Moment(nextProps.time);
+    componentWillReceiveProps(nextProps) {
+        let nextState = _.clone(this.state);
+        let time = Moment(nextProps.time);
         nextState.time = time;
         nextState.date = getDate(time);
-        this.updateClassName(nextState, nextProps);
-        this.updateText(nextState, nextProps);
-        var diff = _.shallowDiff(nextState, this.state);
+        this.updateClassName(nextProps, nextState);
+        this.updateText(nextProps, nextState);
+        let diff = _.shallowDiff(nextState, this.state);
         if (!_.isEmpty(diff)) {
             this.setState(diff);
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {[type]}
      */
-    render: function() {
-        return (
-            <span className={`time ` + this.state.className}>
-                {this.state.text}
-            </span>
-        );
-    },
+    render() {
+        let { text, className } = this.state;
+        return <span className={`time ${className}`}>{text}</span>;
+    }
 
     /**
      * Add update hook on mount
      */
-    componentDidMount: function() {
+    componentDidMount() {
         this.componentDidUpdate();
-    },
+    }
 
     /**
      * Add update hook if relative
      */
-    componentDidUpdate: function(prevProps, prevState) {
-        if (this.state.className === 'today' || this.state.className === 'yesterday') {
+    componentDidUpdate(prevProps, prevState) {
+        let { className } = this.state;
+        if (className === 'today' || className === 'yesterday') {
             if (!_.includes(relativeTimeComponents, this)) {
                 relativeTimeComponents.push(this);
             }
         } else {
             _.pull(relativeTimeComponents, this);
         }
-    },
+    }
 
     /**
      * Remove update hook on unmount
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         _.pull(relativeTimeComponents, this);
-    },
-})
+    }
+}
 
-var relativeTimeComponents = [];
+let relativeTimeComponents = [];
 
 function getDate(m) {
     return m.format('YYYY-MM-DD')
@@ -187,7 +164,7 @@ function getDate(m) {
 
 function updateTime() {
     // copy the list as components can be removed during an update
-    var list = relativeTimeComponents.slice();
+    let list = relativeTimeComponents.slice();
     _.each(list, (component) => {
         if (component) {
             component.update();
@@ -196,3 +173,22 @@ function updateTime() {
 }
 
 setInterval(updateTime, 15 * 1000);
+
+Time.defaultProps = {
+    compact: false,
+};
+
+export {
+    Time as default,
+    Time
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    Time.propTypes = {
+        env: PropTypes.instanceOf(Environment).isRequired,
+        time: PropTypes.string,
+        compact: PropTypes.bool,
+    };
+}

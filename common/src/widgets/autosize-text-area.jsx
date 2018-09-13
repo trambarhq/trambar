@@ -1,86 +1,79 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var ComponentRefs = require('utils/component-refs');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import ComponentRefs from 'utils/component-refs';
 
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import './autosize-text-area.scss';
 
-require('./autosize-text-area.scss');
+class AutosizeTextArea extends PureComponent {
+    static displayName = 'AutosizeTextArea';
 
-module.exports = React.createClass({
-    displayName: 'AutosizeTextArea',
-    mixins: [ UpdateCheck ],
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             actual: HTMLTextAreaElement,
             shadow: HTMLTextAreaElement,
         });
-        return {
+        this.state = {
             requiredHeight: undefined,
         };
-    },
+    }
 
     /**
      * Return the actual textarea element
      *
      * @return {HTMLTextAreaElement}
      */
-    getElement: function() {
+    getElement() {
         return this.components.actual;
-    },
+    }
 
     /**
      * Save caret position when we receive new text
      *
      * @param  {Object}
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.value !== nextProps.value) {
-            var el = this.components.actual;
-            if (el && el === document.activeElement) {
-                if (el.value !== nextProps.value) {
+    componentWillReceiveProps(nextProps) {
+        let { value } = this.props;
+        let { actual } = this.components;
+        if (nextProps.value !== value) {
+            if (actual && actual === document.activeElement) {
+                if (actual.value !== nextProps.value) {
                     this.caretPosition = {
-                        selectionStart: el.selectionStart,
-                        selectionEnd: el.selectionEnd,
-                        text: el.value,
+                        selectionStart: actual.selectionStart,
+                        selectionEnd: actual.selectionEnd,
+                        text: actual.value,
                     };
                 }
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var setters = this.components.setters;
-        var style = _.extend({
-            height: this.state.requiredHeight,
-        }, this.props.style);
-        var props = _.omit(this.props, 'style');
+    render() {
+        let { style } = this.props;
+        let { requiredHeight } = this.state;
+        let { setters } = this.components;
+        style = _.extend({ height: requiredHeight }, style);
+        let props = _.omit(this.props, 'style');
         return (
             <div className="autosize-text-area">
                 <textarea ref={setters.shadow} style={style} className="shadow" value={props.value} readOnly />
                 <textarea ref={setters.actual} style={style} {...props} />
             </div>
         );
-    },
+    }
 
     /**
      * Add resize handler and update height
      */
-    componentDidMount: function() {
+    componentDidMount() {
         window.removeEventListener('resize', this.handleDocumentResize);
         this.updateSize();
-    },
+    }
 
     /**
      * Update height when value changes
@@ -88,19 +81,20 @@ module.exports = React.createClass({
      * @param  {Object} prevProps
      * @param  {Object} prevState
      */
-    componentDidUpdate: function(prevProps, prevState) {
+    componentDidUpdate(prevProps, prevState) {
         if (this.caretPosition) {
             // restore cursor position, using text in front of and after the
             // cursor as anchors
-            var el = this.components.actual;
-            var startBefore = this.caretPosition.selectionStart;
-            var endBefore = this.caretPosition.selectionEnd;
-            var textBefore = this.caretPosition.text;
-            var textAfter = this.props.value;
-            var textPrecedingCaretBefore = textBefore.substring(0, startBefore);
-            var textFollowingCaretBefore = textBefore.substring(endBefore);
-            var textSelectedBefore = textBefore.substring(startBefore, endBefore);
-            var startAfter, endAfter;
+
+            let { actual } = this.components;
+            let startBefore = this.caretPosition.selectionStart;
+            let endBefore = this.caretPosition.selectionEnd;
+            let textBefore = this.caretPosition.text;
+            let textAfter = this.props.value;
+            let textPrecedingCaretBefore = textBefore.substring(0, startBefore);
+            let textFollowingCaretBefore = textBefore.substring(endBefore);
+            let textSelectedBefore = textBefore.substring(startBefore, endBefore);
+            let startAfter, endAfter;
             if (_.startsWith(textAfter, textPrecedingCaretBefore)) {
                 startAfter = startBefore;
             }
@@ -123,46 +117,45 @@ module.exports = React.createClass({
                     // don't select text when none was selected before
                     startAfter = endAfter;
                 }
-                el.selectionStart = startAfter;
-                el.selectionEnd = endAfter;
+                actual.selectionStart = startAfter;
+                actual.selectionEnd = endAfter;
             }
             this.caretPosition = null;
         }
         if (prevProps.value !== this.props.value) {
             this.updateSize();
         }
-    },
+    }
 
     /**
      * Remove resize handler
      *
      * @return {[type]}
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         window.removeEventListener('resize', this.handleDocumentResize);
-    },
+    }
 
     /**
      * Set focus
      */
-    focus: function() {
+    focus() {
         this.components.actual.focus();
-    },
+    }
 
     /**
      * Update the size of the textarea
      */
-    updateSize: function() {
-        var shadow = this.components.shadow;
-        var actual = this.components.actual;
+    updateSize() {
+        let { shadow, actual } = this.components;
         if (!shadow || !actual) {
             return;
         }
-        var oHeight = shadow.offsetHeight;
-        var sHeight = shadow.scrollHeight;
-        var cHeight = shadow.clientHeight;
-        var aHeight = actual.offsetHeight;
-        var requiredHeight = sHeight + (oHeight - cHeight) + 1;
+        let oHeight = shadow.offsetHeight;
+        let sHeight = shadow.scrollHeight;
+        let cHeight = shadow.clientHeight;
+        let aHeight = actual.offsetHeight;
+        let requiredHeight = sHeight + (oHeight - cHeight) + 1;
         if (this.state.height !== requiredHeight) {
             if (aHeight > requiredHeight && aHeight > this.state.requiredHeight) {
                 // don't apply the new height if it's the textarea is taller than
@@ -171,22 +164,27 @@ module.exports = React.createClass({
             }
             this.setState({ requiredHeight })
         }
-    },
+    }
 
     /**
      * Called when user resizes the TEXTAREA
      *
      * @param  {Event} evt
      */
-    handleResize: function(evt) {
-    },
+    handleResize = (evt) => {
+    }
 
     /**
      * Called when the browser window is resized
      *
      * @param  {Event} evt
      */
-    handleDocumentResize: function(evt) {
+    handleDocumentResize = (evt) => {
         this.updateSize();
     }
-});
+}
+
+export {
+    AutosizeTextArea as default,
+    AutosizeTextArea,
+};

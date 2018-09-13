@@ -56,7 +56,7 @@ class ServerSummaryPage extends AsyncComponent {
                 props.system = system;
             });
         }).then(() => {
-            if (params.server !== 'new') {
+            if (route.params.server !== 'new') {
                 return ServerFinder.findServer(db, route.params.server).then((server) => {
                     props.server = server;
                 });
@@ -701,7 +701,7 @@ class ServerSummaryPageSync extends PureComponent {
      */
     renderRoleSelector() {
         let { env, roles } = this.props;
-        let { t } = env.locale;
+        let { t, p } = env.locale;
         let userRolesCurr = this.getServerProperty('settings.user.role_ids', 'current') || [];
         let userRolesPrev = this.getServerProperty('settings.user.role_ids', 'original') || [];
         let newServer = !!this.getServerProperty('id');
@@ -1513,8 +1513,8 @@ function getServerIcon(type) {
     }
 }
 
-let sortRoles = Memoize(function(roles, locale) {
-    let p = locale.pick;
+let sortRoles = Memoize(function(roles, env) {
+    let { p } = env.locale;
     let name = (role) => {
         return p(role.details.title) || role.name;
     };
