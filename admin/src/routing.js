@@ -121,7 +121,8 @@ var routes = {
         query: {
             edit: '${edit}',
         },
-        params: { server: NumberOrNew, edit: Boolean },
+        hash: [ 'T${task}' ],
+        params: { server: NumberOrNew, edit: Boolean, task: Number },
         load: (params, context) => {
             return import('pages/server-summary-page' /* webpackChunkName: "page-server-summary" */).then((module) => {
                 params.module = module;

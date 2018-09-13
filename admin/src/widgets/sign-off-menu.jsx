@@ -26,7 +26,7 @@ class SignOffMenu extends AsyncComponent {
         meanwhile.show(<div className="sign-off-menu" />);
         return db.start().then((currentUserID) => {
             return UserFinder.findUser(db, currentUserID).then((user) => {
-                let url = route.find('user-summary-page', { userID: user.id });
+                let url = route.find('user-summary-page', { user: user.id });
                 return (
                     <div className="sign-off-menu">
                         <a href={url}>
@@ -49,7 +49,7 @@ class SignOffMenu extends AsyncComponent {
      *
      * @return {Event}
      */
-    handleSignOffClick() {
+    handleSignOffClick = (evt) => {
         let { database, route } = this.props;
         database.endSession().then(() => {
             route.push('start-page');

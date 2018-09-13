@@ -173,7 +173,7 @@ class TaskListSync extends PureComponent {
             offset: 5,
             behind: 20,
             ahead: 20,
-            anchor: (taskID) ? `task-${hashParams.task}` : undefined,
+            anchor: (taskID) ? `task-${taskID}` : undefined,
 
             onIdentity: this.handleTaskIdentity,
             onRender: this.handleTaskRender,
