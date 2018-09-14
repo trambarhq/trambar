@@ -55,6 +55,7 @@ function start(cfg) {
         });
     } else {
         notifier = new WebsocketNotifier({
+            basePath: '/srv/socket',
         });
     }
     let payloadManager = new PayloadManager({
@@ -73,6 +74,9 @@ function start(cfg) {
     let signInPageName = _.findKey(routeManager.routes, (route) => {
         return route.public && route.signIn;
     });
+    let currentLocation = {};
+    let currentConnection = {};
+    let currentSubscription = {};
 
     envMonitor.addEventListener('change', (evt) => {
         if (envMonitor.online) {
@@ -103,10 +107,18 @@ function start(cfg) {
                             return dataSource.requestAuthentication(location);
                         });
                     }
+                    return true;
                 });
                 evt.postponeDefault(promise);
             }
         }
+    });
+    routeManager.addEventListener('change', (evt) => {
+        let { address } = routeManager.context;
+        let { schema } = routeManager.params;
+        currentLocation = { address, schema };
+        changeNotification();
+        changeSubscription();
     });
     dataSource.addEventListener('authentication', (evt) => {
         // go to the sign-in page if we aren't there already
@@ -121,6 +133,13 @@ function start(cfg) {
     dataSource.addEventListener('expiration', (evt) => {
         // remove the expired session
         removeSession(evt.session);
+    });
+    notifier.addEventListener('connection', (evt) => {
+        currentConnection = evt.connection;
+        changeSubscription();
+    });
+    notifier.addEventListener('disconnect', (evt) => {
+        currentConnection = null;
     });
     notifier.addEventListener('notify', (evt) => {
         if (process.env.NODE_ENV !== 'production') {
@@ -254,6 +273,83 @@ function start(cfg) {
             key: session.address,
         };
         return dataSource.remove(sessionLocation, [ record ]).return();
+    }
+
+    function changeNotification() {
+        console.log('changeNotification');
+        let { address } = currentLocation;
+        if (currentConnection.address === address) {
+            return;
+        }
+        currentConnection = {};
+        if (notifier instanceof WebsocketNotifier) {
+            notifier.connect(currentLocation.address);
+        } else if (notifier instanceof PushNotifier) {
+
+        }
+    }
+
+    function changeSubscription() {
+        console.log('changeSubscription');
+        let { address, schema } = currentLocation;
+        let watch = (cfg.notifier && cfg.notifier.global) ? '*' : schema;
+        let { localeCode } = localeManager;
+        let oldSubscriptionRecord;
+        // see if the subscription is to the right server
+        if (currentSubscription.address === address) {
+            oldSubscriptionRecord = currentSubscription.record;
+            // see if we're watching the right schema(s)
+            if (currentSubscription.watch === watch) {
+                if (currentSubscription.record) {
+                    // locale has to match
+                    if (currentSubscription.record.locale === localeCode) {
+                        return;
+                    }
+                }
+            }
+        }
+        currentSubscription = {};
+        if (!currentConnection.token) {
+            // notifier hasn't establshed a connection yet
+            return;
+        }
+        if (!dataSource.hasAuthorization(currentLocation)) {
+            // we don't have access yet
+            return;
+        }
+        if (!watch) {
+            // not watching anything
+            return;
+        }
+        dataSource.start(currentLocation).then((currentUserID) => {
+            debugger;
+            let { method, token, relay, details } = currentConnection;
+            let record = {
+                user_id: currentUserID,
+                area: cfg.dataSource.area,
+                locale: localeCode,
+                schema: watch,
+                method,
+                token,
+                relay,
+                details,
+            };
+            if (oldSubscriptionRecord) {
+                // update the existing record instead of creating a new one
+                record.id = oldSubscriptionRecord.id;
+            }
+            let subscriptionLocation = {
+                address,
+                schema: 'global',
+                table: 'subscription'
+            };
+            return dataSource.save(subscriptionLocation, [ record ]).get(0).then((record) => {
+                if (record) {
+                    currentSubscription = { address, watch, record };
+                    console.log(currentSubscription);
+                }
+            });
+        });
     }
 
     function getUploadURL(destination, id, type, part) {

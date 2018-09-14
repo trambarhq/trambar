@@ -51,7 +51,10 @@ class Application extends PureComponent {
                 include_ctime: true,
                 include_mtime: true,
             },
-        }
+        },
+        notifier: {
+            global: true,
+        },
     };
 
     constructor(props) {
@@ -176,6 +179,7 @@ class Application extends PureComponent {
         payloadManager.addEventListener('change', this.handlePayloadsChange);
         envMonitor.addEventListener('change', this.handleEnvironmentChange);
         localeManager.addEventListener('change', this.handleLocaleChange);
+        notifier.addEventListener('alert', this.handleAlertClick);
 
         window.addEventListener('beforeunload', this.handleBeforeUnload);
     }
@@ -277,6 +281,15 @@ class Application extends PureComponent {
     }
 
     /**
+     * Called when user clicks on an alert message
+     *
+     * @param  {NotifierAlert} evt
+     */
+    handleAlertClick = (evt) =>{
+
+    }
+
+    /**
      * Called when user navigate to another site or hit refresh
      *
      * @param  {Event} evt
@@ -318,7 +331,7 @@ import RouteManager from 'relaks-route-manager';
 import RemoteDataSource from 'data/remote-data-source';
 import PayloadManager from 'transport/payload-manager';
 import LocaleManager from 'locale/locale-manager';
-import WebsocketNotifier from 'transport/websocket-notifier';
+import Notifier from 'transport/notifier';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
@@ -328,6 +341,6 @@ if (process.env.NODE_ENV !== 'production') {
         dataSource: PropTypes.instanceOf(RemoteDataSource).isRequired,
         localeManager: PropTypes.instanceOf(LocaleManager).isRequired,
         payloadManager: PropTypes.instanceOf(PayloadManager).isRequired,
-        //notifier: PropTypes.instanceOf(Notifier),
+        notifier: PropTypes.instanceOf(Notifier),
     };
 }

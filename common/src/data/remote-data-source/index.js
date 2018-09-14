@@ -465,11 +465,10 @@ class RemoteDataSource extends EventEmitter {
      *
      * @param  {Object} session
      * @param  {Object} sessionInfo
-     * @param  {Boolean} noEvent
      *
      * @return {null}
      */
-    grantAuthorization(session, sessionInfo, noEvent) {
+    grantAuthorization(session, sessionInfo) {
         let now = Moment().toISOString();
         if (!sessionInfo) {
             throw HTTPError(500);
@@ -491,18 +490,16 @@ class RemoteDataSource extends EventEmitter {
         if (session.authorizationPromise && session.authorizationPromise.resolve) {
             session.authorizationPromise.resolve(true);
         }
-        if (!noEvent) {
-            this.triggerEvent(new RemoteDataSourceEvent('authorization', this, {
-                session
-            }));
-        }
+        this.triggerEvent(new RemoteDataSourceEvent('authorization', this, {
+            session
+        }));
         return null;
     }
 
     restoreAuthorization(location, sessionInfo) {
         let session = this.obtainSession(location);
         try {
-            this.grantAuthorization(session, sessionInfo, true);
+            this.grantAuthorization(session, sessionInfo);
             return true;
         } catch (err) {
             this.discardSession(session);

@@ -2,23 +2,19 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import SockJS from 'sockjs-client';
 import Async from 'async-do-while';
-import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
-import NotificationUnpacker from 'transport/notification-unpacker';
-
-import Locale from 'locale/locale';
+import Notifier, { NotifierEvent } from 'transport/notifier';
 
 const defaultOptions = {
     reconnectionDelay: 1000,
     basePath: '/socket'
 };
 
-class WebsocketNotifier extends EventEmitter {
+class WebsocketNotifier extends Notifier {
     constructor(options) {
-        super(options);
+        super();
         this.options = _.defaults({}, options, defaultOptions);
         this.socket = null;
         this.notificationPermitted = false;
-        this.connectionAddress = '';
         this.connectionPromise = null;
         this.reconnectionCount = 0;
         this.recentMessages = [];
@@ -41,12 +37,12 @@ class WebsocketNotifier extends EventEmitter {
     /**
      * Connect to server
      *
-     * @param  {String} serverAddress
+     * @param  {String} address
      *
      * @return {Promise<Boolean>}
      */
-    connect(serverAddress) {
-        if (this.connectionAddress !== serverAddress) {
+    connect(address) {
+        if (this.address !== address) {
             this.disconnect();
         }
         if (this.connectionPromise) {
@@ -59,7 +55,7 @@ class WebsocketNotifier extends EventEmitter {
         let { reconnectionDelay } = this.options;
         let promise;
         Async.do(() => {
-            return this.createSocket(serverAddress).then((socket) => {
+            return this.createSocket(address).then((socket) => {
                 if (this.connectionPromise !== promise) {
                     // superceded by another call
                     return;
@@ -69,30 +65,25 @@ class WebsocketNotifier extends EventEmitter {
                         return;
                     }
                     let msg = parseJSON(evt.data);
-                    let payload = _.assign({ address: serverAddress }, msg);
-                    let notification = NotificationUnpacker.unpack(payload);
+                    let notification = this.unpack(msg);
                     let event;
                     if (notification.type === 'change') {
-                        event = new WebsocketNotifierEvent('notify', this, {
+                        event = new NotifierEvent('notify', this, {
                             changes: notification.changes
                         });
                     } else if (notification.type === 'alert') {
                         this.showAlert(notification.alert);
                     } else if (notification.type === 'connection') {
-                        event = new WebsocketNotifierEvent('connection', this, {
+                        event = new NotifierEvent('connection', this, {
                             connection: notification.connection
                         });
                     } else if (notification.type === 'revalidation') {
-                        event = new WebsocketNotifierEvent('revalidation', this);
+                        event = new NotifierEvent('revalidation', this);
                     }
                     if (event) {
                         this.triggerEvent(event);
                     }
-
-                    this.recentMessages.unshift(msg);
-                    if (this.recentMessages.length > 10) {
-                       this.recentMessages.splice(10);
-                    }
+                    this.saveMessage(msg);
                 };
                 socket.onclose = () => {
                     if (this.socket !== socket) {
@@ -101,9 +92,9 @@ class WebsocketNotifier extends EventEmitter {
                     // we're still supposed to be connected
                     // try to reestablish connection
                     this.socket = null;
+                    this.address = '';
                     this.connectionPromise = null;
-                    this.connectionAddress = '';
-                    this.connect(serverAddress).then((connected) => {
+                    this.connect(address).then((connected) => {
                         if (connected) {
                             this.reconnectionCount += 1;
                             console.log('Connection reestablished');
@@ -111,11 +102,11 @@ class WebsocketNotifier extends EventEmitter {
                     });
 
                     console.log('Disconnect');
-                    let event = new WebsocketNotifierEvent('disconnect', this);
+                    let event = new NotifierEvent('disconnect', this);
                     this.triggerEvent(event);
                 };
                 this.socket = socket;
-                this.connectionAddress = serverAddress;
+                this.address = address;
                 connected = true;
             }).catch((err) => {
                 return Promise.delay(reconnectionDelay);
@@ -146,18 +137,18 @@ class WebsocketNotifier extends EventEmitter {
             socket.close();
         }
         this.connectionPromise = null;
-        this.connectionAddress = '';
+        this.address = '';
     }
 
     /**
      * Create a SockJS socket
      *
-     * @param  {String} serverAddress
+     * @param  {String} address
      *
      * @return {Promise<SockJS>}
      */
-    createSocket(serverAddress) {
-        let url = serverAddress + this.options.basePath;
+    createSocket(address) {
+        let url = address + this.options.basePath;
         return new Promise((resolve, reject) => {
             let socket = new SockJS(url);
             let isFulfilled = false;
@@ -204,7 +195,7 @@ class WebsocketNotifier extends EventEmitter {
             options.lang = _.get(this.props.locale, 'languageCode');
             let notification = new Notification(alert.title, options);
             notification.addEventListener('click', () => {
-                let evt = new WebsocketNotifierEvent(this, 'alert', { alert });
+                let evt = new NotifierEvent(this, 'alert', { alert });
                 this.triggerEvent(evt);
                 notification.close();
             });
@@ -232,11 +223,7 @@ function parseJSON(text) {
     }
 }
 
-class WebsocketNotifierEvent extends GenericEvent {
-}
-
 export {
     WebsocketNotifier as default,
     WebsocketNotifier,
-    WebsocketNotifierEvent,
 };

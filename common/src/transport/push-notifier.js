@@ -1,10 +1,8 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Moment from 'moment';
 import Async from 'async-do-while';
-import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
+import Notifier, { NotifierEvent } from 'transport/notifier';
 import HTTPRequest from 'transport/http-request';
-import NotificationUnpacker from 'transport/notification-unpacker';
 
 var defaultOptions = {
     initialReconnectionDelay: 500,
@@ -20,7 +18,7 @@ var defaultOptions = {
     },
 };
 
-class PushNotifier extends EventEmitter {
+class PushNotifier extends Notifier {
     constructor(options) {
         super();
         this.currentNotificationID = null;
@@ -29,43 +27,37 @@ class PushNotifier extends EventEmitter {
         this.registrationID = null;
         this.registrationType = null;
         this.pushRelayResponse = null;
-        this.recentMessages = [];
     }
 
-    initialize() {
+    activate() {
         if ((typeof(PushNotification) !== 'undefined')) {
-
-        }
-
-        if (!pushNotification) {
-            if (typeof(PushNotification) === 'undefined') {
-                return;
+            if (!pushNotification) {
+                var params = {
+                    android: this.props.android,
+                    ios: this.props.ios,
+                    windows: this.props.windows,
+                };
+                pushNotification = PushNotification.init(params);
             }
-            var params = {
-                android: this.props.android,
-                ios: this.props.ios,
-                windows: this.props.windows,
-            };
-            pushNotification = PushNotification.init(params);
-        }
-        pushNotification.on('registration', this.handleRegistration);
-        pushNotification.on('notification', this.handleNotification);
-        pushNotification.on('error', this.handleError);
+            pushNotification.on('registration', this.handleRegistration);
+            pushNotification.on('notification', this.handleNotification);
+            pushNotification.on('error', this.handleError);
 
-
-        if (cordova.platformID === 'windows') {
-            document.addEventListener('activated', this.handleActivation);
+            if (cordova.platformID === 'windows') {
+                document.addEventListener('activated', this.handleActivation);
+            }
         }
     }
 
-    shutdown() {
+    deactivate() {
         if (pushNotification) {
             pushNotification.off('registration', this.handleRegistration);
             pushNotification.off('notification', this.handleNotification);
             pushNotification.off('error', this.handleError);
-        }
-        if (cordova.platformID === 'windows') {
-            document.removeEventListener('activated', this.handleActivation);
+
+            if (cordova.platformID === 'windows') {
+                document.removeEventListener('activated', this.handleActivation);
+            }
         }
     }
 
@@ -87,7 +79,7 @@ class PushNotifier extends EventEmitter {
             return this.registrationAttempt.promise;
         }
         this.registrationAttempt = attempt;
-        this.setState({ pushRelayResponse: null });
+        this.pushRelayResponse = null;
 
         var registered = false;
         var delay = this.props.initialReconnectionDelay;
