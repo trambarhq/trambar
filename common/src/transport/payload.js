@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import BlobManager from 'transport/blob-manager';
 import CordovaFile from 'transport/cordova-file';
 
 class Payload {
@@ -20,6 +19,7 @@ class Payload {
         this.uploadStartTime = null;
         this.uploadEndTime = null;
         this.processEndTime = null;
+        this.onAttachment = null;
         this.onProgress = null;
         this.onComplete = null;
         this.onError = null;
@@ -31,18 +31,11 @@ class Payload {
      * @param  {Blob|CordovaFile} file
      * @param  {String|undefined} name
      *
-     * @return {Payload}
+     * @return {this}
      */
     attachFile(file, name) {
-        if (!name) {
-            name = 'main';
-        }
-        var url = `payload:${this.token}/${name}`;
-        // associate file with payload id so we can find it again
-        BlobManager.associate(file, url);
-
         if (file instanceof Blob) {
-            this.parts.push({
+            return this.attachPart({
                 blob: file,
                 size: file.size,
                 uploaded: 0,
@@ -50,7 +43,7 @@ class Payload {
                 name,
             });
         } else if (file instanceof CordovaFile) {
-            this.parts.push({
+            return this.attachPart({
                 cordovaFile: file,
                 size: file.size,
                 uploaded: 0,
@@ -58,7 +51,6 @@ class Payload {
                 name
             });
         }
-        return this;
     }
 
     /**
@@ -67,20 +59,16 @@ class Payload {
      * @param  {BlobStream} stream
      * @param  {String|undefined} name
      *
-     * @return {Payload}
+     * @return {this}
      */
     attachStream(stream, name) {
-        if (!name) {
-            name = 'main';
-        }
-        this.parts.push({
+        return this.attachPart({
             stream: stream,
             size: stream.size,
             uploaded: stream.transferred,
             sent: false,
             name
         });
-        return this;
     }
 
     /**
@@ -89,14 +77,10 @@ class Payload {
      * @param  {BlobStream} stream
      * @param  {String|undefined} name
      *
-     * @return {Payload}
+     * @return {this}
      */
     attachURL(url, name) {
-        if (!name) {
-            name = 'main';
-        }
-        this.parts.push({ url, name, sent: false });
-        return this;
+        return this.attachPart({ url, name, sent: false });
     }
 
     /**
@@ -105,7 +89,7 @@ class Payload {
      * @param  {String} source
      * @param  {String} name
      *
-     * @return {Payload}
+     * @return {this}
      */
     attachStep(source, name) {
         // add options to the source part
@@ -116,7 +100,28 @@ class Payload {
                 break;
         }
         this.setPartOptions(source, options);
-        this.parts.push({ name, sent: false });
+        return this.attachPart({ name, source, sent: false });
+    }
+
+    /**
+     * Attach a part and trigger event handler
+     *
+     * @param  {Object} part
+     *
+     * @return {this}
+     */
+    attachPart(part) {
+        if (!part.name) {
+            part.name = 'main';
+        }
+        this.parts.push(part)
+        if (this.onAttachment) {
+            this.onAttachment({
+                type: 'attachment',
+                target: this,
+                part,
+            });
+        }
         return this;
     }
 

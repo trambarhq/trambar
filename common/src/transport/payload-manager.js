@@ -64,6 +64,7 @@ class PayloadManager extends EventEmitter {
     add(destination, type) {
         let id = RandomToken.generate();
         let payload = new Payload(id, destination, type);
+        payload.onAttachment = this.handleAttachment;
         this.payloads.push(payload);
         return payload;
     }
@@ -759,7 +760,20 @@ class PayloadManager extends EventEmitter {
             }
             this.triggerEvent(new PayloadManagerEvent('change', this));
         }
-    };
+    }
+
+    /**
+     * Relay attachment events to listener
+     *
+     * @param  {Object} evt
+     */
+    handleAttachment = (evt) => {
+        let { part, target } = evt;
+        this.triggerEvent(new PayloadManagerEvent('attachment', this, {
+            payload: target,
+            part,
+        }));
+    }
 }
 
 /**

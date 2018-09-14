@@ -144,6 +144,16 @@ function start(cfg) {
             saveLocale(localeCode);
         }
     });
+    payloadManager.addEventListener('attachment', (evt) => {
+        // associate file with payload id so we can find it again
+        let { payload, part } = evt;
+        let file = part.blob || part.cordovaFile;
+        if (file) {
+            var url = `payload:${payload.id}/${part.name}`;
+            console.log(url);
+            BlobManager.associate(file, url);
+        }
+    });
     payloadManager.addEventListener('permission', (evt) => {
         // add a task object in the backend so upload would be accepted
         let promise = addPayloadTasks(evt.destination, evt.payloads)
@@ -159,9 +169,11 @@ function start(cfg) {
         // don't need to download the file again when the need arises
         let { destination, part, response } = evt;
         if (response && response.url) {
-            if (part.file) {
+            let file = part.blob || part.cordovaFile;
+            if (file) {
                 let { address } = destination;
-                let url = url + response.url;
+                let url = address + response.url;
+                console.log(url);
                 BlobManager.associate(part.file, url);
             }
         }

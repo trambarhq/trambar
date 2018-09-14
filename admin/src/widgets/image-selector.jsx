@@ -342,7 +342,7 @@ class ImageSelector extends PureComponent {
             let payload = payloads.add('image').attachFile(file);
             return MediaLoader.getImageMetadata(file).then((meta) => {
                 let image = {
-                    payload_token: payload.token,
+                    payload_token: payload.id,
                     width: meta.width,
                     height: meta.height,
                     format: meta.format,
