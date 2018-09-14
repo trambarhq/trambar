@@ -1,106 +1,100 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var BlobManager = require('transport/blob-manager');
-var BlobReader = require('transport/blob-reader');
-var MediaLoader = require('media/media-loader');
-var JPEGAnalyser = require('media/jpeg-analyser');
-var ComponentRefs = require('utils/component-refs');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import BlobManager from 'transport/blob-manager';
+import BlobReader from 'transport/blob-reader';
+import MediaLoader from 'media/media-loader';
+import JPEGAnalyser from 'media/jpeg-analyser';
+import ComponentRefs from 'utils/component-refs';
 
-module.exports = React.createClass({
-    displayName: 'BitmapView',
-    propTypes: {
-        url: PropTypes.string,
-        clippingRect: PropTypes.object,
-        onLoad: PropTypes.func,
-        onError: PropTypes.func,
-    },
+class BitmapView extends PureComponent {
+    static displayName = 'BitmapView';
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             canvas: HTMLCanvasElement,
         });
-        return {};
-    },
+    }
 
     /**
      * Load image on mount
      */
-    componentWillMount: function() {
-        this.load(this.props.url);
-    },
+    componentWillMount() {
+        let { url } = this.props;
+        this.load(url);
+    }
 
     /**
      * Update image when URL or clipping rect changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.url !== nextProps.url) {
+    componentWillReceiveProps(nextProps) {
+        let { url, clippingRect } = this.props;
+        if (nextProps.url !== url) {
             this.load(nextProps.url);
         }
-        if (this.clippingRect !== nextProps.clippingRect) {
+        if (nextProps.clippingRect !== clippingRect) {
             if (this.image) {
                 this.drawImage(nextProps.clippingRect);
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var setters = this.components.setters;
-        var props = _.omit(this.props, 'onLoad', 'url', 'clippingRect');
+    render() {
+        let { setters } = this.components;
+        let props = _.omit(this.props, 'onLoad', 'url', 'clippingRect');
         // give empty canvas a size so it scale correctly when empty
         props.width = 4;
         props.height = 4;
         return <canvas ref={setters.canvas} {...props} />
-    },
+    }
 
     /**
      * Draw image on mount (if it manages to load that fast)
      */
-    componentDidMount: function() {
+    componentDidMount() {
+        let { clippingRect } = this.props;
         if (this.image && this.redrawNeeded) {
             // image was loaded before first render
-            this.drawImage(this.props.clippingRect);
+            this.drawImage(clippingRect);
         }
-    },
+    }
 
     /**
      * Inform parent component that loading is complete
      */
-    triggerLoadEvent: function() {
-        if (this.props.onLoad) {
-            this.props.onLoad({
+    triggerLoadEvent() {
+        let { onLoad } = this.props;
+        if (onLoad) {
+            onLoad({
                 type: 'load',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Inform parent component that an error occurred
      *
      * @param  {Error} err
      */
-    triggerErrorEvent: function(err) {
-        if (this.props.onError) {
-            this.props.onError({
+    triggerErrorEvent(err) {
+        let { onError } = this.props;
+        if (onError) {
+            onError({
                 type: 'error',
                 target: this,
                 error: err
             });
         }
-    },
+    }
 
     /**
      * Load file at given URL or clear the canvas if it's empty
@@ -109,14 +103,15 @@ module.exports = React.createClass({
      *
      * @return {Promise}
      */
-    load: function(url) {
+    load(url) {
+        let { clippingRect } = this.props;
         if (url) {
             return BlobManager.fetch(url).then((blob) => {
                 // load the image and its bytes
-                var imageP = MediaLoader.loadImage(blob);
-                var bytesP = BlobReader.loadUint8Array(blob);
+                let imageP = MediaLoader.loadImage(blob);
+                let bytesP = BlobReader.loadUint8Array(blob);
                 return Promise.join(imageP, bytesP, (image, bytes) => {
-                    var orientation = JPEGAnalyser.getOrientation(bytes) || 1;
+                    let orientation = JPEGAnalyser.getOrientation(bytes) || 1;
 
                     this.image = image;
                     this.orientation = orientation;
@@ -128,7 +123,7 @@ module.exports = React.createClass({
                         this.naturalHeight = image.naturalWidth;
                     }
 
-                    this.drawImage(this.props.clippingRect);
+                    this.drawImage(clippingRect);
                     this.triggerLoadEvent();
                     return null;
                 });
@@ -141,27 +136,27 @@ module.exports = React.createClass({
             this.clearCanvas();
             return Promise.resolve();
         }
-    },
+    }
 
     /**
      * Set the canvas's dimensions and draw an image into it
      *
      * @param  {Object} rect
      */
-    drawImage: function(rect) {
-        var image = this.image;
+    drawImage(rect) {
+        let { canvas } = this.components;
+        let image = this.image;
         if (!image) {
             return;
         }
-        var canvas = this.components.canvas;
         if (!canvas) {
             this.redrawNeeded = true;
             return;
         }
-        var orientation = this.orientation;
-        var imageWidth = image.naturalWidth;
-    	var imageHeight = image.naturalHeight;
-    	var matrix;
+        let orientation = this.orientation;
+        let imageWidth = image.naturalWidth;
+    	let imageHeight = image.naturalHeight;
+    	let matrix;
     	switch (orientation) {
     		case 1:
     			// normal
@@ -207,38 +202,38 @@ module.exports = React.createClass({
         this.width = rect.width;
         this.height = rect.height;
 
-        var inverse = invert(matrix);
-    	var src = transformRect(inverse, rect);
-    	var dst = transformRect(inverse, { left: 0, top: 0, width: rect.width, height: rect.height });
+        let inverse = invert(matrix);
+    	let src = transformRect(inverse, rect);
+    	let dst = transformRect(inverse, { left: 0, top: 0, width: rect.width, height: rect.height });
     	canvas.width = dst.width;
     	canvas.height = dst.height;
-    	var context = canvas.getContext('2d');
+    	let context = canvas.getContext('2d');
     	context.transform.apply(context, matrix);
         context.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);
-    },
+    }
 
-    extractMosaic: function() {
+    extractMosaic() {
+        let { canvas } = this.components;
         try {
-            var canvas = this.components.canvas;
-            var miniCanvas = document.createElement('CANVAS');
+            let miniCanvas = document.createElement('CANVAS');
             miniCanvas.width = 48;
             miniCanvas.height = 48;
-            var miniContext = miniCanvas.getContext('2d');
+            let miniContext = miniCanvas.getContext('2d');
             miniContext.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, miniCanvas.width, miniCanvas.height);
-            var microCanvas = document.createElement('CANVAS');
+            let microCanvas = document.createElement('CANVAS');
             microCanvas.width = 4;
             microCanvas.height = 4;
-            var microContext = microCanvas.getContext('2d');
+            let microContext = microCanvas.getContext('2d');
             microContext.drawImage(miniCanvas, 0, 0, miniCanvas.width, miniCanvas.height, 0, 0, microCanvas.width, microCanvas.height);
-            var imageData = microContext.getImageData(0, 0, microCanvas.width, microCanvas.height);
-            var pixels = imageData.data;
+            let imageData = microContext.getImageData(0, 0, microCanvas.width, microCanvas.height);
+            let pixels = imageData.data;
             if (_.size(pixels) >= 64) {
-                var colors = [];
-                for (var i = 0; i < 16; i++) {
-                    var r = pixels[i * 4 + 0];
-                    var g = pixels[i * 4 + 1];
-                    var b = pixels[i * 4 + 2];
-                    var rgb = (r << 16) | (g << 8) | (b << 0);
+                let colors = [];
+                for (let i = 0; i < 16; i++) {
+                    let r = pixels[i * 4 + 0];
+                    let g = pixels[i * 4 + 1];
+                    let b = pixels[i * 4 + 2];
+                    let rgb = (r << 16) | (g << 8) | (b << 0);
                     colors.push(rgb.toString(16));
                 }
                 return colors;
@@ -246,13 +241,13 @@ module.exports = React.createClass({
         } catch (err) {
 
         }
-    },
+    }
 
     /**
      * Collapsed the canvas
      */
-    clearCanvas: function() {
-        var canvas = this.components.canvas;
+    clearCanvas() {
+        let { canvas } = this.components;;
         if (canvas) {
             canvas.width = 0;
         	canvas.height = 0;
@@ -261,8 +256,8 @@ module.exports = React.createClass({
         this.width = 0;
         this.height = 0;
         this.orientation = undefined;
-    },
-});
+    }
+}
 
 /**
  * Calculate inverse of affine matrix
@@ -272,8 +267,8 @@ module.exports = React.createClass({
  * @return {Array<Number>}
  */
 function invert(m) {
-	var [a, b, c, d, e, f] = m;
-	var dt = (a * d - b * c);
+	let [a, b, c, d, e, f] = m;
+	let dt = (a * d - b * c);
 	return [
 		d / dt,
 		-b / dt,
@@ -293,8 +288,8 @@ function invert(m) {
  * @return {Array<Number>}
  */
 function transform(m, p) {
-	var [a, b, c, d, e, f] = m;
-	var [x, y] = p;
+	let [a, b, c, d, e, f] = m;
+	let [x, y] = p;
 	return [
 		a * x + c * y + e,
 		b * x + d * y + f,
@@ -310,8 +305,8 @@ function transform(m, p) {
  * @return {Object}
  */
 function transformRect(m, r) {
-	var c1 = [ r.left, r.top ];
-	var c2 = [ r.left + r.width, r.top + r.height ];
+	let c1 = [ r.left, r.top ];
+	let c2 = [ r.left + r.width, r.top + r.height ];
 	c1 = transform(m, c1);
 	c2 = transform(m, c2);
 	return {
@@ -320,4 +315,20 @@ function transformRect(m, r) {
 		left: Math.min(c2[0], c1[0]),
 		top: Math.min(c2[1], c1[1]),
 	};
+}
+
+export {
+    BitmapView as default,
+    BitmapView,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    BitmapView.propTypes = {
+        url: PropTypes.string,
+        clippingRect: PropTypes.object,
+        onLoad: PropTypes.func,
+        onError: PropTypes.func,
+    };
 }

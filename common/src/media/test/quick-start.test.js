@@ -1,14 +1,14 @@
-var Chai = require('chai'), expect = Chai.expect;
+import Chai from 'chai', expect = Chai.expect;
 
-var QuickStart = require('media/quick-start');
-var MediaLoader = require('media/media-loader');
+import QuickStart from 'media/quick-start';
+import MediaLoader from 'media/media-loader';
 
-var videoData = require('./videos/small.mp4');
+import videoData from './videos/small.mp4';
 
 describe('QuickStart', function() {
     describe('#process()', function() {
         it('should yield a new video with moov repositioned', function() {
-            var blob = new Blob([ videoData ], { type: 'video/mp4' });
+            let blob = new Blob([ videoData ], { type: 'video/mp4' });
             return QuickStart.process(blob).then((processed) => {
                 expect(processed).to.not.be.null;
                 // load the video to see if it's correct
@@ -19,7 +19,7 @@ describe('QuickStart', function() {
             });
         })
         it('should return null when a video has already been processed', function() {
-            var blob = new Blob([ videoData ], { type: 'video/mp4' });
+            let blob = new Blob([ videoData ], { type: 'video/mp4' });
             return QuickStart.process(blob).then((processed) => {
                 expect(processed).to.not.be.null;
                 return QuickStart.process(processed).then((reprocessed) => {

@@ -1,10 +1,6 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Async = require('async-do-while');
-
-module.exports = {
-    process,
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Async from 'async-do-while';
 
 /**
  * Move the MOOV atom in a QuickTime container to the beginning of the file
@@ -15,32 +11,32 @@ module.exports = {
  */
 function process(file) {
     return loadPreambles(file).then((preambles) => {
-        var ftypIndex = _.findIndex(preambles, { name: 'ftyp' });
-        var moovIndex = _.findIndex(preambles, { name: 'moov' });
+        let ftypIndex = _.findIndex(preambles, { name: 'ftyp' });
+        let moovIndex = _.findIndex(preambles, { name: 'moov' });
         // process the file only if ftyp is the first atom and
         // moov isn't the second atom
         if (!(ftypIndex === 0 && moovIndex > 1)) {
             return null;
         }
-        var ftyp = preambles[ftypIndex];
-        var moov = preambles[moovIndex];
+        let ftyp = preambles[ftypIndex];
+        let moov = preambles[moovIndex];
         return loadAtom(file, ftyp).then((ftypData) => {
             return loadAtom(file, moov).then((moovData) => {
                 // shift offsets inside moov that reference data between ftyp
                 // and moov by size of moov
-                var bytes = new Uint8Array(moovData);
+                let bytes = new Uint8Array(moovData);
                 shiftOffsets(bytes, 8, bytes.length, ftyp.offset + ftyp.size, moov.offset, moov.size);
 
                 // build a new blob
-                var dataBeforeMoov = file.slice(ftyp.offset + ftyp.size, moov.offset);
-                var dataAfterMoov = file.slice(moov.offset + moov.size);
-                var blobParts = [
+                let dataBeforeMoov = file.slice(ftyp.offset + ftyp.size, moov.offset);
+                let dataAfterMoov = file.slice(moov.offset + moov.size);
+                let blobParts = [
                     ftypData,
                     moovData,
                     dataBeforeMoov,
                     dataAfterMoov,
                 ];
-                var output = new Blob(blobParts, { type: file.type });
+                let output = new Blob(blobParts, { type: file.type });
                 return output;
             });
         });
@@ -62,17 +58,17 @@ function process(file) {
  */
 function shiftOffsets(bytes, offset, end, rangeStart, rangeEnd, shift) {
     while (offset < end) {
-        var atomSize = BE32(bytes, offset);
-        var atomName = NAME(bytes, offset + 4);
+        let atomSize = BE32(bytes, offset);
+        let atomName = NAME(bytes, offset + 4);
         if (atomSize < 8) {
             break;
         }
         switch (atomName) {
             case 'stco': // "Chunk Offset Atom"
-                var offsetCount = BE32(bytes, offset + 12);
-                for (var i = 0; i < offsetCount; i++) {
-                    var doOffset = offset + 16 + (i * 4);
-                    var dataOffset = BE32(bytes, doOffset);
+                let offsetCount = BE32(bytes, offset + 12);
+                for (let i = 0; i < offsetCount; i++) {
+                    let doOffset = offset + 16 + (i * 4);
+                    let dataOffset = BE32(bytes, doOffset);
                     if (rangeStart <= dataOffset && dataOffset <= rangeEnd) {
                         // if the offset points to data in front of moov, shift
                         // it backward to account for moov's new position
@@ -85,10 +81,10 @@ function shiftOffsets(bytes, offset, end, rangeStart, rangeEnd, shift) {
                 }
                 break;
             case 'co64': // "Chunk Offset Atom, 64-bit"
-                var offsetCount = BE32(bytes, offset + 12);
-                for (var i = 0; i < offsetCount; i++) {
-                    var doOffset = offset + 16 + (i * 8);
-                    var dataOffset = BE64(bytes, doOffset);
+                let offsetCount = BE32(bytes, offset + 12);
+                for (let i = 0; i < offsetCount; i++) {
+                    let doOffset = offset + 16 + (i * 8);
+                    let dataOffset = BE64(bytes, doOffset);
                     if (rangeStart <= dataOffset && dataOffset <= rangeEnd) {
                         dataOffset += shift;
                         bytes[doOffset+0] = (dataOffset >> 56) & 0xFF
@@ -121,14 +117,14 @@ function shiftOffsets(bytes, offset, end, rangeStart, rangeEnd, shift) {
  * @return {Promise<Array<Object>>}
  */
 function loadPreambles(file) {
-    var preambles = [];
-    var offset = 0;
-    var size = file.size;
-    var hasFtyp = false;
-    var hasMoov = false;
+    let preambles = [];
+    let offset = 0;
+    let size = file.size;
+    let hasFtyp = false;
+    let hasMoov = false;
     Async.do(() => {
         return loadPreamble(file, offset).then((p) => {
-            var bogus = false;
+            let bogus = false;
             if (!hasFtyp) {
                 if (p.name === 'ftyp') {
                     hasFtyp = true;
@@ -171,14 +167,14 @@ function loadPreambles(file) {
 function loadPreamble(blob, offset) {
     return new Promise((resolve, reject) => {
         // load 16 bytes, just in case we need the 64-bit size
-        var preambleSize = 16;
-        var slice = blob.slice(offset, offset + preambleSize);
-        var fr = new FileReader();
+        let preambleSize = 16;
+        let slice = blob.slice(offset, offset + preambleSize);
+        let fr = new FileReader();
         fr.readAsArrayBuffer(slice);
         fr.onload = (evt) => {
-            var bytes = new Uint8Array(evt.target.result);
-            var size = BE32(bytes, 0);
-            var min = 8;
+            let bytes = new Uint8Array(evt.target.result);
+            let size = BE32(bytes, 0);
+            let min = 8;
             if (size === 1) {
                 // atom size overflows a 32-bit integer
                 size = BE64(bytes, 8);
@@ -187,8 +183,8 @@ function loadPreamble(blob, offset) {
             if (!(size >= min)) {
                 reject(new Error('Invalid atom size'));
             }
-            var name = NAME(bytes, 4);
-            var preamble = { offset, size, name };
+            let name = NAME(bytes, 4);
+            let preamble = { offset, size, name };
             resolve(preamble);
         };
         fr.onerror = (evt) => {
@@ -207,8 +203,8 @@ function loadPreamble(blob, offset) {
  */
 function loadAtom(blob, preamble) {
     return new Promise((resolve, reject) => {
-        var slice = blob.slice(preamble.offset, preamble.offset + preamble.size);
-        var fr = new FileReader();
+        let slice = blob.slice(preamble.offset, preamble.offset + preamble.size);
+        let fr = new FileReader();
         fr.readAsArrayBuffer(slice);
         fr.onload = (evt) => {
             resolve(evt.target.result);
@@ -256,3 +252,8 @@ function NAME(b, i) {
     return String.fromCharCode(b[i+0]) + String.fromCharCode(b[i+1])
          + String.fromCharCode(b[i+2]) + String.fromCharCode(b[i+3]);
 }
+
+export {
+    process,
+    exports as default,
+};

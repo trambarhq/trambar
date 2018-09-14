@@ -1,23 +1,9 @@
-var Promise = require('bluebird');
-var BlobManager = require('transport/blob-manager');
-var BlobReader = require('transport/blob-reader');
-var JPEGAnalyser = require('media/jpeg-analyser');
-var FrameGrabber = require('media/frame-grabber');
-if (process.env.PLATFORM === 'cordova') {
-    var CordovaFile = require('transport/cordova-file');
-}
-
-module.exports = {
-    loadImage,
-    loadVideo,
-    loadAudio,
-    loadSVG,
-    getImageMetadata,
-    getVideoMetadata,
-    getAudioMetadata,
-    extractFileCategory,
-    extractFileFormat,
-};
+import Promise from 'bluebird';
+import BlobManager from 'transport/blob-manager';
+import BlobReader from 'transport/blob-reader';
+import JPEGAnalyser from 'media/jpeg-analyser';
+import FrameGrabber from 'media/frame-grabber';
+import CordovaFile from 'transport/cordova-file';
 
 /**
  * Load an image
@@ -27,22 +13,20 @@ module.exports = {
  * @return {Promise<HTMLImageElement}
  */
 function loadImage(blob) {
-    var url;
+    let url;
     if (typeof(blob) === 'string') {
         url = blob;
     } else {
-        if (process.env.PLATFORM === 'cordova') {
-            if (blob instanceof CordovaFile) {
-                return blob.getArrayBuffer().then((arrayBuffer) => {
-                    var newBlob = new Blob([ arrayBuffer ], { type: blob.type });
-                    return loadImage(newBlob);
-                });
-            }
+        if (blob instanceof CordovaFile) {
+            return blob.getArrayBuffer().then((arrayBuffer) => {
+                let newBlob = new Blob([ arrayBuffer ], { type: blob.type });
+                return loadImage(newBlob);
+            });
         }
         url = BlobManager.manage(blob);
     }
     return new Promise((resolve, reject) => {
-        var image = document.createElement('IMG');
+        let image = document.createElement('IMG');
         image.src = url;
         image.onload = function(evt) {
             resolve(image);
@@ -66,14 +50,14 @@ function loadVideo(blob) {
         // iPhone doesn't allow loading of video programmatically
         return Promise.reject('Cannot load video on iPhone');
     }
-    var url;
+    let url;
     if (typeof(blob) === 'string') {
         url = blob;
     } else {
         url = BlobManager.manage(blob);
     }
     return new Promise((resolve, reject) => {
-        var video = document.createElement('VIDEO');
+        let video = document.createElement('VIDEO');
         video.src = url;
         video.preload = true;
         video.onloadeddata = function(evt) {
@@ -93,14 +77,14 @@ function loadVideo(blob) {
  * @return {Promise<HTMLAudioElement}
  */
 function loadAudio(blob) {
-    var url;
+    let url;
     if (typeof(blob) === 'string') {
         url = blob;
     } else {
         url = BlobManager.manage(blob);
     }
     return new Promise((resolve, reject) => {
-        var audio = document.createElement('AUDIO');
+        let audio = document.createElement('AUDIO');
         audio.src = url;
         audio.preload = true;
         audio.onloadeddata = function(evt) {
@@ -121,9 +105,9 @@ function loadAudio(blob) {
  */
 function loadSVG(blob) {
     return BlobReader.loadText(blob).then((xml) => {
-        var parser = new DOMParser;
-        var doc = parser.parseFromString(xml, 'text/xml');
-        var svg = doc.getElementsByTagName('svg')[0];
+        let parser = new DOMParser;
+        let doc = parser.parseFromString(xml, 'text/xml');
+        let svg = doc.getElementsByTagName('svg')[0];
         if (!svg) {
             throw new Error('Invalid SVG document');
         }
@@ -140,7 +124,7 @@ function loadSVG(blob) {
  */
 function getImageMetadata(blob) {
     if (typeof(blob) === 'string') {
-        var url = blob;
+        let url = blob;
         return BlobManager.fetch(url).then((blob) => {
             return getImageMetadata(blob);
         }).catch((err) => {
@@ -155,14 +139,14 @@ function getImageMetadata(blob) {
             });
         });
     } else {
-        var format = extractFileFormat(blob.type);
+        let format = extractFileFormat(blob.type);
         if (format === 'svg') {
             // naturalWidth and naturalHeight aren't correct when the SVG file
             // doesn't have width and height set
             return loadSVG(blob).then((svg) => {
-                var width = svg.width.baseVal.value;
-                var height = svg.height.baseVal.value;
-                var viewBox = svg.viewBox.baseVal;
+                let width = svg.width.baseVal.value;
+                let height = svg.height.baseVal.value;
+                let viewBox = svg.viewBox.baseVal;
                 if (!width) {
                     width = viewBox.width;
                 }
@@ -179,12 +163,12 @@ function getImageMetadata(blob) {
             });
         } else if (format === 'jpeg') {
             return BlobReader.loadUint8Array(blob).then((bytes) => {
-                var dimensions = JPEGAnalyser.getDimensions(bytes);
-                var orientation = JPEGAnalyser.getOrientation(bytes);
+                let dimensions = JPEGAnalyser.getDimensions(bytes);
+                let orientation = JPEGAnalyser.getOrientation(bytes);
                 if (!dimensions) {
                     throw new Error('Invalid JPEG file');
                 }
-                var width, height;
+                let width, height;
                 if (orientation >= 5) {
                     width = dimensions.height;
                     height = dimensions.width;
@@ -215,7 +199,7 @@ function getImageMetadata(blob) {
  */
 function getVideoMetadata(blob) {
     if (typeof(blob) === 'string') {
-        var url = blob;
+        let url = blob;
         return BlobManager.fetch(url).then((blob) => {
             return getVideoMetadata(blob);
         }).catch((err) => {
@@ -257,7 +241,7 @@ function getVideoMetadata(blob) {
  */
 function getAudioMetadata(blob) {
     if (typeof(blob) === 'string') {
-        var url = blob;
+        let url = blob;
         return BlobManager.fetch(url).then((blob) => {
             return getAudioMetadata(blob);
         }).catch((err) => {
@@ -289,8 +273,8 @@ function getAudioMetadata(blob) {
  * @return {String}
  */
 function guessFileFormat(url, category) {
-    var ext;
-    var m = /\.(\w+)$/.execute(url.replace(/#.*/, '').replace(/\?.*/, ''));
+    let ext;
+    let m = /\.(\w+)$/.execute(url.replace(/#.*/, '').replace(/\?.*/, ''));
     if (m) {
         ext = _.toLower(m[1]);
         switch (ext) {
@@ -315,7 +299,7 @@ function guessFileFormat(url, category) {
  * @return {String}
  */
 function extractFileCategory(mimeType) {
-    var parts = _.split(mimeType, '/');
+    let parts = _.split(mimeType, '/');
     return _.toLower(parts[0]);
 }
 
@@ -327,8 +311,8 @@ function extractFileCategory(mimeType) {
  * @return {String}
  */
 function extractFileFormat(mimeType) {
-    var parts = _.split(mimeType, '/');
-    var format = _.toLower(parts[1]);
+    let parts = _.split(mimeType, '/');
+    let format = _.toLower(parts[1]);
     switch (format) {
         case 'svg+xml':
             return 'svg';
@@ -337,17 +321,29 @@ function extractFileFormat(mimeType) {
     }
 }
 
-if (process.env.PLATFORM === 'cordova') {
-    /**
-     * Return information about a MediaFile
-     *
-     * @param  {MediaFile} mediaFile
-     *
-     * @return {Promise<MediaFileData>}
-     */
-    module.exports.getFormatData = function(mediaFile) {
-        return new Promise((resolve, reject) => {
-            mediaFile.getFormatData(resolve, reject);
-        });
-    };
-}
+/**
+ * Return information about a MediaFile
+ *
+ * @param  {MediaFile} mediaFile
+ *
+ * @return {Promise<MediaFileData>}
+ */
+function getFormatData(mediaFile) {
+    return new Promise((resolve, reject) => {
+        mediaFile.getFormatData(resolve, reject);
+    });
+};
+
+export {
+    loadImage,
+    loadVideo,
+    loadAudio,
+    loadSVG,
+    getImageMetadata,
+    getVideoMetadata,
+    getAudioMetadata,
+    extractFileCategory,
+    extractFileFormat,
+    getFormatData,
+    exports as default,
+};

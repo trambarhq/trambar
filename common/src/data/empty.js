@@ -1,11 +1,8 @@
-const emptyArray = [];
-const emptyObject = {};
-const emptyString = '';
-const emptyFunction = function() {};
+exports.array = [];
+exports.object = {};
+exports.emptyString = '';
+exports.func = function() {};
 
 export {
-    emptyArray as array,
-    emptyObject as object,
-    emptyString as string,
-    emptyFunction as func,
+    exports as default,
 };

@@ -1,9 +1,5 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-
-module.exports = {
-    capture,
-}
+import _ from 'lodash';
+import Promise from 'bluebird';
 
 /**
  * Capture a frame from a video element
@@ -15,16 +11,16 @@ module.exports = {
  */
 function capture(video, options) {
     return new Promise((resolve, reject) => {
-        var width = video.videoWidth;
-        var height = video.videoHeight;
-        var canvas = document.createElement('CANVAS');
+        let width = video.videoWidth;
+        let height = video.videoHeight;
+        let canvas = document.createElement('CANVAS');
         canvas.width = width;
         canvas.height = height;
-        var attempts = 1;
-        var biggest = null;
-        var live = (video.duration === Infinity);
-        var startTime = _.get(options, 'start', 0);
-        var timeLimit = _.get(options, 'timeout', 1000);
+        let attempts = 1;
+        let biggest = null;
+        let live = (video.duration === Infinity);
+        let startTime = _.get(options, 'start', 0);
+        let timeLimit = _.get(options, 'timeout', 1000);
 
         function onBlob(blob) {
             if (live) {
@@ -32,9 +28,9 @@ function capture(video, options) {
             } else {
                 if (blob) {
                     // check compression ratio to see if image is mostly blank
-                    var uncompressedSize = width * height * 3;
-                    var compressedSize = blob.size;
-                    var compressionRatio = compressedSize / uncompressedSize;
+                    let uncompressedSize = width * height * 3;
+                    let compressedSize = blob.size;
+                    let compressionRatio = compressedSize / uncompressedSize;
                     if (compressionRatio > 1 / 50) {
                         onSuccess(blob);
                     } else {
@@ -59,7 +55,7 @@ function capture(video, options) {
             try {
                 // draw the current video frame on the canvas and encode as
                 // jpeg file
-                var context = canvas.getContext('2d');
+                let context = canvas.getContext('2d');
     		    context.drawImage(video, 0, 0, width, height);
                 saveCanvasContents(canvas, 'image/jpeg', 0.75, onBlob);
     		} catch(err) {
@@ -92,7 +88,7 @@ function capture(video, options) {
             video.currentTime = startTime;
 
             // set a timeout, in case we're not getting expected events from video
-            var timeout = setTimeout(() => {
+            let timeout = setTimeout(() => {
                 onFailure(new Error('Unable to obtain an image within time limit'));
             }, timeLimit);
         }
@@ -119,10 +115,15 @@ function saveCanvasContents(canvas, mimeType, quality, cb) {
     if (typeof(canvas.toBlob) === 'function') {
         canvas.toBlob(cb, mimeType, 90);
     } else {
-        var B64toBlob = require('b64-to-blob');
-        var dataURL = canvas.toDataURL(mimeType, quality);
-        var base64Data = dataURL.replace('data:image/jpeg;base64,', '');
-        var blob = B64toBlob(base64Data, 'image/jpeg');
+        let B64toBlob = require('b64-to-blob');
+        let dataURL = canvas.toDataURL(mimeType, quality);
+        let base64Data = dataURL.replace('data:image/jpeg;base64,', '');
+        let blob = B64toBlob(base64Data, 'image/jpeg');
         cb(blob);
     }
 }
+
+export {
+    capture,
+    exports as default,
+};

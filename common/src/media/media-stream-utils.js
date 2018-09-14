@@ -1,14 +1,4 @@
-var Promise = require('bluebird');
-
-module.exports = {
-    hasSupport,
-    getAudioStream,
-    getVideoStream,
-    getSilentVideoStream,
-    getVideoDimensions,
-    getActualVideoDimensions,
-    stopAllTracks,
-}
+import Promise from 'bluebird';
 
 /**
  * Return true if Media Stream API is available
@@ -29,7 +19,7 @@ function hasSupport() {
  */
 function getAudioStream() {
     return Promise.try(() => {
-        var constraints = {
+        let constraints = {
             audio: true
         };
         return navigator.mediaDevices.getUserMedia(constraints);
@@ -45,7 +35,7 @@ function getAudioStream() {
  */
 function getVideoStream(deviceId) {
     return Promise.try(() => {
-        var constraints = {
+        let constraints = {
             video: (deviceId) ? { deviceId } : true,
             audio: true
         };
@@ -62,7 +52,7 @@ function getVideoStream(deviceId) {
  */
 function getSilentVideoStream(deviceId) {
     return Promise.try(() => {
-        var constraints = {
+        let constraints = {
             video: (deviceId) ? { deviceId } : true
         };
         return navigator.mediaDevices.getUserMedia(constraints);
@@ -78,10 +68,10 @@ function getSilentVideoStream(deviceId) {
  * @return {Object}
  */
 function getVideoDimensions(stream) {
-    var videoTrack = stream.getVideoTracks()[0];
-    var trackSettings = videoTrack.getSettings();
-    var width = trackSettings.width;
-    var height = trackSettings.height;
+    let videoTrack = stream.getVideoTracks()[0];
+    let trackSettings = videoTrack.getSettings();
+    let width = trackSettings.width;
+    let height = trackSettings.height;
     if (width > height) {
         if (screen.width < screen.height) {
             // the camera is probably rotated
@@ -99,9 +89,9 @@ function getVideoDimensions(stream) {
  * @param  {Function} cb
  */
 function getActualVideoDimensions(node, cb) {
-    var handle = (evt) => {
-        var width = node.videoWidth;
-        var height = node.videoHeight;
+    let handle = (evt) => {
+        let width = node.videoWidth;
+        let height = node.videoHeight;
         cb({ width, height });
         node.removeEventListener('loadedmetadata', handle);
     };
@@ -116,8 +106,19 @@ function getActualVideoDimensions(node, cb) {
 function stopAllTracks(stream) {
     if (!stream) {
     }
-    var tracks = stream.getTracks();
+    let tracks = stream.getTracks();
     _.each(tracks, (track) => {
         track.stop();
     });
 }
+
+export {
+    hasSupport,
+    getAudioStream,
+    getVideoStream,
+    getSilentVideoStream,
+    getVideoDimensions,
+    getActualVideoDimensions,
+    stopAllTracks,
+    exports as default,
+};

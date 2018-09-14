@@ -1,92 +1,84 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var MediaLoader = require('media/media-loader');
-var ComponentRefs = require('utils/component-refs');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import MediaLoader from 'media/media-loader';
+import ComponentRefs from 'utils/component-refs';
 
-module.exports = React.createClass({
-    displayName: 'VectorView',
-    propTypes: {
-        url: PropTypes.string,
-        clippingRect: PropTypes.object,
-        title: PropTypes.string,
-        onLoad: PropTypes.func,
-        onError: PropTypes.func,
-    },
+class VectorView extends PureComponent {
+    static displayName = 'VectorView';
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             svg: SVGGraphicsElement,
         });
-        return {};
-    },
+    }
 
     /**
      * Load image on mount
      */
-    componentWillMount: function() {
-        this.load(this.props.url);
-    },
+    componentWillMount() {
+        let { url } = this.props;
+        this.load(url);
+    }
 
     /**
      * Update image when URL or clipping rect changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.url !== nextProps.url) {
+    componentWillReceiveProps(nextProps) {
+        let { url, clippingRect, title } = this.props;
+        if (nextProps.url !== url) {
             this.load(nextProps.url);
         }
-        if (this.props.clippingRect !== nextProps.clippingRect) {
+        if (nextProps.clippingRect !== clippingRect) {
             this.setViewBox(nextProps.clippingRect);
         }
-        if (this.props.title !== nextProps.title) {
+        if (nextProps.title !== title) {
             this.setTitle(nextProps.title);
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var setters = this.components.setters;
-        var props = _.omit(this.props, 'onLoad', 'url', 'clippingRect', 'title');
+    render() {
+        let { setters } = this.components;
+        let props = _.omit(this.props, 'onLoad', 'url', 'clippingRect', 'title');
         return <svg ref={setters.svg} viewBox="0 0 4 4" width={4} height={4} {...props} />
-    },
+    }
 
     /**
      * Inform parent component that loading is complete
      */
-    triggerLoadEvent: function() {
-        if (this.props.onLoad) {
-            this.props.onLoad({
+    triggerLoadEvent() {
+        let { onLoad } = this.props;
+        if (onLoad) {
+            onLoad({
                 type: 'load',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Inform parent component that an error occurred
      *
      * @param  {Error} err
      */
-    triggerErrorEvent: function(err) {
-        if (this.props.onError) {
-            this.props.onError({
+    triggerErrorEvent(err) {
+        let { onError } = this.props;
+        if (onError) {
+            onError({
                 type: 'error',
                 target: this,
                 error: err
             });
         }
-    },
+    }
 
     /**
      * Load file at given URL or clear the canvas if it's empty
@@ -95,23 +87,24 @@ module.exports = React.createClass({
      *
      * @return {Promise}
      */
-    load: function(url) {
+    load(url) {
+        let { title, clippingRect } = this.props;
         if (url) {
             return MediaLoader.loadSVG(url).then((svgNew) => {
-                var svg = this.components.svg;
+                let { svg } = this.components;
                 if (!svg) {
                     throw new Error('Invalid missing container');
                 }
                 this.clear();
-                this.addTitle(this.props.title);
-                var child;
+                this.addTitle(title);
+                let child;
                 while (child = svgNew.firstChild) {
                     svgNew.removeChild(child);
                     svg.appendChild(child);
                 }
-                var width = svgNew.width.baseVal.value;
-                var height = svgNew.height.baseVal.value;
-                var viewBox = svgNew.viewBox.baseVal;
+                let width = svgNew.width.baseVal.value;
+                let height = svgNew.height.baseVal.value;
+                let viewBox = svgNew.viewBox.baseVal;
                 if (!width) {
                     width = viewBox.width;
                 }
@@ -130,7 +123,7 @@ module.exports = React.createClass({
                 this.zoomY = (viewBox.height) ? viewBox.height / height : 1;
                 this.naturalWidth = width;
                 this.naturalHeight = height;
-                this.setViewBox(this.props.clippingRect);
+                this.setViewBox(clippingRect);
                 this.triggerLoadEvent();
             }).catch((err) => {
                 this.triggerErrorEvent(err);
@@ -146,39 +139,39 @@ module.exports = React.createClass({
             this.setViewBox();
             return Promise.resolve();
         }
-    },
+    }
 
     /**
      * Remove all elements from SVG graphic element
      */
-    clear: function() {
-        var svg = this.components.svg;
+    clear() {
+        let { svg } = this.components;
         while (svg.firstChild) {
             svg.removeChild(svg.firstChild);
         }
-    },
+    }
 
     /**
      * Add title to SVG element
      *
      * @param  {String} title
      */
-    addTitle: function(title) {
-        var svg = this.components.svg;
+    addTitle(title) {
+        let { svg } = this.components;
         if (title && svg) {
-            var child = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+            let child = document.createElementNS('http://www.w3.org/2000/svg', 'title');
             child.textContent = title;
             svg.appendChild(child);
         }
-    },
+    }
 
     /**
      * Change title of SVG
      *
      * @param  {String} title
      */
-    setTitle: function(title) {
-        var child = svg.getElementByTagName('title');
+    setTitle(title) {
+        let child = svg.getElementByTagName('title');
         if (child) {
             if (title) {
                 child.textContent = title;
@@ -188,14 +181,15 @@ module.exports = React.createClass({
         } else {
             this.addTitle(title);
         }
-    },
+    }
 
     /**
      * Set view box of SVG graphic element
      *
      * @param {Object} clip
      */
-    setViewBox: function(clip) {
+    setViewBox(clip) {
+        let { svg } = this.components;
         if (!clip) {
             clip = {
                 left: 0,
@@ -204,15 +198,31 @@ module.exports = React.createClass({
                 height: this.naturalHeight,
             };
         }
-        var svg = this.components.svg;
-        var viewBox = svg.viewBox.baseVal;
-        var width = svg.width.baseVal;
-        var height = svg.height.baseVal;
+        let viewBox = svg.viewBox.baseVal;
+        let width = svg.width.baseVal;
+        let height = svg.height.baseVal;
         viewBox.x = clip.left * this.zoomX + this.originX;
         viewBox.y = clip.top * this.zoomX + this.originY;
         viewBox.width = clip.width * this.zoomX;
         viewBox.height = clip.height * this.zoomY;
         width.value = clip.width;
         height.value = clip.height;
-    },
-});
+    }
+}
+
+export {
+    VectorView as default,
+    VectorView,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    VectorView.propTypes = {
+        url: PropTypes.string,
+        clippingRect: PropTypes.object,
+        title: PropTypes.string,
+        onLoad: PropTypes.func,
+        onError: PropTypes.func,
+    };
+}

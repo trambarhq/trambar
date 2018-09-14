@@ -1,9 +1,3 @@
-
-module.exports = {
-    centerSquare,
-    default: centerSquare,
-};
-
 /**
  * Return a square cropping rect that's centered on the image
  *
@@ -13,8 +7,8 @@ module.exports = {
  * @return {Object}
  */
 function centerSquare(width, height) {
-    var left = 0, top = 0;
-    var length = Math.min(width, height);
+    let left = 0, top = 0;
+    let length = Math.min(width, height);
     if (width > length) {
         left = Math.floor((width - length) / 2);
     } else if (height > length) {
@@ -22,3 +16,10 @@ function centerSquare(width, height) {
     }
     return { left, top, width: length, height: length };
 }
+
+exports.centerSquare = exports.default = centerSquare;
+
+
+export {
+    exports as default,
+};
