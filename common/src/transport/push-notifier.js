@@ -23,10 +23,10 @@ var defaultOptions = {
 class PushNotifier extends EventEmitter {
     constructor(options) {
         super();
-        this.currentNotificationId = null;
+        this.currentNotificationID = null;
         this.searchEndTimeout = null;
         this.backgroundTaskTimeout = null;
-        this.registrationId = null;
+        this.registrationID = null;
         this.registrationType = null;
         this.pushRelayResponse = null;
         this.recentMessages = [];
@@ -53,7 +53,7 @@ class PushNotifier extends EventEmitter {
         pushNotification.on('error', this.handleError);
 
 
-        if (cordova.platformId === 'windows') {
+        if (cordova.platformID === 'windows') {
             document.addEventListener('activated', this.handleActivation);
         }
     }
@@ -64,7 +64,7 @@ class PushNotifier extends EventEmitter {
             pushNotification.off('notification', this.handleNotification);
             pushNotification.off('error', this.handleError);
         }
-        if (cordova.platformId === 'windows') {
+        if (cordova.platformID === 'windows') {
             document.removeEventListener('activated', this.handleActivation);
         }
     }
@@ -74,14 +74,14 @@ class PushNotifier extends EventEmitter {
      *
      * @param  {String} relayAddress
      * @param  {String} serverAddress
-     * @param  {String} registrationId
+     * @param  {String} registrationID
      * @param  {String} registrationType
      *
      * @return {Boolean}
      */
-    register(relayAddress, serverAddress, registrationId, registrationType) {
+    register(relayAddress, serverAddress, registrationID, registrationType) {
         // track registration attempt with an object
-        var attempt = { relayAddress, serverAddress, registrationId, registrationType };
+        var attempt = { relayAddress, serverAddress, registrationID, registrationType };
         if (_.isEqual(this.registrationAttempt, attempt)) {
             // already connecting to server
             return this.registrationAttempt.promise;
@@ -101,7 +101,7 @@ class PushNotifier extends EventEmitter {
             var details = getDeviceDetails();
             var payload = {
                 network: registrationType,
-                registration_id: registrationId,
+                registration_id: registrationID,
                 details: details,
                 address: serverAddress,
             };
@@ -168,7 +168,7 @@ class PushNotifier extends EventEmitter {
      * @param  {Object} data
      */
     handleRegistration = (data) => {
-        var id = data.registrationId;
+        var id = data.registrationID;
         var type = _.toLower(data.registrationType);
         if (!type) {
             // the type is missing for WNS
@@ -180,7 +180,7 @@ class PushNotifier extends EventEmitter {
             if (type === 'apns' && debug) {
                 type += '-sb';  // use sandbox
             }
-            this.setState({ registrationId: id, registrationType: type });
+            this.setState({ registrationID: id, registrationType: type });
         });
     }
 
@@ -198,7 +198,7 @@ class PushNotifier extends EventEmitter {
     }
 
     getNotificationHandler() {
-        if (cordova.platformId === 'android' || cordova.platformId === 'ios') {
+        if (cordova.platformID === 'android' || cordova.platformID === 'ios') {
             var payload = data.additionalData;
             var notification = NotificationUnpacker.unpack(payload) || {};
             if (notification.type === 'change') {
@@ -215,8 +215,8 @@ class PushNotifier extends EventEmitter {
             if (data.count !== undefined) {
                 setApplicationIconBadgeNumber(data.count);
             }
-            signalBackgroundTaskCompletion(notId);
-        } else if (cordova.platformId === 'windows') {
+            signalBackgroundTaskCompletion(notID);
+        } else if (cordova.platformID === 'windows') {
             var notification;
             if (data.launchArgs) {
                 // notification is clicked while app isn't running
@@ -321,19 +321,19 @@ function parseJSON(text) {
     }
 }
 
-function signalBackgroundTaskCompletion(notId) {
+function signalBackgroundTaskCompletion(notID) {
     if (pushNotification) {
-        if (cordova.platformId === 'ios') {
+        if (cordova.platformID === 'ios') {
             var success = () => {};
             var failure = () => {};
-            pushNotification.finish(success, failure, notId);
+            pushNotification.finish(success, failure, notID);
         }
     }
 }
 
 function setApplicationIconBadgeNumber(count) {
     if (pushNotification) {
-        if (cordova.platformId === 'android' || cordova.platformId === 'ios') {
+        if (cordova.platformID === 'android' || cordova.platformID === 'ios') {
             var success = () => {};
             var failure = () => {};
             pushNotification.setApplicationIconBadgeNumber(success, failure, count);

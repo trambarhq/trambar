@@ -37,7 +37,7 @@ class Payloads {
      * @return {Promise}
      */
     abandon(object) {
-        var ids = getPayloadIds(object);
+        var ids = getPayloadIDs(object);
         return this.payloadManager.abandon(ids);
     }
 
@@ -49,7 +49,7 @@ class Payloads {
      * @return {Promise}
      */
     dispatch(object) {
-        var ids = getPayloadIds(object);
+        var ids = getPayloadIDs(object);
         return this.payloadManager.dispatch(ids);
     }
 
@@ -61,7 +61,7 @@ class Payloads {
      * @return {Object|null}
      */
     inquire(object) {
-        var ids = getPayloadIds(object);
+        var ids = getPayloadIDs(object);
         return this.payloadManager.inquire(ids, this.destination);
     }
 
@@ -89,19 +89,19 @@ class Payloads {
     }
 }
 
-function getPayloadIds(object) {
+function getPayloadIDs(object) {
     var ids = [];
     if (object) {
         var details = object.details;
         if (details) {
             if (details.resources) {
                 _.each(details.resources, (res) => {
-                    if (res.payload_id) {
-                        ids.push(res.payload_id);
+                    if (res.payload_token) {
+                        ids.push(res.payload_token);
                     }
                 });
-            } else if (details.payload_id) {
-                ids.push(details.payload_id);
+            } else if (details.payload_token) {
+                ids.push(details.payload_token);
             }
         }
     }

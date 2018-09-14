@@ -64,12 +64,10 @@ class Application extends PureComponent {
             localeManager,
         } = this.props;
         let { address } = routeManager.context;
-        let { schema } = routeManager.params;
-        let context = { address, schema };
         let locale = new Locale(localeManager);
         this.state = {
-            database: new Database(dataSource, context),
-            payloads: new Payloads(payloadManager),
+            database: new Database(dataSource, { address }),
+            payloads: new Payloads(payloadManager, { address, schema: 'global' }),
             route: new Route(routeManager),
             env: new Environment(envMonitor, { locale, address, widthDefinitions }),
 
@@ -189,11 +187,8 @@ class Application extends PureComponent {
      */
     handleDatabaseChange = (evt) => {
         let { route } = this.state;
-        let context = {
-            address: route.context.address,
-            schema: route.params.schema,
-        };
-        let database = new Database(evt.target, context);
+        let { address } = route.context;
+        let database = new Database(evt.target, { address });
         this.setState({ database });
     }
 
@@ -265,13 +260,15 @@ class Application extends PureComponent {
      * @param  {RelaksRouteManagerEvent} evt
      */
     handleRouteChange = (evt) => {
-        let { routeManager, dataSource } = this.props;
+        let { routeManager, dataSource, payloadManager } = this.props;
         let route = new Route(routeManager);
         let { address } = route.context;
         let { schema } = route.params;
-        let { database, env } = this.state;
-        if (address !== database.context.address || schema !== database.context.schema) {
-            database = new Database(dataSource, { address, schema });
+        let { database, payloads, env } = this.state;
+        if (address !== database.context.address) {
+            // change database and payloads the server address changes
+            database = new Database(dataSource, { address });
+            payloads = new Payloads(payloadManager, { address, schema: 'global' });
         }
         if (address !== env.address) {
             env = new Environment(envMonitor, { locale, address, widthDefinitions });

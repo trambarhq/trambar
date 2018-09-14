@@ -120,17 +120,17 @@ function limit(table, objects, criteria) {
             _.eachRight(objects, (object) => {
                 let keep = false;
                 if (object.hasOwnProperty('user_id')) {
-                    let userId = object.user_id;
-                    let count = countsByUser[userId] || 0;
+                    let userID = object.user_id;
+                    let count = countsByUser[userID] || 0;
                     if (count < limit) {
-                        countsByUser[userId] = count + 1;
+                        countsByUser[userID] = count + 1;
                         keep = true;
                     }
                 } else if (object.hasOwnProperty('user_ids')) {
-                    _.each(object.user_ids, (userId) => {
-                        let count = countsByUser[userId] || 0;
+                    _.each(object.user_ids, (userID) => {
+                        let count = countsByUser[userID] || 0;
                         if (count < limit) {
-                            countsByUser[userId] = count + 1;
+                            countsByUser[userID] = count + 1;
                             keep = true;
                         }
                     });

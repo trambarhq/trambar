@@ -29,14 +29,14 @@ function getAudioStream() {
 /**
  * Obtain an video stream, with audio
  *
- * @param  {Number|undefined} deviceId
+ * @param  {Number|undefined} deviceID
  *
  * @return {Promise<MediaStream>}
  */
-function getVideoStream(deviceId) {
+function getVideoStream(deviceID) {
     return Promise.try(() => {
         let constraints = {
-            video: (deviceId) ? { deviceId } : true,
+            video: (deviceID) ? { deviceID } : true,
             audio: true
         };
         return navigator.mediaDevices.getUserMedia(constraints);
@@ -46,14 +46,14 @@ function getVideoStream(deviceId) {
 /**
  * Obtain an audio stream
  *
- * @param  {Number|undefined} deviceId
+ * @param  {Number|undefined} deviceID
  *
  * @return {Promise<MediaStream>}
  */
-function getSilentVideoStream(deviceId) {
+function getSilentVideoStream(deviceID) {
     return Promise.try(() => {
         let constraints = {
-            video: (deviceId) ? { deviceId } : true
+            video: (deviceID) ? { deviceID } : true
         };
         return navigator.mediaDevices.getUserMedia(constraints);
     });

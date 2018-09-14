@@ -150,7 +150,6 @@ function start(cfg) {
         let file = part.blob || part.cordovaFile;
         if (file) {
             var url = `payload:${payload.id}/${part.name}`;
-            console.log(url);
             BlobManager.associate(file, url);
         }
     });
@@ -173,7 +172,7 @@ function start(cfg) {
             if (file) {
                 let { address } = destination;
                 let url = address + response.url;
-                console.log(url);
+                console.log(url + ' => (blob)');
                 BlobManager.associate(part.file, url);
             }
         }
@@ -296,25 +295,23 @@ function start(cfg) {
 
     function addPayloadTasks(destination, payloads) {
         let { address, schema } = destination;
-        let tasks = _.map(payloads, (payload) => {
-            // place the status of each part in the options column
-            let status = {}
-            _.each(payload.parts, (part) => {
-                status[part.name] = false;
+        return dataSource.start(destination).then((currentUserID) => {
+            let tasks = _.map(payloads, (payload) => {
+                // place the status of each part in the options column
+                let status = {}
+                _.each(payload.parts, (part) => {
+                    status[part.name] = false;
+                });
+                return {
+                    token: payload.id,
+                    action: `add-${payload.type}`,
+                    options: status,
+                    user_id: currentUserID,
+                };
             });
-            return {
-                token: payload.token,
-                action: `add-${payload.type}`,
-                options: status,
-                user_id: userId,
-            };
+            let location = { address, schema, table: 'task' };
+            return dataSource.save(location, tasks);
         });
-        let location = {
-            address,
-            schema,
-            table: 'task',
-        };
-        return dataSource.save(location, tasks);
     }
 
     function updateBackendProgress(destination, payloads) {

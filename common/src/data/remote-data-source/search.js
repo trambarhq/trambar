@@ -31,7 +31,7 @@ class Search extends Operation {
 
         // filter out bad values
         this.criteria = removeUndefined(this.criteria);
-        this.criteria = removeTemporaryIds(this.criteria);
+        this.criteria = removeTemporaryIDs(this.criteria);
     }
 
     /**
@@ -369,7 +369,7 @@ function removeUndefined(object) {
  *
  * @return {Object}
  */
-function removeTemporaryIds(criteria) {
+function removeTemporaryIDs(criteria) {
     return _.mapValues(criteria, (value, name) => {
         if (value instanceof Array) {
             if (/(^|_)ids?$/.test(name)) {

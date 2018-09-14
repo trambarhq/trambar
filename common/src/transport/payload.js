@@ -4,7 +4,7 @@ import CordovaFile from 'transport/cordova-file';
 class Payload {
     constructor(id, destination, type) {
         this.id = id;
-        this.destination;
+        this.destination = destination;
         this.type = type;
         this.processed = 0;
         this.parts = [];

@@ -60,10 +60,10 @@ function getOrientation(bytes) {
 					// look through the Exif tags
 					let tagCount = short(bytes[p++], bytes[p++]);
 					for (let i = 0; i < tagCount; i++) {
-						let tagId = short(bytes[p++], bytes[p++]);
+						let tagID = short(bytes[p++], bytes[p++]);
 						let tagType = short(bytes[p++], bytes[p++]);
 						let valueCount = long(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
-						if (tagId === 0x0112 && tagType === 3 && valueCount === 1) {
+						if (tagID === 0x0112 && tagType === 3 && valueCount === 1) {
 							return p;
 						} else {
 							p += 4;

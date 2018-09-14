@@ -378,8 +378,8 @@ describe('RemoteDataSource', function() {
             };
             let location = { address: session.address, schema: 'global' };
             dataSource.restoreSession(session);
-            return dataSource.start(location).then((userId) => {
-                expect(userId).to.equal(session.user_id);
+            return dataSource.start(location).then((userID) => {
+                expect(userID).to.equal(session.user_id);
             });
         })
         it('should reject with 401 Unauthorized error when there is no session', function() {

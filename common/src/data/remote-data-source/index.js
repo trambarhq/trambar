@@ -1050,8 +1050,8 @@ class RemoteDataSource extends EventEmitter {
                 return null;
             }
             // load the (possibly) new objects
-            let affectedIds = _.map(affectedObjects, 'id');
-            return this.retrieveRemoteObjects(change.location, affectedIds, true).then((remoteObjects) => {
+            let affectedIDs = _.map(affectedObjects, 'id');
+            return this.retrieveRemoteObjects(change.location, affectedIDs, true).then((remoteObjects) => {
                 _.each(affectedObjects, (own) => {
                     let their = _.find(remoteObjects, { id: own.id });
                     if (their) {
