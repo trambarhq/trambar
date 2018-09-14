@@ -162,6 +162,9 @@ function start(cfg) {
         } else {
             saveLocale(localeCode);
         }
+        // alert messages are language-specific, so we need to update the data
+        // subscription as well when the language changes
+        changeSubscription();
     });
     payloadManager.addEventListener('attachment', (evt) => {
         // associate file with payload id so we can find it again
@@ -276,7 +279,6 @@ function start(cfg) {
     }
 
     function changeNotification() {
-        console.log('changeNotification');
         let { address } = currentLocation;
         if (currentConnection.address === address) {
             return;
@@ -290,7 +292,6 @@ function start(cfg) {
     }
 
     function changeSubscription() {
-        console.log('changeSubscription');
         let { address, schema } = currentLocation;
         let watch = (cfg.notifier && cfg.notifier.global) ? '*' : schema;
         let { localeCode } = localeManager;
@@ -322,7 +323,7 @@ function start(cfg) {
             return;
         }
         dataSource.start(currentLocation).then((currentUserID) => {
-            debugger;
+            console.log('Updating data subscription');
             let { method, token, relay, details } = currentConnection;
             let record = {
                 user_id: currentUserID,
@@ -346,7 +347,6 @@ function start(cfg) {
             return dataSource.save(subscriptionLocation, [ record ]).get(0).then((record) => {
                 if (record) {
                     currentSubscription = { address, watch, record };
-                    console.log(currentSubscription);
                 }
             });
         });
