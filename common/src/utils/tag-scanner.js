@@ -1,10 +1,4 @@
-var _ = require('lodash');
-
-module.exports = {
-    findTags,
-    isTag,
-    removeTags,
-};
+import _ from 'lodash';
 
 /**
  * Find @name and #keyword tags
@@ -14,7 +8,7 @@ module.exports = {
  * @return {Array<String>}
  */
 function findTags(text) {
-    var tags;
+    let tags;
     if (typeof(text) === 'string') {
         text = removeURLs(text);
         text = removeEmails(text);
@@ -37,9 +31,9 @@ function removeTags(text) {
     return _.trim(String(text).replace(findRE, ''));
 }
 
-var pattern = `[@#][a-zA-Z][a-zA-Z0-9_\\-]*`;
-var findRE = new RegExp(`${pattern}`, 'g');
-var checkRE = new RegExp(`^${pattern}$`);
+let pattern = `[@#][a-zA-Z][a-zA-Z0-9_\\-]*`;
+let findRE = new RegExp(`${pattern}`, 'g');
+let checkRE = new RegExp(`^${pattern}$`);
 
 function removeURLs(text) {
     return text.replace(/https?:\/\/\S+/g, '');
@@ -48,3 +42,10 @@ function removeURLs(text) {
 function removeEmails(text) {
     return text.replace(/\w+@\w+.\w+/g, '');
 }
+
+export {
+    findTags,
+    isTag,
+    removeTags,
+    exports as default,
+};

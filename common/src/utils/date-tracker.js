@@ -1,15 +1,7 @@
-var _ = require('lodash');
-var Moment = require('moment');
+import _ from 'lodash';
+import Moment from 'moment';
 
-module.exports = exports = {
-    addEventListener,
-    removeEventListener,
-    setLocale,
-
-    today: undefined,
-};
-
-var dateTransforms = {
+const dateTransforms = {
     today: (m) => {
         return m.startOf('day');
     },
@@ -58,7 +50,7 @@ var dateTransforms = {
     },
 };
 
-var listeners = [];
+let listeners = [];
 
 function addEventListener(type, f) {
     if (type === 'change' && f) {
@@ -72,7 +64,7 @@ function removeEventListener(type, f) {
     }
 }
 
-var currentLocale = '';
+let currentLocale = '';
 
 /**
  * Set the locale, used for determining what's the first day of the week
@@ -99,12 +91,12 @@ function format(m) {
  * @return {Boolean}
  */
 function updateRelativeDates(m) {
-    var changed = false;
+    let changed = false;
     _.each(dateTransforms, (f, name) => {
-        var r = f(m.clone());
-        var before = exports[name];
+        let r = f(m.clone());
+        let before = exports[name];
         if (r) {
-            var after = format(r);
+            let after = format(r);
             if (before !== after) {
                 exports[name] = after;
                 exports[name + 'ISO'] = r.toISOString();
@@ -115,13 +107,16 @@ function updateRelativeDates(m) {
     return changed;
 }
 
+let today;
+
 /**
  * Update what today is if a change-over has occurred
  */
 function update() {
-    var now = Moment();
-    var today = format(now);
-    if (today !== exports.today) {
+    let now = Moment();
+    let date = format(now);
+    if (today !== date) {
+        today = date;
         updateRelativeDates(now);
         triggerChangeEvent();
     }
@@ -131,7 +126,7 @@ function update() {
  * Inform listeners that the date has changed
  */
 function triggerChangeEvent() {
-    var evt = {
+    let evt = {
         type: 'change',
         target: exports,
     };
@@ -142,3 +137,10 @@ function triggerChangeEvent() {
 
 setInterval(update, 1000);
 update();
+
+exports {
+    addEventListener,
+    removeEventListener,
+    setLocale,
+    exports as default,
+};

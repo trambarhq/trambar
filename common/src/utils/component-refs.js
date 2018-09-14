@@ -1,15 +1,12 @@
-var _ = require('lodash');
-
-module.exports = ComponentRefs;
-
 function ComponentRefs(specs) {
     if (!this) {
         return new ComponentRefs(specs);
     }
-    var refs = this;
-    var setters = {};
-    _.forIn(specs, (propType, name) => {
-        var f = function(value) {
+    let refs = this;
+    let setters = {};
+    for (let name in specs) {
+        let type = specs[name];
+        let f = function(value) {
             if (arguments.length > 0) {
                 refs[name] = value;
             } else {
@@ -17,9 +14,12 @@ function ComponentRefs(specs) {
             }
         }
         setters[name] = f;
-    });
-    this.setters = setters;
-    _.forIn(specs, (type, name) => {
         refs[name] = null;
-    });
+    };
+    this.setters = setters;    
 }
+
+export {
+    ComponentRefs as default,
+    ComponentRefs,
+};

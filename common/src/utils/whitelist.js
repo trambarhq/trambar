@@ -1,8 +1,4 @@
-var _ = require('lodash');
-
-module.exports = {
-    match,
-};
+import _ from 'lodash';
 
 /**
  * Return true if a email address matches an item on a whitelist
@@ -13,15 +9,15 @@ module.exports = {
  * @return {Boolean}
  */
 function match(email, whitelist) {
-    var items = _.split(_.trim(whitelist), /\s*\n\s*/);
-    var emailParts = _.split(email, '@');
-    var name = emailParts[0];
-    var domain = emailParts[1];
+    let items = _.split(_.trim(whitelist), /\s*\n\s*/);
+    let emailParts = _.split(email, '@');
+    let name = emailParts[0];
+    let domain = emailParts[1];
     return _.some(items, (item) => {
         if (/^#/.test(item)) {
             return;
         }
-        var permitted = _.split(item, '@');
+        let permitted = _.split(item, '@');
         if (permitted.length === 1) {
             if (domain === permitted[0]) {
                 return true;
@@ -33,3 +29,8 @@ function match(email, whitelist) {
         }
     });
 }
+
+export {
+    match,
+    exports as default,
+};

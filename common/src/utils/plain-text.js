@@ -1,17 +1,8 @@
-var _ = require('lodash');
-var React = require('react');
-var EmojiRegex = require('emoji-regex');
-var ReactEasyEmoji = require('react-easy-emoji');
-var ListParser = require('utils/list-parser');
-
-module.exports = {
-    renderSurvey,
-    renderSurveyResults,
-    renderTaskList,
-    renderEmoji,
-    findEmoji,
-    hasEmojiSupport,
-};
+import _ from 'lodash';
+import React from 'react';
+import EmojiRegex from 'emoji-regex';
+import ReactEasyEmoji from 'react-easy-emoji';
+import ListParser from 'utils/list-parser';
 
 /**
  * Render text containing a survey
@@ -23,15 +14,15 @@ module.exports = {
  * @return {Array<String|ReactElement>}
  */
 function renderSurvey(text, answers, onChange) {
-    var listTokens = ListParser.extract(text);
+    let listTokens = ListParser.extract(text);
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
             return _.map(listToken, (item, key) => {
-                var checked = item.checked;
+                let checked = item.checked;
                 if (answers) {
                     // override radio-button state indicated in text
                     // with set-but-not-yet-saved value
-                    var answer = answers[item.list];
+                    let answer = answers[item.list];
                     if (answer !== undefined) {
                         checked = (item.key == answer);
                     }
@@ -64,16 +55,16 @@ function renderSurvey(text, answers, onChange) {
  * @return {Array<String|ReactElement>}
  */
 function renderSurveyResults(text, voteCounts) {
-    var listTokens = ListParser.extract(text);
+    let listTokens = ListParser.extract(text);
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
             return _.map(listToken, (item, key) => {
-                var tally = voteCounts[item.list];
-                var total = _.get(tally, 'total', 0);
-                var count = _.get(tally, [ 'answers', item.key ], 0);
-                var percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
-                var color = `color-${item.key % 12}`;
-                var className = 'vote-count';
+                let tally = voteCounts[item.list];
+                let total = _.get(tally, 'total', 0);
+                let count = _.get(tally, [ 'answers', item.key ], 0);
+                let percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
+                let color = `color-${item.key % 12}`;
+                let className = 'vote-count';
                 if (count === total) {
                     className += ' unanimous';
                 }
@@ -109,17 +100,17 @@ function renderSurveyResults(text, voteCounts) {
  * @return {Array<String|ReactElement>}
  */
 function renderTaskList(text, answers, onChange) {
-    var listTokens = ListParser.extract(text);
+    let listTokens = ListParser.extract(text);
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
             return _.map(listToken, (item, key) => {
-                var checked = item.checked;
+                let checked = item.checked;
                 if (answers) {
                     // override checkbox/radio-button state indicated in text
                     // with set-but-not-yet-saved value
-                    var answer = answers[item.list];
+                    let answer = answers[item.list];
                     if (answer !== undefined) {
-                        var selected = answer[item.key];
+                        let selected = answer[item.key];
                         if (selected !== undefined) {
                             checked = selected;
                         }
@@ -144,7 +135,7 @@ function renderTaskList(text, answers, onChange) {
     });
 }
 
-var needEmojiHandling = !hasEmojiSupport();
+let needEmojiHandling = !hasEmojiSupport();
 
 /**
  * Render text that might contain emojis unsupported by browser
@@ -159,11 +150,11 @@ function renderEmoji(text, options) {
         return [ text ];
     }
     // use custom function so we can add prefix to key
-    var parentKey = _.get(options, 'key');
+    let parentKey = _.get(options, 'key');
     return ReactEasyEmoji(text, renderEmojiImage.bind(null, parentKey));
 }
 
-var emojiStyle = {
+let emojiStyle = {
 	height: '1em',
 	width: '1em',
 	margin: '0 .05em 0 .1em',
@@ -171,8 +162,8 @@ var emojiStyle = {
 };
 
 function renderEmojiImage(parentKey, code, string, characterKey) {
-    var key = (parentKey !== undefined) ? `${parentKey}.${characterKey}` : characterKey;
-    var src = `https://twemoji.maxcdn.com/2/72x72/${code}.png`;
+    let key = (parentKey !== undefined) ? `${parentKey}.${characterKey}` : characterKey;
+    let src = `https://twemoji.maxcdn.com/2/72x72/${code}.png`;
     return <img key={key} alt={string} draggable={false} src={src} style={emojiStyle} />;
 }
 
@@ -182,23 +173,23 @@ function renderEmojiImage(parentKey, code, string, characterKey) {
  * @return {Boolean}
  */
 function hasEmojiSupport() {
-    var canvas = document.createElement('canvas');
+    let canvas = document.createElement('canvas');
     if (!canvas.getContext) {
         return false;
     }
-    var context = canvas.getContext('2d');
+    let context = canvas.getContext('2d');
     if (!context.fillText) {
         return false;
     }
-    var smile = '\ud83d\ude03';
+    let smile = '\ud83d\ude03';
     context.textBaseline = "top";
     context.font = "32px Arial";
     context.fillText(smile, 0, 0);
-    var pixels = context.getImageData(16, 16, 1, 1).data;
+    let pixels = context.getImageData(16, 16, 1, 1).data;
     return pixels[0] !== 0;
 }
 
-var emojiRegex;
+let emojiRegex;
 
 function findEmoji(string) {
     if (typeof(string) !== 'string') {
@@ -207,6 +198,16 @@ function findEmoji(string) {
     if (!emojiRegex) {
         emojiRegex = EmojiRegex();
     }
-    var m = string.match(emojiRegex);
+    let m = string.match(emojiRegex);
     return m;
 }
+
+export {
+    renderSurvey,
+    renderSurveyResults,
+    renderTaskList,
+    renderEmoji,
+    findEmoji,
+    hasEmojiSupport,
+    exports as default
+};

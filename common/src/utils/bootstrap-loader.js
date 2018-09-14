@@ -1,17 +1,13 @@
-module.exports = {
-    load
-};
-
 function load(importFuncs, progress) {
     return new Promise((resolve, reject) => {
-        var keys = Object.keys(importFuncs);
-        var modules = {};
-        var loaded = 0;
+        let keys = Object.keys(importFuncs);
+        let modules = {};
+        let loaded = 0;
         if (progress) {
             progress(loaded, keys.length);
         }
         keys.forEach((key) => {
-            var load = importFuncs[key];
+            let load = importFuncs[key];
             load().then((module) => {
                 modules[key] = module;
                 loaded++;
@@ -30,3 +26,8 @@ function load(importFuncs, progress) {
         });
     });
 }
+
+export {
+    load,
+    exports as default
+};

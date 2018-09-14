@@ -1,11 +1,6 @@
-var _ = require('lodash');
+import _ from 'lodash';
 
-module.exports = {
-    addListener,
-    removeListener,
-};
-
-var listeners = [];
+let listeners = [];
 
 function addListener(listener) {
     listeners.push(listener);
@@ -21,8 +16,8 @@ function removeListener(listener) {
     }
 }
 
-var correctSequence = [ 38, 38, 40, 40, 37, 39, 37, 39, 66, 65 ];
-var currentSequence = [];
+const correctSequence = [ 38, 38, 40, 40, 37, 39, 37, 39, 66, 65 ];
+let currentSequence = [];
 
 function handleKeydown(evt) {
     currentSequence.push(evt.keyCode);
@@ -38,3 +33,9 @@ function handleKeydown(evt) {
         });
     }
 }
+
+export {
+    addListener,
+    removeListener,
+    exports as default
+};

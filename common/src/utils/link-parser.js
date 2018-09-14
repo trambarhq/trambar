@@ -1,8 +1,4 @@
-var _ = require('lodash');
-
-module.exports = {
-    parse,
-};
+import _ from 'lodash';
 
 /**
  * Parse contents of a .ini file for properties of web bookmark
@@ -26,3 +22,8 @@ function parse(text) {
     console.log(props);
     return (props.url) ? props : null;
 }
+
+export {
+    parse,
+    exports as default
+};
