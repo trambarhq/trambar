@@ -3,7 +3,7 @@ import Promise from 'bluebird';
 import React from 'react';
 import Moment from 'moment';
 import Async from 'async-do-while';
-import EventEmitter, { GenericEvent } from 'utils/event-emitter';
+import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 import ManualPromise from 'utils/manual-promise';
 import HTTPRequest from 'transport/http-request';
 import HTTPError from 'errors/http-error';

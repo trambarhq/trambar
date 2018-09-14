@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import Moment from 'moment';
+import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 import BlobStream from 'transport/blob-stream';
 import Payload from 'transport/payload';
 import HTTPRequest from 'transport/http-request';
@@ -10,7 +11,6 @@ import RandomToken from 'utils/random-token';
 import HTTPError from 'errors/http-error';
 import FileError from 'errors/file-error';
 import Async from 'async-do-while';
-import EventEmitter, { GenericEvent } from 'utils/event-emitter';
 
 const defaultOptions = {
     uploadURL: null,

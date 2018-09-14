@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import EventEmitter, { GenericEvent } from 'utils/event-emitter';
+import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 
 const defaultOptions = {
     defaultLocale: 'en-US',

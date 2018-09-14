@@ -2,9 +2,9 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import Moment from 'moment';
 import Async from 'async-do-while';
+import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 import HTTPRequest from 'transport/http-request';
 import NotificationUnpacker from 'transport/notification-unpacker';
-import EventEmitter, { GenericEvent } from 'utils/event-emitter';
 
 var defaultOptions = {
     initialReconnectionDelay: 500,

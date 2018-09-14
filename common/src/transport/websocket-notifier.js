@@ -2,8 +2,8 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import SockJS from 'sockjs-client';
 import Async from 'async-do-while';
+import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 import NotificationUnpacker from 'transport/notification-unpacker';
-import EventEmitter, { GenericEvent } from 'utils/event-emitter';
 
 import Locale from 'locale/locale';
 

@@ -9,7 +9,6 @@
     "test": "./node_modules/karma/bin/karma start --single-run --",
     "test:start": "./node_modules/karma/bin/karma start --"
   },
-  "dependencies": {},
   "devDependencies": {
     "async-do-while": "0.0.3",
     "b64-to-blob": "^1.2.19",
@@ -55,6 +54,7 @@
     "react-dom": "~15.4.0",
     "react-easy-emoji": "^1.1.0",
     "relaks": "^1.1.1",
+    "relaks-event-emitter": "0.0.1",
     "relaks-route-manager": "0.0.5",
     "sass-loader": "^6.0.6",
     "setimmediate": "^1.0.5",
