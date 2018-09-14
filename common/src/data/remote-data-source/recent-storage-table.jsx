@@ -1,16 +1,14 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-module.exports = RecentStorageTable;
+import _ from 'lodash';
+import React from 'react';
 
 function RecentStorageTable(props) {
-    var remoteStores = _.filter(props.stores, (store) => {
+    let remoteStores = _.filter(props.stores, (store) => {
         return store.schema !== 'local';
     });
-    var renderRow = (store, index) => {
-        var time = (store.duration) ? store.duration + 'ms' : '';
-        var criteriaJSON1 = JSON.stringify(store.results, undefined, 4);
-        var criteriaJSON2 = JSON.stringify(store.results);
+    let renderRow = (store, index) => {
+        let time = (store.duration) ? store.duration + 'ms' : '';
+        let criteriaJSON1 = JSON.stringify(store.results, undefined, 4);
+        let criteriaJSON2 = JSON.stringify(store.results);
         return (
             <tr key={index}>
                 <td className="time">{time}</td>
@@ -40,3 +38,8 @@ function RecentStorageTable(props) {
         </table>
     );
 }
+
+export {
+    RecentStorageTable as default,
+    RecentStorageTable,
+};

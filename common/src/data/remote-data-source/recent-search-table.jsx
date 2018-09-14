@@ -1,5 +1,5 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import React from 'react', PropTypes = React.PropTypes;
 
 module.exports = RecentSearchTable;
 
