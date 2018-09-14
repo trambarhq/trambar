@@ -173,8 +173,7 @@ class Application extends PureComponent {
             notifier,
         } = this.props;
         dataSource.addEventListener('change', this.handleDatabaseChange);
-        dataSource.addEventListener('authenication', this.handleAuthentication);
-        dataSource.addEventListener('authorization', this.handleAuthorization);
+        routeManager.addEventListener('beforechange', this.handleRouteBeforeChange, true);
         routeManager.addEventListener('change', this.handleRouteChange);
         payloadManager.addEventListener('change', this.handlePayloadsChange);
         envMonitor.addEventListener('change', this.handleEnvironmentChange);
@@ -186,7 +185,7 @@ class Application extends PureComponent {
     /**
      * Called when the database queries might yield new results
      *
-     * @param  {Object} evt
+     * @param  {RemoteDataSourceEvent} evt
      */
     handleDatabaseChange = (evt) => {
         let { route } = this.state;
@@ -199,30 +198,9 @@ class Application extends PureComponent {
     }
 
     /**
-     * Called when sign-in is necessary
-     *
-     * @param  {Object} evt
-     */
-    handleAuthentication = (evt) => {
-        this.setState({ authenticating: true });
-    }
-
-    handleAuthorization = (evt) => {
-        this.setState({ authenticating: false });
-    }
-
-    /**
-     * Called if a data query fails to yield the required object
-     *
-     * @param  {Object} evt
-     */
-    handleStupefaction = (evt) => {
-    }
-
-    /**
      * Called when upload payloads changes
      *
-     * @param  {Object} evt
+     * @param  {PayloadManagerEvent} evt
      */
     handlePayloadsChange = (evt) => {
         let { showingUploadProgress } = this.state;
@@ -237,7 +215,7 @@ class Application extends PureComponent {
     /**
      * Called when the locale changes
      *
-     * @param  {Object} evt
+     * @param  {LocaleManagerEvent} evt
      */
     handleLocaleChange = (evt) => {
         let { envMonitor, localeManager, routeManager } = this.props;
@@ -251,7 +229,7 @@ class Application extends PureComponent {
     /**
      * Called when the locale changes
      *
-     * @param  {Object} evt
+     * @param  {EnvironmentMonitorEvent} evt
      */
     handleEnvironmentChange = (evt) => {
         let { envMonitor, routeManager } = this.props;
@@ -262,9 +240,29 @@ class Application extends PureComponent {
     }
 
     /**
+     * Called before a route change occurs
+     *
+     * @param  {RelaksRouteManagerEvent} evt
+     */
+    handleRouteBeforeChange = (evt) => {
+        let { route } = this.state;
+        if (!_.isEmpty(route.callbacks)) {
+            // postpone the route change until each callbacks has been called;
+            // if one returns false, then cancel the change
+            let promise = Promise.reduce(route.callbacks, (proceed, callback) => {
+                if (proceed === false) {
+                    return false;
+                }
+                return callback();
+            }, true);
+            evt.postponeDefault(promise);
+        }
+    }
+
+    /**
      * Called when the route changes
      *
-     * @param  {Object} evt
+     * @param  {RelaksRouteManagerEvent} evt
      */
     handleRouteChange = (evt) => {
         let { routeManager, dataSource } = this.props;

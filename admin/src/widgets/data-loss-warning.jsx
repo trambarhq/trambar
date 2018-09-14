@@ -50,7 +50,7 @@ class DataLossWarning extends PureComponent {
      *
      * @return {Promise<Boolean>}
      */
-    confirmRouteChange() {
+    confirmRouteChange = () => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;

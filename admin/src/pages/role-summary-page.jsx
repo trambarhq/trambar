@@ -126,7 +126,7 @@ class RoleSummaryPageSync extends PureComponent {
         let { role } = this.props;
         let { addingUserIDs, removingUserIDs } = this.state;
         let newRole = this.getRole('current');
-        let newRoleAfter = _.decoupleSet(role, path, value);
+        let newRoleAfter = _.decoupleSet(newRole, path, value);
         if (path === 'details.title') {
             let autoNameBefore = SlugGenerator.fromTitle(newRole.details.title);
             let autoNameAfter = SlugGenerator.fromTitle(newRoleAfter.details.title);
