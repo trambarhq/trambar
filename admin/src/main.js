@@ -16,12 +16,12 @@ function initialize(evt) {
     }
     importFuncs['app'] = () => import('application' /* webpackChunkName: "app" */);
     BootstrapLoader.load(importFuncs, showProgress).then((modules) => {
-        let AppCore = modules['app-core'];
+        let AppCore = modules['app'].AppCore;
         let Application = modules['app'].default;
         let React = modules['react'];
         let ReactDOM = modules['react-dom'];
 
-        AppCore.start(Application.coreConfiguration).then((appProps) => {
+        AppCore(Application.coreConfiguration).then((appProps) => {
             let appElement = React.createElement(Application, appProps);
             ReactDOM.render(appElement, appContainer);
             hideSplashScreen();

@@ -348,5 +348,5 @@ function start(cfg) {
 }
 
 export {
-    start,
+    start as default,
 };

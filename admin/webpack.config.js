@@ -104,7 +104,12 @@ module.exports = {
                                 },
                             }
                         },
-                        'sass-loader',
+                        {
+                            loader: 'sass-loader',
+                            options: {
+                                includePaths: [ resolve('../common/node_modules') ]
+                            }
+                        }
                     ],
                 }),
             },
@@ -203,4 +208,29 @@ function resolve(path) {
     }
 }
 
-require('./webpack.resolve.js')(module.exports);
+function resolveBabel(type, module) {
+    if (module instanceof Array) {
+        module[0] = resolve(type, module[0]);
+        return module;
+    } else {
+        if (!/^[\w\-]+$/.test(module)) {
+            return module;
+        }
+        return Path.resolve(`../common/node_modules/babel-${type}-${module}`);
+    }
+}
+
+module.exports.module.rules.forEach((rule) => {
+    if (rule.loader === 'babel-loader' && rule.query) {
+        if (rule.query.presets) {
+            rule.query.presets = rule.query.presets.map((preset) => {
+                return resolveBabel('preset', preset);
+            })
+        }
+        if (rule.query.plugins) {
+            rule.query.plugins = rule.query.plugins.map((plugin) => {
+                return resolveBabel('plugin', plugin);
+            })
+        }
+    }
+});

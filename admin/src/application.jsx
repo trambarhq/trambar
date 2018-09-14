@@ -1,8 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import createClass from 'relaks/create-class';
+import AppCore from 'app-core';
 
 import ComponentRefs from 'utils/component-refs';
 import HTTPError from 'errors/http-error';
@@ -16,9 +15,6 @@ import Payloads from 'transport/payloads';
 import Locale from 'locale/locale';
 import Environment from 'env/environment';
 
-import SignInPage from 'pages/sign-in-page';
-import ErrorPage from 'pages/error-page';
-
 // widgets
 import SideNavigation from 'widgets/side-navigation';
 import TaskAlertBar from 'widgets/task-alert-bar';
@@ -26,9 +22,9 @@ import UploadProgress from 'widgets/upload-progress';
 
 import 'setimmediate';
 import 'utils/lodash-extra';
+import 'font-awesome-webpack';
 import 'application.scss';
 import 'colors.scss';
-import 'font-awesome-webpack';
 
 const widthDefinitions = {
     'narrow': 700,
@@ -302,8 +298,25 @@ class Application extends PureComponent {
 
 export {
     Application as default,
-    Application
+    Application,
+    AppCore,
 };
+
+// pull in modules here so they won't be placed in the JS files of the pages
+import 'chartist';
+import 'diff';
+import 'hammerjs';
+import 'mark-gor';
+import 'memoizee';
+import 'moment';
+import 'octicons';
+import 'sockjs-client';
+import 'react-dom';
+import 'relaks';
+
+// pull in all widgets and dialogs for the same reason
+require.context('widgets', true);
+require.context('dialogs', true);
 
 import EnvironmentMonitor from 'env/environment-monitor';
 import RouteManager from 'relaks-route-manager';
