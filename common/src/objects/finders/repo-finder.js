@@ -1,13 +1,6 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
-
-module.exports = {
-    findRepo,
-    findAllRepos,
-    findExistingRepos,
-    findProjectRepos,
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Empty from 'data/empty';
 
 /**
  * Find a repo by ID
@@ -101,3 +94,11 @@ function findProjectRepos(db, projects) {
         });
     }
 }
+
+export {
+    findRepo,
+    findAllRepos,
+    findExistingRepos,
+    findProjectRepos,
+    exports as default,
+};

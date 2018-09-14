@@ -1,15 +1,6 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
-
-module.exports = {
-    findProject,
-    findAllProjects,
-    findCurrentProject,
-    findActiveProjects,
-    findProjectsWithMembers,
-    findProjectLinks,
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Empty from 'data/empty';
 
 /**
  * Find project by ID
@@ -90,7 +81,7 @@ function findActiveProjects(db, minimum) {
  * @return {Promise<Array<Project>>}
  */
 function findProjectsWithMembers(db, users, minimum) {
-    var ids = _.map(users, 'id');
+    let ids = _.map(users, 'id');
     if (_.isEmpty(ids)) {
         return Promise.resolve(Empty.array);
     }
@@ -122,7 +113,7 @@ function findProjectLinks(db) {
             criteria: { key: link.address },
         }).then((record) => {
             if (record) {
-                var now = (new Date).toISOString();
+                let now = (new Date).toISOString();
                 if (now < record.etime) {
                     return true;
                 }
@@ -130,3 +121,13 @@ function findProjectLinks(db) {
         });
     });
 }
+
+export {
+    findProject,
+    findAllProjects,
+    findCurrentProject,
+    findActiveProjects,
+    findProjectsWithMembers,
+    findProjectLinks,
+    exports as default,
+};

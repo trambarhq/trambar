@@ -1,11 +1,6 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
-
-module.exports = {
-    findBookmarksByUser,
-    findBookmarksForUser,
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Empty from 'data/empty';
 
 /**
  * Find bookmarks created by a user
@@ -18,7 +13,7 @@ module.exports = {
  * @return {Promise<Array<Bookmark>>}
  */
 function findBookmarksByUser(db, user, stories, minimum) {
-    var storyIds = _.map(stories, 'id');
+    let storyIds = _.map(stories, 'id');
     storyIds = _.sortBy(_.uniq(storyIds));
     if (_.isEmpty(storyIds) || !user) {
         return Promise.resolve(Empty.array);
@@ -52,3 +47,9 @@ function findBookmarksForUser(db, user, minimum) {
         minimum
     });
 }
+
+export {
+    findBookmarksByUser,
+    findBookmarksForUser,
+    exports as default,
+};

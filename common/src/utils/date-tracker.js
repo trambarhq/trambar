@@ -138,7 +138,7 @@ function triggerChangeEvent() {
 setInterval(update, 1000);
 update();
 
-exports {
+export {
     addEventListener,
     removeEventListener,
     setLocale,

@@ -1,14 +1,8 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
-var DateTracker = require('utils/date-tracker');
-var DateUtils = require('utils/date-utils');
-
-module.exports = {
-    findNotificationsForUser,
-    findNotificationsForUserOnDate,
-    findNotificationsUnseenByUser
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Empty from 'data/empty';
+import DateTracker from 'utils/date-tracker';
+import DateUtils from 'utils/date-utils';
 
 /**
  * Find notifications intended for a user
@@ -82,3 +76,10 @@ function findNotificationsUnseenByUser(db, user, minimum) {
         minimum
     });
 }
+
+export {
+    findNotificationsForUser,
+    findNotificationsForUserOnDate,
+    findNotificationsUnseenByUser
+    exports as default,
+};
