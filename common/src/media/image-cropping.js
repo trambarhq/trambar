@@ -17,9 +17,8 @@ function centerSquare(width, height) {
     return { left, top, width: length, height: length };
 }
 
-exports.centerSquare = exports.default = centerSquare;
-
-
 export {
+    centerSquare,
+    centerSquare as apply,
     exports as default,
 };

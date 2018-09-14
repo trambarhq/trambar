@@ -400,7 +400,7 @@ function getClippingRect(res, params) {
         clip = params.clip;
     } else {
         if (!clip) {
-            clip = ImageCropping.default(res.width, res.height);
+            clip = ImageCropping.apply(res.width, res.height);
         }
     }
     return clip;

@@ -242,7 +242,7 @@ module.exports = React.createClass({
         var props = {
             ref: setters.imageCropper,
             url: this.state.fullImageURL,
-            clippingRect: res.clip || ImageCropping.default(res.width, res.height),
+            clippingRect: res.clip || ImageCropping.apply(res.width, res.height),
             vector: (res.format === 'svg'),
             disabled: this.props.disabled,
             onChange: this.handleClipRectChange,
