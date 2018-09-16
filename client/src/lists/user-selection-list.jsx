@@ -22,19 +22,25 @@ class UserSelectionList extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ by: this });
+        let {
+            database,
+            route,
+            env,
+            selection,
+            disabled,
+            onSelect,
+        } = this.props;
+        let db = database.use({ by: this });
         let props = {
             users: null,
 
-            selection: this.props.selection,
-            disabled: this.props.disabled,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            onSelect: this.props.onSelect,
+            selection,
+            disabled,
+            env,
+            onSelect,
         };
         meanwhile.show(<UserSelectionListSync {...props} />);
-        return db.start().then((currentUserId) => {
+        return db.start().then((currentUserID) => {
             return ProjectFinder.findCurrentProject(db).then((project) => {
                 return UserFinder.findProjectMembers(db, project).then((users) => {
                     props.users = users;
@@ -55,7 +61,8 @@ class UserSelectionListSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let users = sortUsers(this.props.users, this.props.locale);
+        let { env, users } = this.props;
+        users = sortUsers(users, env);
         return (
             <div className="user-selection-list">
                 {_.map(users, this.renderUser)}
@@ -69,12 +76,12 @@ class UserSelectionListSync extends PureComponent {
      * @return {ReactElement}
      */
     renderUser(user) {
+        let { env, selection, disabled } = this.props;
         let props = {
             user,
-            selected: _.includes(this.props.selection, user.id),
-            disabled: _.includes(this.props.disabled, user.id),
-            locale: this.props.locale,
-            theme: this.props.theme,
+            selected: _.includes(selection, user.id),
+            disabled: _.includes(disabled, user.id),
+            env,
             onClick: this.handleUserClick,
         };
         return <User key={user.id} {...props} />
@@ -86,8 +93,9 @@ class UserSelectionListSync extends PureComponent {
      * @param  {Array<Number>} selection
      */
     triggerSelectEvent(selection) {
-        if (this.props.onSelect) {
-            this.props.onSelect({
+        let { onSelect } = this.props;
+        if (onSelect) {
+            onSelect({
                 type: 'select',
                 target: this,
                 selection,
@@ -101,18 +109,19 @@ class UserSelectionListSync extends PureComponent {
      * @param  {Event} evt
      */
     handleUserClick = (evt) => {
-        let userId = parseInt(evt.currentTarget.getAttribute('data-user-id'));
-        let selection = this.props.selection;
-        if (_.includes(selection, userId)) {
-            selection = _.difference(selection, [ userId ]);
+        let { selection } = this.props;
+        let userID = parseInt(evt.currentTarget.getAttribute('data-user-id'));
+        if (_.includes(selection, userID)) {
+            selection = _.without(selection, userID);
         } else {
-            selection = _.union(selection, [ userId ]);
+            selection = _.concat(selection, userID);
         }
         this.triggerSelectEvent(selection);
     }
 }
 
 function User(props) {
+    let { user, env, disabled, onClick } = props;
     let classNames = [ 'user' ];
     if (props.selected) {
         classNames.push('selected');
@@ -120,15 +129,15 @@ function User(props) {
     if (props.disabled) {
         classNames.push('disabled');
     }
-    let name = UserUtils.getDisplayName(props.user, props.locale);
+    let name = UserUtils.getDisplayName(user, env);
     let containerProps = {
         className: classNames.join(' '),
-        'data-user-id': props.user.id,
-        onClick: !props.disabled ? props.onClick : null,
+        'data-user-id': user.id,
+        onClick: !disabled ? onClick : null,
     };
     let imageProps = {
-        user: props.user,
-        theme: props.theme,
+        user,
+        env,
         size: 'small',
     };
     return (
@@ -140,8 +149,8 @@ function User(props) {
     );
 }
 
-let sortUsers = Memoize(function(users, locale) {
-    let p = locale.pick;
+let sortUsers = Memoize(function(users, env) {
+    let { p } = env.locale;
     let name = (user) => {
         return p(user.details.name);
     };

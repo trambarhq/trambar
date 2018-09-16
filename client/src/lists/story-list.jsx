@@ -66,7 +66,7 @@ class StoryList extends AsyncComponent {
             env,
         };
         meanwhile.show(<StoryListSync {...props} />);
-        return db.start().then((currentUserId) => {
+        return db.start().then((currentUserID) => {
             // load repos first, so "add to issue tracker" option doesn't pop in
             // suddenly in triple-column mode
             return RepoFinder.findProjectRepos(db, props.project).then((repos) => {
@@ -115,7 +115,7 @@ class StoryListSync extends PureComponent {
             list: SmartList
         });
         this.state = {
-            hiddenStoryIds: [],
+            hiddenStoryIDs: [],
         };
     }
 
@@ -172,14 +172,15 @@ class StoryListSync extends PureComponent {
      * @return {ReactElement}
      */
     renderNewStoryAlert() {
-        let t = this.props.locale.translate;
-        let count = _.size(this.state.hiddenStoryIds);
-        let params = {
-            story: _.first(this.state.hiddenStoryIds)
-        };
+        let { route, env } = this.props;
+        let { hiddenStoryIDs } = this.state;
+        let { t } = env.locale;
+        let count = _.size(hiddenStoryIDs);
+        let url = route.find(route.name, {
+            highlightingStory: _.first(hiddenStoryIDs)
+        });
         let props = {
-            hash: StoryList.getHash(params),
-            route: this.props.route,
+            url,
             onClick: this.handleNewStoryAlertClick,
         };
         return (
@@ -201,9 +202,9 @@ class StoryListSync extends PureComponent {
             // look for temporary id
             let params = this.props.route.parameters;
             let location = { schema: params.schema, table: 'story' };
-            let temporaryId = this.props.database.findTemporaryID(location, evt.item.id);
-            if (temporaryId) {
-                return `story-${temporaryId}`;
+            let temporaryID = this.props.database.findTemporaryID(location, evt.item.id);
+            if (temporaryID) {
+                return `story-${temporaryID}`;
             }
         } else {
             if (this.props.acceptNewStory) {
@@ -334,8 +335,8 @@ class StoryListSync extends PureComponent {
      * @param  {Object} evt
      */
     handleStoryBeforeAnchor = (evt) => {
-        let hiddenStoryIds = _.map(evt.items, 'id');
-        this.setState({ hiddenStoryIds });
+        let hiddenStoryIDs = _.map(evt.items, 'id');
+        this.setState({ hiddenStoryIDs });
     }
 
     /**
@@ -344,7 +345,7 @@ class StoryListSync extends PureComponent {
      * @param  {Event} evt
      */
     handleNewStoryAlertClick = (evt) => {
-        this.setState({ hiddenStoryIds: [] });
+        this.setState({ hiddenStoryIDs: [] });
     }
 
     /**
@@ -415,8 +416,8 @@ let findReactions = Memoize(function(reactions, story) {
 let findAuthors = Memoize(function(users, story) {
     if (story) {
         let hash = _.keyBy(users, 'id');
-        let list = _.filter(_.map(story.user_ids, (userId) => {
-            return hash[userId];
+        let list = _.filter(_.map(story.user_ids, (userID) => {
+            return hash[userID];
         }));
         if (!_.isEmpty(list)) {
             return list;
@@ -426,10 +427,10 @@ let findAuthors = Memoize(function(users, story) {
 });
 
 let findRespondents = Memoize(function(users, reactions) {
-    let respondentIds = _.uniq(_.map(reactions, 'user_id'));
+    let respondentIDs = _.uniq(_.map(reactions, 'user_id'));
     let hash = _.keyBy(users, 'id');
-    let list = _.filter(_.map(respondentIds, (userId) => {
-        return hash[userId];
+    let list = _.filter(_.map(respondentIDs, (userID) => {
+        return hash[userID];
     }));
     if (!_.isEmpty(list)) {
         return list;
@@ -439,8 +440,8 @@ let findRespondents = Memoize(function(users, reactions) {
 
 let findRecommendations = Memoize(function(recommendations, story) {
     if (story) {
-        let storyId = story.published_version_id || story.id;
-        let list = _.filter(recommendations, { story_id: storyId });
+        let storyID = story.published_version_id || story.id;
+        let list = _.filter(recommendations, { story_id: storyID });
         if (!_.isEmpty(list)) {
             return list;
         }
@@ -458,9 +459,9 @@ let findRecipients = Memoize(function(recipients, recommendations) {
     return Empty.array;
 });
 
-function getAuthorIds(stories) {
-    let userIds = _.flatten(_.map(stories, 'user_ids'));
-    return _.uniq(userIds);
+function getAuthorIDs(stories) {
+    let userIDs = _.flatten(_.map(stories, 'user_ids'));
+    return _.uniq(userIDs);
 }
 
 StoryList.defaultProps = {

@@ -16,43 +16,8 @@ class ReactionList extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            hiddenReactionIds: [],
+            hiddenReactionIDs: [],
         };
-    }
-
-    /**
-     * Extract id from URL hash
-     *
-     * @param  {String} hash
-     *
-     * @return {Object}
-     */
-    static parseHash(hash) {
-        let reaction, highlighting;
-        if (reaction = Route.parseId(hash, /R(\d+)/)) {
-            highlighting = true;
-        } else if (reaction = Route.parseId(hash, /r(\d+)/)) {
-            highlighting = false;
-        }
-        return { reaction, highlighting };
-    }
-
-    /**
-     * Get URL hash based on given parameters
-     *
-     * @param  {Object} params
-     *
-     * @return {String}
-     */
-    static getHash(params) {
-        if (params.reaction != undefined) {
-            if (params.highlighting) {
-                return `R${params.reaction}`;
-            } else {
-                return `r${params.reaction}`;
-            }
-        }
-        return '';
     }
 
     /**
@@ -61,17 +26,13 @@ class ReactionList extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let reactions = sortReactions(this.props.reactions, this.props.currentUser);
-        let anchor;
-        let hashParams = ReactionList.parseHash(this.props.route.hash);
-        if (hashParams.reaction) {
-            anchor = `reaction-${hashParams.reaction}`;
-        }
+        let { route, reactions, currentUser } = this.props;
+        let reactionID = route.params.showingReaction || route.params.highlightingReaction;
         let props = {
-            items: reactions,
+            items: sortReactions(reactions, currentUser),
             behind: 5,
             ahead: 10,
-            anchor: anchor,
+            anchor: (reactionID) ? `reaction-${reactionID}` : undefined,
             offset: 4,
             inverted: true,
             fresh: false,
@@ -97,11 +58,11 @@ class ReactionList extends PureComponent {
      */
     handleReactionIdentity = (evt) => {
         if (evt.alternative) {
-            let params = this.props.route.parameters;
-            let location = { schema: params.schema, table: 'reaction' };
-            let temporaryId = this.props.database.findTemporaryID(location, evt.item.id);
-            if (temporaryId) {
-                return `reaction-${temporaryId}`;
+            let { database } = this.props;
+            let location = { table: 'reaction' };
+            let temporaryID = database.findTemporaryID(location, evt.item.id);
+            if (temporaryID) {
+                return `reaction-${temporaryID}`;
             }
         } else {
             return `reaction-${evt.item.id}`;
@@ -131,6 +92,18 @@ class ReactionList extends PureComponent {
      * @return {ReactElement}
      */
     handleReactionRender = (evt) => {
+        let {
+            database,
+            route,
+            payloads,
+            env,
+            currentUser,
+            story,
+            respondents,
+            repo,
+            access,
+            onFinish,
+        } = this.props;
         let reaction = evt.item;
         let isUserDraft = false;
         let isNewComment = false;
@@ -140,16 +113,15 @@ class ReactionList extends PureComponent {
             isNewComment = true;
         } else {
             if (!reaction.published) {
-                if (reaction.user_id === this.props.currentUser.id) {
+                if (reaction.user_id === currentUser.id) {
                     isUserDraft = true;
                     if (!reaction.ptime) {
                         isNewComment = true;
                     }
                 }
             }
-            let hashParams = ReactionList.parseHash(this.props.route.hash);
-            if (reaction.id === hashParams.reaction) {
-                highlighting = hashParams.highlighting;
+            if (reaction.id === route.params.highlightingReaction) {
+                highlighting = true;
             }
         }
         if (isUserDraft) {
@@ -159,30 +131,28 @@ class ReactionList extends PureComponent {
             let key = (isNewComment) ? 0 : reaction.id;
             let props = {
                 reaction,
-                story: this.props.story,
-                currentUser: this.props.currentUser,
-                database: this.props.database,
-                payloads: this.props.payloads,
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
-                onFinish: this.props.onFinish,
+                story,
+                currentUser,
+                database,
+                payloads,
+                route,
+                env,
+                onFinish,
             };
             return <ReactionEditor key={key} {...props} />
         } else {
-            let respondent = findRespondent(this.props.respondents, reaction);
+            let respondent = findRespondent(respondents, reaction);
             let props = {
-                access: this.props.access,
+                access,
                 highlighting,
                 reaction,
                 respondent,
-                story: this.props.story,
-                repo: this.props.repo,
-                currentUser: this.props.currentUser,
-                database: this.props.database,
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
+                story,
+                repo,
+                currentUser,
+                database,
+                route,
+                env,
             };
             return <ReactionView key={reaction.id} {...props} />
         }
@@ -194,8 +164,8 @@ class ReactionList extends PureComponent {
      * @param  {Object} evt
      */
     handleReactionBeforeAnchor = (evt) => {
-        let hiddenReactionIds = _.map(evt.items, 'id');
-        this.setState({ hiddenReactionIds });
+        let hiddenReactionIDs = _.map(evt.items, 'id');
+        this.setState({ hiddenReactionIDs });
     }
 }
 

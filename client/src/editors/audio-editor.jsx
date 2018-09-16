@@ -7,9 +7,8 @@ import DurationIndicator from 'widgets/duration-indicator';
 import './audio-editor.scss';
 
 function AudioEditor(props) {
-    let res = props.resource;
-    let duration = res.duration;
-    if (res.width && res.height) {
+    let { resource, duration } = props;
+    if (resource.width && resource.height) {
         return (
             <ImageEditor {...props}>
                 <div className="audio-duration">
@@ -38,4 +37,6 @@ export {
     AudioEditor,
 };
 
-AudioEditor.propTypes = ImageEditor.propTypes;
+if (process.env.NODE_ENV !== 'production') {
+    AudioEditor.propTypes = ImageEditor.propTypes;
+}

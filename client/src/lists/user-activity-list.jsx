@@ -3,12 +3,6 @@ import React, { PureComponent } from 'react';
 import Memoize from 'utils/memoize';
 import * as DateTracker from 'utils/date-tracker';
 
-import Route from 'routing/route';
-import Environment from 'env/environment';
-
-// mixins
-import UpdateCheck from 'mixins/update-check';
-
 // widgets
 import ProfileImage from 'widgets/profile-image';
 import Time from 'widgets/time';
@@ -24,8 +18,9 @@ class UserActivityList extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        if (this.props.stories) {
-            let stories = sortStories(this.props.stories);
+        let { stories, storyCountEstimate } = this.props;
+        if (stories) {
+            stories = sortStories(stories);
             return (
                 <div className="user-activity-list">
                 {
@@ -36,7 +31,7 @@ class UserActivityList extends PureComponent {
                 </div>
             );
         } else {
-            let indices = _.range(0, this.props.storyCountEstimate);
+            let indices = _.range(0, storyCountEstimate);
             return (
                 <div className="user-activity-list">
                 {
@@ -57,16 +52,11 @@ class UserActivityList extends PureComponent {
      * @return {ReactElement}
      */
     renderActivity(story) {
-        let route = this.props.route;
-        let components = [
-            require('pages/people-page'),
-            require('lists/story-list')
-        ];
-        let params = _.pick(route.parameters, 'schema', 'date', 'search');
-        params.user = this.props.user.id;
-        params.story = story.id;
-        params.highlighting = true;
-        let url = route.find(components, params);
+        let { route, env, user } = this.props;
+        let params = _.pick(route.params, 'schema', 'date', 'search');
+        params.user = user.id;
+        params.highlightingStory = story.id;
+        let url = route.find('person-page', params);
         let text = this.renderText(story);
         let labelClass = 'label';
         let time = story.btime || story.ptime;
@@ -75,7 +65,7 @@ class UserActivityList extends PureComponent {
         }
         return (
             <div key={story.id} className="activity">
-                <Time time={story.ptime} locale={this.props.locale} compact={true} />
+                <Time time={story.ptime} env={env} compact={true} />
                 <div className={labelClass}>
                     <a href={url}>{text}</a>
                 </div>
@@ -102,10 +92,11 @@ class UserActivityList extends PureComponent {
      * @return {String}
      */
     renderText(story) {
-        let t = this.props.locale.translate;
-        let n = this.props.locale.name;
-        let user = this.props.user;
-        let name = n(_.get(user, 'details.name'), _.get(user, 'details.gender'));
+        let { env, user } = this.props;
+        let { t, g } = env.locale;
+        let name = _.get(user, 'details.name');
+        let gender = _.get(user, 'details.gender');
+        g(name, gender);
         switch (story.type) {
             case 'push':
                 return t(`user-activity-$name-pushed-code`, name);
@@ -164,6 +155,9 @@ export {
     UserActivityList as default,
     UserActivityList,
 };
+
+import Route from 'routing/route';
+import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

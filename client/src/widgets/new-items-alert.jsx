@@ -105,10 +105,10 @@ class NewItemsAlertProxy extends PureComponent {
 }
 
 function NewItemsAlert(props) {
-    let url = _.replace(props.route.url, /#(.*)/, '');
+    let url = { props };
     let anchorProps = {
         className: `new-items-alert ${props.show ? 'show' : 'hide'}`,
-        href: url + '#' + props.hash,
+        href: url,
         onClick: props.onClick,
     };
     return (

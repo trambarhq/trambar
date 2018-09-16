@@ -2,7 +2,6 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import Memoize from 'utils/memoize';
-import Empty from 'data/empty';
 import * as DateTracker from 'utils/date-tracker';
 import * as DateUtils from 'utils/date-utils';
 
@@ -23,58 +22,19 @@ class UserList extends PureComponent {
     }
 
     /**
-     * Extract id from URL hash
-     *
-     * @param  {String} hash
-     *
-     * @return {Object}
-     */
-    static parseHash(hash) {
-            let user, highlighting;
-            if (user = Route.parseId(hash, /U(\d+)/)) {
-                highlighting = true;
-            } else if (user = Route.parseId(hash, /u(\d+)/)) {
-                highlighting = false;
-            }
-            return { user, highlighting };
-    }
-
-    /**
-     * Get URL hash based on given parameters
-     *
-     * @param  {Object} params
-     *
-     * @return {String}
-     */
-    static getHash(params) {
-        if (params.user) {
-            if (params.highlighting) {
-                return `U${params.user}`;
-            } else {
-                return `u${params.user}`;
-            }
-        }
-        return '';
-    }
-
-    /**
      * Render component
      *
      * @return {ReactElement}
      */
     render() {
-        let users = sortUsers(this.props.users, this.props.locale);
-        let anchor;
-        let hashParams = UserList.parseHash(this.props.route.hash);
-        if (hashParams.user) {
-            anchor = `user-${hashParams.user}`;
-        }
+        let { route, env, users } = this.props;
+        let userID = route.params.showingUser || route.params.highlightingUser;
         let smartListProps = {
-            items: users,
+            items: sortUsers(users, env),
             offset: 16,
             behind: 4,
             ahead: 8,
-            anchor: anchor,
+            anchor: (userID) ? `user-${userID}` : undefined,
 
             onIdentity: this.handleUserIdentity,
             onRender: this.handleUserRender,
@@ -106,35 +66,46 @@ class UserList extends PureComponent {
      * @return {ReactElement}
      */
     handleUserRender = (evt) => {
+        let {
+            database,
+            route,
+            env,
+            currentUser,
+            roles,
+            stories,
+            dailyActivities,
+            listings,
+            selectedDate,
+            link,
+        } = this.props;
+        let { viewOptions } = this.state;
         if (evt.needed) {
             let user = evt.item;
-            let roles = findRoles(this.props.roles, user);
-            let dailyActivities = _.get(this.props.dailyActivities, user.id);
+            let userRoles = findRoles(roles, user);
+            let userDailyActivities = _.get(dailyActivities, user.id);
             let stories;
-            if (this.props.listings) {
-                let listing = findListing(this.props.listings, user);
-                stories = findListingStories(this.props.stories, listing);
+            if (listings) {
+                let listing = findListing(listings, user);
+                userStories = findListingStories(stories, listing);
             } else {
-                stories = findUserStories(this.props.stories, user);
+                userStories = findUserStories(stories, user);
             }
             if (stories && stories.length > 5) {
                 stories = _.slice(stories, -5);
             }
-            let options = this.state.viewOptions[user.id] || {};
+            let userOptions = viewOptions[user.id] || {};
             let userProps = {
                 user,
-                roles,
-                dailyActivities,
-                stories,
-                options,
-                currentUser: this.props.currentUser,
-                database: this.props.database,
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
-                selectedDate: this.props.selectedDate,
-                today: this.props.today,
-                link: this.props.link,
+                roles: userRoles,
+                dailyActivities: userDailyActivities,
+                stories: userStories,
+                options: userOptions,
+                currentUser,
+                database,
+                route,
+                env,
+                selectedDate,
+                link,
                 onOptionChange: this.handleOptionChange,
             };
             return <UserView {...userProps} />;
@@ -150,11 +121,14 @@ class UserList extends PureComponent {
      * @param  {Object} evt
      */
     handleUserAnchorChange = (evt) => {
+        // TODO
+        /*
         let params = {
             user: _.get(evt.item, 'id')
         };
         let hash = UserList.getHash(params);
         this.props.route.reanchor(hash);
+        */
     }
 
     /**
@@ -171,8 +145,8 @@ class UserList extends PureComponent {
     }
 }
 
-let sortUsers = Memoize(function(users, locale) {
-    let p = locale.pick;
+let sortUsers = Memoize(function(users, env) {
+    let { p } = env.locale;
     let name = (user) => {
         return p(user.details.name);
     };
@@ -252,6 +226,5 @@ if (process.env.NODE_ENV !== 'production') {
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
-        loading: PropTypes.bool,
     };
 }

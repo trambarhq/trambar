@@ -17,41 +17,6 @@ class NotificationList extends AsyncComponent {
     static displayName = 'NotificationList';
 
     /**
-     * Extract id from URL hash
-     *
-     * @param  {String} hash
-     *
-     * @return {Object}
-     */
-    static parseHash(hash) {
-        let notification, highlighting;
-        if (notification = Route.parseId(hash, /N(\d+)/)) {
-            highlighting = true;
-        } else if (notification = Route.parseId(hash, /n(\d+)/)) {
-            highlighting = false;
-        }
-        return { notification, highlighting };
-    }
-
-    /**
-     * Get URL hash based on given parameters
-     *
-     * @param  {Object} params
-     *
-     * @return {String}
-     */
-    static getHash(params) {
-        if (params.notification != undefined) {
-            if (params.highlighting) {
-                return `N${params.notification}`;
-            } else {
-                return `n${params.notification}`;
-            }
-        }
-        return '';
-    }
-
-    /**
      * Retrieve data needed by synchronous component
      *
      * @param  {Meanwhile} meanwhile
@@ -59,21 +24,26 @@ class NotificationList extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let {
+            database,
+            route,
+            env,
+            currentUser,
+            notifications,
+        } = this.props;
+        let db = database.use({ by: this });
         let props = {
             users: null,
             stories: null,
 
-            currentUser: this.props.currentUser,
-            notifications: this.props.notifications,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            currentUser,
+            notifications,
+            database,
+            route,
+            env,
         };
         meanwhile.show(<NotificationListSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((userID) => {
             return UserFinder.findNotificationTriggerers(db, props.notifications).then((users) => {
                 props.users = users;
             });
@@ -94,7 +64,7 @@ class NotificationListSync extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            hiddenNotificationIds: [],
+            hiddenNotificationIDs: [],
         };
     }
 
@@ -104,17 +74,13 @@ class NotificationListSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let notifications = sortNotifications(this.props.notifications);
-        let anchor;
-        let hashParams = NotificationList.parseHash(this.props.route.hash);
-        if (hashParams.notification) {
-            anchor = `notification-${hashParams.notification}`;
-        }
+        let { route, notifications } = this.props;
+        let notificationID = route.params.showingNotification || route.params.highlightingNotification;
         let smartListProps = {
-            items: notifications,
+            items: sortNotifications(notifications),
             behind: 20,
             ahead: 40,
-            anchor: anchor,
+            anchor: (notificationID) ? `notification-${notificationID}` : undefined,
             offset: 10,
 
             onIdentity: this.handleNotificationIdentity,
@@ -136,15 +102,16 @@ class NotificationListSync extends PureComponent {
      * @return {ReactElement}
      */
     renderNewNotificationAlert() {
-        let t = this.props.locale.translate;
-        let count = _.size(this.state.hiddenNotificationIds);
-        let params = {
-            notification: _.first(this.state.hiddenNotificationIds)
-        };
+        let { route, env } = this.props;
+        let { hiddenNotificationIDs } = this.state;
+        let { t } = env.locale;
+        let count = _.size(hiddenNotificationIDs);
+        let url = route.find(route.name, {
+            highlightingNotification: _.first(hiddenNotificationIDs)
+        });
         let props = {
-            hash: NotificationList.getHash(params),
-            route: this.props.route,
-            onClick: this.handleNewNotificationAlertClick,
+            url,
+            onClick: this.handleNewNotificationAlertClick
         };
         return (
             <NewItemsAlert {...props}>
@@ -167,7 +134,7 @@ class NotificationListSync extends PureComponent {
      * @param  {Object} prevState
      */
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.notifications !== this.props.notifications || prevState.hiddenNotificationIds !== this.state.hiddenNotificationIds) {
+        if (prevProps.notifications !== this.props.notifications || prevState.hiddenNotificationIDs !== this.state.hiddenNotificationIDs) {
             this.scheduleNotificationRead();
         }
     }
@@ -176,12 +143,12 @@ class NotificationListSync extends PureComponent {
      * Mark unread notification as read after some time
      */
     scheduleNotificationRead() {
-        // need a small delay here, since hiddenNotificationIds isn't updated
+        // need a small delay here, since hiddenNotificationIDs isn't updated
         // until the SmartList's componentDidUpdate() is called
         setTimeout(() => {
             let unread = _.filter(this.props.notifications, (notification) => {
                 if (!notification.seen) {
-                    if (!_.includes(this.state.hiddenNotificationIds, notification.id)) {
+                    if (!_.includes(this.state.hiddenNotificationIDs, notification.id)) {
                         return true;
                     }
                 }
@@ -291,8 +258,8 @@ class NotificationListSync extends PureComponent {
      * @param  {Object} evt
      */
     handleNotificationBeforeAnchor = (evt) => {
-        let hiddenNotificationIds = _.map(evt.items, 'id');
-        this.setState({ hiddenNotificationIds });
+        let hiddenNotificationIDs = _.map(evt.items, 'id');
+        this.setState({ hiddenNotificationIDs });
     }
 
     /**
@@ -301,7 +268,7 @@ class NotificationListSync extends PureComponent {
      * @param  {Event} evt
      */
     handleNewNotificationAlertClick = (evt) => {
-        this.setState({ hiddenNotificationIds: [] });
+        this.setState({ hiddenNotificationIDs: [] });
     }
 }
 

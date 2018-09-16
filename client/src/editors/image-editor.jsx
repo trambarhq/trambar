@@ -7,8 +7,6 @@ import * as ImageCropping from 'media/image-cropping';
 import * as FocusManager from 'utils/focus-manager';
 import ComponentRefs from 'utils/component-refs';
 
-import Environment from 'env/environment';
-
 // widgets
 import ImageCropper from 'widgets/image-cropper';
 
@@ -35,7 +33,8 @@ class ImageEditor extends PureComponent {
      * Prepare the image on mount
      */
     componentWillMount() {
-        this.prepareImage(this.props.resource, this.props.disabled);
+        let { resource, disabled } = this.props;
+        this.prepareImage(resource, disabled);
     }
 
     /**
@@ -44,7 +43,8 @@ class ImageEditor extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.props.resource !== nextProps.resource || this.props.disabled !== nextProps.disabled) {
+        let { resource, disabled } = this.props;
+        if (nextProps.resource !== resource || nextProps.disabled !== disabled) {
             this.prepareImage(nextProps.resource, nextProps.disabled);
         }
     }
@@ -52,17 +52,19 @@ class ImageEditor extends PureComponent {
     /**
      * Load the image if it isn't available locally
      *
-     * @param  {Object} res
+     * @param  {Object} resource
      * @param  {Boolean} disabled
      */
-    prepareImage(res, disabled) {
+    prepareImage(resource, disabled) {
+        let { env, previewWidth, previewHeight } = this.props;
+        let { t } = env.locale;
         let newState = {
             fullImageURL: null,
             previewImageURL: null,
             placeholderMessage: null,
             placeholderIcon: null,
         };
-        let fullImageRemoteURL = this.props.theme.getImageURL(res, { original: true });
+        let fullImageRemoteURL = env.getImageURL(resource, { original: true });
         if (fullImageRemoteURL) {
             if (isJSONEncoded(fullImageRemoteURL)) {
                 // a blob that hasn't been uploaded yet
@@ -78,9 +80,9 @@ class ImageEditor extends PureComponent {
             if (!newState.fullImageURL) {
                 // we don't have a blob--show a preview image (clipped) while the
                 // full image is retrieved
-                newState.previewImageURL = this.props.theme.getImageURL(res, {
-                    width: this.props.previewWidth,
-                    height: this.props.previewHeight
+                newState.previewImageURL = env.getImageURL(resource, {
+                    width: previewWidth,
+                    height: previewHeight
                 });
 
                 // load it, unless control is disabled
@@ -98,20 +100,19 @@ class ImageEditor extends PureComponent {
         }
         if (!newState.fullImageURL && !newState.previewImageURL) {
             // image isn't available locally
-            let t = this.props.locale.translate;
-            if (res.width && res.height) {
+            if (resource.width && resource.height) {
                 // when the dimensions are known, then the image was available to
                 // the client
                 newState.placeholderMessage = t('image-editor-upload-in-progress');
                 newState.placeholderIcon = 'cloud-upload';
             } else {
-                if (!res.pending) {
+                if (!resource.pending) {
                     // not pending locally--we're wait for remote action to complete
-                    if (res.type === 'video') {
+                    if (resource.type === 'video') {
                         // poster is being generated in the backend
                         newState.placeholderMessage = t('image-editor-poster-extraction-in-progress');
                         newState.placeholderIcon = 'film';
-                    } else if (res.type === 'website') {
+                    } else if (resource.type === 'website') {
                         // web-site preview is being generated
                         newState.placeholderMessage = t('image-editor-page-rendering-in-progress');
                         newState.placeholderIcon = 'file-image-o';
@@ -130,11 +131,12 @@ class ImageEditor extends PureComponent {
      * @return {ReactElement}
      */
     render() {
+        let { children } = this.props
         return (
             <div className="image-editor">
                 {this.renderImage()}
                 {this.renderSpinner()}
-                {this.props.children}
+                {children}
             </div>
         );
     }
@@ -146,9 +148,10 @@ class ImageEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderImage() {
-        if (this.state.fullImageURL) {
+        let { fullImageURL, previewImageURL } = this.state;
+        if (fullImageURL) {
             return this.renderImageCropper();
-        } else if (this.state.previewImageURL) {
+        } else if (previewImageURL) {
             return this.renderPreviewImage();
         } else {
             return this.renderPlaceholder();
@@ -161,14 +164,16 @@ class ImageEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderPreviewImage() {
+        let { previewWidth, previewHeight, disabled } = this.props;
+        let { previewImageURL } = this.state;
         let className = 'preview';
-        if (this.props.disabled) {
+        if (disabled) {
             className += ' disabled';
         }
         let imageProps = {
-            src: this.state.previewImageURL,
-            width: this.props.previewWidth,
-            height: this.props.previewHeight
+            src: previewImageURL,
+            width: previewWidth,
+            height: previewHeight
         };
         return (
             <div className={className}>
@@ -183,13 +188,20 @@ class ImageEditor extends PureComponent {
      * @return {ReactElement|null}
      */
     renderSpinner() {
-        if (this.props.disabled) {
+        let { disabled } = this.props;
+        let {
+            plaeholderMessage,
+            placeholderIcon,
+            fullImageURL,
+            loadedImageURL
+        } = this.state;
+        if (disabled) {
             return null;
         }
-        if (this.state.plaeholderMessage || this.state.placeholderIcon) {
+        if (plaeholderMessage || placeholderIcon) {
             return null;
-        } else if (this.state.fullImageURL) {
-            if (this.state.fullImageURL === this.state.loadedImageURL) {
+        } else if (fullImageURL) {
+            if (fullImageURL === loadedImageURL) {
                 return null;
             }
         }
@@ -206,14 +218,15 @@ class ImageEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderImageCropper() {
-        let setters = this.components.setters;
-        let res = this.props.resource;
+        let { resource, disabled } = this.props;
+        let { fullImageURL } = this.state;
+        let { setters } = this.components;
         let props = {
             ref: setters.imageCropper,
-            url: this.state.fullImageURL,
-            clippingRect: res.clip || ImageCropping.apply(res.width, res.height),
-            vector: (res.format === 'svg'),
-            disabled: this.props.disabled,
+            url: fullImageURL,
+            clippingRect: resource.clip || ImageCropping.apply(resource.width, resource.height),
+            vector: (resource.format === 'svg'),
+            disabled,
             onChange: this.handleClipRectChange,
             onLoad: this.handleFullImageLoad,
         };
@@ -226,18 +239,24 @@ class ImageEditor extends PureComponent {
      * @return {ReactELement|null}
      */
     renderPlaceholder() {
-        if (this.state.fullImageURL || this.state.previewImageURL) {
+        let {
+            plaeholderMessage,
+            placeholderIcon,
+            fullImageURL,
+            previewImageURL
+        } = this.state;
+        if (fullImageURL || previewImageURL) {
             return null;
         }
-        if (!this.state.plaeholderMessage && !this.state.placeholderIcon) {
+        if (!plaeholderMessage && !placeholderIcon) {
             return null;
         }
         return (
             <div className="placeholder">
                 <div className="icon">
-                    <i className={`fa fa-${this.state.placeholderIcon}`} />
+                    <i className={`fa fa-${placeholderIcon}`} />
                 </div>
-                <div className="message">{this.state.placeholderMessage}</div>
+                <div className="message">{placeholderMessage}</div>
             </div>
         );
     }
@@ -262,18 +281,19 @@ class ImageEditor extends PureComponent {
      * Focus image cropper
      */
     focus() {
-        let imageCropper = this.components.imageCropper;
+        let { imageCropper } = this.components;
         if (imageCropper) {
             imageCropper.focus();
         }
     }
 
-    triggerChangeEvent(res) {
-        if (this.props.onChange) {
-            this.props.onChange({
+    triggerChangeEvent(resource) {
+        let { onChange } = this.props;
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
-                resource: res
+                resource
             });
         }
     }
@@ -284,10 +304,12 @@ class ImageEditor extends PureComponent {
      * @param  {Object} evt
      */
     handleClipRectChange = (evt) => {
-        let res = _.clone(this.props.resource);
-        res.clip = evt.rect;
-        res.mosaic = evt.target.extractMosaic();
-        this.triggerChangeEvent(res);
+        let { resource } = this.props;
+        let { imageCropper } = this.components;
+        resource = _.clone(resource);
+        resource.clip = evt.rect;
+        resource.mosaic = imageCropper.extractMosaic();
+        this.triggerChangeEvent(resource);
     }
 
     /**
@@ -296,14 +318,16 @@ class ImageEditor extends PureComponent {
      * @param  {Object} evt
      */
     handleFullImageLoad = (evt) => {
+        let { resource } = this.props;
+        let { imageCropper } = this.components;
         let url = evt.target.props.url;
         this.setState({ loadedImageURL: url });
 
         // set mosaic if there isn't one
-        let res = _.clone(this.props.resource);
-        if (!res.mosaic) {
-            res.mosaic = this.components.imageCropper.extractMosaic();
-            this.triggerChangeEvent(res);
+        if (!resource.mosaic) {
+            resource = _.clone(resource);
+            resource.mosaic = imageCropper.extractMosaic();
+            this.triggerChangeEvent(resource);
         }
     }
 }
@@ -327,6 +351,8 @@ export {
     ImageEditor as default,
     ImageEditor,
 };
+
+import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

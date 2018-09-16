@@ -24,41 +24,6 @@ class BookmarkList extends AsyncComponent {
     static displayName = 'BookmarkList';
 
     /**
-     * Extract id from URL hash
-     *
-     * @param  {String} hash
-     *
-     * @return {Object}
-     */
-    static parseHash(hash) {
-        let story, highlighting;
-        if (story = Route.parseId(hash, /S(\d+)/)) {
-            highlighting = true;
-        } else if (story = Route.parseId(hash, /s(\d+)/)) {
-            highlighting = false;
-        }
-        return { story, highlighting };
-    }
-
-    /**
-     * Get URL hash based on given parameters
-     *
-     * @param  {Object} params
-     *
-     * @return {String}
-     */
-    static getHash(params) {
-        if (params.story) {
-            if (params.highlighting) {
-                return `S${params.story}`;
-            } else {
-                return `s${params.story}`;
-            }
-        }
-        return '';
-    }
-
-    /**
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
@@ -69,8 +34,8 @@ class BookmarkList extends AsyncComponent {
         let {
             database,
             route,
-            env,
             payloads,
+            env,
             access,
             bookmarks,
             currentUser,
@@ -93,12 +58,12 @@ class BookmarkList extends AsyncComponent {
             currentUser,
             project,
             database,
-            payloads,
             route,
+            payloads,
             env,
         };
         meanwhile.show(<BookmarkListSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((userID) => {
             return RepoFinder.findProjectRepos(db, props.project).then((repos) => {
                 props.repos = repos;
             });
@@ -154,7 +119,7 @@ class BookmarkListSync extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            hiddenStoryIds: [],
+            hiddenStoryIDs: [],
         };
     }
 
@@ -193,15 +158,14 @@ class BookmarkListSync extends PureComponent {
      */
     renderNewStoryAlert() {
         let { route, env } = this.props;
-        let { hiddenStoryIds } = this.state;
+        let { hiddenStoryIDs } = this.state;
         let { t } = env.locale;
-        let count = _.size(hiddenStoryIds);
+        let count = _.size(hiddenStoryIDs);
         let url = route.find(route.name, {
-            highlightingStory: _.first(hiddenStoryIds),
+            highlightingStory: _.first(hiddenStoryIDs),
         });
         let props = {
             url,
-            route,
             onClick: this.handleNewBookmarkAlertClick,
         };
         return (
@@ -359,8 +323,8 @@ class BookmarkListSync extends PureComponent {
      * @param  {Object} evt
      */
     handleBookmarkBeforeAnchor = (evt) => {
-        let hiddenStoryIds = _.map(evt.items, 'story_id');
-        this.setState({ hiddenStoryIds });
+        let hiddenStoryIDs = _.map(evt.items, 'story_id');
+        this.setState({ hiddenStoryIDs });
     }
 
     /**
@@ -369,7 +333,7 @@ class BookmarkListSync extends PureComponent {
      * @param  {Event} evt
      */
     handleNewBookmarkAlertClick = (evt) => {
-        this.setState({ hiddenStoryIds: [] });
+        this.setState({ hiddenStoryIDs: [] });
     }
 }
 
@@ -401,8 +365,8 @@ let findReactions = Memoize(function(reactions, story) {
 
 let findAuthors = Memoize(function(users, story) {
     if (story) {
-        let list = _.filter(_.map(story.user_ids, (userId) => {
-           return _.find(users, { id: userId });
+        let list = _.filter(_.map(story.user_ids, (userID) => {
+           return _.find(users, { id: userID });
         }));
         if (!_.isEmpty(list)) {
             return list;
@@ -413,9 +377,9 @@ let findAuthors = Memoize(function(users, story) {
 let findSenders = findAuthors;
 
 let findRespondents = Memoize(function(users, reactions) {
-    let respondentIds = _.uniq(_.map(reactions, 'user_id'));
-    let list = _.filter(_.map(respondentIds, (userId) => {
-        return _.find(users, { id: userId });
+    let respondentIDs = _.uniq(_.map(reactions, 'user_id'));
+    let list = _.filter(_.map(respondentIDs, (userID) => {
+        return _.find(users, { id: userID });
     }));
     if (!_.isEmpty(list)) {
         return list;
@@ -425,8 +389,8 @@ let findRespondents = Memoize(function(users, reactions) {
 
 let findRecommendations = Memoize(function(recommendations, story) {
     if (story) {
-        let storyId = story.published_version_id || story.id;
-        let list = _.filter(recommendations, { story_id: storyId });
+        let storyID = story.published_version_id || story.id;
+        let list = _.filter(recommendations, { story_id: storyID });
         if (!_.isEmpty(list)) {
             return list;
         }
@@ -444,12 +408,12 @@ let findRecipients = Memoize(function(recipients, recommendations) {
     return Empty.array;
 });
 
-function getAuthorIds(stories, currentUser) {
-    let userIds = _.flatten(_.map(stories, 'user_ids'));
+function getAuthorIDs(stories, currentUser) {
+    let userIDs = _.flatten(_.map(stories, 'user_ids'));
     if (currentUser) {
-        userIds.push(currentUser.id);
+        userIDs.push(currentUser.id);
     }
-    return _.uniq(userIds);
+    return _.uniq(userIDs);
 }
 
 export {
@@ -471,7 +435,7 @@ if (process.env.NODE_ENV !== 'production') {
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         project: PropTypes.object,
-        selectedStoryId: PropTypes.number,
+        selectedStoryID: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
