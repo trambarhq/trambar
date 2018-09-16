@@ -84,34 +84,6 @@ class Application extends PureComponent {
      * @return {ReactElement|null}
      */
     render() {
-        let { database, route, env } = this.state;
-        let navProps = {
-            database,
-            route,
-            env,
-            disabled: route.public,
-        };
-        return (
-            <div className="application" id="application">
-                <SideNavigation {...navProps} />
-                <section className="page-view-port">
-                    <div className="scroll-box">
-                        {this.renderCurrentPage()}
-                    </div>
-                    {this.renderTaskAlert()}
-                    {this.renderUploadProgress()}
-                </section>
-            </div>
-        );
-    }
-
-    /**
-     * Render the current page, as indicated by the route--or the login page
-     * if the server isn't accessible yet
-     *
-     * @return {ReactElement}
-     */
-    renderCurrentPage () {
         let { database, route, env, payloads } = this.state;
         let { module } = route.params;
         if (process.env.NODE_ENV !== 'production') {
@@ -128,9 +100,31 @@ class Application extends PureComponent {
             }
         }
         let CurrentPage = module.default;
-        let pageProps = { database, route, env, payloads };
+        let navProps = {
+            database,
+            route,
+            env,
+            disabled: route.public,
+        };
+        let pageProps = {
+            database,
+            route,
+            env,
+            payloads,
+        };
         let key = route.path;
-        return <CurrentPage key={key} {...pageProps} />;
+        return (
+            <div className="application" id="application">
+                <SideNavigation {...navProps} />
+                <section className="page-view-port">
+                    <div className="scroll-box">
+                        <CurrentPage key={key} {...pageProps} />
+                    </div>
+                    {this.renderTaskAlert()}
+                    {this.renderUploadProgress()}
+                </section>
+            </div>
+        );
     }
 
     /**

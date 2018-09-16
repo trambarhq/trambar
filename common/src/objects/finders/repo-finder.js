@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
+
+const emptyArray = [];
 
 /**
  * Find a repo by ID
@@ -67,7 +68,7 @@ function findProjectRepos(db, projects) {
     if (projects instanceof Array) {
         var ids = _.flatten(_.map(projects, 'repo_ids'));
         if (_.isEmpty(ids)) {
-            return Promise.resolve(Empty.array);
+            return Promise.resolve(emptyArray);
         }
         ids = _.sortBy(_.uniq(ids));
         return db.find({
@@ -81,7 +82,7 @@ function findProjectRepos(db, projects) {
     } else {
         var project = projects;
         if (!project) {
-            return Promise.resolve(Empty.array);
+            return Promise.resolve(emptyArray);
         }
         return db.find({
             schema: 'global',
@@ -100,5 +101,4 @@ export {
     findAllRepos,
     findExistingRepos,
     findProjectRepos,
-    exports as default,
 };

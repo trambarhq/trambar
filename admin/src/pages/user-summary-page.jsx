@@ -3,13 +3,13 @@ import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
-import ProjectFinder from 'objects/finders/project-finder';
-import RoleFinder from 'objects/finders/role-finder';
-import UserFinder from 'objects/finders/user-finder';
-import UserTypes from 'objects/types/user-types';
-import UserSettings from 'objects/settings/user-settings';
-import StatisticsFinder from 'objects/finders/statistics-finder';
-import SystemFinder from 'objects/finders/system-finder';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as RoleFinder from 'objects/finders/role-finder';
+import * as UserFinder from 'objects/finders/user-finder';
+import * as UserTypes from 'objects/types/user-types';
+import * as UserSettings from 'objects/settings/user-settings';
+import * as StatisticsFinder from 'objects/finders/statistics-finder';
+import * as SystemFinder from 'objects/finders/system-finder';
 import SlugGenerator from 'utils/slug-generator';
 
 // widgets

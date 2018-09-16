@@ -1,84 +1,21 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var UserFinder = require('objects/finders/user-finder');
-var BookmarkFinder = require('objects/finders/bookmark-finder');
-var ProjectFinder = require('objects/finders/project-finder');
-var ProjectSettings = require('objects/settings/project-settings');
-
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import * as UserFinder from 'objects/finders/user-finder';
+import * as BookmarkFinder from 'objects/finders/bookmark-finder';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as ProjectSettings from 'objects/settings/project-settings';
 
 // widgets
-var PageContainer = require('widgets/page-container');
-var BookmarkList = require('lists/bookmark-list');
-var LoadingAnimation = require('widgets/loading-animation');
-var EmptyMessage = require('widgets/empty-message');
+import PageContainer from 'widgets/page-container';
+import BookmarkList from 'lists/bookmark-list';
+import LoadingAnimation from 'widgets/loading-animation';
+import EmptyMessage from 'widgets/empty-message';
 
-require('./bookmarks-page.scss');
+import './bookmarks-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'BookmarksPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/:schema/bookmarks/?',
-            ], (params) => {
-                return {
-                    schema: params.schema,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/${params.schema}/bookmarks/`, query;
-            return { path, query };
-        },
-
-        /**
-         * Return configuration info for global UI elements
-         *
-         * @param  {Route} currentRoute
-         *
-         * @return {Object}
-         */
-        configureUI: function(currentRoute) {
-            var params = currentRoute.parameters;
-            var route = {
-                schema: params.schema
-            };
-            return {
-                navigation: { route, section: 'bookmarks' }
-            };
-        },
-    },
+class BookmarksPage extends AsyncComponent {
+    static displayName = 'BookmarksPage';
 
     /**
      * Render the component asynchronously
@@ -87,19 +24,18 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env, payloads } = this.props;
+        let db = database.use({ by: this });
+        let props = {
             bookmarks: null,
             currentUser: null,
             project: null,
 
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            payloads,
+            env,
         };
         meanwhile.show(<BookmarksPageSync {...props} />);
         return db.start().then((currentUserId) => {
@@ -118,74 +54,63 @@ module.exports = Relaks.createClass({
             return <BookmarksPageSync {...props} />;
         });
     }
-});
+}
 
-var BookmarksPageSync = module.exports.Sync = React.createClass({
-    displayName: 'BookmarksPage.Sync',
-    propTypes: {
-        bookmarks: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        project: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class BookmarksPageSync extends PureComponent {
+    static displayName = 'BookmarksPage.Sync';
 
     /**
      * Return the access level
      *
      * @return {String}
      */
-    getAccessLevel: function() {
-        var { project, currentUser } = this.props;
+    getAccessLevel() {
+        let { project, currentUser } = this.props;
         return ProjectSettings.getUserAccessLevel(project, currentUser) || 'read-only';
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <PageContainer className="bookmarks-page">
                 {this.renderList()}
                 {this.renderEmptyMessage()}
             </PageContainer>
         );
-    },
+    }
 
     /**
      * Render list of bookmarks
      *
      * @return {ReactElement}
      */
-    renderList: function() {
-        var params = this.props.route.parameters;
-        var listProps = {
+    renderList() {
+        let { database, route, env, payloads, bookmarks, currentUser, project } = this.props;
+        let listProps = {
             access: this.getAccessLevel(),
-            bookmarks: this.props.bookmarks,
-            currentUser: this.props.currentUser,
-            project: this.props.project,
+            bookmarks,
+            currentUser,
+            project,
 
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            payloads,
+            route,
+            env,
         };
         return <BookmarkList {...listProps} />
-    },
+    }
 
     /**
      * Render a message if there're no bookmarks
      *
      * @return {ReactElement|null}
      */
-    renderEmptyMessage: function() {
-        var bookmarks = this.props.bookmarks;
+    renderEmptyMessage() {
+        let { env, bookmarks } = this.props;
         if (!_.isEmpty(bookmarks)) {
             return null;
         }
@@ -193,12 +118,42 @@ var BookmarksPageSync = module.exports.Sync = React.createClass({
             // props.stories is null when they're being loaded
             return <LoadingAnimation />;
         } else {
-            var props = {
-                locale: this.props.locale,
-                online: this.props.database.online,
+            let props = {
                 phrase: 'bookmarks-no-bookmarks',
+                env,
             };
             return <EmptyMessage {...props} />;
         }
-    },
-});
+    }
+}
+
+export {
+    BookmarksPage as default,
+    BookmarksPage,
+    BookmarksPageSync,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    BookmarksPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    BookmarksPageSync.propTypes = {
+        bookmarks: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        project: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    }
+}

@@ -3,8 +3,8 @@ import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import BlobManager from 'transport/blob-manager';
 import BlobReader from 'transport/blob-reader';
-import MediaLoader from 'media/media-loader';
-import JPEGAnalyser from 'media/jpeg-analyser';
+import * as MediaLoader from 'media/media-loader';
+import * as JPEGAnalyser from 'media/jpeg-analyser';
 import ComponentRefs from 'utils/component-refs';
 
 class BitmapView extends PureComponent {

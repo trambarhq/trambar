@@ -27,5 +27,4 @@ function extractAlbumArt(blob) {
 
 export {
     extractAlbumArt,
-    exports as default,
 };

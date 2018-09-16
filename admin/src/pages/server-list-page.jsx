@@ -4,8 +4,8 @@ import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
-import ServerFinder from 'objects/finders/server-finder';
-import UserFinder from 'objects/finders/user-finder';
+import * as ServerFinder from 'objects/finders/server-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 
 // widgets
 import PushButton from 'widgets/push-button';

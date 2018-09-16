@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
+
+const emptyArray = [];
 
 /**
  * Find reactions to given stories
@@ -17,7 +18,7 @@ function findReactionsToStories(db, stories, currentUser, minimum) {
         return (id >= 1);
     });
     if (_.isEmpty(storyIDs) || !currentUser) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     return db.find({
         table: 'reaction',
@@ -31,5 +32,4 @@ function findReactionsToStories(db, stories, currentUser, minimum) {
 
 export {
     findReactionsToStories,
-    exports as default,
 };

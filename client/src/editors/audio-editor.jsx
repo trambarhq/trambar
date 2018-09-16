@@ -1,16 +1,14 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
 // widgets
-var ImageEditor = require('editors/image-editor');
-var DurationIndicator = require('widgets/duration-indicator');
+import ImageEditor from 'editors/image-editor';
+import DurationIndicator from 'widgets/duration-indicator';
 
-module.exports = AudioEditor;
-
-require('./audio-editor.scss');
+import './audio-editor.scss';
 
 function AudioEditor(props) {
-    var res = props.resource;
-    var duration = res.duration;
+    let res = props.resource;
+    let duration = res.duration;
     if (res.width && res.height) {
         return (
             <ImageEditor {...props}>
@@ -34,5 +32,10 @@ function AudioEditor(props) {
         );
     }
 }
+
+export {
+    AudioEditor as default,
+    AudioEditor,
+};
 
 AudioEditor.propTypes = ImageEditor.propTypes;

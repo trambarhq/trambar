@@ -1,34 +1,18 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var ProjectFinder = require('objects/finders/project-finder');
-var RoleFinder = require('objects/finders/role-finder');
-var UserFinder = require('objects/finders/user-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import Memoize from 'utils/memoize';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as RoleFinder from 'objects/finders/role-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 
 // widgets
-var RoleFilterButton = require('widgets/role-filter-button');
+import RoleFilterButton from 'widgets/role-filter-button';
 
-require('./role-filter-bar.scss');
+import './role-filter-bar.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'RoleFilterBar',
-    propTypes: {
-        settings: PropTypes.object.isRequired,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class RoleFilterBar extends AsyncComponent {
+    static displayName = 'RoleFilterBar';
 
     /**
      * Render component asynchronously
@@ -37,10 +21,10 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let params = this.props.route.parameters;
+        let db = this.props.database.use({ schema: params.schema, by: this });
+        let props = {
             roles: null,
             users: null,
             project: null,
@@ -66,55 +50,45 @@ module.exports = Relaks.createClass({
         }).then((roles) => {
             return <RoleFilterBarSync {...props} />;
         });
-    },
-});
+    }
+}
 
-var RoleFilterBarSync = module.exports.Sync = React.createClass({
-    displayName: 'RoleFilterBar.Sync',
-    propTypes: {
-        settings: PropTypes.object.isRequired,
-        project: PropTypes.object,
-        roles: PropTypes.arrayOf(PropTypes.object),
-        users: PropTypes.arrayOf(PropTypes.object),
-
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class RoleFilterBarSync extends PureComponent {
+    static displayName = 'RoleFilterBar.Sync';
 
     /**
      * Render component
      *
      * @return {[type]}
      */
-    render: function() {
+    render() {
         return (
             <div className="role-filter-bar">
                 {this.renderButtons()}
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {Array<ReactElement>|ReactElement}
      */
-    renderButtons: function() {
-        var roles = this.props.roles;
+    renderButtons() {
+        let roles = this.props.roles;
         if (!_.isEmpty(roles)) {
             return _.map(roles, this.renderButton);
         } else {
             // render a blank button to maintain spacing
             // show "No roles" if database query yielded nothing
-            var props = {
+            let props = {
                 role: (roles !== null) ? null : undefined,
                 locale: this.props.locale,
                 theme: this.props.theme,
             };
             return <RoleFilterButton {...props} />;
         }
-    },
+    }
 
     /**
      * Render button for given role
@@ -123,18 +97,18 @@ var RoleFilterBarSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderButton: function(role) {
-        var users = findUsers(this.props.users, role);
-        var route = this.props.route;
-        var roleIds = route.parameters.roles;
-        var params = _.clone(this.props.settings.route);
+    renderButton(role) {
+        let users = findUsers(this.props.users, role);
+        let route = this.props.route;
+        let roleIds = route.parameters.roles;
+        let params = _.clone(this.props.settings.route);
         if (_.includes(roleIds, role.id)) {
             params.roles = _.without(roleIds, role.id);
         } else {
             params.roles = _.concat(roleIds, role.id);
         }
-        var url = route.find(route.component, params);
-        var props = {
+        let url = route.find(route.component, params);
+        let props = {
             role,
             users,
             url,
@@ -144,11 +118,11 @@ var RoleFilterBarSync = module.exports.Sync = React.createClass({
             onRoleClick: this.handleRoleClick,
         };
         return <RoleFilterButton key={role.id} {...props} />;
-    },
-});
+    }
+}
 
-var findUsers = Memoize(function(users, role) {
-    var list = _.filter(users, (user) => {
+let findUsers = Memoize(function(users, role) {
+    let list = _.filter(users, (user) => {
         return _.includes(user.role_ids, role.id);
     });
     if (!_.isEmpty(list)) {
@@ -156,3 +130,33 @@ var findUsers = Memoize(function(users, role) {
     }
     return list;
 });
+
+export {
+    RoleFilterBar as default,
+    RoleFilterBarSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    RoleFilterBar.propTypes = {
+        settings: PropTypes.object.isRequired,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    RoleFilterBarSync.propTypes = {
+        settings: PropTypes.object.isRequired,
+        project: PropTypes.object,
+        roles: PropTypes.arrayOf(PropTypes.object),
+        users: PropTypes.arrayOf(PropTypes.object),
+
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

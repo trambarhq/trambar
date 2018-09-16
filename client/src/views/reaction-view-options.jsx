@@ -1,52 +1,35 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Moment = require('moment');
-var UserUtils = require('objects/utils/user-utils');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var PopUpMenu = require('widgets/pop-up-menu');
-var OptionButton = require('widgets/option-button');
+import PopUpMenu from 'widgets/pop-up-menu';
+import OptionButton from 'widgets/option-button';
 
-require('./reaction-view-options.scss');
+import './reaction-view-options.scss';
 
-module.exports = React.createClass({
-    displayName: 'ReactionViewOptions',
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        currentUser: PropTypes.object.isRequired,
-        reaction: PropTypes.object.isRequired,
-        story: PropTypes.object.isRequired,
-        options: PropTypes.object.isRequired,
+class ReactionViewOptions extends PureComponent {
+    static displayName = 'ReactionViewOptions';
 
-        locale: PropTypes.instanceOf(Locale),
-        theme: PropTypes.instanceOf(Theme),
-    },
-
-    /**
-     * Return intial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             open: false
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var access = this.props.access;
-        var user = this.props.currentUser;
-        var story = this.props.story;
-        var reaction = this.props.reaction;
-        var active = false;
+    render() {
+        let access = this.props.access;
+        let user = this.props.currentUser;
+        let story = this.props.story;
+        let reaction = this.props.reaction;
+        let active = false;
         if (UserUtils.canHideReaction(user, story, reaction, access)) {
             active = true;
         }
@@ -56,7 +39,7 @@ module.exports = React.createClass({
         if (UserUtils.canRemoveReaction(user, story, reaction, access)) {
             active = true;
         }
-        var props = {
+        let props = {
             className: 'reaction-view-options',
             disabled: !active,
             popOut: true,
@@ -73,36 +56,36 @@ module.exports = React.createClass({
                 </menu>
             </PopUpMenu>
         );
-    },
+    }
 
     /**
      * Render options
      *
      * @return {ReactElement|null}
      */
-    renderOptions: function() {
+    renderOptions() {
         if (!this.state.open) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var options = this.props.options;
-        var access = this.props.access;
-        var user = this.props.currentUser;
-        var story = this.props.story;
-        var reaction = this.props.reaction;
-        var hideProps = {
+        let t = this.props.locale.translate;
+        let options = this.props.options;
+        let access = this.props.access;
+        let user = this.props.currentUser;
+        let story = this.props.story;
+        let reaction = this.props.reaction;
+        let hideProps = {
             label: t('option-hide-comment'),
             hidden: !UserUtils.canHideReaction(user, story, reaction, access),
             selected: options.hideReaction,
             onClick: this.handleHideClick,
         };
-        var editProps = {
+        let editProps = {
             label: t('option-edit-comment'),
             hidden: !UserUtils.canEditReaction(user, story, reaction, access),
             selected: options.editReaction,
             onClick: this.handleEditClick,
         };
-        var removeProps = {
+        let removeProps = {
             label: t('option-remove-comment'),
             hidden: !UserUtils.canRemoveReaction(user, story, reaction, access),
             selected: options.removeReaction,
@@ -115,14 +98,14 @@ module.exports = React.createClass({
                 <OptionButton {...removeProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Inform parent component that options have been changed
      *
      * @param  {Object} options
      */
-    triggerChangeEvent: function(options) {
+    triggerChangeEvent(options) {
         if (this.props.onChange) {
             this.props.onChange({
                 type: 'change',
@@ -130,56 +113,78 @@ module.exports = React.createClass({
                 options,
             });
         }
-    },
+    }
 
     /**
      * Called when user opens the menu
      *
      * @param  {Object} evt
      */
-    handleOpen: function(evt) {
+    handleOpen = (evt) => {
         this.setState({ open: true });
-    },
+    }
 
     /**
      * Called when user closes the menu
      *
      * @param  {Object} evt
      */
-    handleClose: function(evt) {
+    handleClose = (evt) => {
         this.setState({ open: false });
-    },
+    }
 
     /**
      * Called when user clicks on hide comment button
      *
      * @param  {Event} evt
      */
-    handleHideClick: function(evt) {
-        var options = _.clone(this.props.options);
+    handleHideClick = (evt) => {
+        let options = _.clone(this.props.options);
         options.hideReaction = !options.hideReaction;
         this.triggerChangeEvent(options);
-    },
+    }
 
     /**
      * Called when user clicks on edit comment button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
-        var options = _.clone(this.props.options);
+    handleEditClick = (evt) => {
+        let options = _.clone(this.props.options);
         options.editReaction = true;
         this.triggerChangeEvent(options);
-    },
+    }
 
     /**
      * Called when user clicks on remove comment button
      *
      * @param  {Event} evt
      */
-    handleRemoveClick: function(evt) {
-        var options = _.clone(this.props.options);
+    handleRemoveClick = (evt) => {
+        let options = _.clone(this.props.options);
         options.removeReaction = true;
         this.triggerChangeEvent(options);
-    },
-});
+    }
+}
+
+export {
+    ReactionViewOptions as default,
+    ReactionViewOptions,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ReactionViewOptions.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        currentUser: PropTypes.object.isRequired,
+        reaction: PropTypes.object.isRequired,
+        story: PropTypes.object.isRequired,
+        options: PropTypes.object.isRequired,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+        theme: PropTypes.instanceOf(Theme),
+    };
+}

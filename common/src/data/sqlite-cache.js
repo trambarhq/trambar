@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import LocalSearch from 'data/local-search';
+import * as LocalSearch from 'data/local-search';
 
 let openDatabase = window.openDatabase;
 if (window.sqlitePlugin) {

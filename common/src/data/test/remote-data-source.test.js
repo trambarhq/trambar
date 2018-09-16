@@ -9,7 +9,7 @@ Chai.use(ChaiAsPromised);
 
 import RemoteDataSource from 'data/remote-data-source';
 import IndexedDBCache from 'data/indexed-db-cache';
-import HTTPRequest from 'transport/http-request';
+import * as HTTPRequest from 'transport/http-request';
 import HTTPError from 'errors/http-error';
 
 describe('RemoteDataSource', function() {

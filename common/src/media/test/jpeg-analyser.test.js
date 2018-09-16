@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import Chai from 'chai', expect = Chai.expect;
+import { expect } from 'chai';
 
-import JPEGAnalyser from 'media/jpeg-analyser';
+import * as JPEGAnalyser from 'media/jpeg-analyser';
 
 import imageWithPaths from './images/malgorzata-socha.jpg';
 let imagesWithOrientation = [

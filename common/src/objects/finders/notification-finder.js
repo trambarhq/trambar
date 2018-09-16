@@ -1,8 +1,9 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
-import DateTracker from 'utils/date-tracker';
-import DateUtils from 'utils/date-utils';
+import * as DateTracker from 'utils/date-tracker';
+import * as DateUtils from 'utils/date-utils';
+
+const emptyArray = [];
 
 /**
  * Find notifications intended for a user
@@ -15,7 +16,7 @@ import DateUtils from 'utils/date-utils';
  */
 function findNotificationsForUser(db, user, minimum) {
     if (!user) {
-        return Promise.resolve(Empty.array)
+        return Promise.resolve(emptyArray)
     }
     return db.find({
         table: 'notification',
@@ -40,7 +41,7 @@ function findNotificationsForUser(db, user, minimum) {
  */
 function findNotificationsForUserOnDate(db, user, date, minimum) {
     if (!user) {
-        return Promise.resolve(Empty.array)
+        return Promise.resolve(emptyArray)
     }
     return db.find({
         table: 'notification',
@@ -63,7 +64,7 @@ function findNotificationsForUserOnDate(db, user, date, minimum) {
  */
 function findNotificationsUnseenByUser(db, user, minimum) {
     if (!user) {
-        return Promise.resolve(Empty.array)
+        return Promise.resolve(emptyArray)
     }
     return db.find({
         table: 'notification',
@@ -81,5 +82,4 @@ export {
     findNotificationsForUser,
     findNotificationsForUserOnDate,
     findNotificationsUnseenByUser
-    exports as default,
 };

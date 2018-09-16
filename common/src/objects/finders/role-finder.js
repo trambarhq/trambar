@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
+
+const emptyArray = [];
 
 /**
  * Find a role by ID
@@ -68,7 +69,7 @@ function findRolesOfUsers(db, users) {
     // load roles that members have
     let roleIDs = _.flatten(_.map(users, 'role_ids'));
     if (_.isEmpty(roleIDs)) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     roleIDs = _.sortBy(_.uniq(roleIDs));
     return db.find({
@@ -85,5 +86,4 @@ export {
     findAllRoles,
     findActiveRoles,
     findRolesOfUsers,
-    exports as default,
 };

@@ -32,5 +32,4 @@ function match(email, whitelist) {
 
 export {
     match,
-    exports as default,
 };

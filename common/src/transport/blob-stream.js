@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import HTTPRequest from 'transport/http-request';
+import * as HTTPRequest from 'transport/http-request';
 import Async from 'async-do-while';
 
 class BlobStream {

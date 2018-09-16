@@ -1,65 +1,43 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var UserUtils = require('objects/utils/user-utils');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var Scrollable = require('widgets/scrollable');
-var ProfileImage = require('widgets/profile-image');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import Scrollable from 'widgets/scrollable';
+import ProfileImage from 'widgets/profile-image';
 
-require('./multiple-user-names.scss');
+import './multiple-user-names.scss';
 
-module.exports = React.createClass({
-    displayName: 'MultipleUserNames',
-    propTypes: {
-        label: PropTypes.string,
-        title: PropTypes.string,
-        users: PropTypes.arrayOf(PropTypes.object).isRequired,
-        popupLimit: PropTypes.number,
+class MultipleUserNames extends PureComponent {
+    static displayName = 'MultipleUserNames';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    getDefaultProps: function() {
-        return {
-            popupLimit: 8
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             showingPopUp: false,
             showingDialogBox: false,
             renderingDialogBox: false,
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var className = 'multiple-user-names';
+    render() {
+        let className = 'multiple-user-names';
         if (this.props.className) {
             className += ` ${this.props.className}`;
         }
-        var containerProps = {
+        let containerProps = {
             className: className,
             onMouseEnter: this.handleMouseEnter,
             onMouseLeave: this.handleMouseLeave,
         };
-        var labelProps = {
+        let labelProps = {
             className: 'label',
             onClick: this.handleClick,
         };
@@ -70,14 +48,14 @@ module.exports = React.createClass({
                 {this.renderDialogBox()}
             </span>
         )
-    },
+    }
 
     /**
      * Render mouse rollover popup
      *
      * @return {ReactElement|null}
      */
-    renderPopUp: function() {
+    renderPopUp() {
         if (!this.state.showingPopUp) {
             return null;
         }
@@ -88,22 +66,22 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render overlay that appears when user clicks on the label
      *
      * @return {ReactElement|null}
      */
-    renderDialogBox: function() {
+    renderDialogBox() {
         if (!this.state.renderingDialogBox) {
             return null;
         }
-        var overlayProps = {
+        let overlayProps = {
             show: this.state.showingDialogBox,
             onBackgroundClick: this.handleDialogBoxClose,
         };
-        var buttonProps = {
+        let buttonProps = {
             label: 'OK',
             emphasized: true,
             onClick: this.handleDialogBoxClose,
@@ -122,7 +100,7 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render user list
@@ -131,15 +109,15 @@ module.exports = React.createClass({
      *
      * @return {Array<ReactElement>}
      */
-    renderUserList: function(limit) {
-        var p = this.props.locale.pick;
-        var users = _.sortBy(this.props.users, (user) => {
+    renderUserList(limit) {
+        let p = this.props.locale.pick;
+        let users = _.sortBy(this.props.users, (user) => {
             return p(user.details.name);
         });
         if (users.length > limit) {
-            var t = this.props.locale.translate;
-            var chunk = _.slice(users, limit);
-            var elements = _.map(chunk, this.renderUser);
+            let t = this.props.locale.translate;
+            let chunk = _.slice(users, limit);
+            let elements = _.map(chunk, this.renderUser);
             elements.push(
                 <div key={0} className="more">
                     {t('list-$count-more', users.length - chunk.length)}
@@ -149,7 +127,7 @@ module.exports = React.createClass({
         } else {
             return _.map(users, this.renderUser);
         }
-    },
+    }
 
     /**
      * Render user profile image and name
@@ -159,72 +137,96 @@ module.exports = React.createClass({
      *
      * @return {ReactELement}
      */
-    renderUser: function(user, index) {
-        var userProps = {
+    renderUser(user, index) {
+        let userProps = {
             user,
             theme: this.props.theme,
             locale: this.props.locale,
         };
         return <User key={user.id} {...userProps} />;
-    },
+    }
 
     /**
      * Called when mouse cursor enters the label
      *
      * @param  {Event} evt
      */
-    handleMouseEnter: function(evt) {
+    handleMouseEnter = (evt) => {
         this.setState({ showingPopUp: true });
-    },
+    }
 
     /**
      * Called when mouse cursor exits the label
      *
      * @param  {Event} evt
      */
-    handleMouseLeave: function(evt) {
+    handleMouseLeave = (evt) => {
         this.setState({ showingPopUp: false });
-    },
+    }
 
     /**
      * Called when user clicks on label
      *
      * @param  {Event} evt
      */
-    handleClick: function(evt) {
+    handleClick = (evt) => {
         this.setState({
             showingPopUp: false,
             showingDialogBox: true,
             renderingDialogBox: true
         });
-    },
+    }
 
     /**
      * Called when user clicks the OK button or outside the dialog box
      *
      * @param  {Event} evt
      */
-    handleDialogBoxClose: function(evt) {
+    handleDialogBoxClose = (evt) => {
         this.setState({ showingDialogBox: false }, () => {
             setTimeout(() => {
                 this.setState({ renderingDialogBox: false });
             }, 1000)
         });
-    },
-});
+    }
+}
 
 function User(props) {
-    var classNames = [ 'user' ];
-    var imageProps = {
+    let classNames = [ 'user' ];
+    let imageProps = {
         user: props.user,
         theme: props.theme,
         size: 'small',
     };
-    var name = UserUtils.getDisplayName(props.user, props.locale);
+    let name = UserUtils.getDisplayName(props.user, props.locale);
     return (
         <div className={classNames.join(' ')}>
             <ProfileImage {...imageProps} />
             <span className="name">{name}</span>
         </div>
     );
+}
+
+MultipleUserNames.defaultProps = {
+    popupLimit: 8
+};
+
+export {
+    MultipleUserNames as default,
+    MultipleUserNames,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MultipleUserNames.propTypes = {
+        label: PropTypes.string,
+        title: PropTypes.string,
+        users: PropTypes.arrayOf(PropTypes.object).isRequired,
+        popupLimit: PropTypes.number,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
 }

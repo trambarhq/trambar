@@ -3,10 +3,9 @@ import Promise from 'promise';
 import React, { PureComponent } from 'react';
 import Chartist from 'widgets/chartist';
 import Moment from 'moment';
-import DateTracker from 'utils/date-tracker';
 import Memoize from 'utils/memoize';
 
-import StoryTypes from 'objects/types/story-types';
+import * as StoryTypes from 'objects/types/story-types';
 
 import './activity-chart.scss';
 
@@ -25,7 +24,7 @@ class ActivityChart extends PureComponent {
     }
 
     renderChart() {
-        let { statistics } = this.props;
+        let { env, statistics } = this.props;
         if (!statistics) {
             return (
                 <div className="scroll-container">
@@ -33,7 +32,7 @@ class ActivityChart extends PureComponent {
                 </div>
             );
         }
-        let today = Moment(DateTracker.today);
+        let today = Moment(env.date);
         let rangeStart = Moment(statistics.range.start);
         let rangeEnd = Moment(statistics.range.end);
 
@@ -72,7 +71,7 @@ class ActivityChart extends PureComponent {
                         let day = getDay(date);
                         if (day === 1) {
                             return date;
-                        } else if (day > 10 && date == DateTracker.today){
+                        } else if (day > 10 && date == env.date){
                             return 'Today';
                         }
                         return '';
@@ -123,6 +122,7 @@ class ActivityChart extends PureComponent {
     }
 
     handleDraw = (cxt) => {
+        let { env } = this.props;
         // move y-axis to the right side
         if(cxt.type === 'label' && cxt.axis.units.pos === 'y') {
             cxt.element.attr({
@@ -136,7 +136,7 @@ class ActivityChart extends PureComponent {
             let day = getDay(date);
             if (day === 1) {
                 cxt.element.addClass('month-start');
-            } else if (date === DateTracker.today) {
+            } else if (date === env.date) {
                 cxt.element.addClass('today');
             }
         }

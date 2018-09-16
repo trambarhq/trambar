@@ -381,5 +381,4 @@ export {
     createParser,
     createRenderer,
     findReferencedResource,
-    exports as default,
 };

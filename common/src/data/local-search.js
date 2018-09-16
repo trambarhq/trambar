@@ -147,5 +147,4 @@ function limit(table, objects, criteria) {
 export {
     match,
     limit,
-    exports as default,
 };

@@ -1,34 +1,24 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var QRCode = require('qrcode');
+import React, { PureComponent } from 'react';
+import QRCodeGenerator from 'qrcode';
 
-module.exports = React.createClass({
-    displayName: 'QRCode',
-    propTypes: {
-        text: PropTypes.string,
-        scale: PropTypes.number,
-    },
-
-    getDefaultProps: function() {
-        return {
-            scale: 4
-        };
-    },
+class QRCode extends PureComponent {
+    static displayName = 'QRCode';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return <canvas ref="canvas" className="qr-code" />
-    },
+    }
 
     /**
      * Draw QR code on mount
      */
-    componentDidMount: function() {
+    componentDidMount() {
         this.redraw();
-    },
+    }
 
     /**
      * Redraw QR code on update
@@ -36,18 +26,36 @@ module.exports = React.createClass({
      * @param  {Object} prevProps
      * @param  {Object} prevState
      */
-    componentDidUpdate: function(prevProps, prevState) {
+    componentDidUpdate(prevProps, prevState) {
         this.redraw();
-    },
+    }
 
     /**
      * Draw QR code into canvas
      */
-    redraw: function() {
-        var canvas = this.refs.canvas;
-        var options = {
+    redraw() {
+        let canvas = this.refs.canvas;
+        let options = {
             scale: this.props.scale
         };
-        QRCode.toCanvas(canvas, this.props.text, options, (err) => {});
+        QRCodeGenerator.toCanvas(canvas, this.props.text, options, (err) => {});
     }
-});
+}
+
+QRCode.defaultProps = {
+    scale: 4
+};
+
+export {
+    QRCode as default,
+    QRCode,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    QRCode.propTypes = {
+        text: PropTypes.string,
+        scale: PropTypes.number,
+    };
+}

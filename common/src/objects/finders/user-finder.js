@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
+
+const emptyArray = [];
 
 /**
  * Find a user by ID
@@ -29,7 +30,7 @@ function findUser(db, id) {
  */
 function findUsers(db, ids) {
     if (_.isEmpty(ids)) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -210,5 +211,4 @@ export {
     findBookmarkRecipients,
     findBookmarkSenders,
     findNotificationTriggerers,
-    exports as default,
 };

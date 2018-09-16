@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
+
+const emptyArray = [];
 
 /**
  * Find devices belonging to a given user
@@ -13,7 +14,7 @@ import Empty from 'data/empty';
  */
 function findUserDevices(db, user, minimum) {
     if (!user) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     return db.find({
         schema: 'global',
@@ -28,5 +29,4 @@ function findUserDevices(db, user, minimum) {
 
 export {
     findUserDevices,
-    exports as default,
 };

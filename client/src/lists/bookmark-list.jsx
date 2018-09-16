@@ -1,86 +1,62 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var Empty = require('data/empty');
-var Merger = require('data/merger');
-var UserFinder = require('objects/finders/user-finder');
-var StoryFinder = require('objects/finders/story-finder');
-var RepoFinder = require('objects/finders/repo-finder');
-var BookmarkFinder = require('objects/finders/bookmark-finder');
-var ReactionFinder = require('objects/finders/reaction-finder');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import Memoize from 'utils/memoize';
+import Empty from 'data/empty';
+import Merger from 'data/merger';
+import * as UserFinder from 'objects/finders/user-finder';
+import * as StoryFinder from 'objects/finders/story-finder';
+import * as RepoFinder from 'objects/finders/repo-finder';
+import * as BookmarkFinder from 'objects/finders/bookmark-finder';
+import * as ReactionFinder from 'objects/finders/reaction-finder';
 
 // widgets
-var SmartList = require('widgets/smart-list');
-var BookmarkView = require('views/bookmark-view');
-var StoryView = require('views/story-view');
-var StoryEditor = require('editors/story-editor');
-var NewItemsAlert = require('widgets/new-items-alert');
+import SmartList from 'widgets/smart-list';
+import BookmarkView from 'views/bookmark-view';
+import StoryView from 'views/story-view';
+import StoryEditor from 'editors/story-editor';
+import NewItemsAlert from 'widgets/new-items-alert';
 
-require('./bookmark-list.scss');
+import './bookmark-list.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'BookmarkList',
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        bookmarks: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        project: PropTypes.object,
-        selectedStoryId: PropTypes.number,
+class BookmarkList extends AsyncComponent {
+    static displayName = 'BookmarkList';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+    /**
+     * Extract id from URL hash
+     *
+     * @param  {String} hash
+     *
+     * @return {Object}
+     */
+    static parseHash(hash) {
+        let story, highlighting;
+        if (story = Route.parseId(hash, /S(\d+)/)) {
+            highlighting = true;
+        } else if (story = Route.parseId(hash, /s(\d+)/)) {
+            highlighting = false;
+        }
+        return { story, highlighting };
+    }
 
-    statics: {
-        /**
-         * Extract id from URL hash
-         *
-         * @param  {String} hash
-         *
-         * @return {Object}
-         */
-        parseHash: function(hash) {
-            var story, highlighting;
-            if (story = Route.parseId(hash, /S(\d+)/)) {
-                highlighting = true;
-            } else if (story = Route.parseId(hash, /s(\d+)/)) {
-                highlighting = false;
+    /**
+     * Get URL hash based on given parameters
+     *
+     * @param  {Object} params
+     *
+     * @return {String}
+     */
+    static getHash(params) {
+        if (params.story) {
+            if (params.highlighting) {
+                return `S${params.story}`;
+            } else {
+                return `s${params.story}`;
             }
-            return { story, highlighting };
-        },
-
-        /**
-         * Get URL hash based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {String}
-         */
-        getHash: function(params) {
-            if (params.story) {
-                if (params.highlighting) {
-                    return `S${params.story}`;
-                } else {
-                    return `s${params.story}`;
-                }
-            }
-            return '';
-        },
-    },
+        }
+        return '';
+    }
 
     /**
      * Render the component asynchronously
@@ -89,10 +65,19 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let {
+            database,
+            route,
+            env,
+            payloads,
+            access,
+            bookmarks,
+            currentUser,
+            project,
+        } = this.props;
+        let db = database.use({ by: this });
+        let props = {
             stories: null,
             draftStories: null,
             authors: null,
@@ -103,15 +88,14 @@ module.exports = Relaks.createClass({
             recipients: null,
             repos: null,
 
-            access: this.props.access,
-            bookmarks: this.props.bookmarks,
-            currentUser: this.props.currentUser,
-            project: this.props.project,
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            access,
+            bookmarks,
+            currentUser,
+            project,
+            database,
+            payloads,
+            route,
+            env,
         };
         meanwhile.show(<BookmarkListSync {...props} />);
         return db.start().then((userId) => {
@@ -129,7 +113,7 @@ module.exports = Relaks.createClass({
             });
         }).then(() => {
             meanwhile.show(<BookmarkListSync {...props} />);
-            var stories = _.filter(_.concat(props.draftStories, props.stories));
+            let stories = _.filter(_.concat(props.draftStories, props.stories));
             return UserFinder.findStoryAuthors(db, stories).then((users) => {
                 props.authors = users;
             });
@@ -161,13 +145,340 @@ module.exports = Relaks.createClass({
         }).then(() => {
             return <BookmarkListSync {...props} />;
         });
-    },
+    }
+}
+
+class BookmarkListSync extends PureComponent {
+    static displayName = 'BookmarkList.Sync';
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            hiddenStoryIds: [],
+        };
+    }
+
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
+    render() {
+        let { route, bookmarks } = this.props;
+        let storyID = route.params.showingStory || route.params.highlightingStory;
+        let smartListProps = {
+            items: bookmarks,
+            behind: 4,
+            ahead: 8,
+            anchor: (storyID) ? `story-${storyID}` : undefined,
+            offset: 20,
+
+            onIdentity: this.handleBookmarkIdentity,
+            onRender: this.handleBookmarkRender,
+            onAnchorChange: this.handleBookmarkAnchorChange,
+            onBeforeAnchor: this.handleBookmarkBeforeAnchor,
+        };
+        return (
+            <div className="bookmark-list">
+                <SmartList {...smartListProps} />
+                {this.renderNewStoryAlert()}
+            </div>
+        );
+    }
+
+    /**
+     * Render alert indicating there're new stories hidden up top
+     *
+     * @return {ReactElement}
+     */
+    renderNewStoryAlert() {
+        let { route, env } = this.props;
+        let { hiddenStoryIds } = this.state;
+        let { t } = env.locale;
+        let count = _.size(hiddenStoryIds);
+        let url = route.find(route.name, {
+            highlightingStory: _.first(hiddenStoryIds),
+        });
+        let props = {
+            url,
+            route,
+            onClick: this.handleNewBookmarkAlertClick,
+        };
+        return (
+            <NewItemsAlert {...props}>
+                {t('alert-$count-new-bookmarks', count)}
+            </NewItemsAlert>
+        );
+    }
+
+    /**
+     * Return id of bookmark view in response to event triggered by SmartList
+     *
+     * @param  {Object} evt
+     *
+     * @return {String}
+     */
+    handleBookmarkIdentity = (evt) => {
+        return `story-${evt.item.story_id}`;
+    }
+
+    /**
+     * Render a bookmark
+     *
+     * @param  {Object} evt
+     *
+     * @return {ReactElement|null}
+     */
+    handleBookmarkRender = (evt) => {
+        let {
+            database,
+            route,
+            env,
+            payloads,
+            currentUser,
+            stories,
+            reactions,
+            draftStories,
+            authors,
+            recommendations,
+            senders,
+            recipients,
+            repos,
+            access,
+        } = this.props;
+        let bookmark = evt.item;
+        let story = findStory(stories, bookmark);
+        if (!story) {
+            return null;
+        }
+
+        // see if it's being editted
+        let editing = false;
+        let highlighting = false;
+        if (story) {
+            if (access === 'read-write') {
+                if (!story.published) {
+                    editing = true;
+                } else {
+                    let tempCopy = _.find(draftStories, { published_version_id: story.id });
+                    if (tempCopy) {
+                        // edit the temporary copy
+                        story = tempCopy;
+                        editing = true;
+                    }
+                }
+            }
+
+            if (story.id === route.params.highlightingStory) {
+                highlighting = true;
+                // suppress highlighting after a second
+                setTimeout(() => {
+                    // TODO
+                    //this.props.route.reanchor(_.toLower(hash));
+                }, 1000);
+            }
+        }
+        if (editing) {
+            let storyAuthors = findAuthors(authors, story);
+            let storyRecommendations = findRecommendations(recommendations, story);
+            let storyRecipients = findRecipients(recipients, recommendations);
+            if (!story) {
+                authors = [ currentUser ];
+            }
+            let editorProps = {
+                story,
+                authors: storyAuthors,
+                recommendations: storyRecommendations,
+                recipients: storyRecipients,
+                currentUser,
+                database,
+                payloads,
+                route,
+                env,
+            };
+            return (
+                <BookmarkView {...bookmarkProps}>
+                    <StoryEditor {...editorProps}/>
+                </BookmarkView>
+            );
+        } else {
+            if (evt.needed) {
+                let storyReactions = findReactions(reactions, story);
+                let storyAuthors = findAuthors(authors, story);
+                let storyRespondents = findRespondents(respondents, storyReactions);
+                let storyRecommendations = findRecommendations(recommendations, story);
+                let storyRecipients = findRecipients(recipients, recommendations);
+                let storyProps = {
+                    access,
+                    story,
+                    bookmark,
+                    reactions: storyReactions,
+                    authors: storyAuthors,
+                    respondents: storyRespondents,
+                    recommendations: storyRecommendations,
+                    recipients: storyRecipients,
+                    repos,
+                    currentUser,
+                    database,
+                    payloads,
+                    route,
+                    env,
+                };
+                return (
+                    <BookmarkView {...bookmarkProps}>
+                        <StoryView {...storyProps} />
+                    </BookmarkView>
+                );
+            } else {
+                let height = evt.previousHeight || evt.estimatedHeight || 100;
+                return <div className="bookmark-view" style={{ height }} />
+            }
+        }
+
+    }
+
+    /**
+     * Called when a different story is positioned at the top of the viewport
+     *
+     * @param  {Object} evt
+     */
+    handleBookmarkAnchorChange = (evt) => {
+        // TODO
+        /*
+        let params = {
+            story: _.get(evt.item, 'story_id')
+        };
+        let hash = BookmarkList.getHash(params);
+        this.props.route.reanchor(hash);
+        */
+    }
+
+    /**
+     * Called when SmartList notice new items were rendered off screen
+     *
+     * @param  {Object} evt
+     */
+    handleBookmarkBeforeAnchor = (evt) => {
+        let hiddenStoryIds = _.map(evt.items, 'story_id');
+        this.setState({ hiddenStoryIds });
+    }
+
+    /**
+     * Called when user clicks on new story alert
+     *
+     * @param  {Event} evt
+     */
+    handleNewBookmarkAlertClick = (evt) => {
+        this.setState({ hiddenStoryIds: [] });
+    }
+}
+
+let array = Memoize(function(object) {
+    return [ object ];
 });
 
-var BookmarkListSync = module.exports.Sync = React.createClass({
-    displayName: 'BookmarkList.Sync',
-    mixins: [ UpdateCheck ],
-    propTypes: {
+let sortBookmark = Memoize(function(bookmarks) {
+    return _.orderBy(bookmarks, [ 'id' ], [ 'desc' ]);
+});
+
+let findStory = Memoize(function(stories, bookmark) {
+    if (bookmark) {
+        return _.find(stories, { id: bookmark.story_id });
+    } else {
+        return null;
+    }
+});
+
+let findReactions = Memoize(function(reactions, story) {
+    if (story) {
+        let list = _.filter(reactions, { story_id: story.id });
+        if (!_.isEmpty(list)) {
+            return list;
+        }
+    }
+    return Empty.array;
+});
+
+let findAuthors = Memoize(function(users, story) {
+    if (story) {
+        let list = _.filter(_.map(story.user_ids, (userId) => {
+           return _.find(users, { id: userId });
+        }));
+        if (!_.isEmpty(list)) {
+            return list;
+        }
+    }
+    return Empty.array;
+});
+let findSenders = findAuthors;
+
+let findRespondents = Memoize(function(users, reactions) {
+    let respondentIds = _.uniq(_.map(reactions, 'user_id'));
+    let list = _.filter(_.map(respondentIds, (userId) => {
+        return _.find(users, { id: userId });
+    }));
+    if (!_.isEmpty(list)) {
+        return list;
+    }
+    return Empty.array;
+})
+
+let findRecommendations = Memoize(function(recommendations, story) {
+    if (story) {
+        let storyId = story.published_version_id || story.id;
+        let list = _.filter(recommendations, { story_id: storyId });
+        if (!_.isEmpty(list)) {
+            return list;
+        }
+    }
+    return Empty.array;
+});
+
+let findRecipients = Memoize(function(recipients, recommendations) {
+    let list = _.filter(recipients, (recipient) => {
+        return _.some(recommendations, { target_user_id: recipient.id });
+    });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
+    return Empty.array;
+});
+
+function getAuthorIds(stories, currentUser) {
+    let userIds = _.flatten(_.map(stories, 'user_ids'));
+    if (currentUser) {
+        userIds.push(currentUser.id);
+    }
+    return _.uniq(userIds);
+}
+
+export {
+    BookmarkList as default,
+    BookmarkList,
+    BookmarkListSync,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    BookmarkList.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        bookmarks: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        project: PropTypes.object,
+        selectedStoryId: PropTypes.number,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    BookmarkList.propTypes = {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         senders: PropTypes.arrayOf(PropTypes.object),
@@ -186,313 +497,6 @@ var BookmarkListSync = module.exports.Sync = React.createClass({
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
-            hiddenStoryIds: [],
-        };
-    },
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render: function() {
-        var bookmarks = sortBookmark(this.props.bookmarks);
-        var anchor;
-        var hashParams = module.exports.parseHash(this.props.route.hash);
-        if (hashParams.story) {
-            anchor = `story-${hashParams.story}`;
-        }
-        var smartListProps = {
-            items: bookmarks,
-            behind: 4,
-            ahead: 8,
-            anchor: anchor,
-            offset: 20,
-
-            onIdentity: this.handleBookmarkIdentity,
-            onRender: this.handleBookmarkRender,
-            onAnchorChange: this.handleBookmarkAnchorChange,
-            onBeforeAnchor: this.handleBookmarkBeforeAnchor,
-        };
-        return (
-            <div className="bookmark-list">
-                <SmartList {...smartListProps} />
-                {this.renderNewStoryAlert()}
-            </div>
-        );
-    },
-
-    /**
-     * Render alert indicating there're new stories hidden up top
-     *
-     * @return {ReactElement}
-     */
-    renderNewStoryAlert: function() {
-        var t = this.props.locale.translate;
-        var count = _.size(this.state.hiddenStoryIds);
-        var params = {
-            story: _.first(this.state.hiddenStoryIds)
-        };
-        var props = {
-            hash: module.exports.getHash(params),
-            route: this.props.route,
-            onClick: this.handleNewBookmarkAlertClick,
-        };
-        return (
-            <NewItemsAlert {...props}>
-                {t('alert-$count-new-bookmarks', count)}
-            </NewItemsAlert>
-        );
-    },
-
-    /**
-     * Return id of bookmark view in response to event triggered by SmartList
-     *
-     * @param  {Object} evt
-     *
-     * @return {String}
-     */
-    handleBookmarkIdentity: function(evt) {
-        return `story-${evt.item.story_id}`;
-    },
-
-    /**
-     * Render a bookmark
-     *
-     * @param  {Object} evt
-     *
-     * @return {ReactElement|null}
-     */
-    handleBookmarkRender: function(evt) {
-        var bookmark = evt.item;
-        var story = findStory(this.props.stories, bookmark);
-        if (!story) {
-            return null;
-        }
-
-        // see if it's being editted
-        var editing = false;
-        var highlighting = false;
-        if (story) {
-            if (this.props.access === 'read-write') {
-                if (!story.published) {
-                    editing = true;
-                } else {
-                    var tempCopy = _.find(this.props.draftStories, { published_version_id: story.id });
-                    if (tempCopy) {
-                        // edit the temporary copy
-                        story = tempCopy;
-                        editing = true;
-                    }
-                }
-            }
-
-            var hash = this.props.route.hash;
-            var hashParams = module.exports.parseHash(hash);
-            if (story.id === hashParams.story) {
-                if (hashParams.highlighting) {
-                    highlighting = true;
-                    // suppress highlighting after a second
-                    setTimeout(() => {
-                        this.props.route.reanchor(_.toLower(hash));
-                    }, 1000);
-                }
-            }
-        }
-        if (editing || evt.needed) {
-            var senders = findSenders(this.props.senders, bookmark);
-            var bookmarkProps = {
-                highlighting,
-                bookmark,
-                senders,
-                currentUser: this.props.currentUser,
-
-                database: this.props.database,
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
-            };
-        }
-        if (editing) {
-            var authors = findAuthors(this.props.authors, story);
-            var recommendations = findRecommendations(this.props.recommendations, story);
-            var recipients = findRecipients(this.props.recipients, recommendations);
-            if (!story) {
-                authors = array(this.props.currentUser);
-            }
-            var editorProps = {
-                story,
-                authors,
-                recommendations,
-                recipients,
-                currentUser: this.props.currentUser,
-                database: this.props.database,
-                payloads: this.props.payloads,
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
-            };
-            return (
-                <BookmarkView {...bookmarkProps}>
-                    <StoryEditor {...editorProps}/>
-                </BookmarkView>
-            );
-        } else {
-            if (evt.needed) {
-                var reactions = findReactions(this.props.reactions, story);
-                var authors = findAuthors(this.props.authors, story);
-                var respondents = findRespondents(this.props.respondents, reactions);
-                var recommendations = findRecommendations(this.props.recommendations, story);
-                var recipients = findRecipients(this.props.recipients, recommendations);
-                var storyProps = {
-                    access: this.props.access,
-                    story,
-                    bookmark,
-                    reactions,
-                    authors,
-                    respondents,
-                    recommendations,
-                    recipients,
-                    repos: this.props.repos,
-                    currentUser: this.props.currentUser,
-                    database: this.props.database,
-                    payloads: this.props.payloads,
-                    route: this.props.route,
-                    locale: this.props.locale,
-                    theme: this.props.theme,
-                };
-                return (
-                    <BookmarkView {...bookmarkProps}>
-                        <StoryView {...storyProps} />
-                    </BookmarkView>
-                );
-            } else {
-                var height = evt.previousHeight || evt.estimatedHeight || 100;
-                return <div className="bookmark-view" style={{ height }} />
-            }
-        }
-
-    },
-
-    /**
-     * Called when a different story is positioned at the top of the viewport
-     *
-     * @param  {Object} evt
-     */
-    handleBookmarkAnchorChange: function(evt) {
-        var params = {
-            story: _.get(evt.item, 'story_id')
-        };
-        var hash = module.exports.getHash(params);
-        this.props.route.reanchor(hash);
-    },
-
-    /**
-     * Called when SmartList notice new items were rendered off screen
-     *
-     * @param  {Object} evt
-     */
-    handleBookmarkBeforeAnchor: function(evt) {
-        var hiddenStoryIds = _.map(evt.items, 'story_id');
-        this.setState({ hiddenStoryIds });
-    },
-
-    /**
-     * Called when user clicks on new story alert
-     *
-     * @param  {Event} evt
-     */
-    handleNewBookmarkAlertClick: function(evt) {
-        this.setState({ hiddenStoryIds: [] });
-    },
-});
-
-var array = Memoize(function(object) {
-    return [ object ];
-});
-
-var sortBookmark = Memoize(function(bookmarks) {
-    return _.orderBy(bookmarks, [ 'id' ], [ 'desc' ]);
-});
-
-var findStory = Memoize(function(stories, bookmark) {
-    if (bookmark) {
-        return _.find(stories, { id: bookmark.story_id });
-    } else {
-        return null;
-    }
-});
-
-var findReactions = Memoize(function(reactions, story) {
-    if (story) {
-        var list = _.filter(reactions, { story_id: story.id });
-        if (!_.isEmpty(list)) {
-            return list;
-        }
-    }
-    return Empty.array;
-});
-
-var findAuthors = Memoize(function(users, story) {
-    if (story) {
-        var list = _.filter(_.map(story.user_ids, (userId) => {
-           return _.find(users, { id: userId });
-        }));
-        if (!_.isEmpty(list)) {
-            return list;
-        }
-    }
-    return Empty.array;
-});
-var findSenders = findAuthors;
-
-var findRespondents = Memoize(function(users, reactions) {
-    var respondentIds = _.uniq(_.map(reactions, 'user_id'));
-    var list = _.filter(_.map(respondentIds, (userId) => {
-        return _.find(users, { id: userId });
-    }));
-    if (!_.isEmpty(list)) {
-        return list;
-    }
-    return Empty.array;
-})
-
-var findRecommendations = Memoize(function(recommendations, story) {
-    if (story) {
-        var storyId = story.published_version_id || story.id;
-        var list = _.filter(recommendations, { story_id: storyId });
-        if (!_.isEmpty(list)) {
-            return list;
-        }
-    }
-    return Empty.array;
-});
-
-var findRecipients = Memoize(function(recipients, recommendations) {
-    var list = _.filter(recipients, (recipient) => {
-        return _.some(recommendations, { target_user_id: recipient.id });
-    });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
-    return Empty.array;
-});
-
-function getAuthorIds(stories, currentUser) {
-    var userIds = _.flatten(_.map(stories, 'user_ids'));
-    if (currentUser) {
-        userIds.push(currentUser.id);
-    }
-    return _.uniq(userIds);
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
 }

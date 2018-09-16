@@ -1,108 +1,75 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Moment = require('moment');
-var Memoize = require('utils/memoize');
-var Empty = require('data/empty');
-var DateTracker = require('utils/date-tracker');
-var DateUtils = require('utils/date-utils');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import Memoize from 'utils/memoize';
+import Empty from 'data/empty';
+import * as DateTracker from 'utils/date-tracker';
+import * as DateUtils from 'utils/date-utils';
 
 // widgets
-var SmartList = require('widgets/smart-list');
-var UserView = require('views/user-view');
+import SmartList from 'widgets/smart-list';
+import UserView from 'views/user-view';
 
-require('./user-list.scss');
+import './user-list.scss';
 
-module.exports = React.createClass({
-    displayName: 'UserList',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        users: PropTypes.arrayOf(PropTypes.object),
-        roles: PropTypes.arrayOf(PropTypes.object),
-        dailyActivities: PropTypes.object,
-        listings: PropTypes.arrayOf(PropTypes.object),
-        stories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        selectedDate: PropTypes.string,
-        today: PropTypes.string,
-        link: PropTypes.oneOf([ 'user', 'team' ]),
+class UserList extends PureComponent {
+    static displayName = 'UserList';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        loading: PropTypes.bool,
-    },
+    constructor(props) {
+        super(props);
+        this.state = {
+            viewOptions: {},
+        };
+    }
 
-    statics: {
-        /**
-         * Extract id from URL hash
-         *
-         * @param  {String} hash
-         *
-         * @return {Object}
-         */
-        parseHash: function(hash) {
-            var user, highlighting;
+    /**
+     * Extract id from URL hash
+     *
+     * @param  {String} hash
+     *
+     * @return {Object}
+     */
+    static parseHash(hash) {
+            let user, highlighting;
             if (user = Route.parseId(hash, /U(\d+)/)) {
                 highlighting = true;
             } else if (user = Route.parseId(hash, /u(\d+)/)) {
                 highlighting = false;
             }
             return { user, highlighting };
-        },
-
-        /**
-         * Get URL hash based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {String}
-         */
-        getHash: function(params) {
-            if (params.user) {
-                if (params.highlighting) {
-                    return `U${params.user}`;
-                } else {
-                    return `u${params.user}`;
-                }
-            }
-            return '';
-        },
-    },
+    }
 
     /**
-     * Return initial state of component
+     * Get URL hash based on given parameters
      *
-     * @return {Object}
+     * @param  {Object} params
+     *
+     * @return {String}
      */
-    getInitialState: function() {
-        return {
-            viewOptions: {},
-        };
-    },
+    static getHash(params) {
+        if (params.user) {
+            if (params.highlighting) {
+                return `U${params.user}`;
+            } else {
+                return `u${params.user}`;
+            }
+        }
+        return '';
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var users = sortUsers(this.props.users, this.props.locale);
-        var anchor;
-        var hashParams = module.exports.parseHash(this.props.route.hash);
+    render() {
+        let users = sortUsers(this.props.users, this.props.locale);
+        let anchor;
+        let hashParams = UserList.parseHash(this.props.route.hash);
         if (hashParams.user) {
             anchor = `user-${hashParams.user}`;
         }
-        var smartListProps = {
+        let smartListProps = {
             items: users,
             offset: 16,
             behind: 4,
@@ -118,7 +85,7 @@ module.exports = React.createClass({
                 <SmartList {...smartListProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Return identifier for item
@@ -127,9 +94,9 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    handleUserIdentity: function(evt) {
+    handleUserIdentity = (evt) => {
         return `user-${evt.item.id}`;
-    },
+    }
 
     /**
      * Render a user view component in response to event fired by SmartList
@@ -138,14 +105,14 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    handleUserRender: function(evt) {
+    handleUserRender = (evt) => {
         if (evt.needed) {
-            var user = evt.item;
-            var roles = findRoles(this.props.roles, user);
-            var dailyActivities = _.get(this.props.dailyActivities, user.id);
-            var stories;
+            let user = evt.item;
+            let roles = findRoles(this.props.roles, user);
+            let dailyActivities = _.get(this.props.dailyActivities, user.id);
+            let stories;
             if (this.props.listings) {
-                var listing = findListing(this.props.listings, user);
+                let listing = findListing(this.props.listings, user);
                 stories = findListingStories(this.props.stories, listing);
             } else {
                 stories = findUserStories(this.props.stories, user);
@@ -153,8 +120,8 @@ module.exports = React.createClass({
             if (stories && stories.length > 5) {
                 stories = _.slice(stories, -5);
             }
-            var options = this.state.viewOptions[user.id] || {};
-            var userProps = {
+            let options = this.state.viewOptions[user.id] || {};
+            let userProps = {
                 user,
                 roles,
                 dailyActivities,
@@ -172,59 +139,59 @@ module.exports = React.createClass({
             };
             return <UserView {...userProps} />;
         } else {
-            var height = evt.previousHeight || evt.estimatedHeight || 100;
+            let height = evt.previousHeight || evt.estimatedHeight || 100;
             return <div className="user-view" style={{ height }} />;
         }
-    },
+    }
 
     /**
      * Called when a different user is positioned at the top of the viewport
      *
      * @param  {Object} evt
      */
-    handleUserAnchorChange: function(evt) {
-        var params = {
+    handleUserAnchorChange = (evt) => {
+        let params = {
             user: _.get(evt.item, 'id')
         };
-        var hash = module.exports.getHash(params);
+        let hash = UserList.getHash(params);
         this.props.route.reanchor(hash);
-    },
+    }
 
     /**
      * Called when the user change chart options
      *
      * @param  {Object} evt
      */
-    handleOptionChange: function(evt) {
+    handleOptionChange = (evt) => {
         // storing chart selection at this level to avoid loss of state
         // due to on-demand rendering
-        var viewOptions = _.clone(this.state.viewOptions);
+        let viewOptions = _.clone(this.state.viewOptions);
         viewOptions[evt.user.id] = evt.options;
         this.setState({ viewOptions });
-    },
-});
+    }
+}
 
-var sortUsers = Memoize(function(users, locale) {
-    var p = locale.pick;
-    var name = (user) => {
+let sortUsers = Memoize(function(users, locale) {
+    let p = locale.pick;
+    let name = (user) => {
         return p(user.details.name);
     };
     return _.orderBy(users, [ name ], [ 'asc' ]);
 });
 
-var findRoles = Memoize(function(roles, user) {
+let findRoles = Memoize(function(roles, user) {
     if (user) {
-        var list = _.filter(_.map(user.role_ids, (roleId) => {
+        let list = _.filter(_.map(user.role_ids, (roleId) => {
             return _.find(roles, { id: roleId });
         }));
         if (!_.isEmpty(list)) {
             return list;
         }
     }
-    return Empty.array;
+    return [];
 });
 
-var findListing = Memoize(function(listings, user) {
+let findListing = Memoize(function(listings, user) {
     if (user) {
         return _.find(listings, (listing) => {
             if (listing.filters.user_ids[0] === user.id) {
@@ -236,25 +203,55 @@ var findListing = Memoize(function(listings, user) {
     }
 });
 
-var findListingStories = Memoize(function(stories, listing) {
+let findListingStories = Memoize(function(stories, listing) {
     if (listing) {
-        var hash = _.keyBy(stories, 'id');
-        var list = _.filter(_.map(listing.story_ids, (id) => {
+        let hash = _.keyBy(stories, 'id');
+        let list = _.filter(_.map(listing.story_ids, (id) => {
             return hash[id];
         }));
         if (!_.isEmpty(list)) {
             return list;
         }
     }
-    return Empty.array;
+    return [];
 });
 
-var findUserStories = Memoize(function(stories, user) {
-    var list = _.filter(stories, (story) => {
+let findUserStories = Memoize(function(stories, user) {
+    let list = _.filter(stories, (story) => {
         return _.includes(story.user_ids, user.id);
     });
     if (!_.isEmpty(list)) {
         return list;
     }
-    return Empty.array;
+    return [];
 });
+
+export {
+    UserList as default,
+    UserList,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UserList.propTypes = {
+        users: PropTypes.arrayOf(PropTypes.object),
+        roles: PropTypes.arrayOf(PropTypes.object),
+        dailyActivities: PropTypes.object,
+        listings: PropTypes.arrayOf(PropTypes.object),
+        stories: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        selectedDate: PropTypes.string,
+        today: PropTypes.string,
+        link: PropTypes.oneOf([ 'user', 'team' ]),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        loading: PropTypes.bool,
+    };
+}

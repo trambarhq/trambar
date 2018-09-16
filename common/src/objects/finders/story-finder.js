@@ -1,8 +1,9 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
-import DateTracker from 'utils/date-tracker';
-import DateUtils from 'utils/date-utils';
+import * as DateTracker from 'utils/date-tracker';
+import * as DateUtils from 'utils/date-utils';
+
+const emptyArray = [];
 
 /**
  * Find a story by ID
@@ -30,7 +31,7 @@ function findStory(db, id) {
  */
 function findStories(db, ids) {
     if (_.isEmpty(ids)) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -50,7 +51,7 @@ function findStories(db, ids) {
  */
 function findViewableStories(db, ids, currentUser) {
     if (_.isEmpty(ids) || !currentUser) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -74,7 +75,7 @@ function findViewableStories(db, ids, currentUser) {
  */
 function findDraftStories(db, user) {
     if (!user) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     return db.find({
         table: 'story',
@@ -96,10 +97,10 @@ function findDraftStories(db, user) {
  */
 function findUnlistedStories(db, user, listedStories) {
     if (!user) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     if (!listedStories) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     let recentStories = _.filter(listedStories, (story) => {
         if (_.includes(story.user_ids, user.id)) {
@@ -213,7 +214,7 @@ function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
  */
 function findStoriesInListing(db, type, currentUser, blockIfStale) {
     if (!currentUser) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     let query = {
         table: 'listing',
@@ -342,7 +343,7 @@ function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
  */
 function findStoriesByUserInListing(db, type, user, currentUser, blockIfStale) {
     if (!currentUser) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     let query = {
         table: 'listing',
@@ -433,7 +434,7 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
  */
 function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blockIfStale) {
     if (!currentUser) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     let query = {
         table: 'listing',
@@ -512,5 +513,4 @@ export {
     findStoriesWithRolesInListing,
     findStoriesOfNotifications,
     findStoriesOfBookmarks,
-    exports as default,
 };

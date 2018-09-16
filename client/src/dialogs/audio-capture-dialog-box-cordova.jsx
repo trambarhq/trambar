@@ -1,47 +1,33 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var MediaLoader = require('media/media-loader');
-var CordovaFile = require('transport/cordova-file');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import * as MediaLoader from 'media/media-loader';
+import CordovaFile from 'transport/cordova-file';
 
-var Payloads = require('transport/payloads');
-var Locale = require('locale/locale');
+class AudioCaptureDialogBox extends PureComponent {
+    static displayName = 'AudioCaptureDialogBox';
 
-module.exports = React.createClass({
-    displayName: 'AudioCaptureDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onCancel: PropTypes.func,
-        onCapture: PropTypes.func,
-    },
-
-    statics: {
-        /**
-         * Return true if the browser has the necessary functionalities
-         *
-         * @return {Boolean}
-         */
-        isAvailable: function() {
-            // the plugin doesn't provide a UI on windows
-            return !!window.cordova && !!navigator.device && cordova.platformId !== 'windows';
-        },
-    },
+    /**
+     * Return true if the browser has the necessary functionalities
+     *
+     * @return {Boolean}
+     */
+    static isAvailable() {
+        // the plugin doesn't provide a UI on windows
+        return !!window.cordova && !!navigator.device && cordova.platformId !== 'windows';
+    }
 
     /**
      * Activate plugin when props.show goes from false to true
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (!this.props.show && nextProps.show) {
-            var capture = navigator.device.capture;
+            let capture = navigator.device.capture;
             if (capture) {
                 requestPermissions().then(() => {
-                    var options = {
+                    let options = {
                         duration: 15 * 60 * 60,
                         limit: 1,
                     };
@@ -49,35 +35,35 @@ module.exports = React.createClass({
                 });
             }
         }
-    },
+    }
 
     /**
      * Render function
      *
      * @return {null}
      */
-    render: function() {
+    render() {
         return null;
-    },
+    }
 
     /**
      * Inform parent component that dialog box should be closed
      */
-    triggerCloseEvent: function() {
+    triggerCloseEvent() {
         if (this.props.onClose) {
             this.props.onClose({
                 type: 'close',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Report back to parent component that an image is ready
      *
      * @param  {Object} resource
      */
-    triggerCaptureEvent: function(resource) {
+    triggerCaptureEvent(resource) {
         if (this.props.onCapture) {
             this.props.onCapture({
                 type: 'capture',
@@ -85,13 +71,13 @@ module.exports = React.createClass({
                 resource,
             });
         }
-    },
+    }
 
     /**
      * Report back to parent component that an image is being loaded
      *
      */
-    triggerCapturePendingEvent: function() {
+    triggerCapturePendingEvent() {
         if (this.props.onCapturePending) {
             this.props.onCapturePending({
                 type: 'capturepending',
@@ -99,14 +85,14 @@ module.exports = React.createClass({
                 resourceType: 'audio'
             });
         }
-    },
+    }
 
     /**
      * Report back to parent component that loading has failed
      *
      * @param  {Error} err
      */
-    triggerCaptureErrorEvent: function(err) {
+    triggerCaptureErrorEvent(err) {
         if (this.props.onCaptureError) {
             this.props.onCaptureError({
                 type: 'capturefailure',
@@ -114,24 +100,24 @@ module.exports = React.createClass({
                 error: err
             });
         }
-    },
+    }
 
     /**
      * Called when plugin has capture an image
      *
      * @param  {Array<MediaFiles>} mediaFiles
      */
-    handleCaptureSuccess: function(mediaFiles) {
+    handleCaptureSuccess(mediaFiles) {
         this.triggerCloseEvent();
-        var mediaFile = mediaFiles[0];
+        let mediaFile = mediaFiles[0];
         if (mediaFile) {
             this.triggerCapturePendingEvent();
             MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
-                var file = new CordovaFile(mediaFile.fullPath);
-                var [ type, format ] = _.split(mediaFile.type, '/');
-                var payload = this.props.payloads.add('audio');
+                let file = new CordovaFile(mediaFile.fullPath);
+                let [ type, format ] = _.split(mediaFile.type, '/');
+                let payload = this.props.payloads.add('audio');
                 payload.attachFile(file);
-                var res = {
+                let res = {
                     type: 'audio',
                     payload_token: payload.token,
                     format: format,
@@ -147,27 +133,27 @@ module.exports = React.createClass({
                 return null;
             });
         }
-    },
+    }
 
     /**
      * Called when the operation failed for some reason
      */
-    handleCaptureFailure: function(err) {
+    handleCaptureFailure(err) {
         this.triggerCloseEvent();
         this.triggerCaptureErrorEvent(err);
-    },
-});
+    }
+}
 
 function requestPermissions() {
-    var permissions = cordova.plugins.permissions;
+    let permissions = cordova.plugins.permissions;
     if (!permissions || cordova.platformId !== 'android') {
         return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
-        var successCB = () => {
+        let successCB = () => {
             resolve();
         };
-        var errorCB = (err) => {
+        let errorCB = (err) => {
             reject(new Error('Unable to obtain permission'));
         };
         permissions.requestPermissions([
@@ -176,4 +162,26 @@ function requestPermissions() {
             permissions.WRITE_EXTERNAL_STORAGE,
         ], successCB, errorCB);
     });
+}
+
+export {
+    AudioCaptureDialogBox as default,
+    AudioCaptureDialogBox,
+};
+
+import Payloads from 'transport/payloads';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    AudioCaptureDialogBox.propTypes = {
+        show: PropTypes.bool,
+
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onCancel: PropTypes.func,
+        onCapture: PropTypes.func,
+    };
 }

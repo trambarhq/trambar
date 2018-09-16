@@ -3,10 +3,10 @@ import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
-import ProjectFinder from 'objects/finders/project-finder';
-import RoleFinder from 'objects/finders/role-finder';
-import UserFinder from 'objects/finders/user-finder';
-import StatisticsFinder from 'objects/finders/statistics-finder';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as RoleFinder from 'objects/finders/role-finder';
+import * as UserFinder from 'objects/finders/user-finder';
+import * as StatisticsFinder from 'objects/finders/statistics-finder';
 
 // widgets
 import PushButton from 'widgets/push-button';

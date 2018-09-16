@@ -1,52 +1,29 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Moment = require('moment');
-var DateTracker = require('utils/date-tracker');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import * as DateTracker from 'utils/date-tracker';
 
-var Locale = require('locale/locale');
+import './calendar.scss';
 
-require('./calendar.scss');
-
-module.exports = React.createClass({
-    displayName: 'Calendar',
-    propTypes: {
-        year: PropTypes.number.isRequired,
-        month: PropTypes.number.isRequired,
-        showYear: PropTypes.bool,
-        selection: PropTypes.string,
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onDateURL: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            showYear: false
-        };
-    },
+class Calendar extends PureComponent {
+    static displayName = 'Calendar';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var localeCode = this.props.locale.localeCode;
-        var localeData = Moment.localeData(localeCode);
-        var year = this.props.year;
-        var month = this.props.month;
-        var selection = this.props.selection;
-        var firstDay = Moment(date(year, month, 1)).locale(localeCode);
-        var firstDayOfWeek = localeData.firstDayOfWeek();
-        var daysInMonth = firstDay.daysInMonth();
-        var dayOfWeek = firstDay.day();
-        var grid = [
+    render() {
+        let localeCode = this.props.locale.localeCode;
+        let localeData = Moment.localeData(localeCode);
+        let year = this.props.year;
+        let month = this.props.month;
+        let selection = this.props.selection;
+        let firstDay = Moment(date(year, month, 1)).locale(localeCode);
+        let firstDayOfWeek = localeData.firstDayOfWeek();
+        let daysInMonth = firstDay.daysInMonth();
+        let dayOfWeek = firstDay.day();
+        let grid = [
             [ null, null, null, null, null, null, null ],
             [ null, null, null, null, null, null, null ],
             [ null, null, null, null, null, null, null ],
@@ -54,28 +31,28 @@ module.exports = React.createClass({
             [ null, null, null, null, null, null, null ],
             [ null, null, null, null, null, null, null ],
         ];
-        var x = 0;
-        var y = dayOfWeek - firstDayOfWeek;
+        let x = 0;
+        let y = dayOfWeek - firstDayOfWeek;
         if (y < 0) {
             y += 7;
         }
-        for (var day = 1; day <= daysInMonth; day++) {
+        for (let day = 1; day <= daysInMonth; day++) {
             grid[x][y++] = day;
             if (y >= 7) {
                 y = 0;
                 x++;
             }
         }
-        var dayLabels = _.slice(localeData.weekdaysShort());
-        var isWeekend = [ true, false, false, false, false, false, true ];
-        for (var i = 0; i < firstDayOfWeek; i++) {
+        let dayLabels = _.slice(localeData.weekdaysShort());
+        let isWeekend = [ true, false, false, false, false, false, true ];
+        for (let i = 0; i < firstDayOfWeek; i++) {
             dayLabels.push(dayLabels.shift());
             isWeekend.push(isWeekend.shift());
         }
-        var titleFormat = (this.props.showYear) ? 'MMMM YYYY' : 'MMMM';
-        var title = firstDay.format(titleFormat);
-        var headings = _.map(dayLabels, (label, index) => {
-            var classNames = [
+        let titleFormat = (this.props.showYear) ? 'MMMM YYYY' : 'MMMM';
+        let title = firstDay.format(titleFormat);
+        let headings = _.map(dayLabels, (label, index) => {
+            let classNames = [
                 isWeekend[index] ? 'weekend' : 'workweek'
             ];
             return (
@@ -84,12 +61,12 @@ module.exports = React.createClass({
                 </th>
             );
         });
-        var rows = _.map(grid, (days) => {
+        let rows = _.map(grid, (days) => {
             return _.map(days, (day, index) => {
-                var classNames = [
+                let classNames = [
                     isWeekend[index] ? 'weekend' : 'workweek'
                 ];
-                var label, date, url;
+                let label, date, url;
                 if (day) {
                     date = `${year}-${pad(month)}-${pad(day)}`;
                     label = day;
@@ -132,7 +109,7 @@ module.exports = React.createClass({
                 </tbody>
             </table>
         );
-    },
+    }
 
     /**
      * Get URL for a date
@@ -141,7 +118,7 @@ module.exports = React.createClass({
      *
      * @return {String|undefined}
      */
-    getDateURL: function(date) {
+    getDateURL(date) {
         if (this.props.onDateURL) {
             return this.props.onDateURL({
                 type: 'dateurl',
@@ -150,16 +127,42 @@ module.exports = React.createClass({
             });
         }
     }
-});
+}
 
 function date(year, month, day) {
     return `${year}-${pad(month)}-${pad(day)}`;
 }
 
 function pad(num) {
-    var s = String(num);
+    let s = String(num);
     if (s.length === 1) {
         s = '0' + s;
     }
     return s;
+}
+
+Calendar.defaultProps = {
+    showYear: false
+};
+
+export {
+    Calendar as default,
+    Calendar,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    Calendar.propTypes = {
+        year: PropTypes.number.isRequired,
+        month: PropTypes.number.isRequired,
+        showYear: PropTypes.bool,
+        selection: PropTypes.string,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onDateURL: PropTypes.func,
+    }
 }

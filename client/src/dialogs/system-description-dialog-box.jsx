@@ -1,35 +1,23 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var Scrollable = require('widgets/scrollable');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import Scrollable from 'widgets/scrollable';
 
-require('./system-description-dialog-box.scss');
+import './system-description-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'SystemDescriptionDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        system: PropTypes.object.isRequired,
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onClose: PropTypes.func,
-    },
+class SystemDescriptionDialogBox extends PureComponent {
+    static displayName = 'SystemDescriptionDialogBox';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var overlayProps = {
+    render() {
+        let overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.handleCloseClick,
         };
@@ -41,18 +29,18 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render description of system
      *
      * @return {ReactElement}
      */
-    renderText: function() {
-        var p = this.props.locale.pick;
-        var system = this.props.system;
-        var title = p(_.get(system, 'details.title'));
-        var description = p(_.get(system, 'details.description'));
+    renderText() {
+        let p = this.props.locale.pick;
+        let system = this.props.system;
+        let title = p(_.get(system, 'details.title'));
+        let description = p(_.get(system, 'details.description'));
         return (
             <Scrollable>
                 <div className="title">{title}</div>
@@ -61,16 +49,16 @@ module.exports = React.createClass({
                 </div>
             </Scrollable>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var closeButtonProps = {
+    renderButtons() {
+        let t = this.props.locale.translate;
+        let closeButtonProps = {
             label: t('project-description-close'),
             emphasized: true,
             onClick: this.handleCloseClick,
@@ -80,16 +68,36 @@ module.exports = React.createClass({
                 <PushButton {...closeButtonProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Called when user click cancel or ok button or outside the dialog box
      *
      * @param  {Event} evt
      */
-    handleCloseClick: function(evt) {
+    handleCloseClick = (evt) => {
         if (this.props.onClose) {
             this.props.onClose({ type: 'cancel', target: this });
         }
-    },
-});
+    }
+}
+
+export {
+    SystemDescriptionDialogBox as default,
+    SystemDescriptionDialogBox,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    SystemDescriptionDialogBox.propTypes = {
+        show: PropTypes.bool,
+        system: PropTypes.object.isRequired,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onClose: PropTypes.func,
+    };
+}

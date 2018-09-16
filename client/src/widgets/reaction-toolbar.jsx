@@ -1,47 +1,33 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var HeaderButton = require('widgets/header-button');
+import HeaderButton from 'widgets/header-button';
 
-require('./reaction-toolbar.scss');
+import './reaction-toolbar.scss';
 
-module.exports = React.createClass({
-    displayName: 'ReactionToolbar',
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]),
-        currentUser: PropTypes.object,
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        respondents: PropTypes.arrayOf(PropTypes.object),
-        addingComment: PropTypes.bool,
-        disabled: PropTypes.bool,
-        locale: PropTypes.instanceOf(Locale),
-        theme: PropTypes.instanceOf(Theme),
-        onAction: PropTypes.func,
-    },
+class ReactionToolbar extends PureComponent {
+    static displayName = 'ReactionToolbar';
 
     /**
      * Return a 'like' reaction by the current user
      *
      * @return {Object|null}
      */
-    getCurrentUserLike: function() {
+    getCurrentUserLike() {
         return _.find(this.props.reactions, {
             type: 'like',
             user_id: _.get(this.props.currentUser, 'id'),
         });
-    },
+    }
 
     /**
      * Return comments by current user
      *
      * @return {Array<Object>}
      */
-    getCurrentUserComments: function() {
-        var userId = _.get(this.props.currentUser, 'id');
+    getCurrentUserComments() {
+        let userId = _.get(this.props.currentUser, 'id');
         return _.filter(this.props.reactions, (reaction) => {
             if (reaction.user_id === userId) {
                 if (reaction.type === 'comment' || reaction.type === 'note') {
@@ -49,18 +35,18 @@ module.exports = React.createClass({
                 }
             }
         });
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
-        var access = this.props.access;
-        var canComment = (access === 'read-comment' || access === 'read-write');
-        var likeButtonProps = {
+    render() {
+        let t = this.props.locale.translate;
+        let access = this.props.access;
+        let canComment = (access === 'read-comment' || access === 'read-write');
+        let likeButtonProps = {
             icon: 'thumbs-up',
             label: t('story-like'),
             hidden: !canComment,
@@ -68,7 +54,7 @@ module.exports = React.createClass({
             disabled: this.props.disabled,
             onClick: this.handleLikeClick,
         };
-        var commentButtonProps = {
+        let commentButtonProps = {
             icon: 'comment',
             label: t('story-comment'),
             hidden: !canComment,
@@ -82,7 +68,7 @@ module.exports = React.createClass({
                 <HeaderButton {...commentButtonProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Inform parent component that certain action should occur
@@ -90,7 +76,7 @@ module.exports = React.createClass({
      * @param  {String} action
      * @param  {Object|undefined} props
      */
-    triggerActionEvent: function(action, props) {
+    triggerActionEvent(action, props) {
         if (this.props.onAction) {
             this.props.onAction(_.extend({
                 type: 'action',
@@ -98,37 +84,60 @@ module.exports = React.createClass({
                 action,
             }, props));
         }
-    },
+    }
 
     /**
      * Called when user click on like button
      *
      * @param  {Event} evt
      */
-    handleLikeClick: function(evt) {
-        var like = this.getCurrentUserLike();
+    handleLikeClick = (evt) => {
+        let like = this.getCurrentUserLike();
         if (like) {
             this.triggerActionEvent('like-remove', { like });
         } else {
             this.triggerActionEvent('like-add');
         }
-    },
+    }
 
     /**
      * Called when user click on comment button
      *
      * @param  {Event} evt
      */
-    handleCommentClick: function(evt) {
+    handleCommentClick = (evt) => {
         this.triggerActionEvent('reaction-add');
-    },
+    }
 
     /**
      * Called when user click on show button
      *
      * @param  {Event} evt
      */
-    handleShowClick: function(evt) {
+    handleShowClick = (evt) => {
         this.triggerActionEvent('reaction-expand');
-    },
-});
+    }
+}
+
+export {
+    ReactionToolbar as default,
+    ReactionToolbar,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ReactionToolbar.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]),
+        currentUser: PropTypes.object,
+        reactions: PropTypes.arrayOf(PropTypes.object),
+        respondents: PropTypes.arrayOf(PropTypes.object),
+        addingComment: PropTypes.bool,
+        disabled: PropTypes.bool,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        theme: PropTypes.instanceOf(Theme),
+        onAction: PropTypes.func,
+    }
+}

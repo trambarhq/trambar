@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { expect } from 'chai';
 
-import LocalSearch from 'data/local-search';
+import * LocalSearch from 'data/local-search';
 
 describe('LocalSearch', function() {
     describe('#match()', function() {

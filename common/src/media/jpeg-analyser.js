@@ -266,5 +266,4 @@ export {
 	getDimensions,
 	getOrientation,
 	extractPaths,
-	exports as default,
 };

@@ -1,82 +1,65 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var HTTPRequest = require('transport/http-request');
-var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
-var Payload = require('transport/payload');
-var ImageCropping = require('media/image-cropping');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import HTTPRequest from 'transport/http-request';
+import Memoize from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import Payload from 'transport/payload';
+import * as ImageCropping from 'media/image-cropping';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var MediaButton = require('widgets/media-button');
-var MediaDialogBox = require('dialogs/media-dialog-box');
-var ResourceView = require('widgets/resource-view');
-var DurationIndicator = require('widgets/duration-indicator');
+import Overlay from 'widgets/overlay';
+import MediaButton from 'widgets/media-button';
+import MediaDialogBox from 'dialogs/media-dialog-box';
+import ResourceView from 'widgets/resource-view';
+import DurationIndicator from 'widgets/duration-indicator';
 
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import './media-view.scss';
 
-require('./media-view.scss');
+class MediaView extends PureComponent {
+    static displayName = 'MediaView';
 
-module.exports = React.createClass({
-    displayName: 'MediaView',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        resources: PropTypes.arrayOf(PropTypes.object).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        width: PropTypes.number.isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             audioPlayer: HTMLAudioElement,
-        })
-        return {
+        });
+        this.state = {
             selectedIndex: 0,
             renderingDialogBox: false,
             showingDialogBox: false,
             audioURL: null,
         };
-    },
+    }
 
     /**
      * Return the number of resources
      *
      * @return {Number}
      */
-    getResourceCount: function() {
+    getResourceCount() {
         return this.props.resources.length;
-    },
+    }
 
     /**
      * Return the index of the currently selected resource
      *
      * @return {Number}
      */
-    getSelectedResourceIndex: function() {
-        var maxIndex = this.getResourceCount() - 1;
-        var index = Math.min(this.state.selectedIndex, maxIndex);
+    getSelectedResourceIndex() {
+        let maxIndex = this.getResourceCount() - 1;
+        let index = Math.min(this.state.selectedIndex, maxIndex);
         return index;
-    },
+    }
 
     /**
      * Return the currently selected resource
      *
      * @return {Number}
      */
-    getSelectedResource: function() {
-        var index = this.getSelectedResourceIndex();
+    getSelectedResource() {
+        let index = this.getSelectedResourceIndex();
         return (index !== -1) ? this.props.resources[index] : null;
-    },
+    }
 
     /**
      * Select a resource by index
@@ -85,9 +68,9 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    selectResource: function(index) {
+    selectResource(index) {
         return new Promise((resolve, reject) => {
-            var count = this.getResourceCount();
+            let count = this.getResourceCount();
             if (index >= 0 && index < count) {
                 this.setState({ selectedIndex: index }, () => {
                     resolve(index);
@@ -96,14 +79,14 @@ module.exports = React.createClass({
                 resolve(this.getSelectedResourceIndex());
             }
         });
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className="media-view">
                 <div className="container">
@@ -114,20 +97,20 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render navigation bar when there are multiple resources
      *
      * @return {ReactElement}
      */
-    renderNavigation: function() {
-        var count = this.getResourceCount();
+    renderNavigation() {
+        let count = this.getResourceCount();
         if (count <= 1) {
             return null;
         }
-        var index = Math.min(count - 1, this.state.selectedIndex);
-        var directionProps = {
+        let index = Math.min(count - 1, this.state.selectedIndex);
+        let directionProps = {
             index,
             count,
             onBackwardClick: this.handleBackwardClick,
@@ -140,18 +123,18 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render audio player when an audio file was selected
      *
      * @return {[type]}
      */
-    renderAudioPlayer: function() {
+    renderAudioPlayer() {
         if (!this.state.audioURL) {
             return null;
         }
-        var audioProps = {
+        let audioProps = {
             ref: this.components.setters.audioPlayer,
             src: this.state.audioURL,
             autoPlay: true,
@@ -159,21 +142,21 @@ module.exports = React.createClass({
             onEnded: this.handleAudioEnded,
         };
         return <audio {...audioProps} />;
-    },
+    }
 
     /**
      * Render dialog box
      *
      * @return {ReactElement|null}
      */
-    renderDialogBox: function() {
+    renderDialogBox() {
         if (!this.state.renderingDialogBox) {
             return null;
         }
-        var zoomableResources = getZoomableResources(this.props.resources);
-        var index = this.getSelectedResourceIndex();
-        var zoomableIndex = _.indexOf(zoomableResources, this.props.resources[index]);
-        var dialogProps = {
+        let zoomableResources = getZoomableResources(this.props.resources);
+        let index = this.getSelectedResourceIndex();
+        let zoomableIndex = _.indexOf(zoomableResources, this.props.resources[index]);
+        let dialogProps = {
             show: this.state.showingDialogBox,
             resources: zoomableResources,
             selectedIndex: zoomableIndex,
@@ -184,24 +167,24 @@ module.exports = React.createClass({
             onClose: this.handleDialogClose,
         };
         return <MediaDialogBox {...dialogProps} />;
-    },
+    }
 
     /**
      * Render image or video poster
      *
      * @return {ReactElement}
      */
-    renderResource: function() {
-        var count = this.props.resources.length;
-        var index = Math.min(count - 1, this.state.selectedIndex);
-        var res = this.props.resources[index];
+    renderResource() {
+        let count = this.props.resources.length;
+        let index = Math.min(count - 1, this.state.selectedIndex);
+        let res = this.props.resources[index];
         switch (res.type) {
             case 'image': return this.renderImage(res, index);
             case 'video': return this.renderVideo(res, index);
             case 'audio': return this.renderAudio(res, index);
             case 'website': return this.renderWebsite(res, index);
         }
-    },
+    }
 
     /**
      * Render image
@@ -211,13 +194,13 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderImage: function(res, key) {
+    renderImage(res, key) {
         return (
             <div key={key} className="image" onClick={this.handleImageClick}>
                 {this.renderImageElement(res)}
             </div>
         );
-    },
+    }
 
     /**
      * Render video poster
@@ -227,9 +210,9 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderVideo: function(res, key) {
-        var className = 'video';
-        var poster = this.renderImageElement(res);
+    renderVideo(res, key) {
+        let className = 'video';
+        let poster = this.renderImageElement(res);
         if (!poster) {
             className += ' posterless';
         }
@@ -246,7 +229,7 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render audio player
@@ -256,13 +239,13 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderAudio: function(res, key) {
-        var className = 'audio';
-        var url = this.props.theme.getImageURL(res);
+    renderAudio(res, key) {
+        let className = 'audio';
+        let url = this.props.theme.getImageURL(res);
         if (!url) {
             className += ' posterless';
         }
-        var action = (!this.state.audioURL) ? 'play' : 'stop';
+        let action = (!this.state.audioURL) ? 'play' : 'stop';
         return (
             <div key={key} className={className} onClick={this.handleAudioClick}>
                 {this.renderImageElement(res)}
@@ -276,7 +259,7 @@ module.exports = React.createClass({
                 </div>
             </div>
         )
-    },
+    }
 
     /**
      * Render website poster
@@ -286,7 +269,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderWebsite: function(res, key) {
+    renderWebsite(res, key) {
         return (
             <div key={key} className="website">
                 <a href={res.url} target="_blank">
@@ -299,7 +282,7 @@ module.exports = React.createClass({
                 </a>
             </div>
         );
-    },
+    }
 
     /**
      * Render image of resource (image/video/website)
@@ -308,8 +291,8 @@ module.exports = React.createClass({
      *
      * @return {[type]}
      */
-    renderImageElement: function(res) {
-        var props = {
+    renderImageElement(res) {
+        let props = {
             resource: res,
             theme: this.props.theme,
             width: this.props.width,
@@ -317,17 +300,17 @@ module.exports = React.createClass({
             mosaic: true,
         };
         return <ResourceView {...props} />;
-    },
+    }
 
     /**
      * Stop playing audio
      */
-    pauseAudio: function() {
-        var audioPlayer = this.components.audioPlayer;
+    pauseAudio() {
+        let audioPlayer = this.components.audioPlayer;
         if (audioPlayer) {
             audioPlayer.pause();
         }
-    },
+    }
 
     /**
      * Called when user clicks backward button
@@ -336,10 +319,10 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    handleBackwardClick: function(evt) {
-        var index = this.getSelectedResourceIndex();
+    handleBackwardClick = (evt) => {
+        let index = this.getSelectedResourceIndex();
         return this.selectResource(index - 1);
-    },
+    }
 
     /**
      * Called when user clicks forward button
@@ -348,76 +331,76 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    handleForwardClick: function(evt) {
-        var index = this.getSelectedResourceIndex();
+    handleForwardClick = (evt) => {
+        let index = this.getSelectedResourceIndex();
         return this.selectResource(index + 1);
-    },
+    }
 
     /**
      * Called when user clicks on image preview
      *
      * @param  {Event} evt
      */
-    handleImageClick: function(evt) {
+    handleImageClick = (evt) => {
         this.setState({
             showingDialogBox: true,
             renderingDialogBox: true,
         });
-    },
+    }
 
     /**
      * Called when user clicks on video poster
      *
      * @param  {Event} evt
      */
-    handleVideoClick: function(evt) {
+    handleVideoClick = (evt) => {
         this.pauseAudio();
         this.setState({
             showingDialogBox: true,
             renderingDialogBox: true,
         });
-    },
+    }
 
     /**
      * Called when user clicks on audio preview
      *
      * @param  {Event} evt
      */
-    handleAudioClick: function(evt) {
+    handleAudioClick = (evt) => {
         if (!this.state.audioURL) {
-            var res = this.getSelectedResource();
-            var version = chooseAudioVersion(res);
-            var audioURL = this.props.theme.getAudioURL(res, { version });
+            let res = this.getSelectedResource();
+            let version = chooseAudioVersion(res);
+            let audioURL = this.props.theme.getAudioURL(res, { version });
             this.setState({ audioURL });
         } else {
             this.setState({ audioURL: null });
         }
-    },
+    }
 
     /**
      * Called when audio playback ends
      *
      * @param  {Event} evt
      */
-    handleAudioEnded: function(evt) {
+    handleAudioEnded = (evt) => {
         this.setState({ audioURL: null });
-    },
+    }
 
     /**
      * Called when user closes dialog box
      *
      * @param  {Event} evt
      */
-    handleDialogClose: function(evt) {
+    handleDialogClose = (evt) => {
         this.setState({ showingDialogBox: false }, () => {
             setTimeout(() => {
                 this.setState({ renderingDialogBox: false });
             }, 1000);
         });
-    },
-});
+    }
+}
 
-var getZoomableResources = Memoize(function(resources) {
+let getZoomableResources = Memoize(function(resources) {
     return _.filter(resources, (res) => {
         switch (res.type) {
             case 'image':
@@ -436,4 +419,21 @@ var getZoomableResources = Memoize(function(resources) {
  */
 function chooseAudioVersion(res) {
     return _.first(_.keys(res.versions)) || null;
+}
+
+export {
+    MediaView as default,
+    MediaView,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MediaView.propTypes = {
+        resources: PropTypes.arrayOf(PropTypes.object).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        width: PropTypes.number.isRequired,
+    };
 }

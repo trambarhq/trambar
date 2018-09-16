@@ -20,5 +20,4 @@ function create(path, w, h) {
 
 export {
 	create,
-	exports as default,
 };

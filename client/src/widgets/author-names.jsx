@@ -1,24 +1,19 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var UserUtils = require('objects/utils/user-utils');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React from 'react';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var MultipleUserNames = require('widgets/multiple-user-names');
+import MultipleUserNames from 'widgets/multiple-user-names';
 
-module.exports = AuthorNames;
-
-require('./author-names.scss');
+import './author-names.scss';
 
 function AuthorNames(props) {
-    var t = props.locale.translate;
-    var authors = props.authors;
-    var names = _.map(authors, (author) => {
+    let t = props.locale.translate;
+    let authors = props.authors;
+    let names = _.map(authors, (author) => {
         return UserUtils.getDisplayName(author, props.locale);
     });
-    var contents;
+    let contents;
     switch (_.size(authors)) {
         // the list can be empty during loading
         case 0:
@@ -28,28 +23,38 @@ function AuthorNames(props) {
             contents = <span key={1} className="sole author">{names[0]}</span>;
             break;
         case 2:
-            var name1 = <span key={1} className="lead author">{names[0]}</span>;
-            var name2 = <span key={3} className="co author">{names[1]}</span>
+            let name1 = <span key={1} className="lead author">{names[0]}</span>;
+            let name2 = <span key={3} className="co author">{names[1]}</span>
             contents = t('story-author-$name1-and-$name2', name1, name2);
             break;
         default:
-            var name1 = <span key={1} className="lead author">{names[0]}</span>;
-            var coauthors = _.slice(authors, 1);
-            var props = {
+            let name1 = <span key={1} className="lead author">{names[0]}</span>;
+            let coauthors = _.slice(authors, 1);
+            let props = {
                 users: coauthors,
                 label: t('story-author-$count-others', coauthors.length),
                 title: t('story-coauthors'),
                 locale: props.locale,
                 theme: props.theme,
             };
-            var others = <MultipleUserNames key={3} {...props} />
+            let others = <MultipleUserNames key={3} {...props} />
             contents = t('story-author-$name1-and-$name2', name1, others);
     }
     return <span className="author-names selectable">{contents}</span>;
 }
 
-AuthorNames.propTypes = {
-    authors: PropTypes.arrayOf(PropTypes.object),
-    locale: PropTypes.instanceOf(Locale).isRequired,
-    theme: PropTypes.instanceOf(Theme).isRequired,
+export {
+    AuthorNames as default,
+    AuthorNames,
 };
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    AuthorNames.propTypes = {
+        authors: PropTypes.arrayOf(PropTypes.object),
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

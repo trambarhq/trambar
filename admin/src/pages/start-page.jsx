@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import SystemFinder from 'objects/finders/system-finder';
+import * as SystemFinder from 'objects/finders/system-finder';
 
 import './start-page.scss';
 

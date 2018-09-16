@@ -1,15 +1,13 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-module.exports = DevicePlaceholder;
-
-require('./device-placeholder.scss');
+import './device-placeholder.scss';
 
 function DevicePlaceholder(props) {
-    var className = 'device-placeholder';
+    let className = 'device-placeholder';
     if (props.blocked) {
         className += ' blocked';
     }
-    var icon = props.icon;
+    let icon = props.icon;
     return (
         <div className={className}>
             <span className="fa-stack fa-lg">
@@ -20,7 +18,16 @@ function DevicePlaceholder(props) {
     );
 }
 
-DevicePlaceholder.propTypes = {
-    blocked: PropTypes.bool,
-    icon: PropTypes.oneOf([ 'camera', 'video-camera', 'microphone' ]).isRequired,
+export {
+    DevicePlaceholder as default,
+    DevicePlaceholder,
 };
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+    
+    DevicePlaceholder.propTypes = {
+        blocked: PropTypes.bool,
+        icon: PropTypes.oneOf([ 'camera', 'video-camera', 'microphone' ]).isRequired,
+    };
+}

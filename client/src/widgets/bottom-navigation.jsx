@@ -1,62 +1,35 @@
-/**
- * BottomNavigation - React component
- *
- * Buttons at the bottom of the screen for going from section to section.
- */
- var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var ComponentRefs = require('utils/component-refs');
-var HTTPError = require('errors/http-error');
-var NotificationFinder = require('objects/finders/notification-finder');
-var UserFinder = require('objects/finders/user-finder');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import ComponentRefs from 'utils/component-refs';
+import HTTPError from 'errors/http-error';
+import * as NotificationFinder from 'objects/finders/notification-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-var NewsPage = require('pages/news-page');
-var PeoplePage = require('pages/people-page');
-var NotificationsPage = require('pages/notifications-page');
-var BookmarksPage = require('pages/bookmarks-page');
-var SettingsPage = require('pages/settings-page');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import NewsPage from 'pages/news-page';
+import PeoplePage from 'pages/people-page';
+import NotificationsPage from 'pages/notifications-page';
+import BookmarksPage from 'pages/bookmarks-page';
+import SettingsPage from 'pages/settings-page';
 
 // widgets
-var Link = require('widgets/link');
+import Link from 'widgets/link';
 
-require('./bottom-navigation.scss');
+import './bottom-navigation.scss';
 
-module.exports = React.createClass({
-    displayName: 'BottomNavigation',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        settings: PropTypes.object.isRequired,
-        hasAccess: PropTypes.bool,
+class BottomNavigation extends PureComponent {
+    static displayName = 'BottomNavigation';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             container: HTMLDivElement,
         });
-        return {
+        this.state =  {
             height: this.isHidden() ? 0 : 'auto',
             stacking: false,
         };
-    },
+    }
 
     /**
      * Return true if bottom nav is supposed to be hidden
@@ -65,12 +38,12 @@ module.exports = React.createClass({
      *
      * @return {Boolean}
      */
-    isHidden: function(settings) {
+    isHidden(settings) {
         if (!settings) {
             settings = this.props.settings;
         }
         return !_.get(settings, 'navigation.bottom', true);
-    },
+    }
 
     /**
      * Return a URL that points to the given page.
@@ -80,29 +53,30 @@ module.exports = React.createClass({
      *
      * @return {String|null}
      */
-    getPageURL: function(pageClass, route) {
+    getPageURL(pageClass, route) {
         if (!route) {
             route = this.props.route;
         }
-        var settings = (pageClass.configureUI) ? pageClass.configureUI(route) : null;
-        var params = _.get(settings, 'navigation.route');
+        let settings = (pageClass.configureUI) ? pageClass.configureUI(route) : null;
+        let params = _.get(settings, 'navigation.route');
         if (!params) {
             return null;
         }
-        return route.find(pageClass, params);
-    },
+        let url = route.find(pageClass, params);
+        return url;
+    }
 
     /**
      * Change this.state.height when this.props.hidden changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        var hiddenBefore = this.isHidden();
-        var hiddenAfter = this.isHidden(nextProps.settings);
+    componentWillReceiveProps(nextProps) {
+        let hiddenBefore = this.isHidden();
+        let hiddenAfter = this.isHidden(nextProps.settings);
         if (hiddenBefore !== hiddenAfter) {
-            var container = this.components.container;
-            var contentHeight = container.offsetHeight;
+            let container = this.components.container;
+            let contentHeight = container.offsetHeight;
             if (hiddenAfter) {
                 // hiding navigation:
                 //
@@ -127,33 +101,33 @@ module.exports = React.createClass({
                 }, 1000);
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var style = { height: this.state.height };
+    render() {
+        let style = { height: this.state.height };
         return (
             <footer className="bottom-navigation" style={style}>
                 {this.renderButtons()}
             </footer>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var setters = this.components.setters;
-        var route = this.props.route;
-        var section = _.get(this.props.settings, 'navigation.section');
-        var newsProps = {
+    renderButtons() {
+        let t = this.props.locale.translate;
+        let setters = this.components.setters;
+        let route = this.props.route;
+        let section = _.get(this.props.settings, 'navigation.section');
+        let newsProps = {
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',
             active: (section === 'news'),
@@ -161,7 +135,7 @@ module.exports = React.createClass({
             url: this.getPageURL(NewsPage),
             onClick: (section === 'news') ? this.handleActiveButtonClick : null,
         };
-        var notificationsProps = {
+        let notificationsProps = {
             label: t('bottom-nav-notifications'),
             icon: 'comments',
             active: (section === 'notifications'),
@@ -169,7 +143,7 @@ module.exports = React.createClass({
             url: this.getPageURL(NotificationsPage),
             onClick: (section === 'notifications') ? this.handleActiveButtonClick : null,
         };
-        var bookmarksProps = {
+        let bookmarksProps = {
             label: t('bottom-nav-bookmarks'),
             icon: 'bookmark',
             active: (section === 'bookmarks'),
@@ -177,7 +151,7 @@ module.exports = React.createClass({
             url: this.getPageURL(BookmarksPage),
             onClick: (section === 'bookmarks') ? this.handleActiveButtonClick : null,
         };
-        var peopleProps = {
+        let peopleProps = {
             label: t('bottom-nav-people'),
             icon: 'users',
             active: (section === 'people'),
@@ -185,7 +159,7 @@ module.exports = React.createClass({
             url: this.getPageURL(PeoplePage),
             onClick: (section === 'people') ? this.handleActiveButtonClick : null,
         };
-        var settingsProps = {
+        let settingsProps = {
             label: t('bottom-nav-settings'),
             icon: 'gears',
             active: (section === 'settings'),
@@ -193,7 +167,7 @@ module.exports = React.createClass({
             url: this.getPageURL(SettingsPage),
             onClick: (section === 'settings') ? this.handleActiveButtonClick : null,
         };
-        var newNotificationProps = {
+        let newNotificationProps = {
             hasAccess: this.props.hasAccess,
             database: this.props.database,
             route: this.props.route,
@@ -209,54 +183,54 @@ module.exports = React.createClass({
                 <Button {...settingsProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Perform stacking check on mount and add resize handler
      */
-    componentDidMount: function() {
+    componentDidMount() {
         this.detectStacking();
         window.addEventListener('resize', this.handleWindowResize);
-    },
+    }
 
     /**
      * Remove resize listener
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         window.removeEventListener('resize', this.handleWindowResize);
-    },
+    }
 
     /**
      * Check if icon and text labels are on top of each other
      */
-    detectStacking: function() {
-        var container = this.components.container;
+    detectStacking() {
+        let container = this.components.container;
         if (container) {
-            var icon = container.getElementsByClassName('fa')[1];
-            var label = container.getElementsByClassName('label')[1];
-            var stacking = (label.offsetTop >= icon.offsetTop + icon.offsetHeight);
+            let icon = container.getElementsByClassName('fa')[1];
+            let label = container.getElementsByClassName('label')[1];
+            let stacking = (label.offsetTop >= icon.offsetTop + icon.offsetHeight);
             if (this.state.stacking !== stacking) {
                 this.setState({ stacking });
             }
         }
-    },
+    }
 
     /**
      * Called when user resize the browser window
      *
      * @param  {Event} evt
      */
-    handleWindowResize: function(evt) {
+    handleWindowResize = (evt) => {
         this.detectStacking();
-    },
+    }
 
     /**
      * Called when user clicks a button that's already active
      *
      * @param  {Event} evt
      */
-    handleActiveButtonClick: function(evt) {
-        var page = document.getElementsByClassName('page-container')[0];
+    handleActiveButtonClick = (evt) => {
+        let page = document.getElementsByClassName('page-container')[0];
         if (page && page.scrollTop > 0) {
             if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
                 // stop momentum scrolling
@@ -267,11 +241,11 @@ module.exports = React.createClass({
                 page.scrollTop = 0;
             }
         }
-    },
-});
+    }
+}
 
 function Button(props) {
-    var className = 'button';
+    let className = 'button';
     if (props.className) {
         className += ` ${props.className}`;
     }
@@ -302,14 +276,8 @@ function Button(props) {
     }
 }
 
-var NewNotificationsBadge = Relaks.createClass({
-    displayName: 'NewNotificationsBadge',
-    propTypes: {
-        stacking: PropTypes.bool,
-        hasAccess: PropTypes.bool,
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-    },
+class NewNotificationsBadge extends AsyncComponent {
+    static displayName = 'NewNotificationsBadge';
 
     /**
      * Render component asynchronously
@@ -318,19 +286,19 @@ var NewNotificationsBadge = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
+    renderAsync(meanwhile) {
+        let params = this.props.route.parameters;
         if (!params.schema) {
             return null;
         }
         if (!this.props.hasAccess) {
             return null;
         }
-        var db = this.props.database.use({ schema: params.schema, by: this });
+        let db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then((currentUserId) => {
             return UserFinder.findUser(db, currentUserId).then((user) => {
                 return NotificationFinder.findNotificationsUnseenByUser(db, user).then((notifications) => {
-                    var count = notifications.length;
+                    let count = notifications.length;
                     if (process.env.PLATFORM === 'browser') {
                         changeFavIcon(count);
                         changeDocumentTitle(count);
@@ -346,44 +314,44 @@ var NewNotificationsBadge = Relaks.createClass({
                 });
             });
         });
-    },
-});
+    }
+}
 
 if (process.env.PLATFORM === 'browser') {
-    var favIcons;
+    let favIcons;
 
     /**
      * Use favicon with a badge if there are unread notifications
      *
      * @param  {Number} count
      */
-    var changeFavIcon = function(count) {
+    let changeFavIcon = function(count) {
         if (!favIcons) {
             // get the post-WebPack filenames of the favicons
-            var paths = require.context('favicon-notification', true, /\.png$/).keys();
+            let paths = require.context('favicon-notification', true, /\.png$/).keys();
             favIcons = _.map(paths, (path) => {
                 // make the file extension part of the expression passed to require()
                 // so WebPack will filter out other files
-                var name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
-                var withoutBadge = require(`favicon/${name}.png`);
-                var withBadge = require(`favicon-notification/${name}.png`);
+                let name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
+                let withoutBadge = require(`favicon/${name}.png`);
+                let withBadge = require(`favicon-notification/${name}.png`);
                 return { withoutBadge, withBadge };
             });
         }
-        var links = _.filter(document.head.getElementsByTagName('LINK'), (link) => {
+        let links = _.filter(document.head.getElementsByTagName('LINK'), (link) => {
             if (link.rel === 'icon' || link.rel === 'apple-touch-icon-precomposed') {
                 return true;
             }
         });
         _.each(links, (link) => {
-            var currentFilename = link.getAttribute('href');
+            let currentFilename = link.getAttribute('href');
             if (count > 0) {
-                var icon = _.find(favIcons, { withoutBadge: currentFilename });
+                let icon = _.find(favIcons, { withoutBadge: currentFilename });
                 if (icon) {
                     link.href = icon.withBadge;
                 }
             } else {
-                var icon = _.find(favIcons, { withBadge: currentFilename });
+                let icon = _.find(favIcons, { withBadge: currentFilename });
                 if (icon) {
                     link.href = icon.withoutBadge;
                 }
@@ -391,11 +359,40 @@ if (process.env.PLATFORM === 'browser') {
         });
     }
 
-    var changeDocumentTitle = function(count) {
-        var title = _.replace(document.title, /^\(\d+\)\s*/, '');
+    let changeDocumentTitle = function(count) {
+        let title = _.replace(document.title, /^\(\d+\)\s*/, '');
         if (count > 0) {
             title = `(${count}) ${title}`;
         }
         document.title = title;
     }
+}
+
+export {
+    BottomNavigation as default,
+    BottomNavigation,
+    NewNotificationsBadge,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    NewNotificationsBadge.propTypes = {
+        stacking: PropTypes.bool,
+        hasAccess: PropTypes.bool,
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+    };
+    BottomNavigation.propTypes = {
+        settings: PropTypes.object.isRequired,
+        hasAccess: PropTypes.bool,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
 }

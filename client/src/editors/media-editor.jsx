@@ -1,49 +1,34 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
 
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-var Payloads = require('transport/payloads');
+import Environment from 'env/environment';
+import Payloads from 'transport/payloads';
 
 // mixins
-var UpdateCheck = require('mixins/update-check');
+import UpdateCheck from 'mixins/update-check';
 
 // widgets
-var MediaButton = require('widgets/media-button');
-var ImageEditor = require('editors/image-editor');
-var VideoEditor = require('editors/video-editor');
-var AudioEditor = require('editors/audio-editor');
+import MediaButton from 'widgets/media-button';
+import ImageEditor from 'editors/image-editor';
+import VideoEditor from 'editors/video-editor';
+import AudioEditor from 'editors/audio-editor';
 
-require('./media-editor.scss');
+import './media-editor.scss';
 
-module.exports = React.createClass({
-    displayName: 'MediaEditor',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        allowEmbedding: PropTypes.bool,
-        allowShifting: PropTypes.bool,
-        resources: PropTypes.arrayOf(PropTypes.object),
-        resourceIndex: PropTypes.number,
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-
-        onChange: PropTypes.func.isRequired,
-        onEmbed: PropTypes.func,
-    },
+class MediaEditor extends PureComponent {
+    static displayName = 'MediaEditor';
 
     /**
      * Render component
      *
      * @return {ReactELement}
      */
-    render: function() {
-        var index = this.props.resourceIndex;
-        var res = _.get(this.props.resources, index);
+    render() {
+        let index = this.props.resourceIndex;
+        let res = _.get(this.props.resources, index);
         if (!res) {
-            var placeholder;
+            let placeholder;
             if (this.props.theme.mode !== 'single-col') {
                 placeholder = this.props.children;
             }
@@ -62,7 +47,7 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render editor for the given resource
@@ -71,8 +56,8 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderResource: function(res) {
-        var props = {
+    renderResource(res) {
+        let props = {
             resource: res,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -88,39 +73,39 @@ module.exports = React.createClass({
             case 'audio':
                 return <AudioEditor {...props} />;
         }
-    },
+    }
 
     /**
      * Render navigation bar for selecting resource
      *
      * @return {ReactElement}
      */
-    renderNavigation: function() {
-        var t = this.props.locale.translate;
-        var index = this.props.resourceIndex;
-        var count = _.size(this.props.resources);
+    renderNavigation() {
+        let t = this.props.locale.translate;
+        let index = this.props.resourceIndex;
+        let count = _.size(this.props.resources);
         if (count === 0) {
             return null;
         }
-        var removeProps = {
+        let removeProps = {
             label: t('media-editor-remove'),
             icon: 'remove',
             onClick: this.handleRemoveClick,
         };
-        var embedProps = {
+        let embedProps = {
             label: t('media-editor-embed'),
             icon: 'code',
             hidden: !this.props.allowEmbedding,
             onClick: this.handleEmbedClick,
         };
-        var shiftProps = {
+        let shiftProps = {
             label: t('media-editor-shift'),
             icon: 'chevron-left',
             hidden: !this.props.allowShifting || !(count > 1),
             disabled: !(index > 0),
             onClick: this.handleShiftClick,
         };
-        var directionProps = {
+        let directionProps = {
             index,
             count,
             hidden: !(count > 1),
@@ -139,7 +124,7 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Call onChange handler
@@ -147,21 +132,21 @@ module.exports = React.createClass({
      * @param  {Array<Object>} resources
      * @param  {Number} selection
      */
-    triggerChangeEvent: function(resources, selection) {
+    triggerChangeEvent(resources, selection) {
         return this.props.onChange({
             type: 'change',
             target: this,
             resources,
             selection,
         });
-    },
+    }
 
     /**
      * Call onEmbed handler
      *
      * @param  {Object} resource
      */
-    triggerEmbedEvent: function(resource) {
+    triggerEmbedEvent(resource) {
         if (this.props.onEmbed) {
             this.props.onEmbed({
                 type: 'embed',
@@ -169,36 +154,36 @@ module.exports = React.createClass({
                 resource,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks shift button
      *
      * @param  {Event} evt
      */
-    handleShiftClick: function(evt) {
-        var index = this.props.resourceIndex;
+    handleShiftClick = (evt) => {
+        let index = this.props.resourceIndex;
         if (index < 1) {
             return;
         }
-        var resources = _.slice(this.props.resources);
-        var res = resources[index];
+        let resources = _.slice(this.props.resources);
+        let res = resources[index];
         resources.splice(index, 1);
         resources.splice(index - 1, 0, res);
         this.triggerChangeEvent(resources, index - 1);
-    },
+    }
 
     /**
      * Called when user clicks remove button
      *
      * @param  {Event} evt
      */
-    handleRemoveClick: function(evt) {
-        var index = this.props.resourceIndex;
-        var resources = _.slice(this.props.resources);
-        var res = resources[index];
+    handleRemoveClick = (evt) => {
+        let index = this.props.resourceIndex;
+        let resources = _.slice(this.props.resources);
+        let res = resources[index];
         resources.splice(index, 1);
-        var newIndex = index;
+        let newIndex = index;
         if (index >= resources.length) {
             newIndex = resources.length - 1;
         }
@@ -206,7 +191,7 @@ module.exports = React.createClass({
         if (res && res.payload_token) {
             this.props.payloads.cancel(res.payload_token);
         }
-    },
+    }
 
     /**
      * Called when user clicks embed button
@@ -215,11 +200,11 @@ module.exports = React.createClass({
      *
      * @return {Promise}
      */
-    handleEmbedClick: function(evt) {
-        var index = this.props.resourceIndex;
-        var resource = this.props.resources[index];
+    handleEmbedClick = (evt) => {
+        let index = this.props.resourceIndex;
+        let resource = this.props.resources[index];
         this.triggerEmbedEvent(resource);
-    },
+    }
 
     /**
      * Called when user clicks backward button
@@ -228,14 +213,14 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    handleBackwardClick: function(evt) {
-        var index = this.props.resourceIndex;
-        var resources = this.props.resources;
+    handleBackwardClick = (evt) => {
+        let index = this.props.resourceIndex;
+        let resources = this.props.resources;
         if (index <= 0) {
             return;
         }
         this.triggerChangeEvent(resources, index - 1);
-    },
+    }
 
     /**
      * Called when user clicks forward button
@@ -244,24 +229,46 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    handleForwardClick: function(evt) {
-        var index = this.props.resourceIndex;
-        var resources = this.props.resources;
+    handleForwardClick = (evt) => {
+        let index = this.props.resourceIndex;
+        let resources = this.props.resources;
         if (index >= _.size(resources) - 1) {
             return;
         }
         this.triggerChangeEvent(resources, index + 1);
-    },
+    }
 
     /**
      * Called when a resource has been edited
      *
      * @param  {Object} evt
      */
-    handleResourceChange: function(evt) {
-        var index = this.props.resourceIndex;
-        var resources = _.slice(this.props.resources);
+    handleResourceChange = (evt) => {
+        let index = this.props.resourceIndex;
+        let resources = _.slice(this.props.resources);
         resources[index] = evt.resource;
         this.triggerChangeEvent(resources, index);
-    },
-});
+    }
+}
+
+export {
+    MediaEditor as default,
+    MediaEditor,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MediaEditor.propTypes = {
+        allowEmbedding: PropTypes.bool,
+        allowShifting: PropTypes.bool,
+        resources: PropTypes.arrayOf(PropTypes.object),
+        resourceIndex: PropTypes.number,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+
+        onChange: PropTypes.func.isRequired,
+        onEmbed: PropTypes.func,
+    };
+}

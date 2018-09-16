@@ -4,11 +4,11 @@ import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
-import ExternalDataUtils from 'objects/utils/external-data-utils';
-import ProjectFinder from 'objects/finders/project-finder';
-import RepoFinder from 'objects/finders/repo-finder';
-import ServerFinder from 'objects/finders/server-finder';
-import StatisticsFinder from 'objects/finders/statistics-finder';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as RepoFinder from 'objects/finders/repo-finder';
+import * as ServerFinder from 'objects/finders/server-finder';
+import * as StatisticsFinder from 'objects/finders/statistics-finder';
 
 // widgets
 import PushButton from 'widgets/push-button';

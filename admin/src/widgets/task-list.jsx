@@ -4,7 +4,7 @@ import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
-import TaskFinder from 'objects/finders/task-finder';
+import * as TaskFinder from 'objects/finders/task-finder';
 
 // widgets
 import SmartList from 'widgets/smart-list';

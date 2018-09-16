@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import TestServer from './lib/test-server';
 
-import HTTPRequest from 'transport/http-request';
+import * as HTTPRequest from 'transport/http-request';
 
 let port = 7878;
 let baseURL = `http://localhost:${port}`;

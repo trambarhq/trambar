@@ -14,5 +14,4 @@ function generate() {
 
 export {
     generate,
-    exports as default,
 };

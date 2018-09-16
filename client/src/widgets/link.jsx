@@ -1,42 +1,23 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
-module.exports = React.createClass({
-    displayName: 'Link',
-    propTypes: {
-        url: PropTypes.string,
-        alwaysAsLink: PropTypes.bool,
-    },
+class Link extends PureComponent {
+    static displayName = 'Link';
 
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            alwaysAsLink: false,
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             hasFocus: false
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var props = _.omit(this.props, 'url', 'alwaysAsLink');
+    render() {
+        let props = _.omit(this.props, 'url', 'alwaysAsLink');
         if (this.props.url) {
             if (this.props.alwaysAsLink) {
                 // always set href
@@ -58,23 +39,41 @@ module.exports = React.createClass({
         return (
             <a {...props}>{this.props.children}</a>
         );
-    },
+    }
 
     /**
      * Called when component gains keyboard focus
      *
      * @param  {Event} evt
      */
-    handleFocus: function(evt) {
+    handleFocus = (evt) => {
         this.setState({ hasFocus: true });
-    },
+    }
 
     /**
      * Called when component loses keyboard focus
      *
      * @param  {Event} evt
      */
-    handleBlur: function(evt) {
+    handleBlur = (evt) => {
         this.setState({ hasFocus: false });
-    },
-});
+    }
+}
+
+Link.defaultProps = {
+    alwaysAsLink: false,
+};
+
+export {
+    Link as default,
+    Link,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    Link.propTypes = {
+        url: PropTypes.string,
+        alwaysAsLink: PropTypes.bool,
+    };
+}

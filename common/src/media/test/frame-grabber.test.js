@@ -1,7 +1,7 @@
-import Chai from 'chai', expect = Chai.expect;
+import { expect } from 'chai';
 
-import MediaLoader from 'media/media-loader';
-import FrameGrabber from 'media/frame-grabber';
+import * as MediaLoader from 'media/media-loader';
+import * as FrameGrabber from 'media/frame-grabber';
 
 import videoData from './videos/small.mp4';
 

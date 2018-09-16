@@ -18,11 +18,13 @@ class EnvironmentMonitor extends EventEmitter {
         this.webpSupport = isWebpSupported(),
         this.browser = detectBrowser();
         this.os = detectOS();
+        this.date = getDate(new Date);
         if (this.os === 'android' || this.os === 'ios' || this.os === 'wp') {
             this.pointingDevice = 'touch';
         } else {
             this.pointingDevice = 'mouse';
         }
+        this.dateCheckInterval = 0;
     }
 
     activate() {
@@ -43,7 +45,7 @@ class EnvironmentMonitor extends EventEmitter {
         toggleEventListener(window, 'online', this.handleOnline, enabled);
         toggleEventListener(window, 'offline', this.handleOffline, enabled);
 
-        var network = getNetworkAPI();
+        let network = getNetworkAPI();
         toggleEventListener(network, 'typechange', this.handleConnectionTypeChange, enabled);
 
         getBattery().then((battery) => {
@@ -56,10 +58,27 @@ class EnvironmentMonitor extends EventEmitter {
             }
         });
 
+        this.scheduleDateCheck(enabled);
+
         if (process.env.PLATFORM === 'cordova') {
             toggleEventListener(document, 'pause', this.handlePause, enabled);
             toggleEventListener(document, 'resume', this.handleResume, enabled);
         }
+    }
+
+    scheduleDateCheck(enabled) {
+        if (this.dateCheckInterval) {
+            clearInterval(this.dateCheckInterval);
+            this.dateCheckInterval = 0;
+        }
+        let now = new Date;
+        // let the handler at the beginning of a minute
+        let millisec = now.getSeconds() * 1000 + now.getMilliseconds();
+        console.log(millisec)
+        setTimeout(() => {
+            console.log((new Date).toISOString());
+            this.dateCheckInterval = setInterval(this.handleDateChange, 60 * 1000);
+        }, 60 * 1000 - millisec + 50);
     }
 
     /**
@@ -156,6 +175,21 @@ class EnvironmentMonitor extends EventEmitter {
             this.triggerEvent(new EnvironmentMonitorEvent('change', this));
         }
     }
+
+    handleDateChange = () => {
+        let now = new Date;
+        let date = getDate(now);
+        if (date !== this.date) {
+            this.date = date;
+            this.triggerEvent(new EnvironmentMonitorEvent('change', this));
+        }
+        let sec = now.getSeconds();
+        if (sec >= 5) {
+            // interval has drifted--reschedule it
+            this.scheduleDateCheck();
+        }
+        console.log(now.toISOString())
+    }
 }
 
 /**
@@ -165,7 +199,7 @@ class EnvironmentMonitor extends EventEmitter {
  */
 function isOnline() {
     if (process.env.PLATFORM === 'cordova') {
-        var connection = getNetworkAPI();
+        let connection = getNetworkAPI();
         return (connection.type !== 'none');
     } else {
         return navigator.onLine;
@@ -173,7 +207,7 @@ function isOnline() {
 }
 
 function getConnectionType() {
-    var connection = getNetworkAPI();
+    let connection = getNetworkAPI();
     if (process.env.PLATFORM === 'cordova') {
         return connection.type;
     } else {
@@ -194,7 +228,7 @@ function getBattery() {
 
 }
 
-var uaFragmentsBrowser = {
+let uaFragmentsBrowser = {
     firefox: 'Firefox',
     opera: 'Opera',
     ie: 'Trident',
@@ -204,7 +238,7 @@ var uaFragmentsBrowser = {
 };
 
 function detectBrowser() {
-    var ua = navigator.userAgent;
+    let ua = navigator.userAgent;
     for (let name in uaFragmentsBrowser) {
         if (ua.indexOf(uaFragmentsBrowser[name]) > -1) {
             return name;
@@ -213,7 +247,7 @@ function detectBrowser() {
     return 'unknown';
 }
 
-var uaFragmentsOS = {
+let uaFragmentsOS = {
     wp: 'Windows Phone',
     windows: 'Windows',
     ios: 'iPhone OS',
@@ -223,7 +257,7 @@ var uaFragmentsOS = {
 };
 
 function detectOS() {
-    var ua = navigator.userAgent;
+    let ua = navigator.userAgent;
     for (let name in uaFragmentsOS) {
         if (ua.indexOf(uaFragmentsOS[name]) > -1) {
             return name;
@@ -233,15 +267,20 @@ function detectOS() {
 }
 
 function isWebpSupported() {
-    var canvas = document.createElement('CANVAS');
+    let canvas = document.createElement('CANVAS');
     canvas.width = canvas.height = 1;
     if (canvas.toDataURL) {
-        var url = canvas.toDataURL('image/webp');
+        let url = canvas.toDataURL('image/webp');
         if (url.indexOf('image/webp') === 5) {
             return true;
         }
     }
     return false;
+}
+
+function getDate(date) {
+    let s = date.toISOString();
+    return s.substr(0, 10);
 }
 
 function toggleEventListener(emitter, type, func, enabled) {

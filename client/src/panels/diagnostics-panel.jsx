@@ -1,41 +1,32 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var SettingsPanel = require('widgets/settings-panel');
-var Diagnostics = require('widgets/diagnostics');
+import SettingsPanel from 'widgets/settings-panel';
+import Diagnostics from 'widgets/diagnostics';
 
-require('./diagnostics-panel.scss');
+import './diagnostics-panel.scss';
 
-module.exports = React.createClass({
-    displayName: 'DiagnosticsPanel',
-    propTypes: {
-        type: PropTypes.string.isRequired,
-        title: PropTypes.string.isRequired,
-    },
+class DiagnosticsPanel extends PureComponent {
+    static displayName = 'DiagnosticsPanel';
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             contents: Diagnostics.get(this.props.type),
         };
-    },
+    }
 
     /**
      * Render component if content is available
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         if (!this.state.contents) {
             return null;
         }
-        var className = `diagnostics ${this.props.type}`;
+        let className = `diagnostics ${this.props.type}`;
         return (
             <SettingsPanel className={className}>
                 <header>
@@ -46,29 +37,43 @@ module.exports = React.createClass({
                 </body>
             </SettingsPanel>
         );
-    },
+    }
 
     /**
      * Add change handler
      */
-    componentDidMount: function() {
+    componentDidMount() {
         Diagnostics.addListener(this.handleChange);
-    },
+    }
 
     /**
      * Remove change handler
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         Diagnostics.removeListener(this.handleChange);
-    },
+    }
 
     /**
      * Called when diagnostic data has changed
      */
-    handleChange: function() {
-        var contents = Diagnostics.get(this.props.type);
+    handleChange = (evt) => {
+        let contents = Diagnostics.get(this.props.type);
         if (this.state.contents !== contents) {
             this.setState({ contents });
         }
-    },
-});
+    }
+}
+
+export {
+    DiagnosticsPanel as default,
+    DiagnosticsPanel,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    DiagnosticsPanel.propTypes = {
+        type: PropTypes.string.isRequired,
+        title: PropTypes.string.isRequired,
+    };
+}

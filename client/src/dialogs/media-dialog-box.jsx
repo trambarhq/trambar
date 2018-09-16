@@ -1,61 +1,44 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Hammer = require('hammerjs');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import Hammer from 'hammerjs';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var ResourceView = require('widgets/resource-view');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import ResourceView from 'widgets/resource-view';
 
-require('./media-dialog-box.scss');
+import './media-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'MediaDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        resources: PropTypes.arrayOf(PropTypes.object).isRequired,
-        selectedIndex: PropTypes.number.isRequired,
+class MediaDialogBox extends PureComponent {
+    static displayName = 'MediaDialogBox';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onClose: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             selectedIndex: this.props.selectedIndex,
         };
-    },
+    }
 
     /**
      * Return the number of resources
      *
      * @return {Number}
      */
-    getResourceCount: function() {
+    getResourceCount() {
         return this.props.resources.length;
-    },
+    }
 
     /**
      * Return the currently selected resource
      *
      * @return {Number}
      */
-    getSelectedResourceIndex: function() {
-        var maxIndex = this.getResourceCount() - 1;
-        var index = _.min([ this.state.selectedIndex, maxIndex ]);
+    getSelectedResourceIndex() {
+        let maxIndex = this.getResourceCount() - 1;
+        let index = _.min([ this.state.selectedIndex, maxIndex ]);
         return index;
-    },
+    }
 
     /**
      * Select a resource by index
@@ -64,9 +47,9 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    selectResource: function(index) {
+    selectResource(index) {
         return new Promise((resolve, reject) => {
-            var count = this.getResourceCount();
+            let count = this.getResourceCount();
             if (index >= 0 && index < count) {
                 this.setState({ selectedIndex: index }, () => {
                     resolve(index);
@@ -75,24 +58,24 @@ module.exports = React.createClass({
                 resolve(this.getSelectedResourceIndex());
             }
         });
-    },
+    }
 
     /**
      * Add event listeners
      */
-    addListeners: function() {
+    addListeners() {
         document.addEventListener('keydown', this.handleKeyDown);
         document.addEventListener('mousewheel', this.handleMouseWheel);
 
         this.hammer = new Hammer(document.body);
         this.hammer.on('swipeleft', this.handleSwipeLeft);
         this.hammer.on('swiperight', this.handleSwipeRight);
-    },
+    }
 
     /**
      * Remove event listeners
      */
-    removeListeners: function() {
+    removeListeners() {
         document.removeEventListener('keydown', this.handleKeyDown);
         document.removeEventListener('mousewheel', this.handleMouseWheel);
 
@@ -103,23 +86,23 @@ module.exports = React.createClass({
             this.hammer.destroy();
             this.hammer = null;
         }
-    },
+    }
 
     /**
      * Add listeners on mount
      */
-    componentWillMount: function() {
+    componentWillMount() {
         if (this.props.show) {
             this.addListeners();
         }
-    },
+    }
 
     /**
      * Set the selectedIndex when the dialog box becomes visible
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.show !== nextProps.show) {
             if (nextProps.show) {
                 this.setState({
@@ -127,22 +110,22 @@ module.exports = React.createClass({
                 });
                 this.addListeners();
             } else {
-                var video = this.refs.video;
+                let video = this.refs.video;
                 if (video) {
                     video.pause();
                 }
                 this.removeListeners();
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var overlayProps = {
+    render() {
+        let overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.props.onClose,
         };
@@ -157,20 +140,20 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render either live or captured video
      *
      * @return {ReactElement}
      */
-    renderView: function() {
-        var index = this.getSelectedResourceIndex();
-        var res = this.props.resources[index];
+    renderView() {
+        let index = this.getSelectedResourceIndex();
+        let res = this.props.resources[index];
         if (res) {
-            var viewport = document.body.parentNode;
-            var viewportWidth = viewport.clientWidth;
-            var viewportHeight = viewport.clientHeight;
+            let viewport = document.body.parentNode;
+            let viewportWidth = viewport.clientWidth;
+            let viewportHeight = viewport.clientHeight;
             if (this.props.theme.mode === 'single-col') {
                 viewportWidth -= 10;
                 viewportHeight -= 100;
@@ -178,10 +161,10 @@ module.exports = React.createClass({
                 viewportWidth -= 100;
                 viewportHeight -= 200;
             }
-            var viewportAspect = viewportWidth / viewportHeight;
-            var maxWidth, maxHeight;
+            let viewportAspect = viewportWidth / viewportHeight;
+            let maxWidth, maxHeight;
             _.each(this.props.resources, (res) => {
-                var dims = this.props.theme.getDimensions(res, { clip: null });
+                let dims = this.props.theme.getDimensions(res, { clip: null });
                 if (!(maxWidth >= dims.width)) {
                     maxWidth = dims.width;
                 }
@@ -189,7 +172,7 @@ module.exports = React.createClass({
                     maxHeight = dims.height;
                 }
             });
-            var maxAspect = maxWidth / maxHeight;
+            let maxAspect = maxWidth / maxHeight;
             if (viewportAspect > maxAspect) {
                 if (maxHeight > viewportHeight) {
                     maxHeight = viewportHeight;
@@ -201,8 +184,8 @@ module.exports = React.createClass({
                     maxHeight = Math.round(maxWidth / maxAspect);
                 }
             }
-            var style = { width: maxWidth, height: maxHeight };
-            var contents;
+            let style = { width: maxWidth, height: maxHeight };
+            let contents;
             switch (res.type) {
                 case 'image':
                     contents = this.renderImage(res, maxWidth, maxHeight);
@@ -217,7 +200,7 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render image
@@ -228,8 +211,8 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderImage: function(res, maxWidth, maxHeight) {
-        var props = {
+    renderImage(res, maxWidth, maxHeight) {
+        let props = {
             // prevent image element from being reused, so when changing from
             // one image to the next the current image doesn't momentarily
             // appears with the dimensions of the next image
@@ -250,7 +233,7 @@ module.exports = React.createClass({
             props.height = maxHeight;
         }
         return <ResourceView {...props} />;
-    },
+    }
 
     /**
      * Render video player
@@ -261,17 +244,17 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderVideo: function(res) {
-        var theme = this.props.theme;
-        var url = theme.getVideoURL(res);
-        var dims = theme.getDimensions(res, { clip: null });
-        var posterURL = theme.getImageURL(res, {
+    renderVideo(res) {
+        let theme = this.props.theme;
+        let url = theme.getVideoURL(res);
+        let dims = theme.getDimensions(res, { clip: null });
+        let posterURL = theme.getImageURL(res, {
             width: dims.width,
             height: dims.height,
             clip: null,
             quality: 60
         });
-        var props = {
+        let props = {
             ref: 'video',
             src: url,
             controls: true,
@@ -279,17 +262,17 @@ module.exports = React.createClass({
             poster: posterURL,
         };
         return <video {...props} />;
-    },
+    }
 
     /**
      * Render links
      *
      * @return {ReactElement|null}
      */
-    renderThumbnails: function(index) {
-        var selectedIndex = this.getSelectedResourceIndex();
-        var thumbnails = _.map(this.props.resources, (res, index) => {
-            var frameProps = {
+    renderThumbnails(index) {
+        let selectedIndex = this.getSelectedResourceIndex();
+        let thumbnails = _.map(this.props.resources, (res, index) => {
+            let frameProps = {
                 className: 'thumbnail',
                 'data-index': index,
                 onClick: this.handleThumbnailClick,
@@ -297,7 +280,7 @@ module.exports = React.createClass({
             if (index === selectedIndex) {
                 frameProps.className += ' selected';
             }
-            var viewProps = {
+            let viewProps = {
                 resource: res,
                 theme: this.props.theme,
                 width: 28,
@@ -310,22 +293,22 @@ module.exports = React.createClass({
             );
         });
         return <div className="links">{thumbnails}</div>;
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var downloadButtonProps = {
+    renderButtons() {
+        let t = this.props.locale.translate;
+        let downloadButtonProps = {
             label: t('media-download-original'),
             emphasized: false,
             hidden: (this.props.theme.mode === 'single-col'),
             onClick: this.handleDownloadClick,
         };
-        var closeButtonProps = {
+        let closeButtonProps = {
             label: t('media-close'),
             emphasized: true,
             onClick: this.props.onClose,
@@ -336,38 +319,38 @@ module.exports = React.createClass({
                 <PushButton {...closeButtonProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Remove event handler on unmount
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         this.removeListeners();
-    },
+    }
 
     /**
      * Called when user clicks on a thumbnail
      *
      * @param  {Event} evt
      */
-    handleThumbnailClick: function(evt) {
-        var index = parseInt(evt.currentTarget.getAttribute('data-index'));
+    handleThumbnailClick = (evt) => {
+        let index = parseInt(evt.currentTarget.getAttribute('data-index'));
         return this.selectResource(index);
-    },
+    }
 
     /**
      * Called when user clicks on download button
      *
      * @param  {Evt} evt
      */
-    handleDownloadClick: function(evt) {
-        var index = this.getSelectedResourceIndex();
-        var res = this.props.resources[index];
+    handleDownloadClick = (evt) => {
+        let index = this.getSelectedResourceIndex();
+        let res = this.props.resources[index];
         if (res) {
             // create a link then simulate a click
-            var link = document.createElement('A');
-            var theme = this.props.theme;
-            var url;
+            let link = document.createElement('A');
+            let theme = this.props.theme;
+            let url;
             switch (res.type) {
                 case 'image': url = theme.getImageURL(res, { original: true }); break;
                 case 'video': url = theme.getVideoURL(res, { original: true }); break;
@@ -376,17 +359,17 @@ module.exports = React.createClass({
             link.download = res.filename || true;   // only works when it's same origin
             link.click();
         }
-    },
+    }
 
     /**
      * Change the selection index
      *
      * @param  {Number} diff
      */
-    changeSelection: function(diff) {
+    changeSelection(diff) {
         if (diff) {
-            var count = this.getResourceCount();
-            var index = this.getSelectedResourceIndex() + diff;
+            let count = this.getResourceCount();
+            let index = this.getSelectedResourceIndex() + diff;
             if (index >= count) {
                 index = 0;
             } else if (index < 0){
@@ -394,15 +377,15 @@ module.exports = React.createClass({
             }
             this.selectResource(index);
         }
-    },
+    }
 
     /**
      * Called when user presses a key
      *
      * @param  {Event} evt
      */
-    handleKeyDown: function(evt) {
-        var diff = 0;
+    handleKeyDown = (evt) => {
+        let diff = 0;
         if (evt.keyCode === 39) {           // right arrow
             diff = +1;
         } else if (evt.keyCode == 37) {     // left arrow
@@ -412,16 +395,16 @@ module.exports = React.createClass({
         }
         this.changeSelection(diff);
         evt.preventDefault();
-    },
+    }
 
     /**
      * Called when user turns the mouse wheel
      *
      * @param  {Event} evt
      */
-    handleMouseWheel: function(evt) {
-        var diff = 0;
-        var delta;
+    handleMouseWheel = (evt) => {
+        let diff = 0;
+        let delta;
         if (Math.abs(evt.deltaX) >= Math.abs(evt.deltaY)) {
             delta = evt.deltaX;
         } else {
@@ -436,19 +419,40 @@ module.exports = React.createClass({
         }
         this.changeSelection(diff);
         evt.preventDefault();
-    },
+    }
 
     /**
      * Called when user swipe left
      */
-    handleSwipeLeft: function(evt) {
+    handleSwipeLeft = (evt) => {
         this.changeSelection(-1);
-    },
+    }
 
     /**
      * Called when user swipe right
      */
-    handleSwipeRight: function(evt) {
+    handleSwipeRight = (evt) => {
         this.changeSelection(+1);
-    },
-});
+    }
+}
+
+export {
+    MediaDialogBox as default,
+    MediaDialogBox,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MediaDialogBox.propTypes = {
+        show: PropTypes.bool,
+        resources: PropTypes.arrayOf(PropTypes.object).isRequired,
+        selectedIndex: PropTypes.number.isRequired,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onClose: PropTypes.func,
+    };
+}

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import Moment from 'moment';
-import DateTracker from 'utils/date-tracker';
+import * as DateTracker from 'utils/date-tracker';
 
 import Locale from 'locale/locale';
 

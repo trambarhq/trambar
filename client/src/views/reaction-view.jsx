@@ -1,97 +1,69 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Markdown = require('utils/markdown');
-var PlainText = require('utils/plain-text');
-var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
-var UserUtils = require('objects/utils/user-utils');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import * as Markdown from 'utils/markdown';
+import * as PlainText from 'utils/plain-text';
+import Memoize from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var ProfileImage = require('widgets/profile-image');
-var MediaView = require('views/media-view');
-var MediaDialogBox = require('dialogs/media-dialog-box');
-var ReactionProgress = require('widgets/reaction-progress');
-var Time = require('widgets/time');
-var ReactionViewOptions = require('views/reaction-view-options');
+import ProfileImage from 'widgets/profile-image';
+import MediaView from 'views/media-view';
+import MediaDialogBox from 'dialogs/media-dialog-box';
+import ReactionProgress from 'widgets/reaction-progress';
+import Time from 'widgets/time';
+import ReactionViewOptions from 'views/reaction-view-options';
 
-require('./reaction-view.scss');
+import './reaction-view.scss';
 
-module.exports = React.createClass({
-    displayName: 'ReactionView',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        highlighting: PropTypes.bool,
-        reaction: PropTypes.object.isRequired,
-        respondent: PropTypes.object,
-        story: PropTypes.object.isRequired,
-        currentUser: PropTypes.object.isRequired,
-        repo: PropTypes.object,
+class ReactionView extends PureComponent {
+    static displayName = 'ReactionView';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             audioPlayer: HTMLAudioElement,
         });
-        var nextState = {
+        this.state = {
             options: defaultOptions,
             selectedResourceURL: null,
             showingReferencedMediaDialog: false,
             renderingReferencedMediaDialog: false,
         };
-        this.updateOptions(nextState, this.props);
-        return nextState;
-    },
+        this.updateOptions(this.state, this.props);
+    }
 
     /**
      * Return class name, possibly with modifiers
      *
      * @return {String}
      */
-    getClassName: function() {
-        var className = 'reaction-view';
+    getClassName() {
+        let className = 'reaction-view';
         if (this.props.highlighting) {
             className += ' highlighting';
         }
         return className;
-    },
+    }
 
     /**
      * Update options when new data arrives from server
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        var nextState = _.clone(this.state);
+    componentWillReceiveProps(nextProps) {
+        let nextState = _.clone(this.state);
         if (this.props.reaction !== nextProps.reaction) {
             this.updateOptions(nextState, nextProps);
         }
-        var changes = _.pickBy(nextState, (value, name) => {
+        let changes = _.pickBy(nextState, (value, name) => {
             return this.state[name] !== value;
         });
         if (!_.isEmpty(changes)) {
             this.setState(changes);
         }
-    },
+    }
 
     /**
      * Update state.options based on props
@@ -99,17 +71,17 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateOptions: function(nextState, nextProps) {
-        var options = nextState.options = _.clone(nextState.options);
+    updateOptions(nextState, nextProps) {
+        let options = nextState.options = _.clone(nextState.options);
         options.hideReaction = !nextProps.reaction.public;
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className={this.getClassName()}>
                 <div className="profile-image-column">
@@ -127,15 +99,15 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render profile image
      *
      * @return {ReactElement}
      */
-    renderProfileImage: function() {
-        var props = {
+    renderProfileImage() {
+        let props = {
             user: this.props.respondent,
             theme: this.props.theme,
             size: 'small'
@@ -147,21 +119,21 @@ module.exports = React.createClass({
             });
         }
         return <ProfileImage {...props} />;
-    },
+    }
 
     /**
      * Render user name and text
      *
      * @return {ReactElement}
      */
-    renderText: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var reaction = this.props.reaction;
-        var user = this.props.currentUser;
-        var story = this.props.story;
-        var repo = this.props.repo;
-        var name = UserUtils.getDisplayName(this.props.respondent, this.props.locale);
+    renderText() {
+        let t = this.props.locale.translate;
+        let p = this.props.locale.pick;
+        let reaction = this.props.reaction;
+        let user = this.props.currentUser;
+        let story = this.props.story;
+        let repo = this.props.repo;
+        let name = UserUtils.getDisplayName(this.props.respondent, this.props.locale);
         this.resourcesReferenced = {};
         if (reaction.published && reaction.ready !== false) {
             switch (reaction.type) {
@@ -172,11 +144,11 @@ module.exports = React.createClass({
                         </span>
                     );
                 case 'comment':
-                    var text = _.get(reaction, 'details.text');
-                    var markdown = _.get(reaction, 'details.markdown', false);
+                    let text = _.get(reaction, 'details.text');
+                    let markdown = _.get(reaction, 'details.markdown', false);
                     if (markdown) {
                         // parse the Markdown text
-                        var paragraphs = Markdown.render(p(text), this.handleReference);
+                        let paragraphs = Markdown.render(p(text), this.handleReference);
                         // if there first paragraph is a P tag, turn it into a SPAN
                         if (paragraphs[0] && paragraphs[0].type === 'p') {
                             paragraphs[0] = <span key={0}>{paragraphs[0].props.children}</span>;
@@ -206,35 +178,35 @@ module.exports = React.createClass({
                         </span>
                     );
                 case 'note':
-                    var url, target;
-                    var user = this.props.currentUser;
-                    var repo = this.props.repo;
+                    let url, target;
+                    let user = this.props.currentUser;
+                    let repo = this.props.repo;
                     if (UserUtils.canAccessRepo(user, repo)) {
                         switch (story.type) {
                             case 'push':
                             case 'merge':
-                                var link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'commit');
+                                let link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'commit');
                                 if (link) {
-                                    var commitId = link.commit.id;
-                                    var hash = getNoteHash(link);
+                                    let commitId = link.commit.id;
+                                    let hash = getNoteHash(link);
                                     url = `${repo.details.web_url}/commit/${commitId}${hash}`;
                                     target = link.type;
                                 }
                                 break;
                             case 'issue':
-                                var link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'issue');
+                                let link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'issue');
                                 if (link) {
-                                    var issueNumber = link.issue.number;
-                                    var hash = getNoteHash(link);
+                                    let issueNumber = link.issue.number;
+                                    let hash = getNoteHash(link);
                                     url = `${repo.details.web_url}/issues/${issueNumber}${hash}`;
                                     target = link.type;
                                 }
                                 break;
                             case 'merge-request':
-                                var link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'merge_request');
+                                let link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'merge_request');
                                 if (link) {
-                                    var mergeRequestNumber = link.merge_request.number;
-                                    var hash = getNoteHash(link);
+                                    let mergeRequestNumber = link.merge_request.number;
+                                    let hash = getNoteHash(link);
                                     url = `${repo.details.web_url}/merge_requests/${mergeRequestNumber}${hash}`;
                                     target = link.type;
                                 }
@@ -249,12 +221,12 @@ module.exports = React.createClass({
                     );
                 case 'assignment':
                     if (story.type === 'issue' || story.type === 'post') {
-                        var url, target;
+                        let url, target;
                         if (UserUtils.canAccessRepo(user, repo)) {
-                            var link = ExternalDataUtils.findLinkByRelations(reaction, 'issue');
+                            let link = ExternalDataUtils.findLinkByRelations(reaction, 'issue');
                             if (link) {
-                                var issueNumber = _.get(link, 'issue.number');
-                                var hash = getNoteHash(link);
+                                let issueNumber = _.get(link, 'issue.number');
+                                let hash = getNoteHash(link);
                                 url = `${repo.details.web_url}/issues/${issueNumber}${hash}`;
                                 target = link.type;
                             }
@@ -265,12 +237,12 @@ module.exports = React.createClass({
                             </a>
                         );
                     } else if (story.type === 'merge-request') {
-                        var url, target;
+                        let url, target;
                         if (UserUtils.canAccessRepo(user, repo)) {
-                            var link = ExternalDataUtils.findLinkByRelations(reaction, 'merge_request');
+                            let link = ExternalDataUtils.findLinkByRelations(reaction, 'merge_request');
                             if (link) {
-                                var mergeRequestNumber = link.merge_request.number;
-                                var hash = getNoteHash(link);
+                                let mergeRequestNumber = link.merge_request.number;
+                                let hash = getNoteHash(link);
                                 url = `${repo.details.web_url}/merge_requests/${mergeRequestNumber}${hash}`;
                                 target = link.type;
                             }
@@ -282,11 +254,11 @@ module.exports = React.createClass({
                         );
                     }
                 case 'tracking':
-                    var url, target;
+                    let url, target;
                     if (UserUtils.canAccessRepo(user, repo)) {
-                        var link = ExternalDataUtils.findLinkByRelations(reaction, 'issue');
+                        let link = ExternalDataUtils.findLinkByRelations(reaction, 'issue');
                         if (link) {
-                            var issueNumber = link.issue.number;
+                            let issueNumber = link.issue.number;
                             url = `${repo.details.web_url}/issues/${issueNumber}`;
                             target = link.type;
                         }
@@ -299,7 +271,7 @@ module.exports = React.createClass({
 
             }
         } else {
-            var phrase;
+            let phrase;
             if (!reaction.published) {
                 if (reaction.ptime) {
                     // if it has a ptime, then it was published before
@@ -316,18 +288,18 @@ module.exports = React.createClass({
                 </span>
             );
         }
-    },
+    }
 
     /**
      * Render option button
      *
      * @return {ReactElement|null}
      */
-    renderOptionButton: function() {
+    renderOptionButton() {
         if (!this.props.reaction.published) {
             return null;
         }
-        var props = {
+        let props = {
             access: this.props.access,
             currentUser: this.props.currentUser,
             reaction: this.props.reaction,
@@ -338,34 +310,34 @@ module.exports = React.createClass({
             onChange: this.handleOptionsChange,
         };
         return <ReactionViewOptions {...props} />;
-    },
+    }
 
     /**
      * Render the publication time
      *
      * @return {ReactElement|null}
      */
-    renderProgress: function() {
+    renderProgress() {
         if (!this.props.reaction.published) {
             return null;
         }
-        var props = {
+        let props = {
             reaction: this.props.reaction,
             locale: this.props.locale,
         };
         return <ReactionProgress {...props} />;
-    },
+    }
 
     /**
      * Render audio player for embed audio in markdown text
      *
      * @return {ReactElement|null}
      */
-    renderAudioPlayer: function() {
+    renderAudioPlayer() {
         if (!this.state.audioURL) {
             return null;
         }
-        var audioProps = {
+        let audioProps = {
             ref: this.components.setters.audioPlayer,
             src: this.state.audioURL,
             autoPlay: true,
@@ -373,46 +345,46 @@ module.exports = React.createClass({
             onEnded: this.handleAudioEnded,
         };
         return <audio {...audioProps} />;
-    },
+    }
 
     /**
      * Render attached media
      *
      * @return {ReactElement}
      */
-    renderMedia: function() {
-        var resources = _.get(this.props.reaction, 'details.resources');
+    renderMedia() {
+        let resources = _.get(this.props.reaction, 'details.resources');
         if (!_.isEmpty(this.resourcesReferenced)) {
             resources = _.difference(resources, _.values(this.resourcesReferenced));
         }
         if (_.isEmpty(resources)) {
             return null;
         }
-        var props = {
+        let props = {
             locale: this.props.locale,
             theme: this.props.theme,
             resources,
             width: (this.props.theme.mode === 'signle-col') ? 220 : 300
         };
         return <div className="media"><MediaView {...props} /></div>;
-    },
+    }
 
     /**
      * Render dialog box showing referenced image at full size
      *
      * @return {ReactElement|null}
      */
-    renderReferencedMediaDialog: function() {
+    renderReferencedMediaDialog() {
         if (!this.state.renderingReferencedMediaDialog) {
             return null;
         }
-        var selectedResource = this.resourcesReferenced[this.state.selectedResourceURL];
-        var zoomableResources = getZoomableResources(this.resourcesReferenced);
-        var zoomableIndex = _.indexOf(zoomableResources, selectedResource);
+        let selectedResource = this.resourcesReferenced[this.state.selectedResourceURL];
+        let zoomableResources = getZoomableResources(this.resourcesReferenced);
+        let zoomableIndex = _.indexOf(zoomableResources, selectedResource);
         if (zoomableIndex === -1) {
             return null;
         }
-        var dialogProps = {
+        let dialogProps = {
             show: this.state.showingReferencedMediaDialog,
             resources: zoomableResources,
             selectedIndex: zoomableIndex,
@@ -423,7 +395,7 @@ module.exports = React.createClass({
             onClose: this.handleReferencedMediaDialogClose,
         };
         return <MediaDialogBox {...dialogProps} />;
-    },
+    }
 
     /**
      * Save reaction to remote database
@@ -432,13 +404,13 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    saveReaction: function(reaction) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
+    saveReaction(reaction) {
+        let params = this.props.route.parameters;
+        let db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'reaction' }, reaction);
         });
-    },
+    }
 
     /**
      * Remove reaction from remote database
@@ -447,22 +419,22 @@ module.exports = React.createClass({
      *
      * @return {Promise<Reaction>}
      */
-    removeReaction: function(reaction) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
+    removeReaction(reaction) {
+        let params = this.props.route.parameters;
+        let db = this.props.database.use({ schema: params.schema, by: this });
         return db.removeOne({ table: 'reaction' }, reaction);
-    },
+    }
 
     /**
      * Change options concerning a story
      *
      * @param  {Object} options
      */
-    setOptions: function(options) {
-        var before = this.state.options;
+    setOptions(options) {
+        let before = this.state.options;
         this.setState({ options }, () => {
             if (options.editReaction && !before.editReaction) {
-                var reaction = _.clone(this.props.reaction);
+                let reaction = _.clone(this.props.reaction);
                 reaction.published = false;
                 this.saveReaction(reaction);
             }
@@ -470,22 +442,22 @@ module.exports = React.createClass({
                 this.removeReaction(this.props.reaction);
             }
             if (options.hideReaction !== before.hideReaction) {
-                var reaction = _.clone(this.props.reaction);
+                let reaction = _.clone(this.props.reaction);
                 reaction.public = !options.hideReaction;
                 this.saveReaction(reaction);
             }
         });
-    },
+    }
 
     /**
      * Called when a resource is referenced by Markdown
      */
-    handleReference: function(evt) {
-        var resources = this.props.reaction.details.resources;
-        var res = Markdown.findReferencedResource(resources, evt.name);
+    handleReference = (evt) => {
+        let resources = this.props.reaction.details.resources;
+        let res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
-            var theme = this.props.theme;
-            var url;
+            let theme = this.props.theme;
+            let url;
             if (evt.forImage)  {
                 if (res.type === 'audio') {
                     url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
@@ -503,18 +475,18 @@ module.exports = React.createClass({
                 title: undefined
             };
         }
-    },
+    }
 
     /**
      * Called when user clicks on the text contents
      *
      * @param  {Event} evt
      */
-     handleMarkdownClick: function(evt) {
-        var target = evt.target;
+     handleMarkdownClick = (evt) => {
+        let target = evt.target;
         if (target.tagName === 'IMG') {
-            var src = target.getAttribute('src');
-            var res = this.resourcesReferenced[src];
+            let src = target.getAttribute('src');
+            let res = this.resourcesReferenced[src];
             if (res) {
                 if (res.type === 'image' || res.type === 'video') {
                     this.setState({
@@ -525,27 +497,27 @@ module.exports = React.createClass({
                 } else if (res.type === 'website') {
                     window.open(res.url);
                 } else if (res.type === 'audio') {
-                    var version = chooseAudioVersion(res);
-                    var audioURL = this.props.theme.getAudioURL(res, { version });
+                    let version = chooseAudioVersion(res);
+                    let audioURL = this.props.theme.getAudioURL(res, { version });
                     this.setState({ audioURL });
                 }
             } else {
-                var targetRect = target.getBoundingClientRect();
-                var width = target.naturalWidth + 50;
-                var height = target.naturalHeight + 50;
-                var left = targetRect.left + window.screenLeft;
-                var top = targetRect.top + window.screenTop;
+                let targetRect = target.getBoundingClientRect();
+                let width = target.naturalWidth + 50;
+                let height = target.naturalHeight + 50;
+                let left = targetRect.left + window.screenLeft;
+                let top = targetRect.top + window.screenTop;
                 window.open(target.src, '_blank', `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`);
             }
         }
-    },
+    }
 
     /**
      * Called when user closes referenced media dialog
      *
      * @param  {Object} evt
      */
-    handleReferencedMediaDialogClose: function(evt) {
+    handleReferencedMediaDialogClose = (evt) => {
         this.setState({ showingReferencedMediaDialog: false }, () => {
             setTimeout(() => {
                 if (!this.state.showingReferencedMediaDialog) {
@@ -556,34 +528,34 @@ module.exports = React.createClass({
                 }
             }, 500);
         })
-    },
+    }
 
     /**
      * Called when options are changed
      *
      * @param  {Object} evt
      */
-    handleOptionsChange: function(evt) {
+    handleOptionsChange = (evt) => {
         this.setOptions(evt.options);
-    },
+    }
 
     /**
      * Called when audio playback ends
      *
      * @param  {Event} evt
      */
-    handleAudioEnded: function(evt) {
+    handleAudioEnded = (evt) => {
         this.setState({ audioURL: null });
-    },
-});
+    }
+}
 
-var defaultOptions = {
+let defaultOptions = {
     hideReaction: false,
     editReaction: false,
     removeReaction: false,
 };
 
-var getZoomableResources = Memoize(function(resources) {
+let getZoomableResources = Memoize(function(resources) {
     return _.filter(resources, (res) => {
         switch (res.type) {
             case 'image':
@@ -605,6 +577,33 @@ function chooseAudioVersion(res) {
 }
 
 function getNoteHash(link) {
-    var noteId = _.get(link, 'note.id');
+    let noteId = _.get(link, 'note.id');
     return (noteId) ? `#note_${noteId}` : '';
+}
+
+export {
+    ReactionView as default,
+    ReactionView,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ReactionView.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        highlighting: PropTypes.bool,
+        reaction: PropTypes.object.isRequired,
+        respondent: PropTypes.object,
+        story: PropTypes.object.isRequired,
+        currentUser: PropTypes.object.isRequired,
+        repo: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
 }

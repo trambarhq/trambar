@@ -1,92 +1,21 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Moment = require('moment');
-var DateTracker = require('utils/date-tracker');
-var UserFinder = require('objects/finders/user-finder');
-var NotificationFinder = require('objects/finders/notification-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import * as DateTracker from 'utils/date-tracker';
+import * as UserFinder from 'objects/finders/user-finder';
+import * as NotificationFinder from 'objects/finders/notification-finder';
 
 // widgets
-var PageContainer = require('widgets/page-container');
-var NotificationList = require('lists/notification-list');
-var LoadingAnimation = require('widgets/loading-animation');
-var EmptyMessage = require('widgets/empty-message');
+import PageContainer from 'widgets/page-container';
+import NotificationList from 'lists/notification-list';
+import LoadingAnimation from 'widgets/loading-animation';
+import EmptyMessage from 'widgets/empty-message';
 
 require('./notifications-page.scss');
 
-module.exports = Relaks.createClass({
-    displayName: 'NotificationsPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/:schema/notifications/:date/?',
-                '/:schema/notifications/?'
-            ], (params) => {
-                return {
-                    schema: params.schema,
-                    date: Route.parseDate(params.date),
-                };
-            })
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/${params.schema}/notifications/`, query;
-            if (params.date != undefined) {
-                path += `${params.date || 'date'}/`;
-            }
-            return { path, query };
-        },
-
-        /**
-         * Return configuration info for global UI elements
-         *
-         * @param  {Route} currentRoute
-         *
-         * @return {Object}
-         */
-        configureUI: function(currentRoute) {
-            var params = currentRoute.parameters;
-            var route = {
-                schema: params.schema,
-            };
-            var statistics = {
-                type: 'daily-notifications',
-                schema: params.schema,
-                user_id: 'current'
-            };
-            return {
-                calendar: { route, statistics },
-                navigation: { route, section: 'notifications' }
-            };
-        },
-    },
+class NotificationsPage extends AsyncComponent {
+    static displayName = 'NotificationsPage';
 
     /**
      * Render the component asynchronously
@@ -95,26 +24,25 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let db = database.use({ by: this });
+        let props = {
             currentUser: null,
             notifications: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
         };
         meanwhile.show(<NotificationsPageSync {...props} />);
-        return db.start().then((currentUserId) => {
-            return UserFinder.findUser(db, currentUserId).then((user) => {
+        return db.start().then((currentUserID) => {
+            return UserFinder.findUser(db, currentUserID).then((user) => {
                 props.currentUser = user;
             });
         }).then(() => {
-            if (params.date) {
-                return NotificationFinder.findNotificationsForUserOnDate(db, props.currentUser, params.date).then((notifications) => {
+            if (route.params.date) {
+                return NotificationFinder.findNotificationsForUserOnDate(db, props.currentUser, route.params.date).then((notifications) => {
                     props.notifications = notifications;
                 });
             } else {
@@ -126,59 +54,56 @@ module.exports = Relaks.createClass({
             return <NotificationsPageSync {...props} />;
         });
     }
-});
+}
 
-var NotificationsPageSync = module.exports.Sync = React.createClass({
-    displayName: 'NotificationsPage.Sync',
-    propTypes: {
-        notifications: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class NotificationsPageSync extends PureComponent {
+    static displayName = 'NotificationsPage.Sync';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <PageContainer className="notifications-page">
                 {this.renderList()}
                 {this.renderEmptyMessage()}
             </PageContainer>
         );
-    },
+    }
 
     /**
      * Render list of notifications
      *
      * @return {ReactElement}
      */
-    renderList: function() {
-        var listProps = {
-            notifications: this.props.notifications,
-            currentUser: this.props.currentUser,
+    renderList() {
+        let {
+            database,
+            route,
+            env,
+            notification,
+            currentUser,
+        } = this.props;
+        let listProps = {
+            notifications,
+            currentUser,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
         };
         return <NotificationList {...listProps} />;
-    },
+    }
 
     /**
      * Render a message if there're no notifications
      *
      * @return {ReactElement|null}
      */
-    renderEmptyMessage: function() {
-        var notifications = this.props.notifications;
+    renderEmptyMessage() {
+        let { route, notifications } = this.props;
         if (!_.isEmpty(notifications)) {
             return null;
         }
@@ -186,19 +111,42 @@ var NotificationsPageSync = module.exports.Sync = React.createClass({
             // props.notifications is null when they're being loaded
             return <LoadingAnimation />;
         } else {
-            var params = this.props.route.parameters;
-            var phrase;
+            let phrase;
             if (params.date) {
                 phrase = 'notifications-no-notifications-on-date';
             } else {
                 phrase = 'notifications-no-notifications-yet';
             }
-            var props = {
-                locale: this.props.locale,
-                online: this.props.database.online,
-                phrase,
-            };
+            let props = { phrase, env };
             return <EmptyMessage {...props} />;
         }
-    },
-});
+    }
+}
+
+export {
+    NotificationsPage as default,
+    NotificationsPage,
+    NotificationsPageSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    NotificationsPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    NotificationsPageSync.propTypes = {
+        notifications: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

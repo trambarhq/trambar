@@ -57,5 +57,4 @@ function removeDiacritics(s) {
 export {
     fromTitle,
     fromPersonalName,
-    exports as default,
 };

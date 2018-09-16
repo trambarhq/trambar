@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
+
+const emptyArray = [];
 
 /**
  * Find project by ID
@@ -83,7 +84,7 @@ function findActiveProjects(db, minimum) {
 function findProjectsWithMembers(db, users, minimum) {
     let ids = _.map(users, 'id');
     if (_.isEmpty(ids)) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -129,5 +130,4 @@ export {
     findActiveProjects,
     findProjectsWithMembers,
     findProjectLinks,
-    exports as default,
 };

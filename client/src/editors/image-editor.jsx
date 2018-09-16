@@ -1,84 +1,53 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var BlobManager = require('transport/blob-manager');
-var Payload = require('transport/payload');
-var ImageCropping = require('media/image-cropping');
-var FocusManager = require('utils/focus-manager');
-var ComponentRefs = require('utils/component-refs');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import * as BlobManager from 'transport/blob-manager';
+import Payload from 'transport/payload';
+import * as ImageCropping from 'media/image-cropping';
+import * as FocusManager from 'utils/focus-manager';
+import ComponentRefs from 'utils/component-refs';
 
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import Environment from 'env/environment';
 
 // widgets
-var ImageCropper = require('widgets/image-cropper');
+import ImageCropper from 'widgets/image-cropper';
 
-require('./image-editor.scss');
+import './image-editor.scss';
 
-module.exports = React.createClass({
-    displayName: 'ImageEditor',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        resource: PropTypes.object,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        previewWidth: PropTypes.number,
-        previewHeight: PropTypes.number,
-        disabled: PropTypes.bool,
-        onChange: PropTypes.func,
-    },
+class ImageEditor extends PureComponent {
+    static displayName = 'ImageEditor';
 
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            previewWidth: 512,
-            previewHeight: 512,
-            disabled: false,
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             imageCropper: ImageCropper,
         });
-        return {
+        this.state = {
             fullImageURL: null,
             loadedImageURL: null,
             previewImageURL: null,
             placeholderMessage: null,
             placeholderIcon: null,
         };
-    },
+    }
 
     /**
      * Prepare the image on mount
      */
-    componentWillMount: function() {
+    componentWillMount() {
         this.prepareImage(this.props.resource, this.props.disabled);
-    },
+    }
 
     /**
      * Prepare the image when it changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.resource !== nextProps.resource || this.props.disabled !== nextProps.disabled) {
             this.prepareImage(nextProps.resource, nextProps.disabled);
         }
-    },
+    }
 
     /**
      * Load the image if it isn't available locally
@@ -86,22 +55,22 @@ module.exports = React.createClass({
      * @param  {Object} res
      * @param  {Boolean} disabled
      */
-    prepareImage: function(res, disabled) {
-        var newState = {
+    prepareImage(res, disabled) {
+        let newState = {
             fullImageURL: null,
             previewImageURL: null,
             placeholderMessage: null,
             placeholderIcon: null,
         };
-        var fullImageRemoteURL = this.props.theme.getImageURL(res, { original: true });
+        let fullImageRemoteURL = this.props.theme.getImageURL(res, { original: true });
         if (fullImageRemoteURL) {
             if (isJSONEncoded(fullImageRemoteURL)) {
                 // a blob that hasn't been uploaded yet
-                var image = parseJSONEncodedURL(fullImageRemoteURL)
+                let image = parseJSONEncodedURL(fullImageRemoteURL)
                 newState.fullImageURL = image.url;
             } else {
                 // the remote URL might point to a file we had uploaded
-                var blob = BlobManager.find(fullImageRemoteURL);
+                let blob = BlobManager.find(fullImageRemoteURL);
                 if (blob) {
                     newState.fullImageURL = BlobManager.url(blob);
                 }
@@ -129,7 +98,7 @@ module.exports = React.createClass({
         }
         if (!newState.fullImageURL && !newState.previewImageURL) {
             // image isn't available locally
-            var t = this.props.locale.translate;
+            let t = this.props.locale.translate;
             if (res.width && res.height) {
                 // when the dimensions are known, then the image was available to
                 // the client
@@ -153,14 +122,14 @@ module.exports = React.createClass({
         if (!_.isMatch(this.state, newState)) {
             this.setState(newState);
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className="image-editor">
                 {this.renderImage()}
@@ -168,7 +137,7 @@ module.exports = React.createClass({
                 {this.props.children}
             </div>
         );
-    },
+    }
 
     /**
      * Render image cropper if full image is available; otherwise render
@@ -176,7 +145,7 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderImage: function() {
+    renderImage() {
         if (this.state.fullImageURL) {
             return this.renderImageCropper();
         } else if (this.state.previewImageURL) {
@@ -184,19 +153,19 @@ module.exports = React.createClass({
         } else {
             return this.renderPlaceholder();
         }
-    },
+    }
 
     /**
      * Render preview image when we don't have the full image yet
      *
      * @return {ReactElement}
      */
-    renderPreviewImage: function() {
-        var className = 'preview';
+    renderPreviewImage() {
+        let className = 'preview';
         if (this.props.disabled) {
             className += ' disabled';
         }
-        var imageProps = {
+        let imageProps = {
             src: this.state.previewImageURL,
             width: this.props.previewWidth,
             height: this.props.previewHeight
@@ -206,14 +175,14 @@ module.exports = React.createClass({
                 <img {...imageProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render a spinner until full image is loaded
      *
      * @return {ReactElement|null}
      */
-    renderSpinner: function() {
+    renderSpinner() {
         if (this.props.disabled) {
             return null;
         }
@@ -229,17 +198,17 @@ module.exports = React.createClass({
                 <i className="fa fa-refresh fa-spin fa-fw" />
             </div>
         );
-    },
+    }
 
     /**
      * Render image with cropping handling
      *
      * @return {ReactElement}
      */
-    renderImageCropper: function() {
-        var setters = this.components.setters;
-        var res = this.props.resource;
-        var props = {
+    renderImageCropper() {
+        let setters = this.components.setters;
+        let res = this.props.resource;
+        let props = {
             ref: setters.imageCropper,
             url: this.state.fullImageURL,
             clippingRect: res.clip || ImageCropping.apply(res.width, res.height),
@@ -249,14 +218,14 @@ module.exports = React.createClass({
             onLoad: this.handleFullImageLoad,
         };
         return <ImageCropper {...props} />;
-    },
+    }
 
     /**
      * Render message when image isn't available yet
      *
      * @return {ReactELement|null}
      */
-    renderPlaceholder: function() {
+    renderPlaceholder() {
         if (this.state.fullImageURL || this.state.previewImageURL) {
             return null;
         }
@@ -271,35 +240,35 @@ module.exports = React.createClass({
                 <div className="message">{this.state.placeholderMessage}</div>
             </div>
         );
-    },
+    }
 
     /**
      * Register component with FocusManager so focus can be set by other
      */
-    componentDidMount: function() {
+    componentDidMount() {
         FocusManager.register(this, {
             type: 'ImageEditor',
         });
-    },
+    }
 
     /**
      * Unregister component
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         FocusManager.unregister(this);
-    },
+    }
 
     /**
      * Focus image cropper
      */
-    focus: function() {
-        var imageCropper = this.components.imageCropper;
+    focus() {
+        let imageCropper = this.components.imageCropper;
         if (imageCropper) {
             imageCropper.focus();
         }
-    },
+    }
 
-    triggerChangeEvent: function(res) {
+    triggerChangeEvent(res) {
         if (this.props.onChange) {
             this.props.onChange({
                 type: 'change',
@@ -307,43 +276,67 @@ module.exports = React.createClass({
                 resource: res
             });
         }
-    },
+    }
 
     /**
      * Called after user has made adjustments to an image's clipping rect
      *
      * @param  {Object} evt
      */
-    handleClipRectChange: function(evt) {
-        var res = _.clone(this.props.resource);
+    handleClipRectChange = (evt) => {
+        let res = _.clone(this.props.resource);
         res.clip = evt.rect;
         res.mosaic = evt.target.extractMosaic();
         this.triggerChangeEvent(res);
-    },
+    }
 
     /**
      * Called when ImageView has loaded the full image
      *
      * @param  {Object} evt
      */
-    handleFullImageLoad: function(evt) {
-        var url = evt.target.props.url;
+    handleFullImageLoad = (evt) => {
+        let url = evt.target.props.url;
         this.setState({ loadedImageURL: url });
 
         // set mosaic if there isn't one
-        var res = _.clone(this.props.resource);
+        let res = _.clone(this.props.resource);
         if (!res.mosaic) {
             res.mosaic = this.components.imageCropper.extractMosaic();
             this.triggerChangeEvent(res);
         }
-    },
-});
+    }
+}
 
 function isJSONEncoded(url) {
     return _.startsWith(url, 'json:');
 }
 
 function parseJSONEncodedURL(url) {
-    var json = url.substr(5);
+    let json = url.substr(5);
     return JSON.parse(json);
+}
+
+ImageEditor.defaultProps = {
+    previewWidth: 512,
+    previewHeight: 512,
+    disabled: false,
+};
+
+export {
+    ImageEditor as default,
+    ImageEditor,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ImageEditor.propTypes = {
+        resource: PropTypes.object,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        previewWidth: PropTypes.number,
+        previewHeight: PropTypes.number,
+        disabled: PropTypes.bool,
+        onChange: PropTypes.func,
+    };
 }

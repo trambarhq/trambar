@@ -1,14 +1,10 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-var Locale = require('locale/locale');
-
-module.exports = EmptyMessage;
-
-require('./empty-message.scss');
+import './empty-message.scss';
 
 function EmptyMessage(props) {
-    var t = props.locale.translate;
-    var phrase = props.phrase;
+    let t = props.locale.translate;
+    let phrase = props.phrase;
     if (!props.online) {
         phrase = 'empty-currently-offline';
     }
@@ -19,12 +15,23 @@ function EmptyMessage(props) {
     );
 }
 
-EmptyMessage.propTypes = {
-    locale: PropTypes.instanceOf(Locale).isRequired,
-    online: PropTypes.bool,
-    phrase: PropTypes.string.isRequired,
-};
-
 EmptyMessage.defaultProps = {
     online: true
 };
+
+export {
+    EmptyMessage as default,
+    EmptyMessage,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    EmptyMessage.propTypes = {
+        env: PropTypes.instanceOf(Environment).isRequired,
+        online: PropTypes.bool,
+        phrase: PropTypes.string.isRequired,
+    };
+}

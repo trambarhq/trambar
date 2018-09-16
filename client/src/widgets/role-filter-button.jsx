@@ -1,33 +1,21 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var ProfileImage = require('widgets/profile-image');
+import ProfileImage from 'widgets/profile-image';
 
-require('./role-filter-button.scss');
+import './role-filter-button.scss';
 
-module.exports = React.createClass({
-    displayName: 'RoleFilterButton',
-    propTypes: {
-        role: PropTypes.object,
-        users: PropTypes.arrayOf(PropTypes.object),
-        selected: PropTypes.bool,
-        url: PropTypes.string,
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class RoleFilterButton extends PureComponent {
+    static displayName = 'RoleFilterButton';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var className = 'role-filter-button';
+    render() {
+        let className = 'role-filter-button';
         if (this.props.selected) {
             className += ' selected';
         }
@@ -44,7 +32,7 @@ module.exports = React.createClass({
                 </div>
             </a>
         );
-    },
+    }
 
     /**
      * Render a row of profile images
@@ -54,9 +42,9 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderImageRow: function(index, count) {
+    renderImageRow(index, count) {
         // only show user if he has a profile image
-        var users = _.filter(this.props.users, (user) => {
+        let users = _.filter(this.props.users, (user) => {
             return _.some(user.details.resources, { type: 'image' });
         });
         users = _.slice(users, index, count);
@@ -65,7 +53,7 @@ module.exports = React.createClass({
                 {_.map(users, this.renderProfileImage)}
             </div>
         );
-    },
+    }
 
     /**
      * Render profile image of user
@@ -75,21 +63,21 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderProfileImage: function(user, i) {
+    renderProfileImage(user, i) {
         return <ProfileImage key={i} user={user} size="medium" theme={this.props.theme} />
-    },
+    }
 
     /**
      * Render title
      *
      * @return {ReactElement}
      */
-    renderTitle: function() {
+    renderTitle() {
         if (!this.props.role) {
             return this.renderMessage();
          }
-        var p = this.props.locale.pick;
-        var role = this.props.role;
+        let p = this.props.locale.pick;
+        let role = this.props.role;
         return (
             <div className="band">
                 <div className="title">
@@ -98,36 +86,56 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
-    renderMessage: function() {
+    renderMessage() {
         // undefined means data isn't done loading
         if (this.props.role === undefined) {
             return null;
         }
-        var t = this.props.locale.translate;
+        let t = this.props.locale.translate;
         return (
             <div className="message">
                 {t('role-filter-no-roles')}
             </div>
         );
-    },
+    }
 
     /**
      * Render user count
      *
      * @return {ReactElement|null}
      */
-    renderUserCount: function() {
+    renderUserCount() {
         if (!this.props.users) {
             return null;
         }
-        var count = this.props.users.length;
+        let count = this.props.users.length;
         return (
             <div className="user-count">
                 <i className="fa fa-male"></i>
                 <span className="number">{count}</span>
             </div>
         );
-    },
-});
+    }
+}
+
+export {
+    RoleFilterButton as default,
+    RoleFilterButton,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    RoleFilterButton.propTypes = {
+        role: PropTypes.object,
+        users: PropTypes.arrayOf(PropTypes.object),
+        selected: PropTypes.bool,
+        url: PropTypes.string,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

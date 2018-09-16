@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import SystemFinder from 'objects/finders/system-finder';
-import SystemSettings from 'objects/settings/system-settings';
+import * as SystemFinder from 'objects/finders/system-finder';
+import * as SystemSettings from 'objects/settings/system-settings';
 
 // widgets
 import PushButton from 'widgets/push-button';

@@ -97,7 +97,7 @@ module.exports = function(localeCode) {
         'issue-cancel': 'Avbryt',
         'issue-delete': 'Slett',
         'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
-            var objects = [];
+            let objects = [];
             if (photos > 0) {
                 objects.push(photos === 1 ? 'bilde' : 'bilder');
             }
@@ -262,8 +262,8 @@ module.exports = function(localeCode) {
         'option-remove-story': 'Fjern historien',
         'option-send-bookmarks': 'Send bokmerker til andre brukere',
         'option-send-bookmarks-to-$count-users': (count) => {
-            var users = (count === 1) ? `${count} bruker` : `${count} brukere`;
-            var bookmarks = (count === 1) ? 'bokmerke' : 'bokmerker';
+            let users = (count === 1) ? `${count} bruker` : `${count} brukere`;
+            let bookmarks = (count === 1) ? 'bokmerke' : 'bokmerker';
             return `Send ${bookmarks} to ${users}`;
         },
         'option-show-media-preview': 'Vis vedlagte medier',
@@ -442,7 +442,7 @@ module.exports = function(localeCode) {
             return `Opprettet wiki-siden “${page}”`;
         },
         'story-$name-created-$repo': (name, repo) => {
-            var text = `Opprettet prosjektet`;
+            let text = `Opprettet prosjektet`;
             if (repo) {
                 text += ` “${repo}”`;
             }
@@ -455,37 +455,37 @@ module.exports = function(localeCode) {
             return `Fjernet wiki-siden “${page}”`;
         },
         'story-$name-deleted-$repo': (name, repo) => {
-            var text = `Slettet prosjektet`;
+            let text = `Slettet prosjektet`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
         'story-$name-imported-$repo': (name, repo) => {
-            var text = `Importerte prosjektet`;
+            let text = `Importerte prosjektet`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
         'story-$name-joined-$repo': (name, repo) => {
-            var text = `Ble med i prosjektet`;
+            let text = `Ble med i prosjektet`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
         'story-$name-left-$repo': (name, repo) => {
-            var text = `Forlot prosjektet`;
+            let text = `Forlot prosjektet`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
         'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-            var text = `Merget kode`;
+            let text = `Merget kode`;
             if (branches && branches.length > 0) {
-                var sources = branches.map((branch) => {
+                let sources = branches.map((branch) => {
                     return `“${branch}”`;
                 });
                 text += ` fra ${sources.join(', ')}`;
@@ -500,7 +500,7 @@ module.exports = function(localeCode) {
             return `Åpnet problemet ${number}: ${title}`;
         },
         'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-            var text = `Pushet forandringer til branchen “${branch}”`;
+            let text = `Pushet forandringer til branchen “${branch}”`;
             if (repo) {
                 text += ` av prosjektet “${repo}”`;
             }
@@ -542,32 +542,32 @@ module.exports = function(localeCode) {
         'story-photo': 'Bilde',
         'story-post': 'Post',
         'story-push-added-$count-files': (count) => {
-            var files = (count === 1) ? `1 fil` : `${count} filer`;
+            let files = (count === 1) ? `1 fil` : `${count} filer`;
             return `${files} lagt til`;
         },
         'story-push-added-$count-lines': (count) => {
-            var lines = (count === 1) ? `1 linje` : `${count} linjer`;
+            let lines = (count === 1) ? `1 linje` : `${count} linjer`;
             return `${lines} lagt til`;
         },
         'story-push-components-changed': 'Følgende deler ble endret:',
         'story-push-deleted-$count-files': (count) => {
-            var files = (count === 1) ? `1 fil` : `${count} filer`;
+            let files = (count === 1) ? `1 fil` : `${count} filer`;
             return `${files} fjernet`;
         },
         'story-push-deleted-$count-lines': (count) => {
-            var lines = (count === 1) ? `1 linje` : `${count} linjer`;
+            let lines = (count === 1) ? `1 linje` : `${count} linjer`;
             return `${lines} fjernet`;
         },
         'story-push-modified-$count-files': (count) => {
-            var files = (count === 1) ? `1 fil` : `${count} filer`;
+            let files = (count === 1) ? `1 fil` : `${count} filer`;
             return `${files} endret`;
         },
         'story-push-modified-$count-lines': (count) => {
-            var lines = (count === 1) ? `1 linje` : `${count} linjer`;
+            let lines = (count === 1) ? `1 linje` : `${count} linjer`;
             return `${lines} endret`;
         },
         'story-push-renamed-$count-files': (count) => {
-            var files = (count === 1) ? `1 fil` : `${count} filer`;
+            let files = (count === 1) ? `1 fil` : `${count} filer`;
             return `${files} omdøpt`;
         },
         'story-remove-yourself': 'Fjern deg selv',
@@ -602,7 +602,7 @@ module.exports = function(localeCode) {
         'time-yesterday': 'I går',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-            var files = (count === 1) ? `1 fil` : `${count} filer`;
+            let files = (count === 1) ? `1 fil` : `${count} filer`;
             return `Laster opp ${files}, ${size} gjenværende`;
         },
 
@@ -620,20 +620,20 @@ module.exports = function(localeCode) {
         'user-activity-$name-left-repo': 'Dro et git-prosjek',
         'user-activity-$name-merged-code': 'Utført en kodefusjon',
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-            var audios = (count === 1) ? `et audioklipp` : `${count} audioklipp`;
+            let audios = (count === 1) ? `et audioklipp` : `${count} audioklipp`;
             return `Skrevet ${audios}`;
         },
         'user-activity-$name-posted-$count-links': (name, count) => {
-            var links = (count === 1) ? `et lenke` : `lenker`;
-            var website = (count === 1) ? `et nettsted` : `${count} nettsteder`;
+            let links = (count === 1) ? `et lenke` : `lenker`;
+            let website = (count === 1) ? `et nettsted` : `${count} nettsteder`;
             return `Skrevet ${links} til ${website}`
         },
         'user-activity-$name-posted-$count-pictures': (name, count) => {
-            var pictures = (count === 1) ? `et bilde` : `${count} bilder`;
+            let pictures = (count === 1) ? `et bilde` : `${count} bilder`;
             return `Skrevet ${pictures}`;
         },
         'user-activity-$name-posted-$count-video-clips': (name, count) => {
-            var videos = (count === 1) ? `et videoklipp` : `${count} videoklipp`;
+            let videos = (count === 1) ? `et videoklipp` : `${count} videoklipp`;
             return `Skrevet ${videos}`;
         },
         'user-activity-$name-pushed-code': 'La kod til repoen',
@@ -730,7 +730,7 @@ function list(items) {
         return `${item}`;
     });
     if (items.length >= 2) {
-        var lastItem = items.pop();
+        let lastItem = items.pop();
         items[items.length - 1] += ` og ${lastItem}`;
     }
     return items.join(', ');

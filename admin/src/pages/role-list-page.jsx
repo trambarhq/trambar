@@ -3,8 +3,8 @@ import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
-import RoleFinder from 'objects/finders/role-finder';
-import UserFinder from 'objects/finders/user-finder';
+import * as RoleFinder from 'objects/finders/role-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 
 // widgets
 import PushButton from 'widgets/push-button';

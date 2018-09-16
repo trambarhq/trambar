@@ -65,8 +65,7 @@ function shiftOffsets(bytes, offset, end, rangeStart, rangeEnd, shift) {
         }
         switch (atomName) {
             case 'stco': // "Chunk Offset Atom"
-                let offsetCount = BE32(bytes, offset + 12);
-                for (let i = 0; i < offsetCount; i++) {
+                for (let i = 0, oc = BE32(bytes, offset + 12); i < oc; i++) {
                     let doOffset = offset + 16 + (i * 4);
                     let dataOffset = BE32(bytes, doOffset);
                     if (rangeStart <= dataOffset && dataOffset <= rangeEnd) {
@@ -81,8 +80,7 @@ function shiftOffsets(bytes, offset, end, rangeStart, rangeEnd, shift) {
                 }
                 break;
             case 'co64': // "Chunk Offset Atom, 64-bit"
-                let offsetCount = BE32(bytes, offset + 12);
-                for (let i = 0; i < offsetCount; i++) {
+                for (let i = 0, oc = BE32(bytes, offset + 12); i < oc; i++) {
                     let doOffset = offset + 16 + (i * 8);
                     let dataOffset = BE64(bytes, doOffset);
                     if (rangeStart <= dataOffset && dataOffset <= rangeEnd) {
@@ -255,5 +253,4 @@ function NAME(b, i) {
 
 export {
     process,
-    exports as default,
 };

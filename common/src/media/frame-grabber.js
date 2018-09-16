@@ -125,5 +125,4 @@ function saveCanvasContents(canvas, mimeType, quality, cb) {
 
 export {
     capture,
-    exports as default,
 };

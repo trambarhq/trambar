@@ -13,5 +13,4 @@ let lastTemporaryID = 0;
 
 export {
     allocate,
-    exports as default,
 };

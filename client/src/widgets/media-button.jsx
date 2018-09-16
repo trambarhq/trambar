@@ -1,9 +1,6 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-module.exports = MediaButton;
-module.exports.Direction = Direction;
-
-require('./media-button.scss');
+import './media-button.scss';
 
 function MediaButton(props) {
     if (props.hidden) {
@@ -17,19 +14,13 @@ function MediaButton(props) {
     );
 }
 
-Direction.propTypes = {
-    index: PropTypes.number,
-    count: PropTypes.number,
-    hidden: PropTypes.bool,
-    onBackwardClick: PropTypes.func,
-    onForwardClick: PropTypes.func,
-};
+MediaButton.Direction = Direction;
 
 function Direction(props) {
     if (props.hidden) {
         return null;
     }
-    var text = `${props.index + 1} / ${props.count}`;
+    let text = `${props.index + 1} / ${props.count}`;
     return (
         <div className="media-direction">
             <label className="backward-button" onClick={props.onBackwardClick}>
@@ -43,17 +34,8 @@ function Direction(props) {
     );
 }
 
-Direction.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    highlighted: PropTypes.bool,
-    disabled: PropTypes.bool,
-    onChange: PropTypes.func,
-};
-
 function buttonClasses(props) {
-    var classNames = [ 'media-button' ];
+    let classNames = [ 'media-button' ];
     if (props.className) {
         classNames.push(props.className);
     }
@@ -64,9 +46,34 @@ function buttonClasses(props) {
 }
 
 function iconClasses(props) {
-    var classNames = [];
+    let classNames = [];
     if (props.icon) {
         classNames.push('fa', `fa-${props.icon}`);
     }
     return classNames.join(' ');
+}
+
+export {
+    MediaButton as default,
+    MediaButton,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MediaButton.propTypes = {
+        label: PropTypes.string,
+        icon: PropTypes.string,
+        hidden: PropTypes.bool,
+        highlighted: PropTypes.bool,
+        disabled: PropTypes.bool,
+        onChange: PropTypes.func,
+    };
+    Direction.propTypes = {
+        index: PropTypes.number,
+        count: PropTypes.number,
+        hidden: PropTypes.bool,
+        onBackwardClick: PropTypes.func,
+        onForwardClick: PropTypes.func,
+    };
 }

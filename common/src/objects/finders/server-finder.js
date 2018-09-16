@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
 import ExternalDataUtils from 'objects/utils/external-data-utils';
+
+const emptyArray = [];
 
 /**
  * Find server by ID
@@ -52,7 +53,7 @@ function findServersOfRepos(db, repos) {
         }
     }));
     if (_.isEmpty(ids)) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -66,5 +67,4 @@ export {
     findServer,
     findAllServers,
     findServersOfRepos,
-    exports as default,
 };

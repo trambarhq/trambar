@@ -37,5 +37,4 @@ function handleKeydown(evt) {
 export {
     addListener,
     removeListener,
-    exports as default
 };

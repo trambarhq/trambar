@@ -159,5 +159,4 @@ function getDefaultClippingRect(width, height, align) {
 export {
     escape,
     attachResources,
-    exports as default
 };

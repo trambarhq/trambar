@@ -4,10 +4,10 @@ import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
-import ProjectFinder from 'objects/finders/project-finder';
-import RoleFinder from 'objects/finders/role-finder';
-import UserFinder from 'objects/finders/user-finder';
-import UserTypes from 'objects/types/user-types';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as RoleFinder from 'objects/finders/role-finder';
+import * as UserFinder from 'objects/finders/user-finder';
+import * as UserTypes from 'objects/types/user-types';
 
 // widgets
 import PushButton from 'widgets/push-button';

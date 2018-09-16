@@ -1,24 +1,21 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import React from 'react';
 
-module.exports = DeviceSelector;
-module.exports.choose = choose;
-
-require('./device-selector.scss');
+import './device-selector.scss';
 
 function DeviceSelector(props) {
-    var t = props.locale.translate;
-    var devices = props.devices;
+    let t = props.locale.translate;
+    let devices = props.devices;
     if (devices.length < 2) {
         return null;
     }
-    var frontBack = (devices.length === 2) && _.every(devices, (device) => {
+    let frontBack = (devices.length === 2) && _.every(devices, (device) => {
         if (/front|back/i.test(device.label)) {
             return true;
         }
     });
-    var options = _.map(devices, (device, index) => {
-        var label;
+    let options = _.map(devices, (device, index) => {
+        let label;
         if (props.type === 'video') {
             if (frontBack) {
                 if (/front/i.test(device.label)) {
@@ -32,7 +29,7 @@ function DeviceSelector(props) {
         } else if (type === 'audio') {
             label = t('device-selector-mic-$number', index + 1);
         }
-        var optionProps = {
+        let optionProps = {
             value: device.deviceId,
             selected: device.deviceId === props.selectedDeviceId,
         };
@@ -47,7 +44,7 @@ function DeviceSelector(props) {
     );
 }
 
-function choose(devices, direction) {
+DeviceSelector.choose = function(devices, direction) {
     return _.find(devices, (device) => {
         if (direction === 'front') {
             return /front/i.test(device.label);
@@ -55,4 +52,9 @@ function choose(devices, direction) {
             return /back/i.test(device.label);
         }
     })
-}
+};
+
+export {
+    DeviceSelector as default,
+    DeviceSelector,
+};

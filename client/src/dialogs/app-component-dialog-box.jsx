@@ -1,36 +1,26 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var MarkGor = require('mark-gor/react');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import React, { PureComponent } from 'react';
+import MarkGor from 'mark-gor/react';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var ResourceView = require('widgets/resource-view');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import ResourceView from 'widgets/resource-view';
 
-require('./app-component-dialog-box.scss');
+import './app-component-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'AppComponentDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        component: PropTypes.object.isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        onClose: PropTypes.func,
-    },
+class AppComponentDialogBox extends PureComponent {
+    static displayName = 'AppComponentDialogBox';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         if (!this.props.component) {
             return null;
         }
-        var overlayProps = {
+        let overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.props.onClose,
         };
@@ -45,15 +35,15 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render icon or image
      *
      * @return {ReactElement}
      */
-    renderPicture: function() {
-        var component = this.props.component;
+    renderPicture() {
+        let component = this.props.component;
         if (component.image) {
             return (
                 <div className="picture">
@@ -61,9 +51,9 @@ module.exports = React.createClass({
                 </div>
             );
         } else {
-            var icon = component.icon || {};
-            var iconClassName = icon.class || 'fa-cubes';
-            var style = {
+            let icon = component.icon || {};
+            let iconClassName = icon.class || 'fa-cubes';
+            let style = {
                 color: icon.color,
                 backgroundColor: icon.backgroundColor,
             };
@@ -75,32 +65,32 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render text description of component, formatted as Markdown
      *
      * @return {ReactElement}
      */
-    renderText: function() {
-        var p = this.props.locale.pick;
-        var text = p(this.props.component.text);
-        var elements = MarkGor.parse(text);
+    renderText() {
+        let p = this.props.locale.pick;
+        let text = p(this.props.component.text);
+        let elements = MarkGor.parse(text);
         return (
             <div className="text">
                 {elements}
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var closeButtonProps = {
+    renderButtons() {
+        let t = this.props.locale.translate;
+        let closeButtonProps = {
             label: t('app-component-close'),
             emphasized: true,
             onClick: this.props.onClose,
@@ -110,5 +100,23 @@ module.exports = React.createClass({
                 <PushButton {...closeButtonProps} />
             </div>
         );
-    },
-});
+    }
+}
+
+export {
+    AppComponentDialogBox as default,
+    AppComponentDialogBox,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    AppComponentDialogBox.propTypes = {
+        show: PropTypes.bool,
+        component: PropTypes.object.isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        onClose: PropTypes.func,
+    };
+}

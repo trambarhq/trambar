@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
+
+const emptyArray = [];
 
 /**
  * Find bookmarks created by a user
@@ -16,7 +17,7 @@ function findBookmarksByUser(db, user, stories, minimum) {
     let storyIds = _.map(stories, 'id');
     storyIds = _.sortBy(_.uniq(storyIds));
     if (_.isEmpty(storyIds) || !user) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     return db.find({
         table: 'bookmark',
@@ -51,5 +52,4 @@ function findBookmarksForUser(db, user, minimum) {
 export {
     findBookmarksByUser,
     findBookmarksForUser,
-    exports as default,
 };

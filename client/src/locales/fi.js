@@ -97,8 +97,8 @@ module.exports = function(localeCode) {
         'issue-cancel': 'Peruutta',
         'issue-delete': 'Poista',
         'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
-            var objects = [];
-            var ae;
+            let objects = [];
+            let ae;
             if (photos > 0) {
                 objects.push(photos === 1 ? 'kuvan' : 'kuvat');
                 ae = (photos === 1) ? 'an' : 'at';
@@ -115,11 +115,11 @@ module.exports = function(localeCode) {
                     ae = (audios === 1) ? 'an' : 'at';
                 }
             }
-            var ve = (names.length === 1) ? 'i' : 'ivät';
+            let ve = (names.length === 1) ? 'i' : 'ivät';
             return `${list(names)} lähett${ve} seuraav${ae} ${list(objects)}:`;
         },
         'issue-export-$names-wrote': (names) => {
-            var e = (names.length === 1) ? 'i' : 'avat';
+            let e = (names.length === 1) ? 'i' : 'avat';
             return `${list(names)} kirjoitt${e}:`;
         },
         'issue-ok': 'OK',
@@ -453,7 +453,7 @@ module.exports = function(localeCode) {
             return `Loi wiki-sivun “${page}”`;
         },
         'story-$name-created-$repo': (name, repo) => {
-            var text = `Loi projektin`;
+            let text = `Loi projektin`;
             if (repo) {
                 text += ` “${repo}”`;
             }
@@ -466,37 +466,37 @@ module.exports = function(localeCode) {
             return `Poisti wiki-sivun “${page}”`;
         },
         'story-$name-deleted-$repo': (name, repo) => {
-            var text = `Poisti projektin`;
+            let text = `Poisti projektin`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
         'story-$name-imported-$repo': (name, repo) => {
-            var text = `Toi projektin`;
+            let text = `Toi projektin`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
         'story-$name-joined-$repo': (name, repo) => {
-            var text = `Liittyi projektiin`;
+            let text = `Liittyi projektiin`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
         'story-$name-left-$repo': (name, repo) => {
-            var text = `Lähti projektista`;
+            let text = `Lähti projektista`;
             if (repo) {
                 text += ` “${repo}”`;
             }
             return text;
         },
         'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-            var text = `Yhdisti koodin`;
+            let text = `Yhdisti koodin`;
             if (branches && branches.length > 0) {
-                var sources = branches.map((branch) => {
+                let sources = branches.map((branch) => {
                     return `“${branch}”`;
                 });
                 text += (sources.length === 1) ? ` haarasta` : ` haaroista`;
@@ -509,14 +509,14 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-opened-issue-$number-$title': (name, number, title) => {
-            var text = `Avasi asian ${number}`;
+            let text = `Avasi asian ${number}`;
             if (title) {
                 text += `: ${title}`;
             }
             return text;
         },
         'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-            var text = `Painoi muutoksia haaraan “${branch}”`;
+            let text = `Painoi muutoksia haaraan “${branch}”`;
             if (repo) {
                 text += ` projektin “${repo}”`;
             }
@@ -558,32 +558,32 @@ module.exports = function(localeCode) {
         'story-photo': 'Kuva',
         'story-post': 'Viesti',
         'story-push-added-$count-files': (count) => {
-            var files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
+            let files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
             return `${files} lisätty`;
         },
         'story-push-added-$count-lines': (count) => {
-            var lines = (count === 1) ? `1 rivi` : `${count} riviä`;
+            let lines = (count === 1) ? `1 rivi` : `${count} riviä`;
             return `${lines} lisätty`;
         },
         'story-push-components-changed': 'Seuraavat osat muutettiin:',
         'story-push-deleted-$count-files': (count) => {
-            var files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
+            let files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
             return `${files} poistettiin`;
         },
         'story-push-deleted-$count-lines': (count) => {
-            var lines = (count === 1) ? `1 rivi` : `${count} riviä`;
+            let lines = (count === 1) ? `1 rivi` : `${count} riviä`;
             return `${lines} poistettiin`;
         },
         'story-push-modified-$count-files': (count) => {
-            var files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
+            let files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
             return `${files} muokattu`;
         },
         'story-push-modified-$count-lines': (count) => {
-            var lines = (count === 1) ? `1 rivi` : `${count} riviä`;
+            let lines = (count === 1) ? `1 rivi` : `${count} riviä`;
             return `${lines} muokattu`;
         },
         'story-push-renamed-$count-files': (count) => {
-            var files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
+            let files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
             return `${files} nimettiin uudelleen`;
         },
         'story-remove-yourself': 'Poista itsesi',
@@ -618,7 +618,7 @@ module.exports = function(localeCode) {
         'time-yesterday': 'Eilen',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-            var files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
+            let files = (count === 1) ? `1 tiedosto` : `${count} tiedostoa`;
             return `Lataaminen ${files}, ${size} jäljellä`;
         },
 
@@ -636,19 +636,19 @@ module.exports = function(localeCode) {
         'user-activity-$name-left-repo': 'Jätti git-projektin',
         'user-activity-$name-merged-code': 'Teki koodin yhdistämisen',
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-            var audios = (count === 1) ? `äänileikkeen` : `${count} äänileikkeitä`;
+            let audios = (count === 1) ? `äänileikkeen` : `${count} äänileikkeitä`;
             return `Lähetti ${audios}`;
         },
         'user-activity-$name-posted-$count-links': (name, count) => {
-            var links = (count === 1) ? `linkin verkkosivustoon` : `linkit ${count} verkkosivustoon`;
+            let links = (count === 1) ? `linkin verkkosivustoon` : `linkit ${count} verkkosivustoon`;
             return `Lähetti ${links}`;
         },
         'user-activity-$name-posted-$count-pictures': (name, count) => {
-            var pictures = (count === 1) ? `kuvan` : `${count} kuvaa`;
+            let pictures = (count === 1) ? `kuvan` : `${count} kuvaa`;
             return `Lähetti ${pictures}`;
         },
         'user-activity-$name-posted-$count-video-clips': (name, count) => {
-            var videos = (count === 1) ? `videoleikeen` : `${count} videoleikkeitä`;
+            let videos = (count === 1) ? `videoleikeen` : `${count} videoleikkeitä`;
             return `Lähetti ${videos}`;
         },
         'user-activity-$name-pushed-code': 'Siirretty koodi arkistolle',
@@ -745,7 +745,7 @@ function list(items) {
         return `${item}`;
     });
     if (items.length >= 2) {
-        var lastItem = items.pop();
+        let lastItem = items.pop();
         items[items.length - 1] += ` ja ${lastItem}`;
     }
     return items.join(', ');

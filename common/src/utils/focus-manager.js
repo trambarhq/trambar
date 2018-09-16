@@ -37,5 +37,4 @@ export {
     register,
     unregister,
     focus,
-    exports as default
 };

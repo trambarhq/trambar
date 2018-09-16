@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import Chai, { expect } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
-import HTTPRequest from 'transport/http-request';
+import * as HTTPRequest from 'transport/http-request';
 import ManualPromise from 'utils/manual-promise';
 import TestServer from './lib/test-server';
 

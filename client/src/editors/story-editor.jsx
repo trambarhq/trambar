@@ -1,92 +1,51 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Memoize = require('utils/memoize');
-var ListParser = require('utils/list-parser');
-var Markdown = require('utils/markdown');
-var PlainText = require('utils/plain-text');
-var TagScanner = require('utils/tag-scanner');
-var FocusManager = require('utils/focus-manager');
-var ComponentRefs = require('utils/component-refs');
-var StoryUtils = require('objects/utils/story-utils');
-var IssueUtils = require('objects/utils/issue-utils');
-var TemporaryId = require('data/remote-data-source/temporary-id');
-var RandomToken = require('utils/random-token');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import Memoize from 'utils/memoize';
+import * as ListParser from 'utils/list-parser';
+import * as Markdown from 'utils/markdown';
+import * as PlainText from 'utils/plain-text';
+import * as TagScanner from 'utils/tag-scanner';
+import * as FocusManager from 'utils/focus-manager';
+import ComponentRefs from 'utils/component-refs';
+import * as StoryUtils from 'objects/utils/story-utils';
+import * as IssueUtils from 'objects/utils/issue-utils';
+import * as TemporaryId from 'data/remote-data-source/temporary-id';
+import * as RandomToken from 'utils/random-token';
 
 // widgets
-var AuthorNames = require('widgets/author-names');
-var ProfileImage = require('widgets/profile-image');
-var CoauthoringButton = require('widgets/coauthoring-button');
-var PushButton = require('widgets/push-button');
-var AutosizeTextArea = require('widgets/autosize-text-area');
-var MediaToolbar = require('widgets/media-toolbar');
-var TextToolbar = require('widgets/text-toolbar');
-var HeaderButton = require('widgets/header-button');
-var DropZone = require('widgets/drop-zone');
-var MediaEditor = require('editors/media-editor');
-var MediaImporter = require('editors/media-importer');
-var MediaPlaceholder = require('widgets/media-placeholder');
-var StoryEditorOptions = require('editors/story-editor-options');
-var CornerPopUp = require('widgets/corner-pop-up');
-var ConfirmationDialogBox = require('dialogs/confirmation-dialog-box');
+import AuthorNames from 'widgets/author-names';
+import ProfileImage from 'widgets/profile-image';
+import CoauthoringButton from 'widgets/coauthoring-button';
+import PushButton from 'widgets/push-button';
+import AutosizeTextArea from 'widgets/autosize-text-area';
+import MediaToolbar from 'widgets/media-toolbar';
+import TextToolbar from 'widgets/text-toolbar';
+import HeaderButton from 'widgets/header-button';
+import DropZone from 'widgets/drop-zone';
+import MediaEditor from 'editors/media-editor';
+import MediaImporter from 'editors/media-importer';
+import MediaPlaceholder from 'widgets/media-placeholder';
+import StoryEditorOptions from 'editors/story-editor-options';
+import CornerPopUp from 'widgets/corner-pop-up';
+import ConfirmationDialogBox from 'dialogs/confirmation-dialog-box';
 
-require('./story-editor.scss');
+import './story-editor.scss';
 
 const AUTOSAVE_DURATION = 2000;
 
-module.exports = React.createClass({
-    displayName: 'StoryEditor',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        isStationary: PropTypes.bool,
-        highlighting: PropTypes.bool,
-        story: PropTypes.object,
-        authors: PropTypes.arrayOf(PropTypes.object),
-        recommendations: PropTypes.arrayOf(PropTypes.object),
-        recipients: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        repos: PropTypes.arrayOf(PropTypes.object),
+class StoryEditor extends PureComponent {
+    static displayName = 'StoryEditor';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            isStationary: false
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             mediaImporter: MediaImporter,
             textArea: AutosizeTextArea,
             mainPopUp: CornerPopUp,
             previewPopUp: CornerPopUp,
         });
-        var nextState = {
+        this.state = {
             options: defaultOptions,
             selectedResourceIndex: 0,
             original: null,
@@ -95,47 +54,46 @@ module.exports = React.createClass({
             capturing: null,
             action: null,
         };
-        this.updateDraft(nextState, this.props);
-        this.updateOptions(nextState, this.props);
-        this.updateLocaleCode(nextState, this.props);
-        this.updateLeadAuthor(nextState, this.props);
-        this.updateBookmarkRecipients(nextState, this.props);
-        this.updateResourceIndex(nextState, this.props);
-        return nextState;
-    },
+        this.updateDraft(this.state, props);
+        this.updateOptions(this.state, props);
+        this.updateLocaleCode(this.state, props);
+        this.updateLeadAuthor(this.state, props);
+        this.updateBookmarkRecipients(this.state, props);
+        this.updateResourceIndex(this.state, props);
+    }
 
     /**
      * Return class name, possibly with modifiers
      *
      * @return {String}
      */
-    getClassName: function() {
-        var className = 'story-editor';
+    getClassName() {
+        let className = 'story-editor';
         if (this.props.highlighting) {
             className += ' highlighting';
         }
         return className;
-    },
+    }
 
     /**
      * Return true if the current user is coauthoring this article
      *
      * @return {Boolean}
      */
-    isCoauthoring: function() {
-        var userIds = _.get(this.props.story, 'user_ids');
-        var currentUserId = _.get(this.props.currentUser, 'id');
-        var index = _.indexOf(userIds, currentUserId);
+    isCoauthoring() {
+        let userIds = _.get(this.props.story, 'user_ids');
+        let currentUserId = _.get(this.props.currentUser, 'id');
+        let index = _.indexOf(userIds, currentUserId);
         return (index > 0);
-    },
+    }
 
     /**
      * Update state when certain props change
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        var nextState = _.clone(this.state);
+    componentWillReceiveProps(nextProps) {
+        let nextState = _.clone(this.state);
         if (this.props.story !== nextProps.story) {
             this.updateDraft(nextState, nextProps);
             this.updateOptions(nextState, nextProps);
@@ -155,11 +113,11 @@ module.exports = React.createClass({
             this.updateOptions(nextState, nextProps);
             this.updateLocaleCode(nextState, nextProps);
         }
-        var changes = _.shallowDiff(nextState, this.state);
+        let changes = _.shallowDiff(nextState, this.state);
         if (!_.isEmpty(changes)) {
             this.setState(changes);
         }
-    },
+    }
 
     /**
      * Update state.draft based on props
@@ -167,7 +125,7 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateDraft: function(nextState, nextProps) {
+    updateDraft(nextState, nextProps) {
         if (nextProps.story) {
             nextState.draft = nextProps.story;
             if (!nextProps.story.uncommitted) {
@@ -177,7 +135,7 @@ module.exports = React.createClass({
             nextState.draft = createBlankStory(nextProps.currentUser);
             nextState.original = null;
         }
-    },
+    }
 
     /**
      * Update state.draft.user_ids
@@ -185,15 +143,15 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateLeadAuthor: function(nextState, nextProps) {
+    updateLeadAuthor(nextState, nextProps) {
         if (!nextState.story) {
-            var currentUserId = _.get(nextProps.currentUser, 'id');
+            let currentUserId = _.get(nextProps.currentUser, 'id');
             if (!nextState.draft.user_ids) {
                 nextState.draft = _.decouple(nextState.draft, 'user_ids', []);
                 nextState.draft.user_ids[0] = currentUserId;
             }
         }
-    },
+    }
 
     /**
      * Update state.options based on props
@@ -201,7 +159,7 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateOptions: function(nextState, nextProps) {
+    updateOptions(nextState, nextProps) {
         if (!nextProps.story) {
             // reset options to default when a new story starts
             nextState.options = defaultOptions;
@@ -213,7 +171,7 @@ module.exports = React.createClass({
                 nextState.options.preview = this.choosePreview(nextState.draft);
             }
         }
-    },
+    }
 
     /**
      * Update state.options.bookmarkRecipients based on props
@@ -221,11 +179,11 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateBookmarkRecipients: function(nextState, nextProps) {
-        var targetUserIds = _.map(nextProps.recommendations, 'target_user_id');
+    updateBookmarkRecipients(nextState, nextProps) {
+        let targetUserIds = _.map(nextProps.recommendations, 'target_user_id');
         nextState.options = _.clone(nextState.options);
         nextState.options.bookmarkRecipients = _.union(nextState.options.bookmarkRecipients, targetUserIds);
-    },
+    }
 
     /**
      * Update state.options.localeCode based on props
@@ -233,10 +191,10 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateLocaleCode: function(nextState, nextProps) {
+    updateLocaleCode(nextState, nextProps) {
         nextState.options = _.clone(nextState.options);
         nextState.options.localeCode = this.chooseLocale(nextState.draft, nextProps.locale);
-    },
+    }
 
     /**
      * Update state.selectedResourceIndex
@@ -244,15 +202,15 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateResourceIndex: function(nextState, nextProps) {
-        var resources = _.get(nextState.draft, 'details.resources');
-        var count = _.size(resources);
+    updateResourceIndex(nextState, nextProps) {
+        let resources = _.get(nextState.draft, 'details.resources');
+        let count = _.size(resources);
         if (nextState.selectedResourceIndex >= count) {
             nextState.selectedResourceIndex = count - 1;
         } else if (nextState.selectedResourceIndex < 0 && count > 0) {
             nextState.selectedResourceIndex = 0;
         }
-    },
+    }
 
     /**
      * Choose preview type based on story contents
@@ -261,7 +219,7 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    choosePreview: function(story) {
+    choosePreview(story) {
         // show preview when text is formatted
         if (story.type === 'survey' || story.type === 'task-list') {
             return 'text';
@@ -271,7 +229,7 @@ module.exports = React.createClass({
         }
         // default to media until we know more
         return '';
-    },
+    }
 
     /**
      * Choose locale based on selected locale and story contents
@@ -280,22 +238,22 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    chooseLocale: function(story, locale) {
-        var localeCode;
-        var text = _.get(story, 'details.text');
+    chooseLocale(story, locale) {
+        let localeCode;
+        let text = _.get(story, 'details.text');
         if (!_.isEmpty(text)) {
             // the country code may affect which dictionary is chosen
             // try to add it to the language code
-            var languageCode = _.first(_.keys(text));
+            let languageCode = _.first(_.keys(text));
             if (languageCode === locale.languageCode) {
                 // great, the current user speaks the language
                 localeCode = locale.localeCode;
             } else {
                 // use the first country on the list if the language is in
                 // the directory
-                var entry = _.find(locale.directory, { code: languageCode });
+                let entry = _.find(locale.directory, { code: languageCode });
                 if (entry) {
-                    var countryCode = entry.defaultCountry;
+                    let countryCode = entry.defaultCountry;
                     localeCode = `${languageCode}-${countryCode}`;
                 } else {
                     // shouldn't really happen
@@ -306,14 +264,14 @@ module.exports = React.createClass({
             localeCode = locale.localeCode;
         }
         return localeCode;
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         switch (this.props.theme.mode) {
             case 'single-col':
                 return this.renderSingleColumn();
@@ -322,14 +280,14 @@ module.exports = React.createClass({
             case 'triple-col':
                 return this.renderTripleColumn();
         }
-    },
+    }
 
     /**
      * Render single-column view
      *
      * @return {ReactElement}
      */
-    renderSingleColumn: function() {
+    renderSingleColumn() {
         return (
             <div className={this.getClassName()}>
                 <div className="header">
@@ -361,14 +319,14 @@ module.exports = React.createClass({
                 {this.renderConfirmationDialogBox()}
             </div>
         );
-    },
+    }
 
     /**
      * Render double-column view
      *
      * @return {ReactElement}
      */
-    renderDoubleColumn: function() {
+    renderDoubleColumn() {
         return (
             <div className={this.getClassName()}>
                 <div className="header">
@@ -396,15 +354,15 @@ module.exports = React.createClass({
                 {this.renderConfirmationDialogBox()}
             </div>
         );
-    },
+    }
 
     /**
      * Render triple-column view
      *
      * @return {ReactElement}
      */
-    renderTripleColumn: function() {
-        var t = this.props.locale.translate;
+    renderTripleColumn() {
+        let t = this.props.locale.translate;
         return (
             <div className={this.getClassName()}>
                 <div className="header">
@@ -436,43 +394,43 @@ module.exports = React.createClass({
                 {this.renderConfirmationDialogBox()}
             </div>
         );
-    },
+    }
 
     /**
      * Render profile image
      *
      * @return {ReactElement}
      */
-    renderProfileImage: function() {
-        var props = {
+    renderProfileImage() {
+        let props = {
             user: _.get(this.props.authors, 0),
             theme: this.props.theme,
             size: 'medium',
         };
         return <ProfileImage {...props} />;
-    },
+    }
 
     /**
      * Render the names of the author and co-authors
      *
      * @return {ReactElement}
      */
-    renderAuthorNames: function() {
-        var props = {
+    renderAuthorNames() {
+        let props = {
             authors: this.props.authors,
             locale: this.props.locale,
             theme: this.props.theme,
         };
         return <AuthorNames {...props} />;
-    },
+    }
 
     /**
      * Render button that opens coauthor selection dialog box
      *
      * @return {ReactElement}
      */
-    renderCoauthoringButton: function() {
-        var props = {
+    renderCoauthoringButton() {
+        let props = {
             coauthoring: this.isCoauthoring(),
             story: this.state.draft,
             database: this.props.database,
@@ -484,19 +442,19 @@ module.exports = React.createClass({
             onRemove: this.handleCancelClick,
         };
         return <CoauthoringButton {...props} />;
-    },
+    }
 
     /**
      * Render the control for text entry
      *
      * @return {ReactElement}
      */
-    renderTextArea: function() {
-        var setters = this.components.setters;
-        var loc = this.state.options.localeCode;
-        var lang = loc.substr(0, 2);
-        var langText = _.get(this.state.draft, [ 'details', 'text', lang ], '');
-        var props = {
+    renderTextArea() {
+        let setters = this.components.setters;
+        let loc = this.state.options.localeCode;
+        let lang = loc.substr(0, 2);
+        let langText = _.get(this.state.draft, [ 'details', 'text', lang ], '');
+        let props = {
             value: langText,
             lang: loc,
             onChange: this.handleTextChange,
@@ -506,28 +464,28 @@ module.exports = React.createClass({
             onPaste: this.handlePaste,
         };
         return <AutosizeTextArea ref={setters.textArea} {...props} />;
-    },
+    }
 
     /**
      * Render cancel and post buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var draft = this.state.draft;
-        var text = _.get(draft, 'details.text');
-        var resources = _.get(draft, 'details.resources');
-        var noText = _.isEmpty(_.pickBy(text));
-        var noResources = _.isEmpty(resources);
-        var pendingResource = hasPendingResources(resources)
-        var publishing = _.get(draft, 'published', false);
-        var cancelButtonProps = {
+    renderButtons() {
+        let t = this.props.locale.translate;
+        let draft = this.state.draft;
+        let text = _.get(draft, 'details.text');
+        let resources = _.get(draft, 'details.resources');
+        let noText = _.isEmpty(_.pickBy(text));
+        let noResources = _.isEmpty(resources);
+        let pendingResource = hasPendingResources(resources)
+        let publishing = _.get(draft, 'published', false);
+        let cancelButtonProps = {
             label: t('story-cancel'),
             onClick: this.handleCancelClick,
             disabled: (noText && noResources) || publishing,
         };
-        var postButtonProps = {
+        let postButtonProps = {
             label: t('story-post'),
             onClick: this.handlePublishClick,
             emphasized: true,
@@ -539,70 +497,70 @@ module.exports = React.createClass({
                 <PushButton {...postButtonProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render text or media preview
      *
      * @return {ReactElement|null}
      */
-    renderToolbar: function() {
+    renderToolbar() {
         if (this.state.options.preview === 'text') {
             return this.renderTextToolbar();
         } else {
             return this.renderMediaToolbar();
         }
-    },
+    }
 
     /**
      * Render buttons in title bar
      *
      * @return {ReactElement}
      */
-    renderTextToolbar: function() {
-        var props = {
+    renderTextToolbar() {
+        let props = {
             story: this.state.draft,
             locale: this.props.locale,
             onAction: this.handleAction,
         };
         return <TextToolbar {...props} />;
-    },
+    }
 
     /**
      * Render buttons for ataching media
      *
      * @return {ReactElement}
      */
-    renderMediaToolbar: function() {
-        var props = {
+    renderMediaToolbar() {
+        let props = {
             story: this.state.draft,
             capturing: this.state.capturing,
             locale: this.props.locale,
             onAction: this.handleAction,
         };
         return <MediaToolbar {...props} />;
-    },
+    }
 
     /**
      * Render text or media preview
      *
      * @return {ReactElement|null}
      */
-    renderPreview: function() {
+    renderPreview() {
         if (this.state.options.preview === 'text') {
             return this.renderTextPreview();
         } else {
             return this.renderMediaPreview();
         }
-    },
+    }
 
     /**
      * Render MarkDown preview
      *
      * @return {ReactElement}
      */
-    renderTextPreview: function() {
-        var contents;
+    renderTextPreview() {
+        let contents;
         switch (this.state.draft.type) {
             case undefined:
             case '':
@@ -617,18 +575,18 @@ module.exports = React.createClass({
                 break;
         }
         return <div className="story-contents">{contents}</div>;
-    },
+    }
 
     /**
      * Render text for regular post
      *
      * @return {ReactElement}
      */
-    renderRegularPost: function() {
-        var p = this.props.locale.pick;
-        var className = 'text story';
-        var draft = this.state.draft;
-        var text = p(draft.details.text);
+    renderRegularPost() {
+        let p = this.props.locale.pick;
+        let className = 'text story';
+        let draft = this.state.draft;
+        let text = p(draft.details.text);
         if (draft.details.markdown) {
             text = Markdown.render(text, this.handleReference);
             className += ' markdown';
@@ -641,19 +599,19 @@ module.exports = React.createClass({
                 {text}
             </div>
         );
-    },
+    }
 
     /**
      * Render task list
      *
      * @return {ReactElement}
      */
-    renderTaskListText: function() {
-        var p = this.props.locale.pick;
-        var className = 'text task-list';
-        var draft = this.state.draft;
-        var text = p(draft.details.text);
-        var list;
+    renderTaskListText() {
+        let p = this.props.locale.pick;
+        let className = 'text task-list';
+        let draft = this.state.draft;
+        let text = p(draft.details.text);
+        let list;
         if (draft.details.markdown) {
             // answers are written to the text itself, so there's no need to
             // provide user answers to Markdown.renderTaskList()
@@ -669,19 +627,19 @@ module.exports = React.createClass({
                 {list}
             </div>
         );
-    },
+    }
 
     /**
      * Render survey choices or results depending whether user has voted
      *
      * @return {ReactElement}
      */
-    renderSurveyText: function() {
-        var p = this.props.locale.pick;
-        var className = 'text survey';
-        var draft = this.state.draft;
-        var text = p(draft.details.text);
-        var survey;
+    renderSurveyText() {
+        let p = this.props.locale.pick;
+        let className = 'text survey';
+        let draft = this.state.draft;
+        let text = p(draft.details.text);
+        let survey;
         if (draft.details.markdown) {
             survey = Markdown.renderSurvey(text, null, this.handleItemChange, this.handleReference);
             className += ' markdown';
@@ -695,15 +653,15 @@ module.exports = React.createClass({
                 {survey}
             </div>
         );
-    },
+    }
 
     /**
      * Render preview of images and videos
      *
      * @return {ReactElement}
      */
-    renderMediaPreview: function() {
-        var editorProps = {
+    renderMediaPreview() {
+        let editorProps = {
             allowEmbedding: true,
             allowShifting: true,
             resources: _.get(this.state.draft, 'details.resources'),
@@ -714,7 +672,7 @@ module.exports = React.createClass({
             onChange: this.handleResourcesChange,
             onEmbed: this.handleResourceEmbed,
         };
-        var placeholderProps = {
+        let placeholderProps = {
             showHints: this.props.isStationary,
             locale: this.props.locale,
             theme: this.props.theme,
@@ -726,15 +684,15 @@ module.exports = React.createClass({
                 </MediaEditor>
             </DropZone>
         );
-    },
+    }
 
     /**
      * Render preview of images and videos
      *
      * @return {ReactElement}
      */
-    renderMediaImporter: function() {
-        var props = {
+    renderMediaImporter() {
+        let props = {
             ref: this.components.setters.mediaImporter,
             resources: _.get(this.state.draft, 'details.resources', []),
             locale: this.props.locale,
@@ -746,21 +704,21 @@ module.exports = React.createClass({
             onChange: this.handleResourcesChange,
         };
         return <MediaImporter {...props} />;
-    },
+    }
 
     /**
      * Render popup menu
      *
      * @return {ReactElement}
      */
-    renderPopUpMenu: function(section) {
-        var ref = this.components.setters[section + 'PopUp'];
+    renderPopUpMenu(section) {
+        let ref = this.components.setters[section + 'PopUp'];
         return (
             <CornerPopUp ref={ref}>
                 {this.renderOptions(section)}
             </CornerPopUp>
         );
-    },
+    }
 
     /**
      * Render editor options
@@ -769,8 +727,8 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOptions: function(section) {
-        var props = {
+    renderOptions(section) {
+        let props = {
             section,
             story: this.state.draft,
             options: this.state.options,
@@ -786,21 +744,21 @@ module.exports = React.createClass({
             onComplete: this.handleOptionComplete,
         };
         return <StoryEditorOptions {...props} />;
-    },
+    }
 
     /**
      * Render confirmation dialog box
      *
      * @return {ReactElement}
      */
-    renderConfirmationDialogBox: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderConfirmationDialogBox() {
+        let t = this.props.locale.translate;
+        let props = {
             show: this.state.confirming,
             locale: this.props.locale,
             onClose: this.handleDialogClose,
         };
-        var message;
+        let message;
         if (this.state.action === 'delete-post') {
             message = t('story-cancel-are-you-sure');
             props.onConfirm = this.handleCancelConfirm;
@@ -816,15 +774,15 @@ module.exports = React.createClass({
                 {message}
             </ConfirmationDialogBox>
         );
-    },
+    }
 
-    componentDidUpdate: function(prevProp, prevState) {
+    componentDidUpdate(prevProp, prevState) {
         if (this.repositionCursor) {
-            var target = this.repositionCursor.target;
+            let target = this.repositionCursor.target;
             target.selectionStart = target.selectionEnd = this.repositionCursor.position;
             this.repositionCursor = null;
         }
-    },
+    }
 
     /**
      * Set current draft
@@ -833,16 +791,16 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    changeDraft: function(draft, resourceIndex) {
+    changeDraft(draft, resourceIndex) {
         return new Promise((resolve, reject) => {
-            var options = this.state.options;
+            let options = this.state.options;
             if (!options.preview) {
-                var preview = this.choosePreview(draft);
+                let preview = this.choosePreview(draft);
                 if (preview) {
                     options = _.decoupleSet(options, 'preview', preview);
                 }
             }
-            var newState = { draft, options };
+            let newState = { draft, options };
             if (resourceIndex !== undefined) {
                 newState.selectedResourceIndex = resourceIndex;
             }
@@ -850,7 +808,7 @@ module.exports = React.createClass({
                 resolve(draft);
             });
         });
-    },
+    }
 
     /**
      * Set options
@@ -859,13 +817,13 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    changeOptions: function(options) {
+    changeOptions(options) {
         return new Promise((resolve, reject) => {
             this.setState({ options }, () => {
                 resolve(options);
             });
         });
-    },
+    }
 
     /**
      * Set current draft and initiate autosave
@@ -876,7 +834,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    saveDraft: function(draft, immediate, resourceIndex) {
+    saveDraft(draft, immediate, resourceIndex) {
         draft.public = !this.state.options.hidePost;
         return this.changeDraft(draft, resourceIndex).then((story) => {
             if (!hasPendingResources(story.details.resources)) {
@@ -884,7 +842,7 @@ module.exports = React.createClass({
             }
             return story;
         });
-    },
+    }
 
     /**
      * Save story to remote database
@@ -894,11 +852,11 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    saveStory: function(story, immediate) {
-        var params = this.props.route.parameters;
-        var resources = story.details.resources || [];
-        var original = this.state.original;
-        var options = {
+    saveStory(story, immediate) {
+        let params = this.props.route.parameters;
+        let resources = story.details.resources || [];
+        let original = this.state.original;
+        let options = {
             delay: (immediate) ? undefined : AUTOSAVE_DURATION,
             onConflict: (evt) => {
                 // perform merge on conflict, if the object still exists
@@ -908,7 +866,7 @@ module.exports = React.createClass({
                 }
             },
         };
-        var db = this.props.database.use({ schema: params.schema, by: this });
+        let db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'story' }, story, options).then((story) => {
                 // send images and videos to server
@@ -916,7 +874,7 @@ module.exports = React.createClass({
                 return story;
             });
         });
-    },
+    }
 
     /**
      * Remove story from remote database
@@ -925,31 +883,31 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    removeStory: function(story) {
-        var route = this.props.route;
-        var schema = route.parameters.schema;
-        var db = this.props.database.use({ schema, by: this });
+    removeStory(story) {
+        let route = this.props.route;
+        let schema = route.parameters.schema;
+        let db = this.props.database.use({ schema, by: this });
         return db.removeOne({ table: 'story' }, story);
-    },
+    }
 
     /**
      * Remove current user from author list
      *
      * @return {Promise<Story>}
      */
-    removeSelf: function() {
-        var story = this.props.story;
-        var userIds = _.without(story.user_ids, this.props.currentUser.id);
-        var columns = {
+    removeSelf() {
+        let story = this.props.story;
+        let userIds = _.without(story.user_ids, this.props.currentUser.id);
+        let columns = {
             id: story.id,
             user_ids: userIds,
         };
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
+        let params = this.props.route.parameters;
+        let db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'story' }, columns);
         });
-    },
+    }
 
     /**
      * Save bookmarks to remote database
@@ -958,16 +916,16 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    saveBookmarks: function(bookmarks) {
+    saveBookmarks(bookmarks) {
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
+        let params = this.props.route.parameters;
+        let db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.save({ table: 'bookmark' }, bookmarks);
         });
-    },
+    }
 
     /**
      * Remove bookmarks from remote database
@@ -976,16 +934,16 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    removeBookmarks: function(bookmarks) {
+    removeBookmarks(bookmarks) {
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
+        let params = this.props.route.parameters;
+        let db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.remove({ table: 'bookmark' }, bookmarks);
         });
-    },
+    }
 
     /**
      * Send bookmarks to recipients
@@ -995,13 +953,13 @@ module.exports = React.createClass({
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    sendBookmarks: function(story, recipientIds) {
-        var bookmarks = this.props.recommendations;
-        var newBookmarks = [];
+    sendBookmarks(story, recipientIds) {
+        let bookmarks = this.props.recommendations;
+        let newBookmarks = [];
         // add bookmarks that don't exist yet
         _.each(recipientIds, (recipientId) => {
             if (!_.some(bookmarks, { target_user_id: recipientId })) {
-                var newBookmark = {
+                let newBookmark = {
                     story_id: story.published_version_id || story.id,
                     user_ids: [ this.props.currentUser.id ],
                     target_user_id: recipientId,
@@ -1011,7 +969,7 @@ module.exports = React.createClass({
         });
         // delete bookmarks that aren't needed anymore
         // the backend will handle the fact a bookmark can belong to multiple users
-        var redundantBookmarks = [];
+        let redundantBookmarks = [];
         _.each(bookmarks, (bookmark) => {
             if (!_.includes(recipientIds, bookmark.target_user_id)) {
                 redundantBookmarks.push(bookmark);
@@ -1022,7 +980,7 @@ module.exports = React.createClass({
                 return _.concat(newBookmarks, redundantBookmarks);
             });
         });
-    },
+    }
 
     /**
      * Create a task in the backend
@@ -1032,78 +990,78 @@ module.exports = React.createClass({
      *
      * @return {Promise<Task>}
      */
-    sendTask: function(action, options) {
-        var task = {
+    sendTask(action, options) {
+        let task = {
             action,
             options,
             user_id: this.props.currentUser.id,
             token: RandomToken.generate(),
         };
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
+        let params = this.props.route.parameters;
+        let db = this.props.database.use({ schema: params.schema, by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'task' }, task);
         });
-    },
+    }
 
     /**
      * Publish the story
      *
      * @return {[type]}
      */
-    publishStory: function() {
-        var draft = _.clone(this.state.draft);
-        var options = this.state.options;
+    publishStory() {
+        let draft = _.clone(this.state.draft);
+        let options = this.state.options;
         if (!draft.type) {
             draft.type = 'post';
         }
         if (_.isEmpty(draft.role_ids)) {
-            var roleIds = _.map(this.props.authors, 'role_ids');
+            let roleIds = _.map(this.props.authors, 'role_ids');
             draft.role_ids = _.uniq(_.flatten(roleIds));
         }
         draft.published = true;
 
         return this.saveDraft(draft, true).then((story) => {
             return this.sendBookmarks(story, options.bookmarkRecipients).then(() => {
-                var issueDetailsBefore = IssueUtils.extractIssueDetails(this.state.draft, this.props.repos);
-                var issueDetailsAfter = this.state.options.issueDetails;
+                let issueDetailsBefore = IssueUtils.extractIssueDetails(this.state.draft, this.props.repos);
+                let issueDetailsAfter = this.state.options.issueDetails;
                 if (!_.isEqual(issueDetailsAfter, issueDetailsBefore)) {
                     if (issueDetailsAfter) {
-                        var params = _.clone(issueDetailsAfter);
+                        let params = _.clone(issueDetailsAfter);
                         params.story_id = story.id;
                         return this.sendTask('export-issue', params);
                     }
                 }
             });
         });
-    },
+    }
 
     /**
      * Called when user clicks the Post button
      *
      * @param  {Event} evt
      */
-    handlePublishClick: function(evt) {
+    handlePublishClick = (evt) => {
         this.publishStory();
-    },
+    }
 
     /**
      * Called when user changes the text
      *
      * @param  {Event} evt
      */
-    handleTextChange: function(evt) {
-        var langText = evt.currentTarget.value;
-        var loc = this.state.options.localeCode;
-        var lang = loc.substr(0, 2);
+    handleTextChange = (evt) => {
+        let langText = evt.currentTarget.value;
+        let loc = this.state.options.localeCode;
+        let lang = loc.substr(0, 2);
         if (loc) {
             lang = loc.substr(0, 2);
         } else {
             // locale isn't set--use current locale
             lang = this.props.locale.languageCode;
         }
-        var path = `details.text.${lang}`;
-        var draft = _.decoupleSet(this.state.draft, path, langText);
+        let path = `details.text.${lang}`;
+        let draft = _.decoupleSet(this.state.draft, path, langText);
 
         // remove zero-length text
         draft.details.text = _.pickBy(draft.details.text, 'length');
@@ -1124,10 +1082,10 @@ module.exports = React.createClass({
 
         if (draft.type === 'task-list') {
             // update unfinished_tasks
-            var counts = [];
+            let counts = [];
             _.each(draft.details.text, (langText) => {
-                var tokens = ListParser.extract(langText);
-                var unfinished = ListParser.count(tokens, false);
+                let tokens = ListParser.extract(langText);
+                let unfinished = ListParser.count(tokens, false);
                 counts.push(unfinished);
             });
             draft.unfinished_tasks = _.max(counts);
@@ -1143,26 +1101,26 @@ module.exports = React.createClass({
         // look for tags
         draft.tags = TagScanner.findTags(draft.details.text);
         this.saveDraft(draft);
-    },
+    }
 
     /**
      * Called when user press a key
      *
      * @param  {Event} evt
      */
-    handleKeyDown: function(evt) {
+    handleKeyDown = (evt) => {
         this.lastInput = null;
-    },
+    }
 
     /**
      * Called when keystrokes generate text input
      *
      * @param  {Event} evt
      */
-    handleBeforeInput: function(evt) {
-        var target = evt.target;
+    handleBeforeInput = (evt) => {
+        let target = evt.target;
         if (evt.data === '\n') {
-            var storyType = this.state.draft.type;
+            let storyType = this.state.draft.type;
             if (storyType !== 'survey' && storyType !== 'task-list') {
                 if (this.props.theme.mode === 'single-col') {
                     evt.preventDefault();
@@ -1173,27 +1131,27 @@ module.exports = React.createClass({
             }
         }
         this.lastInput = evt.data;
-    },
+    }
 
     /**
      * Called when user releases a key
      *
      * @param  {Event} evt
      */
-    handleKeyUp: function(evt) {
-        var target = evt.target;
+    handleKeyUp = (evt) => {
+        let target = evt.target;
         if (this.lastInput === '\n') {
-            var storyType = this.state.draft.type;
+            let storyType = this.state.draft.type;
             if (storyType === 'survey' || storyType === 'task-list') {
                 // see if there's survey or task-list item on the line where
                 // the cursor is at
-                var value = target.value;
-                var selStart = target.selectionStart;
-                var textInFront = value.substr(0, selStart);
-                var lineFeedIndex = _.lastIndexOf(textInFront.substr(0, textInFront.length - 1), '\n');
-                var lineInFront = textInFront.substr(lineFeedIndex + 1);
-                var tokens = ListParser.extract(lineInFront);
-                var item = _.get(tokens, [ 0, 0 ]);
+                let value = target.value;
+                let selStart = target.selectionStart;
+                let textInFront = value.substr(0, selStart);
+                let lineFeedIndex = _.lastIndexOf(textInFront.substr(0, textInFront.length - 1), '\n');
+                let lineInFront = textInFront.substr(lineFeedIndex + 1);
+                let tokens = ListParser.extract(lineInFront);
+                let item = _.get(tokens, [ 0, 0 ]);
                 if (item instanceof Object) {
                     if (item.label) {
                         // the item is not empty--start the next item automatically
@@ -1206,24 +1164,24 @@ module.exports = React.createClass({
                 }
             }
         } else if (this.lastInput === ']') {
-            var value = target.value;
-            var selStart = target.selectionStart;
-            var textInFront = value.substr(0, selStart);
-            var lineFeedIndex = _.lastIndexOf(textInFront, '\n');
-            var lineInFront = textInFront.substr(lineFeedIndex + 1);
+            let value = target.value;
+            let selStart = target.selectionStart;
+            let textInFront = value.substr(0, selStart);
+            let lineFeedIndex = _.lastIndexOf(textInFront, '\n');
+            let lineInFront = textInFront.substr(lineFeedIndex + 1);
             if (/^\s*\*\[\]/.test(lineInFront)) {
                 target.selectionStart = selStart - 3;
                 document.execCommand("insertText", false, '* [ ]');
             }
         }
-    },
+    }
 
     /**
      * Called when user paste into editor
      *
      * @param  {Event} evt
      */
-    handlePaste: function(evt) {
+    handlePaste = (evt) => {
         Promise.all([
             this.components.mediaImporter.importFiles(evt.clipboardData.files),
             this.components.mediaImporter.importDataItems(evt.clipboardData.items)
@@ -1231,7 +1189,7 @@ module.exports = React.createClass({
         if (evt.clipboardData.files.length > 0) {
             evt.preventDefault();
         }
-    },
+    }
 
     /**
      * Called when user click Cancel button
@@ -1240,8 +1198,8 @@ module.exports = React.createClass({
      *
      * @return {Promise<Story>}
      */
-    handleCancelClick: function(evt) {
-        var action;
+    handleCancelClick = (evt) => {
+        let action;
         if (this.isCoauthoring()) {
             action = 'remove-self';
         } else if (this.props.isStationary) {
@@ -1250,7 +1208,7 @@ module.exports = React.createClass({
             action = 'cancel-edit';
         }
         this.setState({ confirming: true, action });
-    },
+    }
 
     /**
      * Called when options are changed
@@ -1259,44 +1217,44 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    handleOptionChange: function(evt) {
+    handleOptionChange = (evt) => {
         return this.changeOptions(evt.options);
-    },
+    }
 
     /**
      * Called when a change to the story options is complete
      *
      * @param  {Object} evt
      */
-    handleOptionComplete: function(evt) {
-        var section = evt.target.props.section;
-        var popUp = this.components[section + 'PopUp'];
+    handleOptionComplete = (evt) => {
+        let section = evt.target.props.section;
+        let popUp = this.components[section + 'PopUp'];
         if (popUp) {
             popUp.close();
         }
-    },
+    }
 
     /**
      * Called when user cancel an action
      *
      * @param  {Event} evt
      */
-    handleDialogClose: function(evt) {
+    handleDialogClose = (evt) => {
         this.setState({ confirming: false });
-    },
+    }
 
     /**
      * Called when user confirms his desire to cancel a story
      *
      * @param  {Event} evt
      */
-    handleCancelConfirm: function(evt) {
+    handleCancelConfirm = (evt) => {
         this.setState({ confirming: false });
-        var draft = this.state.draft;
+        let draft = this.state.draft;
         if (this.props.isStationary) {
             // when it's the top editor, create a blank story first, since this
             // instance of the component will be reused
-            var blank = createBlankStory(this.props.currentUser);
+            let blank = createBlankStory(this.props.currentUser);
             this.changeDraft(blank).then(() => {
                 if (draft.id) {
                     return this.removeStory(draft);
@@ -1307,19 +1265,19 @@ module.exports = React.createClass({
         } else {
             this.removeStory(draft);
         }
-    },
+    }
 
     /**
      * Called when Markdown text references a resource
      *
      * @param  {Object} evt
      */
-    handleReference: function(evt) {
-        var resources = this.state.draft.details.resources;
-        var res = Markdown.findReferencedResource(resources, evt.name);
+    handleReference = (evt) => {
+        let resources = this.state.draft.details.resources;
+        let res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
-            var theme = this.props.theme;
-            var url;
+            let theme = this.props.theme;
+            let url;
             if (evt.forImage)  {
                 if (res.type === 'audio') {
                     url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
@@ -1335,21 +1293,21 @@ module.exports = React.createClass({
                 title: evt.name
             };
         }
-    },
+    }
 
     /**
      * Called when user clicks on the text contents
      *
      * @param  {Event} evt
      */
-    handleTextClick: function(evt) {
-        var target = evt.target;
+    handleTextClick = (evt) => {
+        let target = evt.target;
         if (target.viewportElement) {
             target = target.viewportElement;
         }
-        var name;
+        let name;
         if (target.tagName === 'svg') {
-            var title = target.getElementsByTagName('title')[0];
+            let title = target.getElementsByTagName('title')[0];
             if (title) {
                 name = title.textContent;
             }
@@ -1357,83 +1315,83 @@ module.exports = React.createClass({
             name = evt.target.title;
         }
         if (name) {
-            var resources = this.state.draft.details.resources;
-            var res = Markdown.findReferencedResource(resources, name);
+            let resources = this.state.draft.details.resources;
+            let res = Markdown.findReferencedResource(resources, name);
             if (res) {
-                var selectedResourceIndex = _.indexOf(resources, res);
-                var options = _.decoupleSet(this.state.options, 'preview', 'media');
+                let selectedResourceIndex = _.indexOf(resources, res);
+                let options = _.decoupleSet(this.state.options, 'preview', 'media');
                 this.setState({ selectedResourceIndex, options });
             }
         }
-    },
+    }
 
     /**
      * Called when user click a checkbox or radio button in the preview
      *
      * @param  {Event} evt
      */
-    handleItemChange: function(evt) {
+    handleItemChange = (evt) => {
         // update the text of the story to reflect the selection
-        var target = evt.currentTarget;
-        var list = parseInt(target.name);
-        var item = parseInt(target.value);
-        var selected = target.checked;
-        var draft = _.decouple(this.state.draft, 'details');
+        let target = evt.currentTarget;
+        let list = parseInt(target.name);
+        let item = parseInt(target.value);
+        let selected = target.checked;
+        let draft = _.decouple(this.state.draft, 'details');
         if (draft.type === 'task-list') {
-            var counts = [];
+            let counts = [];
             draft.details.text = _.mapValues(draft.details.text, (langText) => {
-                var tokens = ListParser.extract(langText);
+                let tokens = ListParser.extract(langText);
                 ListParser.set(tokens, list, item, selected);
-                var unfinished = ListParser.count(tokens, false);
+                let unfinished = ListParser.count(tokens, false);
                 counts.push(unfinished);
                 return ListParser.join(tokens);
             });
             draft.unfinished_tasks = _.max(counts);
         } else if (draft.type === 'survey') {
             draft.details.text = _.mapValues(draft.details.text, (langText) => {
-                var tokens = ListParser.extract(langText);
+                let tokens = ListParser.extract(langText);
                 ListParser.set(tokens, list, item, selected, true);
                 return ListParser.join(tokens);
             });
         }
         this.saveDraft(draft);
-    },
+    }
 
     /**
      * Called when user confirms his desire to remove himself as a co-author
      *
      * @param  {Event} evt
      */
-    handleRemoveConfirm: function(evt) {
+    handleRemoveConfirm = (evt) => {
         this.setState({ confirming: false });
         this.removeSelf();
-    },
+    }
 
     /**
      * Called when user has added or removed users from author list
      *
      * @param  {Object} evt
      */
-    handleCoauthorSelect: function(evt) {
-        var draft = _.decoupleSet(this.state.draft, 'user_ids', evt.selection);
+    handleCoauthorSelect = (evt) => {
+        let draft = _.decoupleSet(this.state.draft, 'user_ids', evt.selection);
         this.saveDraft(draft, true);
-    },
+    }
 
     /**
      * Called when user add new resources or adjusted image cropping
      *
      * @param  {Object} evt
      */
-    handleResourcesChange: function(evt) {
-        var resourcesBefore = this.state.draft.resources;
-        var resourcesAfter = evt.resources;
-        var selectedResourceIndex = evt.selection;
+    handleResourcesChange = (evt) => {
+        let resourcesBefore = this.state.draft.resources;
+        let resourcesAfter = evt.resources;
+        let selectedResourceIndex = evt.selection;
         if (selectedResourceIndex === undefined) {
             selectedResourceIndex = this.state.selectedResourceIndex;
         }
         if (resourcesBefore !== resourcesAfter) {
-            var draft = _.decoupleSet(this.state.draft, 'details.resources', resourcesAfter);
-            var immediate = false;
+            let draft = _.decoupleSet(this.state.draft, 'details.resources', resourcesAfter);
+            let immediate = false;
             if (hasPendingResources(resourcesAfter)) {
                 if (hasUnsentFiles(resourcesAfter)) {
                     immediate = true;
@@ -1443,92 +1401,92 @@ module.exports = React.createClass({
         } else {
             this.setState({ selectedResourceIndex });
         }
-    },
+    }
 
     /**
      * Called when user wants to embed a resource into Markdown text
      *
      * @param  {Object} evt
      */
-    handleResourceEmbed: function(evt) {
-        var resource = evt.resource;
-        var draft = _.decouple(this.state.draft, 'details');
-        var resources = draft.details.resources;
-        var resourcesOfType = _.filter(resources, { type: resource.type });
-        var index = _.indexOf(resourcesOfType, resource);
+    handleResourceEmbed = (evt) => {
+        let resource = evt.resource;
+        let draft = _.decouple(this.state.draft, 'details');
+        let resources = draft.details.resources;
+        let resourcesOfType = _.filter(resources, { type: resource.type });
+        let index = _.indexOf(resourcesOfType, resource);
         if (index !== -1) {
             // keep previewing media
-            var options = _.clone(this.state.options);
+            let options = _.clone(this.state.options);
             options.preview = 'media';
             this.changeOptions(options).then(() => {
                 _.set(draft, `details.markdown`, true);
                 this.changeDraft(draft).then(() => {
-                    var textArea = this.components.textArea.getElement();
+                    let textArea = this.components.textArea.getElement();
                     textArea.focus();
                     setTimeout(() => {
-                        var addition = `![${resource.type}-${index+1}]`;
+                        let addition = `![${resource.type}-${index+1}]`;
                         document.execCommand("insertText", false, addition);
                     }, 10);
                 });
             });
         }
-    },
+    }
 
     /**
      * Called when user drops an item over the editor
      *
      * @param  {Event} evt
      */
-    handleDrop: function(evt) {
+    handleDrop = (evt) => {
         Promise.all([
             this.components.mediaImporter.importFiles(evt.files),
             this.components.mediaImporter.importDataItems(evt.items),
         ]);
-    },
+    }
 
     /**
      * Called when MediaEditor opens one of the capture dialog boxes
      *
      * @param  {Object} evt
      */
-    handleCaptureStart: function(evt) {
+    handleCaptureStart = (evt) => {
         this.setState({ capturing: evt.mediaType });
-    },
+    }
 
     /**
      * Called when MediaEditor stops rendering a media capture dialog box
      *
      * @param  {Object} evt
      */
-    handleCaptureEnd: function(evt) {
+    handleCaptureEnd = (evt) => {
         this.setState({ capturing: null });
-    },
+    }
 
     /**
      * Called when user initiates an action
      *
      * @param  {Object} evt
      */
-    handleAction: function(evt) {
+    handleAction = (evt) => {
         switch (evt.action) {
             case 'markdown-set':
-                var draft = _.decouple(this.state.draft, 'details');
+                let draft = _.decouple(this.state.draft, 'details');
                 draft.details.markdown = evt.value;
                 this.saveDraft(draft);
                 break;
             case 'story-type-set':
-                var draft = _.decouple(this.state.draft, 'details');
+                let draft = _.decouple(this.state.draft, 'details');
                 draft.type = evt.value;
                 // attach a list template to the story if there's no list yet
                 if (draft.type === 'task-list' || draft.type === 'survey') {
-                    var textArea = this.components.textArea.getElement();
+                    let textArea = this.components.textArea.getElement();
                     textArea.focus();
                     if (!ListParser.detect(textArea.value)) {
                         setTimeout(() => {
-                            var value = textArea.value;
-                            var addition = '* [ ] ';
-                            var selStart = textArea.selectionStart;
-                            var textInFront = value.substr(0, selStart);
+                            let value = textArea.value;
+                            let addition = '* [ ] ';
+                            let selStart = textArea.selectionStart;
+                            let textInFront = value.substr(0, selStart);
                             if (/[^\n]$/.test(textInFront)) {
                                 addition = '\n' + addition;
                             }
@@ -1552,9 +1510,9 @@ module.exports = React.createClass({
                 break;
         }
     }
-});
+}
 
-var defaultOptions = {
+let defaultOptions = {
     localeCode: '',
     issueDetails: null,
     hidePost: false,
@@ -1594,4 +1552,38 @@ function hasUnsentFiles(resources) {
             return true;
         }
     });
+}
+
+StoryEditor.defaultProps = {
+    isStationary: false
+};
+
+export {
+    StoryEditor as default,
+    StoryEditor,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryEditor.propTypes = {
+        isStationary: PropTypes.bool,
+        highlighting: PropTypes.bool,
+        story: PropTypes.object,
+        authors: PropTypes.arrayOf(PropTypes.object),
+        recommendations: PropTypes.arrayOf(PropTypes.object),
+        recipients: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        repos: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
 }

@@ -3,9 +3,9 @@ import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
-import RoleFinder from 'objects/finders/role-finder';
-import SystemFinder from 'objects/finders/system-finder';
-import UserFinder from 'objects/finders/user-finder';
+import * as RoleFinder from 'objects/finders/role-finder';
+import * as SystemFinder from 'objects/finders/system-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 
 import SlugGenerator from 'utils/slug-generator';
 

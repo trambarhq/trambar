@@ -1,58 +1,34 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Moment = require('moment');
-var Memoize = require('utils/memoize');
-var ListParser = require('utils/list-parser');
-var Markdown = require('utils/markdown');
-var PlainText = require('utils/plain-text');
-var ComponentRefs = require('utils/component-refs');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
-var UserUtils = require('objects/utils/user-utils');
-var Payload = require('transport/payload');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import Memoize from 'utils/memoize';
+import * as ListParser from 'utils/list-parser';
+import * as Markdown from 'utils/markdown';
+import * as PlainText from 'utils/plain-text';
+import ComponentRefs from 'utils/component-refs';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
+import * as UserUtils from 'objects/utils/user-utils';
+import Payload from 'transport/payload';
 
 // widgets
-var MediaView = require('views/media-view');
-var MediaDialogBox = require('dialogs/media-dialog-box');
-var AppComponent = require('views/app-component');
-var AppComponentDialogBox = require('dialogs/app-component-dialog-box');
-var Scrollable = require('widgets/scrollable');
-var PushButton = require('widgets/push-button');
+import MediaView from 'views/media-view';
+import MediaDialogBox from 'dialogs/media-dialog-box';
+import AppComponent from 'views/app-component';
+import AppComponentDialogBox from 'dialogs/app-component-dialog-box';
+import Scrollable from 'widgets/scrollable';
+import PushButton from 'widgets/push-button';
 
-require('./story-contents.scss');
+import './story-contents.scss';
 
-module.exports = React.createClass({
-    displayName: 'StoryContents',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        story: PropTypes.object.isRequired,
-        authors: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object.isRequired,
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        repo: PropTypes.object,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
+class StoryContents extends PureComponent {
+    static displayName = 'StoryContents';
 
-        onChange: PropTypes.func,
-        onReaction: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             audioPlayer: HTMLAudioElement,
         });
-        var nextState = {
+        this.state = {
             voteSubmitted: false,
             selectedComponent: null,
             showingComponentDialog: false,
@@ -62,37 +38,36 @@ module.exports = React.createClass({
             renderingReferencedMediaDialog: false,
             audioURL: null,
         };
-        this.updateUserAnswers({}, nextState);
-        return nextState;
-    },
+        this.updateUserAnswers({}, this.state);
+    }
 
     /**
      * Return the name the lead author
      *
      * @return {String}
      */
-    getAuthorName: function() {
-        var n = this.props.locale.name;
-        var author = _.first(this.props.authors);
-        var name = (author) ? n(author.details.name, author.details.gender) : '';
+    getAuthorName() {
+        let n = this.props.locale.name;
+        let author = _.first(this.props.authors);
+        let name = (author) ? n(author.details.name, author.details.gender) : '';
         return name;
-    },
+    }
 
     /**
      * Update state when props changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        var nextState = _.clone(this.state);
+    componentWillReceiveProps(nextProps) {
+        let nextState = _.clone(this.state);
         if (this.props.story !== nextProps.story) {
             this.updateUserAnswers(nextState, nextProps);
         }
-        var changes = _.shallowDiff(nextState, this.state);
+        let changes = _.shallowDiff(nextState, this.state);
         if (!_.isEmpty(changes)) {
             this.setState(changes);
         }
-    },
+    }
 
     /**
      * Update the default answers of survey question
@@ -100,13 +75,13 @@ module.exports = React.createClass({
      * @param  {Object} nextState
      * @param  {Object} nextProps
      */
-    updateUserAnswers: function(nextState, nextProps) {
+    updateUserAnswers(nextState, nextProps) {
         if (nextProps.story) {
             if (nextProps.story.type === 'survey') {
-                var p = nextProps.locale.pick;
-                var langText = p(nextProps.story.details.text);
-                var tokens = ListParser.extract(langText);
-                var answers = nextState.userAnswers;
+                let p = nextProps.locale.pick;
+                let langText = p(nextProps.story.details.text);
+                let tokens = ListParser.extract(langText);
+                let answers = nextState.userAnswers;
                 _.each(tokens, (list, listIndex) => {
                     _.each(list, (item, itemIndex) => {
                         if (item.checked) {
@@ -121,63 +96,63 @@ module.exports = React.createClass({
                 nextState.userAnswers = null;
             }
         }
-    },
+    }
 
     /**
      * Return true if the current user is one of the story's author
      *
      * @return {Boolean}
      */
-    isCurrentUserAuthor: function() {
-        var userIds = this.props.story.user_ids;
-        var currentUserId = this.props.currentUser.id;
+    isCurrentUserAuthor() {
+        let userIds = this.props.story.user_ids;
+        let currentUserId = this.props.currentUser.id;
         return _.includes(userIds, currentUserId);
-    },
+    }
 
     /**
      * Return true if the current user has already voted
      *
      * @return {Boolean|undefined}
      */
-    hasUserVoted: function() {
+    hasUserVoted() {
         if (this.props.reactions === null) {
             return undefined;
         }
-        var vote = getUserVote(this.props.reactions, this.props.currentUser);
+        let vote = getUserVote(this.props.reactions, this.props.currentUser);
         return !!vote;
-    },
+    }
 
     /**
      * Return true of the current user can vote
      *
      * @return {Boolean}
      */
-    canUserVote: function() {
+    canUserVote() {
         return (this.props.access === 'read-write');
-    },
+    }
 
     /**
      * Clear state.voteSubmitted once vote has been recorded
      *
      * @param  {Object} nextProps
      */
-    componentDidUpdate: function(nextProps) {
+    componentDidUpdate(nextProps) {
         if (this.props.reactions !== nextProps.reactions) {
             if (this.state.voteSubmitted) {
-                var vote = getUserVote(nextProps.reactions, nextProps.currentUser);
+                let vote = getUserVote(nextProps.reactions, nextProps.currentUser);
                 if (vote) {
                     this.setState({ voteSubmitted: false });
                 }
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className="story-contents">
                 {this.renderText()}
@@ -188,15 +163,15 @@ module.exports = React.createClass({
                 {this.renderButtons()}
             </div>
         );
-    },
+    }
 
     /**
      * Render text of the story
      *
      * @return {ReactElement}
      */
-    renderText: function() {
-        var story = this.props.story;
+    renderText() {
+        let story = this.props.story;
         this.resourcesReferenced = [];
         switch (story.type) {
             case 'post':
@@ -228,18 +203,18 @@ module.exports = React.createClass({
             case 'wiki':
                 return this.renderWikiText();
         }
-    },
+    }
 
     /**
      * Render text for regular post, task list, and survey
      *
      * @return {ReactElement|null}
      */
-    renderStoryText: function() {
-        var p = this.props.locale.pick;
-        var story = this.props.story;
-        var text = _.trimEnd(p(story.details.text));
-        var tags;
+    renderStoryText() {
+        let p = this.props.locale.pick;
+        let story = this.props.story;
+        let text = _.trimEnd(p(story.details.text));
+        let tags;
         if (story.details.labels) {
             tags = this.renderLabels();
         }
@@ -254,8 +229,8 @@ module.exports = React.createClass({
                 </div>
             );
         } else {
-            var className = 'text story plain-text';
-            var emoji = PlainText.findEmoji(text);
+            let className = 'text story plain-text';
+            let emoji = PlainText.findEmoji(text);
             if (emoji) {
                 if (_.join(emoji, '') === text) {
                     className += ` emoji-${emoji.length}`;
@@ -268,93 +243,93 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render task list
      *
      * @return {ReactElement}
      */
-    renderTaskListText: function() {
-        var p = this.props.locale.pick;
-        var story = this.props.story;
-        var text = _.trimEnd(p(story.details.text));
+    renderTaskListText() {
+        let p = this.props.locale.pick;
+        let story = this.props.story;
+        let text = _.trimEnd(p(story.details.text));
         if (!text) {
             return null;
         }
-        var answers = this.state.userAnswers;
-        var onChange = this.isCurrentUserAuthor() ? this.handleTaskListItemChange : null;
-        var onReference = this.handleReference;
+        let answers = this.state.userAnswers;
+        let onChange = this.isCurrentUserAuthor() ? this.handleTaskListItemChange : null;
+        let onReference = this.handleReference;
         if (story.details.markdown) {
-            var list = Markdown.renderTaskList(text, answers, onChange, onReference);
+            let list = Markdown.renderTaskList(text, answers, onChange, onReference);
             return (
                 <div className="text task-list markdown" onClick={this.handleMarkdownClick}>
                     {list}
                 </div>
             );
         } else {
-            var list = PlainText.renderTaskList(text, answers, onChange);
+            let list = PlainText.renderTaskList(text, answers, onChange);
             return <div className="text task-list plain-text"><p>{list}</p></div>;
         }
-    },
+    }
 
     /**
      * Render survey choices or results depending whether user has voted
      *
      * @return {ReactElement|null}
      */
-    renderSurveyText: function() {
-        var p = this.props.locale.pick;
-        var story = this.props.story;
-        var text = _.trimEnd(p(story.details.text));
+    renderSurveyText() {
+        let p = this.props.locale.pick;
+        let story = this.props.story;
+        let text = _.trimEnd(p(story.details.text));
         if (!text) {
             return null;
         }
-        var onChange = this.handleSurveyItemChange;
-        var onReference = this.handleReference;
+        let onChange = this.handleSurveyItemChange;
+        let onReference = this.handleReference;
         if (this.canUserVote() && !this.hasUserVoted()) {
-            var answers = this.state.userAnswers;
+            let answers = this.state.userAnswers;
             if (story.details.markdown) {
-                var survey = Markdown.renderSurvey(text, answers, onChange, onReference);
+                let survey = Markdown.renderSurvey(text, answers, onChange, onReference);
                 return (
                     <div className="text survey markdown" onClick={this.handleMarkdownClick}>
                         {survey}
                     </div>
                 );
             } else {
-                var survey = PlainText.renderSurvey(text, answers, onChange);
+                let survey = PlainText.renderSurvey(text, answers, onChange);
                 return <div className="text survey plain-text"><p>{survey}</p></div>;
             }
         } else {
-            var voteCounts = countVotes(this.props.reactions) || {};
+            let voteCounts = countVotes(this.props.reactions) || {};
             if (story.details.markdown) {
-                var results = Markdown.renderSurveyResults(text, voteCounts, onReference);
+                let results = Markdown.renderSurveyResults(text, voteCounts, onReference);
                 return (
                     <div className="text survey markdown" onClick={this.handleMarkdownClick}>
                         {results}
                     </div>
                 );
             } else {
-                var results = PlainText.renderSurveyResults(text, voteCounts);
+                let results = PlainText.renderSurveyResults(text, voteCounts);
                 return <div className="text survey plain-text"><p>{results}</p></div>;
             }
         }
-    },
+    }
 
     /**
      * Render text for repo story
      *
      * @return {ReactElement}
      */
-    renderRepoText: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var story = this.props.story;
-        var name = this.getAuthorName();
-        var action = story.details.action;
-        var repo = this.props.repo;
-        var repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
-        var url = _.get(repo, 'details.web_url');
+    renderRepoText() {
+        let t = this.props.locale.translate;
+        let p = this.props.locale.pick;
+        let story = this.props.story;
+        let name = this.getAuthorName();
+        let action = story.details.action;
+        let repo = this.props.repo;
+        let repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
+        let url = _.get(repo, 'details.web_url');
         return (
             <div className="text repo">
                 <p>
@@ -364,22 +339,22 @@ module.exports = React.createClass({
                 </p>
             </div>
         );
-    },
+    }
 
     /**
      * Render text for member story
      *
      * @return {ReactElement}
      */
-    renderMemberText: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var story = this.props.story;
-        var name = this.getAuthorName();
-        var action = story.details.action;
-        var repo = this.props.repo;
-        var repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
-        var url = _.get(repo, 'details.web_url');
+    renderMemberText() {
+        let t = this.props.locale.translate;
+        let p = this.props.locale.pick;
+        let story = this.props.story;
+        let name = this.getAuthorName();
+        let action = story.details.action;
+        let repo = this.props.repo;
+        let repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
+        let url = _.get(repo, 'details.web_url');
         return (
             <div className="text member">
                 <p>
@@ -389,30 +364,30 @@ module.exports = React.createClass({
                 </p>
             </div>
         );
-    },
+    }
 
     /**
      * Render text for issue story
      *
      * @return {ReactElement}
      */
-    renderIssueText: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var story = this.props.story;
-        var name = this.getAuthorName();
-        var title = story.details.title;
-        var repo = this.props.repo;
-        var url, target;
-        var issueLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'issue');
+    renderIssueText() {
+        let t = this.props.locale.translate;
+        let p = this.props.locale.pick;
+        let story = this.props.story;
+        let name = this.getAuthorName();
+        let title = story.details.title;
+        let repo = this.props.repo;
+        let url, target;
+        let issueLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'issue');
         if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
             if (issueLink) {
-                var issueNumber = issueLink.issue.number;
+                let issueNumber = issueLink.issue.number;
                 url = `${repo.details.web_url}/issues/${issueNumber}`;
                 target = issueLink.type;
             }
         }
-        var number = (issueLink) ? issueLink.issue.number : '';
+        let number = (issueLink) ? issueLink.issue.number : '';
         return (
             <div className="text issue">
                 <p>
@@ -424,23 +399,23 @@ module.exports = React.createClass({
                 {this.renderLabels()}
             </div>
         );
-    },
+    }
 
     /**
      * Render text for milestone story
      *
      * @return {ReactElement}
      */
-    renderMilestoneText: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var story = this.props.story;
-        var name = this.getAuthorName();
-        var repo = this.props.repo;
-        var title = story.details.title;
-        var url;
+    renderMilestoneText() {
+        let t = this.props.locale.translate;
+        let p = this.props.locale.pick;
+        let story = this.props.story;
+        let name = this.getAuthorName();
+        let repo = this.props.repo;
+        let title = story.details.title;
+        let url;
         if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
-            var milestoneLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'milestone');
+            let milestoneLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'milestone');
             if (milestoneLink) {
                 url = `${repo.details.web_url}/milestones/${milestoneLink.milestone.id}`;
             }
@@ -454,24 +429,24 @@ module.exports = React.createClass({
                 </p>
             </div>
         );
-    },
+    }
 
     /**
      * Render text for merge request story
      *
      * @return {ReactElement}
      */
-    renderMergeRequestText: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var story = this.props.story;
-        var name = this.getAuthorName();
-        var repo = this.props.repo;
-        var branch1 = _.get(story, 'details.source_branch');
-        var branch2 = _.get(story, 'details.branch');
-        var url;
+    renderMergeRequestText() {
+        let t = this.props.locale.translate;
+        let p = this.props.locale.pick;
+        let story = this.props.story;
+        let name = this.getAuthorName();
+        let repo = this.props.repo;
+        let branch1 = _.get(story, 'details.source_branch');
+        let branch2 = _.get(story, 'details.branch');
+        let url;
         if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
-            var mergeRequestLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'merge_request');
+            let mergeRequestLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'merge_request');
             if (mergeRequestLink) {
                 url = `${repo.details.web_url}/merge_requests/${mergeRequestLink.merge_request.id}`;
             }
@@ -487,20 +462,20 @@ module.exports = React.createClass({
                 {this.renderLabels()}
             </div>
         );
-    },
+    }
 
     /**
      * Render text for wiki story
      *
      * @return {ReactElement}
      */
-    renderWikiText: function() {
-        var t = this.props.locale.translate;
-        var story = this.props.story;
-        var name = this.getAuthorName();
-        var url = story.details.url;
-        var title = _.capitalize(story.details.title);
-        var action = story.details.action + 'd';
+    renderWikiText() {
+        let t = this.props.locale.translate;
+        let story = this.props.story;
+        let name = this.getAuthorName();
+        let url = story.details.url;
+        let title = _.capitalize(story.details.title);
+        let action = story.details.action + 'd';
         if (action === 'deleted') {
             url = undefined;
         }
@@ -513,37 +488,37 @@ module.exports = React.createClass({
                 </p>
             </div>
         );
-    },
+    }
 
     /**
      * Render text for push story
      *
      * @return {ReactElement}
      */
-    renderPushText: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var story = this.props.story;
-        var name = this.getAuthorName();
-        var commits = _.get(this.props.story, 'details.commit_ids.length');
-        var repo = this.props.repo;
-        var repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
-        var branch = story.details.branch;
-        var url;
+    renderPushText() {
+        let t = this.props.locale.translate;
+        let p = this.props.locale.pick;
+        let story = this.props.story;
+        let name = this.getAuthorName();
+        let commits = _.get(this.props.story, 'details.commit_ids.length');
+        let repo = this.props.repo;
+        let repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
+        let branch = story.details.branch;
+        let url;
         if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
-            var commitBefore = story.details.commit_before;
-            var commitAfter = story.details.commit_after;
+            let commitBefore = story.details.commit_before;
+            let commitAfter = story.details.commit_after;
             if (commitBefore) {
                 url = `${repo.details.web_url}/compare/${commitBefore}...${commitAfter}`;
             } else {
                 url = `${repo.details.web_url}/commit/${commitAfter}`;
             }
         }
-        var text;
+        let text;
         if (story.type === 'push') {
             text = t(`story-$name-pushed-to-$branch-of-$repo`, name, branch, repoName);
         } else if (story.type === 'merge') {
-            var sourceBranches = story.details.source_branches;
+            let sourceBranches = story.details.source_branches;
             text = t(`story-$name-merged-$branches-into-$branch-of-$repo`, name, sourceBranches, branch, repoName);
         }
         return (
@@ -554,22 +529,22 @@ module.exports = React.createClass({
                 {this.renderChanges()}
             </div>
         );
-    },
+    }
 
     /**
      * Render text for branch story
      *
      * @return {ReactElement}
      */
-    renderBranchText: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var story = this.props.story;
-        var name = this.getAuthorName();
-        var repo = this.props.repo;
-        var repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
-        var branch = story.details.branch;
-        var url;
+    renderBranchText() {
+        let t = this.props.locale.translate;
+        let p = this.props.locale.pick;
+        let story = this.props.story;
+        let name = this.getAuthorName();
+        let repo = this.props.repo;
+        let repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
+        let branch = story.details.branch;
+        let url;
         if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
             if (story.type === 'branch') {
                 url = `${repo.details.web_url}/commits/${branch}`;
@@ -577,7 +552,7 @@ module.exports = React.createClass({
                 url = `${repo.details.web_url}/tags/${branch}`;
             }
         }
-        var text;
+        let text;
         if (story.type === 'branch') {
             text = t(`story-$name-created-$branch-in-$repo`, name, branch, repoName);
         } else if (story.type === 'tag') {
@@ -591,22 +566,22 @@ module.exports = React.createClass({
                 {this.renderChanges()}
             </div>
         );
-    },
+    }
 
     /**
      * Render the number of file/lines changed
      *
      * @return {ReactElement|null}
      */
-    renderChanges: function() {
-        var t = this.props.locale.translate;
-        var files = _.get(this.props.story, 'details.files');
+    renderChanges() {
+        let t = this.props.locale.translate;
+        let files = _.get(this.props.story, 'details.files');
         if (_.isEmpty(files)) {
             return null;
         }
-        var fileChangeTypes = [ 'added', 'deleted', 'modified', 'renamed' ];
-        var fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {
-            var count = files[type];
+        let fileChangeTypes = [ 'added', 'deleted', 'modified', 'renamed' ];
+        let fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {
+            let count = files[type];
             if (count > 0) {
                 elements.push(
                     <li key={i} className={type}>
@@ -615,10 +590,10 @@ module.exports = React.createClass({
                 );
             }
         }, []);
-        var lines = _.get(this.props.story, 'details.lines');
-        var lineChangeTypes = [ 'added', 'deleted', 'modified' ];
-        var lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
-            var count = lines[type];
+        let lines = _.get(this.props.story, 'details.lines');
+        let lineChangeTypes = [ 'added', 'deleted', 'modified' ];
+        let lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
+            let count = lines[type];
             if (count > 0) {
                 elements.push(
                     <li key={i} className={type}>
@@ -633,16 +608,16 @@ module.exports = React.createClass({
                 <ul className="lines">{lineChanges}</ul>
             </div>
         );
-    },
+    }
 
     /**
      * Render current status of issue or merge request
      *
      * @return {ReactElement}
      */
-    renderStatus: function() {
-        var t = this.props.locale.translate;
-        var state = this.props.story.details.state;
+    renderStatus() {
+        let t = this.props.locale.translate;
+        let state = this.props.story.details.state;
         if (!state) {
             return null;
         }
@@ -653,24 +628,24 @@ module.exports = React.createClass({
                 <span>{t(`story-issue-status-${state}`)}</span>
             </p>
         );
-    },
+    }
 
     /**
      * Render labels for issue and merge requests
      *
      * @return {ReactElement|null}
      */
-    renderLabels: function() {
-        var labels = _.sortBy(this.props.story.details.labels);
+    renderLabels() {
+        let labels = _.sortBy(this.props.story.details.labels);
         if (_.isEmpty(labels)) {
             return null;
         }
-        var repo = this.props.repo;
-        var tags = _.map(labels, (label, i) => {
-            var style;
+        let repo = this.props.repo;
+        let tags = _.map(labels, (label, i) => {
+            let style;
             if (repo) {
-                var index = _.indexOf(repo.details.labels, label);
-                var color = _.get(repo.details.label_colors, index);
+                let index = _.indexOf(repo.details.labels, label);
+                let color = _.get(repo.details.label_colors, index);
                 if (color) {
                     style = { backgroundColor: color };
                 }
@@ -678,18 +653,18 @@ module.exports = React.createClass({
             return <span key={i} className="tag" style={style}>{label}</span>;
         });
         // inserting actual spaces between the tags for the sake of copy-and-pasting
-        for (var i = 1; i < tags.length; i += 2) {
+        for (let i = 1; i < tags.length; i += 2) {
             tags.splice(i, 0, ' ');
         }
         return <p className="tags">{tags}</p>;
-    },
+    }
 
     /**
      * Render button for filling survey
      *
      * @return {ReactElement|null}
      */
-    renderButtons: function() {
+    renderButtons() {
         if (this.props.story.type !== 'survey') {
             return null;
         }
@@ -699,8 +674,8 @@ module.exports = React.createClass({
         if (this.hasUserVoted() !== false) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var submitProps = {
+        let t = this.props.locale.translate;
+        let submitProps = {
             label: t('story-vote-submit'),
             emphasized: !_.isEmpty(this.state.userAnswers),
             disabled: this.state.voteSubmitted || _.isEmpty(this.state.userAnswers),
@@ -711,18 +686,18 @@ module.exports = React.createClass({
                 <PushButton {...submitProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render audio player for embed audio in markdown text
      *
      * @return {ReactElement|null}
      */
-    renderAudioPlayer: function() {
+    renderAudioPlayer() {
         if (!this.state.audioURL) {
             return null;
         }
-        var audioProps = {
+        let audioProps = {
             ref: this.components.setters.audioPlayer,
             src: this.state.audioURL,
             autoPlay: true,
@@ -730,15 +705,15 @@ module.exports = React.createClass({
             onEnded: this.handleAudioEnded,
         };
         return <audio {...audioProps} />;
-    },
+    }
 
     /**
      * Render attached media
      *
      * @return {ReactElement}
      */
-    renderMedia: function() {
-        var resources = _.get(this.props.story, 'details.resources');
+    renderMedia() {
+        let resources = _.get(this.props.story, 'details.resources');
         if (!_.isEmpty(this.resourcesReferenced)) {
             // exclude the ones that are shown in Markdown
             resources = _.difference(resources, this.resourcesReferenced);
@@ -746,35 +721,35 @@ module.exports = React.createClass({
         if (_.isEmpty(resources)) {
             return null;
         }
-        var props = {
+        let props = {
             locale: this.props.locale,
             theme: this.props.theme,
             resources,
             width: Math.min(512, screen.width),
         };
         return <MediaView {...props} />
-    },
+    }
 
     /**
      * Render dialog box showing referenced image at full size
      *
      * @return {ReactElement|null}
      */
-    renderReferencedMediaDialog: function() {
+    renderReferencedMediaDialog() {
         if (!this.state.renderingReferencedMediaDialog) {
             return null;
         }
-        var resources = this.props.story.details.resources;
-        var res = Markdown.findReferencedResource(resources, this.state.selectedResourceName);
+        let resources = this.props.story.details.resources;
+        let res = Markdown.findReferencedResource(resources, this.state.selectedResourceName);
         if (!res) {
             return null;
         }
-        var zoomableResources = getZoomableResources(this.resourcesReferenced);
-        var zoomableIndex = _.indexOf(zoomableResources, res);
+        let zoomableResources = getZoomableResources(this.resourcesReferenced);
+        let zoomableIndex = _.indexOf(zoomableResources, res);
         if (zoomableIndex === -1) {
             return null;
         }
-        var dialogProps = {
+        let dialogProps = {
             show: this.state.showingReferencedMediaDialog,
             resources: zoomableResources,
             selectedIndex: zoomableIndex,
@@ -785,17 +760,17 @@ module.exports = React.createClass({
             onClose: this.handleReferencedMediaDialogClose,
         };
         return <MediaDialogBox {...dialogProps} />;
-    },
+    }
 
     /**
      * Render affected app components
      *
      * @return {ReactElement}
      */
-    renderAppComponents: function() {
-        var t = this.props.locale.translate;
-        var type = _.get(this.props.story, 'type');
-        var components = _.get(this.props.story, 'details.components');
+    renderAppComponents() {
+        let t = this.props.locale.translate;
+        let type = _.get(this.props.story, 'type');
+        let components = _.get(this.props.story, 'details.components');
         if (_.isEmpty(components)) {
             return null;
         }
@@ -809,33 +784,33 @@ module.exports = React.createClass({
                 {this.renderAppComponentDialog()}
             </div>
         );
-    },
+    }
 
     /**
      * Render an affected app component
      *
      * @return {ReactElement}
      */
-    renderAppComponent: function(component, i) {
-        var componentProps = {
+    renderAppComponent(component, i) {
+        let componentProps = {
             component: component,
             locale: this.props.locale,
             theme: this.props.theme,
             onSelect: this.handleComponentSelect,
         };
         return <AppComponent key={i} {...componentProps} />
-    },
+    }
 
     /**
      * Render dialog showing full description of component
      *
      * @return {ReactElement}
      */
-    renderAppComponentDialog: function() {
+    renderAppComponentDialog() {
         if (!this.state.renderingComponentDialog) {
             return null;
         }
-        var dialogProps = {
+        let dialogProps = {
             show: this.state.showingComponentDialog,
             component: this.state.selectedComponent,
             locale: this.props.locale,
@@ -843,14 +818,14 @@ module.exports = React.createClass({
             onClose: this.handleComponentDialogClose,
         };
         return <AppComponentDialogBox {...dialogProps} />;
-    },
+    }
 
     /**
      * Inform parent component that changes were made to story
      *
      * @param  {Story} story
      */
-    triggerChangeEvent: function(story) {
+    triggerChangeEvent(story) {
         if (this.props.onChange) {
             this.props.onChange({
                 type: 'change',
@@ -858,14 +833,14 @@ module.exports = React.createClass({
                 story,
             });
         }
-    },
+    }
 
     /**
      * Inform parent component that there's a new reaction to story
      *
      * @param  {Story} story
      */
-    triggerReactionEvent: function(reaction) {
+    triggerReactionEvent(reaction) {
         if (this.props.onReaction) {
             this.props.onReaction({
                 type: 'reaction',
@@ -873,19 +848,19 @@ module.exports = React.createClass({
                 reaction,
             });
         }
-    },
+    }
 
     /**
      * Called when Markdown text references a resource
      *
      * @param  {Object} evt
      */
-    handleReference: function(evt) {
-        var resources = this.props.story.details.resources;
-        var res = Markdown.findReferencedResource(resources, evt.name);
+    handleReference = (evt) => {
+        let resources = this.props.story.details.resources;
+        let res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
-            var theme = this.props.theme;
-            var url;
+            let theme = this.props.theme;
+            let url;
             if (evt.forImage)  {
                 if (res.type === 'audio') {
                     url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
@@ -903,21 +878,21 @@ module.exports = React.createClass({
                 title: evt.name
             };
         }
-    },
+    }
 
     /**
      * Called when user clicks on the text contents
      *
      * @param  {Event} evt
      */
-     handleMarkdownClick: function(evt) {
-         var target = evt.target;
+     handleMarkdownClick = (evt) => {
+         let target = evt.target;
          if (target.viewportElement) {
              target = target.viewportElement;
          }
-         var name;
+         let name;
          if (target.tagName === 'svg') {
-             var title = target.getElementsByTagName('title')[0];
+             let title = target.getElementsByTagName('title')[0];
              if (title) {
                  name = title.textContent;
              }
@@ -925,8 +900,8 @@ module.exports = React.createClass({
              name = evt.target.title;
          }
          if (name) {
-             var resources = this.props.story.details.resources;
-             var res = Markdown.findReferencedResource(resources, name);
+             let resources = this.props.story.details.resources;
+             let res = Markdown.findReferencedResource(resources, name);
              if (res) {
                  if (res.type === 'image' || res.type === 'video') {
                      this.setState({
@@ -937,46 +912,46 @@ module.exports = React.createClass({
                  } else if (res.type === 'website') {
                      window.open(res.url, '_blank');
                  } else if (res.type === 'audio') {
-                     var version = chooseAudioVersion(res);
-                     var audioURL = this.props.theme.getAudioURL(res, { version });
+                     let version = chooseAudioVersion(res);
+                     let audioURL = this.props.theme.getAudioURL(res, { version });
                      this.setState({ audioURL });
                  }
              }
          } else {
              if (target.tagName === 'IMG') {
-                 var src = target.getAttribute('src');
-                 var targetRect = target.getBoundingClientRect();
-                 var width = target.naturalWidth + 50;
-                 var height = target.naturalHeight + 50;
-                 var left = targetRect.left + window.screenLeft;
-                 var top = targetRect.top + window.screenTop;
+                 let src = target.getAttribute('src');
+                 let targetRect = target.getBoundingClientRect();
+                 let width = target.naturalWidth + 50;
+                 let height = target.naturalHeight + 50;
+                 let left = targetRect.left + window.screenLeft;
+                 let top = targetRect.top + window.screenTop;
                  window.open(target.src, '_blank', `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`);
              }
          }
-    },
+    }
 
     /**
      * Called when user clicks on a checkbox in a task list
      *
      * @param  {Event} evt
      */
-    handleTaskListItemChange: function(evt) {
-        var target = evt.currentTarget;
-        var list = parseInt(target.name);
-        var item = parseInt(target.value);
-        var selected = target.checked;
+    handleTaskListItemChange = (evt) => {
+        let target = evt.currentTarget;
+        let list = parseInt(target.name);
+        let item = parseInt(target.value);
+        let selected = target.checked;
 
         // save the answer in state for immediately UI response
-        var userAnswers = _.decoupleSet(this.state.userAnswers, [ list, item ], selected);
+        let userAnswers = _.decoupleSet(this.state.userAnswers, [ list, item ], selected);
         this.setState({ userAnswers });
 
         // update the text of the story
-        var story = _.cloneDeep(this.props.story);
-        var counts = [];
+        let story = _.cloneDeep(this.props.story);
+        let counts = [];
         story.details.text = _.mapValues(story.details.text, (langText) => {
-            var tokens = ListParser.extract(langText);
+            let tokens = ListParser.extract(langText);
             ListParser.set(tokens, list, item, selected);
-            var unfinished = ListParser.count(tokens, false);
+            let unfinished = ListParser.count(tokens, false);
             counts.push(unfinished);
             return ListParser.join(tokens);
         });
@@ -984,9 +959,9 @@ module.exports = React.createClass({
         this.triggerChangeEvent(story);
 
         // add or remove reaction
-        var task = { list, item };
+        let task = { list, item };
         if (selected) {
-            var reaction = {
+            let reaction = {
                 type: 'task-completion',
                 story_id: story.id,
                 user_id: this.props.currentUser.id,
@@ -996,7 +971,7 @@ module.exports = React.createClass({
             };
             this.triggerReactionEvent(reaction);
         } else {
-            var reaction = _.find(this.props.reactions, (r) => {
+            let reaction = _.find(this.props.reactions, (r) => {
                 if (r.type === 'task-completion') {
                     if (r.user_id === this.props.currentUser.id) {
                         return _.isEqual(r.details.task, task);
@@ -1009,29 +984,29 @@ module.exports = React.createClass({
                 this.triggerReactionEvent(reaction);
             }
         }
-    },
+    }
 
     /**
      * Called when user clicks on a radio button in a survey
      *
      * @param  {Event} evt
      */
-    handleSurveyItemChange: function(evt) {
-        var target = evt.currentTarget;
-        var list = target.name;
-        var item = target.value;
-        var userAnswers = _.decoupleSet(this.state.userAnswers, [ list ], item);
+    handleSurveyItemChange = (evt) => {
+        let target = evt.currentTarget;
+        let list = target.name;
+        let item = target.value;
+        let userAnswers = _.decoupleSet(this.state.userAnswers, [ list ], item);
         this.setState({ userAnswers });
-    },
+    }
 
     /**
      * Called when user clicks on the submit button
      *
      * @param  {Event} evt
      */
-    handleVoteSubmitClick: function(evt) {
-        var story = this.props.story;
-        var reaction = {
+    handleVoteSubmitClick = (evt) => {
+        let story = this.props.story;
+        let reaction = {
             type: 'vote',
             story_id: story.id,
             user_id: this.props.currentUser.id,
@@ -1043,27 +1018,27 @@ module.exports = React.createClass({
         };
         this.triggerReactionEvent(reaction);
         this.setState({ voteSubmitted: true });
-    },
+    }
 
     /**
      * Called when user clicks on an app component description
      *
      * @param  {Object} evt
      */
-    handleComponentSelect: function(evt) {
+    handleComponentSelect = (evt) => {
         this.setState({
             renderingComponentDialog: true,
             showingComponentDialog: true,
             selectedComponent: evt.component,
         });
-    },
+    }
 
     /**
      * Called when user closes component description dialog
      *
      * @param  {Object} evt
      */
-    handleComponentDialogClose: function(evt) {
+    handleComponentDialogClose = (evt) => {
         this.setState({ showingComponentDialog: false }, () => {
             setTimeout(() => {
                 if (!this.state.showingComponentDialog) {
@@ -1074,14 +1049,14 @@ module.exports = React.createClass({
                 }
             }, 500);
         });
-    },
+    }
 
     /**
      * Called when user closes referenced media dialog
      *
      * @param  {Object} evt
      */
-    handleReferencedMediaDialogClose: function(evt) {
+    handleReferencedMediaDialogClose = (evt) => {
         this.setState({ showingReferencedMediaDialog: false }, () => {
             setTimeout(() => {
                 if (!this.state.showingReferencedMediaDialog) {
@@ -1092,28 +1067,28 @@ module.exports = React.createClass({
                 }
             }, 500);
         })
-    },
+    }
 
     /**
      * Called when audio playback ends
      *
      * @param  {Event} evt
      */
-    handleAudioEnded: function(evt) {
+    handleAudioEnded = (evt) => {
         this.setState({ audioURL: null });
-    },
-});
+    }
+}
 
-var countVotes = Memoize(function(reactions) {
-    var tallies = {};
+let countVotes = Memoize(function(reactions) {
+    let tallies = {};
     _.each(reactions, (reaction) => {
         if (reaction.type === 'vote' ) {
             _.forIn(reaction.details.answers, (value, name) => {
-                var totalPath = [ name, 'total' ];
-                var newTotal = _.get(tallies, totalPath, 0) + 1;
+                let totalPath = [ name, 'total' ];
+                let newTotal = _.get(tallies, totalPath, 0) + 1;
                 _.set(tallies, totalPath, newTotal);
-                var countPath = [ name, 'answers', value ];
-                var newCount = _.get(tallies, countPath, 0) + 1;
+                let countPath = [ name, 'answers', value ];
+                let newCount = _.get(tallies, countPath, 0) + 1;
                 _.set(tallies, countPath, newCount);
             });
         }
@@ -1121,7 +1096,7 @@ var countVotes = Memoize(function(reactions) {
     return tallies;
 });
 
-var getUserVote = Memoize(function(reactions, user) {
+let getUserVote = Memoize(function(reactions, user) {
     if (user) {
         return _.find(reactions, { type: 'vote', user_id: user.id })
     } else {
@@ -1129,7 +1104,7 @@ var getUserVote = Memoize(function(reactions, user) {
     }
 });
 
-var getZoomableResources = Memoize(function(resources) {
+let getZoomableResources = Memoize(function(resources) {
     return _.filter(resources, (res) => {
         switch (res.type) {
             case 'image':
@@ -1150,9 +1125,33 @@ function chooseAudioVersion(res) {
     return _.first(_.keys(res.versions)) || null;
 }
 
-var sortComponents = Memoize(function(components, locale) {
-    var p = locale.pick;
+let sortComponents = Memoize(function(components, locale) {
+    let p = locale.pick;
     return _.sortBy(components, (component) => {
         return _.toLower(p(component.text));
     });
 });
+
+export {
+    StoryContents as default,
+    StoryContents,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryContents.propTypes = {
+        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        story: PropTypes.object.isRequired,
+        authors: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object.isRequired,
+        reactions: PropTypes.arrayOf(PropTypes.object),
+        repo: PropTypes.object,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onChange: PropTypes.func,
+        onReaction: PropTypes.func,
+    };
+}

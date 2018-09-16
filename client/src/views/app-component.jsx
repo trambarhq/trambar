@@ -1,45 +1,38 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var MarkGor = require('mark-gor/react');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import MarkGor from 'mark-gor/react';
 
-var Theme = require('theme/theme');
-var Locale = require('locale/locale');
+import Environment from 'env/environment';
 
 // widgets
-var ResourceView = require('widgets/resource-view');
+import ResourceView from 'widgets/resource-view';
 
-require('./app-component.scss');
+import './app-component.scss';
 
-module.exports = React.createClass({
-    displayName: 'AppComponent',
-    propTypes: {
-        component: PropTypes.object.isRequired,
-        theme: PropTypes.instanceOf(Theme),
-        locale: PropTypes.instanceOf(Locale),
-        onSelect: PropTypes.func,
-    },
+class AppComponent extends PureComponent {
+    static displayName = 'AppComponent';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className="app-component" onClick={this.handleClick}>
                 {this.renderPicture()}
                 {this.renderText()}
             </div>
         );
-    },
+    }
 
     /**
      * Render icon or image
      *
      * @return {ReactElement}
      */
-    renderPicture: function() {
-        var component = this.props.component;
+    renderPicture() {
+        let component = this.props.component;
         if (component.image) {
             return (
                 <div className="picture">
@@ -47,9 +40,9 @@ module.exports = React.createClass({
                 </div>
             );
         } else {
-            var icon = component.icon || {};
-            var iconClassName = icon.class || 'fa-cubes';
-            var style = {
+            let icon = component.icon || {};
+            let iconClassName = icon.class || 'fa-cubes';
+            let style = {
                 color: icon.color,
                 backgroundColor: icon.backgroundColor,
             };
@@ -61,17 +54,17 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render text description of component, formatted as Markdown
      *
      * @return {ReactElement}
      */
-    renderText: function() {
-        var p = this.props.locale.pick;
-        var text = p(this.props.component.text);
-        var elements = MarkGor.parse(text);
+    renderText() {
+        let p = this.props.locale.pick;
+        let text = p(this.props.component.text);
+        let elements = MarkGor.parse(text);
         return (
             <div className="description">
                 <div className="description-contents">
@@ -82,14 +75,14 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Called when user clicks on component description
      *
      * @param  {Event} evt
      */
-    handleClick: function(evt) {
+    handleClick = (evt) => {
         if (this.props.onSelect) {
             this.props.onSelect({
                 type: 'select',
@@ -97,5 +90,16 @@ module.exports = React.createClass({
                 component: this.props.component,
             });
         }
-    },
-});
+    }
+}
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    AppComponent.propTypes = {
+        component: PropTypes.object.isRequired,
+        theme: PropTypes.instanceOf(Theme),
+        env: PropTypes.instanceOf(Environment).isRequired,
+        onSelect: PropTypes.func,
+    };
+}

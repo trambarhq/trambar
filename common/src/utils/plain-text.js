@@ -209,5 +209,4 @@ export {
     renderEmoji,
     findEmoji,
     hasEmojiSupport,
-    exports as default
 };

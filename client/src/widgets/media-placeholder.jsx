@@ -1,19 +1,14 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import React from 'react';
 
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-module.exports = MediaPlaceholder;
-
-require('./media-placeholder.scss');
+import './media-placeholder.scss';
 
 function MediaPlaceholder(props) {
     if (props.theme.mode === 'columns-1') {
         return null;
     }
-    var t = props.locale.translate;
-    var phraseIds;
+    let t = props.locale.translate;
+    let phraseIds;
     if (process.env.PLATFORM !== 'mobile') {
         if (props.showHints) {
             phraseIds = [
@@ -22,8 +17,8 @@ function MediaPlaceholder(props) {
             ]
         }
     }
-    var messages = _.map(phraseIds, (phraseId, index) => {
-        var style = {
+    let messages = _.map(phraseIds, (phraseId, index) => {
+        let style = {
             animationDelay: `${10 * index}s`
         };
         return (
@@ -39,8 +34,18 @@ function MediaPlaceholder(props) {
     );
 }
 
-MediaPlaceholder.propTypes = {
-    showHints: PropTypes.bool,
-    locale: PropTypes.instanceOf(Locale).isRequired,
-    theme: PropTypes.instanceOf(Theme).isRequired,
+export {
+    MediaPlaceholder as default,
+    MediaPlaceholder,
 };
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MediaPlaceholder.propTypes = {
+        showHints: PropTypes.bool,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

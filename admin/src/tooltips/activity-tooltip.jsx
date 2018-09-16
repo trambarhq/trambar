@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 
 import Environment from 'env/environment';
 
-import StoryTypes from 'objects/types/story-types';
+import * as StoryTypes from 'objects/types/story-types';
 
 // widgets
 import Tooltip from 'widgets/tooltip';

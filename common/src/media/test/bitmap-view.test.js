@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React from 'react';
-import Chai from 'chai', expect = Chai.expect;
-import Enzyme from 'enzyme';
+import { expect } from 'chai';
+import * as Enzyme from 'enzyme';
 
 import BitmapView from 'media/bitmap-view';
 

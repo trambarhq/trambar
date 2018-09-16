@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import MediaLoader from 'media/media-loader';
-import ImageCropping from 'media/image-cropping';
+import * as MediaLoader from 'media/media-loader';
+import * as ImageCropping from 'media/image-cropping';
 
 import BitmapView from 'media/bitmap-view';
 import VectorView from 'media/vector-view';

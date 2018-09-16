@@ -5,10 +5,10 @@ import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
-import ProjectFinder from 'objects/finders/project-finder';
-import RepoFinder from 'objects/finders/repo-finder';
-import UserFinder from 'objects/finders/user-finder';
-import StatisticsFinder from 'objects/finders/statistics-finder';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as RepoFinder from 'objects/finders/repo-finder';
+import * as UserFinder from 'objects/finders/user-finder';
+import * as StatisticsFinder from 'objects/finders/statistics-finder';
 
 // widgets
 import PushButton from 'widgets/push-button';

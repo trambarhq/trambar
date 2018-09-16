@@ -97,7 +97,7 @@ module.exports = function(localeCode) {
         'issue-cancel': "Annulla",
         'issue-delete': "Elimina",
         'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
-            var objects = [];
+            let objects = [];
             if (photos > 0) {
                 objects.push(photos === 1 ? 'la immagine' : 'le immagini');
             }
@@ -110,7 +110,7 @@ module.exports = function(localeCode) {
             if (objects.length > 0) {
                 objects[0] = objects[0].replace(/^(\S+)/, '$1 seguenti');
             }
-            var verb = (names.length === 1) ? 'ha' : 'hanno';
+            let verb = (names.length === 1) ? 'ha' : 'hanno';
             return `${list(names)} ${verb} inviato ${list(objects)}:`;
         },
         'issue-export-$names-wrote': (names) => {
@@ -266,8 +266,8 @@ module.exports = function(localeCode) {
         'option-remove-story': "Rimuovi la storia",
         'option-send-bookmarks': "Invia segnalibri ad altri utenti",
         'option-send-bookmarks-to-$count-users': (count) => {
-            var users = (count === 1) ? `${count} utente` : `${count} utenti`;
-            var bookmarks = (count === 1) ? `segnalibro` : `segnalibri`;
+            let users = (count === 1) ? `${count} utente` : `${count} utenti`;
+            let bookmarks = (count === 1) ? `segnalibro` : `segnalibri`;
             return `Invia ${bookmarks} a ${users}`;
         },
         'option-show-media-preview': "Mostra media allegati",
@@ -446,7 +446,7 @@ module.exports = function(localeCode) {
             return `Ha creato la pagina wiki «${page}»`;
         },
         'story-$name-created-$repo': (name, repo) => {
-            var text = `Ha creato il repository `;
+            let text = `Ha creato il repository `;
             if (repo) {
                 text += ` «${repo}»`;
             }
@@ -459,37 +459,37 @@ module.exports = function(localeCode) {
             return `Ha rimosso la pagina wiki «${page}»`;
         },
         'story-$name-deleted-$repo': (name, repo) => {
-            var text = `Ha cancellato il progetto`;
+            let text = `Ha cancellato il progetto`;
             if (repo) {
                 text += ` «${repo}»`;
             }
             return text;
         },
         'story-$name-imported-$repo': (name, repo) => {
-            var text = `Ha importato il progetto`;
+            let text = `Ha importato il progetto`;
             if (repo) {
                 text += ` «${repo}»`;
             }
             return text;
         },
         'story-$name-joined-$repo': (name, repo) => {
-            var text = `Si è unito al repository`;
+            let text = `Si è unito al repository`;
             if (repo) {
                 text += ` «${repo}»`;
             }
             return text;
         },
         'story-$name-left-$repo': (name, repo) => {
-            var text = `Ha lasciato il repository`;
+            let text = `Ha lasciato il repository`;
             if (repo) {
                 text += ` «${repo}»`;
             }
             return text;
         },
         'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-            var text = `Ha incorporato le modifiche`;
+            let text = `Ha incorporato le modifiche`;
             if (branches && branches.length > 0) {
-                var sources = branches.map((branch) => {
+                let sources = branches.map((branch) => {
                     return `«${branch}»`;
                 });
                 if (sources.length === 1) {
@@ -506,14 +506,14 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-opened-issue-$number-$title': (name, number, title) => {
-            var text = `Ha aperto il problema #${number}`;
+            let text = `Ha aperto il problema #${number}`;
             if (title) {
                 text += `: ${title}`;
             }
             return text;
         },
         'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-            var text = `Ha inviato modifiche al branch «${branch}»`;
+            let text = `Ha inviato modifiche al branch «${branch}»`;
             if (repo) {
                 text += ` del repository «${repo}»`;
             }
@@ -654,20 +654,20 @@ module.exports = function(localeCode) {
         'user-activity-$name-left-repo': "Ha lasciato un progetto git",
         'user-activity-$name-merged-code': "Ha eseguito un merge",
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-            var audios = (count === 1) ? `un audioclip` : `${count} audioclip`;
+            let audios = (count === 1) ? `un audioclip` : `${count} audioclip`;
             return `Ha pubblicato ${audios}`;
         },
         'user-activity-$name-posted-$count-links': (name, count) => {
-            var links = (count === 1) ? `un link` : `link`;
-            var website = (count === 1) ? `un sito web` : `${count} siti web`;
+            let links = (count === 1) ? `un link` : `link`;
+            let website = (count === 1) ? `un sito web` : `${count} siti web`;
             return `Ha pubblicato ${links} a ${website}`;
         },
         'user-activity-$name-posted-$count-pictures': (name, count) => {
-            var pictures = (count === 1) ? `a foto` : `${count} foto`;
+            let pictures = (count === 1) ? `a foto` : `${count} foto`;
             return `Ha pubblicato ${pictures}`;
         },
         'user-activity-$name-posted-$count-video-clips': (name, count) => {
-            var videos = (count === 1) ? `un videoclip` : `${count} videoclip`;
+            let videos = (count === 1) ? `un videoclip` : `${count} videoclip`;
             return `Ha pubblicato ${videos}`;
         },
         'user-activity-$name-pushed-code': "Ha inviato il codice nel repository",
@@ -764,7 +764,7 @@ function list(items) {
         return `${item}`;
     });
     if (items.length >= 2) {
-        var lastItem = items.pop();
+        let lastItem = items.pop();
         items[items.length - 1] += ` e ${lastItem}`;
     }
     return items.join(', ');

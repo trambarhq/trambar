@@ -1,15 +1,12 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-require('./push-button.scss');
-
-module.exports = PushButton;
-module.exports.File = FileButton;
+import './push-button.scss';
 
 function PushButton(props) {
     if (props.hidden) {
         return null;
     }
-    var classNames = [ 'push-button' ];
+    let classNames = [ 'push-button' ];
     if (props.emphasized) {
         classNames.push('emphasized');
     }
@@ -20,11 +17,13 @@ function PushButton(props) {
     );
 }
 
+PushButton.File = FileButton;
+
 function FileButton(props) {
     if (props.hidden) {
         return null;
     }
-    var inputProps = {
+    let inputProps = {
         type: 'file',
         value: '',
         disabled: props.disabled,
@@ -32,7 +31,7 @@ function FileButton(props) {
         accept: props.accept,
         onChange: props.onChange,
     };
-    var classNames = [ 'push-button' ];
+    let classNames = [ 'push-button' ];
     if (props.emphasized) {
         classNames.push('emphasized');
     }
@@ -44,11 +43,21 @@ function FileButton(props) {
     );
 }
 
-FileButton.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    disabled: PropTypes.bool,
-    multiple: PropTypes.bool,
-    onChange: PropTypes.func,
+export {
+    PushButton as default,
+    PushButton,
+    FileButton,
 };
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    FileButton.propTypes = {
+        label: PropTypes.string,
+        icon: PropTypes.string,
+        hidden: PropTypes.bool,
+        disabled: PropTypes.bool,
+        multiple: PropTypes.bool,
+        onChange: PropTypes.func,
+    };
+}

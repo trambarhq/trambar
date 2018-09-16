@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Async from 'async-do-while';
+import * as Async from 'async-do-while';
 
-import LocalSearch from 'data/local-search';
-import TemporaryID from 'data/remote-data-source/temporary-id';
+import * as LocalSearch from 'data/local-search';
+import * as TemporaryID from 'data/remote-data-source/temporary-id';
 
 class Change {
     constructor(location, objects, options) {

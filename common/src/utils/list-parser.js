@@ -195,5 +195,4 @@ export {
     find,
     count,
     join,
-    exports as default
 };

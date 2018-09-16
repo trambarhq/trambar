@@ -18,6 +18,7 @@ function load(importFuncs, progress) {
                     resolve(modules);
                 }
             }).catch((err) => {
+                console.error(err);
                 if (reject) {
                     reject(err);
                     reject = null;
@@ -29,5 +30,4 @@ function load(importFuncs, progress) {
 
 export {
     load,
-    exports as default
 };

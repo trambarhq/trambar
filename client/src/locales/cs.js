@@ -109,7 +109,7 @@ module.exports = function(localeCode) {
         'issue-cancel': 'Zrušit',
         'issue-delete': 'Vymazat',
         'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
-            var objects = [];
+            let objects = [];
             if (photos > 0) {
                 objects.push(photos === 1 ? 'obrázek' : 'obrázky');
             }
@@ -119,11 +119,11 @@ module.exports = function(localeCode) {
             if (audios > 0) {
                 objects.push(audios === 1 ? 'audioklip' : 'audioklipy');
             }
-            var e = pastTenseEnding(names, names.length > 1);
+            let e = pastTenseEnding(names, names.length > 1);
             return `${list(names)} posíla${e} následující ${list(objects)}:`;
         },
         'issue-export-$names-wrote': (names) => {
-            var e = pastTenseEnding(names, names.length > 1);
+            let e = pastTenseEnding(names, names.length > 1);
             return `${list(names)} napsa${e}:`;
         },
         'issue-ok': 'OK',
@@ -178,15 +178,15 @@ module.exports = function(localeCode) {
                 case 'post': story = 'váš příspěvek.'; break;
                 default: story = 'váš příběh';
             }
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} komentova${e} ${story}`;
         },
         'notification-$name-completed-task': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} dokonči${e} úkol na vašem seznamu`;
         },
         'notification-$name-is-assigned-to-your-issue': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} je přidělen${e} do vašeho problému`;
         },
         'notification-$name-likes-your-$story': (name, story) => {
@@ -196,12 +196,12 @@ module.exports = function(localeCode) {
                 case 'post': story = 'vašeho příspěvku'; break;
                 default: story = 'vašeho příběhu';
             }
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} má rád ${story}`;
         },
         'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
             reaction = 'komentáři';
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} zmíni${e} se o vás v ${reaction}`;
         },
         'notification-$name-mentioned-you-in-$story': (name, story) => {
@@ -213,15 +213,15 @@ module.exports = function(localeCode) {
                 case 'merge-request': story = 'žádosti o sloučení'; break;
                 default: story = 'příběhu';
             }
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} zmíni${e} se o vás v ${story}`;
         },
         'notification-$name-merged-code-to-$branch': (name, branch) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} slouči${e} změny do větve „${branch}”`;
         },
         'notification-$name-opened-an-issue': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} otevře${e} problém`;
         },
         'notification-$name-posted-a-note-about-your-$story': (name, story) => {
@@ -230,19 +230,19 @@ module.exports = function(localeCode) {
                 case 'issue': story = 'vaš problém'; break;
                 case 'merge-request': story = 'vaši žádost o sloučení'; break;
             }
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} komentova${e} ${story}`;
         },
         'notification-$name-posted-a-survey': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} zveřejni${e} anketu`;
         },
         'notification-$name-pushed-code-to-$branch': (name, branch) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} posunova${e} změny do větve „${branch}”`;
         },
         'notification-$name-requested-to-join': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} požáda${e} o vstup do tohoto projektu`;
         },
         'notification-$name-sent-bookmark-to-$story': (name, story) => {
@@ -252,11 +252,11 @@ module.exports = function(localeCode) {
                 case 'post': story = 'příspěvku'; break;
                 default: story = 'příběhu';
             }
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} posla${e} vám záložku k ${story}`;
         },
         'notification-$name-voted-in-your-survey': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} odpovědě${e} na vaši anketu`;
         },
         'notification-option-assignment': 'Když je k vašemu problému přiřazen někdo',
@@ -290,7 +290,7 @@ module.exports = function(localeCode) {
         'option-remove-story': 'Odstranit příběh',
         'option-send-bookmarks': 'Poslat záložky ostatním uživatelům',
         'option-send-bookmarks-to-$count-users': (count) => {
-            var users;
+            let users;
             if (singular(count)) {
                 users = `1 uživateli`;
             } else if (plural(count)) {
@@ -298,7 +298,7 @@ module.exports = function(localeCode) {
             } else {
                 users = `${count} uživatelům`;
             }
-            var bookmarks = (count === 1) ? `záložky` : `záložky`;
+            let bookmarks = (count === 1) ? `záložky` : `záložky`;
             return `Poslat ${bookmarks} ${users}`;
         },
         'option-show-media-preview': 'Zobrazit připojené média',
@@ -339,50 +339,50 @@ module.exports = function(localeCode) {
         'qr-scanner-qr-code-found': 'QR kód nalezený',
 
         'reaction-$name-added-story-to-issue-tracker': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} přida${e} tento příspěvek na bugtracker`;
         },
         'reaction-$name-cast-a-vote': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} hlasova${e}`;
         },
         'reaction-$name-commented-on-branch': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} komentova${e} tuto větev`;
         },
         'reaction-$name-commented-on-issue': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} komentova${e} tento problém`;
         },
         'reaction-$name-commented-on-merge': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} komentova${e} toto sloučení kódu`;
         },
         'reaction-$name-commented-on-merge-request': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} komentova${e} tuto žádost o sloučení`;
         },
         'reaction-$name-commented-on-push': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} komentova${e} tento přesun`;
         },
         'reaction-$name-commented-on-tag': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `${name} komentova${e} tento tag`;
         },
         'reaction-$name-completed-a-task': (name) => {
-            var ve = pastTenseEnding(name);
-            var ae = ve.substr(1);
+            let ve = pastTenseEnding(name);
+            let ae = ve.substr(1);
             return `${name} by${ve} dokončen${ae} úkol`;
         },
         'reaction-$name-is-assigned-to-issue': (name) => {
-            var ve = pastTenseEnding(name);
-            var ae = ve.substr(1);
+            let ve = pastTenseEnding(name);
+            let ae = ve.substr(1);
             return `${name} byl${ve} přidělen${ae} tomuto problému`;
         },
         'reaction-$name-is-assigned-to-merge-request': (name) => {
-            var ve = pastTenseEnding(name);
-            var ae = ve.substr(1);
+            let ve = pastTenseEnding(name);
+            let ae = ve.substr(1);
             return `${name} byl${ve} přidělen${ae} této žádosti o sloučení`;
         },
         'reaction-$name-is-editing': (name) => {
@@ -489,70 +489,70 @@ module.exports = function(localeCode) {
             }
         },
         'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Stvoři${e} větve „${branch}” v projektu „${repo}”`;
         },
         'story-$name-created-$milestone': (name, milestone) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Vytvoři${e} milník „${milestone}”`;
         },
         'story-$name-created-$page': (name, page) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Vytvoři${e} wiki stránku „${page}”`;
         },
         'story-$name-created-$repo': (name, repo) => {
-            var e = pastTenseEnding(name);
-            var text = `Vytvoři${e} projekt`;
+            let e = pastTenseEnding(name);
+            let text = `Vytvoři${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
             }
             return text;
         },
         'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Stvoři${e} tag „${tag}” v projektu „${repo}”`;
         },
         'story-$name-deleted-$page': (name, page) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Smaza${e} stránku wiki „${page}”`;
         },
         'story-$name-deleted-$repo': (name, repo) => {
-            var e = pastTenseEnding(name);
-            var text = `Smaza${e} projekt`;
+            let e = pastTenseEnding(name);
+            let text = `Smaza${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
             }
             return text;
         },
         'story-$name-imported-$repo': (name, repo) => {
-            var e = pastTenseEnding(name);
-            var text = `Importova${e} projekt`;
+            let e = pastTenseEnding(name);
+            let text = `Importova${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
             }
             return text;
         },
         'story-$name-joined-$repo': (name, repo) => {
-            var e = pastTenseEnding(name);
-            var text = `Vstoupi${e} Do projektu`;
+            let e = pastTenseEnding(name);
+            let text = `Vstoupi${e} Do projektu`;
             if (repo) {
                 text += ` „${repo}”`;
             }
             return text;
         },
         'story-$name-left-$repo': (name, repo) => {
-            var e = pastTenseEnding(name);
-            var text = `Opusti${e} projekt`;
+            let e = pastTenseEnding(name);
+            let text = `Opusti${e} projekt`;
             if (repo) {
                 text += ` „${repo}”`;
             }
             return text;
         },
         'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-            var e = pastTenseEnding(name);
-            var text = `Slouči${e} změny`;
+            let e = pastTenseEnding(name);
+            let text = `Slouči${e} změny`;
             if (branches && branches.length > 0) {
-                var sources = branches.map((branch) => {
+                let sources = branches.map((branch) => {
                     return `„${branch}”`;
                 });
                 if (singular(sources.length)) {
@@ -569,27 +569,27 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-opened-issue-$number-$title': (name, number, title) => {
-            var e = pastTenseEnding(name);
-            var text = `Otevře${e} problém ${number}`;
+            let e = pastTenseEnding(name);
+            let text = `Otevře${e} problém ${number}`;
             if (title) {
                 text += `: ${title}`;
             }
             return text;
         },
         'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-            var e = pastTenseEnding(name);
-            var text = `Posunova${e} změny do větve „${branch}”`;
+            let e = pastTenseEnding(name);
+            let text = `Posunova${e} změny do větve „${branch}”`;
             if (repo) {
                 text += ` projektu „${repo}”`;
             }
             return text;
         },
         'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Požádal sloučit větve „${branch1}” do větve „${branch2}”.`;
         },
         'story-$name-updated-$page': (name, page) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Aktualizova${e} stránku wiki „${page}”`;
         },
         'story-add-coauthor': 'Přidat spoluautora',
@@ -628,7 +628,7 @@ module.exports = function(localeCode) {
         'story-photo': 'Foto',
         'story-post': 'Přidat',
         'story-push-added-$count-files': (count) => {
-            var files;
+            let files;
             if (singular(count)) {
                 files = `1 soubor`
             } else if (plural(count)) {
@@ -639,7 +639,7 @@ module.exports = function(localeCode) {
             return `${files} přidáno`;
         },
         'story-push-added-$count-lines': (count) => {
-            var lines;
+            let lines;
             if (singular(count)) {
                 lines = `1 řádek`
             } else if (plural(count)) {
@@ -651,7 +651,7 @@ module.exports = function(localeCode) {
         },
         'story-push-components-changed': 'Byly změněny následující části:',
         'story-push-deleted-$count-files': (count) => {
-            var files;
+            let files;
             if (singular(count)) {
                 files = `1 soubor`
             } else if (plural(count)) {
@@ -662,7 +662,7 @@ module.exports = function(localeCode) {
             return `${files} smazáno`;
         },
         'story-push-deleted-$count-lines': (count) => {
-            var lines;
+            let lines;
             if (singular(count)) {
                 lines = `1 řádek`
             } else if (plural(count)) {
@@ -673,7 +673,7 @@ module.exports = function(localeCode) {
             return `${lines} smazáno`;
         },
         'story-push-modified-$count-files': (count) => {
-            var files;
+            let files;
             if (singular(count)) {
                 files = `1 soubor`
             } else if (plural(count)) {
@@ -684,7 +684,7 @@ module.exports = function(localeCode) {
             return `${files} modifikovano`;
         },
         'story-push-modified-$count-lines': (count) => {
-            var lines;
+            let lines;
             if (singular(count)) {
                 lines = `1 řádek`
             } else if (plural(count)) {
@@ -695,7 +695,7 @@ module.exports = function(localeCode) {
             return `${lines} modifikovano`;
         },
         'story-push-renamed-$count-files': (count) => {
-            var files;
+            let files;
             if (singular(count)) {
                 files = `1 soubor`
             } else if (plural(count)) {
@@ -745,58 +745,58 @@ module.exports = function(localeCode) {
         'time-yesterday': 'Včera',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-            var files = (count === 1) ? `1 souboru` : `${count} souborů`;
+            let files = (count === 1) ? `1 souboru` : `${count} souborů`;
             return `Nahrávání ${files}, zbývá ${size}`;
         },
 
         'user-actions': 'Akce',
 
         'user-activity-$name-created-branch': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Vytvoři${e} větev`;
         },
         'user-activity-$name-created-merge-request': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Vytvoři${e} žádost o sloučení`;
         },
         'user-activity-$name-created-milestone': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Vytvoři${e} milník.`;
         },
         'user-activity-$name-created-repo': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Vytvoři${e} projekt git.`;
         },
         'user-activity-$name-created-tag': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Vytvoři${e} tag`;
         },
         'user-activity-$name-deleted-repo': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Smaza${e} projekt git`;
         },
         'user-activity-$name-edited-wiki-page': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Upravi${e} stránku wiki`;
         },
         'user-activity-$name-imported-repo': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Importova${e} projekt git`;
         },
         'user-activity-$name-joined-repo': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Připoji${e} se k projektu git`;
         },
         'user-activity-$name-left-repo': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Opusti${e} projekt git`;
         },
         'user-activity-$name-merged-code': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Proved${e} sloučení kódu.`;
         },
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-            var audios;
+            let audios;
             if (singular(count)) {
                 audios = 'audioklip';
             } else if (plural(count)) {
@@ -804,17 +804,17 @@ module.exports = function(localeCode) {
             } else {
                 audios = `${count} audioklipů`;
             }
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Zveřejni${e} ${audios}`;
         },
         'user-activity-$name-posted-$count-links': (name, count) => {
-            var links = (count === 1) ? `odkaz` : `odkazy`;
-            var website = `webové stránky`;
-            var e = pastTenseEnding(name);
+            let links = (count === 1) ? `odkaz` : `odkazy`;
+            let website = `webové stránky`;
+            let e = pastTenseEnding(name);
             return `Posla${e} ${links} na ${website}`
         },
         'user-activity-$name-posted-$count-pictures': (name, count) => {
-            var pictures;
+            let pictures;
             if (singular(count)) {
                 pictures = 'obrázek';
             } else if (plural(count)) {
@@ -822,11 +822,11 @@ module.exports = function(localeCode) {
             } else {
                 pictures = `${count} obrázků`;
             }
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Zveřejni${e} ${pictures}`;
         },
         'user-activity-$name-posted-$count-video-clips': (name, count) => {
-            var videos;
+            let videos;
             if (singular(count)) {
                 videos = 'videoklip';
             } else if (plural(count)) {
@@ -834,27 +834,27 @@ module.exports = function(localeCode) {
             } else {
                 videos = `${count} videoklipů`;
             }
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Zveřejni${e} ${videos}`;
         },
         'user-activity-$name-pushed-code': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Posunova${e} změny do repozitáře`;
         },
         'user-activity-$name-reported-issue': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Ohlási${e} problém`;
         },
         'user-activity-$name-started-survey': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Vytvoři${e} anketu`;
         },
         'user-activity-$name-started-task-list': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Vytvoři${e} seznam úkolů`;
         },
         'user-activity-$name-wrote-post': (name) => {
-            var e = pastTenseEnding(name);
+            let e = pastTenseEnding(name);
             return `Napsa${e} příspěvek`;
         },
         'user-activity-back': 'Dozadu',
@@ -1033,7 +1033,7 @@ function plural(n) {
 function gender(name) {
     if (name) {
         if (name instanceof Array) {
-            for (var i = 0; i < name.length; i++) {
+            for (let i = 0; i < name.length; i++) {
                 if (gender(name[i]) === 'male') {
                     return 'male';
                 }
@@ -1043,8 +1043,8 @@ function gender(name) {
         if (name.gender) {
             return name.gender;
         }
-        var parts = name.split(/\s+/);
-        var fname = parts[0].toLocaleLowerCase();
+        let parts = name.split(/\s+/);
+        let fname = parts[0].toLocaleLowerCase();
         if (/a$/.test(fname)) {
             if (!isMasculine[fname]) {
                 return 'female';
@@ -1058,7 +1058,7 @@ function gender(name) {
     return 'male';
 }
 
-var isFeminine = {};
+let isFeminine = {};
 [
     'Abigail',
     'Adél',
@@ -1213,7 +1213,7 @@ var isFeminine = {};
     isFeminine[name.toLocaleLowerCase()] = true;
 });
 
-var isMasculine = {};
+let isMasculine = {};
 [
     'Honza',
     'Jožka',
@@ -1243,7 +1243,7 @@ function list(items) {
         return `${item}`;
     });
     if (items.length >= 2) {
-        var lastItem = items.pop();
+        let lastItem = items.pop();
         items[items.length - 1] += ` a ${lastItem}`;
     }
     return items.join(', ');

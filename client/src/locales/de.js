@@ -99,8 +99,8 @@ module.exports = function(localeCode) {
         'issue-cancel': 'Abbrechen',
         'issue-delete': 'Löschen',
         'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
-            var objects = [];
-            var adjectives = [];
+            let objects = [];
+            let adjectives = [];
             if (photos > 0) {
                 objects.push(photos === 1 ? 'das Bild' : 'die Bilder');
                 adjectives.push(photos === 1 ? 'folgende' : 'folgenden');
@@ -113,7 +113,7 @@ module.exports = function(localeCode) {
                 objects.push(audios === 1 ? 'den Audioclip' : 'die Audioclips');
                 adjectives.push('folgenden');
             }
-            for (var i = 0; i < objects.length; i++) {
+            for (let i = 0; i < objects.length; i++) {
                 if (i === 0) {
                     // insert adjustive after article
                     objects[i] = objects[i].replace(/^(\S+)/, '$1 ' + adjectives[i]);
@@ -122,7 +122,7 @@ module.exports = function(localeCode) {
                     objects[i] = objects[i].replace(/^(\S+)\s+/, '');
                 }
             }
-            var verb = (names.length > 1) ? 'haben' : 'hat';
+            let verb = (names.length > 1) ? 'haben' : 'hat';
             return `${list(names)} ${verb} ${list(objects)} gepostet:`;
         },
         'issue-export-$names-wrote': (names) => {
@@ -278,7 +278,7 @@ module.exports = function(localeCode) {
         'option-remove-story': 'Geschichte entfernen',
         'option-send-bookmarks': 'Lesezeichen an andere Benutzer senden',
         'option-send-bookmarks-to-$count-users': (count) => {
-            var users = `${count} users`;
+            let users = `${count} users`;
             return `Lesezeichen an ${users} senden`;
         },
         'option-show-media-preview': 'Angehängte Medien anzeigen',
@@ -458,7 +458,7 @@ module.exports = function(localeCode) {
             return `Hat die Wiki-Seite “${page}” erstellt`;
         },
         'story-$name-created-$repo': (name, repo) => {
-            var project = `das Projekt`;
+            let project = `das Projekt`;
             if (repo) {
                 project += ` “${repo}”`;
             }
@@ -471,37 +471,37 @@ module.exports = function(localeCode) {
             return `Hat die Wiki-Seite “${page}” gelöscht`;
         },
         'story-$name-deleted-$repo': (name, repo) => {
-            var project = `das Projekt`;
+            let project = `das Projekt`;
             if (repo) {
                 project += ` “${repo}”`;
             }
             return `Hat ${project} gelöscht`;
         },
         'story-$name-imported-$repo': (name, repo) => {
-            var project = `das Projekt`;
+            let project = `das Projekt`;
             if (repo) {
                 project += ` “${repo}”`;
             }
             return `Hat ${project} importiert`;
         },
         'story-$name-joined-$repo': (name, repo) => {
-            var project = `das Projekt`;
+            let project = `das Projekt`;
             if (repo) {
                 project += ` “${repo}”`;
             }
             return `Hat ${project} beigetreten`;
         },
         'story-$name-left-$repo': (name, repo) => {
-            var project = `das Projekt`;
+            let project = `das Projekt`;
             if (repo) {
                 project += ` “${repo}”`;
             }
             return `Hat ${project} verlassen`;
         },
         'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-            var text = `Hat Code`;
+            let text = `Hat Code`;
             if (branches && branches.length > 0) {
-                var sources = branches.map((branch) => {
+                let sources = branches.map((branch) => {
                     return `“${branch}”`;
                 });
                 text += ` aus `;
@@ -520,14 +520,14 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-opened-issue-$number-$title': (name, number, title) => {
-            var text = `Hat das Problem ${number} eröffnet`;
+            let text = `Hat das Problem ${number} eröffnet`;
             if (title) {
                 text += `: ${title}`;
             }
             return text;
         },
         'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-            var text = `Hat Änderungen in den Branch “${branch}”`;
+            let text = `Hat Änderungen in den Branch “${branch}”`;
             if (repo) {
                 text += ` des Projekt “${repo}”`;
             }
@@ -570,32 +570,32 @@ module.exports = function(localeCode) {
         'story-photo': 'Foto',
         'story-post': 'Posten',
         'story-push-added-$count-files': (count) => {
-            var files = (count === 1) ? `1 Datei` : `${count} Dateien`;
+            let files = (count === 1) ? `1 Datei` : `${count} Dateien`;
             return `${files} hinzugefügt`;
         },
         'story-push-added-$count-lines': (count) => {
-            var lines = (count === 1) ? `1 Zeile` : `${count} Zeilen`;
+            let lines = (count === 1) ? `1 Zeile` : `${count} Zeilen`;
             return `${lines} hinzugefügt`;
         },
         'story-push-components-changed': 'Die folgenden Teile wurden geändert:',
         'story-push-deleted-$count-files': (count) => {
-            var files = (count === 1) ? `1 Datei` : `${count} Dateien`;
+            let files = (count === 1) ? `1 Datei` : `${count} Dateien`;
             return `${files} entfernt`;
         },
         'story-push-deleted-$count-lines': (count) => {
-            var lines = (count === 1) ? `1 Zeile` : `${count} Zeilen`;
+            let lines = (count === 1) ? `1 Zeile` : `${count} Zeilen`;
             return `${lines} entfernt`;
         },
         'story-push-modified-$count-files': (count) => {
-            var files = (count === 1) ? `1 Datei` : `${count} Dateien`;
+            let files = (count === 1) ? `1 Datei` : `${count} Dateien`;
             return `${files} modifiziert`;
         },
         'story-push-modified-$count-lines': (count) => {
-            var lines = (count === 1) ? `1 Zeile` : `${count} Zeilen`;
+            let lines = (count === 1) ? `1 Zeile` : `${count} Zeilen`;
             return `${lines} modifiziert`;
         },
         'story-push-renamed-$count-files': (count) => {
-            var files = (count === 1) ? `1 Datei` : `${count} Dateien`;
+            let files = (count === 1) ? `1 Datei` : `${count} Dateien`;
             return `${files} umbenannt`;
         },
         'story-remove-yourself': 'Sich selbst entfernen',
@@ -630,8 +630,8 @@ module.exports = function(localeCode) {
         'time-yesterday': 'Gestern',
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-            var files = (count === 1) ? `1 Datei` : `${count} Dateien`;
-            var are = (count === 1) ? `wird` : `werden`;
+            let files = (count === 1) ? `1 Datei` : `${count} Dateien`;
+            let are = (count === 1) ? `wird` : `werden`;
             return `${files} ${are} hochgeladen, ${size} übrig`;
         },
 
@@ -649,20 +649,20 @@ module.exports = function(localeCode) {
         'user-activity-$name-left-repo': 'Hat ein Git-Projekt verlassen',
         'user-activity-$name-merged-code': 'Hat einen Merge durchgeführt',
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-            var audios = (count === 1) ? `einen Audioclip` : `${count} Audioclips`;
+            let audios = (count === 1) ? `einen Audioclip` : `${count} Audioclips`;
             return `Hat ${videos} gepostet`;
         },
         'user-activity-$name-posted-$count-links': (name, count) => {
-            var links = (count === 1) ? `einen Link` : `${count} Links`;
-            var website = (count === 1) ? `einer Webseite` : `${count} Webseiten`;
+            let links = (count === 1) ? `einen Link` : `${count} Links`;
+            let website = (count === 1) ? `einer Webseite` : `${count} Webseiten`;
             return `Hat ${links} zu ${website} gepostet`;
         },
         'user-activity-$name-posted-$count-pictures': (name, count) => {
-            var pictures = (count === 1) ? `ein Bild` : `${count} Bilder`;
+            let pictures = (count === 1) ? `ein Bild` : `${count} Bilder`;
             return `Hat ${pictures} gepostet`;
         },
         'user-activity-$name-posted-$count-video-clips': (name, count) => {
-            var videos = (count === 1) ? `einen Videoclip` : `${count} Videoclips`;
+            let videos = (count === 1) ? `einen Videoclip` : `${count} Videoclips`;
             return `Hat ${videos} gepostet`;
         },
         'user-activity-$name-pushed-code': 'Hat Änderungen an einem Repository gepusht',
@@ -759,7 +759,7 @@ function list(items) {
         return `${item}`;
     });
     if (items.length >= 2) {
-        var lastItem = items.pop();
+        let lastItem = items.pop();
         items[items.length - 1] += ` und ${lastItem}`;
     }
     return items.join(', ');

@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
+
+const emptyArray = [];
 
 /**
  * Find system tasks that haven't yet ended
@@ -37,7 +38,7 @@ function findActiveTasks(db, startTime, minimum) {
  */
 function findServerTasks(db, server, minimum) {
     if (!server) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     return db.find({
         schema: 'global',
@@ -56,5 +57,4 @@ function findServerTasks(db, server, minimum) {
 export {
     findActiveTasks,
     findServerTasks,
-    exports as default,
 };

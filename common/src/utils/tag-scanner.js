@@ -47,5 +47,4 @@ export {
     findTags,
     isTag,
     removeTags,
-    exports as default,
 };

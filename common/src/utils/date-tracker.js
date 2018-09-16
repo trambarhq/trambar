@@ -142,5 +142,4 @@ export {
     addEventListener,
     removeEventListener,
     setLocale,
-    exports as default,
 };

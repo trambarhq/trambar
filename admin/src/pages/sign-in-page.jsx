@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Moment from 'moment';
-import HTTPRequest from 'transport/http-request';
+import * as HTTPRequest from 'transport/http-request';
 
 // widgets
 import PushButton from 'widgets/push-button';

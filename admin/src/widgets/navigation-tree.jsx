@@ -2,11 +2,11 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import ProjectFinder from 'objects/finders/project-finder';
-import RepoFinder from 'objects/finders/repo-finder';
-import RoleFinder from 'objects/finders/role-finder';
-import ServerFinder from 'objects/finders/server-finder';
-import UserFinder from 'objects/finders/user-finder';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as RepoFinder from 'objects/finders/repo-finder';
+import * as RoleFinder from 'objects/finders/role-finder';
+import * as ServerFinder from 'objects/finders/server-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 import ComponentRefs from 'utils/component-refs';
 
 // widgets

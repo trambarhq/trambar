@@ -1,32 +1,24 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React, { PureComponent } from 'react';
 
-var Locale = require('locale/locale');
+import Environment from 'env/environment';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var QRCode = require('widgets/qr-code');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import QRCode from 'widgets/qr-code';
 
-require('./telephone-number-dialog-box.scss');
+import './telephone-number-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'TelephoneNumberDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        number: PropTypes.string,
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onClose: PropTypes.func,
-    },
+class TelephoneNumberDialogBox extends PureComponent {
+    static displayName = 'TelephoneNumberDialogBox';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var overlayProps = {
+    render() {
+        let overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.props.onClose,
         };
@@ -38,32 +30,32 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render QR-code and number
      *
      * @return {ReactElement}
      */
-    renderContents: function() {
-        var number = this.props.number;
-        var url = `tel:${number}`;
+    renderContents() {
+        let number = this.props.number;
+        let url = `tel:${number}`;
         return (
             <div className="contents">
                 <QRCode text={url} scale={6} />
                 <div className="number">{number}</div>
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var closeButtonProps = {
+    renderButtons() {
+        let t = this.props.locale.translate;
+        let closeButtonProps = {
             label: t('telephone-dialog-close'),
             emphasized: true,
             onClick: this.props.onClose,
@@ -73,5 +65,23 @@ module.exports = React.createClass({
                 <PushButton {...closeButtonProps} />
             </div>
         );
-    },
-});
+    }
+}
+
+export {
+    TelephoneNumberDialogBox as default,
+    TelephoneNumberDialogBox,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    TelephoneNumberDialogBox.propTypes = {
+        show: PropTypes.bool,
+        number: PropTypes.string,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onClose: PropTypes.func,
+    };
+}

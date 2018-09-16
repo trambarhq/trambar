@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import Empty from 'data/empty';
+
+const emptyArray = [];
 
 /**
  * Find system object
@@ -22,5 +23,4 @@ function findSystem(db) {
 
 export {
     findSystem,
-    exports as default,
 };

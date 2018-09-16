@@ -1,29 +1,29 @@
-var Promise = require('bluebird');
-var Chai = require('chai'), expect = Chai.expect;
+import Promise from 'bluebird';
+import Chai, { expect } from 'chai';
 
-var BlobStream = require('transport/blob-stream');
-var HTTPRequest = require('transport/http-request');
-var HTTPError = require('errors/http-error');
+import BlobStream from 'transport/blob-stream';
+import * as HTTPRequest from 'transport/http-request';
+import HTTPError from  'errors/http-error';
 
 describe('BlobStream', function() {
-    var fetchOriginal = HTTPRequest.fetch;
+    let fetchOriginal = HTTPRequest.fetch;
     after(function() {
         HTTPRequest.fetch = fetchOriginal;
     })
 
     describe('#pull()', function() {
         it('should take a blob that was pushed in previously', function() {
-            var stream = new BlobStream('http://somewhere/1', {});
-            var blob = new Blob([ 'Hello' ]);
+            let stream = new BlobStream('http://somewhere/1', {});
+            let blob = new Blob([ 'Hello' ]);
             stream.push(blob);
             return stream.pull().then((b) => {
                 return expect(b).to.equal(blob);
             });
         })
         it('should wait when stream is empty', function() {
-            var stream = new BlobStream('http://somewhere/2', {});
-            var promise1 = stream.pull();
-            var promise2 = Promise.delay(250).return('timeout');
+            let stream = new BlobStream('http://somewhere/2', {});
+            let promise1 = stream.pull();
+            let promise2 = Promise.delay(250).return('timeout');
             return Promise.race([ promise1, promise2 ]).then((result) => {
                 return expect(result).to.equal('timeout');
             });
@@ -31,10 +31,10 @@ describe('BlobStream', function() {
     })
     describe('#push()', function() {
         it('should cause an earlier call to pull() to resolve', function() {
-            var stream = new BlobStream('http://somewhere/3', {});
-            var promise1 = stream.pull();
-            var promise2 = Promise.delay(1000).return('timeout');
-            var blob = new Blob([ 'Hello' ]);
+            let stream = new BlobStream('http://somewhere/3', {});
+            let promise1 = stream.pull();
+            let promise2 = Promise.delay(1000).return('timeout');
+            let blob = new Blob([ 'Hello' ]);
             setTimeout(() => {
                 stream.push(blob);
             }, 100);
@@ -45,9 +45,9 @@ describe('BlobStream', function() {
     })
     describe('#close()', function() {
         it('should cause an earlier call to pull() to resolve to null', function() {
-            var stream = new BlobStream('http://somewhere/4', {});
-            var promise1 = stream.pull();
-            var promise2 = Promise.delay(1000).return('timeout');
+            let stream = new BlobStream('http://somewhere/4', {});
+            let promise1 = stream.pull();
+            let promise2 = Promise.delay(1000).return('timeout');
             setTimeout(() => {
                 stream.close();
             }, 100);
@@ -58,14 +58,14 @@ describe('BlobStream', function() {
     })
     describe('#wait()', function() {
         it('should wait til all blobs to be finalized', function() {
-            var stream = new BlobStream('http://somewhere/5', {});
+            let stream = new BlobStream('http://somewhere/5', {});
             _.each(_.range(1, 5), (num) => {
-                var blob = new Blob([ `Blob #${num}` ]);
+                let blob = new Blob([ `Blob #${num}` ]);
                 stream.push(blob);
             });
             stream.close();
-            var count = 0;
-            var interval = setInterval(() => {
+            let count = 0;
+            let interval = setInterval(() => {
                 stream.pull().then((blob) => {
                     count++;
                     if (blob) {
@@ -80,14 +80,14 @@ describe('BlobStream', function() {
             });
         })
         it('should reject when the stream was abandoned', function() {
-            var stream = new BlobStream('http://somewhere/6', {});
+            let stream = new BlobStream('http://somewhere/6', {});
             _.each(_.range(1, 5), (num) => {
-                var blob = new Blob([ `Blob #${num}` ]);
+                let blob = new Blob([ `Blob #${num}` ]);
                 stream.push(blob);
             });
             stream.close();
-            var count = 0;
-            var interval = setInterval(() => {
+            let count = 0;
+            let interval = setInterval(() => {
                 stream.pull().then((blob) => {
                     count++;
                     if (blob) {
@@ -112,16 +112,16 @@ describe('BlobStream', function() {
         it('should send chunks to remote server, one at a time', function() {
             this.timeout(5000);
 
-            var stream = new BlobStream('http://somewhere/7', {});
+            let stream = new BlobStream('http://somewhere/7', {});
             _.each(_.range(1, 51), (num) => {
-                var blob = new Blob([ `Blob #${num}` ]);
+                let blob = new Blob([ `Blob #${num}` ]);
                 stream.push(blob);
             });
             stream.close();
 
-            var sent = 0;
+            let sent = 0;
             HTTPRequest.fetch = (method, url, payload, options) => {
-                var onUploadProgress = options.onUploadProgress;
+                let onUploadProgress = options.onUploadProgress;
                 return Promise.delay(20).then(() => {
                     sent++;
                     onUploadProgress({
@@ -136,7 +136,7 @@ describe('BlobStream', function() {
 
             stream.start();
             return stream.wait().then((result) => {
-                var all = stream.toBlob();
+                let all = stream.toBlob();
                 expect(sent).to.equal(50);
                 expect(stream.transferred).to.equal(all.size);
             });
@@ -144,17 +144,17 @@ describe('BlobStream', function() {
         it('should reattempt a chunk when an error occurs', function() {
             this.timeout(30000);
 
-            var stream = new BlobStream('http://somewhere/7', {});
+            let stream = new BlobStream('http://somewhere/7', {});
             _.each(_.range(1, 51), (num) => {
-                var blob = new Blob([ `Blob #${num}` ]);
+                let blob = new Blob([ `Blob #${num}` ]);
                 stream.push(blob);
             });
             stream.close();
 
-            var sent = 0;
-            var errors = 0;
+            let sent = 0;
+            let errors = 0;
             HTTPRequest.fetch = (method, url, payload, options) => {
-                var onUploadProgress = options.onUploadProgress;
+                let onUploadProgress = options.onUploadProgress;
                 return Promise.delay(20).then(() => {
                     if (Math.random() > 0.90) {
                         if (errors < 2) {
@@ -182,18 +182,18 @@ describe('BlobStream', function() {
         it('should wait for resumption when suspected', function() {
             this.timeout(5000);
 
-            var stream = new BlobStream('http://somewhere/8', {});
+            let stream = new BlobStream('http://somewhere/8', {});
             _.each(_.range(1, 51), (num) => {
-                var blob = new Blob([ `Blob #${num}` ]);
+                let blob = new Blob([ `Blob #${num}` ]);
                 stream.push(blob);
             });
             stream.close();
             stream.suspend();
 
-            var sent = 0;
-            var online = false;
+            let sent = 0;
+            let online = false;
             HTTPRequest.fetch = (method, url, payload, options) => {
-                var onUploadProgress = options.onUploadProgress;
+                let onUploadProgress = options.onUploadProgress;
                 return Promise.delay(20).then(() => {
                     if (!online) {
                         throw new HTTPError(504);

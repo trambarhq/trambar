@@ -1,14 +1,12 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-module.exports = OptionButton;
-
-require('./option-button.scss');
+import './option-button.scss';
 
 function OptionButton(props) {
     if (props.hidden) {
         return null;
     }
-    var anchorProps = {
+    let anchorProps = {
         className: buttonClasses(props),
         id: props.id,
         href: props.url,
@@ -27,27 +25,8 @@ function OptionButton(props) {
     )
 }
 
-OptionButton.propTypes = {
-    label: PropTypes.node,
-    id: PropTypes.string,
-    icon: PropTypes.string,
-    iconOn: PropTypes.string,
-    iconOff: PropTypes.string,
-    url: PropTypes.string,
-    target: PropTypes.string,
-    hidden: PropTypes.bool,
-    selected: PropTypes.bool,
-    disabled: PropTypes.bool,
-    onClick: PropTypes.func,
-};
-
-OptionButton.defaultProps = {
-    iconOn: 'check-circle',
-    iconOff: 'circle-o',
-};
-
 function buttonClasses(props) {
-    var classNames = [ 'option-button' ];
+    let classNames = [ 'option-button' ];
     if (props.className) {
         classNames.push(props.className);
     }
@@ -61,7 +40,7 @@ function buttonClasses(props) {
 }
 
 function iconClasses(props) {
-    var classNames = [ 'fa' ];
+    let classNames = [ 'fa' ];
     if (props.icon) {
         classNames.push(`fa-${props.icon}`);
     } else {
@@ -72,4 +51,32 @@ function iconClasses(props) {
         }
     }
     return classNames.join(' ');
+}
+
+OptionButton.defaultProps = {
+    iconOn: 'check-circle',
+    iconOff: 'circle-o',
+};
+
+export {
+    OptionButton as default,
+    OptionButton,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    OptionButton.propTypes = {
+        label: PropTypes.node,
+        id: PropTypes.string,
+        icon: PropTypes.string,
+        iconOn: PropTypes.string,
+        iconOff: PropTypes.string,
+        url: PropTypes.string,
+        target: PropTypes.string,
+        hidden: PropTypes.bool,
+        selected: PropTypes.bool,
+        disabled: PropTypes.bool,
+        onClick: PropTypes.func,
+    };
 }

@@ -1,140 +1,28 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Moment = require('moment');
-var Memoize = require('utils/memoize');
-var Empty = require('data/empty');
-var DateTracker = require('utils/date-tracker');
-var ProjectFinder = require('objects/finders/project-finder');
-var ProjectSettings = require('objects/settings/project-settings');
-var StatisticsFinder = require('objects/finders/statistics-finder');
-var StoryFinder = require('objects/finders/story-finder');
-var UserFinder = require('objects/finders/user-finder');
-var TagScanner = require('utils/tag-scanner');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import Memoize from 'utils/memoize';
+import * as DateTracker from 'utils/date-tracker';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as ProjectSettings from 'objects/settings/project-settings';
+import * as StatisticsFinder from 'objects/finders/statistics-finder';
+import * as StoryFinder from 'objects/finders/story-finder';
+import * as UserFinder from 'objects/finders/user-finder';
+import * as TagScanner from 'utils/tag-scanner';
 
 // widgets
-var PageContainer = require('widgets/page-container');
-var UserList = require('lists/user-list');
-var StoryList = require('lists/story-list');
-var LoadingAnimation = require('widgets/loading-animation');
-var EmptyMessage = require('widgets/empty-message');
+import PageContainer from 'widgets/page-container';
+import UserList from 'lists/user-list';
+import StoryList from 'lists/story-list';
+import LoadingAnimation from 'widgets/loading-animation';
+import EmptyMessage from 'widgets/empty-message';
 
-require('./people-page.scss')
+import './people-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'PeoplePage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/:schema/people/:user/?',
-                '/:schema/people/?',
-            ], (params) => {
-                return {
-                    schema: params.schema,
-                    search: query.search,
-                    user: Route.parseId(params.user),
-                    date: Route.parseDate(query.date),
-                    roles: Route.parseIdList(query.roles),
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/${params.schema}/people/`, query = {};
-            if (params.user) {
-                path += `${params.user}/`;
-            }
-            if (params.date != undefined) {
-                query.date = params.date;
-            }
-            if (params.roles != undefined) {
-                query.roles = params.roles.join(' ');
-            }
-            if (params.search != undefined) {
-                query.search = params.search;
-            }
-            return { path, query };
-        },
-
-        /**
-         * Return configuration info for global UI elements
-         *
-         * @param  {Route} currentRoute
-         *
-         * @return {Object}
-         */
-        configureUI: function(currentRoute) {
-            var params = currentRoute.parameters;
-            var route = {
-                schema: params.schema,
-                user: params.user,
-            };
-            var statistics = {
-                type: 'daily-activities',
-                schema: params.schema,
-                user_id: params.user,
-            };
-            if (!params.user) {
-                return {
-                    calendar: { route, statistics },
-                    filter: { route },
-                    search: { route, statistics },
-                    navigation: { route, section: 'people' }
-                };
-            } else {
-                return {
-                    calendar: { route, statistics },
-                    search: { route, statistics },
-                    navigation: {
-                        // go back to full list
-                        route: _.omit(route, 'user'),
-                        section: 'people'
-                    }
-                };
-            }
-        },
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
-            today: DateTracker.today,
-        };
-    },
+class PeoplePage extends AsyncComponent {
+    static displayName = 'PeoplePage';
 
     /**
      * Render the component asynchronously
@@ -143,17 +31,16 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
-        var tags;
-        if (params.search && !TagScanner.removeTags(params.search)) {
-            tags = TagScanner.findTags(params.search);
-            if (_.isEmpty(tags)) {
-                tags = null;
+    renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let db = database.use({ by: this });
+        let tags;
+        if (params.search) {
+            if (!TagScanner.removeTags(params.search)) {
+                tags = TagScanner.findTags(params.search);
             }
         }
-        var props = {
+        let props = {
             project: null,
             members: null,
             stories: null,
@@ -161,16 +48,14 @@ module.exports = Relaks.createClass({
             selectedUser: null,
             visibleUsers: null,
 
-            selectedDate: params.date,
-            today: this.state.today,
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            selectedDate: route.params.date,
+            database,
+            payloads,
+            route,
+            env,
         };
         // wait for retrieval of fresh story listing on initial render
-        var freshListing = meanwhile.revising() ? false : true;
+        let freshListing = meanwhile.revising() ? false : true;
         meanwhile.show(<PeoplePageSync {...props} />);
         return db.start().then((currentUserId) => {
             return UserFinder.findUser(db, currentUserId).then((user) => {
@@ -185,13 +70,13 @@ module.exports = Relaks.createClass({
                 props.members = users;
                 if (params.user) {
                     // find the selected user
-                    var user = _.find(users, { id: params.user });
+                    let user = _.find(users, { id: route.params.user });
                     if (!user) {
                         props.selectedUser = user;
                         props.visibleUsers = [ user ];
                     } else {
                         // not on the member list
-                        return UserFinder.findUser(db, params.user).then((user) => {
+                        return UserFinder.findUser(db, route.params.user).then((user) => {
                             props.selectedUser = user;
                             props.visibleUsers = [ user ];
                         });
@@ -199,10 +84,10 @@ module.exports = Relaks.createClass({
                 } else {
                     // if we're not searching for stories, then we know which
                     // users to list at this point
-                    if (!(params.search || params.date)) {
-                        if (!_.isEmpty(params.roles)) {
+                    if (!(route.params.search || route.params.date)) {
+                        if (!_.isEmpty(route.params.roles)) {
                             // show users with roles
-                            props.visibleUsers = findUsersWithRoles(users, params.roles);
+                            props.visibleUsers = findUsersWithRoles(users, route.params.roles);
                         } else {
                             // all project members are shown
                             props.visibleUsers = users;
@@ -211,27 +96,27 @@ module.exports = Relaks.createClass({
                 }
             });
         }).then(() => {
-            if (this.props.theme.mode !== 'single-col') {
+            if (env.isWiderThan('double-col')) {
                 // don't render without stats in single-column mode, since
                 // that affects the height of the view
                 meanwhile.show(<PeoplePageSync {...props} />);
             }
-            var publicOnly = (props.currentUser.type === 'guest');
+            let publicOnly = (props.currentUser.type === 'guest');
             return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, props.members, publicOnly).then((statistics) => {
                 props.dailyActivities = statistics;
                 if (!props.visibleUsers) {
                     // find users with stories using stats
-                    var users;
-                    if (params.date) {
-                        users = findUsersWithActivitiesOnDate(props.members, statistics, params.date);
+                    let users;
+                    if (route.params.date) {
+                        users = findUsersWithActivitiesOnDate(props.members, statistics, route.params.date);
                     } else if (params.search) {
                         if (tags) {
                             users = findUsersWithStoriesWithTags(props.members, statistics, tags);
                         }
                     }
                     if (users) {
-                        if (!_.isEmpty(params.roles)) {
-                            props.visibleUsers = findUsersWithRoles(users, params.roles);
+                        if (!_.isEmpty(route.params.roles)) {
+                            props.visibleUsers = findUsersWithRoles(users, route.params.roles);
                         } else {
                             props.visibleUsers = users;
                         }
@@ -248,7 +133,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             // force progress update initially to avoid flicking
             meanwhile.show(<PeoplePageSync {...props} />, 'initial');
-            if (params.search) {
+            if (route.params.search) {
                 if (tags) {
                     return StoryFinder.findStoriesWithTags(db, tags, 5).then((stories) => {
                         props.stories = stories;
@@ -258,7 +143,7 @@ module.exports = Relaks.createClass({
                         }
                     });
                 } else {
-                    return StoryFinder.findStoriesMatchingText(db, params.search, this.props.locale, 5).then((stories) => {
+                    return StoryFinder.findStoriesMatchingText(db, route.params.search, env, 5).then((stories) => {
                         props.stories = stories;
                         if (!props.selectedUser) {
                             // now that we have the stories, we can see whom should be shown
@@ -266,8 +151,8 @@ module.exports = Relaks.createClass({
                         }
                     });
                 }
-            } else if (params.date) {
-                return StoryFinder.findStoriesOnDate(db, params.date, 5).then((stories) => {
+            } else if (route.params.date) {
+                return StoryFinder.findStoriesOnDate(db, route.params.date, 5).then((stories) => {
                     props.stories = stories;
                     if (!props.selectedUser) {
                         // do this for date search as well, even through
@@ -307,10 +192,10 @@ module.exports = Relaks.createClass({
             } else {
                 // deal with situation where we're showing stories by someone
                 // who're not on the team
-                var authorIds = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
-                var memberIds = _.map(props.members, 'id');
-                var nonMemberUserIds = _.difference(authorIds, memberIds);
-                var publicOnly = (props.currentUser.type === 'guest');
+                let authorIds = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
+                let memberIds = _.map(props.members, 'id');
+                let nonMemberUserIds = _.difference(authorIds, memberIds);
+                let publicOnly = (props.currentUser.type === 'guest');
                 if (!_.isEmpty(nonMemberUserIds)) {
                     return UserFinder.findUsers(db, nonMemberUserIds).then((users) => {
                         // add non-members
@@ -325,13 +210,13 @@ module.exports = Relaks.createClass({
             }
         }).then(() => {
             // when we're highlighting a story, make sure the story is actually there
-            if (!params.date) {
-                var hashParams = StoryList.parseHash(this.props.route.hash);
-                if (hashParams.story && hashParams.highlighting) {
-                    var allStories = props.selectedUserStories;
-                    if (!_.find(allStories, { id: hashParams.story })) {
-                        return StoryFinder.findStory(db, hashParams.story).then((story) => {
-                            return this.redirectToStory(params.schema, story);
+            if (!route.params.date) {
+                let storyID = route.params.highlightingStory;
+                if (storyID) {
+                    let allStories = props.selectedUserStories;
+                    if (!_.find(allStories, { id: storyID })) {
+                        return StoryFinder.findStory(db, storyID).then((story) => {
+                            return this.redirectToStory(story);
                         }).catch((err) => {
                         });
                     }
@@ -340,121 +225,70 @@ module.exports = Relaks.createClass({
         }).then(() => {
             return <PeoplePageSync {...props} />;
         });
-    },
+    }
 
     /**
      * Redirect to page showing stories on the date of a story
      *
-     * @param  {String} schema
      * @param  {Story} story
      *
      * @return {Promise}
      */
-    redirectToStory: function(schema, story) {
-        var redirect = true;
+    redirectToStory(story) {
+        let { route } = this.props;
+        let { schema } = route.params;
         if (story.ptime && story.published && story.ready !== false) {
             // don't redirect if the story is very recent
-            var elapsed = Moment() - Moment(story.ptime);
+            let elapsed = Moment() - Moment(story.ptime);
             if (elapsed < 60 * 1000) {
                 return;
             }
         }
-        if (redirect) {
-            var components = [
-                require('pages/people-page'),
-                require('lists/story-list'),
-            ];
-            var params = {
-                schema: schema,
-                date: Moment(story.ptime).format('YYYY-MM-DD'),
-                user: story.user_ids[0],
-                story: story.id,
-                highlighting: true,
-            };
-            return this.props.route.replace(components, params);
-        }
-    },
+        let params = {
+            schema,
+            date: Moment(story.ptime).format('YYYY-MM-DD'),
+            user: route.params.user,
+            highlightingStory: story.id,
+        };
+        return route.replace(route.name, params);
+    }
+}
 
-    /**
-     * Listen for date change event
-     */
-    componentDidMount: function() {
-        DateTracker.addEventListener('change', this.handleDateChange);
-    },
+class PeoplePageSync extends PureComponent {
+    static displayName = 'PeoplePageSync';
 
-    /**
-     * Remove event listener
-     */
-    componentWillUnmount: function() {
-        DateTracker.removeEventListener('change', this.handleDateChange);
-    },
-
-    /**
-     * Force rerendering by setting today's date
-     */
-    handleDateChange: function() {
-        // force rerendering
-        this.setState({ today: DateTracker.today });
-    },
-});
-
-var PeoplePageSync = module.exports.Sync = React.createClass({
-    displayName: 'PeoplePageSync',
-    propTypes: {
-        project: PropTypes.object,
-        members: PropTypes.arrayOf(PropTypes.object),
-        selectedUser: PropTypes.object,
-        visibleUsers: PropTypes.arrayOf(PropTypes.object),
-        dailyActivities: PropTypes.object,
-        listings: PropTypes.arrayOf(PropTypes.object),
-        stories: PropTypes.arrayOf(PropTypes.object),
-        selectedUserStories: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        selectedDate: PropTypes.string,
-        today: PropTypes.string,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             chartType: undefined
         };
-    },
+    }
 
     /**
      * Return the access level
      *
      * @return {String}
      */
-    getAccessLevel: function() {
-        var { project, currentUser } = this.props;
+    getAccessLevel() {
+        let { project, currentUser } = this.props;
         return ProjectSettings.getUserAccessLevel(project, currentUser) || 'read-only';
-    },
+    }
 
     /**
      * Remember the previously selected user
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.selectedUser && !nextProps.selectedUser) {
             this.previouslySelectedUser = this.props.selectedUser;
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <PageContainer className="people-page">
                 {this.renderUserList()}
@@ -462,65 +296,81 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
                 {this.renderEmptyMessage()}
             </PageContainer>
         );
-    },
+    }
 
     /**
      * Render list of users
      *
      * @return {ReactElement}
      */
-    renderUserList: function() {
-        var params = this.props.route.parameters;
-        var listProps = {
-            users: this.props.visibleUsers,
-            dailyActivities: this.props.dailyActivities,
-            listings: this.props.listings,
-            stories: this.props.stories,
-            currentUser: this.props.currentUser,
-            selectedDate: this.props.selectedDate,
-            today: this.props.today,
-            link: (this.props.selectedUser) ? 'team' : 'user',
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+    renderUserList() {
+        let {
+            database,
+            route,
+            env,
+            visibleUsers,
+            dailyActivities,
+            listings,
+            stories,
+            currentUser,
+            selectedDate,
+            selectedUser,
+        } = this.props;
+        let listProps = {
+            users: visibleUsers,
+            dailyActivities,
+            listings,
+            stories,
+            currentUser,
+            selectedDate,
+            link: (selectedUser) ? 'team' : 'user',
+            database,
+            route,
+            env,
         };
         return <UserList {...listProps} />
-    },
+    }
 
     /**
      * Render list of stories authored by selected user
      *
      * @return {ReactElement|null}
      */
-    renderSelectedUserStoryList: function() {
-        if (!this.props.selectedUser || !this.props.selectedUserStories) {
+    renderSelectedUserStoryList() {
+        let {
+            database,
+            route,
+            env,
+            payloads,
+            selectedUser,
+            project,
+            selectedUserStories,
+            currentUser,
+        } = this.props;
+        if (!selectedUser || !selectedUserStories) {
             return null;
         }
-        var params = this.props.route.parameters;
-        var listProps = {
+        let listProps = {
             access: this.getAccessLevel(),
-            stories: this.props.selectedUserStories,
-            currentUser: this.props.currentUser,
-            project: this.props.project,
+            stories: selectedUserStories,
+            currentUser,
+            project,
 
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            payloads,
+            route,
+            env,
         };
         return <StoryList {...listProps} />
-    },
+    }
 
     /**
      * Render a message if there're no bookmarks
      *
      * @return {ReactElement|null}
      */
-    renderEmptyMessage: function() {
-        var list;
+    renderEmptyMessage() {
+        let list;
         if (this.props.selectedUser) {
             list = this.props.selectedUserStories;
         } else {
@@ -533,8 +383,8 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             // props.users and props.stories are null when they're being loaded
             return <LoadingAnimation />;
         } else {
-            var params = this.props.route.parameters;
-            var phrase;
+            let params = this.props.route.parameters;
+            let phrase;
             if (params.date) {
                 phrase = 'people-no-stories-on-date';
             } else if (!_.isEmpty(params.roles)) {
@@ -544,17 +394,17 @@ var PeoplePageSync = module.exports.Sync = React.createClass({
             } else {
                 phrase = 'people-no-users-yet';
             }
-            var props = {
+            let props = {
                 locale: this.props.locale,
                 online: this.props.database.online,
                 phrase,
             };
             return <EmptyMessage {...props} />;
         }
-    },
-});
+    }
+}
 
-var findUsersWithRoles = Memoize(function(users, roleIds) {
+let findUsersWithRoles = Memoize(function(users, roleIds) {
     return _.filter(users, (user) => {
         return _.some(user.role_ids, (roleId) => {
             return _.includes(roleIds, roleId);
@@ -563,12 +413,12 @@ var findUsersWithRoles = Memoize(function(users, roleIds) {
     if (!_.isEmpty(list)) {
         return list;
     }
-    return Empty.array;
+    return [];
 });
 
-var findUsersWithActivitiesOnDate = Memoize(function(users, statistics, date) {
-    var list = _.filter(users, (user) => {
-        var userStats = statistics[user.id];
+let findUsersWithActivitiesOnDate = Memoize(function(users, statistics, date) {
+    let list = _.filter(users, (user) => {
+        let userStats = statistics[user.id];
         if (userStats) {
             return userStats.daily[date];
         }
@@ -579,9 +429,9 @@ var findUsersWithActivitiesOnDate = Memoize(function(users, statistics, date) {
     return list;
 });
 
-var findUsersWithStoriesWithTags = Memoize(function(users, statistics, tags) {
-    var list = _.filter(users, (user) => {
-        var userStats = statistics[user.id];
+let findUsersWithStoriesWithTags = Memoize(function(users, statistics, tags) {
+    let list = _.filter(users, (user) => {
+        let userStats = statistics[user.id];
         if (userStats) {
             return _.some(userStats.daily, (counts, date) => {
                 return _.some(tags, (tag) => {
@@ -596,8 +446,8 @@ var findUsersWithStoriesWithTags = Memoize(function(users, statistics, tags) {
     return list;
 });
 
-var findUsersWithStories = Memoize(function(users, stories) {
-    var list = _.filter(users, (user) => {
+let findUsersWithStories = Memoize(function(users, stories) {
+    let list = _.filter(users, (user) => {
         return _.some(stories, (story) => {
             return _.includes(story.user_ids, user.id);
         });
@@ -607,3 +457,41 @@ var findUsersWithStories = Memoize(function(users, stories) {
     }
     return list;
 });
+
+export {
+    PeoplePage as default,
+    PeoplePage,
+    PeoplePageSync,
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    PeoplePage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    PeoplePageSync.propTypes = {
+        project: PropTypes.object,
+        members: PropTypes.arrayOf(PropTypes.object),
+        selectedUser: PropTypes.object,
+        visibleUsers: PropTypes.arrayOf(PropTypes.object),
+        dailyActivities: PropTypes.object,
+        listings: PropTypes.arrayOf(PropTypes.object),
+        stories: PropTypes.arrayOf(PropTypes.object),
+        selectedUserStories: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        selectedDate: PropTypes.string,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

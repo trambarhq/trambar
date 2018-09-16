@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import UserFinder from 'objects/finders/user-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 
 // widgets
 import ProfileImage from 'widgets/profile-image';

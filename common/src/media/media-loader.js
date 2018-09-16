@@ -1,8 +1,8 @@
 import Promise from 'bluebird';
 import BlobManager from 'transport/blob-manager';
 import BlobReader from 'transport/blob-reader';
-import JPEGAnalyser from 'media/jpeg-analyser';
-import FrameGrabber from 'media/frame-grabber';
+import * as JPEGAnalyser from 'media/jpeg-analyser';
+import * as FrameGrabber from 'media/frame-grabber';
 import CordovaFile from 'transport/cordova-file';
 
 /**
@@ -345,5 +345,4 @@ export {
     extractFileCategory,
     extractFileFormat,
     getFormatData,
-    exports as default,
 };

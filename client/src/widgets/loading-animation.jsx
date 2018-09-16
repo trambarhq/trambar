@@ -1,8 +1,6 @@
-var React = require('react');
+import React from 'react';
 
-module.exports = LoadingAnimation;
-
-require('./loading-animation.scss');
+import './loading-animation.scss';
 
 function LoadingAnimation(props) {
     return (
@@ -14,3 +12,8 @@ function LoadingAnimation(props) {
         </div>
     );
 }
+
+export {
+    LoadingAnimation as default,
+    LoadingAnimation,
+};

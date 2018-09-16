@@ -1,7 +1,7 @@
-import Chai from 'chai', expect = Chai.expect;
+import Chai, { expect } from 'chai';
 
-import QuickStart from 'media/quick-start';
-import MediaLoader from 'media/media-loader';
+import * as QuickStart from 'media/quick-start';
+import * as MediaLoader from 'media/media-loader';
 
 import videoData from './videos/small.mp4';
 

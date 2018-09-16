@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import MediaLoader from 'media/media-loader';
+import * as MediaLoader from 'media/media-loader';
 
 // widgets
 import ImageCroppingDialogBox from 'dialogs/image-cropping-dialog-box';

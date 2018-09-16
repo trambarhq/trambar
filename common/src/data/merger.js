@@ -136,5 +136,4 @@ function isObject(v) {
 export {
     mergeObjects,
     mergeStrings,
-    exports as default,
 };

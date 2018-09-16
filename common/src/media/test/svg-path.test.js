@@ -1,7 +1,7 @@
-import Chai from 'chai', expect = Chai.expect;
+import Chai, { expect } from 'chai';
 
-import JPEGAnalyser from 'media/jpeg-analyser';
-import SVGPath from 'media/svg-path';
+import * as JPEGAnalyser from 'media/jpeg-analyser';
+import * as SVGPath from 'media/svg-path';
 
 import testImage from './images/malgorzata-socha.jpg';
 

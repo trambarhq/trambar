@@ -3,7 +3,7 @@ import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import SessionStartTime from 'data/session-start-time';
-import TaskFinder from 'objects/finders/task-finder';
+import * as TaskFinder from 'objects/finders/task-finder';
 
 import './task-alert-bar.scss';
 

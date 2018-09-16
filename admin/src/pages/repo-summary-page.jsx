@@ -2,10 +2,10 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import ComponentRefs from 'utils/component-refs';
-import ProjectFinder from 'objects/finders/project-finder';
-import RepoFinder from 'objects/finders/repo-finder';
-import StatisticsFinder from 'objects/finders/statistics-finder';
-import SystemFinder from 'objects/finders/system-finder';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as RepoFinder from 'objects/finders/repo-finder';
+import * as StatisticsFinder from 'objects/finders/statistics-finder';
+import * as SystemFinder from 'objects/finders/system-finder';
 
 // widgets
 import PushButton from 'widgets/push-button';

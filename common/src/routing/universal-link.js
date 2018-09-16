@@ -21,8 +21,8 @@ function form(address, path, query, hash) {
 
 const regExp = new RegExp('^' + baseURL + '((/https?/[^/]*)([^?]*)([^#]*)?(#(.*))?)');
 
-function parse(url) {
-    let m = regExp.exec(url);
+function parse(universalURL) {
+    let m = regExp.exec(universalURL);
     if (!m) {
         return null;
     }
@@ -49,5 +49,4 @@ function parse(url) {
 export {
     parse,
     form,
-    exports as default,
 };

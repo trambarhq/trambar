@@ -120,5 +120,4 @@ export {
     getVideoDimensions,
     getActualVideoDimensions,
     stopAllTracks,
-    exports as default,
 };

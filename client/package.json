@@ -24,6 +24,7 @@
     "node-sass": "^4.9.3",
     "octicons": "^6.0.0",
     "postcss-loader": "^2.1.4",
+    "prop-types": "^15.6.2",
     "qrcode": "^0.9.0",
     "sass-loader": "^6.0.5",
     "scroll-into-view-if-needed": "^2.2.16",

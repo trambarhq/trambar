@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import Async from 'async-do-while';
 import Notifier, { NotifierEvent } from 'transport/notifier';
-import HTTPRequest from 'transport/http-request';
+import * as HTTPRequest from 'transport/http-request';
 
 var defaultOptions = {
     initialReconnectionDelay: 500,

@@ -1,5 +1,5 @@
 import Moment from 'moment';
-import DateTracker from 'utils/date-tracker';
+import * as DateTracker from 'utils/date-tracker';
 
 /**
  * Return time range of given date
@@ -75,5 +75,4 @@ export {
     getMonthRanges,
     getTimeZoneOffset,
     getDates,
-    exports as default,
 };

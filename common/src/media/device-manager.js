@@ -94,5 +94,4 @@ export {
     hasDevice,
     addEventListener,
     removeEventListener,
-    exports as default,
 };

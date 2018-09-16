@@ -1,47 +1,28 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var ReactDOM = require('react-dom');
-var Async = require('async-do-while');
-
-var Locale = require('locale/locale');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import ReactDOM from 'react-dom';
+import Async from 'async-do-while';
 
 // widgets
-var PushButton = require('widgets/push-button');
+import PushButton from 'widgets/push-button';
 
-require('./qr-scanner-dialog-box.scss');
+import './qr-scanner-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'QRScannerDialogBx',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        show: PropTypes.bool,
-        invalid: PropTypes.bool,
-        found: PropTypes.bool,
-        serverError: PropTypes.instanceOf(Error),
-        locale: PropTypes.instanceOf(Locale),
-        onCancel: PropTypes.func,
-        onResult: PropTypes.func,
-    },
+class QRScannerDialogBox extends PureComponent {
+    static displayName = 'QRScannerDialogBox';
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             available: false,
         };
-    },
+    }
 
     /**
      * Initialize QR scanner on mount
      */
-    componentWillMount: function() {
+    componentWillMount() {
         initializeQRScanner();
         if (QRScanner) {
             QRScanner.prepareAsync().then((status) => {
@@ -52,16 +33,16 @@ module.exports = React.createClass({
                 this.setState({ available: true });
             }
         }
-    },
+    }
 
     /**
      * Render function
      *
      * @return {null}
      */
-    render: function() {
+    render() {
         return null;
-    },
+    }
 
     /**
      * Update or remove the camera overlay depending on props.show and state.available
@@ -69,25 +50,25 @@ module.exports = React.createClass({
      * @param  {Object} prevProps
      * @param  {Object]} prevState
      */
-    componentDidUpdate: function(prevProps, prevState) {
+    componentDidUpdate(prevProps, prevState) {
         if (this.state.available && this.props.show) {
             this.show();
         } else if (prevProps.show && !this.props.show) {
             this.hide();
         }
-    },
+    }
 
     /**
      * Turn off QR scanner on unmount
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         this.hide();
-    },
+    }
 
     /**
      * Create (or update) the camera overlay
      */
-    show: function() {
+    show() {
         if (!this.overlayNode) {
             // show the camera preview, which appears behind the webview
             if (QRScanner) {
@@ -117,18 +98,18 @@ module.exports = React.createClass({
             } else {
                 if (process.env.NODE_ENV !== 'production') {
                     // insert a placeholder so we can work on the layout in the browser
-                    var imageURL = require('camera-placeholder-qr-code.jpg');
+                    let imageURL = require('camera-placeholder-qr-code.jpg');
                     this.cameraPlaceholderNode = document.createElement('DIV');
                     this.cameraPlaceholderNode.className = 'camera-placeholder';
                     this.cameraPlaceholderNode.style.backgroundImage = `url(${imageURL})`;
                     document.body.appendChild(this.cameraPlaceholderNode);
 
-                    var input = document.createElement('INPUT');
+                    let input = document.createElement('INPUT');
                     input.type = 'text';
                     input.value = '';
                     input.addEventListener('keydown', (evt) => {
                         if (evt.keyCode === 0x0d) {
-                            var url = evt.target.value;
+                            let url = evt.target.value;
                             if (this.props.onResult) {
                                 this.props.onResult({
                                     type: 'result',
@@ -145,15 +126,15 @@ module.exports = React.createClass({
             document.body.appendChild(this.overlayNode);
         }
 
-        var t = this.props.locale.translate;
-        var cancelProps = {
+        let t = this.props.locale.translate;
+        let cancelProps = {
             label: t('qr-scanner-cancel'),
             onClick: this.handleCancelClick
         };
-        var message;
-        var err = this.props.serverError;
+        let message;
+        let err = this.props.serverError;
         if (err) {
-            var text = `${err.statusCode} - ${err.message}`;
+            let text = `${err.statusCode} - ${err.message}`;
             message = <span className="error">{text}</span>;
         } else {
             if (this.props.found) {
@@ -162,7 +143,7 @@ module.exports = React.createClass({
                 message = <span className="error">{t('qr-scanner-invalid-qr-code')}</span>;
             }
         }
-        var element = (
+        let element = (
             <CameraOverlay>
                 <top>
                     {this.props.children}
@@ -176,12 +157,12 @@ module.exports = React.createClass({
             </CameraOverlay>
         );
         ReactDOM.render(element, this.overlayNode);
-    },
+    }
 
     /**
      * Destroy the camera overlay
      */
-    hide: function() {
+    hide() {
         if (this.overlayNode) {
             if (QRScanner) {
                 QRScanner.hideAsync().then(() => {
@@ -198,33 +179,32 @@ module.exports = React.createClass({
             document.body.removeChild(this.overlayNode);
             this.overlayNode = null;
         }
-    },
+    }
 
     /**
      * Called when user clicks the cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         if (this.props.onCancel) {
             this.props.onCancel({
                 type: 'cancel',
                 target: this,
             });
         }
-    },
-});
+    }
+}
 
-var CameraOverlay = React.createClass({
-    displayName: 'CameraOverlay',
-    mixins: [ UpdateCheck ],
+class CameraOverlay extends PureComponent {
+    static displayName = 'CameraOverlay';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
         return (
             <div className="camera-overlay">
                 {this.renderPart('top')}
@@ -232,14 +212,14 @@ var CameraOverlay = React.createClass({
                 {this.renderPart('bottom')}
             </div>
         );
-    },
+    }
 
     /**
      * Render targetting square
      *
      * @return {ReactElement}
      */
-    renderSquare: function() {
+    renderSquare() {
         return (
             <div className="square">
                 <div className="corner top-left"></div>
@@ -248,7 +228,7 @@ var CameraOverlay = React.createClass({
                 <div className="corner bottom-right"></div>
             </div>
         );
-    },
+    }
 
     /**
      * Render children at the top and bottom
@@ -257,9 +237,9 @@ var CameraOverlay = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderPart: function(tag) {
-        var children = React.Children.toArray(this.props.children);
-        var element = _.find(children, { type: tag });
+    renderPart(tag) {
+        let children = React.Children.toArray(this.props.children);
+        let element = _.find(children, { type: tag });
         if (!element) {
             return null;
         }
@@ -268,26 +248,26 @@ var CameraOverlay = React.createClass({
                 {element.props.children}
             </div>
         );
-    },
+    }
 
     /**
      * Hide the app container on mount
      */
-    componentDidMount: function() {
-        var app = document.getElementById('app-container');
+    componentDidMount() {
+        let app = document.getElementById('app-container');
         app.style.visibility = 'hidden';
-    },
+    }
 
     /**
      * Show the app container again on unmount
      */
-    componentWillUnmount: function() {
-        var app = document.getElementById('app-container');
+    componentWillUnmount() {
+        let app = document.getElementById('app-container');
         app.style.visibility = '';
-    },
-})
+    }
+}
 
-var QRScanner;
+let QRScanner;
 
 function initializeQRScanner() {
     if (!QRScanner) {
@@ -318,4 +298,26 @@ function initializeQRScanner() {
         });
     }
     return true;
+}
+
+export {
+    QRScannerDialogBox as default,
+    QRScannerDialogBox,
+    CameraOverlay,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    QRScannerDialogBox.propTypes = {
+        show: PropTypes.bool,
+        invalid: PropTypes.bool,
+        found: PropTypes.bool,
+        serverError: PropTypes.instanceOf(Error),
+        env: PropTypes.instanceOf(Environment).isRequired,
+        onCancel: PropTypes.func,
+        onResult: PropTypes.func,
+    };
 }

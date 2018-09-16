@@ -25,5 +25,4 @@ function parse(text) {
 
 export {
     parse,
-    exports as default
 };

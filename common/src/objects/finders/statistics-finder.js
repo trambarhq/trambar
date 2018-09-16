@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import Moment from 'moment';
 import Memoize from 'utils/memoize';
-import DateUtils from 'utils/date-utils';
+import * as DateUtils from 'utils/date-utils';
 
 /**
  * Fetch statistics, given certain parameters
@@ -430,5 +430,4 @@ export {
     findDailyNotificationsOfUsers,
     findDailyActivitiesOfRepo,
     findDailyActivitiesOfRepos,
-    exports as default,
 };

@@ -20,5 +20,4 @@ function findPictures(db, purpose, minimum) {
 
 export {
     findPictures,
-    exports as default,
 };

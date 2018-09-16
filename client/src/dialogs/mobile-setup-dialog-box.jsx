@@ -1,32 +1,20 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var UniversalLink = require('routing/universal-link');
-var DeviceFinder = require('objects/finders/device-finder');
-var UserFinder = require('objects/finders/user-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import UniversalLink from 'routing/universal-link';
+import * as DeviceFinder from 'objects/finders/device-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var QRCode = require('widgets/qr-code');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import QRCode from 'widgets/qr-code';
 
-require('./mobile-setup-dialog-box.scss');
+import StartPage from 'pages/start-page';
 
-module.exports = Relaks.createClass({
-    displayName: 'MobileSetupDialogBox.Sync',
-    propTypes: {
-        show: PropTypes.bool,
-        system: PropTypes.object,
+import './mobile-setup-dialog-box.scss';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onClose: PropTypes.func,
-    },
+class MobileSetupDialogBox extends AsyncComponent {
+    static displayName = 'MobileSetupDialogBox';
 
     /**
      * Render the component asynchronously
@@ -35,9 +23,9 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let db = this.props.database.use({ by: this });
+        let props = {
             activationCode: null,
             currentUser: null,
             devices: null,
@@ -64,35 +52,26 @@ module.exports = Relaks.createClass({
         }).then(() => {
             return <MobileSetupDialogBoxSync {...props} />;
         });
-    },
+    }
 
     /**
      * Release the mobile session, assuming the device has acquired it
      */
-    componentWillUnmount: function() {
-        var db = this.props.database.use({ by: this });
+    componentWillUnmount() {
+        let db = this.props.database.use({ by: this });
         db.releaseMobileSession();
-    },
-})
+    }
+}
 
-var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
-    displayName: 'MobileSetupDialogBox.Sync',
-    propTypes: {
-        show: PropTypes.bool,
-        activationCode: PropTypes.string,
-        devices: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onClose: PropTypes.func,
-    },
+class MobileSetupDialogBoxSync extends PureComponent {
+    static displayName = 'MobileSetupDialogBox.Sync';
 
     /**
      * Check for change in props.devices
      */
-    componentWillReceiveProps: function(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.devices !== nextProps.devices) {
-            var handle = nextProps.activationCode;
+            let handle = nextProps.activationCode;
             if (handle) {
                 if (_.some(nextProps.devices, { session_handle: handle })) {
                     // a device has acquire the session--close dialog box automatically
@@ -105,15 +84,15 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
                 }
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var overlayProps = {
+    render() {
+        let overlayProps = {
             show: this.props.show,
             onBackgroundClick: this.props.onClose,
         };
@@ -125,27 +104,26 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render QR-code and number
      *
      * @return {ReactElement}
      */
-    renderContents: function() {
-        var t = this.props.locale.translate;
-        var number = this.props.number;
-        var route = this.props.route;
-        var url;
-        var address = _.get(this.props.system, 'settings.address');
+    renderContents() {
+        let t = this.props.locale.translate;
+        let number = this.props.number;
+        let route = this.props.route;
+        let url;
+        let address = _.get(this.props.system, 'settings.address');
         if (!address) {
             address = route.parameters.address;
         }
-        var schema = route.parameters.schema;
-        var activationCode = this.props.activationCode;
+        let schema = route.parameters.schema;
+        let activationCode = this.props.activationCode;
         if (activationCode) {
-            var StartPage = require('pages/start-page');
-            var urlParts = StartPage.getURL({ activationCode, schema });
+            let urlParts = StartPage.getURL({ activationCode, schema });
             url = UniversalLink.form(address, urlParts.path, urlParts.query);
             console.log(url);
         }
@@ -162,16 +140,16 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var closeButtonProps = {
+    renderButtons() {
+        let t = this.props.locale.translate;
+        let closeButtonProps = {
             label: t('mobile-setup-close'),
             emphasized: true,
             onClick: this.props.onClose,
@@ -181,13 +159,47 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
                 <PushButton {...closeButtonProps} />
             </div>
         );
-    },
-});
+    }
+}
 
 function insertSpacers(s) {
     if (!s) {
         return s;
     }
-    var parts = s.match(/.{1,4}/g);
+    let parts = s.match(/.{1,4}/g);
     return _.toUpper(parts.join(' '));
+}
+
+export {
+    MobileSetupDialogBox as default,
+    MobileSetupDialogBox,
+    MobileSetupDialogBoxSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MobileSetupDialogBox.propTypes = {
+        show: PropTypes.bool,
+        system: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onClose: PropTypes.func,
+    };
+    MobileSetupDialogBoxSync.propTypes = {
+        show: PropTypes.bool,
+        activationCode: PropTypes.string,
+        devices: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        onClose: PropTypes.func,
+    };
 }

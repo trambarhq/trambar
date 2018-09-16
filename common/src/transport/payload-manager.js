@@ -4,7 +4,7 @@ import Moment from 'moment';
 import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 import BlobStream from 'transport/blob-stream';
 import Payload from 'transport/payload';
-import HTTPRequest from 'transport/http-request';
+import * as HTTPRequest from 'transport/http-request';
 import CordovaFile from 'transport/cordova-file';
 import BackgroundFileTransfer from 'transport/background-file-transfer';
 import RandomToken from 'utils/random-token';

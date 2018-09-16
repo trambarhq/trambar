@@ -104,8 +104,8 @@ let phrases = {
     'issue-cancel': 'Отмена',
     'issue-delete': 'Удалить',
     'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
-        var objects = [];
-        var ae;
+        let objects = [];
+        let ae;
         if (photos > 0) {
             objects.push(photos === 1 ? 'изображение' : 'изображения');
             ae = (photos === 1) ? 'ий' : 'ие';
@@ -122,11 +122,11 @@ let phrases = {
                 ae = (photos === 1) ? 'ий' : 'ие';
             }
         }
-        var ve = pastTenseEnding(names, names.length > 1);
+        let ve = pastTenseEnding(names, names.length > 1);
         return `${list(names)} размести${ve} следующ${ae} ${list(objects)}:`;
     },
     'issue-export-$names-wrote': (names) => {
-        var e = pastTenseEnding(names, names.length > 1);
+        let e = pastTenseEnding(names, names.length > 1);
         return `${list(names)} написа${e}:`;
     },
     'issue-ok': 'OK',
@@ -169,11 +169,11 @@ let phrases = {
     'news-no-stories-yet': 'Нет рассказов',
 
     'notification-$name-added-you-as-coauthor': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} предложи${e} вам совместно редактировать сообщение`;
     },
     'notification-$name-added-your-post-to-issue-tracker': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} добави${e} ваше сообщение в баг трекер`;
     },
     'notification-$name-commented-on-your-$story': (name, story) => {
@@ -183,16 +183,16 @@ let phrases = {
             case 'post': 'ваше сообщение'; break;
             default: story = 'ваш рассказ';
         }
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} прокомментирова${e} ${story}`;
     },
     'notification-$name-completed-task': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} выполнил задачу в вашем списке`;
     },
     'notification-$name-is-assigned-to-your-issue': (name) => {
-        var ve = pastTenseEnding(name);
-        var ae = ve;
+        let ve = pastTenseEnding(name);
+        let ae = ve;
         return `${name} был${ve} назначен${ae} на ваш отчёт об ошибке`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
@@ -220,15 +220,15 @@ let phrases = {
         return `${name} упомянул вас ${story}`;
     },
     'notification-$name-merged-code-to-$branch': (name, branch) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} сли${e} изменения в ветку «${branch}»`;
     },
     'notification-$name-opened-an-issue': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} написа${e} отчёт об ошибке`;
     },
     'notification-$name-posted-a-note-about-your-$story': (name, story) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         switch (story) {
             case 'push': story = 'ваш коммит'; break;
             case 'issue': story = 'ваш отчёт об ошибке'; break;
@@ -237,15 +237,15 @@ let phrases = {
         return `${name} прокомментирова${e} ${story}`;
     },
     'notification-$name-posted-a-survey': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} опубликова${e} опрос`;
     },
     'notification-$name-pushed-code-to-$branch': (name, branch) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} отправи${e} изменения в ветку «${branch}»`;
     },
     'notification-$name-requested-to-join': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} попроси${e} присоединиться к проекту`;
     },
     'notification-$name-sent-bookmark-to-$story': (name, story) => {
@@ -255,11 +255,11 @@ let phrases = {
             case 'post': story = 'сообщение'; break;
             default: story = 'рассказ';
         }
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} отправи${e} вам закладку в ${story}`;
     },
     'notification-$name-voted-in-your-survey': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} ответи${e} на ваш опрос`;
     },
     'notification-option-assignment': 'Когда кто-то назначен на вашу проблему',
@@ -338,48 +338,48 @@ let phrases = {
     'qr-scanner-qr-code-found': 'QR-код найден',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} добави${e} это сообщение в баг трекер`;
     },
     'reaction-$name-cast-a-vote': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} проголосова${e}`;
     },
     'reaction-$name-commented-on-branch': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} прокомментирова${e} эту ветку`;
     },
     'reaction-$name-commented-on-issue': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} прокомментирова${e} эту проблему`;
     },
     'reaction-$name-commented-on-merge': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} прокомментирова${e} это слияние`;
     },
     'reaction-$name-commented-on-merge-request': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} прокомментирова${e} этот запрос слияния`;
     },
     'reaction-$name-commented-on-push': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} прокомментирова${e} это помещение`;
     },
     'reaction-$name-commented-on-tag': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} прокомментирова${e} этот тег`;
     },
     'reaction-$name-completed-a-task': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} выполнил задачу`;
     },
     'reaction-$name-is-assigned-to-issue': (name) => {
-        var ve = pastTenseEnding(name);
-        var ae = ve;
+        let ve = pastTenseEnding(name);
+        let ae = ve;
         return `${name} был${ve} назначен${ae} на этот отчёт об ошибке`;
     },
     'reaction-$name-is-assigned-to-merge-request': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `${name} был назначен на этот запрос слияния`;
     },
     'reaction-$name-is-editing': (name) => {
@@ -479,68 +479,68 @@ let phrases = {
         return cardinal(count, 'реакция', 'реакции', 'реакций');
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Созда${e} ветку «${branch}» в репозитории «${repo}»`;
     },
     'story-$name-created-$milestone': (name, milestone) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Созда${e} веху «${milestone}»`;
     },
     'story-$name-created-$page': (name, page) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Созда${e} wiki-страницу «${page}»`;
     },
     'story-$name-created-$repo': (name, repo) => {
-        var e = pastTenseEnding(name);
-        var text = `Создал репозиторий`;
+        let e = pastTenseEnding(name);
+        let text = `Создал репозиторий`;
         if (repo) {
             text += ` «${repo}»`;
         }
         return text;
     },
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Созда${e} тег «${tag}» в репозитории «${repo}»`;
     },
     'story-$name-deleted-$page': (name, page) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Удали${e} wiki-страницу «${page}»`;
     },
     'story-$name-deleted-$repo': (name, repo) => {
-        var text = `Удали${e} проект`;
+        let text = `Удали${e} проект`;
         if (repo) {
             text += ` «${repo}»`;
         }
         return text;
     },
     'story-$name-imported-$repo': (name, repo) => {
-        var text = `Импортирова${e} проект`;
+        let text = `Импортирова${e} проект`;
         if (repo) {
             text += ` «${repo}»`;
         }
         return text;
     },
     'story-$name-joined-$repo': (name, repo) => {
-        var e = reflective(pastTenseEnding(name));
-        var text = `Присоедини${e} к репозиторию`;
+        let e = reflective(pastTenseEnding(name));
+        let text = `Присоедини${e} к репозиторию`;
         if (repo) {
             text += ` «${repo}»`;
         }
         return text;
     },
     'story-$name-left-$repo': (name, repo) => {
-        var e = pastTenseEnding(name);
-        var text = `Остави${e} репозиторий`;
+        let e = pastTenseEnding(name);
+        let text = `Остави${e} репозиторий`;
         if (repo) {
             text += ` «${repo}»`;
         }
         return text;
     },
     'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-        var e = pastTenseEnding(name);
-        var text = `Сли${e} изменения`;
+        let e = pastTenseEnding(name);
+        let text = `Сли${e} изменения`;
         if (branches && branches.length > 0) {
-            var sources = branches.map((branch) => {
+            let sources = branches.map((branch) => {
                 return `«${branch}»`;
             });
             text += ` из`;
@@ -558,27 +558,27 @@ let phrases = {
         return text;
     },
     'story-$name-opened-issue-$number-$title': (name, number, title) => {
-        var e = pastTenseEnding(name);
-        var text = `Написа${e} отчёт ${number}`;
+        let e = pastTenseEnding(name);
+        let text = `Написа${e} отчёт ${number}`;
         if (title) {
             text += `: ${title}`;
         }
         return text;
     },
     'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-        var e = pastTenseEnding(name);
-        var text = `Отправи${e} изменения в ветку «${branch}»`;
+        let e = pastTenseEnding(name);
+        let text = `Отправи${e} изменения в ветку «${branch}»`;
         if (repo) {
             text += ` репозитория «${repo}»`;
         }
         return text;
     },
     'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Попроси${e} слить ветку «${branch1}» в ветку «${branch2}»`;
     },
     'story-$name-updated-$page': (name, page) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Обнови${e} wiki-страницу «${page}»`;
     },
     'story-add-coauthor': 'Добавить соавтора',
@@ -611,32 +611,32 @@ let phrases = {
     'story-photo': 'Фото',
     'story-post': 'Опубликовать',
     'story-push-added-$count-files': (count) => {
-        var files = cardinal(count, 'файл', 'файла', 'файлов');
+        let files = cardinal(count, 'файл', 'файла', 'файлов');
         return `${files} добавлено`;
     },
     'story-push-added-$count-lines': (count) => {
-        var lines = cardinal(count, 'линия', 'линии', 'линий');
+        let lines = cardinal(count, 'линия', 'линии', 'линий');
         return `${lines} добавлено`;
     },
     'story-push-components-changed': 'Изменено следующие части:',
     'story-push-deleted-$count-files': (count) => {
-        var files = cardinal(count, 'файл', 'файла', 'файлов');
+        let files = cardinal(count, 'файл', 'файла', 'файлов');
         return `${files} удалено`;
     },
     'story-push-deleted-$count-lines': (count) => {
-        var lines = cardinal(count, 'линия', 'линии', 'линий');
+        let lines = cardinal(count, 'линия', 'линии', 'линий');
         return `${lines} удалено`;
     },
     'story-push-modified-$count-files': (count) => {
-        var files = cardinal(count, 'файл', 'файла', 'файлов');
+        let files = cardinal(count, 'файл', 'файла', 'файлов');
         return `${files} изменено`;
     },
     'story-push-modified-$count-lines': (count) => {
-        var lines = cardinal(count, 'линия', 'линии', 'линий');
+        let lines = cardinal(count, 'линия', 'линии', 'линий');
         return `${lines} изменено`;
     },
     'story-push-renamed-$count-files': (count) => {
-        var files = cardinal(count, 'файл', 'файла', 'файлов');
+        let files = cardinal(count, 'файл', 'файла', 'файлов');
         return `${files} переименовано`;
     },
     'story-remove-yourself': 'Удалите себя',
@@ -656,7 +656,7 @@ let phrases = {
     'telephone-dialog-close': 'Закрыть',
 
     'time-$hours-ago': (hours) => {
-        var time = cardinal(hours, 'Час', 'часа', 'часов', true);
+        let time = cardinal(hours, 'Час', 'часа', 'часов', true);
         return `${time} назад`;
     },
     'time-$hr-ago': (hr) => {
@@ -666,101 +666,101 @@ let phrases = {
         return `${min} м. назад`;
     },
     'time-$minutes-ago': (minutes) => {
-        var time = cardinal(hours, 'Минута', 'минуты', 'минут', true);
+        let time = cardinal(hours, 'Минута', 'минуты', 'минут', true);
         return `${time} назад`;
     },
     'time-just-now': 'Прямо сейчас',
     'time-yesterday': 'Вчера',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        var files = (count === 1) ? `1 файла` : `${count} файлов`;
+        let files = (count === 1) ? `1 файла` : `${count} файлов`;
         return `Загрузка ${files}, оставшихся ${size}`;
     },
 
     'user-actions': 'Действия',
 
     'user-activity-$name-created-branch': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Созда${e} новую ветку`;
     },
     'user-activity-$name-created-merge-request': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Отправи${e} a запрос слияния`;
     },
     'user-activity-$name-created-milestone': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Созда${e} веху`;
     },
     'user-activity-$name-created-repo': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Созда${e} проект git`;
     },
     'user-activity-$name-created-tag': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Созда${e} новый тег`;
     },
     'user-activity-$name-deleted-repo': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Удали${e} проект git`;
     },
     'user-activity-$name-edited-wiki-page': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Редактирова${e} страницу wiki`;
     },
     'user-activity-$name-imported-repo': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Импортирова${e} проект git`;
     },
     'user-activity-$name-joined-repo': (name) => {
-        var e = reflective(pastTenseEnding(name));
+        let e = reflective(pastTenseEnding(name));
         return `Присоедини${e} к проекту git`
     },
     'user-activity-$name-left-repo': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Остави${e} проект git`;
     },
     'user-activity-$name-merged-code': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Выполни${e} слияние`;
     },
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        var audios = cardinal(count, 'аудиоклип', 'аудиоклипа', 'аудиоклипов');
-        var e = pastTenseEnding(name);
+        let audios = cardinal(count, 'аудиоклип', 'аудиоклипа', 'аудиоклипов');
+        let e = pastTenseEnding(name);
         return `Опубликова${e} ${audios}`;
     },
     'user-activity-$name-posted-$count-links': (name, count) => {
-        var links = cardinal(count, 'веб-ссылка', 'веб-ссылки', 'веб-ссылок');
-        var e = pastTenseEnding(name);
+        let links = cardinal(count, 'веб-ссылка', 'веб-ссылки', 'веб-ссылок');
+        let e = pastTenseEnding(name);
         return `Опубликова${e} ${links}`;
     },
     'user-activity-$name-posted-$count-pictures': (name, count) => {
-        var pictures = cardinal(count, 'фото', 'фото', 'фото');
-        var e = pastTenseEnding(name);
+        let pictures = cardinal(count, 'фото', 'фото', 'фото');
+        let e = pastTenseEnding(name);
         return `Опубликова${e} ${pictures}`;
     },
     'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        var videos = cardinal(count, 'видеоклип', 'видеоклипа', 'видеоклипов');
-        var e = pastTenseEnding(name);
+        let videos = cardinal(count, 'видеоклип', 'видеоклипа', 'видеоклипов');
+        let e = pastTenseEnding(name);
         return `Опубликова${e} ${videos}`;
     },
     'user-activity-$name-pushed-code': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Отправи${e} код в репозиторий`;
     },
     'user-activity-$name-reported-issue': (name ) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Сообщи${e} о проблеме`;
     },
     'user-activity-$name-started-survey': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Нача${e} опрос`;
     },
     'user-activity-$name-started-task-list': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Нача${e} список задач`;
     },
     'user-activity-$name-wrote-post': (name) => {
-        var e = pastTenseEnding(name);
+        let e = pastTenseEnding(name);
         return `Написа${e} сообщение`;
     },
     'user-activity-back': 'Назад',

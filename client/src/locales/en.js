@@ -5,22 +5,22 @@ require('moment/locale/en-ie');
 require('moment/locale/en-nz');
 
 module.exports = function(localeCode) {
-    var freedomLoving = true;
+    let freedomLoving = true;
     if (/\-(au|ca|gb|ie|nz)$/.test(localeCode)) {
         freedomLoving = false;
     }
     if (freedomLoving) {
         return americanPhrases;
     } else {
-        var merged = {};
-        for (var name in americanPhrases) {
+        let merged = {};
+        for (let name in americanPhrases) {
             merged[name] = unamericanPhrases[name] || americanPhrases[name];
         }
         return merged
     }
 };
 
-var americanPhrases = {
+let americanPhrases = {
     'action-contact-by-email': 'Contact by e-mail',
     'action-contact-by-ichat': 'Contact by iChat',
     'action-contact-by-phone': 'Contact by phone',
@@ -116,7 +116,7 @@ var americanPhrases = {
     'issue-cancel': 'Cancel',
     'issue-delete': 'Delete',
     'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
-        var objects = [];
+        let objects = [];
         if (photos > 0) {
             objects.push(photos === 1 ? 'picture' : 'pictures');
         }
@@ -281,7 +281,7 @@ var americanPhrases = {
     'option-remove-story': 'Remove story',
     'option-send-bookmarks': 'Send bookmarks to other users',
     'option-send-bookmarks-to-$count-users': (count) => {
-        var users = (count === 1) ? `${count} user` : `${count} users`;
+        let users = (count === 1) ? `${count} user` : `${count} users`;
         return `Send bookmarks to ${users}`;
     },
     'option-show-media-preview': 'Show attached media',
@@ -460,7 +460,7 @@ var americanPhrases = {
         return `Created wiki page “${page}”`;
     },
     'story-$name-created-$repo': (name, repo) => {
-        var text = `Created project`;
+        let text = `Created project`;
         if (repo) {
             text += ` “${repo}”`;
         }
@@ -473,37 +473,37 @@ var americanPhrases = {
         return `Deleted wiki page “${page}”`;
     },
     'story-$name-deleted-$repo': (name, repo) => {
-        var text = `Deleted project`;
+        let text = `Deleted project`;
         if (repo) {
             text += ` “${repo}”`;
         }
         return text;
     },
     'story-$name-imported-$repo': (name, repo) => {
-        var text = `Imported project`;
+        let text = `Imported project`;
         if (repo) {
             text += ` “${repo}”`;
         }
         return text;
     },
     'story-$name-joined-$repo': (name, repo) => {
-        var text = `Joined project`;
+        let text = `Joined project`;
         if (repo) {
             text += ` “${repo}”`;
         }
         return text;
     },
     'story-$name-left-$repo': (name, repo) => {
-        var text = `Left project`;
+        let text = `Left project`;
         if (repo) {
             text += ` “${repo}”`;
         }
         return text;
     },
     'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-        var text = `Merged code`;
+        let text = `Merged code`;
         if (branches && branches.length > 0) {
-            var sources = branches.map((branch) => {
+            let sources = branches.map((branch) => {
                 return `“${branch}”`;
             });
             text += ` from ${sources.join(', ')}`;
@@ -515,14 +515,14 @@ var americanPhrases = {
         return text;
     },
     'story-$name-opened-issue-$number-$title': (name, number, title) => {
-        var text = `Opened issue ${number}`;
+        let text = `Opened issue ${number}`;
         if (title) {
             text += `: ${title}`;
         }
         return text;
     },
     'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-        var text = `Pushed changes to branch “${branch}”`;
+        let text = `Pushed changes to branch “${branch}”`;
         if (repo) {
             text += ` of project “${repo}”`;
         }
@@ -564,32 +564,32 @@ var americanPhrases = {
     'story-photo': 'Photo',
     'story-post': 'Post',
     'story-push-added-$count-files': (count) => {
-        var files = (count === 1) ? `1 file` : `${count} files`;
+        let files = (count === 1) ? `1 file` : `${count} files`;
         return `${files} added`;
     },
     'story-push-added-$count-lines': (count) => {
-        var lines = (count === 1) ? `1 line` : `${count} lines`;
+        let lines = (count === 1) ? `1 line` : `${count} lines`;
         return `${lines} added`;
     },
     'story-push-components-changed': 'The following parts were changed:',
     'story-push-deleted-$count-files': (count) => {
-        var files = (count === 1) ? `1 file` : `${count} files`;
+        let files = (count === 1) ? `1 file` : `${count} files`;
         return `${files} removed`;
     },
     'story-push-deleted-$count-lines': (count) => {
-        var lines = (count === 1) ? `1 line` : `${count} lines`;
+        let lines = (count === 1) ? `1 line` : `${count} lines`;
         return `${lines} removed`;
     },
     'story-push-modified-$count-files': (count) => {
-        var files = (count === 1) ? `1 file` : `${count} files`;
+        let files = (count === 1) ? `1 file` : `${count} files`;
         return `${files} modified`;
     },
     'story-push-modified-$count-lines': (count) => {
-        var lines = (count === 1) ? `1 line` : `${count} lines`;
+        let lines = (count === 1) ? `1 line` : `${count} lines`;
         return `${lines} modified`;
     },
     'story-push-renamed-$count-files': (count) => {
-        var files = (count === 1) ? `1 file` : `${count} files`;
+        let files = (count === 1) ? `1 file` : `${count} files`;
         return `${files} renamed`;
     },
     'story-remove-yourself': 'Remove yourself',
@@ -624,7 +624,7 @@ var americanPhrases = {
     'time-yesterday': 'Yesterday',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        var files = (count === 1) ? `1 file` : `${count} files`;
+        let files = (count === 1) ? `1 file` : `${count} files`;
         return `Uploading ${files}, ${size} remaining`;
     },
 
@@ -642,20 +642,20 @@ var americanPhrases = {
     'user-activity-$name-left-repo': 'Left a git project',
     'user-activity-$name-merged-code': 'Performed a code merge',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        var audios = (count === 1) ? `a audio clip` : `${count} audio clips`;
+        let audios = (count === 1) ? `a audio clip` : `${count} audio clips`;
         return `Posted ${audios}`;
     },
     'user-activity-$name-posted-$count-links': (name, count) => {
-        var links = (count === 1) ? `a link` : `links`;
-        var website = (count === 1) ? `a website` : `${count} websites`;
+        let links = (count === 1) ? `a link` : `links`;
+        let website = (count === 1) ? `a website` : `${count} websites`;
         return `Posted ${links} to ${website}`
     },
     'user-activity-$name-posted-$count-pictures': (name, count) => {
-        var pictures = (count === 1) ? `a picture` : `${count} pictures`;
+        let pictures = (count === 1) ? `a picture` : `${count} pictures`;
         return `Posted ${pictures}`;
     },
     'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        var videos = (count === 1) ? `a video clip` : `${count} video clips`;
+        let videos = (count === 1) ? `a video clip` : `${count} video clips`;
         return `Posted ${videos}`;
     },
     'user-activity-$name-pushed-code': 'Pushed code to repo',
@@ -746,7 +746,7 @@ var americanPhrases = {
     'warning-no-connection': 'No instant update',
 };
 
-var unamericanPhrases = {
+let unamericanPhrases = {
     'mobile-device-revoke-are-you-sure': 'Are you sure you want to revoke authorisation to this device?',
     'mobile-setup-code': 'Authorisation code',
     'start-error-existing-users-only': 'Only authorised personnel can access this system',
@@ -757,8 +757,8 @@ function list(items) {
         return `${item}`;
     });
     if (items.length >= 2) {
-        var oxfordComma = (items.length > 2) ? ',' : '';
-        var lastItem = items.pop();
+        let oxfordComma = (items.length > 2) ? ',' : '';
+        let lastItem = items.pop();
         items[items.length - 1] += `${oxfordComma} and ${lastItem}`;
     }
     return items.join(', ');

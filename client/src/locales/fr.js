@@ -97,8 +97,8 @@ module.exports = function(localeCode) {
         'issue-cancel': "Annuler",
         'issue-delete': "Effacer",
         'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
-            var objects = [];
-            var ae;
+            let objects = [];
+            let ae;
             if (photos > 0) {
                 objects.push(photos === 1 ? "l'image" : "les images");
                 ae = (photos === 1) ? 'e' : 'es';
@@ -114,7 +114,7 @@ module.exports = function(localeCode) {
             if (objects.length > 1) {
                 ae = 's';
             }
-            var verb = (names.length === 1) ? 'a' : 'ont';
+            let verb = (names.length === 1) ? 'a' : 'ont';
             return `${list(names)} ${verb} posté les ${list(objects)} suivant${ae}:`;
         },
         'issue-export-$names-wrote': (names) => {
@@ -270,7 +270,7 @@ module.exports = function(localeCode) {
         'option-remove-story': "Supprimer l'histoire",
         'option-send-bookmarks': "Envoyer des signets à d'autres utilisateurs",
         'option-send-bookmarks-to-$count-users': (count) => {
-            var users = (count === 1) ? `${count} utilisateur` : `${count} utilisateurs`;
+            let users = (count === 1) ? `${count} utilisateur` : `${count} utilisateurs`;
             return `Envoyer des favoris à ${users}`;
         },
         'option-show-media-preview': "Afficher les médias attachés",
@@ -449,7 +449,7 @@ module.exports = function(localeCode) {
             return `A créé la page wiki «${page}»`;
         },
         'story-$name-created-$repo': (name, repo) => {
-            var text = `A créé le projet`;
+            let text = `A créé le projet`;
             if (repo) {
                 text += ` «${repo}»`;
             }
@@ -462,37 +462,37 @@ module.exports = function(localeCode) {
             return `A supprimé la page wiki «${page}»`;
         },
         'story-$name-deleted-$repo': (name, repo) => {
-            var text = `A supprimé le projet`;
+            let text = `A supprimé le projet`;
             if (repo) {
                 text += ` «${repo}»`;
             }
             return text;
         },
         'story-$name-imported-$repo': (name, repo) => {
-            var text = `A importé le projet`;
+            let text = `A importé le projet`;
             if (repo) {
                 text += ` «${repo}»`;
             }
             return text;
         },
         'story-$name-joined-$repo': (name, repo) => {
-            var text = `A rejoint le projet`;
+            let text = `A rejoint le projet`;
             if (repo) {
                 text += ` «${repo}»`;
             }
             return text;
         },
         'story-$name-left-$repo': (name, repo) => {
-            var text = `A quitté le projet`;
+            let text = `A quitté le projet`;
             if (repo) {
                 text += ` «${repo}»`;
             }
             return text;
         },
         'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-            var text = `A fusionné le code`;
+            let text = `A fusionné le code`;
             if (branches && branches.length > 0) {
-                var sources = branches.map((branch) => {
+                let sources = branches.map((branch) => {
                     return `«${branch}»`;
                 });
                 text += ` de ${sources.join(', ')}`;
@@ -504,14 +504,14 @@ module.exports = function(localeCode) {
             return text;
         },
         'story-$name-opened-issue-$number-$title': (name, number, title) => {
-            var text = `A ouvert le problème ${number}`;
+            let text = `A ouvert le problème ${number}`;
             if (title) {
                 text += `: ${title}`;
             }
             return text;
         },
         'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-            var text = `A poussé les changements à la branche «${branch}»`;
+            let text = `A poussé les changements à la branche «${branch}»`;
             if (repo) {
                 text += ` du projet «${repo}»`;
             }
@@ -634,7 +634,7 @@ module.exports = function(localeCode) {
         'time-yesterday': "Hier",
 
         'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-            var files = (count === 1) ? `1 fichier` : `${count} fichiers`;
+            let files = (count === 1) ? `1 fichier` : `${count} fichiers`;
             return `Téléchargement de ${files}, ${size} restants`;
         },
 
@@ -652,20 +652,20 @@ module.exports = function(localeCode) {
         'user-activity-$name-left-repo': "A quitté un projet git",
         'user-activity-$name-merged-code': "A effectué une fusion de code",
         'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-            var audios = (count === 1) ? `un clip audio` : `${count} clips audio`;
+            let audios = (count === 1) ? `un clip audio` : `${count} clips audio`;
             return `A posté ${audios}`;
         },
         'user-activity-$name-posted-$count-links': (name, count) => {
-            var links = (count === 1) ? `un lien` : `des liens`;
-            var website = (count === 1) ? `un site web` : `${count} sites web`;
+            let links = (count === 1) ? `un lien` : `des liens`;
+            let website = (count === 1) ? `un site web` : `${count} sites web`;
             return `A posté ${links} vers ${website}`
         },
         'user-activity-$name-posted-$count-pictures': (name, count) => {
-            var pictures = (count === 1) ? `une photo` : `${count} photos`;
+            let pictures = (count === 1) ? `une photo` : `${count} photos`;
             return `A posté ${pictures}`;
         },
         'user-activity-$name-posted-$count-video-clips': (name, count) => {
-            var videos = (count === 1) ? `un clip vidéo` : `${count} clips vidéo`;
+            let videos = (count === 1) ? `un clip vidéo` : `${count} clips vidéo`;
             return `A posté ${videos}`;
         },
         'user-activity-$name-pushed-code': "A poussé le code au dépôt",
@@ -762,7 +762,7 @@ function list(items) {
         return `${item}`;
     });
     if (items.length >= 2) {
-        var lastItem = items.pop();
+        let lastItem = items.pop();
         items[items.length - 1] += ` et ${lastItem}`;
     }
     return items.join(', ');

@@ -3,8 +3,8 @@ import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
-import MediaLoader from 'media/media-loader';
-import PictureFinder from 'objects/finders/picture-finder';
+import * as MediaLoader from 'media/media-loader';
+import * as PictureFinder from 'objects/finders/picture-finder';
 
 // widgets
 import Overlay from 'widgets/overlay';

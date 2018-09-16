@@ -1,109 +1,23 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var ReactDOM = require('react-dom');
-var Moment = require('moment');
-var Relaks = require('relaks');
-var UserFinder = require('objects/finders/user-finder');
-var ProjectFinder = require('objects/finders/project-finder');
-var StoryFinder = require('objects/finders/story-finder');
-var ProjectSettings = require('objects/settings/project-settings');
-var TagScanner = require('utils/tag-scanner');
-
-var Database = require('data/database');
-var Payloads = require('transport/payloads');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import * as UserFinder from 'objects/finders/user-finder';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as StoryFinder from 'objects/finders/story-finder';
+import * as ProjectSettings from 'objects/settings/project-settings';
+import * as TagScanner from 'utils/tag-scanner';
 
 // widgets
-var PageContainer = require('widgets/page-container');
-var StoryList = require('lists/story-list');
-var LoadingAnimation = require('widgets/loading-animation');
-var EmptyMessage = require('widgets/empty-message');
+import PageContainer from 'widgets/page-container';
+import StoryList from 'lists/story-list';
+import LoadingAnimation from 'widgets/loading-animation';
+import EmptyMessage from 'widgets/empty-message';
 
-require('./news-page.scss');
+import './news-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'NewsPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/:schema/news/?',
-            ], (params) => {
-                return {
-                    schema: params.schema,
-                    roles: Route.parseIdList(query.roles),
-                    search: query.search,
-                    date: Route.parseDate(query.date),
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/${params.schema}/news/`, query = {};
-            if (params.date != undefined) {
-                query.date = params.date;
-            }
-            if (params.roles != undefined) {
-                query.roles = params.roles.join(' ');
-            }
-            if (params.search != undefined) {
-                query.search = params.search;
-            }
-            return { path, query };
-        },
-
-        /**
-         * Return configuration info for global UI elements
-         *
-         * @param  {Route} currentRoute
-         *
-         * @return {Object}
-         */
-        configureUI: function(currentRoute) {
-            var params = currentRoute.parameters;
-            var route = {
-                schema: params.schema
-            };
-            var statistics = {
-                type: 'daily-activities',
-                schema: params.schema,
-                public: 'guest',
-            };
-            return {
-                calendar: { route, statistics },
-                filter: { route },
-                search: { route, statistics },
-                navigation: { route, section: 'news' }
-            };
-        },
-    },
+class NewsPage extends AsyncComponent {
+    static displayName = 'NewsPage';
 
     /**
      * Render the component asynchronously
@@ -112,29 +26,35 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
-        var tags;
-        if (params.search && !TagScanner.removeTags(params.search)) {
-            tags = TagScanner.findTags(params.search);
+    renderAsync(meanwhile) {
+        let { database, route, payloads, env } = this.props;
+        let db = database.use({ by: this });
+        let filtering = false;
+        let tags;
+        if (routes.params.search) {
+            if (!TagScanner.removeTags(route.params.search)) {
+                tags = TagScanner.findTags(route.params.search);
+            }
+            filtering = true;
         }
-        var props = {
+        if (route.params.date || !_.isEmpty(route.params.roles)) {
+            filtering = true;
+        }
+        let props = {
             stories: null,
             draftStories: null,
             pendingStories: null,
             project: null,
             currentUser: null,
 
-            acceptNewStory: (!params.date && _.isEmpty(params.roles) && !params.search),
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            acceptNewStory: !filtering,
+            database,
+            payloads,
+            route,
+            env,
         };
         // wait for retrieval of fresh story listing on initial render
-        var freshListing = meanwhile.revising() ? false : true;
+        let freshListing = meanwhile.revising() ? false : true;
         meanwhile.show(<NewsPageSync {...props} />);
         return db.start().then((userId) => {
             return UserFinder.findUser(db, userId).then((user) => {
@@ -150,16 +70,16 @@ module.exports = Relaks.createClass({
                 return StoryFinder.findStoriesWithTags(db, tags, props.currentUser).then((stories) => {
                     props.stories = stories;
                 });
-            } else if (params.search) {
-                return StoryFinder.findStoriesMatchingText(db, params.search, props.locale, props.currentUser).then((stories) => {
+            } else if (route.params.search) {
+                return StoryFinder.findStoriesMatchingText(db, route.params.search, env, props.currentUser).then((stories) => {
                     props.stories = stories;
                 });
-            } else if (params.date) {
-                return StoryFinder.findStoriesOnDate(db, params.date, props.currentUser).then((stories) => {
+            } else if (route.params.date) {
+                return StoryFinder.findStoriesOnDate(db, route.params.date, props.currentUser).then((stories) => {
                     props.stories = stories;
                 });
-            } else if (!_.isEmpty(params.roles)) {
-                return StoryFinder.findStoriesWithRolesInListing(db, 'news', params.roles, props.currentUser, freshListing).then((stories) => {
+            } else if (!_.isEmpty(route.params.roles)) {
+                return StoryFinder.findStoriesWithRolesInListing(db, 'news', route.params.roles, props.currentUser, freshListing).then((stories) => {
                     props.stories = stories;
                 });
             } else {
@@ -178,13 +98,13 @@ module.exports = Relaks.createClass({
             }
         }).then(() => {
             // when we're highlighting a story, make sure the story is actually there
-            if (!params.date) {
-                var hashParams = StoryList.parseHash(this.props.route.hash);
-                if (hashParams.story && hashParams.highlighting) {
-                    var allStories = _.concat(props.stories, props.draftStories, props.pendingStories);
-                    if (!_.find(allStories, { id: hashParams.story })) {
-                        return StoryFinder.findStory(db, hashParams.story).then((story) => {
-                            return this.redirectToStory(params.schema, story);
+            if (!route.params.date) {
+                let storyID = route.params.highlightingStory;
+                if (storyID) {
+                    let allStories = _.concat(props.stories, props.draftStories, props.pendingStories);
+                    if (!_.find(allStories, { id: storyID })) {
+                        return StoryFinder.findStory(db, storyID).then((story) => {
+                            return this.redirectToStory(route.params.schema, story);
                         }).catch((err) => {
                         });
                     }
@@ -193,7 +113,7 @@ module.exports = Relaks.createClass({
         }).then(() => {
             return <NewsPageSync {...props} />;
         });
-    },
+    }
 
     /**
      * Redirect to page showing stories on the date of a story
@@ -203,35 +123,145 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise|undefined}
      */
-    redirectToStory: function(schema, story) {
-        var redirect = true;
+    redirectToStory(schema, story) {
+        let { route } = this.props;
+        let redirect = true;
         if (story.ptime && story.published && story.ready !== false) {
             // don't redirect if the story is very recent
-            var elapsed = Moment() - Moment(story.ptime);
+            let elapsed = Moment() - Moment(story.ptime);
             if (elapsed < 60 * 1000) {
                 return;
             }
         }
         if (redirect) {
-            var components = [
-                require('pages/news-page'),
-                require('lists/story-list'),
-            ];
-            var params = {
+            let params = {
                 schema: schema,
                 date: Moment(story.ptime).format('YYYY-MM-DD'),
-                story: story.id,
-                highlighting: true,
+                highlightingStory: story.id,
             };
-            return this.props.route.replace(components, params);
+            return route.replace(route.name, params);
         }
     }
-});
+}
 
-var NewsPageSync = module.exports.Sync = React.createClass({
-    displayName: 'NewsPage.Sync',
-    mixins: [ UpdateCheck ],
-    propTypes: {
+class NewsPageSync extends PureComponent {
+    static displayName = 'NewsPage.Sync';
+
+    /**
+     * Return the access level
+     *
+     * @return {String}
+     */
+    getAccessLevel() {
+        let { project, currentUser } = this.props;
+        return ProjectSettings.getUserAccessLevel(project, currentUser) || 'read-only';
+    }
+
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
+    render() {
+        return (
+            <PageContainer className="news-page">
+                {this.renderList()}
+                {this.renderEmptyMessage()}
+            </PageContainer>
+        );
+    }
+
+    /**
+     * Render list of stories
+     *
+     * @return {ReactElement|null}
+     */
+    renderList() {
+        let {
+            database,
+            route,
+            env,
+            payloads,
+            stories,
+            draftStories,
+            pendingStories,
+            currentUser,
+            project,
+            acceptNewStory
+        } = this.props;
+        // don't render when we haven't done loading
+        if (!stories) {
+            return null;
+        }
+        let access = this.getAccessLevel();
+        let listProps = {
+            access,
+            acceptNewStory: acceptNewStory && access === 'read-write',
+            stories,
+            draftStories,
+            pendingStories,
+            currentUser,
+            project,
+            database,
+            payloads,
+            route,
+            env,
+            onMissingStory: this.handleMissingStory,
+        };
+        return <StoryList {...listProps} />
+    }
+
+    /**
+     * Render a message if there're no stories
+     *
+     * @return {ReactElement|null}
+     */
+    renderEmptyMessage() {
+        let { route, env, stories } = this.props;
+        if (!_.isEmpty(stories)) {
+            return null;
+        }
+        if (!stories) {
+            // props.stories is null when they're being loaded
+            return <LoadingAnimation />;
+        } else {
+            let phrase;
+            if (route.params.date) {
+                phrase = 'news-no-stories-on-date';
+            } else if (!_.isEmpty(route.params.roles)) {
+                phrase = 'news-no-stories-by-role';
+            } else if (route.params.search) {
+                phrase = 'news-no-stories-found';
+            } else {
+                phrase = 'news-no-stories-yet';
+            }
+            let props = { phrase, env };
+            return <EmptyMessage {...props} />;
+        }
+    }
+}
+
+export {
+    NewsPage as default,
+    NewsPage,
+    NewsPageSync
+};
+
+import Database from 'data/database';
+import Payloads from 'transport/payloads';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    NewsPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    NewsPageSync.propTypes = {
         acceptNewStory: PropTypes.bool,
         listing: PropTypes.object,
         stories: PropTypes.arrayOf(PropTypes.object),
@@ -243,101 +273,6 @@ var NewsPageSync = module.exports.Sync = React.createClass({
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return the access level
-     *
-     * @return {String}
-     */
-    getAccessLevel: function() {
-        var { project, currentUser } = this.props;
-        return ProjectSettings.getUserAccessLevel(project, currentUser) || 'read-only';
-    },
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render: function() {
-        return (
-            <PageContainer className="news-page">
-                {this.renderList()}
-                {this.renderEmptyMessage()}
-            </PageContainer>
-        );
-    },
-
-    /**
-     * Render list of stories
-     *
-     * @return {ReactElement|null}
-     */
-    renderList: function() {
-        // don't render when we haven't done loading
-        if (!this.props.stories) {
-            return null;
-        }
-        var access = this.getAccessLevel();
-        var params = this.props.route.parameters;
-        var listProps = {
-            access: access,
-            acceptNewStory: this.props.acceptNewStory && access === 'read-write',
-            stories: this.props.stories,
-            draftStories: this.props.draftStories,
-            pendingStories: this.props.pendingStories,
-            currentUser: this.props.currentUser,
-            project: this.props.project,
-
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-
-            onMissingStory: this.handleMissingStory,
-        };
-        return <StoryList {...listProps} />
-    },
-
-    /**
-     * Render a message if there're no stories
-     *
-     * @return {ReactElement|null}
-     */
-    renderEmptyMessage: function() {
-        var stories = this.props.stories;
-        if (!_.isEmpty(stories)) {
-            return null;
-        }
-        if (!stories) {
-            // props.stories is null when they're being loaded
-            return <LoadingAnimation />;
-        } else {
-            var params = this.props.route.parameters;
-            var phrase;
-            if (params.date) {
-                phrase = 'news-no-stories-on-date';
-            } else if (!_.isEmpty(params.roles)) {
-                phrase = 'news-no-stories-by-role';
-            } else if (params.search) {
-                phrase = 'news-no-stories-found';
-            } else {
-                phrase = 'news-no-stories-yet';
-            }
-            var props = {
-                locale: this.props.locale,
-                online: this.props.database.online,
-                phrase,
-            };
-            return <EmptyMessage {...props} />;
-        }
-    },
-
-    handleMissingStory: function(evt) {
-
-    },
-});
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}
