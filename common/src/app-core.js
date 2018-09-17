@@ -9,7 +9,6 @@ import RemoteDataSource from 'data/remote-data-source';
 import IndexedDBCache from 'data/indexed-db-cache';
 import LocalStorageCache from 'data/local-storage-cache';
 import BlobManager from 'transport/blob-manager';
-import CORSRewriter from 'routing/cors-rewriter';
 
 import languages from 'languages';
 
@@ -31,7 +30,7 @@ function start(cfg) {
         // CORSRewriter will extract site address from the URL when there's one
         // and default to the site address of the page when there isn't; the
         // address will appear in .context
-        rewrites: [ CORSRewriter ],
+        rewrites: cfg.routeManager.rewrites,
     });
     let localeManager = new LocaleManager({
         directory: languages
@@ -114,8 +113,7 @@ function start(cfg) {
         }
     });
     routeManager.addEventListener('change', (evt) => {
-        let { address } = routeManager.context;
-        let { schema } = routeManager.params;
+        let { address, schema } = routeManager.context;
         currentLocation = { address, schema };
         changeNotification();
         changeSubscription();

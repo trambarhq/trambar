@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import ComponentRefs from 'utils/component-refs';
+import CORSRewriter from 'routing/cors-rewriter';
+import SchemaRewriter from 'routing/schema-rewriter';
 
 // non-visual components
 import Database from 'data/database';
@@ -29,6 +31,7 @@ class Application extends PureComponent {
     static coreConfiguration = {
         routeManager: {
             routes,
+            rewrites: [ CORSRewriter, SchemaRewriter ],
         },
         dataSource: {
             area: 'client',

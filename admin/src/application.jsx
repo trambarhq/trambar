@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import AppCore from 'app-core';
+import CORSRewriter from 'routing/cors-rewriter';
 
 import ComponentRefs from 'utils/component-refs';
 import HTTPError from 'errors/http-error';
@@ -40,6 +41,7 @@ class Application extends PureComponent {
         routeManager: {
             basePath: '/admin',
             routes,
+            rewrites: [ CORSRewriter ],
         },
         dataSource: {
             basePath: '/srv/admin-data',

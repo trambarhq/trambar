@@ -1,14 +1,9 @@
 const routes = {
     'bookmarks-page': {
-        path: '/${schema}/bookmarks/',
-        params: {
-            schema: String
-        },
+        path: '/bookmarks/',
         load: (params, context) => {
-            let { schema } = params;
-            let route = { schema };
             params.ui = {
-                navigation: { route, section: 'bookmarks' }
+                navigation: { section: 'bookmarks' }
             };
             return import('pages/bookmarks-page' /* webpackChunkName: "page-bookmarks" */).then((module) => {
                 params.module = module;
@@ -16,23 +11,27 @@ const routes = {
         }
     },
     'news-page': {
-        path: '/${schema}/news/',
+        path: '/news/',
         query: {
-            roles: '${roles}',
+            roles: '${roleIDs}',
             search: '${search}',
             date: '${date}',
         },
-        hash: [ 'S${story}', 'R${reaction}' ],
+        hash: [
+            's${anchoredStoryID}',
+            'S${highlightedStoryID}',
+            'r${anchoredReactionID}',
+            'R{$highlightedReactionID}',
+        ],
         params: {
-            schema: String,
-            roles: NumberArray,
+            roleIDs: NumberArray,
             search: String,
             date: String,
             story: Number,
             reaction: Number,
         },
         load: (params, context) => {
-            let { schema } = params;
+            let { schema } = context;
             let route = { schema };
             let statistics = { schema,  type: 'daily-activities', public: 'guest' };
             return {
@@ -47,7 +46,7 @@ const routes = {
         }
     },
     'notifications-page': {
-        path: '/${schema}/notifications/',
+        path: '/notifications/',
         query: {
             date: '${date}',
         },
@@ -56,7 +55,7 @@ const routes = {
             date: String,
         },
         load: (params, context) => {
-            let { schema } = params;
+            let { schema } = context;
             let route = { schema };
             let statistics = { schema, type: 'daily-notifications', user_id: 'current' };
             params.ui = {
@@ -69,7 +68,7 @@ const routes = {
         }
     },
     'people-page': {
-        path: '/${schema}/people/',
+        path: '/people/',
         query: {
             roles: '${roles}',
             search: '${search}',
@@ -98,7 +97,7 @@ const routes = {
         }
     },
     'person-page': {
-        path: '/${schema}/people/${user}/',
+        path: '/people/${user}/',
         query: {
             search: '${search}',
             date: '${date}',
@@ -131,7 +130,7 @@ const routes = {
         }
     },
     'settings-page': {
-        path: '/${schema}/settings/',
+        path: '/settings/',
         params: {
             schema: String,
         },
