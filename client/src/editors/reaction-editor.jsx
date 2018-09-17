@@ -50,8 +50,9 @@ class ReactionEditor extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
+        let { reaction } = this.props;
         let nextState = _.clone(this.state);
-        if (this.props.reaction !== nextProps.reaction) {
+        if (nextProps.reaction !== reaction) {
             this.updateDraft(nextState, nextProps);
             this.updateResourceIndex(nextState, nextProps);
         }
@@ -131,9 +132,10 @@ class ReactionEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderProfileImage() {
+        let { env, currentUser } = this.props;
         let props = {
-            user: this.props.currentUser,
-            theme: this.props.theme,
+            user: currentUser,
+            env,
             size: 'small',
         };
         return <ProfileImage {...props} />;
@@ -145,12 +147,15 @@ class ReactionEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderTextArea() {
-        let lang = this.props.locale.languageCode;
-        let langText = _.get(this.state.draft, [ 'details', 'text', lang ], '');
+        let { env } = this.props;
+        let { draft } = this.state;
+        let { setters } = this.components;
+        let { languageCode, localeCode } = env.locale;
+        let langText = _.get(draft, [ 'details', 'text', languageCode ], '');
         let textareaProps = {
-            ref: this.components.setters.textArea,
+            ref: setters.textArea,
             value: langText,
-            lang: this.props.locale.localeCode,
+            lang: localeCode,
             onChange: this.handleTextChange,
             onKeyPress: this.handleKeyPress,
             onPaste: this.handlePaste,
@@ -164,10 +169,12 @@ class ReactionEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderMediaToolbar() {
+        let { env } = this.props;
+        let { draft, capturing } = this.state;
         let props = {
-            reaction: this.state.draft,
-            capturing: this.state.capturing,
-            locale: this.props.locale,
+            reaction: draft,
+            capturing,
+            env,
             onAction: this.handleAction,
         };
         return <ReactionMediaToolbar {...props} />;
@@ -179,10 +186,12 @@ class ReactionEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderActionButtons() {
-        let t = this.props.locale.translate;
-        let noText = _.isEmpty(_.get(this.state.draft, 'details.text'));
-        let noResources = _.isEmpty(_.get(this.state.draft, 'details.resources'));
-        let publishing = _.get(this.state.draft, 'published', false);
+        let { env } = this.props;
+        let { draft } = this.state;
+        let { t } = env.locale;
+        let noText = _.isEmpty(_.get(draft, 'details.text'));
+        let noResources = _.isEmpty(_.get(draft, 'details.resources'));
+        let publishing = _.get(draft, 'published', false);
         let cancelButtonProps = {
             label: t('story-cancel'),
             onClick: this.handleCancelClick,
@@ -208,15 +217,15 @@ class ReactionEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderMediaEditor() {
-        let t = this.props.locale.translate;
+        let { env, payloads } = this.props;
+        let { draft, selectedResourceIndex } = this.state;
+        let { t } = env.locale;
         let props = {
-            ref: this.components.setters.mediaImporter,
-            allowShifting: (this.props.theme.mode !== 'single-col'),
-            resources: _.get(this.state.draft, 'details.resources'),
-            resourceIndex: this.state.selectedResourceIndex,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
+            allowShifting: env.isWiderThan('double-col'),
+            resources: _.get(draft, 'details.resources'),
+            resourceIndex: selectedResourceIndex,
+            payloads,
+            env,
             onChange: this.handleResourcesChange,
         };
         return (
@@ -230,13 +239,15 @@ class ReactionEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderMediaImporter() {
-        let t = this.props.locale.translate;
+        let { env, payloads } = this.props;
+        let { draft } = this.state;
+        let { setters } = this.components;
+        let { t } = env.locale;
         let props = {
-            ref: this.components.setters.mediaImporter,
-            resources: _.get(this.state.draft, 'details.resources'),
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
+            ref: setters.mediaImporter,
+            resources: _.get(draft, 'details.resources'),
+            payloads,
+            env,
             cameraDirection: 'back',
             onCaptureStart: this.handleCaptureStart,
             onCaptureEnd: this.handleCaptureEnd,
@@ -251,10 +262,11 @@ class ReactionEditor extends PureComponent {
      * Register the component at FocusManager so others can bring focus to it
      */
     componentDidMount() {
+        let { story, currentUser } = this.props;
         FocusManager.register(this, {
             type: 'ReactionEditor',
-            story_id: this.props.story.id,
-            user_id: this.props.currentUser.id,
+            story_id: story.id,
+            user_id: currentUser.id,
         });
     }
 
@@ -310,9 +322,9 @@ class ReactionEditor extends PureComponent {
      * @return {Promise<Reaction>}
      */
     saveReaction(reaction, immediate) {
+        let { database, payloads } = this.props;
+        let { original } = this.state;
         // send images and videos to server
-        let params = this.props.route.parameters;
-        let original = this.state.original;
         let options = {
             delay: (immediate) ? undefined : AUTOSAVE_DURATION,
             onConflict: (evt) => {
@@ -323,11 +335,11 @@ class ReactionEditor extends PureComponent {
                 }
             },
         };
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'reaction' }, reaction, options).then((reaction) => {
                 // start file upload
-                this.props.payloads.dispatch(reaction);
+                payloads.dispatch(reaction);
                 return reaction;
             });
         });
@@ -341,9 +353,8 @@ class ReactionEditor extends PureComponent {
      * @return {Promise<Reaction>}
      */
     removeReaction(reaction) {
-        let route = this.props.route;
-        let schema = route.parameters.schema;
-        let db = this.props.database.use({ schema, by: this });
+        let { database } = this.props;
+        let db = database.use({ by: this });
         return db.removeOne({ table: 'reaction' }, reaction);
     }
 
@@ -351,8 +362,9 @@ class ReactionEditor extends PureComponent {
      * Inform parent component that editing is over
      */
     triggerFinishEvent() {
-        if (this.props.onFinish) {
-            this.props.onFinish({
+        let { onFinish } = this.props;
+        if (onFinish) {
+            onFinish({
                 type: 'finish',
                 target: this,
             });
@@ -363,7 +375,7 @@ class ReactionEditor extends PureComponent {
      * Focus text area
      */
     focus() {
-        let textArea = this.components.textArea;
+        let { textArea } = this.components;
         if (textArea) {
             textArea.focus();
         }
@@ -377,10 +389,12 @@ class ReactionEditor extends PureComponent {
      * @return {Promise<Reaction>}
      */
     handleTextChange = (evt) => {
+        let { env } = this.props;
+        let { draft } = this.state;
+        let { languageCode } = env.locale;
         let langText = evt.currentTarget.value;
-        let lang = this.props.locale.languageCode;
-        let path = `details.text.${lang}`;
-        let draft = _.decoupleSet(this.state.draft, path, langText);
+        let path = `details.text.${languageCode}`;
+        draft = _.decoupleSet(draft, path, langText);
 
         // automatically enable Markdown formatting
         if (draft.details.markdown === undefined) {
@@ -400,9 +414,10 @@ class ReactionEditor extends PureComponent {
      * @param  {Event} evt
      */
     handleKeyPress = (evt) => {
+        let { env } = this.props;
         let target = evt.target;
         if (evt.charCode == 0x0D) {
-            if (this.props.theme.mode === 'single-col') {
+            if (!env.isWiderThan('double-col')) {
                 evt.preventDefault();
                 this.handlePublishClick(evt);
                 target.blur();
@@ -416,8 +431,9 @@ class ReactionEditor extends PureComponent {
      * @param  {Event} evt
      */
     handlePaste = (evt) => {
-        this.components.mediaImporter.importFiles(evt.clipboardData.files);
-        this.components.mediaImporter.importDataItems(evt.clipboardData.items);
+        let { mediaImport } = this.components;
+        mediaImporter.importFiles(evt.clipboardData.files);
+        mediaImporter.importDataItems(evt.clipboardData.items);
     }
 
     /**
@@ -428,11 +444,12 @@ class ReactionEditor extends PureComponent {
      * @return {Promise<Reaction>}
      */
     handlePublishClick = (evt) => {
+        let { draft } = this.state;
         this.triggerFinishEvent();
 
-        let reaction = _.clone(this.state.draft);
-        reaction.published = true;
-        return this.saveDraft(reaction, true);
+        draft = _.clone(draft);
+        draft.published = true;
+        return this.saveDraft(draft, true);
     }
 
     /**
@@ -443,10 +460,10 @@ class ReactionEditor extends PureComponent {
      * @return {Promise<Reaction>}
      */
     handleCancelClick = (evt) => {
+        let { reaction } = this.props;
         return Promise.try(() => {
             this.triggerFinishEvent();
 
-            let reaction = this.props.reaction;
             if (reaction) {
                 if (reaction.ptime) {
                     // reaction was published before--publish it again
@@ -470,12 +487,13 @@ class ReactionEditor extends PureComponent {
      * @return {Promise}
      */
     handleResourcesChange = (evt) => {
-        let resourcesBefore = _.get(this.state.draft, 'details.resources');
+        let { draft } = this.state;
+        let resourcesBefore = _.get(draft, 'details.resources');
         let resourcesAfter = evt.resources;
         let selectedResourceIndex = evt.selection;
         if (resourcesBefore !== resourcesAfter) {
-            let draft = _.decoupleSet(this.state.draft, 'details.resources', evt.resources);
-            let immediate = hasUnsentFiles(evt.resources);
+            let immediate = hasUnsentFiles(resourcesAfter);
+            draft = _.decoupleSet(draft, 'details.resources', resourcesAfter);
             return this.saveDraft(draft, immediate, selectedResourceIndex);
         } else {
             this.setState({ selectedResourceIndex });
@@ -506,15 +524,17 @@ class ReactionEditor extends PureComponent {
      * @param  {Object} evt
      */
     handleReference = (evt) => {
-        let resources = this.state.draft.details.resources;
-        let res = Markdown.findReferencedResource(resources, evt.name);
-        if (res) {
+        let { evn } = this.props;
+        let { draft } = this.state;
+        let resources = draft.details.resources;
+        let resource = Markdown.findReferencedResource(resources, evt.name);
+        if (resource) {
             let url;
             if (evt.forImage)  {
                 // images are style at height = 1.5em
-                url = this.props.theme.getImageURL(res, { height: 24 });;
+                url = env.getImageURL(resource, { height: 24 });;
             } else {
-                url = this.props.theme.getURL(res);
+                url = env.getURL(resource);
             }
             return {
                 href: url,
@@ -529,22 +549,24 @@ class ReactionEditor extends PureComponent {
      * @param  {Object} evt
      */
     handleAction = (evt) => {
+        let { draft } = this.state;
+        let { mediaImporter } = this.components;
         switch (evt.action) {
             case 'markdown-set':
-                let draft = _.decoupleSet(this.state.draft, 'details.markdown', evt.value);
+                draft = _.decoupleSet(draft, 'details.markdown', evt.value);
                 this.saveDraft(draft);
                 break;
             case 'photo-capture':
-                this.components.mediaImporter.capture('image');
+                mediaImporter.capture('image');
                 break;
             case 'video-capture':
-                this.components.mediaImporter.capture('video');
+                mediaImporter.capture('video');
                 break;
             case 'audio-capture':
-                this.components.mediaImporter.capture('audio');
+                mediaImporter.capture('audio');
                 break;
             case 'file-import':
-                this.components.mediaImporter.importFiles(evt.files);
+                mediaImporter.importFiles(evt.files);
                 break;
         }
     }

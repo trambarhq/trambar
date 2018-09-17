@@ -2,12 +2,6 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 
-import Environment from 'env/environment';
-import Payloads from 'transport/payloads';
-
-// mixins
-import UpdateCheck from 'mixins/update-check';
-
 // widgets
 import MediaButton from 'widgets/media-button';
 import ImageEditor from 'editors/image-editor';
@@ -25,12 +19,12 @@ class MediaEditor extends PureComponent {
      * @return {ReactELement}
      */
     render() {
-        let index = this.props.resourceIndex;
-        let res = _.get(this.props.resources, index);
-        if (!res) {
+        let { env, resources, resourceIndex, children } = this.props;
+        let resource = _.get(resources, resourceIndex);
+        if (!resource) {
             let placeholder;
-            if (this.props.theme.mode !== 'single-col') {
-                placeholder = this.props.children;
+            if (env.isWiderThan('double-col')) {
+                placeholder = children;
             }
             return (
                 <div className="media-editor empty">
@@ -41,7 +35,7 @@ class MediaEditor extends PureComponent {
             return (
                 <div key={index} className="media-editor">
                     <div className="resource">
-                        {this.renderResource(res)}
+                        {this.renderResource(resource)}
                         {this.renderNavigation()}
                     </div>
                 </div>
@@ -52,19 +46,19 @@ class MediaEditor extends PureComponent {
     /**
      * Render editor for the given resource
      *
-     * @param  {Object} res
+     * @param  {Object} resource
      *
      * @return {ReactElement}
      */
-    renderResource(res) {
+    renderResource(resource) {
+        let { payloads, env } = this.props;
         let props = {
-            resource: res,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
+            resource,
+            payloads,
+            env,
             onChange: this.handleResourceChange,
         };
-        switch (res.type) {
+        switch (resource.type) {
             case 'image':
             case 'website':
                 return <ImageEditor {...props} />;
@@ -81,10 +75,16 @@ class MediaEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderNavigation() {
-        let t = this.props.locale.translate;
-        let index = this.props.resourceIndex;
-        let count = _.size(this.props.resources);
-        if (count === 0) {
+        let {
+            env,
+            resources,
+            resourceIndex,
+            allowEmbedding,
+            allowShifting,
+        } = this.props;
+        let { t } = env.locale;
+        let resourceCount = _.size(resources);
+        if (resourceCount === 0) {
             return null;
         }
         let removeProps = {
@@ -95,19 +95,19 @@ class MediaEditor extends PureComponent {
         let embedProps = {
             label: t('media-editor-embed'),
             icon: 'code',
-            hidden: !this.props.allowEmbedding,
+            hidden: !allowEmbedding,
             onClick: this.handleEmbedClick,
         };
         let shiftProps = {
             label: t('media-editor-shift'),
             icon: 'chevron-left',
-            hidden: !this.props.allowShifting || !(count > 1),
-            disabled: !(index > 0),
+            hidden: !allowShifting || !(resourceCount > 1),
+            disabled: !(resourceIndex > 0),
             onClick: this.handleShiftClick,
         };
         let directionProps = {
-            index,
-            count,
+            index: resourceIndex,
+            count: resourceCount,
             hidden: !(count > 1),
             onBackwardClick: this.handleBackwardClick,
             onForwardClick: this.handleForwardClick,
@@ -133,12 +133,15 @@ class MediaEditor extends PureComponent {
      * @param  {Number} selection
      */
     triggerChangeEvent(resources, selection) {
-        return this.props.onChange({
-            type: 'change',
-            target: this,
-            resources,
-            selection,
-        });
+        let { onChange } = this.props;
+        if (onChange) {
+            return onChange({
+                type: 'change',
+                target: this,
+                resources,
+                selection,
+            });
+        }
     }
 
     /**
@@ -147,8 +150,9 @@ class MediaEditor extends PureComponent {
      * @param  {Object} resource
      */
     triggerEmbedEvent(resource) {
-        if (this.props.onEmbed) {
-            this.props.onEmbed({
+        let { onEmbed } = this.props;
+        if (onEmbed) {
+            onEmbed({
                 type: 'embed',
                 target: this,
                 resource,
@@ -162,12 +166,12 @@ class MediaEditor extends PureComponent {
      * @param  {Event} evt
      */
     handleShiftClick = (evt) => {
-        let index = this.props.resourceIndex;
-        if (index < 1) {
+        let { resources, resourceIndex } = this.props;
+        if (resourceIndex < 1) {
             return;
         }
-        let resources = _.slice(this.props.resources);
-        let res = resources[index];
+        let res = resources[resourceIndex];
+        resources = _.slice(resources);
         resources.splice(index, 1);
         resources.splice(index - 1, 0, res);
         this.triggerChangeEvent(resources, index - 1);
@@ -179,17 +183,17 @@ class MediaEditor extends PureComponent {
      * @param  {Event} evt
      */
     handleRemoveClick = (evt) => {
-        let index = this.props.resourceIndex;
-        let resources = _.slice(this.props.resources);
-        let res = resources[index];
+        let { payloads, resources, resourceIndex } = this.props;
+        let res = resources[resourceIndex];
+        let resources = _.slice(resources);
         resources.splice(index, 1);
-        let newIndex = index;
-        if (index >= resources.length) {
+        let newIndex = resourceIndex;
+        if (resourceIndex >= resources.length) {
             newIndex = resources.length - 1;
         }
         this.triggerChangeEvent(resources, newIndex);
         if (res && res.payload_token) {
-            this.props.payloads.cancel(res.payload_token);
+            payloads.cancel(res.payload_token);
         }
     }
 
@@ -201,9 +205,9 @@ class MediaEditor extends PureComponent {
      * @return {Promise}
      */
     handleEmbedClick = (evt) => {
-        let index = this.props.resourceIndex;
-        let resource = this.props.resources[index];
-        this.triggerEmbedEvent(resource);
+        let { resources, resourceIndex } = this.props;
+        let res = resources[resourceIndex];
+        this.triggerEmbedEvent(res);
     }
 
     /**
@@ -214,12 +218,11 @@ class MediaEditor extends PureComponent {
      * @return {Promise<Number>}
      */
     handleBackwardClick = (evt) => {
-        let index = this.props.resourceIndex;
-        let resources = this.props.resources;
-        if (index <= 0) {
+        let { resources, resourceIndex } = this.props;
+        if (resourceIndex <= 0) {
             return;
         }
-        this.triggerChangeEvent(resources, index - 1);
+        this.triggerChangeEvent(resources, resourceIndex - 1);
     }
 
     /**
@@ -230,12 +233,11 @@ class MediaEditor extends PureComponent {
      * @return {Promise<Number>}
      */
     handleForwardClick = (evt) => {
-        let index = this.props.resourceIndex;
-        let resources = this.props.resources;
-        if (index >= _.size(resources) - 1) {
+        let { resources, resourceIndex } = this.props;
+        if (resourceIndex >= _.size(resources) - 1) {
             return;
         }
-        this.triggerChangeEvent(resources, index + 1);
+        this.triggerChangeEvent(resources, resourceIndex + 1);
     }
 
     /**
@@ -244,10 +246,10 @@ class MediaEditor extends PureComponent {
      * @param  {Object} evt
      */
     handleResourceChange = (evt) => {
-        let index = this.props.resourceIndex;
-        let resources = _.slice(this.props.resources);
-        resources[index] = evt.resource;
-        this.triggerChangeEvent(resources, index);
+        let { resources, resourceIndex } = this.props;
+        resources = _.slice(resources);
+        resources[resourceIndex] = evt.resource;
+        this.triggerChangeEvent(resources, resourceIndex);
     }
 }
 
@@ -255,6 +257,9 @@ export {
     MediaEditor as default,
     MediaEditor,
 };
+
+import Environment from 'env/environment';
+import Payloads from 'transport/payloads';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
@@ -265,8 +270,8 @@ if (process.env.NODE_ENV !== 'production') {
         resources: PropTypes.arrayOf(PropTypes.object),
         resourceIndex: PropTypes.number,
 
-        env: PropTypes.instanceOf(Environment).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
 
         onChange: PropTypes.func.isRequired,
         onEmbed: PropTypes.func,

@@ -29,7 +29,8 @@ class StoryEditorOptions extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        if (this.props.section === 'both') {
+        let { section } = this.props;
+        if (section === 'both') {
             return (
                 <div className="story-editor-options">
                     {this.renderButtons('main')}
@@ -40,7 +41,7 @@ class StoryEditorOptions extends PureComponent {
         } else {
             return (
                 <div className="story-editor-options">
-                    {this.renderButtons(this.props.section)}
+                    {this.renderButtons(section)}
                 </div>
             );
         }
@@ -54,15 +55,12 @@ class StoryEditorOptions extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons(section) {
-        let t = this.props.locale.translate;
-        let options = this.props.options;
+        let { env, options, currentUser, story, repos } = this.props;
+        let { t } = env.locale;
         if (section === 'main') {
             let access = 'read-write';
-            let user = this.props.currentUser;
-            let story = this.props.story;
-            let repos = this.props.repos;
-            let bookmarking = (user) ? _.includes(options.bookmarkRecipients, user.id) : false;
-            let otherRecipients = (user) ? _.without(options.bookmarkRecipients, user.id) : [];
+            let bookmarking = (currentUser) ? _.includes(options.bookmarkRecipients, currentUser.id) : false;
+            let otherRecipients = (currentUser) ? _.without(options.bookmarkRecipients, currentUser.id) : [];
             let bookmarkProps = {
                 label: t('option-add-bookmark'),
                 selected: bookmarking,
@@ -72,20 +70,20 @@ class StoryEditorOptions extends PureComponent {
                 label: _.isEmpty(otherRecipients)
                     ? t('option-send-bookmarks')
                     : t('option-send-bookmarks-to-$count-users', _.size(otherRecipients)),
-                hidden: !UserUtils.canSendBookmarks(user, story, access),
+                hidden: !UserUtils.canSendBookmarks(currentUser, story, access),
                 selected: !_.isEmpty(otherRecipients),
                 onClick: this.handleSendBookmarkClick,
             };
             let addIssueProps = {
                 label: t('option-add-issue'),
                 selected: !!options.issueDetails,
-                hidden: !UserUtils.canAddIssue(user, story, repos, access),
+                hidden: !UserUtils.canAddIssue(currentUser, story, repos, access),
                 onClick: this.handleAddIssueClick,
             };
             let hidePostProps = {
                 label: t('option-hide-story'),
                 selected: options.hidePost,
-                hidden: !UserUtils.canHideStory(user, story, access),
+                hidden: !UserUtils.canHideStory(currentUser, story, access),
                 onClick: this.handleHidePostClick,
             };
             return (
@@ -124,17 +122,18 @@ class StoryEditorOptions extends PureComponent {
      * @return {ReactElement}
      */
     renderRecipientDialogBox() {
-        if (!this.state.renderingRecipientDialogBox) {
+        let { database, route, env, options } = this.props;
+        let { renderingRecipientDialogBox, selectingRecipients } = this.state;
+        if (!renderingRecipientDialogBox) {
             return null;
         }
         let props = {
-            show: this.state.selectingRecipients,
-            selection: this.props.options.bookmarkRecipients,
+            show: selectingRecipients,
+            selection: options.bookmarkRecipients,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
 
             onSelect: this.handleRecipientsSelect,
             onCancel: this.handleRecipientsCancel,
@@ -148,19 +147,18 @@ class StoryEditorOptions extends PureComponent {
      * @return {ReactElement}
      */
     renderIssueDialogBox() {
-        if (!this.state.renderingIssueDialogBox) {
+        let { env, options, story, repos } = this.props;
+        let { renderingIssueDialogBox, enteringIssueDetails } = this.state;
+        if (!renderingIssueDialogBox) {
             return null;
         }
         let props = {
-            show: this.state.enteringIssueDetails,
+            show: enteringIssueDetails,
             allowDeletion: false,
-            story: this.props.story,
-            issue: this.props.options.issueDetails,
-            repos: this.props.repos,
-
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            story,
+            issue: options.issueDetails,
+            repos,
+            env,
             onConfirm: this.handleIssueConfirm,
             onCancel: this.handleIssueCancel,
         };
@@ -173,8 +171,9 @@ class StoryEditorOptions extends PureComponent {
      * @param  {Object} options
      */
     triggerChangeEvent(options) {
-        if (this.props.onChange) {
-            this.props.onChange({
+        let { onChange } = this.props;
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 options,
@@ -186,8 +185,9 @@ class StoryEditorOptions extends PureComponent {
      * Inform parent component the action requested is either done or canceled
      */
     triggerCompleteEvent() {
-        if (this.props.onComplete) {
-            this.props.onComplete({
+        let { onComplete } = this.props;
+        if (onComplete) {
+            onComplete({
                 type: 'complete',
                 target: this,
             });
@@ -200,7 +200,8 @@ class StoryEditorOptions extends PureComponent {
      * @param  {Event} evt
      */
     openSelectionDialogBox(evt) {
-        if (!this.state.selectingRecipients) {
+        let { selectingRecipients } = this.state;
+        if (!selectingRecipients) {
             this.setState({
                 selectingRecipients: true,
                 renderingRecipientDialogBox: true
@@ -212,10 +213,12 @@ class StoryEditorOptions extends PureComponent {
      * Close dialog box
      */
     closeSelectionDialogBox() {
-        if (this.state.selectingRecipients) {
+        let { selectingRecipients } = this.state;
+        if (selectingRecipients) {
             this.setState({ selectingRecipients: false });
             setTimeout(() => {
-                if (!this.state.selectingRecipients) {
+                let { selectingRecipients } = this.state;
+                if (!selectingRecipients) {
                     this.setState({ renderingRecipientDialogBox: false });
                 }
             }, 500);
@@ -228,7 +231,8 @@ class StoryEditorOptions extends PureComponent {
      * @param  {Event} evt
      */
     openIssueDialogBox(evt) {
-        if (!this.state.enteringIssueDetails) {
+        let { enteringIssueDetails } = this.state;
+        if (!enteringIssueDetails) {
             this.setState({
                 enteringIssueDetails: true,
                 renderingIssueDialogBox: true
@@ -240,10 +244,12 @@ class StoryEditorOptions extends PureComponent {
      * Close dialog box
      */
     closeIssueDialogBox() {
-        if (this.state.enteringIssueDetails) {
+        let { enteringIssueDetails } = this.state;
+        if (enteringIssueDetails) {
             this.setState({ enteringIssueDetails: false });
             setTimeout(() => {
-                if (!this.state.enteringIssueDetails) {
+                let { enteringIssueDetails } = this.state;
+                if (!enteringIssueDetails) {
                     this.setState({ renderingIssueDialogBox: false });
                 }
             }, 500);
@@ -256,12 +262,12 @@ class StoryEditorOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleBookmarkClick = (evt) => {
-        let options = _.clone(this.props.options);
-        let userId = this.props.currentUser.id;
-        if (_.includes(options.bookmarkRecipients, userId)) {
-            options.bookmarkRecipients = _.difference(options.bookmarkRecipients, [ userId ]);
+        let { options, currentUser } = this.props;
+        let userID = currentUser.id;
+        if (_.includes(options.bookmarkRecipients, userID)) {
+            options.bookmarkRecipients = _.difference(options.bookmarkRecipients, [ userID ]);
         } else {
-            options.bookmarkRecipients = _.union(options.bookmarkRecipients, [ userId ]);
+            options.bookmarkRecipients = _.union(options.bookmarkRecipients, [ userID ]);
         }
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();

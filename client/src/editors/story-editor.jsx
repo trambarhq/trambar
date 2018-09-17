@@ -10,7 +10,7 @@ import * as FocusManager from 'utils/focus-manager';
 import ComponentRefs from 'utils/component-refs';
 import * as StoryUtils from 'objects/utils/story-utils';
 import * as IssueUtils from 'objects/utils/issue-utils';
-import * as TemporaryId from 'data/remote-data-source/temporary-id';
+import * as TemporaryID from 'data/remote-data-source/temporary-id';
 import * as RandomToken from 'utils/random-token';
 
 // widgets
@@ -68,8 +68,9 @@ class StoryEditor extends PureComponent {
      * @return {String}
      */
     getClassName() {
+        let { highlighting } = this.props;
         let className = 'story-editor';
-        if (this.props.highlighting) {
+        if (highlighting) {
             className += ' highlighting';
         }
         return className;
@@ -81,10 +82,10 @@ class StoryEditor extends PureComponent {
      * @return {Boolean}
      */
     isCoauthoring() {
-        let userIds = _.get(this.props.story, 'user_ids');
-        let currentUserId = _.get(this.props.currentUser, 'id');
-        let index = _.indexOf(userIds, currentUserId);
-        return (index > 0);
+        let { story, currentUser } = this.props;
+        let userIDs = _.get(story, 'user_ids');
+        let currentUserID = _.get(currentUser, 'id');
+        return _.includes(userIDs, currentUserID);
     }
 
     /**
@@ -93,23 +94,24 @@ class StoryEditor extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
+        let { env, story, currentUser, repos, recommendations } = this.props;
         let nextState = _.clone(this.state);
-        if (this.props.story !== nextProps.story) {
+        if (nextProps.story !== story) {
             this.updateDraft(nextState, nextProps);
             this.updateOptions(nextState, nextProps);
             this.updateLocaleCode(nextState, nextProps);
             this.updateResourceIndex(nextState, nextProps);
         }
-        if (this.props.currentUser !== nextProps.currentUser) {
+        if (nextProps.currentUser !== currentUser) {
             this.updateLeadAuthor(nextState, nextProps);
         }
-        if (this.props.locale !== nextProps.locale) {
+        if (nextProps.env.locale !== env.locale) {
             this.updateLocaleCode(nextState, nextProps);
         }
-        if (this.props.recommendations !== nextProps.recommendations) {
+        if (nextProps.recommendations !== recommendations) {
             this.updateBookmarkRecipients(nextState, nextProps);
         }
-        if (this.props.repos !== nextProps.repos) {
+        if (nextProps.repos !== repos) {
             this.updateOptions(nextState, nextProps);
             this.updateLocaleCode(nextState, nextProps);
         }
@@ -145,10 +147,10 @@ class StoryEditor extends PureComponent {
      */
     updateLeadAuthor(nextState, nextProps) {
         if (!nextState.story) {
-            let currentUserId = _.get(nextProps.currentUser, 'id');
+            let currentUserID = _.get(nextProps.currentUser, 'id');
             if (!nextState.draft.user_ids) {
                 nextState.draft = _.decouple(nextState.draft, 'user_ids', []);
-                nextState.draft.user_ids[0] = currentUserId;
+                nextState.draft.user_ids[0] = currentUserID;
             }
         }
     }
@@ -180,9 +182,9 @@ class StoryEditor extends PureComponent {
      * @param  {Object} nextProps
      */
     updateBookmarkRecipients(nextState, nextProps) {
-        let targetUserIds = _.map(nextProps.recommendations, 'target_user_id');
+        let targetUserIDs = _.map(nextProps.recommendations, 'target_user_id');
         nextState.options = _.clone(nextState.options);
-        nextState.options.bookmarkRecipients = _.union(nextState.options.bookmarkRecipients, targetUserIds);
+        nextState.options.bookmarkRecipients = _.union(nextState.options.bookmarkRecipients, targetUserIDs);
     }
 
     /**
@@ -272,13 +274,13 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        switch (this.props.theme.mode) {
-            case 'single-col':
-                return this.renderSingleColumn();
-            case 'double-col':
-                return this.renderDoubleColumn();
-            case 'triple-col':
-                return this.renderTripleColumn();
+        let { env } = this.props;
+        if (env.isWiderThan('triple-col')) {
+            return this.renderTripleColumn();
+        } else if (env.isWiderThan('double-col')) {
+            return this.renderDoubleColumn();
+        } else {
+            return this.renderSingleColumn();
         }
     }
 
@@ -362,7 +364,8 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderTripleColumn() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <div className={this.getClassName()}>
                 <div className="header">
@@ -402,9 +405,10 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderProfileImage() {
+        let { env, authors } = this.props;
         let props = {
-            user: _.get(this.props.authors, 0),
-            theme: this.props.theme,
+            user: _.get(authors, 0),
+            env,
             size: 'medium',
         };
         return <ProfileImage {...props} />;
@@ -416,11 +420,8 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderAuthorNames() {
-        let props = {
-            authors: this.props.authors,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
+        let { env, authors } = this.props;
+        let props = { authors, env };
         return <AuthorNames {...props} />;
     }
 
@@ -430,14 +431,14 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderCoauthoringButton() {
+        let { database, route, env } = this.props;
+        let { draft } = this.state;
         let props = {
             coauthoring: this.isCoauthoring(),
-            story: this.state.draft,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            story: draft,
+            database,
+            route,
+            env,
             onSelect: this.handleCoauthorSelect,
             onRemove: this.handleCancelClick,
         };
@@ -450,13 +451,13 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderTextArea() {
-        let setters = this.components.setters;
-        let loc = this.state.options.localeCode;
-        let lang = loc.substr(0, 2);
-        let langText = _.get(this.state.draft, [ 'details', 'text', lang ], '');
+        let { draft, options } = this.state;
+        let { setters } = this.components;
+        let languageCode = options.localeCode.substr(0, 2);
+        let langText = _.get(draft, `details.text.${languageCode}`, '');
         let props = {
             value: langText,
-            lang: loc,
+            lang: options.localeCode,
             onChange: this.handleTextChange,
             onBeforeInput: this.handleBeforeInput,
             onKeyDown: this.handleKeyDown,
@@ -472,8 +473,9 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
-        let draft = this.state.draft;
+        let { env } = this.props;
+        let { draft } = this.state;
+        let { t } = env.locale;
         let text = _.get(draft, 'details.text');
         let resources = _.get(draft, 'details.resources');
         let noText = _.isEmpty(_.pickBy(text));
@@ -505,7 +507,8 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement|null}
      */
     renderToolbar() {
-        if (this.state.options.preview === 'text') {
+        let { options } = this.state;
+        if (options.preview === 'text') {
             return this.renderTextToolbar();
         } else {
             return this.renderMediaToolbar();
@@ -518,9 +521,11 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderTextToolbar() {
+        let { env } = this.props;
+        let { draft } = this.state;
         let props = {
-            story: this.state.draft,
-            locale: this.props.locale,
+            story: draft,
+            env,
             onAction: this.handleAction,
         };
         return <TextToolbar {...props} />;
@@ -532,10 +537,12 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderMediaToolbar() {
+        let { env } = this.props;
+        let { draft, capturing } = this.state;
         let props = {
-            story: this.state.draft,
-            capturing: this.state.capturing,
-            locale: this.props.locale,
+            story: draft,
+            capturing,
+            env,
             onAction: this.handleAction,
         };
         return <MediaToolbar {...props} />;
@@ -547,7 +554,8 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement|null}
      */
     renderPreview() {
-        if (this.state.options.preview === 'text') {
+        let { options } = this.state;
+        if (options.preview === 'text') {
             return this.renderTextPreview();
         } else {
             return this.renderMediaPreview();
@@ -560,8 +568,9 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderTextPreview() {
+        let { draft } = this.state;
         let contents;
-        switch (this.state.draft.type) {
+        switch (draft.type) {
             case undefined:
             case '':
             case 'post':
@@ -583,9 +592,10 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderRegularPost() {
-        let p = this.props.locale.pick;
+        let { env } = this.props;
+        let { draft } = this.state;
+        let { p } = env.locale;
         let className = 'text story';
-        let draft = this.state.draft;
         let text = p(draft.details.text);
         if (draft.details.markdown) {
             text = Markdown.render(text, this.handleReference);
@@ -607,9 +617,10 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderTaskListText() {
-        let p = this.props.locale.pick;
+        let { env } = this.props;
+        let { draft } = this.state;
+        let { p } = env.locale;
         let className = 'text task-list';
-        let draft = this.state.draft;
         let text = p(draft.details.text);
         let list;
         if (draft.details.markdown) {
@@ -635,9 +646,10 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderSurveyText() {
-        let p = this.props.locale.pick;
+        let { env } = this.props;
+        let { draft } = this.state;
+        let { p } = env.locale;
         let className = 'text survey';
-        let draft = this.state.draft;
         let text = p(draft.details.text);
         let survey;
         if (draft.details.markdown) {
@@ -661,21 +673,21 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderMediaPreview() {
+        let { payloads, env, isStationary } = this.props;
+        let { draft, selectedResourceIndex } = this.state;
         let editorProps = {
             allowEmbedding: true,
             allowShifting: true,
-            resources: _.get(this.state.draft, 'details.resources'),
-            resourceIndex: this.state.selectedResourceIndex,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
+            resources: _.get(draft, 'details.resources'),
+            resourceIndex: selectedResourceIndex,
+            payloads,
+            env,
             onChange: this.handleResourcesChange,
             onEmbed: this.handleResourceEmbed,
         };
         let placeholderProps = {
-            showHints: this.props.isStationary,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            showHints: isStationary,
+            env,
         };
         return (
             <DropZone onDrop={this.handleDrop}>
@@ -692,13 +704,15 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderMediaImporter() {
+        let { payloads, env } = this.props;
+        let { draft } = this.state;
+        let { setters } = this.components;
         let props = {
-            ref: this.components.setters.mediaImporter,
-            resources: _.get(this.state.draft, 'details.resources', []),
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
+            ref: setters.mediaImporter,
+            resources: _.get(draft, 'details.resources', []),
             cameraDirection: 'back',
+            payloads,
+            env,
             onCaptureStart: this.handleCaptureStart,
             onCaptureEnd: this.handleCaptureEnd,
             onChange: this.handleResourcesChange,
@@ -712,7 +726,8 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderPopUpMenu(section) {
-        let ref = this.components.setters[section + 'PopUp'];
+        let { setters } = this.components;
+        let ref = setters[section + 'PopUp'];
         return (
             <CornerPopUp ref={ref}>
                 {this.renderOptions(section)}
@@ -728,18 +743,17 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderOptions(section) {
+        let { database, route, env, currentUser, repos } = this.props;
+        let { draft, options } = this.state;
         let props = {
             section,
-            story: this.state.draft,
-            options: this.state.options,
-
-            currentUser: this.props.currentUser,
-            repos: this.props.repos,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            story: draft,
+            options,
+            currentUser,
+            repos,
+            database,
+            route,
+            env,
             onChange: this.handleOptionChange,
             onComplete: this.handleOptionComplete,
         };
@@ -752,22 +766,28 @@ class StoryEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderConfirmationDialogBox() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { action, confirming } = this.state;
+        let { t } = env.locale;
         let props = {
-            show: this.state.confirming,
-            locale: this.props.locale,
+            show: confirming,
+            env,
             onClose: this.handleDialogClose,
         };
         let message;
-        if (this.state.action === 'delete-post') {
-            message = t('story-cancel-are-you-sure');
-            props.onConfirm = this.handleCancelConfirm;
-        } else if (this.state.action === 'cancel-edit') {
-            message = t('story-cancel-edit-are-you-sure');
-            props.onConfirm = this.handleCancelConfirm;
-        } else {
-            message = t('story-remove-yourself-are-you-sure');
-            props.onConfirm = this.handleRemoveConfirm;
+        switch (action) {
+            case 'delete-post':
+                message = t('story-cancel-are-you-sure');
+                props.onConfirm = this.handleCancelConfirm;
+                break;
+            case 'cancel-edit':
+                message = t('story-cancel-edit-are-you-sure');
+                props.onConfirm = this.handleCancelConfirm;
+                break;
+            case 'remove-self':
+                message = t('story-remove-yourself-are-you-sure');
+                props.onConfirm = this.handleRemoveConfirm;
+                break;
         }
         return (
             <ConfirmationDialogBox {...props}>
@@ -792,8 +812,8 @@ class StoryEditor extends PureComponent {
      * @return {Promise<Story>}
      */
     changeDraft(draft, resourceIndex) {
+        let { options } = this.state;
         return new Promise((resolve, reject) => {
-            let options = this.state.options;
             if (!options.preview) {
                 let preview = this.choosePreview(draft);
                 if (preview) {
@@ -835,7 +855,8 @@ class StoryEditor extends PureComponent {
      * @return {Promise<Story>}
      */
     saveDraft(draft, immediate, resourceIndex) {
-        draft.public = !this.state.options.hidePost;
+        let { options } = this.state;
+        draft.public = !options.hidePost;
         return this.changeDraft(draft, resourceIndex).then((story) => {
             if (!hasPendingResources(story.details.resources)) {
                 this.saveStory(story, immediate);
@@ -853,9 +874,9 @@ class StoryEditor extends PureComponent {
      * @return {Promise<Story>}
      */
     saveStory(story, immediate) {
-        let params = this.props.route.parameters;
+        let { database, payloads } = this.props;
+        let { original } = this.state;
         let resources = story.details.resources || [];
-        let original = this.state.original;
         let options = {
             delay: (immediate) ? undefined : AUTOSAVE_DURATION,
             onConflict: (evt) => {
@@ -866,11 +887,11 @@ class StoryEditor extends PureComponent {
                 }
             },
         };
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'story' }, story, options).then((story) => {
                 // send images and videos to server
-                this.props.payloads.dispatch(story);
+                payloads.dispatch(story);
                 return story;
             });
         });
@@ -884,9 +905,8 @@ class StoryEditor extends PureComponent {
      * @return {Promise<Story>}
      */
     removeStory(story) {
-        let route = this.props.route;
-        let schema = route.parameters.schema;
-        let db = this.props.database.use({ schema, by: this });
+        let { database } = this.props;
+        let db = database.use({ by: this });
         return db.removeOne({ table: 'story' }, story);
     }
 
@@ -896,14 +916,13 @@ class StoryEditor extends PureComponent {
      * @return {Promise<Story>}
      */
     removeSelf() {
-        let story = this.props.story;
-        let userIds = _.without(story.user_ids, this.props.currentUser.id);
+        let { story, currentUser } = this.props;
+        let userIDs = _.without(story.user_ids, currentUser.id);
         let columns = {
             id: story.id,
-            user_ids: userIds,
+            user_ids: userIDs,
         };
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let db = this.props.database.use({ by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'story' }, columns);
         });
@@ -917,11 +936,11 @@ class StoryEditor extends PureComponent {
      * @return {Promise<Array<Bookmark>>}
      */
     saveBookmarks(bookmarks) {
+        let { database } = this.props;
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.save({ table: 'bookmark' }, bookmarks);
         });
@@ -935,11 +954,11 @@ class StoryEditor extends PureComponent {
      * @return {Promise<Array<Bookmark>>}
      */
     removeBookmarks(bookmarks) {
+        let { database } = this.props;
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.remove({ table: 'bookmark' }, bookmarks);
         });
@@ -949,20 +968,20 @@ class StoryEditor extends PureComponent {
      * Send bookmarks to recipients
      *
      * @param  {Story} story
-     * @param  {Array<Number>} recipientIds
+     * @param  {Array<Number>} recipientIDs
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    sendBookmarks(story, recipientIds) {
-        let bookmarks = this.props.recommendations;
+    sendBookmarks(story, recipientIDs) {
+        let { bookmarks } = this.props;
         let newBookmarks = [];
         // add bookmarks that don't exist yet
-        _.each(recipientIds, (recipientId) => {
-            if (!_.some(bookmarks, { target_user_id: recipientId })) {
+        _.each(recipientIDs, (recipientID) => {
+            if (!_.some(bookmarks, { target_user_id: recipientID })) {
                 let newBookmark = {
                     story_id: story.published_version_id || story.id,
                     user_ids: [ this.props.currentUser.id ],
-                    target_user_id: recipientId,
+                    target_user_id: recipientID,
                 };
                 newBookmarks.push(newBookmark);
             }
@@ -971,7 +990,7 @@ class StoryEditor extends PureComponent {
         // the backend will handle the fact a bookmark can belong to multiple users
         let redundantBookmarks = [];
         _.each(bookmarks, (bookmark) => {
-            if (!_.includes(recipientIds, bookmark.target_user_id)) {
+            if (!_.includes(recipientIDs, bookmark.target_user_id)) {
                 redundantBookmarks.push(bookmark);
             }
         });
@@ -991,14 +1010,14 @@ class StoryEditor extends PureComponent {
      * @return {Promise<Task>}
      */
     sendTask(action, options) {
+        let { database, currentUser } = this.props;
         let task = {
             action,
             options,
-            user_id: this.props.currentUser.id,
+            user_id: currentUser.id,
             token: RandomToken.generate(),
         };
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'task' }, task);
         });
@@ -1010,21 +1029,19 @@ class StoryEditor extends PureComponent {
      * @return {[type]}
      */
     publishStory() {
-        let draft = _.clone(this.state.draft);
-        let options = this.state.options;
+        let { draft, options, authors, repos } = this.state;
+        draft = _.clone(draft);
         if (!draft.type) {
             draft.type = 'post';
         }
-        if (_.isEmpty(draft.role_ids)) {
-            let roleIds = _.map(this.props.authors, 'role_ids');
-            draft.role_ids = _.uniq(_.flatten(roleIds));
-        }
+        let roleIDs = _.map(.authors, 'role_ids');
+        draft.role_ids = _.uniq(_.flatten(roleIDs));
         draft.published = true;
 
         return this.saveDraft(draft, true).then((story) => {
             return this.sendBookmarks(story, options.bookmarkRecipients).then(() => {
-                let issueDetailsBefore = IssueUtils.extractIssueDetails(this.state.draft, this.props.repos);
-                let issueDetailsAfter = this.state.options.issueDetails;
+                let issueDetailsBefore = IssueUtils.extractIssueDetails(draft, repos);
+                let issueDetailsAfter = options.issueDetails;
                 if (!_.isEqual(issueDetailsAfter, issueDetailsBefore)) {
                     if (issueDetailsAfter) {
                         let params = _.clone(issueDetailsAfter);
@@ -1051,17 +1068,16 @@ class StoryEditor extends PureComponent {
      * @param  {Event} evt
      */
     handleTextChange = (evt) => {
+        let { env } = this.props;
+        let { draft, options } = this.state;
         let langText = evt.currentTarget.value;
-        let loc = this.state.options.localeCode;
-        let lang = loc.substr(0, 2);
-        if (loc) {
-            lang = loc.substr(0, 2);
-        } else {
+        let lang = options.localeCode.substr(0, 2);
+        if (!lang) {
             // locale isn't set--use current locale
-            lang = this.props.locale.languageCode;
+            lang = env.locale.languageCode;
         }
         let path = `details.text.${lang}`;
-        let draft = _.decoupleSet(this.state.draft, path, langText);
+        draft = _.decoupleSet(draft, path, langText);
 
         // remove zero-length text
         draft.details.text = _.pickBy(draft.details.text, 'length');
@@ -1118,11 +1134,12 @@ class StoryEditor extends PureComponent {
      * @param  {Event} evt
      */
     handleBeforeInput = (evt) => {
+        let { env } = this.props;
+        let { draft } = this.state;
         let target = evt.target;
         if (evt.data === '\n') {
-            let storyType = this.state.draft.type;
-            if (storyType !== 'survey' && storyType !== 'task-list') {
-                if (this.props.theme.mode === 'single-col') {
+            if (draft.type !== 'survey' && draft.type !== 'task-list') {
+                if (!env.isWiderThan('double-col')) {
                     evt.preventDefault();
                     this.handlePublishClick(evt);
                     target.blur();
@@ -1139,10 +1156,11 @@ class StoryEditor extends PureComponent {
      * @param  {Event} evt
      */
     handleKeyUp = (evt) => {
+        let { env } = this.props;
+        let { draft } = this.state;
         let target = evt.target;
         if (this.lastInput === '\n') {
-            let storyType = this.state.draft.type;
-            if (storyType === 'survey' || storyType === 'task-list') {
+            if (draft.type === 'survey' || draft.type === 'task-list') {
                 // see if there's survey or task-list item on the line where
                 // the cursor is at
                 let value = target.value;
@@ -1182,10 +1200,9 @@ class StoryEditor extends PureComponent {
      * @param  {Event} evt
      */
     handlePaste = (evt) => {
-        Promise.all([
-            this.components.mediaImporter.importFiles(evt.clipboardData.files),
-            this.components.mediaImporter.importDataItems(evt.clipboardData.items)
-        ]);
+        let { mediaImporter } = this.components;
+        mediaImporter.importFiles(evt.clipboardData.files);
+        mediaImporter.importDataItems(evt.clipboardData.items);
         if (evt.clipboardData.files.length > 0) {
             evt.preventDefault();
         }
@@ -1249,12 +1266,13 @@ class StoryEditor extends PureComponent {
      * @param  {Event} evt
      */
     handleCancelConfirm = (evt) => {
+        let { currentUser, isStationary } = this.props;
+        let { draft } = this.state;
         this.setState({ confirming: false });
-        let draft = this.state.draft;
-        if (this.props.isStationary) {
+        if (isStationary) {
             // when it's the top editor, create a blank story first, since this
             // instance of the component will be reused
-            let blank = createBlankStory(this.props.currentUser);
+            let blank = createBlankStory(currentUser);
             this.changeDraft(blank).then(() => {
                 if (draft.id) {
                     return this.removeStory(draft);
@@ -1273,20 +1291,21 @@ class StoryEditor extends PureComponent {
      * @param  {Object} evt
      */
     handleReference = (evt) => {
-        let resources = this.state.draft.details.resources;
+        let { env } = this.props;
+        let { draft } = this.state;
+        let resources = draft.details.resources;
         let res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
-            let theme = this.props.theme;
             let url;
             if (evt.forImage)  {
                 if (res.type === 'audio') {
                     url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
                 } else {
                     // images are style at height = 1.5em
-                    url = theme.getImageURL(res, { height: 24 });
+                    url = env.getImageURL(res, { height: 24 });
                 }
             } else {
-                url = theme.getURL(res);
+                url = env.getURL(res);
             }
             return {
                 href: url,
@@ -1301,12 +1320,14 @@ class StoryEditor extends PureComponent {
      * @param  {Event} evt
      */
     handleTextClick = (evt) => {
+        let { draft, options } = this.state;
         let target = evt.target;
         if (target.viewportElement) {
             target = target.viewportElement;
         }
         let name;
         if (target.tagName === 'svg') {
+            // title is an element not an attribute when it's SVG
             let title = target.getElementsByTagName('title')[0];
             if (title) {
                 name = title.textContent;
@@ -1315,11 +1336,11 @@ class StoryEditor extends PureComponent {
             name = evt.target.title;
         }
         if (name) {
-            let resources = this.state.draft.details.resources;
+            let resources = draft.details.resources;
             let res = Markdown.findReferencedResource(resources, name);
             if (res) {
                 let selectedResourceIndex = _.indexOf(resources, res);
-                let options = _.decoupleSet(this.state.options, 'preview', 'media');
+                options = _.decoupleSet(options, 'preview', 'media');
                 this.setState({ selectedResourceIndex, options });
             }
         }
@@ -1332,11 +1353,12 @@ class StoryEditor extends PureComponent {
      */
     handleItemChange = (evt) => {
         // update the text of the story to reflect the selection
+        let { draft } = this.state;
         let target = evt.currentTarget;
         let list = parseInt(target.name);
         let item = parseInt(target.value);
         let selected = target.checked;
-        let draft = _.decouple(this.state.draft, 'details');
+        draft = _.decouple(draft, 'details');
         if (draft.type === 'task-list') {
             let counts = [];
             draft.details.text = _.mapValues(draft.details.text, (langText) => {
@@ -1373,7 +1395,8 @@ class StoryEditor extends PureComponent {
      * @param  {Object} evt
      */
     handleCoauthorSelect = (evt) => {
-        let draft = _.decoupleSet(this.state.draft, 'user_ids', evt.selection);
+        let { draft } = this.state;
+        draft = _.decoupleSet(draft, 'user_ids', evt.selection);
         this.saveDraft(draft, true);
     }
 
@@ -1383,14 +1406,14 @@ class StoryEditor extends PureComponent {
      * @param  {Object} evt
      */
     handleResourcesChange = (evt) => {
-        let resourcesBefore = this.state.draft.resources;
+        let { draft, selectedResourceIndex } = this.state;
+        let resourcesBefore = draft.resources;
         let resourcesAfter = evt.resources;
-        let selectedResourceIndex = evt.selection;
-        if (selectedResourceIndex === undefined) {
-            selectedResourceIndex = this.state.selectedResourceIndex;
+        if (evt.selection) {
+            selectedResourceIndex = evt.selection;
         }
         if (resourcesBefore !== resourcesAfter) {
-            let draft = _.decoupleSet(this.state.draft, 'details.resources', resourcesAfter);
+            draft = _.decoupleSet(draft, 'details.resources', resourcesAfter);
             let immediate = false;
             if (hasPendingResources(resourcesAfter)) {
                 if (hasUnsentFiles(resourcesAfter)) {
@@ -1409,19 +1432,21 @@ class StoryEditor extends PureComponent {
      * @param  {Object} evt
      */
     handleResourceEmbed = (evt) => {
+        let { draft, options } = this.state;
+        let { textArea } = this.components;
         let resource = evt.resource;
-        let draft = _.decouple(this.state.draft, 'details');
+        draft = _.decouple(draft, 'details');
         let resources = draft.details.resources;
         let resourcesOfType = _.filter(resources, { type: resource.type });
         let index = _.indexOf(resourcesOfType, resource);
         if (index !== -1) {
             // keep previewing media
-            let options = _.clone(this.state.options);
+            options = _.clone(options);
             options.preview = 'media';
             this.changeOptions(options).then(() => {
                 _.set(draft, `details.markdown`, true);
                 this.changeDraft(draft).then(() => {
-                    let textArea = this.components.textArea.getElement();
+                    textArea = textArea.getElement();
                     textArea.focus();
                     setTimeout(() => {
                         let addition = `![${resource.type}-${index+1}]`;
@@ -1438,10 +1463,9 @@ class StoryEditor extends PureComponent {
      * @param  {Event} evt
      */
     handleDrop = (evt) => {
-        Promise.all([
-            this.components.mediaImporter.importFiles(evt.files),
-            this.components.mediaImporter.importDataItems(evt.items),
-        ]);
+        let { mediaImport } = this.components;
+        mediaImporter.importFiles(evt.files)
+        mediaImporter.importDataItems(evt.items)
     }
 
     /**
@@ -1468,18 +1492,18 @@ class StoryEditor extends PureComponent {
      * @param  {Object} evt
      */
     handleAction = (evt) => {
+        let { draft } = this.state;
+        let { textArea, mediaImporter } = this.components;
         switch (evt.action) {
             case 'markdown-set':
-                let draft = _.decouple(this.state.draft, 'details');
-                draft.details.markdown = evt.value;
+                draft = _.decoupleSet(draft, 'details.markdown', evt.value);
                 this.saveDraft(draft);
                 break;
             case 'story-type-set':
-                let draft = _.decouple(this.state.draft, 'details');
-                draft.type = evt.value;
+                draft = _.decoupleSet(draft, 'details.type', evt.value);
                 // attach a list template to the story if there's no list yet
                 if (draft.type === 'task-list' || draft.type === 'survey') {
-                    let textArea = this.components.textArea.getElement();
+                    textArea = textArea.getElement();
                     textArea.focus();
                     if (!ListParser.detect(textArea.value)) {
                         setTimeout(() => {
@@ -1497,22 +1521,22 @@ class StoryEditor extends PureComponent {
                 this.saveDraft(draft);
                 break;
             case 'photo-capture':
-                this.components.mediaImporter.capture('image');
+                mediaImporter.capture('image');
                 break;
             case 'video-capture':
-                this.components.mediaImporter.capture('video');
+                mediaImporter.capture('video');
                 break;
             case 'audio-capture':
-                this.components.mediaImporter.capture('audio');
+                mediaImporter.capture('audio');
                 break;
             case 'file-import':
-                this.components.mediaImporter.importFiles(evt.files);
+                mediaImporter.importFiles(evt.files);
                 break;
         }
     }
 }
 
-let defaultOptions = {
+const defaultOptions = {
     localeCode: '',
     issueDetails: null,
     hidePost: false,
@@ -1530,7 +1554,7 @@ let defaultOptions = {
 function createBlankStory(currentUser) {
     // assign a temporary id immediately to ensure proper merging
     return {
-        id: TemporaryId.allocate(),
+        id: TemporaryID.allocate(),
         user_ids: [ currentUser.id ],
         details: {},
         public: true,

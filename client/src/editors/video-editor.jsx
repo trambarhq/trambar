@@ -7,7 +7,7 @@ import DurationIndicator from 'widgets/duration-indicator';
 import './video-editor.scss';
 
 function VideoEditor(props) {
-    let duration = props.resource.duration;
+    let { duration } = props;
     return (
         <ImageEditor {...props}>
             <div className="video-duration">
@@ -22,4 +22,6 @@ export {
     VideoEditor,
 };
 
-VideoEditor.propTypes = ImageEditor.propTypes;
+if (process.env.NODE_ENV !== 'production') {
+    VideoEditor.propTypes = ImageEditor.propTypes;
+}

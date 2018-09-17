@@ -36,7 +36,8 @@ class MediaImporter extends PureComponent {
      * @return {Boolean}
      */
     isAcceptable(type) {
-        return _.includes(this.props.types, type);
+        let { types } = this.props;
+        return _.includes(types, type);
     }
 
     /**
@@ -129,7 +130,8 @@ class MediaImporter extends PureComponent {
      * @return {Promise<Object>}
      */
     importImageFile(file) {
-        let payload = this.props.payloads.add('image').attachFile(file);
+        let { payloads } = this.props;
+        let payload = payloads.add('image').attachFile(file);
         return MediaLoader.getImageMetadata(file).then((meta) => {
             return {
                 type: 'image',
@@ -160,6 +162,7 @@ class MediaImporter extends PureComponent {
      * @return {Promise<Object>}
      */
     importVideoFile(file) {
+        let { payloads } = this.props;
         // if file is in a QuickTime container, make sure metadata is
         // at the beginning of the file
         return QuickStart.process(file).then((blob) => {
@@ -167,10 +170,10 @@ class MediaImporter extends PureComponent {
                 // if video wasn't processed, use the original file
                 blob = file;
             }
-            let payload = this.props.payloads.add('video');
+            let payload = payloads.add('video');
             if (USE_STREAM) {
                 // upload file in small chunks
-                let stream = this.props.payloads.stream().pipe(blob);
+                let stream = payloads.stream().pipe(blob);
                 payload.attachStream(stream);
             } else {
                 payload.attachFile(blob);
@@ -209,9 +212,10 @@ class MediaImporter extends PureComponent {
      * @return {Promise<Object>}
      */
     importAudioFile(file) {
-        let payload = this.props.payloads.add('audio');
+        let { payloads } = this.props;
+        let payload = payloads.add('audio');
         if (USE_STREAM) {
-            let stream = this.props.payloads.stream().pipe(file);
+            let stream = payloads.stream().pipe(file);
             payload.attachStream(stream);
         } else {
             payload.attachFile(file);
@@ -255,10 +259,11 @@ class MediaImporter extends PureComponent {
      * @return {Promise<Object|undefined>}
      */
     importBookmarkFile(file) {
+        let { payloads } = this.props;
         return BlobReader.loadText(file).then((text) => {
             let link = LinkParser.parse(text);
             if (link && /https?:/.test(link.url)) {
-                let payload = this.props.payloads.add('website').attachURL(link.url, 'poster');
+                let payload = payloads.add('website').attachURL(link.url, 'poster');
                 return {
                     type: 'website',
                     payload_token: payload.token,
@@ -277,6 +282,7 @@ class MediaImporter extends PureComponent {
      * @return {Promise<Number>}
      */
     importDataItems(items) {
+        let { payloads } = this.props;
         return retrieveDataItemTexts(items).then((strings) => {
             let html = strings['text/html'];
             let url = strings['text/uri-list'];
@@ -286,14 +292,14 @@ class MediaImporter extends PureComponent {
                 if (this.isAcceptable(type)) {
                     if (type === 'image') {
                         let filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
-                        let payload = this.props.payloads.add('image').attachURL(url);
+                        let payload = payloads.add('image').attachURL(url);
                         return {
                             type: 'image',
                             payload_token: payload.token,
                             filename: filename,
                         };
                     } else if (type === 'website') {
-                        let payload = this.props.payloads.add('website').attachURL(url, 'poster');
+                        let payload = payloads.add('website').attachURL(url, 'poster');
                         return {
                             type: 'website',
                             payload_token: payload.token,
@@ -333,11 +339,13 @@ class MediaImporter extends PureComponent {
      * @return {ReactElement}
      */
     renderPhotoDialog() {
+        let { payloads, env, cameraDirection } = this.props;
+        let { capturing } = this.state.capturing;
         let props = {
-            show: (this.state.capturing === 'image'),
-            cameraDirection: this.props.cameraDirection,
-            payloads: this.props.payloads,
-            locale: this.props.locale,
+            show: (capturing === 'image'),
+            cameraDirection,
+            payloads,
+            env,
             onLoadStart: this.handleLoadStart,
             onClose: this.handleClose,
             onCapturePending: this.handleCapturePending,
@@ -353,11 +361,13 @@ class MediaImporter extends PureComponent {
      * @return {ReactElement}
      */
     renderVideoDialog() {
+        let { payloads, env, cameraDirection } = this.props;
+        let { capturing } = this.state.capturing;
         let props = {
-            show: (this.state.capturing === 'video'),
-            cameraDirection: this.props.cameraDirection,
-            payloads: this.props.payloads,
-            locale: this.props.locale,
+            show: (capturing === 'video'),
+            cameraDirection,
+            payloads,
+            env,
             onLoadStart: this.handleLoadStart,
             onClose: this.handleClose,
             onCapturePending: this.handleCapturePending,
@@ -373,10 +383,12 @@ class MediaImporter extends PureComponent {
      * @return {ReactElement}
      */
     renderAudioDialog() {
+        let { payloads, env, cameraDirection } = this.props;
+        let { capturing } = this.state.capturing;
         let props = {
-            show: (this.state.capturing === 'audio'),
-            payloads: this.props.payloads,
-            locale: this.props.locale,
+            show: (capturing === 'audio'),
+            payloads,
+            env,
             onClose: this.handleClose,
             onCapturePending: this.handleCapturePending,
             onCaptureError: this.handleCaptureError,
@@ -389,7 +401,8 @@ class MediaImporter extends PureComponent {
      * Send end event if component is unmounted in the middle of capturing
      */
     componentWillUnmount() {
-        if (this.state.capturing) {
+        let { capturing } = this.state;
+        if (capturing) {
             this.triggerCaptureEndEvent();
         }
     }
@@ -419,23 +432,23 @@ class MediaImporter extends PureComponent {
      * @param  {Array<Object>} newResources
      */
     addResources(newResources) {
+        let { resources, limit } = this.props;
         if (_.isEmpty(newResources)) {
             return Promise.resolve(0);
         }
         let path = 'details.resources'
-        let resourcesBefore = this.props.resources || [];
-        let resources;
-        if (this.props.limit === 1) {
+        let firstIndex = resources.length;
+        if (limit === 1) {
             let newResource = _.first(newResources);
-            let index = _.findIndex(resourcesBefore, { type: newResource.type });
-            resources = _.concat(resourcesBefore, newResource);
+            let index = _.findIndex(resources, { type: newResource.type });
+            resources = _.concat(resources, newResource);
             if (index !== -1) {
                 resources.splice(index, 1);
+                firstIndex--;
             }
         } else {
-            resources = _.concat(resourcesBefore, newResources);
+            resources = _.concat(resources, newResources);
         }
-        let firstIndex = resourcesBefore.length;
         this.triggerChangeEvent(resources, firstIndex);
     }
 
@@ -448,9 +461,10 @@ class MediaImporter extends PureComponent {
      * @return {Promise}
      */
     updateResource(before, after) {
-        let resources = _.slice(this.props.resources);
+        let { resources } = this.props;
         let index = _.findIndex(resources, before);
         if (index !== -1) {
+            resources = _.slice(resources);
             resources[index] = after;
             this.triggerChangeEvent(resources);
         }
@@ -465,9 +479,10 @@ class MediaImporter extends PureComponent {
      * @return {Promise}
      */
     removeResource(before, after) {
-        let resources = _.slice(this.props.resources);
+        let { resources } = this.props;
         let index = _.findIndex(resources, before);
         if (index !== -1) {
+            resources = _.slice(resources);
             resources.splice(index, 1);
             this.triggerChangeEvent(resources);
         }
@@ -480,8 +495,9 @@ class MediaImporter extends PureComponent {
      * @param  {Number|undefined} selection
      */
     triggerChangeEvent(resources, selection) {
-        if (this.props.onChange) {
-            this.props.onChange({
+        let { onChange } = this.props;
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 resources,
@@ -494,11 +510,13 @@ class MediaImporter extends PureComponent {
      * Call onCaptureStart handler
      */
     triggerCaptureStartEvent() {
-        if (this.props.onCaptureStart) {
-            this.props.onCaptureStart({
+        let { onCaptureStart } = this.props;
+        let { capturing } = this.state;
+        if (onCaptureStart) {
+            onCaptureStart({
                 type: 'capturestart',
                 target: this,
-                mediaType: this.state.capturing,
+                mediaType: capturing,
             });
         }
     }
@@ -506,15 +524,17 @@ class MediaImporter extends PureComponent {
     /**
      * Call onCaptureEnd handler
      *
-     * @param  {Object|undefined} res
+     * @param  {Object|undefined} resource
      */
-    triggerCaptureEndEvent(res) {
-        if (this.props.onCaptureEnd) {
-            this.props.onCaptureEnd({
+    triggerCaptureEndEvent(resource) {
+        let { onCaptureStart } = this.props;
+        let { capturing } = this.state;
+        if (onCaptureEnd) {
+            onCaptureEnd({
                 type: 'captureend',
                 target: this,
-                mediaType: this.state.capturing,
-                resource: res,
+                mediaType: capturing,
+                resource,
             });
         }
     }
