@@ -8,18 +8,19 @@ import Icon from 'octicons/build/svg/person.svg';
 import './profile-image.scss';
 
 function ProfileImage(props) {
-    let className = `profile-image ${props.size}`;
-    let resources = _.get(props.user, 'details.resources');
+    let { env, href, user, size } = props;
+    let className = `profile-image ${size}`;
+    let resources = _.get(user, 'details.resources');
     let profileImage = _.find(resources, { type: 'image' });
     let image;
     if (profileImage) {
-        let width = imageResolutions[props.size];
-        image = <ResourceView resource={profileImage} mosaic={true} theme={props.theme} width={width} height={width} />;
+        let width = imageResolutions[size];
+        image = <ResourceView resource={profileImage} mosaic={true} env={env} width={width} height={width} />;
     } else {
         image = <div className="placeholder"><Icon /></div>;
     }
-    if (props.href) {
-        return <a className={className} href={props.href}>{image}</a>;
+    if (href) {
+        return <a className={className} href={href}>{image}</a>;
     } else {
         return <span className={className}>{image}</span>;
     }

@@ -27,13 +27,14 @@ class ReactionMediaToolbar extends PureComponent {
      * @return {Object}
      */
     getResourceCounts() {
+        let { reaction } = this.props;
         let counts = {
             photo: 0,
             video: 0,
             audio: 0,
             file: 0,
         };
-        let resources = _.get(this.props.reaction, 'details.resources');
+        let resources = _.get(reaction, 'details.resources');
         _.each(resources, (res) => {
             if (res.imported) {
                 counts.file++;
@@ -54,17 +55,19 @@ class ReactionMediaToolbar extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env, reaction } = this.props;
+        let { hasCamera, hasMicrophone, capturing } = this.state;
+        let { t } = env.locale;
         let counts = this.getResourceCounts();
-        let canCaptureStaticImage = this.state.hasCamera && PhotoCaptureDialogBox.isAvailable();
-        let canCaptureVideo = this.state.hasCamera && VideoCaptureDialogBox.isAvailable();
-        let canCaptureAudio = this.state.hasMicrophone && AudioCaptureDialogBox.isAvailable();
+        let canCaptureStaticImage = hasCamera && PhotoCaptureDialogBox.isAvailable();
+        let canCaptureVideo = hasCamera && VideoCaptureDialogBox.isAvailable();
+        let canCaptureAudio = hasMicrophone && AudioCaptureDialogBox.isAvailable();
         let photoButtonProps = {
             tooltip: t('story-photo'),
             icon: 'camera',
             hidden: !counts.photo && !canCaptureStaticImage,
             disabled: !canCaptureStaticImage,
-            highlighted: (counts.photo > 0 || this.props.capturing === 'image'),
+            highlighted: (counts.photo > 0 || capturing === 'image'),
             onClick: this.handlePhotoClick,
         };
         let videoButtonProps = {
@@ -72,7 +75,7 @@ class ReactionMediaToolbar extends PureComponent {
             icon: 'video-camera',
             hidden: !counts.video && !canCaptureVideo,
             disabled: !canCaptureVideo,
-            highlighted: (counts.video > 0 || this.props.capturing === 'video'),
+            highlighted: (counts.video > 0 || capturing === 'video'),
             onClick: this.handleVideoClick,
         };
         let audioButtonProps = {
@@ -80,7 +83,7 @@ class ReactionMediaToolbar extends PureComponent {
             icon: 'microphone',
             hidden: !counts.audio && !canCaptureAudio,
             disabled: !canCaptureAudio,
-            highlighted: (counts.audio > 0 || this.props.capturing === 'audio'),
+            highlighted: (counts.audio > 0 || capturing === 'audio'),
             onClick: this.handleAudioClick,
         };
         let selectButtonProps = {
@@ -90,7 +93,7 @@ class ReactionMediaToolbar extends PureComponent {
             highlighted: (counts.file > 0),
             onChange: this.handleFileSelect,
         };
-        let markdown = _.get(this.props.reaction, 'details.markdown', false);
+        let markdown = _.get(reaction, 'details.markdown', false);
         let markdownProps = {
             tooltip: t('story-markdown'),
             icon: 'pencil-square',
@@ -129,8 +132,9 @@ class ReactionMediaToolbar extends PureComponent {
      * @param  {Object|undefined} props
      */
     triggerActionEvent(action, props) {
-        if (this.props.onAction) {
-            this.props.onAction(_.extend({
+        let { onAction } = props;
+        if (onAction) {
+            onAction(_.extend({
                 type: 'action',
                 target: this,
                 action,
@@ -183,7 +187,7 @@ class ReactionMediaToolbar extends PureComponent {
      * @param  {Event} evt
      */
     handleMarkdownClick = (evt) => {
-        let reaction = this.props.reaction;
+        let { reaction } = this.props;
         let value = !reaction.details.markdown;
         this.triggerActionEvent('markdown-set', { value });
     }

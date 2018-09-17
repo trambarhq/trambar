@@ -3,11 +3,11 @@ import React from 'react';
 import './device-placeholder.scss';
 
 function DevicePlaceholder(props) {
+    let { icon, blocked } = props;
     let className = 'device-placeholder';
-    if (props.blocked) {
+    if (blocked) {
         className += ' blocked';
     }
-    let icon = props.icon;
     return (
         <div className={className}>
             <span className="fa-stack fa-lg">
@@ -25,7 +25,7 @@ export {
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
-    
+
     DevicePlaceholder.propTypes = {
         blocked: PropTypes.bool,
         icon: PropTypes.oneOf([ 'camera', 'video-camera', 'microphone' ]).isRequired,

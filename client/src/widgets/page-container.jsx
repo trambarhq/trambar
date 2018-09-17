@@ -15,14 +15,12 @@ class PageContainer extends PureComponent {
     }
 
     render() {
-        let className = 'page-container';
-        if (this.props.className) {
-            className += ' ' + this.props.className;
-        }
+        let { className, children } = this.props;
+        className = 'page-container' + ((className) ? ` ${className}` : '');
         return (
             <div className={className} tabIndex={0} ref={this.setNode}>
                 <div className="contents">
-                    {this.props.children}
+                    {children}
                 </div>
             </div>
         );

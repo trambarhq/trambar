@@ -3,16 +3,17 @@ import React from 'react';
 import './push-button.scss';
 
 function PushButton(props) {
-    if (props.hidden) {
+    let { label, emphasized, hidden, disabled, onClick } = props;
+    if (hidden) {
         return null;
     }
     let classNames = [ 'push-button' ];
-    if (props.emphasized) {
+    if (emphasized) {
         classNames.push('emphasized');
     }
     return (
-        <button className={classNames.join(' ')} disabled={props.disabled} onClick={props.onClick}>
-            {props.label}
+        <button className={classNames.join(' ')} disabled={disabled} onClick={onClick}>
+            {label}
         </button>
     );
 }
@@ -20,24 +21,25 @@ function PushButton(props) {
 PushButton.File = FileButton;
 
 function FileButton(props) {
-    if (props.hidden) {
+    let { label, emphasized, hidden, disabled, multiple, accept, onChange } = props;
+    if (hidden) {
         return null;
     }
     let inputProps = {
         type: 'file',
         value: '',
-        disabled: props.disabled,
-        multiple: props.multiple,
-        accept: props.accept,
-        onChange: props.onChange,
+        disabled,
+        multiple,
+        accept,
+        onChange,
     };
     let classNames = [ 'push-button' ];
-    if (props.emphasized) {
+    if (emphasized) {
         classNames.push('emphasized');
     }
     return (
-        <label className={classNames.join(' ')} disabled={props.disabled} onClick={props.onClick}>
-            {props.label}
+        <label className={classNames.join(' ')} disabled={disabled}>
+            {label}
             <input {...inputProps} />
         </label>
     );

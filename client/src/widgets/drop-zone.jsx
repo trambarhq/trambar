@@ -18,9 +18,10 @@ class DropZone extends PureComponent {
      * @return {ReactElement}
      */
     render() {
+        let { children } = this.props;
         return (
             <div className="drop-zone" onDragEnter={this.handleDragEnter}>
-                {this.props.children}
+                {children}
                 {this.renderOverlay()}
             </div>
         );
@@ -32,7 +33,8 @@ class DropZone extends PureComponent {
      * @return {ReactElement|null}
      */
     renderOverlay() {
-        if (!this.state.active) {
+        let { active } = this.state;
+        if (!active) {
             return null;
         }
         let handlers = {
@@ -76,10 +78,12 @@ class DropZone extends PureComponent {
      * @param  {Event} evt
      */
     handleDrop = (evt) => {
+        let { onDrop } = this.props;
+        let { active } = this.state;
         evt.preventDefault();
-        if (this.state.active) {
-            if (this.props.onDrop) {
-                this.props.onDrop({
+        if (active) {
+            if (onDrop) {
+                onDrop({
                     type: 'drop',
                     files: evt.dataTransfer.files,
                     items: evt.dataTransfer.items,

@@ -28,12 +28,10 @@ class MultipleUserNames extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let className = 'multiple-user-names';
-        if (this.props.className) {
-            className += ` ${this.props.className}`;
-        }
+        let { label, className } = this.props;
+        className = 'multiple-user-names' + ((className) ? ` ${className}` : '');
         let containerProps = {
-            className: className,
+            className,
             onMouseEnter: this.handleMouseEnter,
             onMouseLeave: this.handleMouseLeave,
         };
@@ -43,7 +41,7 @@ class MultipleUserNames extends PureComponent {
         };
         return (
             <span {...containerProps}>
-                <span {...labelProps}>{this.props.label}</span>
+                <span {...labelProps}>{label}</span>
                 {this.renderPopUp()}
                 {this.renderDialogBox()}
             </span>
@@ -56,13 +54,14 @@ class MultipleUserNames extends PureComponent {
      * @return {ReactElement|null}
      */
     renderPopUp() {
-        if (!this.state.showingPopUp) {
+        let { showingPopUp, popupLimit } = this.state;
+        if (!showingPopUp) {
             return null;
         }
         return (
             <div className="popup-container">
                 <div className="popup">
-                    {this.renderUserList(this.props.popupLimit)}
+                    {this.renderUserList(popupLimit)}
                 </div>
             </div>
         );
@@ -74,11 +73,12 @@ class MultipleUserNames extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDialogBox() {
-        if (!this.state.renderingDialogBox) {
+        let { showingDialogBox, renderingDialogBox } = this.state;
+        if (!renderingDialogBox) {
             return null;
         }
         let overlayProps = {
-            show: this.state.showingDialogBox,
+            show: showingDialogBox,
             onBackgroundClick: this.handleDialogBoxClose,
         };
         let buttonProps = {
@@ -110,14 +110,16 @@ class MultipleUserNames extends PureComponent {
      * @return {Array<ReactElement>}
      */
     renderUserList(limit) {
-        let p = this.props.locale.pick;
-        let users = _.sortBy(this.props.users, (user) => {
+        let { env, users } = this.props;
+        let { t, p } = env.locale;
+        users = _.sortBy(users, (user) => {
             return p(user.details.name);
         });
         if (users.length > limit) {
-            let t = this.props.locale.translate;
             let chunk = _.slice(users, limit);
-            let elements = _.map(chunk, this.renderUser);
+            let elements = _.map(chunk, (user) => {
+                return this.renderUser(user);
+            });
             elements.push(
                 <div key={0} className="more">
                     {t('list-$count-more', users.length - chunk.length)}
@@ -125,7 +127,9 @@ class MultipleUserNames extends PureComponent {
             );
             return elements;
         } else {
-            return _.map(users, this.renderUser);
+            return _.map(users, (user) => {
+                return this.renderUser(user);
+            });
         }
     }
 
@@ -133,16 +137,12 @@ class MultipleUserNames extends PureComponent {
      * Render user profile image and name
      *
      * @param  {User} user
-     * @param  {Number} index
      *
-     * @return {ReactELement}
+     * @return {ReactElement}
      */
-    renderUser(user, index) {
-        let userProps = {
-            user,
-            theme: this.props.theme,
-            locale: this.props.locale,
-        };
+    renderUser(user) {
+        let { env } = this.props;
+        let userProps = { user, env };
         return <User key={user.id} {...userProps} />;
     }
 
@@ -192,13 +192,14 @@ class MultipleUserNames extends PureComponent {
 }
 
 function User(props) {
+    let { env, user } = props;
     let classNames = [ 'user' ];
     let imageProps = {
-        user: props.user,
-        theme: props.theme,
+        user,
+        env,
         size: 'small',
     };
-    let name = UserUtils.getDisplayName(props.user, props.locale);
+    let name = UserUtils.getDisplayName(user, env);
     return (
         <div className={classNames.join(' ')}>
             <ProfileImage {...imageProps} />

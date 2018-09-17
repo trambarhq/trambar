@@ -23,8 +23,9 @@ class CornerPopUp extends PureComponent {
      * Close the pop-up menu
      */
     close() {
+        let { popUpMenu } = this.components;
         this.setState({ open: false });
-        this.components.popUpMenu.close();
+        popUpMenu.close();
     }
 
     /**
@@ -33,19 +34,21 @@ class CornerPopUp extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let setters = this.components.setters;
+        let { children } = this.props;
+        let { setters } = this.components;
+        let { open } = this.state;
         let handlers = {
             onOpen: this.handleOpen,
             onClose: this.handleClose,
         };
-        let dir = (this.state.open) ? 'left' : 'down';
+        let dir = (open) ? 'left' : 'down';
         return (
             <PopUpMenu ref={setters.popUpMenu} className="corner-pop-up" {...handlers} >
                 <button>
                     <i className={`fa fa-chevron-circle-${dir}`} />
                 </button>
                 <menu>
-                    {this.props.children}
+                    {children}
                 </menu>
             </PopUpMenu>
         );
@@ -57,9 +60,10 @@ class CornerPopUp extends PureComponent {
      * @param  {Object} evt
      */
     handleOpen = (evt) => {
+        let { onOpen } = this.props;
         this.setState({ open: true });
-        if (this.props.onOpen) {
-            this.props.onOpen({
+        if (onOpen) {
+            onOpen({
                 type: open,
                 target: this,
             });
@@ -72,9 +76,10 @@ class CornerPopUp extends PureComponent {
      * @param  {Object} evt
      */
     handleClose = (evt) => {
+        let { onClose } = this.props;
         this.setState({ open: false });
-        if (this.props.onClose) {
-            this.props.onClose({
+        if (onClose) {
+            onClose({
                 type: open,
                 target: this,
             });

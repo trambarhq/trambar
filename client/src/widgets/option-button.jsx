@@ -3,15 +3,16 @@ import React from 'react';
 import './option-button.scss';
 
 function OptionButton(props) {
-    if (props.hidden) {
+    let { id, label, url, target, hidden, disabled, onClick } = props;
+    if (hidden) {
         return null;
     }
     let anchorProps = {
         className: buttonClasses(props),
-        id: props.id,
-        href: props.url,
-        target: props.target,
-        onClick: !props.disabled ? props.onClick : null,
+        id,
+        href: url,
+        target,
+        onClick: !disabled ? onClick : null,
     };
     return (
         <a {...anchorProps}>
@@ -19,7 +20,7 @@ function OptionButton(props) {
                 <i className={iconClasses(props)} />
             </div>
             <div className="label">
-                {props.label}
+                {label}
             </div>
         </a>
     )

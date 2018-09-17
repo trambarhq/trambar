@@ -20,7 +20,8 @@ class NewItemsAlertProxy extends PureComponent {
      * Draw the alert if component is show on mount
      */
     componentDidMount() {
-        if (this.props.hash) {
+        let { url } = this.props;
+        if (url) {
             this.show(this.props);
         }
     }
@@ -31,12 +32,13 @@ class NewItemsAlertProxy extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (!this.props.hash && nextProps.hash) {
+        let { url, children } = this.props;
+        if (!url && nextProps.url) {
             this.show(nextProps);
-        } else if (this.props.hash && !nextProps.hash) {
+        } else if (url && !nextProps.url) {
             this.hide(this.props);
-        } else if (this.props.children !== nextProps.children || this.props.hash !== nextProps.hash) {
-            if (nextProps.hash) {
+        } else if (nextProps.children !== children || nextProps.url !== url) {
+            if (nextProps.url) {
                 this.redraw(nextProps, true);
             }
         }
@@ -78,7 +80,7 @@ class NewItemsAlertProxy extends PureComponent {
      * @param  {Boolean} show
      */
     redraw(props, show) {
-        let route = this.props.route;
+        let { route } = this.props;
         ReactDOM.render(<NewItemsAlert {...props} show={show} />, this.containerNode);
     }
 
@@ -131,8 +133,7 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     NewItemsAlertProxy.propTypes = {
-        hash: PropTypes.string,
-        route: PropTypes.instanceOf(Route).isRequired,
+        url: PropTypes.string,
         onClick: PropTypes.func,
     };
 }

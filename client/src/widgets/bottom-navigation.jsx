@@ -34,35 +34,29 @@ class BottomNavigation extends PureComponent {
     /**
      * Return true if bottom nav is supposed to be hidden
      *
-     * @param  {Object|undefined} settings
+     * @param  {Object|undefined} props
      *
      * @return {Boolean}
      */
-    isHidden(settings) {
-        if (!settings) {
-            settings = this.props.settings;
-        }
+    isHidden(props) {
+        let { settings } = props || this.props;
         return !_.get(settings, 'navigation.bottom', true);
     }
 
     /**
      * Return a URL that points to the given page.
      *
-     * @param  {ReactClass} pageClass
-     * @param  {Route|undefined} route
+     * @param  {String} pageName
      *
      * @return {String|null}
      */
-    getPageURL(pageClass, route) {
-        if (!route) {
-            route = this.props.route;
-        }
-        let settings = (pageClass.configureUI) ? pageClass.configureUI(route) : null;
+    getPageURL(pageName) {
+        let { settings, route } = this.props;
         let params = _.get(settings, 'navigation.route');
         if (!params) {
             return null;
         }
-        let url = route.find(pageClass, params);
+        let url = route.find(pageName, params);
         return url;
     }
 
@@ -72,10 +66,10 @@ class BottomNavigation extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
+        let { container } = this.components;
         let hiddenBefore = this.isHidden();
-        let hiddenAfter = this.isHidden(nextProps.settings);
+        let hiddenAfter = this.isHidden(nextProps);
         if (hiddenBefore !== hiddenAfter) {
-            let container = this.components.container;
             let contentHeight = container.offsetHeight;
             if (hiddenAfter) {
                 // hiding navigation:
@@ -109,9 +103,9 @@ class BottomNavigation extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let style = { height: this.state.height };
+        let { height } = this.state;
         return (
-            <footer className="bottom-navigation" style={style}>
+            <footer className="bottom-navigation" style={{ height }}>
                 {this.renderButtons()}
             </footer>
         );
@@ -123,23 +117,24 @@ class BottomNavigation extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
-        let setters = this.components.setters;
-        let route = this.props.route;
-        let section = _.get(this.props.settings, 'navigation.section');
+        let { database, env } = this.props;
+        let { stacking } = this.state;
+        let { setters } = this.components;
+        let { t } = env.locale;
+        let section = _.get(settings, 'navigation.section');
         let newsProps = {
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',
             active: (section === 'news'),
-            stacking: this.state.stacking,
-            url: this.getPageURL(NewsPage),
+            stacking,
+            url: this.getPageURL('news-page'),
             onClick: (section === 'news') ? this.handleActiveButtonClick : null,
         };
         let notificationsProps = {
             label: t('bottom-nav-notifications'),
             icon: 'comments',
             active: (section === 'notifications'),
-            stacking: this.state.stacking,
+            stacking,
             url: this.getPageURL(NotificationsPage),
             onClick: (section === 'notifications') ? this.handleActiveButtonClick : null,
         };
@@ -147,7 +142,7 @@ class BottomNavigation extends PureComponent {
             label: t('bottom-nav-bookmarks'),
             icon: 'bookmark',
             active: (section === 'bookmarks'),
-            stacking: this.state.stacking,
+            stacking,
             url: this.getPageURL(BookmarksPage),
             onClick: (section === 'bookmarks') ? this.handleActiveButtonClick : null,
         };
@@ -155,7 +150,7 @@ class BottomNavigation extends PureComponent {
             label: t('bottom-nav-people'),
             icon: 'users',
             active: (section === 'people'),
-            stacking: this.state.stacking,
+            stacking,
             url: this.getPageURL(PeoplePage),
             onClick: (section === 'people') ? this.handleActiveButtonClick : null,
         };
@@ -163,15 +158,11 @@ class BottomNavigation extends PureComponent {
             label: t('bottom-nav-settings'),
             icon: 'gears',
             active: (section === 'settings'),
-            stacking: this.state.stacking,
+            stacking,
             url: this.getPageURL(SettingsPage),
             onClick: (section === 'settings') ? this.handleActiveButtonClick : null,
         };
-        let newNotificationProps = {
-            hasAccess: this.props.hasAccess,
-            database: this.props.database,
-            route: this.props.route,
-        };
+        let newNotificationProps = { database, route };
         return (
             <div ref={setters.container} className="container">
                 <Button {...newsProps} />
@@ -245,32 +236,39 @@ class BottomNavigation extends PureComponent {
 }
 
 function Button(props) {
-    let className = 'button';
-    if (props.className) {
-        className += ` ${props.className}`;
-    }
-    if (props.active) {
+    let {
+        className,
+        url,
+        label,
+        icon,
+        children,
+        active,
+        stacking,
+        onClick
+    } = props;
+    className = 'button' + ((className) ? ` ${className}` : '');
+    if (active) {
         className += ' active';
     }
-    if (props.stacking) {
+    if (stacking) {
         className += ' stacking';
     }
-    if (props.stacking) {
+    if (stacking) {
         return (
-            <Link className={className} url={props.url} onClick={props.onClick}>
-                <i className={`fa fa-${props.icon}`} />
-                    {props.children}
+            <Link className={className} url={url} onClick={onClick}>
+                <i className={`fa fa-${icon}`} />
+                    {children}
                     {' '}
-                <span className="label">{props.label}</span>
+                <span className="label">{label}</span>
             </Link>
         );
     } else {
         return (
-            <Link className={className} url={props.url} onClick={props.onClick}>
-                <i className={`fa fa-${props.icon}`} />
+            <Link className={className} url={url} onClick={onClick}>
+                <i className={`fa fa-${icon}`} />
                 {' '}
-                <span className="label">{props.label}</span>
-                {props.children}
+                <span className="label">{label}</span>
+                {children}
             </Link>
         );
     }
@@ -287,16 +285,16 @@ class NewNotificationsBadge extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let params = this.props.route.parameters;
-        if (!params.schema) {
+        let { database } = this.props;
+        if (!database.context.schema) {
             return null;
         }
-        if (!this.props.hasAccess) {
-            return null;
+        if (!database.authorized) {
+            return nul;
         }
-        let db = this.props.database.use({ schema: params.schema, by: this });
-        return db.start().then((currentUserId) => {
-            return UserFinder.findUser(db, currentUserId).then((user) => {
+        let db = database.use({ by: this });
+        return db.start().then((currentUserID) => {
+            return UserFinder.findUser(db, currentUserID).then((user) => {
                 return NotificationFinder.findNotificationsUnseenByUser(db, user).then((notifications) => {
                     let count = notifications.length;
                     if (process.env.PLATFORM === 'browser') {

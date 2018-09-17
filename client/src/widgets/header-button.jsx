@@ -3,13 +3,14 @@ import React from 'react';
 import './header-button.scss';
 
 function HeaderButton(props) {
-    if (props.hidden) {
+    let { label, hidden, disabled, onClick } = props;
+    if (hidden) {
         return null;
     }
     return (
-        <label className={buttonClasses(props)} onClick={!props.disabled ? props.onClick : null}>
+        <label className={buttonClasses(props)} onClick={!disabled ? onClick : null}>
             <i className={iconClasses(props)}/>
-            <span className="label">{props.label}</span>
+            <span className="label">{label}</span>
         </label>
     );
 }
@@ -17,15 +18,16 @@ function HeaderButton(props) {
 HeaderButton.File = FileButton;
 
 function FileButton(props) {
-    if (props.hidden) {
+    let { label, hidden, disabled, multiple, onChange } = props;
+    if (hidden) {
         return null;
     }
     let inputProps = {
         type: 'file',
         value: '',
-        disabled: props.disabled,
-        multiple: props.multiple,
-        onChange: props.onChange,
+        disabled,
+        multiple,
+        onChange,
     };
     if (edgeBug) {
         // deal with bug in Edge:
@@ -35,7 +37,7 @@ function FileButton(props) {
             <span className={buttonClasses(props)}>
                 <label htmlFor={inputProps.id}>
                     <i className={iconClasses(props)}/>
-                    <span className="label">{props.label}</span>
+                    <span className="label">{label}</span>
                 </label>
                 <input {...inputProps} />
             </span>
@@ -44,7 +46,7 @@ function FileButton(props) {
     return (
         <label className={buttonClasses(props)}>
             <i className={iconClasses(props)}/>
-            <span className="label">{props.label}</span>
+            <span className="label">{label}</span>
             <input {...inputProps} />
         </label>
     );

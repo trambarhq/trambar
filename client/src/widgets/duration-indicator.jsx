@@ -22,10 +22,10 @@ class DurationIndicator extends PureComponent {
     }
 
     calculateDuration() {
-        let duration = this.props.duration;
-        if (this.props.startTime) {
+        let { duration, startTime } = this.props;
+        if (startTime) {
             let now = new Date;
-            duration += (now - this.props.startTime);
+            duration += (now - startTime);
         }
         return duration;
     }
@@ -34,7 +34,8 @@ class DurationIndicator extends PureComponent {
      * Start timer on mount if startTime is non-null
      */
     componentWillMount() {
-        if (this.props.startTime) {
+        let { startTime } = this.props;
+        if (startTime) {
             this.startTimer();
         }
     }
@@ -46,9 +47,10 @@ class DurationIndicator extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (!this.props.startTime && nextProps.startTime) {
+        let { startTime } = this.props;
+        if (!startTime && nextProps.startTime) {
             this.startTimer();
-        } else if (this.props.startTime && !nextProps.startTime) {
+        } else if (startTime && !nextProps.startTime) {
             this.stopTimer();
         }
     }
@@ -59,9 +61,10 @@ class DurationIndicator extends PureComponent {
      * @return {ReactElement}
      */
     render() {
+        let { startTime } = this.props;
         let millseconds = this.calculateDuration();
         let iconClassName = 'icon';
-        if (this.props.startTime) {
+        if (startTime) {
             iconClassName += ' blinking';
         }
         return (

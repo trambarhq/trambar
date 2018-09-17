@@ -15,9 +15,10 @@ class ReactionToolbar extends PureComponent {
      * @return {Object|null}
      */
     getCurrentUserLike() {
-        return _.find(this.props.reactions, {
+        let { reactions, currentUser } = this.props;
+        return _.find(reactions, {
             type: 'like',
-            user_id: _.get(this.props.currentUser, 'id'),
+            user_id: _.get(currentUser, 'id'),
         });
     }
 
@@ -27,9 +28,10 @@ class ReactionToolbar extends PureComponent {
      * @return {Array<Object>}
      */
     getCurrentUserComments() {
-        let userId = _.get(this.props.currentUser, 'id');
-        return _.filter(this.props.reactions, (reaction) => {
-            if (reaction.user_id === userId) {
+        let { currentUser, reactions } = this.props;
+        let userID = _.get(currentUser, 'id');
+        return _.filter(reactions, (reaction) => {
+            if (reaction.user_id === userID) {
                 if (reaction.type === 'comment' || reaction.type === 'note') {
                     return true;
                 }
@@ -43,23 +45,23 @@ class ReactionToolbar extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
-        let access = this.props.access;
+        let { env, access, addingComment, disabled } = this.props;
+        let { t } = env.locale;
         let canComment = (access === 'read-comment' || access === 'read-write');
         let likeButtonProps = {
             icon: 'thumbs-up',
             label: t('story-like'),
             hidden: !canComment,
             highlighted: !!this.getCurrentUserLike(),
-            disabled: this.props.disabled,
+            disabled,
             onClick: this.handleLikeClick,
         };
         let commentButtonProps = {
             icon: 'comment',
             label: t('story-comment'),
             hidden: !canComment,
-            highlighted: !_.isEmpty(this.getCurrentUserComments()) || this.props.addingComment,
-            disabled: this.props.disabled,
+            highlighted: !_.isEmpty(this.getCurrentUserComments()) || addingComment,
+            disabled,
             onClick: this.handleCommentClick,
         };
         return (
@@ -77,8 +79,9 @@ class ReactionToolbar extends PureComponent {
      * @param  {Object|undefined} props
      */
     triggerActionEvent(action, props) {
-        if (this.props.onAction) {
-            this.props.onAction(_.extend({
+        let { onAction } = this.props;
+        if (onAction) {
+            onAction(_.extend({
                 type: 'action',
                 target: this,
                 action,
@@ -137,7 +140,6 @@ if (process.env.NODE_ENV !== 'production') {
         addingComment: PropTypes.bool,
         disabled: PropTypes.bool,
         env: PropTypes.instanceOf(Environment).isRequired,
-        theme: PropTypes.instanceOf(Theme),
         onAction: PropTypes.func,
     }
 }

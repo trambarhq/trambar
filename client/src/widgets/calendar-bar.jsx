@@ -21,26 +21,26 @@ class CalendarBar extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
-        let currentUserId;
+        let { database, route, env, settings } = this.props;
+        let db = database.use({ by: this });
+        let currentUserID;
         let props = {
             dailyActivities: null,
 
-            settings: this.props.settings,
-            route: this.props.route,
-            locale: this.props.locale,
+            settings,
+            route,
+            env,
         };
         meanwhile.show(<CalendarBarSync {...props} />);
-        return db.start().then((userId) => {
-            return UserFinder.findUser(db, userId);
-        }).then((user) => {
-            let params = _.clone(this.props.settings.statistics);
+        return db.start().then((currentUserID) => {
+            return UserFinder.findUser(db, currentUserID);
+        }).then((currentUser) => {
+            let params = _.clone(settings.statistics);
             if (params.user_id === 'current') {
-                params.user_id = user.id;
+                params.user_id = currentUser.id;
             }
             if (params.public === 'guest') {
-                params.public = (user.type === 'guest');
+                params.public = (currentUser.type === 'guest');
             }
             return StatisticsFinder.find(db, params);
         }).then((statistics) => {
@@ -54,12 +54,13 @@ class CalendarBarSync extends PureComponent {
     static displayName = 'CalendarBar.Sync';
 
     render() {
+        let { route, env, dailyActivities } = this.props;
         let endOfThisMonth = Moment().endOf('month');
         let months = [];
         let multiyear = false;
-        let startTime = _.get(this.props.dailyActivities, 'range.start');
-        let endTime = _.get(this.props.dailyActivities, 'range.end');
-        let selectedDate = this.props.route.parameters.date;
+        let startTime = _.get(dailyActivities, 'range.start');
+        let endTime = _.get(dailyActivities, 'range.end');
+        let selectedDate = route.params.date;
         if (startTime && endTime) {
             let s = Moment(startTime).startOf('month');
             let e = Moment(endTime).endOf('month');
@@ -90,7 +91,7 @@ class CalendarBarSync extends PureComponent {
                 month: month.month,
                 showYear: multiyear,
                 selection: selectedDate,
-                locale: this.props.locale,
+                emv,
                 onDateURL: this.handleDateURL,
             };
             return <Calendar key={index} {...props} />;
@@ -110,11 +111,11 @@ class CalendarBarSync extends PureComponent {
      * @return {String|undefined}
      */
     handleDateURL = (evt) => {
-        let activities = _.get(this.props.dailyActivities, [ 'daily', evt.date ]);
+        let { route, dailyActivities, settings } = this.props;
+        let activities = _.get(dailyActivities, [ 'daily', evt.date ]);
         if (activities) {
-            let route = this.props.route;
-            let params = _.assign({ date: evt.date }, this.props.settings.route);
-            let url = route.find(route.component, params);
+            let params = _.assign({ date: evt.date }, settings.route);
+            let url = route.find(route.name, params);
             return url;
         }
     }

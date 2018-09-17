@@ -15,23 +15,24 @@ class ChartToolbar extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env, chartType } = this.props;
+        let { t } = env.locale;
         let barChartProps = {
             label: t('statistics-bar'),
             icon: 'bar-chart',
-            highlighted: (this.props.chartType === 'bar'),
+            highlighted: (chartType === 'bar'),
             onClick: this.handleBarChartClick,
         };
         let lineChartProps = {
             label: t('statistics-line'),
             icon: 'line-chart',
-            highlighted: (this.props.chartType === 'line'),
+            highlighted: (chartType === 'line'),
             onClick: this.handleLineChartClick,
         };
         let pieChartProps = {
             label: t('statistics-pie'),
             icon: 'pie-chart',
-            highlighted: (this.props.chartType === 'pie'),
+            highlighted: (chartType === 'pie'),
             onClick: this.handlePieChartClick,
         };
         return (
@@ -50,8 +51,9 @@ class ChartToolbar extends PureComponent {
      * @param  {Object|undefined} props
      */
     triggerActionEvent(action, props) {
-        if (this.props.onAction) {
-            this.props.onAction(_.extend({
+        let { onAction } = this.props;
+        if (onAction) {
+            onAction(_.extend({
                 type: 'action',
                 target: this,
                 action,

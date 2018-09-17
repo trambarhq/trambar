@@ -4,26 +4,24 @@ import React from 'react';
 import './media-placeholder.scss';
 
 function MediaPlaceholder(props) {
-    if (props.theme.mode === 'columns-1') {
-        return null;
-    }
-    let t = props.locale.translate;
-    let phraseIds;
+    let { env, showHints } = props;
+    let { t } = env.locale;
+    let phraseIDs;
     if (process.env.PLATFORM !== 'mobile') {
-        if (props.showHints) {
-            phraseIds = [
+        if (showHints) {
+            phraseIDs = [
                 'story-drop-files-here',
                 'story-paste-image-here',
             ]
         }
     }
-    let messages = _.map(phraseIds, (phraseId, index) => {
+    let messages = _.map(phraseIDs, (phraseID, index) => {
         let style = {
             animationDelay: `${10 * index}s`
         };
         return (
             <div key={index} className="message" style={style}>
-                {t(phraseId)}
+                {t(phraseID)}
             </div>
         )
     });

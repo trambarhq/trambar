@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { PureComponent, Children } from 'react';
 import ReactDOM from 'react-dom';
 import ScrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
 import Overlay from 'widgets/overlay';
@@ -27,7 +27,8 @@ class PopUpMenu extends PureComponent {
      * @return {tagName}
      */
     getContents(tagName) {
-        let children = React.Children.toArray(this.props.children);
+        let { children } = this.props;
+        children = Children.toArray(children);
         let child = _.find(children, { type: tagName });
         if (child) {
             return child.props.children;
@@ -47,17 +48,16 @@ class PopUpMenu extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let className = 'pop-up-menu';
-        if (this.props.className) {
-            className += ' ' + this.props.className;
-        }
-        if (this.state.open) {
+        let { className, popOut } = this.props;
+        let { open } = this.state;
+        className = 'pop-up-menu' + ((className) ? ` ${className}` : '');
+        if (open) {
             className += ' open';
         }
         return (
             <span className={className}>
                 {this.renderButton()}
-                {!this.props.popOut ? this.renderMenu() : null}
+                {!popOut ? this.renderMenu() : null}
             </span>
         );
     }
@@ -68,8 +68,9 @@ class PopUpMenu extends PureComponent {
      * @return {ReactElement}
      */
     renderButton() {
+        let { disabled } = this.props;
         let className = 'button';
-        if (!this.props.disabled) {
+        if (!disabled) {
             className += ' active';
         }
         return (
@@ -85,10 +86,11 @@ class PopUpMenu extends PureComponent {
      * @return {ReactElement}
      */
     renderMenu() {
-        if (!this.state.open) {
+        let { open } = this.state;
+        let { setters } = this.components;
+        if (!open) {
             return null;
         }
-        let setters = this.components.setters;
         return (
             <div ref={setters.container} className="container">
                 <div ref={setters.menu} className="menu">
@@ -102,19 +104,17 @@ class PopUpMenu extends PureComponent {
      * Render menu into pop-out container
      */
     redrawPopOutMenu() {
+        let { className } = this.props;
+        let { setters } = this.components;
         let node = ReactDOM.findDOMNode(this);
         let page = getPageNode();
-        let setters = this.components.setters;
         let nodePos = getRelativePosition(node, page);
         let style = {
             position: 'absolute',
             left: nodePos.left + node.offsetWidth,
             top: nodePos.top,
         };
-        let className = 'pop-up-menu';
-        if (this.props.className) {
-            className += ' ' + this.props.className;
-        }
+        className = 'pop-up-menu' + ((className) ? ` ${className}` : '');
         let element = (
             <div className={className} style={style}>
                 <div ref={setters.container} className="container">
@@ -134,25 +134,27 @@ class PopUpMenu extends PureComponent {
      * @param  {Object} prevState
      */
     componentDidUpdate(prevProps, prevState) {
+        let { popOut } = this.props;
+        let { open } = this.state;
+        let { menu } = this.components;
         let appContainer = document.getElementById('application');
-        if (!prevState.open && this.state.open) {
+        if (!prevState.open && open) {
             appContainer.addEventListener('mousedown', this.handleBodyMouseDown);
-            if (this.props.popOut) {
+            if (popOut) {
                 this.addPopOutContainer();
             }
-        } else if (prevState.open && !this.state.open) {
+        } else if (prevState.open && !open) {
             appContainer.removeEventListener('mousedown', this.handleBodyMouseDown);
-            if (this.props.popOut) {
+            if (popOut) {
                 this.removePopOutContainer();
             }
         }
 
-        if (this.state.open && this.props.popOut) {
+        if (open && popOut) {
             this.redrawPopOutMenu();
         }
-        if (this.state.open && !prevProps.open) {
+        if (open && !prevProps.open) {
             setTimeout(() => {
-                let menu = this.components.menu;
                 if (menu) {
                     let options = {
                         behavior: 'smooth',
@@ -205,16 +207,17 @@ class PopUpMenu extends PureComponent {
      * @param  {Boolean} open
      */
     triggerEvent(open) {
+        let { onOpen, onClose } = this.props;
         if (open) {
-            if (this.props.onOpen) {
-                this.props.onOpen({
+            if (onOpen) {
+                onOpen({
                     type: 'open',
                     target: this,
                 });
             }
         } else {
-            if (this.props.onClose) {
-                this.props.onClose({
+            if (onClose) {
+                onClose({
                     type: 'close',
                     target: this,
                 });
@@ -228,9 +231,11 @@ class PopUpMenu extends PureComponent {
      * @param  {Event} evt
      */
     handleButtonClick = (evt) => {
-        if (!this.props.disabled) {
-            this.triggerEvent(!this.state.open);
-            this.setState({ open: !this.state.open });
+        let { disabled } = this.props;
+        let { open } = this.state;
+        if (!disabled) {
+            this.triggerEvent(!open);
+            this.setState({ open: !open });
         }
     }
 

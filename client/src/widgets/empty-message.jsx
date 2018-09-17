@@ -3,9 +3,9 @@ import React from 'react';
 import './empty-message.scss';
 
 function EmptyMessage(props) {
-    let t = props.locale.translate;
-    let phrase = props.phrase;
-    if (!props.online) {
+    let { env, phrase } = props;
+    let { t } = env.locale;
+    if (!env.online) {
         phrase = 'empty-currently-offline';
     }
     return (
@@ -14,10 +14,6 @@ function EmptyMessage(props) {
         </div>
     );
 }
-
-EmptyMessage.defaultProps = {
-    online: true
-};
 
 export {
     EmptyMessage as default,
@@ -30,8 +26,7 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     EmptyMessage.propTypes = {
-        env: PropTypes.instanceOf(Environment).isRequired,
-        online: PropTypes.bool,
         phrase: PropTypes.string.isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
     };
 }

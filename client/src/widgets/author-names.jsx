@@ -8,10 +8,10 @@ import MultipleUserNames from 'widgets/multiple-user-names';
 import './author-names.scss';
 
 function AuthorNames(props) {
-    let t = props.locale.translate;
-    let authors = props.authors;
+    let { env, authors } = props;
+    let { t } = env.locale;
     let names = _.map(authors, (author) => {
-        return UserUtils.getDisplayName(author, props.locale);
+        return UserUtils.getDisplayName(author, env);
     });
     let contents;
     switch (_.size(authors)) {

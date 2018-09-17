@@ -3,13 +3,14 @@ import React from 'react';
 import './media-button.scss';
 
 function MediaButton(props) {
-    if (props.hidden) {
+    let { label, hidden, disabled, onClick } = props;
+    if (hidden) {
         return null;
     }
     return (
-        <label className={buttonClasses(props)} onClick={!props.disabled ? props.onClick : null}>
+        <label className={buttonClasses(props)} onClick={!disabled ? onClick : null}>
             <i className={iconClasses(props)}/>
-            <span className="label">{props.label}</span>
+            <span className="label">{label}</span>
         </label>
     );
 }
@@ -17,17 +18,18 @@ function MediaButton(props) {
 MediaButton.Direction = Direction;
 
 function Direction(props) {
-    if (props.hidden) {
+    let { index, count, hidden, onBackwardClick, onForwardClick } = props;
+    if (hidden) {
         return null;
     }
-    let text = `${props.index + 1} / ${props.count}`;
+    let text = `${index + 1} / ${count}`;
     return (
         <div className="media-direction">
-            <label className="backward-button" onClick={props.onBackwardClick}>
+            <label className="backward-button" onClick={onBackwardClick}>
                 <i className="fa fa-caret-left"/>
             </label>
             <span className="position">{text}</span>
-            <label className="forward-button" onClick={props.onForwardClick}>
+            <label className="forward-button" onClick={onForwardClick}>
                 <i className="fa fa-caret-right"/>
             </label>
         </div>

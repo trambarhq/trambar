@@ -17,17 +17,19 @@ class Link extends PureComponent {
      * @return {ReactElement}
      */
     render() {
+        let { url, alwaysAsLink } = this.props;
+        let { hasFocus } = this.state;
         let props = _.omit(this.props, 'url', 'alwaysAsLink');
-        if (this.props.url) {
-            if (this.props.alwaysAsLink) {
+        if (url) {
+            if (alwaysAsLink) {
                 // always set href
-                props.href = this.props.url;
+                props.href = url;
             } else {
                 // set href only when link has focus
-                if (this.state.hasFocus) {
-                    props.href = this.props.url;
+                if (hasFocus) {
+                    props.href = url;
                 } else {
-                    props['data-url'] = this.props.url;
+                    props['data-url'] = url;
                 }
                 if (props.tabIndex === undefined) {
                     props.tabIndex = 0;

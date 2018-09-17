@@ -22,20 +22,19 @@ class RoleFilterBar extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let { database, route, env, settings } = this.props;
+        let db = database.use({ by: this });
         let props = {
             roles: null,
             users: null,
             project: null,
 
-            settings: this.props.settings,
-            locale: this.props.locale,
-            route: this.props.route,
-            theme: this.props.theme,
+            settings,
+            route,
+            env,
         };
         meanwhile.show(<RoleFilterBarSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserID) => {
             return ProjectFinder.findCurrentProject(db).then((project) => {
                 props.project = project;
             });
@@ -75,16 +74,17 @@ class RoleFilterBarSync extends PureComponent {
      * @return {Array<ReactElement>|ReactElement}
      */
     renderButtons() {
-        let roles = this.props.roles;
+        let { env, roles } = this.props;
         if (!_.isEmpty(roles)) {
-            return _.map(roles, this.renderButton);
+            return _.map(roles, (role) => {
+                return this.renderButton(role);
+            });
         } else {
             // render a blank button to maintain spacing
             // show "No roles" if database query yielded nothing
             let props = {
                 role: (roles !== null) ? null : undefined,
-                locale: this.props.locale,
-                theme: this.props.theme,
+                env,
             };
             return <RoleFilterButton {...props} />;
         }
@@ -98,23 +98,21 @@ class RoleFilterBarSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButton(role) {
-        let users = findUsers(this.props.users, role);
-        let route = this.props.route;
-        let roleIds = route.parameters.roles;
-        let params = _.clone(this.props.settings.route);
-        if (_.includes(roleIds, role.id)) {
-            params.roles = _.without(roleIds, role.id);
+        let { route, users, settings } = this.props;
+        let roleUsers = findUsers(users, role);
+        let params = _.clone(settings.route);
+        if (_.includes(route.params.roles, role.id)) {
+            params.roles = _.without(roleIDs, role.id);
         } else {
-            params.roles = _.concat(roleIds, role.id);
+            params.roles = _.concat(roleIDs, role.id);
         }
-        let url = route.find(route.component, params);
+        let url = route.find(route.name, params);
         let props = {
             role,
-            users,
+            users: roleUsers,
             url,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            selected: _.includes(roleIds, role.id),
+            selected: _.includes(route.params.roles, role.id),
+            env,
             onRoleClick: this.handleRoleClick,
         };
         return <RoleFilterButton key={role.id} {...props} />;

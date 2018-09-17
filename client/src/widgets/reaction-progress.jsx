@@ -7,17 +7,17 @@ import Time from 'widgets/time';
 import './reaction-progress.scss';
 
 function ReactionProgress(props) {
-    let t = props.locale.translate;
+    let { env, reaction, status } = props;
+    let { t } = env.locale;
     let contents;
-    if (!ReactionUtils.isActuallyPublished(props.reaction)) {
+    if (!ReactionUtils.isActuallyPublished(reaction)) {
         // not saved yet
         contents = t('reaction-status-storage-pending');
     } else {
-        let status = props.status;
         if (status) {
             contents = t(`reaction-status-${status.action}`);
         } else {
-            contents = <Time time={props.reaction.ptime} compact={true} locale={props.locale} />;
+            contents = <Time time={reaction.ptime} env={env} compact={true} />;
         }
     }
     return <span className="reaction-progress">{contents}</span>;

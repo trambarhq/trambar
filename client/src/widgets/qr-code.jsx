@@ -1,8 +1,11 @@
 import React, { PureComponent } from 'react';
+import ComponentRefs from 'utils/component-refs';
 import QRCodeGenerator from 'qrcode';
 
 class QRCode extends PureComponent {
     static displayName = 'QRCode';
+
+
 
     /**
      * Render component
@@ -10,7 +13,8 @@ class QRCode extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        return <canvas ref="canvas" className="qr-code" />
+        let { setters } = this.components;
+        return <canvas ref={setters.canvas} className="qr-code" />
     }
 
     /**
@@ -34,11 +38,10 @@ class QRCode extends PureComponent {
      * Draw QR code into canvas
      */
     redraw() {
-        let canvas = this.refs.canvas;
-        let options = {
-            scale: this.props.scale
-        };
-        QRCodeGenerator.toCanvas(canvas, this.props.text, options, (err) => {});
+        let { text, scale } = this.props;
+        let { canvas } = this.components;
+        let options = { scale };
+        QRCodeGenerator.toCanvas(canvas, text, options, (err) => {});
     }
 }
 

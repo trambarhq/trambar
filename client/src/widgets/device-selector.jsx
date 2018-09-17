@@ -4,8 +4,8 @@ import React from 'react';
 import './device-selector.scss';
 
 function DeviceSelector(props) {
-    let t = props.locale.translate;
-    let devices = props.devices;
+    let { env, devices } = props;
+    let { t } = env.locale;
     if (devices.length < 2) {
         return null;
     }
@@ -30,8 +30,8 @@ function DeviceSelector(props) {
             label = t('device-selector-mic-$number', index + 1);
         }
         let optionProps = {
-            value: device.deviceId,
-            selected: device.deviceId === props.selectedDeviceId,
+            value: device.deviceID,
+            selected: device.deviceID === props.selectedDeviceID,
         };
         return <option key={index} {...optionProps}>{label}</option>;
     });

@@ -24,14 +24,15 @@ class CoauthoringButton extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env, story, coauthoring } = this.props;
+        let { t } = env.locale;
         let icon, label;
-        if (this.props.coauthoring) {
+        if (coauthoring) {
             icon = 'minus-square';
             label = t('story-remove-yourself');
         } else {
             icon = 'plus-square';
-            if (this.props.story.user_ids.length > 1) {
+            if (story.user_ids.length > 1) {
                 label = t('story-add-remove-coauthor');
             } else {
                 label = t('story-add-coauthor');
@@ -52,15 +53,15 @@ class CoauthoringButton extends PureComponent {
      * @return {ReactElement}
      */
     renderDialogBox() {
+        let { database, route, env, story } = this.props;
+        let { selecting } = this.state;
         let props = {
-            show: this.state.selecting,
-            selection: this.props.story.user_ids,
-            disabled: _.slice(this.props.story.user_ids, 0, 1),
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            show: selecting,
+            selection: story.user_ids,
+            disabled: _.slice(story.user_ids, 0, 1),
+            database,
+            route,
+            env,
             onSelect: this.handleSelect,
             onCancel: this.handleCancel,
         };
@@ -73,9 +74,10 @@ class CoauthoringButton extends PureComponent {
      * @param  {Event} evt
      */
     handleClick = (evt) => {
-        if (this.props.coauthoring) {
-            if (this.props.onRemove) {
-                this.props.onRemove({
+        let { coauthoring, onRemove } = this.props;
+        if (coauthoring) {
+            if (onRemove) {
+                onRemove({
                     type: 'remove',
                     target: this,
                 });
@@ -100,8 +102,9 @@ class CoauthoringButton extends PureComponent {
      * @param  {Object} evt
      */
     handleSelect = (evt) => {
-        if (this.props.onSelect) {
-            this.props.onSelect({
+        let { onSelect } = this.props;
+        if (onSelect) {
+            onSelect({
                 type: 'select',
                 target: this,
                 selection: evt.selection

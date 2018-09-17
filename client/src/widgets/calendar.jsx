@@ -14,11 +14,9 @@ class Calendar extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let localeCode = this.props.locale.localeCode;
+        let { env, year, month, selection, showYear } = this.props;
+        let { localeCode } = env.locale;
         let localeData = Moment.localeData(localeCode);
-        let year = this.props.year;
-        let month = this.props.month;
-        let selection = this.props.selection;
         let firstDay = Moment(date(year, month, 1)).locale(localeCode);
         let firstDayOfWeek = localeData.firstDayOfWeek();
         let daysInMonth = firstDay.daysInMonth();
@@ -49,7 +47,7 @@ class Calendar extends PureComponent {
             dayLabels.push(dayLabels.shift());
             isWeekend.push(isWeekend.shift());
         }
-        let titleFormat = (this.props.showYear) ? 'MMMM YYYY' : 'MMMM';
+        let titleFormat = (showYear) ? 'MMMM YYYY' : 'MMMM';
         let title = firstDay.format(titleFormat);
         let headings = _.map(dayLabels, (label, index) => {
             let classNames = [
@@ -119,8 +117,9 @@ class Calendar extends PureComponent {
      * @return {String|undefined}
      */
     getDateURL(date) {
-        if (this.props.onDateURL) {
-            return this.props.onDateURL({
+        let { onDataURL } = this.props;
+        if (onDateURL) {
+            return onDateURL({
                 type: 'dateurl',
                 target: this,
                 date,
