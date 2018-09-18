@@ -9,11 +9,11 @@ var NumberOrNew = {
 
 var routes = {
     'member-list-page': {
-        path: '/projects/${project}/members/',
+        path: '/projects/${projectID}/members/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { project: Number, edit: Boolean },
+        params: { projectID: Number, editing: Boolean },
         load: (params, context) => {
             return import('pages/member-list-page' /* webpackChunkName: "page-member-list" */).then((module) => {
                 params.module = module;
@@ -21,11 +21,11 @@ var routes = {
         }
     },
     'member-summary-page': {
-        path: '/projects/${project}/members/${user}/',
+        path: '/projects/${projectID}/members/${userID}/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { project:Number, user: NumberOrNew, edit: Boolean },
+        params: { projectID: Number, userID: NumberOrNew, editing: Boolean },
         load: (params, context) => {
             return import('pages/user-summary-page' /* webpackChunkName: "page-user-summary" */).then((module) => {
                 params.module = module;
@@ -35,9 +35,9 @@ var routes = {
     'project-list-page': {
         path: '/projects/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { edit: Boolean },
+        params: { editing: Boolean },
         load: (params, context) => {
             return import('pages/project-list-page' /* webpackChunkName: "page-project-list" */).then((module) => {
                 params.module = module;
@@ -45,11 +45,11 @@ var routes = {
         }
     },
     'project-summary-page': {
-        path: '/projects/${project}/',
+        path: '/projects/${projectID}/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { project: NumberOrNew, edit: Boolean },
+        params: { projectID: NumberOrNew, editing: Boolean },
         load: (params, context) => {
             return import('pages/project-summary-page' /* webpackChunkName: "page-project-summary" */).then((module) => {
                 params.module = module;
@@ -57,11 +57,11 @@ var routes = {
         }
     },
     'repo-list-page': {
-        path: '/projects/${project}/repos/',
+        path: '/projects/${projectID}/repos/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { project: Number, edit: Boolean },
+        params: { projectID: Number, editing: Boolean },
         load: (params, context) => {
             return import('pages/repo-list-page' /* webpackChunkName: "page-repo-list" */).then((module) => {
                 params.module = module;
@@ -69,11 +69,11 @@ var routes = {
         }
     },
     'repo-summary-page': {
-        path: '/projects/${project}/repos/${repo}/',
+        path: '/projects/${projectID}/repos/${repoID}/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { project: Number, repo: Number, edit: Boolean },
+        params: { projectID: Number, repoID: Number, editing: Boolean },
         load: (params, context) => {
             return import('pages/repo-summary-page' /* webpackChunkName: "page-repo-summary" */).then((module) => {
                 params.module = module;
@@ -83,9 +83,9 @@ var routes = {
     'role-list-page': {
         path: '/roles/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { edit: Boolean },
+        params: { editing: Boolean },
         load: (params, context) => {
             return import('pages/role-list-page' /* webpackChunkName: "page-role-list" */).then((module) => {
                 params.module = module;
@@ -93,11 +93,11 @@ var routes = {
         }
     },
     'role-summary-page': {
-        path: '/roles/${role}/',
+        path: '/roles/${roleID}/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { role: NumberOrNew, edit: Boolean },
+        params: { roleID: NumberOrNew, editing: Boolean },
         load: (params, context) => {
             return import('pages/role-summary-page' /* webpackChunkName: "page-role-summary" */).then((module) => {
                 params.module = module;
@@ -107,9 +107,9 @@ var routes = {
     'server-list-page': {
         path: '/servers/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { edit: Boolean },
+        params: { editing: Boolean },
         load: (params, context) => {
             return import('pages/server-list-page' /* webpackChunkName: "page-server-list" */).then((module) => {
                 params.module = module;
@@ -117,12 +117,12 @@ var routes = {
         }
     },
     'server-summary-page': {
-        path: '/servers/${server}/',
+        path: '/servers/${serverID}/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        hash: [ 'T${task}' ],
-        params: { server: NumberOrNew, edit: Boolean, task: Number },
+        hash: [ 'T${taskID}' ],
+        params: { serverID: NumberOrNew, editing: Boolean, taskID: Number },
         load: (params, context) => {
             return import('pages/server-summary-page' /* webpackChunkName: "page-server-summary" */).then((module) => {
                 params.module = module;
@@ -132,9 +132,9 @@ var routes = {
     'settings-page': {
         path: '/settings/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { edit: Boolean },
+        params: { editing: Boolean },
         load: (params, context) => {
             return import('pages/settings-page' /* webpackChunkName: "page-settings" */).then((module) => {
                 params.module = module;
@@ -161,9 +161,9 @@ var routes = {
     'user-list-page': {
         path: '/users/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { edit: Boolean },
+        params: { editing: Boolean },
         load: (params, context) => {
             return import('pages/user-list-page' /* webpackChunkName: "page-user-list" */).then((module) => {
                 params.module = module;
@@ -171,11 +171,11 @@ var routes = {
         }
     },
     'user-summary-page': {
-        path: '/users/${user}/',
+        path: '/users/${userID}/',
         query: {
-            edit: '${edit}',
+            edit: '${editing}',
         },
-        params: { user: NumberOrNew, edit: Boolean },
+        params: { userID: NumberOrNew, editing: Boolean },
         load: (params, context) => {
             return import('pages/user-summary-page' /* webpackChunkName: "page-user-summary" */).then((module) => {
                 params.module = module;

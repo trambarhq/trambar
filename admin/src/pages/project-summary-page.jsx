@@ -35,8 +35,9 @@ class ProjectSummaryPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env, payloads } = this.props;
+        let { database, route, env, payloads, projectID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
+        let creating = (projectID === 'new');
         let props = {
             system: null,
             project: null,
@@ -46,6 +47,8 @@ class ProjectSummaryPage extends AsyncComponent {
             route,
             env,
             payloads,
+            editing: editing || creating,
+            creating,
         };
         meanwhile.show(<ProjectSummaryPageSync {...props} />);
         return db.start().then((currentUserID) => {
@@ -53,13 +56,13 @@ class ProjectSummaryPage extends AsyncComponent {
                 props.system = system;
             });
         }).then(() => {
-            if (route.params.project !== 'new') {
-                return ProjectFinder.findProject(db, route.params.project).then((project) => {
+            if (!creating) {
+                return ProjectFinder.findProject(db, projectID).then((project) => {
                     props.project = project;
                 });
             }
         }).then(() => {
-            if (route.params.project !== 'new') {
+            if (!creating) {
                 meanwhile.show(<ProjectSummaryPageSync {...props} />);
                 return StatisticsFinder.findDailyActivitiesOfProject(db, props.project).then((statistics) => {
                     props.statistics = statistics;
@@ -95,9 +98,9 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getProject(state) {
-        let { project } = this.props;
+        let { project, editing } = this.props;
         let { newProject } = this.state;
-        if (this.isEditing() && (!state || state === 'current')) {
+        if (editing && (!state || state === 'current')) {
             return newProject || project || emptyProject;
         } else {
             return project || emptyProject;
@@ -166,30 +169,6 @@ class ProjectSummaryPageSync extends PureComponent {
     }
 
     /**
-     * Return true when the URL indicate we're creating a new user
-     *
-     * @param  {Object} props
-     *
-     * @return {Boolean}
-     */
-    isCreating(props) {
-        let { route } = props || this.props;
-        return (route.params.project === 'new');
-    }
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object} props
-     *
-     * @return {Boolean}
-     */
-    isEditing(props) {
-        let { route } = props || this.props;
-        return this.isCreating(props) || route.params.edit;
-    }
-
-    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -198,18 +177,17 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {Promise}
      */
     setEditability(edit, newProject) {
-        let { route } = this.props;
-        if (this.isCreating() && !edit && !newProject) {
+        let { route, creating } = this.props;
+        if (creating && !edit && !newProject) {
             // return to list when cancelling project creation
             this.returnToList();
         } else {
             let params = _.clone(route.params);
-            params.edit = edit || undefined;
+            params.editing = edit || undefined;
             if (newProject) {
                 // use id of newly created project
-                params.project = newProject.id;
+                params.projectID = newProject.id;
             }
-            debugger;
             return route.replace(route.name, params).then((replaced) => {
                 if (replaced) {
                     this.setState({ problems: {} });
@@ -256,8 +234,9 @@ class ProjectSummaryPageSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 this.setState({
                     newProject: null,
                     hasChanges: false,
@@ -300,10 +279,10 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { env, project } = this.props;
+        let { env, project, editing } = this.props;
         let { hasChanges, adding } = this.state;
         let { t, p } = env.locale;
-        if (this.isEditing()) {
+        if (editing) {
             // using keys here to force clearing of focus
             return (
                 <div key="edit" className="buttons">
@@ -376,13 +355,13 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTitleInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'title',
             value: this.getProjectProperty('details.title'),
             availableLanguageCodes: this.getInputLanguages(),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             env,
             onChange: this.handleTitleChange,
         };
@@ -399,13 +378,13 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderNameInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { problems } = this.state;
         let { t } = env.locale;
         let props = {
             id: 'name',
             value: this.getProjectProperty('name'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleNameChange,
@@ -424,14 +403,14 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderDescriptionInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'description',
             value: this.getProjectProperty('details.description'),
             availableLanguageCodes: this.getInputLanguages(),
             type: 'textarea',
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             env,
             onChange: this.handleDescriptionChange,
         };
@@ -448,14 +427,14 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderEmblemSelector() {
-        let { database, env, payloads } = this.props;
+        let { database, env, payloads, editing } = this.props;
         let { t } = env.locale;
         let props = {
             purpose: 'project-emblem',
             desiredWidth: 500,
             desiredHeight: 500,
             resources: this.getProjectProperty('details.resources'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             database,
             env,
             payloads,
@@ -474,7 +453,7 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderMembershipOptions() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let memOptsCurr = this.getProjectProperty('settings.membership', 'current') || {};
         let memOptsPrev = this.getProjectProperty('settings.membership', 'original') || {};
@@ -514,7 +493,7 @@ class ProjectSummaryPageSync extends PureComponent {
             },
         ];
         let listProps = {
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             onOptionClick: this.handleMembershipOptionClick,
         };
         return (
@@ -531,7 +510,7 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderAccessControlOptions() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let acOptsCurr = this.getProjectProperty('settings.access_control', 'current') || {};
         let acOptsPrev = this.getProjectProperty('settings.access_control', 'original') || {};
@@ -558,7 +537,7 @@ class ProjectSummaryPageSync extends PureComponent {
             },
         ];
         let listProps = {
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             onOptionClick: this.handleAccessControlOptionClick,
         };
         return (
@@ -575,12 +554,12 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderInstructions() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let instructionProps = {
             folder: 'project',
             topic: 'project-summary',
-            hidden: !this.isEditing(),
+            hidden: !editing,
             env,
         };
         return (
@@ -596,9 +575,9 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderChart() {
-        let { env, statistics } = this.props;
+        let { env, statistics, creating } = this.props;
         let { t } = env.locale;
-        if (this.isCreating()) {
+        if (creating) {
             return null;
         }
         let chartProps = {
@@ -895,12 +874,20 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     ProjectSummaryPage.propTypes = {
+        editing: PropTypes.bool,
+        projectID: PropTypes.oneOfType([
+            PropTypes.number,
+            PropTypes.oneOf([ 'new' ]),
+        ]).isRequired,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
     };
     ProjectSummaryPageSync.propTypes = {
+        editing: PropTypes.bool,
+        creating: PropTypes.bool,
         system: PropTypes.object,
         project: PropTypes.object,
         statistics: PropTypes.object,

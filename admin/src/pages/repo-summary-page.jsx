@@ -32,7 +32,7 @@ class RepoSummaryPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env } = this.props;
+        let { database, route, env, projectID, repoID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
             system: null,
@@ -43,6 +43,7 @@ class RepoSummaryPage extends AsyncComponent {
             database,
             route,
             env,
+            editing,
         };
         meanwhile.show(<RepoSummaryPageSync {...props} />);
         return db.start().then((currentUserID) => {
@@ -50,12 +51,12 @@ class RepoSummaryPage extends AsyncComponent {
                 props.system = system;
             });
         }).then(() => {
-            return RepoFinder.findRepo(db, route.params.repo).then((repo) => {
+            return RepoFinder.findRepo(db, repoID).then((repo) => {
                 props.repo = repo;
             });
         }).then(() => {
             meanwhile.show(<RepoSummaryPageSync {...props} />);
-            return ProjectFinder.findProject(db, route.params.project).then((project) => {
+            return ProjectFinder.findProject(db, projectID).then((project) => {
                 props.project = project;
             });
         }).then(() => {
@@ -92,9 +93,9 @@ class RepoSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getRepo(state) {
-        let { repo } = this.props;
+        let { repo, editing } = this.props;
         let { newRepo } = this.state;
-        if (this.isEditing() && (!state || state === 'current')) {
+        if (editing && (!state || state === 'current')) {
             return newRepo || repo || emptyRepo;
         } else {
             return repo || emptyRepo;
@@ -133,18 +134,6 @@ class RepoSummaryPageSync extends PureComponent {
     }
 
     /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object} props
-     *
-     * @return {Boolean}
-     */
-    isEditing(props) {
-        let { route } = props || this.props;
-        return route.params.edit;
-    }
-
-    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -154,7 +143,7 @@ class RepoSummaryPageSync extends PureComponent {
     setEditability(edit) {
         let { route } = this.props;
         let params = _.clone(route.params);
-        params.edit = edit || undefined;
+        params.editing = edit || undefined;
         return route.replace(route.name, params);
     }
 
@@ -165,7 +154,7 @@ class RepoSummaryPageSync extends PureComponent {
      */
     returnToList() {
         let { route } = this.props;
-        let params = { project: route.params.project };
+        let params = { projectID: route.params.projectID };
         return route.push('repo-list-page', params);
     }
 
@@ -185,8 +174,9 @@ class RepoSummaryPageSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 this.setState({
                     newRepo: null,
                     hasChanges: false,
@@ -229,10 +219,10 @@ class RepoSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { route, env, project } = this.props;
+        let { route, env, project, editing } = this.props;
         let { hasChanges } = this.state;
         let { t } = env.locale;
-        if (this.isEditing()) {
+        if (editing) {
             return (
                 <div key="edit" className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
@@ -291,13 +281,13 @@ class RepoSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTitleInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'title',
             value: this.getRepoProperty('details.title'),
             availableLanguageCodes: this.getInputLanguages(),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             env,
             onChange: this.handleTitleChange,
         };
@@ -362,11 +352,11 @@ class RepoSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderInstructions() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let instructionProps = {
             folder: 'repo',
             topic: 'repo-summary',
-            hidden: !this.isEditing(),
+            hidden: !editing,
             env,
         };
         return (
@@ -540,11 +530,16 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     RepoSummaryPage.propTypes = {
+        editing: PropTypes.bool,
+        projectID: PropTypes.number.isRequired,
+        repoID: PropTypes.number.isRequired,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     RepoSummaryPageSync.propTypes = {
+        editing: PropTypes.bool,
         system: PropTypes.object,
         repo: PropTypes.object,
         project: PropTypes.object,

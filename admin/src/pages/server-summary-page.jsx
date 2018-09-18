@@ -39,8 +39,9 @@ class ServerSummaryPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env } = this.props;
+        let { database, route, env, serverID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
+        let creating = (serverID === 'new');
         let props = {
             system: null,
             server: null,
@@ -49,6 +50,8 @@ class ServerSummaryPage extends AsyncComponent {
             database,
             route,
             env,
+            editing: editing || creating,
+            creating,
         };
         meanwhile.show(<ServerSummaryPageSync {...props} />);
         return db.start().then((userID) => {
@@ -56,8 +59,8 @@ class ServerSummaryPage extends AsyncComponent {
                 props.system = system;
             });
         }).then(() => {
-            if (route.params.server !== 'new') {
-                return ServerFinder.findServer(db, route.params.server).then((server) => {
+            if (creating) {
+                return ServerFinder.findServer(db, serverID).then((server) => {
                     props.server = server;
                 });
             }
@@ -98,9 +101,9 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getServer(state) {
-        let { server } = this.props;
+        let { server, editing } = this.props;
         let { newServer } = this.state;
-        if (this.isEditing() && (!state || state === 'current')) {
+        if (editing && (!state || state === 'current')) {
             return newServer || server || emptyServer;
         } else {
             return server || emptyServer;
@@ -196,30 +199,6 @@ class ServerSummaryPageSync extends PureComponent {
     }
 
     /**
-     * Return true when the URL indicate we're creating a new user
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isCreating(props) {
-        let { route } = props || this.props;
-        return (route.params.server === 'new');
-    }
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isEditing(props) {
-        let { route } = props || this.props;
-        return this.isCreating(props) || route.params.edit;
-    }
-
-    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -228,16 +207,16 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {Promise}
      */
     setEditability(edit, newServer) {
-        let { route } = this.props;
-        if (this.isCreating() && !edit && !newServer) {
+        let { route, creating } = this.props;
+        if (creating && !edit && !newServer) {
             // return to list when cancelling server creation
             return this.returnToList();
         } else {
             let params = _.clone(route.params);
-            params.edit = edit || undefined;
+            params.editing = edit || undefined;
             if (newServer) {
                 // use id of newly created server
-                params.server = newServer.id;
+                params.serverID = newServer.id;
             }
             return route.replace(route.name, params);
         }
@@ -281,8 +260,9 @@ class ServerSummaryPageSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 this.setState({
                     newServer: null,
                     hasChanges: false,
@@ -328,10 +308,10 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { hasChanges, adding, credentialsChanged } = this.state;
         let { t } = env.locale;
-        if (this.isEditing()) {
+        if (editing) {
             return (
                 <div key="edit" className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
@@ -429,7 +409,7 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTypeSelector() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { problems } = this.state;
         let { t } = env.locale;
         let typeCurr = this.getServerProperty('type', 'current');
@@ -448,7 +428,7 @@ class ServerSummaryPageSync extends PureComponent {
             };
         });
         let listProps = {
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             onOptionClick: this.handleTypeOptionClick,
         };
         return (
@@ -468,13 +448,13 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTitleInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'title',
             value: this.getServerProperty('details.title'),
             availableLanguageCodes: this.getInputLanguages(),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             env,
             onChange: this.handleTitleChange,
         };
@@ -491,13 +471,13 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderNameInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { problems } = this.state;
         let { t } = env.locale;
         let props = {
             id: 'name',
             value: this.getServerProperty('name'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleNameChange,
@@ -529,7 +509,7 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderGitlabUserOptions() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let userOptsCurr = this.getServerProperty('settings.user', 'current') || {};
         let userOptsPrev = this.getServerProperty('settings.user', 'original') || {};
@@ -603,7 +583,7 @@ class ServerSummaryPageSync extends PureComponent {
             },
         ];
         let listProps = {
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             onOptionClick: this.handleGitlabUserOptionClick,
         };
         return (
@@ -622,7 +602,7 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderOAuthUserOptions() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let userOptsCurr = this.getServerProperty('settings.user', 'current') || {};
         let userOptsPrev = this.getServerProperty('settings.user', 'original') || {};
@@ -648,7 +628,7 @@ class ServerSummaryPageSync extends PureComponent {
             },
         ];
         let listProps = {
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             onOptionClick: this.handleOAuthUserOptionClick,
         };
         return (
@@ -667,7 +647,7 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderWhitelist() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { problems } = this.state;
         let { t } = env.locale;
         let serverType = this.getServerProperty('type');
@@ -681,7 +661,7 @@ class ServerSummaryPageSync extends PureComponent {
         let props = {
             id: 'whitelist',
             value: this.getServerProperty('settings.user.whitelist'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             type: 'textarea',
             spellCheck: false,
             env,
@@ -700,7 +680,7 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderRoleSelector() {
-        let { env, roles } = this.props;
+        let { env, roles, editing } = this.props;
         let { t, p } = env.locale;
         let userRolesCurr = this.getServerProperty('settings.user.role_ids', 'current') || [];
         let userRolesPrev = this.getServerProperty('settings.user.role_ids', 'original') || [];
@@ -722,7 +702,7 @@ class ServerSummaryPageSync extends PureComponent {
             children: t('server-summary-role-none')
         });
         let listProps = {
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             onOptionClick: this.handleRoleOptionClick,
         };
         return (
@@ -917,7 +897,7 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderGitlabURLInput() {
-        let { env, system } = this.props;
+        let { env, system, editing } = this.props;
         let { problems } = this.state;
         let { t } = env.locale;
         let serverType = this.getServerProperty('type');
@@ -925,7 +905,7 @@ class ServerSummaryPageSync extends PureComponent {
             id: 'oauth_token',
             type: 'url',
             value: this.getServerProperty('settings.oauth.base_url'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleOAuthURLChange,
@@ -946,13 +926,13 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderOAuthClientIDInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { problems } = this.state;
         let { t } = env.locale;
         let props = {
             id: 'oauth_id',
             value: this.getServerProperty('settings.oauth.client_id'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleOAuthIDChange,
@@ -992,13 +972,13 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderOAuthClientSecretInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { problems } = this.state;
         let { t } = env.locale;
         let props = {
             id: 'oauth_secret',
             value: this.getServerProperty('settings.oauth.client_secret'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleOAuthSecretChange,
@@ -1071,11 +1051,11 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderInstructions() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let instructionProps = {
             folder: 'server',
             topic: 'server-summary',
-            hidden: !this.isEditing(),
+            hidden: !editing,
             env,
         };
         let serverType = this.getServerProperty('type');
@@ -1535,11 +1515,19 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     ServerSummaryPage.propTypes = {
+        editing: PropTypes.bool,
+        serverID: PropTypes.oneOfType([
+            PropTypes.number,
+            PropTypes.oneOf([ 'new' ]),
+        ]).isRequired,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     ServerSummaryPageSync.propTypes = {
+        editing: PropTypes.bool,
+        creating: PropTypes.bool,
         system: PropTypes.object,
         server: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),

@@ -34,8 +34,9 @@ class RoleSummaryPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env } = this.props;
-        let db = database.use({ by: this });
+        let { database, route, env, roleID, editing } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let creating = (roleID === 'new');
         let props = {
             system: null,
             role: null,
@@ -44,6 +45,8 @@ class RoleSummaryPage extends AsyncComponent {
             database,
             route,
             env,
+            editing: editing || creating,
+            creating,
         };
         meanwhile.show(<RoleSummaryPageSync {...props} />);
         return db.start().then((currentUserID) => {
@@ -51,8 +54,8 @@ class RoleSummaryPage extends AsyncComponent {
                 props.system = system;
             });
         }).then(() => {
-            if (route.params.role !== 'new') {
-                return RoleFinder.findRole(db, route.params.role).then((role) => {
+            if (!creating) {
+                return RoleFinder.findRole(db, roleID).then((role) => {
                     props.role = role;
                 });
             }
@@ -94,9 +97,9 @@ class RoleSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getRole(state) {
-        let { role } = this.props;
+        let { role, editing } = this.props;
         let { newRole } = this.state;
-        if (this.isEditing() && (!state || state === 'current')) {
+        if (editing && (!state || state === 'current')) {
             return newRole || role || emptyRole;
         } else {
             return role || emptyRole;
@@ -160,30 +163,6 @@ class RoleSummaryPageSync extends PureComponent {
     }
 
     /**
-     * Return true when the URL indicate we're creating a new user
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isCreating(props) {
-        let { route } = props || this.props;
-        return (route.params.role === 'new');
-    }
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isEditing(props) {
-        let { route } = props || this.props;
-        return this.isCreating(props) || route.params.edit;
-    }
-
-    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -192,15 +171,15 @@ class RoleSummaryPageSync extends PureComponent {
      * @return {Promise}
      */
     setEditability(edit, newRole) {
-        let { route } = this.props;
-        if (this.isCreating() && !edit && !newRole) {
+        let { route, creating } = this.props;
+        if (creating && !edit && !newRole) {
             return this.returnToList();
         } else {
             let params = _.clone(route.params);
-            params.edit = edit || undefined;
+            params.editing = edit || undefined;
             if (newRole) {
                 // use id of newly created role
-                params.role = newRole.id;
+                params.roleID = newRole.id;
             }
             return route.replace(route.name, params);
         }
@@ -244,8 +223,9 @@ class RoleSummaryPageSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 this.setState({
                     newRole: null,
                     hasChanges: false,
@@ -289,10 +269,10 @@ class RoleSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { env, role } = this.props;
+        let { env, role, editing } = this.props;
         let { hasChanges, adding } = this.state;
         let { t } = env.locale;
-        if (this.isEditing()) {
+        if (editing) {
             return (
                 <div className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
@@ -363,14 +343,14 @@ class RoleSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTitleInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'title',
             value: this.getRoleProperty('details.title'),
             availableLanguageCodes: this.getInputLanguages(),
             onChange: this.handleTitleChange,
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             env,
         };
         return (
@@ -386,13 +366,13 @@ class RoleSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderNameInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { problems } = this.state;
         let { t } = env.locale;
         let props = {
             id: 'name',
             value: this.getRoleProperty('name'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleNameChange,
@@ -411,14 +391,14 @@ class RoleSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderDescriptionInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'description',
             value: this.getRoleProperty('details.description'),
             availableLanguageCodes: this.getInputLanguages(),
             type: 'textarea',
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             env,
             onChange: this.handleDescriptionChange,
         };
@@ -435,7 +415,7 @@ class RoleSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderRatingSelector() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let ratingCurr = this.getRoleProperty('settings.rating', 'current') || 0;
         let ratingPrev = this.getRoleProperty('settings.rating', 'original') || 0;
@@ -449,7 +429,7 @@ class RoleSummaryPageSync extends PureComponent {
         });
         let listProps = {
             onOptionClick: this.handleRatingOptionClick,
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
         };
         return (
             <OptionList {...listProps}>
@@ -467,7 +447,7 @@ class RoleSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderUserSelector() {
-        let { env, users } = this.props;
+        let { env, users, editing } = this.props;
         let { removingUserIDs, addingUserIDs } = this.state;
         let { t, p } = env.locale;
         let roleID = this.getRoleProperty('id');
@@ -488,7 +468,7 @@ class RoleSummaryPageSync extends PureComponent {
             }
         });
         let listProps = {
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             onOptionClick: this.handleUserOptionClick,
         };
         return (
@@ -505,11 +485,11 @@ class RoleSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderInstructions() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let instructionProps = {
             folder: 'role',
             topic: 'role-summary',
-            hidden: !this.isEditing(),
+            hidden: !editing,
             env,
         };
         return (
@@ -795,11 +775,19 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     RoleSummaryPage.propTypes = {
+        editing: PropTypes.bool,
+        roleID: PropTypes.oneOfType([
+            PropTypes.number,
+            PropTypes.oneOf([ 'new' ]),
+        ]).isRequired,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     RoleSummaryPageSync.propTypes = {
+        editing: PropTypes.bool,
+        creating: PropTypes.bool,
         system: PropTypes.object,
         role: PropTypes.object,
         users: PropTypes.arrayOf(PropTypes.object),

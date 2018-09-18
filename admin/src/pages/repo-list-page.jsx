@@ -33,7 +33,7 @@ class RepoListPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env } = this.props;
+        let { database, route, env, projectID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
             project: null,
@@ -44,10 +44,11 @@ class RepoListPage extends AsyncComponent {
             database,
             route,
             env,
+            editing,
         };
         meanwhile.show(<RepoListPageSync {...props} />);
         return db.start().then((currentUserID) => {
-            return ProjectFinder.findProject(db, route.params.project).then((project) => {
+            return ProjectFinder.findProject(db, projectID).then((project) => {
                 props.project = project;
             });
         }).then(() => {
@@ -75,6 +76,7 @@ class RepoListPageSync extends PureComponent {
     static displayName = 'RepoListPage.Sync';
 
     constructor(props) {
+        let { editing } = props;
         super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
@@ -84,21 +86,9 @@ class RepoListPageSync extends PureComponent {
             sortDirections: [ 'asc' ],
             selectedRepoIDs: [],
             hasChanges: false,
-            renderingFullList: this.isEditing(),
+            renderingFullList: editing,
             problems: {},
         };
-    }
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isEditing(props) {
-        let { route } = props || this.props;
-        return route.params.edit;
     }
 
     /**
@@ -111,7 +101,7 @@ class RepoListPageSync extends PureComponent {
     setEditability(edit) {
         let { route } = this.props;
         let params = _.clone(route.params);
-        params.edit = edit || undefined;
+        params.editing = edit || undefined;
         return route.replace(route.name, params);
     }
 
@@ -121,10 +111,10 @@ class RepoListPageSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        let { project } = this.props;
+        let { project, editing } = this.props;
         let { selectedRepoIDs } = this.state;
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 // initial list of ids to the current list
                 this.setState({
                     renderingFullList: true,
@@ -133,7 +123,8 @@ class RepoListPageSync extends PureComponent {
                 });
             } else {
                 setTimeout(() => {
-                    if (!this.isEditing()) {
+                    let { editing } = this.props;
+                    if (!editing) {
                         this.setState({ renderingFullList: false, problems: {} });
                     }
                 }, 500);
@@ -183,10 +174,10 @@ class RepoListPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { env, repos } = this.props;
+        let { env, repos, editing } = this.props;
         let { hasChanges } = this.state;
         let { t } = env.locale;
-        if (this.isEditing()) {
+        if (editing) {
             return (
                 <div className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
@@ -216,6 +207,7 @@ class RepoListPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTable() {
+        let { editing } = this.props;
         let { renderingFullList, sortColumns, sortDirections } = this.state;
         let tableProps = {
             sortColumns,
@@ -225,7 +217,7 @@ class RepoListPageSync extends PureComponent {
         if (renderingFullList) {
             tableProps.expandable = true;
             tableProps.selectable = true;
-            tableProps.expanded = this.isEditing();
+            tableProps.expanded = editing;
         }
         return (
             <SortableTable {...tableProps}>
@@ -345,7 +337,7 @@ class RepoListPageSync extends PureComponent {
             } else {
                 // don't create the link when we're editing the list
                 let params = _.clone(route.params);
-                params.repo = repo.id;
+                params.repoID = repo.id;
                 url = route.find('repo-summary-page', params);
             }
             return (
@@ -373,7 +365,7 @@ class RepoListPageSync extends PureComponent {
             let contents;
             if (server) {
                 let title = p(server.details.title) || t(`server-type-${server.type}`);
-                let params = { server: server.id };
+                let params = { serverID: server.id };
                 let url = route.find('server-summary-page', params);
                 contents =(
                     <a href={url}>
@@ -699,11 +691,15 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     RepoListPage.propTypes = {
+        editing: PropTypes.bool,
+        projectID: PropTypes.number.isRequired,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     RepoListPageSync.propTypes = {
+        editing: PropTypes.bool,
         repos: PropTypes.arrayOf(PropTypes.object),
         project: PropTypes.object,
         servers: PropTypes.arrayOf(PropTypes.object),

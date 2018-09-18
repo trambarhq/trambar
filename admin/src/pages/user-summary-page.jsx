@@ -40,8 +40,9 @@ class UserSummaryPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env, payloads } = this.props;
+        let { database, route, env, payloads, projectID, userID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
+        let creating = (userID === 'new');
         let props = {
             system: null,
             user: null,
@@ -53,6 +54,9 @@ class UserSummaryPage extends AsyncComponent {
             route,
             env,
             payloads,
+            member: !!projectID,
+            editing: editing || creating,
+            creating,
         };
         meanwhile.show(<UserSummaryPageSync {...props} />);
         return db.start().then((currentUserID) => {
@@ -61,8 +65,8 @@ class UserSummaryPage extends AsyncComponent {
             });
         }).then(() => {
             // load selected user
-            if (route.params.user !== 'new') {
-                return UserFinder.findUser(db, route.params.user).then((user) => {
+            if (!creating) {
+                return UserFinder.findUser(db, userID).then((user) => {
                     props.user = user;
                 });
             }
@@ -73,9 +77,9 @@ class UserSummaryPage extends AsyncComponent {
             })
         }).then(() => {
             // load project if project id is provided (i.e. member summary)
-            if (route.params.project) {
+            if (projectID) {
                 meanwhile.show(<UserSummaryPageSync {...props} />);
-                return ProjectFinder.findProject(db, route.params.project).then((project) => {
+                return ProjectFinder.findProject(db, projectID).then((project) => {
                     props.project = project;
                 });
             }
@@ -118,9 +122,9 @@ class UserSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getUser(state) {
-        let { user } = this.props;
+        let { user, editing } = this.props;
         let { newUser } = this.state;
-        if (this.isEditing() && (!state || state === 'current')) {
+        if (editing && (!state || state === 'current')) {
             return newUser || user || emptyUser;
         } else {
             return user || emptyUser;
@@ -186,42 +190,6 @@ class UserSummaryPageSync extends PureComponent {
     }
 
     /**
-     * Return true when the URL indicate we're creating a new user
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isCreating(props) {
-        let { route } = props || this.props;
-        return (route.params.user === 'new');
-    }
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isEditing(props) {
-        let { route } = props || this.props;
-        return this.isCreating(props) || route.params.edit;
-    }
-
-    /**
-     * Return true when the URL includes project id
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isProjectMember(props) {
-        let { route } = props || this.props;
-        return !!route.params.project;
-    }
-
-    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -230,16 +198,16 @@ class UserSummaryPageSync extends PureComponent {
      * @return {Promise}
      */
     setEditability(edit, newUser) {
-        let { route } = this.props;
-        if (this.isCreating() && !edit && !newUser) {
+        let { route, creating } = this.props;
+        if (creating && !edit && !newUser) {
             // return to list when cancelling user creation
             return this.returnToList();
         } else {
             let params = _.clone(route.params);
-            params.edit = edit || undefined;
+            params.editing = edit || undefined;
             if (newUser) {
                 // use id of newly created user
-                params.user = newUser.id;
+                params.userID = newUser.id;
             }
             return route.replace(route.name, params);
         }
@@ -251,9 +219,9 @@ class UserSummaryPageSync extends PureComponent {
      * @return {Promise}
      */
     returnToList() {
-        let { route } = this.props;
-        if (route.params.project) {
-            let params = { project: route.params.project };
+        let { route, member } = this.props;
+        if (member) {
+            let params = { projectID: route.params.projectID };
             return route.push('member-list-page', params);
         } else {
             return route.push('user-list-page');
@@ -288,8 +256,9 @@ class UserSummaryPageSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 this.setState({
                     newUser: null,
                     hasChanges: false,
@@ -306,11 +275,10 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { route, env } = this.props;
+        let { route, env, project, member } = this.props;
         let { hasChanges, problems } = this.state;
         let { setters } = this.components;
         let { t, p } = env.locale;
-        let member = this.isProjectMember();
         let user = this.getUser();
         let name = p(user.details.name);
         return (
@@ -335,11 +303,10 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { env, user } = this.props;
+        let { env, user, member, editing } = this.props;
         let { hasChanges, adding } = this.state;
         let { t } = env.locale;
-        let member = this.isProjectMember();
-        if (this.isEditing()) {
+        if (editing) {
             return (
                 <div className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
@@ -412,14 +379,14 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderNameInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t, p } = env.locale;
         // not supporting multilingual name yet
         let name = p(this.getUserProperty('details.name'));
         let props = {
             id: 'name',
             value: name,
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleNameChange,
@@ -437,13 +404,13 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderUsernameInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { problems } = this.state;
         let { t } = env.locale;
         let props = {
             id: 'username',
             value: this.getUserProperty('username'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleUsernameChange,
@@ -462,14 +429,14 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderEmailInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { problems } = this.state;
         let { t } = env.locale;
         let props = {
             id: 'email',
             type: 'email',
             value: this.getUserProperty('details.email'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleEmailChange,
@@ -488,13 +455,13 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderPhoneInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'phone',
             type: 'tel',
             value: this.getUserProperty('details.phone'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handlePhoneChange,
@@ -512,14 +479,14 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderProfileImageSelector() {
-        let { database, env, payloads } = this.props;
+        let { database, env, payloads, editing } = this.props;
         let { t } = env.locale;
         let props = {
             purpose: 'profile-image',
             desiredWidth: 500,
             desiredHeight: 500,
             resources: this.getUserProperty('details.resources'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             database,
             env,
             payloads,
@@ -538,7 +505,7 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTypeSelector() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { problems } = this.state;
         let { t } = env.locale;
         let userTypeCurr = this.getUserProperty('type', 'current');
@@ -552,7 +519,7 @@ class UserSummaryPageSync extends PureComponent {
             };
         });
         let listProps = {
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             onOptionClick: this.handleTypeOptionClick,
         };
         return (
@@ -572,7 +539,7 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderRoleSelector() {
-        let { env, roles } = this.props;
+        let { env, roles, editing } = this.props;
         let { t, p } = env.locale;
         let userRolesCurr = this.getUserProperty('role_ids', 'current') || [];
         let userRolesPrev = this.getUserProperty('role_ids', 'original') || [];
@@ -593,7 +560,7 @@ class UserSummaryPageSync extends PureComponent {
             children: t('user-summary-role-none')
         });
         let listProps = {
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             onOptionClick: this.handleRoleOptionClick,
         };
         return (
@@ -629,11 +596,11 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderSocialLinksForm() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { showingSocialLinks } = this.state;
         let { t } = env.locale;
         let user = this.getUser();
-        let readOnly = !this.isEditing();
+        let readOnly = !editing;
         return (
             <div className="form social">
                 <CollapsibleContainer open={showingSocialLinks}>
@@ -655,12 +622,12 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderSkypeNameInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'skype',
             value: this.getUserProperty('details.skype_username'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleSkypeUsernameChange,
@@ -674,12 +641,12 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderIChatInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'ichat',
             value: this.getUserProperty('details.ichat_username'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleIchatUsernameChange,
@@ -693,12 +660,12 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTwitterInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'twitter',
             value: this.getUserProperty('details.twitter_username'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleTwitterUsernameChange,
@@ -712,13 +679,13 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderGithubURLInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'github',
             type: 'url',
             value: this.getUserProperty('details.github_url'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleGitHubURLChange,
@@ -732,13 +699,13 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderGitlabURLInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'github',
             type: 'url',
             value: this.getUserProperty('details.gitlab_url'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleGitlabURLChange,
@@ -752,13 +719,13 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderLinkedInURLInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'linkedin',
             type: 'url',
             value: this.getUserProperty('details.linkedin_url'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleLinkedinURLChange,
@@ -772,13 +739,13 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderStackoverflowURLInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'stackoverflow',
             type: 'url',
             value: this.getUserProperty('details.stackoverflow_url'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleStackoverflowURLChange,
@@ -792,11 +759,11 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderInstructions() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let instructionProps = {
             folder: 'user',
             topic: 'user-summary',
-            hidden: !this.isEditing(),
+            hidden: !editing,
             env,
         };
         return (
@@ -812,12 +779,12 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderChart() {
-        let { env, statistics } = this.props;
+        let { env, statistics, member, creating } = this.props;
         let { t } = env.locale;
-        if (!this.isProjectMember()) {
+        if (!member) {
             return null;
         }
-        if (this.isCreating()) {
+        if (creating) {
             return null;
         }
         let chartProps = {
@@ -1201,12 +1168,22 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     UserSummaryPage.propTypes = {
+        editing: PropTypes.bool,
+        projectID: PropTypes.number,
+        userID: PropTypes.oneOfType([
+            PropTypes.number,
+            PropTypes.oneOf([ 'new' ]),
+        ]).isRequired,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
     };
     UserSummaryPageSync.propTypes = {
+        member: PropTypes.bool,
+        editing: PropTypes.bool,
+        creating: PropTypes.bool,
         system: PropTypes.object,
         user: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),

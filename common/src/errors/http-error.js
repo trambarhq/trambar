@@ -1,5 +1,3 @@
-module.exports = HTTPError;
-
 class HTTPError extends Error {
     constructor() {
         super();

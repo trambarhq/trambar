@@ -27,9 +27,6 @@ function start(cfg) {
     let routeManager = new RouteManager({
         basePath: cfg.routeManager.basePath,
         routes: cfg.routeManager.routes,
-        // CORSRewriter will extract site address from the URL when there's one
-        // and default to the site address of the page when there isn't; the
-        // address will appear in .context
         rewrites: cfg.routeManager.rewrites,
     });
     let localeManager = new LocaleManager({

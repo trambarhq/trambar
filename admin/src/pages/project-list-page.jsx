@@ -36,7 +36,7 @@ class ProjectListPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env } = this.props;
+        let { database, route, env, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
             projects: null,
@@ -47,6 +47,7 @@ class ProjectListPage extends AsyncComponent {
             database,
             route,
             env,
+            editing,
         };
         meanwhile.show(<ProjectListPageSync {...props} />);
         return db.start().then((currentUserID) => {
@@ -76,6 +77,7 @@ class ProjectListPageSync extends PureComponent {
     static displayName = 'ProjectListPage.Sync';
 
     constructor(props) {
+        let { editing } = props;
         super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
@@ -86,21 +88,9 @@ class ProjectListPageSync extends PureComponent {
             restoringProjectIDs: [],
             archivingProjectIDs: [],
             hasChanges: false,
-            renderingFullList: this.isEditing(),
+            renderingFullList: editing,
             problems: {},
         };
-    }
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isEditing(props) {
-        let { route } = props || this.props;
-        return route.params.edit;
     }
 
     /**
@@ -113,7 +103,7 @@ class ProjectListPageSync extends PureComponent {
     setEditability(edit) {
         let { route } = this.props;
         let params = _.clone(route.params);
-        params.edit = edit || undefined;
+        params.editing = edit || undefined;
         return route.replace(route.name, params);
     }
 
@@ -123,8 +113,9 @@ class ProjectListPageSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 // initial list of ids to the current list
                 this.setState({
                     renderingFullList: true,
@@ -134,7 +125,8 @@ class ProjectListPageSync extends PureComponent {
                 });
             } else {
                 setTimeout(() => {
-                    if (!this.isEditing()) {
+                    let { editing } = this.props;
+                    if (!editing) {
                         this.setState({ renderingFullList: false, problems: {} });
                     }
                 }, 500);
@@ -170,10 +162,10 @@ class ProjectListPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { env, projects } = this.props;
+        let { env, projects, editing } = this.props;
         let { hasChanges } = this.state;
         let { t } = env.locale;
-        if (this.isEditing()) {
+        if (editing) {
             return (
                 <div className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
@@ -210,6 +202,7 @@ class ProjectListPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTable() {
+        let { editing } = this.props;
         let { renderingFullList, sortColumns, sortDirections } = this.state;
         let tableProps = {
             sortColumns,
@@ -219,7 +212,7 @@ class ProjectListPageSync extends PureComponent {
         if (renderingFullList) {
             tableProps.expandable = true;
             tableProps.selectable = true;
-            tableProps.expanded = this.isEditing();
+            tableProps.expanded = editing;
             tableProps.onClick = this.handleRowClick;
         }
         return (
@@ -360,8 +353,9 @@ class ProjectListPageSync extends PureComponent {
                 }
             } else {
                 // link to project summary in non-editing mode
-                let params = { project: project.id };
-                url = route.find('project-summary-page', params);
+                url = route.find('project-summary-page', {
+                    projectID: project.id
+                });
             }
             return (
                 <td>
@@ -569,7 +563,7 @@ class ProjectListPageSync extends PureComponent {
      */
     handleAddClick = (evt) => {
         let { route } = this.props;
-        return route.push('project-summary-page', { project: 'new' });
+        return route.push('project-summary-page', { projectID: 'new' });
     }
 
     /**
@@ -742,11 +736,13 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     ProjectListPage.propTypes = {
+        editing: PropTypes.bool,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     ProjectListPageSync.propTypes = {
+        editing: PropTypes.bool,
         projects: PropTypes.arrayOf(PropTypes.object),
         repos: PropTypes.arrayOf(PropTypes.object),
         users: PropTypes.arrayOf(PropTypes.object),

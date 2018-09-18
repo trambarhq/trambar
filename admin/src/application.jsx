@@ -108,12 +108,12 @@ class Application extends PureComponent {
             env,
             disabled: route.public,
         };
-        let pageProps = {
+        let pageProps = _.assign({
             database,
             route,
             env,
             payloads,
-        };
+        }, route.params);
         let key = route.path;
         return (
             <div className="application" id="application">

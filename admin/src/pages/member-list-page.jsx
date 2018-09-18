@@ -33,7 +33,7 @@ class MemberListPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env } = this.props;
+        let { database, route, env, projectID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
             project: null,
@@ -43,10 +43,11 @@ class MemberListPage extends AsyncComponent {
             database,
             route,
             env,
+            editing,
         };
         meanwhile.show(<MemberListPageSync {...props} />);
         return db.start().then((userID) => {
-            return ProjectFinder.findProject(db, route.params.project).then((project) => {
+            return ProjectFinder.findProject(db, projectID).then((project) => {
                 props.project = project;
             });
         }).then(() => {
@@ -74,6 +75,7 @@ class MemberListPageSync extends PureComponent {
     static displayName = 'MemberListPage.Sync';
 
     constructor(props) {
+        let { editing } = props;
         super(props);
         this.state = {
             sortColumns: [ 'name' ],
@@ -81,21 +83,9 @@ class MemberListPageSync extends PureComponent {
             removingUserIDs: [],
             addingUserIDs: [],
             hasChanges: false,
-            renderingFullList: this.isEditing(),
+            renderingFullList: editing,
             problems: {},
         };
-    }
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isEditing(props) {
-        props = props || this.props;
-        return props.route.params.edit;
     }
 
     /**
@@ -108,7 +98,7 @@ class MemberListPageSync extends PureComponent {
     setEditability(edit) {
         let { route } = this.props;
         let params = _.clone(route.params);
-        params.edit = edit || undefined;
+        params.editing = edit || undefined;
         return route.replace(route.name, params);
     }
 
@@ -118,8 +108,9 @@ class MemberListPageSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 this.setState({
                     renderingFullList: true,
                     removingUserIDs: [],
@@ -128,7 +119,8 @@ class MemberListPageSync extends PureComponent {
                 });
             } else {
                 setTimeout(() => {
-                    if (!this.isEditing()) {
+                    let { editing } = this.props;
+                    if (!editing) {
                         this.setState({ renderingFullList: false, problems: {} });
                     }
                 }, 500);
@@ -162,10 +154,10 @@ class MemberListPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { env, project, users } = this.props;
+        let { env, project, users, editing } = this.props;
         let { hasChanges, problems } = this.state;
         let { t } = env.locale;
-        if (this.isEditing()) {
+        if (editing) {
             return (
                 <div key="edit" className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
@@ -212,7 +204,7 @@ class MemberListPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTable() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { renderingFullList, sortColumns, sortDirections } = this.state;
         let { t } = env.locale;
         let tableProps = {
@@ -223,7 +215,7 @@ class MemberListPageSync extends PureComponent {
         if (renderingFullList) {
             tableProps.expandable = true;
             tableProps.selectable = true;
-            tableProps.expanded = this.isEditing();
+            tableProps.expanded = editing;
         }
         return (
             <SortableTable {...tableProps}>
@@ -371,10 +363,9 @@ class MemberListPageSync extends PureComponent {
                 }
             } else {
                 // don't create the link when we're editing the list
-                url = route.find('member-summary-page', {
-                    user: user.id,
-                    project: project.id,
-                });
+                let params = _.clone(route.params);
+                params.userID = user.id;
+                url = route.find('member-summary-page', params);
             }
             let image = <ProfileImage user={user} env={env} />;
             return (
@@ -619,7 +610,7 @@ class MemberListPageSync extends PureComponent {
     handleAddClick = (evt) => {
         let { route } = this.props;
         let params = _.clone(route.params);
-        params.user = 'new';
+        params.userID = 'new';
         return route.push('user-summary-page', params);
     }
 
@@ -814,11 +805,15 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     MemberListPage.propTypes = {
+        editing: PropTypes.bool,
+        projectID: PropTypes.number.isRequired,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     MemberListPageSync.propTypes = {
+        editing: PropTypes.bool,
         project: PropTypes.object,
         users: PropTypes.arrayOf(PropTypes.object),
         roles: PropTypes.arrayOf(PropTypes.object),

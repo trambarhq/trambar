@@ -74,9 +74,7 @@ class EnvironmentMonitor extends EventEmitter {
         let now = new Date;
         // let the handler at the beginning of a minute
         let millisec = now.getSeconds() * 1000 + now.getMilliseconds();
-        console.log(millisec)
         setTimeout(() => {
-            console.log((new Date).toISOString());
             this.dateCheckInterval = setInterval(this.handleDateChange, 60 * 1000);
         }, 60 * 1000 - millisec + 50);
     }
@@ -188,7 +186,6 @@ class EnvironmentMonitor extends EventEmitter {
             // interval has drifted--reschedule it
             this.scheduleDateCheck();
         }
-        console.log(now.toISOString())
     }
 }
 

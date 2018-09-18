@@ -27,7 +27,7 @@ class SettingsPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env, payloads } = this.props;
+        let { database, route, env, payloads, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
             system: null,
@@ -36,6 +36,7 @@ class SettingsPage extends AsyncComponent {
             route,
             env,
             payloads,
+            editing,
         };
         meanwhile.show(<SettingsPageSync {...props} />);
         return db.start().then((currentUserID) => {
@@ -73,9 +74,9 @@ class SettingsPageSync extends PureComponent {
      * @return {Object}
      */
     getSystem(state) {
-        let { system } = this.props;
+        let { system, editing } = this.props;
         let { newSystem } = this.state;
-        if (this.isEditing() && (!state || state === 'current')) {
+        if (editing && (!state || state === 'current')) {
             return newSystem || system || defaultSystem;
         } else {
             return system || emptySystem;
@@ -114,18 +115,6 @@ class SettingsPageSync extends PureComponent {
     }
 
     /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object} props
-     *
-     * @return {Boolean}
-     */
-    isEditing(props) {
-        let { route } = props || this.props;
-        return route.params.edit;
-    }
-
-    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -135,7 +124,7 @@ class SettingsPageSync extends PureComponent {
     setEditability(edit) {
         let { route } = this.props;
         let params = _.clone(route.params);
-        params.edit = edit || undefined;
+        params.editing = edit || undefined;
         return route.replace(route.name, params);
     }
 
@@ -155,8 +144,9 @@ class SettingsPageSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 this.setState({
                     newSystem: null,
                     hasChanges: false,
@@ -193,10 +183,10 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { route, env } = this.props;
+        let { route, env, editing } = this.props;
         let { hasChanges } = this.state;
         let { t } = env.locale;
-        if (this.isEditing()) {
+        if (editing) {
             // using keys here to force clearing of focus
             return (
                 <div key="edit" className="buttons">
@@ -246,13 +236,13 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderTitleInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'title',
             value: this.getSystemProperty('details.title'),
             availableLanguageCodes: this.getInputLanguages(),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             env,
             onChange: this.handleTitleChange,
         };
@@ -269,12 +259,12 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderCompanyNameInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'company_name',
             value: this.getSystemProperty('details.company_name'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             env,
             onChange: this.handleCompanyNameChange,
         };
@@ -291,14 +281,14 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderDescriptionInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'description',
             value: this.getSystemProperty('details.description'),
             availableLanguageCodes: this.getInputLanguages(),
             type: 'textarea',
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             env,
             onChange: this.handleDescriptionChange,
         };
@@ -315,14 +305,14 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderSiteAddressInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'address',
             type: 'url',
             value: this.getSystemProperty('settings.address'),
             placeholder: 'https://',
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handleAddressChange,
@@ -340,14 +330,14 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderPushRelayInput() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t } = env.locale;
         let props = {
             id: 'relay',
             type: 'url',
             value: this.getSystemProperty('settings.push_relay'),
             placeholder: 'https://',
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
             env,
             onChange: this.handlePushRelayChange,
@@ -365,12 +355,12 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderBackgroundSelector() {
-        let { database, env, payloads } = this.props;
+        let { database, env, payloads, editing } = this.props;
         let { t } = env.locale;
         let props = {
             purpose: 'background',
             resources: this.getSystemProperty('details.resources'),
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             database,
             payloads,
             env,
@@ -389,7 +379,7 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderInputLanguageSelector() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let { t, directory } = env.locale;
         let inputLanguageCurr = this.getSystemProperty('settings.input_languages', 'current') || [];
         let inputLanguagePrev = this.getSystemProperty('settings.input_languages', 'original') || [];
@@ -407,7 +397,7 @@ class SettingsPageSync extends PureComponent {
             };
         });
         let listProps = {
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             onOptionClick: this.handleLanguageOptionClick,
         };
         return (
@@ -424,11 +414,11 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderInstructions() {
-        let { env } = this.props;
+        let { env, editing } = this.props;
         let instructionProps = {
             folder: 'settings',
             topic: 'settings',
-            hidden: !this.isEditing(),
+            hidden: !editing,
             env,
         };
         return (
@@ -599,12 +589,15 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     SettingsPage.propTypes = {
+        editing: PropTypes.bool,
+
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
     };
     SettingsPageSync.propTypes = {
+        editing: PropTypes.bool,
         system: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
