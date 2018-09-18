@@ -10,8 +10,8 @@ class TextToolbar extends PureComponent {
     static displayName = 'TextToolbar';
 
     render() {
-        let t = this.props.locale.translate;
-        let story = this.props.story;
+        let { env, story } = this.props;
+        let { t } = env.locale;
         let markdownProps = {
             label: t('story-markdown'),
             icon: 'pencil-square',
@@ -46,8 +46,9 @@ class TextToolbar extends PureComponent {
      * @param  {Object|undefined} props
      */
     triggerActionEvent(action, props) {
-        if (this.props.onAction) {
-            this.props.onAction(_.extend({
+        let { onAction } = this.props;
+        if (onAction) {
+            onAction(_.extend({
                 type: 'action',
                 target: this,
                 action,
@@ -61,7 +62,7 @@ class TextToolbar extends PureComponent {
      * @param  {Event} evt
      */
     handleMarkdownClick = (evt) => {
-        let story = this.props.story;
+        let { story } = this.props;
         let value = !story.details.markdown;
         this.triggerActionEvent('markdown-set', { value });
     }
@@ -72,7 +73,7 @@ class TextToolbar extends PureComponent {
      * @param  {Event} evt
      */
     handleTaskListClick = (evt) => {
-        let story = this.props.story;
+        let { story } = this.props;
         let value = (story.type !== 'task-list') ? 'task-list' : 'post';
         this.triggerActionEvent('story-type-set', { value });
     }
@@ -83,7 +84,7 @@ class TextToolbar extends PureComponent {
      * @param  {Event} evt
      */
     handleSurveyClick = (evt) => {
-        let story = this.props.story;
+        let { story } = this.props;
         let value = (story.type !== 'survey') ? 'survey' : 'post';
         this.triggerActionEvent('story-type-set', { value });
     }

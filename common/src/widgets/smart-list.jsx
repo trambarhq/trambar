@@ -14,7 +14,6 @@ class SmartList extends Component {
      */
     constructor(props) {
         super(props);
-
         this.state = {};
         this.updateAnchor(props, this.state);
         this.updateSlots(props, this.state);

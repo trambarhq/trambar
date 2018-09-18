@@ -6,7 +6,7 @@ import Memoize from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as RoleFinder from 'objects/finders/role-finder';
 import * as ServerFinder from 'objects/finders/server-finder';
-import * as ServerTypes from 'objects/types/server-types';
+import ServerTypes from 'objects/types/server-types';
 import * as ServerSettings from 'objects/settings/server-settings';
 import * as SystemFinder from 'objects/finders/system-finder';
 

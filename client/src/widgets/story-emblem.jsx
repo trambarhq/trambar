@@ -1,11 +1,12 @@
 import _ from 'lodash';
 import React from 'react';
-import * as StoryTypes from 'objects/types/story-types';
+import { GitStoryTypes, StoryIcons } from 'objects/types/story-types';
 
 import './story-emblem.scss';
 
 function StoryEmblem(props) {
-    if (_.includes(props.story.tags, '#yippeekiyay')) {
+    let { story } = props;
+    if (_.includes(story.tags, '#yippeekiyay')) {
         return (
             <div className="story-emblem die-hard">
                 <img src={require('explosion.gif')} />
@@ -13,17 +14,16 @@ function StoryEmblem(props) {
         );
     }
 
-    let type = props.story.type;
     let className = 'story-emblem';
-    if (_.includes(StoryTypes.git, type)) {
+    if (_.includes(GitStoryTypes, type)) {
         className += ' git';
     } else {
         return null;
     }
-    let Icon = StoryTypes.icons[type];
+    let Icon = StoryIcons[type];
     if (type === 'issue') {
-        let state = props.story.details.state;
-        Icon = StoryTypes.icons[type + '.' + state];
+        let state = story.details.state;
+        Icon = StoryIcons[type + '.' + state];
     }
     if (!Icon) {
         return null;

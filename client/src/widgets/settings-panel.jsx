@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { PureComponent, Children } from 'react';
 
 import './settings-panel.scss';
 
@@ -7,10 +7,8 @@ class SettingsPanel extends PureComponent {
     static displayName = 'SettingsPanel';
 
     render() {
-        let className = 'settings-panel';
-        if (this.props.className) {
-            className += ` ${this.props.className}`;
-        }
+        let { className } = this.props;
+        className = 'settings-panel' + ((className) ? ` ${className}` : '');
         return (
             <div className={className}>
                 {this.renderPart('header')}
@@ -22,7 +20,8 @@ class SettingsPanel extends PureComponent {
     }
 
     renderPart(tag) {
-        let children = React.Children.toArray(this.props.children);
+        let { children } = this.props;
+        children = Children.toArray(children);
         let element = _.find(children, { type: tag });
         if (!element) {
             return null;

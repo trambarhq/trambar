@@ -50,11 +50,10 @@ class Application extends PureComponent {
             envMonitor,
             localeManager,
         } = this.props;
-        let { address } = routeManager.context;
-        let { schema } = routeManager.params;
+        let { address, schema } = routeManager.context;
         let locale = new Locale(localeManager);
         this.state = {
-            database: new Database(dataSource, { address }),
+            database: new Database(dataSource, { address, schema }),
             payloads: new Payloads(payloadManager, { address, schema }),
             route: new Route(routeManager),
             env: new Environment(envMonitor, { locale, address, widthDefinitions }),

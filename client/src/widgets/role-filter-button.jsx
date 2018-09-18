@@ -15,15 +15,16 @@ class RoleFilterButton extends PureComponent {
      * @return {ReactElement}
      */
     render() {
+        let { url, role, selected } = this.props;
         let className = 'role-filter-button';
-        if (this.props.selected) {
+        if (selected) {
             className += ' selected';
         }
-        if (!this.props.role) {
+        if (!role) {
             className += ' no-roles';
         }
         return (
-            <a className={className} href={this.props.url}>
+            <a className={className} href={url}>
                 <div className="contents">
                     {this.renderImageRow(0, 4)}
                     {this.renderImageRow(0, 0)}
@@ -43,14 +44,19 @@ class RoleFilterButton extends PureComponent {
      * @return {ReactElement}
      */
     renderImageRow(index, count) {
+        let { users } = this.props;
         // only show user if he has a profile image
-        let users = _.filter(this.props.users, (user) => {
+        users = _.filter(users, (user) => {
             return _.some(user.details.resources, { type: 'image' });
         });
         users = _.slice(users, index, count);
         return (
             <div className="row">
-                {_.map(users, this.renderProfileImage)}
+            {
+                _.map(users, (user, i) => {
+                    return this.renderProfileImage(user, i);
+                })
+            }
             </div>
         );
     }
@@ -64,7 +70,8 @@ class RoleFilterButton extends PureComponent {
      * @return {ReactElement}
      */
     renderProfileImage(user, i) {
-        return <ProfileImage key={i} user={user} size="medium" theme={this.props.theme} />
+        let { env } = this.props;
+        return <ProfileImage key={i} user={user} env={env} size="medium" />
     }
 
     /**
@@ -73,11 +80,11 @@ class RoleFilterButton extends PureComponent {
      * @return {ReactElement}
      */
     renderTitle() {
-        if (!this.props.role) {
+        let { env, role } = this.props;
+        let { p } = env.locale;
+        if (!role) {
             return this.renderMessage();
          }
-        let p = this.props.locale.pick;
-        let role = this.props.role;
         return (
             <div className="band">
                 <div className="title">
@@ -89,11 +96,12 @@ class RoleFilterButton extends PureComponent {
     }
 
     renderMessage() {
+        let { env, role } = this.props;
+        let { t } = env.locale;
         // undefined means data isn't done loading
-        if (this.props.role === undefined) {
+        if (role === undefined) {
             return null;
         }
-        let t = this.props.locale.translate;
         return (
             <div className="message">
                 {t('role-filter-no-roles')}
@@ -107,14 +115,14 @@ class RoleFilterButton extends PureComponent {
      * @return {ReactElement|null}
      */
     renderUserCount() {
-        if (!this.props.users) {
+        let { users } this.props;
+        if (!users) {
             return null;
         }
-        let count = this.props.users.length;
         return (
             <div className="user-count">
                 <i className="fa fa-male"></i>
-                <span className="number">{count}</span>
+                <span className="number">{users.length}</span>
             </div>
         );
     }

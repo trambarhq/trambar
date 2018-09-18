@@ -7,19 +7,19 @@ import Time from 'widgets/time';
 import './story-progress.scss';
 
 function StoryProgress(props) {
-    let t = props.locale.translate;
+    let { env, story, status, pending } = props;
+    let { t } = env.locale;
     let contents;
 
-    if (!StoryUtils.isActuallyPublished(props.story)) {
+    if (!StoryUtils.isActuallyPublished(story)) {
         // not saved yet
         contents = t('story-status-storage-pending');
     } else {
-        let status = props.status;
         if (status) {
             contents = t(`story-status-${status.action}-$progress`, status.progress);
         } else {
-            contents = <Time time={props.story.ptime} locale={props.locale} />;
-            if (props.pending) {
+            contents = <Time time={story.ptime} env={env} />;
+            if (pending) {
                 // story has not made it into listings yet
                 contents = (
                     <span>

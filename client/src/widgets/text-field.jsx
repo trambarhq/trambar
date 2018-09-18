@@ -23,24 +23,26 @@ class TextField extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let classNames = [ 'text-field'];
+        let { env, id, type, children, readOnly } = this.props;
+        let { setters } = this.components;
+        let { t } = env.locale;
+        let classNames = [ 'text-field' ];
         let Input = 'input';
         let inputProps = _.omit(this.props, 'children', 'locale');
-        if (this.props.type === 'textarea') {
+        if (type === 'textarea') {
             Input = AutosizeTextArea;
             inputProps = _.omit(inputProps, 'type');
         }
-        if (this.props.readOnly) {
+        if (readOnly) {
             classNames.push('readonly');
-            let t = this.props.locale.translate;
             inputProps.placeholder = t('text-field-placeholder-none');
             inputProps.spellCheck = false;
         }
         inputProps.value = inputProps.value || '';
         return (
             <div className={classNames.join(' ')}>
-                <label htmlFor={this.props.id}>{this.props.children}</label>
-                <Input ref={this.components.setters.input} {...inputProps} />
+                <label htmlFor={id}>{children}</label>
+                <Input ref={setters.input} {...inputProps} />
             </div>
         );
     }
@@ -49,7 +51,8 @@ class TextField extends PureComponent {
      * Place focus on the text field
      */
     focus() {
-        this.components.input.focus();
+        let { input } = this.components;
+        input.focus();
     }
 }
 

@@ -10,10 +10,11 @@ class Time extends PureComponent {
 
     constructor(props) {
         super(props);
-        let time = Moment(this.props.time);
+        let { time } = this.props;
+        let moment = Moment(time);
         this.state = {
-            time: time,
-            date: getDate(time),
+            time: moment,
+            date: getDate(moment),
         };
         this.updateClassName(props, this.state);
         this.updateText(props, this.state);
@@ -48,37 +49,38 @@ class Time extends PureComponent {
      * @param  {Object} nextState
      */
     updateText(nextProps, nextState) {
-        let t = nextProps.locale.translate;
-        let locale = nextProps.locale.localeCode;
-        let time = nextState.time.clone().locale(locale);
+        let { env, compact } = nextProps;
+        let { time, className } = nextState;
+        let { t, localeCode } = env.locale;
+        let moment = time.clone().locale(localeCode);
         let text;
-        if (nextState.className === 'today') {
+        if (className === 'today') {
             let now = Moment();
-            let elapsed = (now - time) * 0.001;
+            let elapsed = (now - moment) * 0.001;
             if (elapsed < 60) {
                 text = t('time-just-now');
             } else if (elapsed < 60 * 60) {
                 let minutes = Math.floor(elapsed * (1 / 60));
-                if (nextProps.compact) {
+                if (compact) {
                     text = t('time-$min-ago', minutes);
                 } else {
                     text = t('time-$minutes-ago', minutes);
                 }
             } else {
                 let hours = Math.floor(elapsed * (1 / 3600));
-                if (nextProps.compact) {
+                if (compact) {
                     text = t('time-$hr-ago', hours);
                 } else {
                     text = t('time-$hours-ago', hours);
                 }
             }
-        } else if (nextState.className === 'yesterday') {
+        } else if (className === 'yesterday') {
             text = t('time-yesterday');
-        } else if (nextState.className === 'older') {
-            if (nextProps.compact) {
-                text = time.format('ll');
+        } else if (className === 'older') {
+            if (compact) {
+                text = moment.format('ll');
             } else {
-                text = time.format('LL');
+                text = moment.format('LL');
             }
         } else {
             text = '';
@@ -106,9 +108,9 @@ class Time extends PureComponent {
      */
     componentWillReceiveProps(nextProps) {
         let nextState = _.clone(this.state);
-        let time = Moment(nextProps.time);
-        nextState.time = time;
-        nextState.date = getDate(time);
+        let moment = Moment(nextProps.time);
+        nextState.time = moment;
+        nextState.date = getDate(moment);
         this.updateClassName(nextProps, nextState);
         this.updateText(nextProps, nextState);
         let diff = _.shallowDiff(nextState, this.state);
@@ -187,8 +189,8 @@ import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
     Time.propTypes = {
-        env: PropTypes.instanceOf(Environment).isRequired,
         time: PropTypes.string,
         compact: PropTypes.bool,
+        env: PropTypes.instanceOf(Environment).isRequired,
     };
 }

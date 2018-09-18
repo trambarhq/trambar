@@ -20,21 +20,20 @@ class SearchBar extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
-        let currentUserId;
+        let { database, route, env, settings } = this.props;
+        let db = database.use({ by: this });
         let props = {
             dailyActivities: null,
 
-            settings: this.props.settings,
-            route: this.props.route,
-            locale: this.props.locale,
+            settings,
+            route,
+            env,
         };
         meanwhile.show(<SearchBarSync {...props} />);
-        return db.start().then((userId) => {
-            return UserFinder.findUser(db, userId);
+        return db.start().then((currentUserID) => {
+            return UserFinder.findUser(db, currentUserID);
         }).then((user) => {
-            let params = _.clone(this.props.settings.statistics);
+            let params = _.clone(settings.statistics);
             if (params.user_id === 'current') {
                 params.user_id = user.id;
             }
@@ -57,16 +56,16 @@ class SearchBarSync extends PureComponent {
      *
      * @return {Object}
      */
-    getInitialState() {
+    constructor(props) {
+        super(props);
+        let { route, dailyActivities } = props;
         this.components = ComponentRefs({
             tags: HTMLDivElement,
         });
-        let route = this.props.route;
-        let keywords = route.query.search || '';
-        return {
-            keywords: keywords,
-            hashTags: extractTags(this.props.dailyActivities),
-            selectedHashTags: findTags(keywords),
+        this.state = {
+            keywords: route.params.search || '',
+            hashTags: extractTags(dailyActivities),
+            selectedHashTags: findTags(route.params.search),
         };
     }
 

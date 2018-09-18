@@ -31,9 +31,8 @@ const routes = {
             reaction: Number,
         },
         load: (params, context) => {
-            let { schema } = context;
-            let route = { schema };
-            let statistics = { schema,  type: 'daily-activities', public: 'guest' };
+            let route = {};
+            let statistics = { type: 'daily-activities', public: 'guest' };
             return {
                 calendar: { route, statistics },
                 filter: { route },
@@ -55,9 +54,8 @@ const routes = {
             date: String,
         },
         load: (params, context) => {
-            let { schema } = context;
-            let route = { schema };
-            let statistics = { schema, type: 'daily-notifications', user_id: 'current' };
+            let route = {};
+            let statistics = { type: 'daily-notifications', user_id: 'current' };
             params.ui = {
                 calendar: { route, statistics },
                 navigation: { route, section: 'notifications' }
@@ -81,9 +79,8 @@ const routes = {
             date: String,
         },
         load: (params, context) => {
-            let { schema } = params;
-            let route = { schema };
-            let statistics = { schema, type: 'daily-activities' };
+            let route = {};
+            let statistics = { type: 'daily-activities' };
             // go back to full list
             params.ui = {
                 calendar: { route, statistics },
@@ -112,15 +109,15 @@ const routes = {
             reaction: Number,
         },
         load: (params, context) => {
-            let { schema, user } = params;
-            let route = { schema, user };
-            let statistics = { schema, type: 'daily-activities', user_id: user };
+            let { user } = params;
+            let route = { user };
+            let statistics = { type: 'daily-activities', user_id: user };
             params.ui = {
                 calendar: { route, statistics },
                 search: { route, statistics },
                 navigation: {
                     // go back to full list
-                    route: { schema },
+                    route: {},
                     section: 'people'
                 }
             };
@@ -135,8 +132,7 @@ const routes = {
             schema: String,
         },
         load: (params, context) => {
-            let { schema } = params;
-            let route = { schema };
+            let route = {};
             params.ui = {
                 navigation: { route, section: 'settings '},
             };
@@ -175,4 +171,4 @@ const routes = {
             });
         },
     }
-}
+};
