@@ -1,14 +1,6 @@
-var Promise = require('bluebird');
-var BlobManager = require('transport/blob-manager');
-if (process.env.PLATFORM === 'cordova') {
-    var CordovaFile = require('transport/cordova-file');
-}
-
-module.exports = {
-    loadUint8Array,
-    loadArrayBuffer,
-    loadText,
-};
+import Promise from 'bluebird';
+import BlobManager from 'transport/blob-manager';
+import CordovaFile from 'transport/cordova-file';
 
 /**
  * Load a file as Uint8Array
@@ -86,3 +78,9 @@ function loadText(blob) {
         reader.readAsText(blob);
     });
 }
+
+export {
+    loadUint8Array,
+    loadArrayBuffer,
+    loadText,
+};

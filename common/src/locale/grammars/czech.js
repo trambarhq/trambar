@@ -268,7 +268,7 @@ var isMasculine = {};
     isMasculine[name.toLocaleLowerCase()] = true;
 });
 
-module.exports = {
+export {
     singular,
     plural,
     cardinal,

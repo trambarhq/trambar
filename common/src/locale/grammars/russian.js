@@ -251,7 +251,7 @@ var isFeminine = {};
     isFeminine[name.toLocaleLowerCase()] = true;
 });
 
-module.exports = {
+export {
     cardinal,
     genderize,
     gender,

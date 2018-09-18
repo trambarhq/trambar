@@ -1,33 +1,28 @@
-var _ = require('lodash');
-var FileTransferManager = window.FileTransferManager;
+import _ from 'lodash';
 
-module.exports = {
-    initialize,
-    send,
-    cancel,
-};
+const FileTransferManager = window.FileTransferManager;
 
-var transfers = [];
-var uploader;
+let transfers = [];
+let uploader;
 
 function initialize() {
     try {
         uploader = FileTransferManager.init();
         uploader.on('success', function(upload) {
-            var transfer = _.find(transfers, { id: upload.id });
+            let transfer = _.find(transfers, { id: upload.id });
             if (transfer && transfer.onSuccess) {
                 transfer.onSuccess(upload);
             }
             _.pull(transfers, transfer);
         });
         uploader.on('progress', function(upload) {
-            var transfer = _.find(transfers, { id: upload.id });
+            let transfer = _.find(transfers, { id: upload.id });
             if (transfer && transfer.onProgress) {
                 transfer.onProgress(upload);
             }
         });
         uploader.on('error', function(upload) {
-            var transfer = _.find(transfers, { id: upload.id });
+            let transfer = _.find(transfers, { id: upload.id });
             if (transfer && transfer.onError) {
                 transfer.onError(new Error(upload.error));
             }
@@ -46,7 +41,7 @@ function initialize() {
  * @param  {Object|undefined} options
  */
 function send(token, path, url, options) {
-    var payload = {
+    let payload = {
          id: token,
          filePath: path,
          serverUrl: url,
@@ -55,7 +50,7 @@ function send(token, path, url, options) {
          parameters: _.get(options, 'parameters', {}),
      };
      uploader.startUpload(payload);
-     var transfer = {
+     let transfer = {
          id: token,
          onSuccess: _.get(options, 'onSuccess'),
          onError: _.get(options, 'onError'),
@@ -73,12 +68,18 @@ function send(token, path, url, options) {
  */
 function cancel(token) {
     return new Promise((resolve, reject) => {
-        var success = (res) => {
+        let success = (res) => {
             resolve(res);
         };
-        var fail = (msg) => {
+        let fail = (msg) => {
             reject(new Error(msg.error));
         };
         uploader.removeUpload(token, success, fail);
     });
 }
+
+export {
+    initialize,
+    send,
+    cancel,
+};

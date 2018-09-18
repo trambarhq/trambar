@@ -1,3 +1,5 @@
-module.exports = {
-    name: 'a'
+const name = 'a';
+
+export {
+    name
 };

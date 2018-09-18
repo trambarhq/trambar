@@ -28,7 +28,7 @@ function handleKeydown(evt) {
         _.each(listeners, (f) => {
             f({
                 type: 'cheat',
-                target: module.exports,
+                target: exports,
             });
         });
     }
