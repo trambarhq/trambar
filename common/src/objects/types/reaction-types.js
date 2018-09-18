@@ -1,4 +1,4 @@
-module.exports = exports = [
+const ReactionTypes = [
     'like',
     'comment',
     'vote',
@@ -8,11 +8,18 @@ module.exports = exports = [
     'tracking',
 ];
 
-exports.editable = [
+const EditableReactionTypes = [
     'comment',
 ];
 
-exports.git = [
+const GitReactionTypes = [
     'note',
     'assignment',
 ];
+
+export {
+    ReactionTypes as default,
+    ReactionTypes,
+    EditableReactionTypes,
+    GitReactionTypes,
+};

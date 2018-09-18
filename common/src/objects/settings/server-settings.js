@@ -1,10 +1,6 @@
-module.exports = exports = {
-    default: {
-    }
-};
-
+let ServerSettingsTypedef;
 if (process.env.NODE_ENV !== 'production') {
-    exports.typedef = {
+    ServerSettingsTypedef = {
         api: {
             access_token: String,
             refresh_token: String,
@@ -25,3 +21,7 @@ if (process.env.NODE_ENV !== 'production') {
         },
     }
 }
+
+export {
+    ServerSettingsTypedef,
+};

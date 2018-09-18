@@ -1,17 +1,8 @@
-var _ = require('lodash');
-var Moment = require('moment');
-var Merger = require('data/merger');
-var ReactionTypes = require('objects/types/reaction-types');
-var StoryUtils = require('objects/utils/story-utils');
-
-module.exports = {
-    isSaved,
-    isActuallyPublished,
-    isEditable,
-    wasPublishedWithin,
-    hasUncomittedChanges,
-    mergeRemoteChanges: StoryUtils.mergeRemoteChanges,
-};
+import _ from 'lodash';
+import Moment from 'moment';
+import Merger from 'data/merger';
+import ReactionTypes from 'objects/types/reaction-types';
+import { mergeRemoteChanges } from 'objects/utils/story-utils';
 
 /**
  * Return true if the reaction has a valid database id
@@ -77,7 +68,7 @@ function wasPublishedWithin(reaction, time, unit) {
     if (!reaction || !reaction.published) {
         return false;
     }
-    var ptime = reaction.ptime;
+    let ptime = reaction.ptime;
     if (!ptime) {
         return true;
     }
@@ -99,3 +90,12 @@ function hasUncomittedChanges(reaction) {
     // a special property set by RemoteDataSource
     return reaction.uncommitted;
 }
+
+export {
+    isSaved,
+    isActuallyPublished,
+    isEditable,
+    wasPublishedWithin,
+    hasUncomittedChanges,
+    mergeRemoteChanges,
+};

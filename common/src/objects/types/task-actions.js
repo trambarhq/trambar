@@ -1,4 +1,4 @@
-module.exports = exports = [
+const TaskActions = [
     'image-copy',
     'image-upload',
     'audio-copy-transcode',
@@ -17,3 +17,8 @@ module.exports = exports = [
     'gitlab-issue-comment-import',
     'gitlab-merge-request-comment-import',
 ];
+
+export {
+    TaskActions as default,
+    TaskActions,
+};

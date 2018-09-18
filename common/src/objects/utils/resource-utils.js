@@ -1,9 +1,5 @@
-var _ = require('lodash');
-var Merger = require('data/merger');
-
-module.exports = {
-    mergeLists
-};
+import _ from 'lodash';
+import Merger from 'data/merger';
 
 /**
  * Merge remote resource list into local one
@@ -15,22 +11,22 @@ module.exports = {
  * @param  {Array<Object>}
  */
 function mergeLists(local, remote, common) {
-    var commonToLocal = findIndexMapping(common, local);
-    var commonToRemote = findIndexMapping(common, remote);
-    var localToRemote = findIndexMapping(local, remote);
-    var list = [];
+    let commonToLocal = findIndexMapping(common, local);
+    let commonToRemote = findIndexMapping(common, remote);
+    let localToRemote = findIndexMapping(local, remote);
+    let list = [];
     _.each(common, (resC, indexC) => {
-        var indexL = commonToLocal[indexC];
-        var indexR = commonToRemote[indexC];
-        var resL = local[indexL];
-        var resR = remote[indexR];
+        let indexL = commonToLocal[indexC];
+        let indexR = commonToRemote[indexC];
+        let resL = local[indexL];
+        let resR = remote[indexR];
         if (resL && resR) {
             // merge resource objects, applying the same logic
             // to the indices as well
-            var a = { resource: resL, index: indexL };
-            var b = { resource: resR, index: indexR };
-            var c = { resource: resC, index: indexC };
-            var d = Merger.mergeObjects(a, b, c);
+            let a = { resource: resL, index: indexL };
+            let b = { resource: resR, index: indexR };
+            let c = { resource: resC, index: indexC };
+            let d = Merger.mergeObjects(a, b, c);
             list.push(d);
         }
     });
@@ -41,8 +37,8 @@ function mergeLists(local, remote, common) {
         }
     });
     _.each(local, (resL, indexL) => {
-        var indexR = localToRemote[indexL];
-        var resR = remote[indexR];
+        let indexR = localToRemote[indexL];
+        let resR = remote[indexR];
         if (!_.includes(commonToLocal, indexL) && !resR) {
             // add resource that wasn't there before or in the remote list
             list.push({ resource: resL, index: indexL });
@@ -62,12 +58,12 @@ function mergeLists(local, remote, common) {
  * @return {Array}
  */
 function findIndexMapping(listA, listB) {
-    var map = [];
-    var mapped = [];
+    let map = [];
+    let mapped = [];
     _.each(listA, (a, indexA) => {
-        var keyA = a.url || a.payload_token;
-        var indexB = _.findIndex(listB, (b, indexB) => {
-            var keyB = b.url || b.payload_token;
+        let keyA = a.url || a.payload_token;
+        let indexB = _.findIndex(listB, (b, indexB) => {
+            let keyB = b.url || b.payload_token;
             if (keyA === keyB && !mapped[indexB]) {
                 return true;
             }
@@ -79,3 +75,7 @@ function findIndexMapping(listA, listB) {
     });
     return map;
 }
+
+export {
+    mergeLists
+};

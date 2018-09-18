@@ -1,4 +1,4 @@
-module.exports = exports = [
+const NotificationTypes = [
     'like',
     'comment',
     'task-completion',
@@ -15,11 +15,11 @@ module.exports = exports = [
     'join-request',
 ];
 
-exports.admin = [
+const AdminNotificationTypes = [
     'join-request',
 ];
 
-exports.git = [
+const GitNotificationTypes = [
     'push',
     'merge',
     'note',
@@ -27,6 +27,14 @@ exports.git = [
     'issue',
 ];
 
-exports.git.membership = [
+const MembershipNotificationTypes = [
     'assignment',
 ];
+
+export {
+    NotificationTypes as default,
+    NotificationTypes,
+    AdminNotificationTypes,
+    GitNotificationTypes,
+    MembershipNotificationTypes,
+};
