@@ -6,6 +6,7 @@ import Memoize from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 import * as UserUtils from 'objects/utils/user-utils';
+import * as RepoUtils from 'objects/utils/repo-utils';
 
 // widgets
 import ProfileImage from 'widgets/profile-image';
@@ -40,8 +41,9 @@ class ReactionView extends PureComponent {
      * @return {String}
      */
     getClassName() {
+        let { highlighting } = this.props;
         let className = 'reaction-view';
-        if (this.props.highlighting) {
+        if (highlighting) {
             className += ' highlighting';
         }
         return className;
@@ -53,13 +55,12 @@ class ReactionView extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
+        let { reaction } = this.props;
         let nextState = _.clone(this.state);
-        if (this.props.reaction !== nextProps.reaction) {
+        if (nextProps.reaction !== reaction) {
             this.updateOptions(nextState, nextProps);
         }
-        let changes = _.pickBy(nextState, (value, name) => {
-            return this.state[name] !== value;
-        });
+        let changes = _.shallowDiff(nextState, this.state);
         if (!_.isEmpty(changes)) {
             this.setState(changes);
         }
@@ -107,15 +108,15 @@ class ReactionView extends PureComponent {
      * @return {ReactElement}
      */
     renderProfileImage() {
+        let { env, route, respondent } = this.props;
         let props = {
-            user: this.props.respondent,
-            theme: this.props.theme,
-            size: 'small'
+            user: respondent,
+            size: 'small',
+            env,
         };
-        if (this.props.respondent) {
-            props.url = this.props.route.find(require('pages/people-page'), {
-                schema: this.props.route.parameters.schema,
-                user: this.props.respondent.id,
+        if (respondent) {
+            props.url = route.find('person-page', {
+                userID: respondent.id,
             });
         }
         return <ProfileImage {...props} />;
@@ -127,13 +128,12 @@ class ReactionView extends PureComponent {
      * @return {ReactElement}
      */
     renderText() {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
-        let reaction = this.props.reaction;
-        let user = this.props.currentUser;
-        let story = this.props.story;
-        let repo = this.props.repo;
-        let name = UserUtils.getDisplayName(this.props.respondent, this.props.locale);
+        let { env, reaction, respondent, story, currentUser, repo } = this.props;
+        let { t, p, g } = env.locale;
+        let { text, markdown } = reaction.details;
+        let name = UserUtils.getDisplayName(respondent, env);
+        let gender = UserUtils.getGender(respondent);
+        g(name, gender);
         this.resourcesReferenced = {};
         if (reaction.published && reaction.ready !== false) {
             switch (reaction.type) {
@@ -144,11 +144,10 @@ class ReactionView extends PureComponent {
                         </span>
                     );
                 case 'comment':
-                    let text = _.get(reaction, 'details.text');
-                    let markdown = _.get(reaction, 'details.markdown', false);
+                    let langText = p(text);
                     if (markdown) {
                         // parse the Markdown text
-                        let paragraphs = Markdown.render(p(text), this.handleReference);
+                        let paragraphs = Markdown.render(langText, this.handleReference);
                         // if there first paragraph is a P tag, turn it into a SPAN
                         if (paragraphs[0] && paragraphs[0].type === 'p') {
                             paragraphs[0] = <span key={0}>{paragraphs[0].props.children}</span>;
@@ -161,7 +160,7 @@ class ReactionView extends PureComponent {
                     } else {
                         return (
                             <span className="comment">
-                                {name}: {PlainText.renderEmoji(p(text))}
+                                {name}: {PlainText.renderEmoji(langText)}
                             </span>
                         );
                     }
@@ -179,40 +178,21 @@ class ReactionView extends PureComponent {
                     );
                 case 'note':
                     let url, target;
-                    let user = this.props.currentUser;
-                    let repo = this.props.repo;
-                    if (UserUtils.canAccessRepo(user, repo)) {
+                    if (UserUtils.canAccessRepo(currentUser, repo)) {
+                        let hash = getNoteHash(link);
                         switch (story.type) {
                             case 'push':
                             case 'merge':
-                                let link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'commit');
-                                if (link) {
-                                    let commitId = link.commit.id;
-                                    let hash = getNoteHash(link);
-                                    url = `${repo.details.web_url}/commit/${commitId}${hash}`;
-                                    target = link.type;
-                                }
+                                url = RepoUtils.getCommitNoteURL(repo, reaction);
                                 break;
                             case 'issue':
-                                let link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'issue');
-                                if (link) {
-                                    let issueNumber = link.issue.number;
-                                    let hash = getNoteHash(link);
-                                    url = `${repo.details.web_url}/issues/${issueNumber}${hash}`;
-                                    target = link.type;
-                                }
+                                url = RepoUtils.getIssueNoteURL(repo, reaction);
                                 break;
                             case 'merge-request':
-                                let link = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'merge_request');
-                                if (link) {
-                                    let mergeRequestNumber = link.merge_request.number;
-                                    let hash = getNoteHash(link);
-                                    url = `${repo.details.web_url}/merge_requests/${mergeRequestNumber}${hash}`;
-                                    target = link.type;
-                                }
+                                url = RepUtils.getMergeRequestNoteURL(repo, reaction);
                                 break;
                         }
-
+                        target = repo.type;
                     }
                     return (
                         <a className="note" href={url} target={target}>
@@ -223,13 +203,8 @@ class ReactionView extends PureComponent {
                     if (story.type === 'issue' || story.type === 'post') {
                         let url, target;
                         if (UserUtils.canAccessRepo(user, repo)) {
-                            let link = ExternalDataUtils.findLinkByRelations(reaction, 'issue');
-                            if (link) {
-                                let issueNumber = _.get(link, 'issue.number');
-                                let hash = getNoteHash(link);
-                                url = `${repo.details.web_url}/issues/${issueNumber}${hash}`;
-                                target = link.type;
-                            }
+                            url = RepoUtils.getIssueNoteURL(repo, reaction);
+                            target = repo.type;
                         }
                         return (
                             <a className="issue-assignment" href={url} target={target}>
@@ -239,13 +214,8 @@ class ReactionView extends PureComponent {
                     } else if (story.type === 'merge-request') {
                         let url, target;
                         if (UserUtils.canAccessRepo(user, repo)) {
-                            let link = ExternalDataUtils.findLinkByRelations(reaction, 'merge_request');
-                            if (link) {
-                                let mergeRequestNumber = link.merge_request.number;
-                                let hash = getNoteHash(link);
-                                url = `${repo.details.web_url}/merge_requests/${mergeRequestNumber}${hash}`;
-                                target = link.type;
-                            }
+                            url = RepoUtils.getMergeRequestNoteURL(repo, reaction);
+                            target = repo.type;
                         }
                         return (
                             <a className="issue-assignment" href={url} target={target}>
@@ -256,19 +226,14 @@ class ReactionView extends PureComponent {
                 case 'tracking':
                     let url, target;
                     if (UserUtils.canAccessRepo(user, repo)) {
-                        let link = ExternalDataUtils.findLinkByRelations(reaction, 'issue');
-                        if (link) {
-                            let issueNumber = link.issue.number;
-                            url = `${repo.details.web_url}/issues/${issueNumber}`;
-                            target = link.type;
-                        }
+                        url = RepoUtils.getIssueNoteURL(repo, reaction);
+                        target = repo.type;
                     }
                     return (
                         <a className="issue-tracking" href={url} target={target}>
                             {t('reaction-$name-added-story-to-issue-tracker', name)}
                         </a>
                     );
-
             }
         } else {
             let phrase;
@@ -296,17 +261,18 @@ class ReactionView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderOptionButton() {
-        if (!this.props.reaction.published) {
+        let { env, reaction, story, currentUser, access } = this.props;
+        let { options } = this.state;
+        if (!reaction.published) {
             return null;
         }
         let props = {
-            access: this.props.access,
-            currentUser: this.props.currentUser,
-            reaction: this.props.reaction,
-            story: this.props.story,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            options: this.state.options,
+            access,
+            currentUser,
+            reaction,
+            story,
+            env,
+            options,
             onChange: this.handleOptionsChange,
         };
         return <ReactionViewOptions {...props} />;
@@ -318,13 +284,11 @@ class ReactionView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderProgress() {
-        if (!this.props.reaction.published) {
+        let { env, reaction } = this.props;
+        if (!reaction.published) {
             return null;
         }
-        let props = {
-            reaction: this.props.reaction,
-            locale: this.props.locale,
-        };
+        let props = { reaction, env };
         return <ReactionProgress {...props} />;
     }
 
@@ -334,12 +298,14 @@ class ReactionView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderAudioPlayer() {
-        if (!this.state.audioURL) {
+        let { audioURL } = this.state;
+        let { setters } = this.components;
+        if (!audioURL) {
             return null;
         }
         let audioProps = {
-            ref: this.components.setters.audioPlayer,
-            src: this.state.audioURL,
+            ref: setters.audioPlayer,
+            src: audioURL,
             autoPlay: true,
             controls: true,
             onEnded: this.handleAudioEnded,
@@ -350,10 +316,11 @@ class ReactionView extends PureComponent {
     /**
      * Render attached media
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderMedia() {
-        let resources = _.get(this.props.reaction, 'details.resources');
+        let { env, reaction } = this.props;
+        let resources = _.get(reaction, 'details.resources');
         if (!_.isEmpty(this.resourcesReferenced)) {
             resources = _.difference(resources, _.values(this.resourcesReferenced));
         }
@@ -361,10 +328,9 @@ class ReactionView extends PureComponent {
             return null;
         }
         let props = {
-            locale: this.props.locale,
-            theme: this.props.theme,
             resources,
-            width: (this.props.theme.mode === 'signle-col') ? 220 : 300
+            width: env.isWiderThan('double-col') ? 220 : 300
+            emv.
         };
         return <div className="media"><MediaView {...props} /></div>;
     }
@@ -375,23 +341,26 @@ class ReactionView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderReferencedMediaDialog() {
-        if (!this.state.renderingReferencedMediaDialog) {
+        let { env } = this.props;
+        let {
+            showingReferencedMediaDialog,
+            renderingReferencedMediaDialog,
+            selectedResourceURL,
+        } = this.state;
+        if (!renderingReferencedMediaDialog) {
             return null;
         }
-        let selectedResource = this.resourcesReferenced[this.state.selectedResourceURL];
+        let selectedResource = this.resourcesReferenced[selectedResourceURL];
         let zoomableResources = getZoomableResources(this.resourcesReferenced);
         let zoomableIndex = _.indexOf(zoomableResources, selectedResource);
         if (zoomableIndex === -1) {
             return null;
         }
         let dialogProps = {
-            show: this.state.showingReferencedMediaDialog,
+            show: showingReferencedMediaDialog,
             resources: zoomableResources,
             selectedIndex: zoomableIndex,
-
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            env,
             onClose: this.handleReferencedMediaDialogClose,
         };
         return <MediaDialogBox {...dialogProps} />;
@@ -405,8 +374,8 @@ class ReactionView extends PureComponent {
      * @return {Promise<Reaction>}
      */
     saveReaction(reaction) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let { database } = this.props;
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'reaction' }, reaction);
         });
@@ -420,8 +389,8 @@ class ReactionView extends PureComponent {
      * @return {Promise<Reaction>}
      */
     removeReaction(reaction) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let { database } = this.props;
+        let db = database.use({ by: this });
         return db.removeOne({ table: 'reaction' }, reaction);
     }
 
@@ -431,18 +400,19 @@ class ReactionView extends PureComponent {
      * @param  {Object} options
      */
     setOptions(options) {
-        let before = this.state.options;
+        let { reaction } = this.props;
+        let { options: before } = this.state;
         this.setState({ options }, () => {
             if (options.editReaction && !before.editReaction) {
-                let reaction = _.clone(this.props.reaction);
+                reaction = _.clone(reaction);
                 reaction.published = false;
                 this.saveReaction(reaction);
             }
             if (options.removeReaction && !before.removeReaction) {
-                this.removeReaction(this.props.reaction);
+                this.removeReaction(reaction);
             }
             if (options.hideReaction !== before.hideReaction) {
-                let reaction = _.clone(this.props.reaction);
+                reaction = _.clone(reaction);
                 reaction.public = !options.hideReaction;
                 this.saveReaction(reaction);
             }
@@ -453,20 +423,20 @@ class ReactionView extends PureComponent {
      * Called when a resource is referenced by Markdown
      */
     handleReference = (evt) => {
-        let resources = this.props.reaction.details.resources;
+        let { env, reaction } = this.props;
+        let resources = _.get(reaction, 'details.resources');
         let res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
-            let theme = this.props.theme;
             let url;
             if (evt.forImage)  {
                 if (res.type === 'audio') {
                     url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
                 } else {
                     // images are style at height = 1.5em
-                    url = theme.getImageURL(res, { height: 24 });
+                    url = env.getImageURL(res, { height: 24 });
                 }
             } else {
-                url = theme.getURL(res);
+                url = env.getURL(res);
             }
             // remember the resource and the url
             this.resourcesReferenced[url] = res;
@@ -482,7 +452,8 @@ class ReactionView extends PureComponent {
      *
      * @param  {Event} evt
      */
-     handleMarkdownClick = (evt) => {
+    handleMarkdownClick = (evt) => {
+        let { env } = this.props;
         let target = evt.target;
         if (target.tagName === 'IMG') {
             let src = target.getAttribute('src');
@@ -498,7 +469,7 @@ class ReactionView extends PureComponent {
                     window.open(res.url);
                 } else if (res.type === 'audio') {
                     let version = chooseAudioVersion(res);
-                    let audioURL = this.props.theme.getAudioURL(res, { version });
+                    let audioURL = env.getAudioURL(res, { version });
                     this.setState({ audioURL });
                 }
             } else {
@@ -520,7 +491,8 @@ class ReactionView extends PureComponent {
     handleReferencedMediaDialogClose = (evt) => {
         this.setState({ showingReferencedMediaDialog: false }, () => {
             setTimeout(() => {
-                if (!this.state.showingReferencedMediaDialog) {
+                let { showingReferencedMediaDialog } = this.state;
+                if (!showingReferencedMediaDialog) {
                     this.setState({
                         renderingReferencedMediaDialog: false,
                         selectedResourceURL: null
@@ -574,11 +546,6 @@ let getZoomableResources = Memoize(function(resources) {
  */
 function chooseAudioVersion(res) {
     return _.first(_.keys(res.versions)) || null;
-}
-
-function getNoteHash(link) {
-    let noteId = _.get(link, 'note.id');
-    return (noteId) ? `#note_${noteId}` : '';
 }
 
 export {

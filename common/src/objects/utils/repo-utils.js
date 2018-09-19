@@ -50,7 +50,7 @@ function getMergeRequestURL(repo, story) {
     let url;
     let repoURL = getURL(repo);
     let mergeRequestLink = ExternalDataUtils.findLinkByRelations(story, 'merge_request');
-    let mergeRequestID = _.get(mergeRequestLink, 'merge_request.id');
+    let mergeRequestID = _.get(mergeRequestLink, 'merge_request.number');
     if (repoURL && mergeRequestID) {
         url = `${repo.details.web_url}/merge_requests/${milestoneID}`;
     }
@@ -100,6 +100,47 @@ function getLabelStyle(repo, label) {
         }
     }
     return style;
+}
+
+function getNoteHash(noteLink) {
+    let noteID = _.get(noteLink, 'note.id');
+    return (noteID) ? `#note_${noteID}` : '';
+}
+
+function getCommitNoteURL(repo, reaction) {
+    let url;
+    let repoURL = getURL(repo);
+    let noteLink = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'commit');
+    if (repoURL && noteLink) {
+        let commitID = noteLink.commit.id;
+        let hash = getNoteHash(noteLink);
+        url = `${repoURL}/commit/${commitID}${hash}`;
+    }
+    return url;
+}
+
+function getIssueNoteURL(repo, reaction) {
+    let url;
+    let repoURL = getURL(repo);
+    let noteLink = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'issue');
+    let issueNumber = _.get(noteLink, 'issue.number');
+    if (repoURL && issueNumber) {
+        let hash = getNoteHash(noteLink);
+        url = `${repoURL}/issues/${issueNumber}${hash}`;
+    }
+    return url;
+}
+
+function getMergeRequestNoteURL(repo, reaction) {
+    let url;
+    let repoURL = getURL(repo);
+    let noteLink = ExternalDataUtils.findLinkByRelations(reaction, 'note', 'merge_request');
+    let mergeRequestNumber = _.get(noteLink, 'merge_request.number');
+    if (repoURL && mergeRequestNumber) {
+        let hash = getNoteHash(noteLink);
+        url = `${repoURL}/merge_requests/${mergeRequestNumber}${hash}`;
+    }
+    return url;
 }
 
 function isBright(color) {

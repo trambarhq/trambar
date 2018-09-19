@@ -25,18 +25,15 @@ class ReactionViewOptions extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let access = this.props.access;
-        let user = this.props.currentUser;
-        let story = this.props.story;
-        let reaction = this.props.reaction;
+        let { reaction, story, currentUser, access } = this.props;
         let active = false;
-        if (UserUtils.canHideReaction(user, story, reaction, access)) {
+        if (UserUtils.canHideReaction(currentUser, story, reaction, access)) {
             active = true;
         }
-        if (UserUtils.canEditReaction(user, story, reaction, access)) {
+        if (UserUtils.canEditReaction(currentUser, story, reaction, access)) {
             active = true;
         }
-        if (UserUtils.canRemoveReaction(user, story, reaction, access)) {
+        if (UserUtils.canRemoveReaction(currentUser, story, reaction, access)) {
             active = true;
         }
         let props = {
@@ -64,30 +61,27 @@ class ReactionViewOptions extends PureComponent {
      * @return {ReactElement|null}
      */
     renderOptions() {
-        if (!this.state.open) {
+        let { env, options, reaction, story, currentUser, access } = this.props;
+        let { open } = this.state;
+        let { t } = env.locale;
+        if (!open) {
             return null;
         }
-        let t = this.props.locale.translate;
-        let options = this.props.options;
-        let access = this.props.access;
-        let user = this.props.currentUser;
-        let story = this.props.story;
-        let reaction = this.props.reaction;
         let hideProps = {
             label: t('option-hide-comment'),
-            hidden: !UserUtils.canHideReaction(user, story, reaction, access),
+            hidden: !UserUtils.canHideReaction(currentUser, story, reaction, access),
             selected: options.hideReaction,
             onClick: this.handleHideClick,
         };
         let editProps = {
             label: t('option-edit-comment'),
-            hidden: !UserUtils.canEditReaction(user, story, reaction, access),
+            hidden: !UserUtils.canEditReaction(currentUser, story, reaction, access),
             selected: options.editReaction,
             onClick: this.handleEditClick,
         };
         let removeProps = {
             label: t('option-remove-comment'),
-            hidden: !UserUtils.canRemoveReaction(user, story, reaction, access),
+            hidden: !UserUtils.canRemoveReaction(currentUser, story, reaction, access),
             selected: options.removeReaction,
             onClick: this.handleRemoveClick,
         };
@@ -106,8 +100,9 @@ class ReactionViewOptions extends PureComponent {
      * @param  {Object} options
      */
     triggerChangeEvent(options) {
-        if (this.props.onChange) {
-            this.props.onChange({
+        let { onChange } = this.props;
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 options,
@@ -139,7 +134,8 @@ class ReactionViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleHideClick = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.hideReaction = !options.hideReaction;
         this.triggerChangeEvent(options);
     }
@@ -150,7 +146,8 @@ class ReactionViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleEditClick = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.editReaction = true;
         this.triggerChangeEvent(options);
     }
@@ -161,7 +158,8 @@ class ReactionViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleRemoveClick = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.removeReaction = true;
         this.triggerChangeEvent(options);
     }
