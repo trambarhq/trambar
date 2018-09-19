@@ -29,46 +29,46 @@ const phrases = {
     'activity-chart-legend-wiki': 'Правки wiki',
 
     'activity-tooltip-$count': (count) => {
-        return cardinal(count, 'рассказ', 'рассказа', 'рассказов');
+        return cardinal(count, '1 рассказ', '2 рассказа', '5 рассказов');
     },
     'activity-tooltip-$count-branch': (count) => {
-        return cardinal(count, 'ветка', 'ветки', 'веток');
+        return cardinal(count, '1 ветка', '2 ветки', '5 веток');
     },
     'activity-tooltip-$count-issue': (count) => {
-        return cardinal(count, 'отчёт', 'отчёта', 'отчётов');
+        return cardinal(count, '1 отчёт', '2 отчёта', '5 отчётов');
     },
     'activity-tooltip-$count-member': (count) => {
-        return cardinal(count, 'изменение членства', 'изменения членства', 'изменений членства');
+        return cardinal(count, '1 изменение членства', '2 изменения членства', '5 изменений членства');
     },
     'activity-tooltip-$count-merge': (count) => {
-        return cardinal(count, 'слияние', 'слияния', 'слияний');
+        return cardinal(count, '1 слияние', '2 слияния', '5 слияний');
     },
     'activity-tooltip-$count-merge-request': (count) => {
-        return cardinal(count, 'запрос слияния', 'запроса слияния', 'запросов слияния');
+        return cardinal(count, '1 запрос слияния', '2 запроса слияния', '5 запросов слияния');
     },
     'activity-tooltip-$count-milestone': (count) => {
-        return cardinal(count, 'веха', 'вехи', 'вех');
+        return cardinal(count, '1 веха', '2 вехи', '5 вех');
     },
     'activity-tooltip-$count-post': (count) => {
-        return cardinal(count, 'сообщение', 'сообщений', 'сообщений');
+        return cardinal(count, '1 сообщение', '2 сообщений', '5 сообщений');
     },
     'activity-tooltip-$count-push': (count) => {
-        return cardinal(count, 'помещение', 'помещения', 'помещений');
+        return cardinal(count, '1 помещение', '2 помещения', '5 помещений');
     },
     'activity-tooltip-$count-repo': (count) => {
-        return cardinal(count, 'изменение репозитория', 'изменения репозитория', 'изменений репозитория');
+        return cardinal(count, '1 изменение репозитория', '2 изменения репозитория', '5 изменений репозитория');
     },
     'activity-tooltip-$count-survey': (count) => {
-        return cardinal(count, 'опрос', 'опроса', 'опросов');
+        return cardinal(count, '1 опрос', '2 опроса', '5 опросов');
     },
     'activity-tooltip-$count-tag': (count) => {
-        return cardinal(count, 'тег', 'теги', 'тегов');
+        return cardinal(count, '1 тег', '2 теги', '5 тегов');
     },
     'activity-tooltip-$count-task-list': (count) => {
-        return cardinal(count, 'список задач', 'списка задач', 'списков задач');
+        return cardinal(count, '1 список задач', '2 списка задач', '5 списков задач');
     },
     'activity-tooltip-$count-wiki': (count) => {
-        return cardinal(count, 'правка wiki', 'правки wiki', 'правок wiki');
+        return cardinal(count, '1 правка wiki', '2 правки wiki', '5 правок wiki')f;
     },
 
     'app-name': 'Трамбар',
@@ -140,11 +140,11 @@ const phrases = {
     'project-list-add': 'Добавить проект',
     'project-list-cancel': 'Отмена',
     'project-list-confirm-archive-$count': (count) => {
-        let projects = cardinal(count, 'выбранный проект', [ 'эти', 'проекта' ], [ 'эти', 'проектов' ], true);
+        let projects = cardinal(count, 'выбранный проект', 'эти 2 проекта', 'эти 5 проектов');
         return `Вы действительно хотите архивировать ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        let projects = cardinal(count, 'выбранный проект', [ 'эти', 'проекта' ], [ 'эти', 'проектов' ], true);
+        let projects = cardinal(count, 'выбранный проект', 'эти 2 проекта', 'эти 5 проектов');
         return `Вы действительно хотите восстановить ${projects}?`;
     },
     'project-list-deleted': 'Удаленный',
@@ -190,12 +190,12 @@ const phrases = {
     'project-summary-title': 'Название',
 
     'project-tooltip-$count-others': (count) => {
-        return cardinal(count, 'другой', 'других', 'других');
+        return cardinal(count, '1 другой', '2 других');
     },
 
     'repo-list-cancel': 'Отмена',
     'repo-list-confirm-remove-$count': (count) => {
-        let repositories = cardinal(count, 'выбранный репозиторий', [ 'эти', 'репозитория' ], [ 'эти', 'репозиториев' ], true);
+        let repositories = cardinal(count, 'выбранный репозиторий', 'эти 2 репозитория', 'эти 5 репозиториев');
         return `Вы действительно хотите удалить ${repositories} из проекта?`;
     },
     'repo-list-edit': 'Редактировать список репозитория',
@@ -227,17 +227,17 @@ const phrases = {
     'repo-summary-title': 'Название',
 
     'repository-tooltip-$count': (count) => {
-        return cardinal(count, 'репозиторий', 'репозитория', 'репозиториев');
+        return cardinal(count, '1 репозиторий', '2 репозитория', '5 репозиториев');
     },
 
     'role-list-add': 'Добавить роль',
     'role-list-cancel': 'Отмена',
     'role-list-confirm-disable-$count': (count) => {
-        let roles = cardinal(count, 'эту роль', [ 'эти', 'роли' ], [ 'эти', 'ролей' ], true);
+        let roles = cardinal(count, 'эту роль', 'эти 2 роли', 'эти 5 ролей');
         return `Вы действительно хотите отключить ${roles}?`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        let roles = cardinal(count, 'эту роль', [ 'эти', 'роли' ], [ 'эти', 'ролей' ], true);
+        let roles = cardinal(count, 'эту роль', 'эти 2 роли', 'эти 5 ролей');
         return `Вы действительно хотите реактивировать ${roles}?`
     },
     'role-list-edit': 'Редактировать список ролей',
@@ -276,7 +276,7 @@ const phrases = {
     'role-summary-users': 'Пользователи',
 
     'role-tooltip-$count-others': (count) => {
-        return cardinal(count, 'другая', 'другие', 'других');
+        return cardinal(count, '1 другая', '2 другие', '5 других');
     },
 
     'server-list-add': 'Добавить сервер',
@@ -284,11 +284,11 @@ const phrases = {
     'server-list-api-access-true': 'Получен',
     'server-list-cancel': 'Отмена',
     'server-list-confirm-disable-$count': (count) => {
-        let servers = cardinal(count, 'выбранный сервер', [ 'эти', 'сервера' ], [ 'эти', 'серверов' ], true);
+        let servers = cardinal(count, 'выбранный сервер', 'эти 2 сервера', 'эти 5 серверов');
         return `Вы действительно хотите отключить ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        let servers = cardinal(count, 'выбранный сервер', [ 'эти', 'сервера' ], [ 'эти', 'серверов' ], true);
+        let servers = cardinal(count, 'выбранный сервер', 'эти 2 сервера', 'эти 5 серверов');
         return `Вы действительно хотите реактивировать ${servers}?`
     },
     'server-list-edit': 'Редактировать список серверов',
@@ -417,34 +417,34 @@ const phrases = {
     'table-heading-users': 'Пользователи',
 
     'task-$seconds': (seconds) => {
-        return cardinal(seconds, 'секунда', 'секунды', 'секунд');
+        return cardinal(seconds, '1 секунда', '2 секунды', '5 секунд');
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'комментарий', 'комментария', 'комментариев');
+        let comments = cardinal(count, '1 комментарий', '2 комментария', '5 комментариев');
         return `Импортировано из репозитория «${repo}» ${comments} к коммиту`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        let events = cardinal(count, 'событие', 'события', 'событий');
+        let events = cardinal(count, '1 событие', '2 события', '5 событий');
         return `Импортировано из репозитория «${repo}» ${events}`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'комментарий', 'комментария', 'комментариев');
+        let comments = cardinal(count, '1 комментарий', '2 комментария', '5 комментариев');
         return `Импортировано из репозитория «${repo}» ${comments} к отчёту об ошибке`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'комментарий', 'комментария', 'комментариев');
+        let comments = cardinal(count, '1 комментарий', '2 комментария', '5 комментариев');
         return `Импортировано из репозитория «${repo}» ${comments} к запросу слияния`;
     },
     'task-imported-$count-repos': (count) => {
-        let repos = cardinal(count, 'репозиторий', 'репозитория', 'репозиториев');
+        let repos = cardinal(count, '1 репозиторий', '2 репозитория', '5 репозиториев');
         return `Импортировано ${repos}`;
     },
     'task-imported-$count-users': (count) => {
-        let users = cardinal(count, 'пользователь', 'пользователя', 'пользователей');
+        let users = cardinal(count, '1 пользователь', '2 пользователя', '5 пользователей');
         return `Импортировано ${users}`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        let commits = cardinal(count, 'коммитом', 'коммитами', 'коммитами');
+        let commits = cardinal(count, '1 коммитом', '2 коммитами');
         return `Импортировано из ветки «${branch}» репозитория «${repo}» помещения с ${commits}`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
@@ -465,29 +465,29 @@ const phrases = {
     'task-importing-repos': 'Импортирования репозиториев',
     'task-importing-users': 'Импортирования пользователей',
     'task-installed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'обратный вызов', 'обратного вызова', 'обратных вызовов');
+        let hooks = cardinal(count, '1 обратный вызов', '2 обратного вызова', '5 обратных вызовов');
         return `Установлен ${hooks}`;
     },
     'task-installing-hooks': 'Установка обратных вызовов',
     'task-removed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'обратный вызов', 'обратного вызова', 'обратных вызовов');
+        let hooks = cardinal(count, '1 обратный вызов', '2 обратного вызова', '5 обратных вызовов');
         return `Удален ${hooks}`;
     },
     'task-removed-$count-repos': (count) => {
-        let repos = cardinal(count, 'репозиторий', 'репозитория', 'репозиториев');
+        let repos = cardinal(count, '1 репозиторий', '2 репозитория', '5 репозиториев');
         return `Удален ${repos}`;
     },
     'task-removed-$count-users': (count) => {
-        let users = cardinal(count, 'пользователь', 'пользователя', 'пользователей');
+        let users = cardinal(count, '1 пользователь', '2 пользователя', '5 пользователей');
         return `Удален ${users}`;
     },
     'task-removing-hooks': 'Удаление обратных вызовов',
     'task-updated-$count-repos': (count) => {
-        let repos = cardinal(count, 'репозиторий', 'репозитория', 'репозиториев');
+        let repos = cardinal(count, '1 репозиторий', '2 репозитория', '5 репозиториев');
         return `Обновлено ${repos}`;
     },
     'task-updated-$count-users': (count) => {
-        let users = cardinal(count, 'пользователь', 'пользователя', 'пользователей');
+        let users = cardinal(count, '1 пользователь', '2 пользователя', '5 пользователей');
         return `Обновлено ${users}`;
     },
 
@@ -499,7 +499,7 @@ const phrases = {
     'tooltip-more': 'Более',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        let files = cardinal(count, 'файла', 'файлов', 'файлов');
+        let files = cardinal(count, '1 файла', '2 файлов');
         return `Загрузка ${files}, оставшихся ${size}`;
     },
 
@@ -507,11 +507,11 @@ const phrases = {
     'user-list-approve-all': 'Утвердить все запросы',
     'user-list-cancel': 'Отмена',
     'user-list-confirm-disable-$count': (count) => {
-        let users = cardinal(count, 'выбранного пользователя', [ 'этих', 'пользователей' ], [ 'этих', 'пользователей' ], true);
+        let users = cardinal(count, 'выбранного пользователя', 'этих 2 пользователей');
         return `Вы действительно хотите отключить ${users}?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        let users = cardinal(count, 'выбранного пользователя', [ 'этих', 'пользователей' ], [ 'этих', 'пользователей' ], true);
+        let users = cardinal(count, 'выбранного пользователя', 'этих 2 пользователей');
         return `Вы действительно хотите реактивировать ${users}?`
     },
     'user-list-edit': 'Редактировать список пользователей',
@@ -578,7 +578,7 @@ const phrases = {
     'user-summary-username': 'Имя пользователя',
 
     'user-tooltip-$count': (count) => {
-        return cardinal(count, 'пользователь', 'пользователя', 'пользователей');
+        return cardinal(count, '1 пользователь', '2 пользователя', '5 пользователей');
     },
 
     'validation-duplicate-project-name': 'Проект с этим идентификатором уже существует',

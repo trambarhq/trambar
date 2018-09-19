@@ -29,46 +29,46 @@ const phrases = {
     'activity-chart-legend-wiki': 'Úpravy wiki',
 
     'activity-tooltip-$count': (count) => {
-        return cardinal(count, 'příběh', 'příběhy', 'příběhů');
+        return cardinal(count, '1 příběh', '2 příběhy', '5 příběhů');
     },
     'activity-tooltip-$count-branch': (count) => {
-        return cardinal(count, 'větev', 'větve', 'větví');
+        return cardinal(count, '1 větev', '2 větve', '5 větví');
     },
     'activity-tooltip-$count-issue': (count) => {
-        return cardinal(count, 'problém', 'problémy', 'problémů');
+        return cardinal(count, '1 problém', '2 problémy', '5 problémů');
     },
     'activity-tooltip-$count-member': (count) => {
-        return cardinal(count, 'změna členství', 'změny členství', 'změn členství');
+        return cardinal(count, '1 změna členství', '2 změny členství', '5 změn členství');
     },
     'activity-tooltip-$count-merge': (count) => {
-        return cardinal(count, 'sloučení', 'sloučení', 'sloučeních');
+        return cardinal(count, '1 sloučení', '2 sloučení', '5 sloučeních');
     },
     'activity-tooltip-$count-merge-request': (count) => {
-        return cardinal(count, 'žádost o sloučení', 'žádosti o sloučení', 'žádostí o sloučení');
+        return cardinal(count, '1 žádost o sloučení', '2 žádosti o sloučení', '5 žádostí o sloučení');
     },
     'activity-tooltip-$count-milestone': (count) => {
-        return cardinal(count, 'milník', 'milníky', 'milníků');
+        return cardinal(count, '1 milník', '2 milníky', '5 milníků');
     },
     'activity-tooltip-$count-post': (count) => {
-        return cardinal(count, 'příspěvek', 'příspěvky', 'příspěvků');
+        return cardinal(count, '1 příspěvek', '2 příspěvky', '5 příspěvků');
     },
     'activity-tooltip-$count-push': (count) => {
-        return cardinal(count, 'přesun', 'přesuny', 'přesunů');
+        return cardinal(count, '1 přesun', '2 přesuny', '5 přesunů');
     },
     'activity-tooltip-$count-repo': (count) => {
-        return cardinal(count, 'změna repozitáře', 'změny repozitářů', 'změn repozitářů');
+        return cardinal(count, '1 změna repozitáře', '2 změny repozitářů', '5 změn repozitářů');
     },
     'activity-tooltip-$count-survey': (count) => {
-        return cardinal(count, 'anketa', 'ankety', 'anket');
+        return cardinal(count, '1 anketa', '2 ankety', '5 anket');
     },
     'activity-tooltip-$count-tag': (count) => {
-        return cardinal(count, 'tag', 'tagy', 'tagů');
+        return cardinal(count, '1 tag', '2 tagy', '5 tagů');
     },
     'activity-tooltip-$count-task-list': (count) => {
-        return cardinal(count, 'seznam úkolů', 'seznamy úkolů', 'seznamů úkolů');
+        return cardinal(count, '1 seznam úkolů', '2 seznamy úkolů', '5 seznamů úkolů');
     },
     'activity-tooltip-$count-wiki': (count) => {
-        return cardinal(count, 'úprava stránky wiki', 'úpravy stránek wiki', 'úprav stránek wiki');
+        return cardinal(count, '1 úprava stránky wiki', '2 úpravy stránek wiki', '5 úprav stránek wiki');
     },
 
     'app-name': 'Trambar',
@@ -140,11 +140,11 @@ const phrases = {
     'project-list-add': 'Přidat nový projekt',
     'project-list-cancel': 'Zrušit',
     'project-list-confirm-archive-$count': (count) => {
-        let projects = cardinal(count, 'vybraný projekt', [ 'tyto', 'projekty' ], [ 'těchto', 'projektů' ], true);
+        let projects = cardinal(count, 'vybraný projekt', 'tyto 2 projekty', 'těchto 5 projektů');
         return `Opravdu chcete ${projects} archivovat?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        let projects = cardinal(count, 'vybraný projekt', [ 'tyto', 'projekty' ], [ 'těchto', 'projektů' ], true);
+        let projects = cardinal(count, 'vybraný projekt', 'tyto 2 projekty', 'těchto 5 projektů');
         return `Opravdu chcete ${projects} obnovit?`;
     },
     'project-list-deleted': 'Smazány',
@@ -195,7 +195,7 @@ const phrases = {
 
     'repo-list-cancel': 'Zrušit',
     'repo-list-confirm-remove-$count': (count) => {
-        let repositories = cardinal(count, 'tento repozitář', [ 'tyto', 'repozitáře' ], [ 'těchto', 'repozitářů' ], true);
+        let repositories = cardinal(count, 'tento repozitář', 'tyto 2 repozitáře', 'těchto 5 repozitářů');
         return `Opravdu chcete ${repositories} odstranit z projektu?`;
     },
     'repo-list-edit': 'Upravit seznam repozitářů',
@@ -227,17 +227,17 @@ const phrases = {
     'repo-summary-title': 'Název',
 
     'repository-tooltip-$count': (count) => {
-        return cardinal(count, 'repozitář', 'repozitáře', 'repozitářů');
+        return cardinal(count, '1 repozitář', '2 repozitáře', '5 repozitářů');
     },
 
     'role-list-add': 'Přidat novou roli',
     'role-list-cancel': 'Zrušit',
     'role-list-confirm-disable-$count': (count) => {
-        let roles = cardinal(count, 'tuto roli', [ 'tyto', 'role' ], [ 'těchto', 'rolí' ], true);
+        let roles = cardinal(count, 'tuto roli', 'tyto 2 role', 'těchto 5 rolí');
         return `Opravdu chcete ${roles} deaktivovat?`;
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        let roles = cardinal(count, 'tuto roli', [ 'tyto', 'role' ], [ 'těchto', 'rolí' ], true);
+        let roles = cardinal(count, 'tuto roli', 'tyto 2 role', 'těchto 5 rolí');
         return `Opravdu chcete ${roles} reaktivovat?`;
     },
     'role-list-edit': 'Upravit seznam rolí',
@@ -276,7 +276,7 @@ const phrases = {
     'role-summary-users': 'Uživatelé',
 
     'role-tooltip-$count-others': (count) => {
-        return cardinal(count, 'další', 'další', 'dalších');
+        return cardinal(count, '1 další', '2 další', '5 dalších');
     },
 
     'server-list-add': 'Přidat nový server',
@@ -284,11 +284,11 @@ const phrases = {
     'server-list-api-access-true': 'Získaný',
     'server-list-cancel': 'Zrušit',
     'server-list-confirm-disable-$count': (count) => {
-        let servers = cardinal(count, 'tento server', [ 'tyto', 'servery' ], [ 'těchto', 'serverů' ], true);
+        let servers = cardinal(count, 'tento server', 'tyto 2 servery', 'těchto 5 serverů');
         return `Opravdu chcete ${servers} deaktivovat?`;
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        let servers = cardinal(count, 'tento server', [ 'tyto', 'servery' ], [ 'těchto', 'serverů' ], true);
+        let servers = cardinal(count, 'tento server', 'tyto 2 servery', 'těchto 5 serverů');
         return `Opravdu chcete ${servers} reaktivovat?`;
     },
     'server-list-edit': 'Upravit seznam serverů',
@@ -417,34 +417,34 @@ const phrases = {
     'table-heading-users': 'Uživatelé',
 
     'task-$seconds': (seconds) => {
-        return cardinal(count, 'sekunda', 'sekundy', 'sekund');
+        return cardinal(count, '1 sekunda', '2 sekundy', '5 sekund');
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'komentář', 'komentáře', 'komentářů');
+        let comments = cardinal(count, '1 komentář', '2 komentáře', '5 komentářů');
         return `Importováno ${comments} k commitu z repozitářu „${repo}”`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        let events = cardinal(count, 'událost', 'události', 'událostí');
+        let events = cardinal(count, '1 událost', '2 události', '5 událostí');
         return `Importováno ${events} z repozitářu „${repo}”`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'komentář', 'komentáře', 'komentářů');
+        let comments = cardinal(count, '1 komentář', '2 komentáře', '5 komentářů');
         return `Importováno ${comments} k problému from „${repo}”`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'komentář', 'komentáře', 'komentářů');
+        let comments = cardinal(count, '1 komentář', '2 komentáře', '5 komentářů');
         return `Importováno ${comments} k požadavku na sloučení z repozitářu „${repo}”`;
     },
     'task-imported-$count-repos': (count) => {
-        let repos = cardinal(count, 'repozitář', 'repozitáře', 'repozitářů');
+        let repos = cardinal(count, '1 repozitář', '2 repozitáře', '5 repozitářů');
         return `Importováno ${repos}`;
     },
     'task-imported-$count-users': (count) => {
-        let users = cardinal(count, 'uživatel', 'uživatelé', 'uživatelů');
+        let users = cardinal(count, '1 uživatel', '2 uživatelé', '5 uživatelů');
         return `Importováno ${users}`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        let commits = cardinal(count, 'commitu', 'commity', 'commitů');
+        let commits = cardinal(count, '1 commitu', '2 commitů');
         return `Importováno přesun ${commits} z větve „${branch}” repozitářu „${repo}”`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
@@ -465,29 +465,29 @@ const phrases = {
     'task-importing-repos': 'Importování repozitářů',
     'task-importing-users': 'Importování uživatelů',
     'task-installed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'hák', 'háki', 'háků');
+        let hooks = cardinal(count, '1 hák', '2 háki', '5 háků');
         return `Instalováno ${hooks}`;
     },
     'task-installing-hooks': 'Instalování háků',
     'task-removed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'hák', 'háki', 'háků');
+        let hooks = cardinal(count, '1 hák', '2 háki', '5 háků');
         return `Odinstalováno ${hooks}`;
     },
     'task-removed-$count-repos': (count) => {
-        let repos = cardinal(count, 'repozitář', 'repozitáře', 'repozitářů');
+        let repos = cardinal(count, '1 repozitář', '2 repozitáře', '5 repozitářů');
         return `Odstraněno ${repos}`;
     },
     'task-removed-$count-users': (count) => {
-        let users = cardinal(count, 'uživatel', 'uživatelé', 'uživatelů');
+        let users = cardinal(count, '1 uživatel', '2 uživatelé', '5 uživatelů');
         return `Odstraněno ${users}`;
     },
     'task-removing-hooks': 'Odinstalování háků',
     'task-updated-$count-repos': (count) => {
-        let repos = cardinal(count, 'repozitář', 'repozitáře', 'repozitářů');
+        let repos = cardinal(count, '1 repozitář', '2 repozitáře', '5 repozitářů');
         return `Aktualizováno ${repos}`;
     },
     'task-updated-$count-users': (count) => {
-        let users = cardinal(count, 'uživatel', 'uživatelé', 'uživatelů');
+        let users = cardinal(count, '1 uživatel', '2 uživatelé', '5 uživatelů');
         return `Aktualizováno ${users}`;
     },
 
@@ -499,7 +499,7 @@ const phrases = {
     'tooltip-more': 'Více',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        let files = cardinal(count, 'souboru', 'souborů', 'souborů');
+        let files = cardinal(count, '1 souboru', '2 souborů');
         return `Nahrávání ${files}, zbývá ${size}`;
     },
 
@@ -507,11 +507,11 @@ const phrases = {
     'user-list-approve-all': 'Schválit všechny požadavky',
     'user-list-cancel': 'Zrušit',
     'user-list-confirm-disable-$count': (count) => {
-        let accounts = cardinal(count, 'tohoto uživatele', [ 'tyto', 'uživatele' ], [ 'těchto', 'uživatelů' ], true);
+        let accounts = cardinal(count, 'tohoto uživatele', 'tyto 2 uživatele', 'těchto 5 uživatelů');
         return `Opravdu chcete ${accounts} deaktivovat?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        let accounts = cardinal(count, 'tohoto uživatele', [ 'tyto', 'uživatele' ], [ 'těchto', 'uživatelů' ], true);
+        let accounts = cardinal(count, 'tohoto uživatele', 'tyto 2 uživatele', 'těchto 5 uživatelů');
         return `Opravdu chcete ${accounts} reaktivovat?`
     },
     'user-list-edit': 'Upravit seznam uživatelů',
@@ -578,7 +578,7 @@ const phrases = {
     'user-summary-username': 'Uživatelské jméno',
 
     'user-tooltip-$count': (count) => {
-        return cardinal(count, 'uživatel', 'uživatelé', 'uživatelů');
+        return cardinal(count, '1 uživatel', '2 uživatelé', '5 uživatelů');
     },
 
     'validation-duplicate-project-name': 'Projekt s tímto identifikátorem již existuje',

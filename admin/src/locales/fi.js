@@ -25,46 +25,46 @@ const phrases = {
     'activity-chart-legend-wiki': 'Wiki-muokkaukset',
 
     'activity-tooltip-$count': (count) => {
-        return cardinal(count, 'tarina', 'tarinaa');
+        return cardinal(count, '1 tarina', '2 tarinaa');
     },
     'activity-tooltip-$count-branch': (count) => {
-        return cardinal(count, 'haara', 'haaraa');
+        return cardinal(count, '1 haara', '2 haaraa');
     },
     'activity-tooltip-$count-issue': (count) => {
-        return cardinal(count, 'asia', 'asiaa');
+        return cardinal(count, '1 asia', '2 asiaa');
     },
     'activity-tooltip-$count-member': (count) => {
-        return cardinal(count, 'jäsenmuutos', 'jäsenmuutosta');
+        return cardinal(count, '1 jäsenmuutos', '2 jäsenmuutosta');
     },
     'activity-tooltip-$count-merge': (count) => {
-        return cardinal(count, 'yhdistäminen', 'yhdistämistä');
+        return cardinal(count, '1 yhdistäminen', '2 yhdistämistä');
     },
     'activity-tooltip-$count-merge-request': (count) => {
-        return cardinal(count, 'yhdistämisenpyyntö', 'yhdistämispyyntöä');
+        return cardinal(count, '1 yhdistämisenpyyntö', '2 yhdistämispyyntöä');
     },
     'activity-tooltip-$count-milestone': (count) => {
-        return cardinal(count, 'virstanpylväs', 'virstanpylvästä');
+        return cardinal(count, '1 virstanpylväs', '2 virstanpylvästä');
     },
     'activity-tooltip-$count-post': (count) => {
-        return cardinal(count, 'viesti', 'viestiä');
+        return cardinal(count, '1 viesti', '2 viestiä');
     },
     'activity-tooltip-$count-push': (count) => {
-        return cardinal(count, 'työntö', 'työntöä');
+        return cardinal(count, '1 työntö', '2 työntöä');
     },
     'activity-tooltip-$count-repo': (count) => {
-        return cardinal(count, 'muutos arkistoon', 'muutosta arkistoon');
+        return cardinal(count, '1 muutos arkistoon', '2 muutosta arkistoon');
     },
     'activity-tooltip-$count-survey': (count) => {
-        return cardinal(count, 'kysely', 'kyselystä');
+        return cardinal(count, '1 kysely', '2 kyselystä');
     },
     'activity-tooltip-$count-tag': (count) => {
-        return cardinal(count, 'tagi', 'tagia');
+        return cardinal(count, '1 tagi', '2 tagia');
     },
     'activity-tooltip-$count-task-list': (count) => {
-        return cardinal(count, 'tehtäväluettelo', 'tehtäväluetteloa');
+        return cardinal(count, '1 tehtäväluettelo', '2 tehtäväluetteloa');
     },
     'activity-tooltip-$count-wiki': (count) => {
-        return cardinal(count, 'wiki muokkaus', 'wiki muokkausta');
+        return cardinal(count, '1 wiki muokkaus', '2 wiki muokkausta');
     },
 
     'app-name': 'Trambar',
@@ -136,11 +136,11 @@ const phrases = {
     'project-list-add': 'Lisää uusi projekti',
     'project-list-cancel': 'Peruutta',
     'project-list-confirm-archive-$count': (count) => {
-        let projects = cardinal(count, 'valitun projektin', [ 'nämä', 'projektia' ], true);
+        let projects = cardinal(count, 'valitun projektin', 'nämä 2 projektia');
         return `Haluatko letmasti arkistoida ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        let projects = cardinal(count, 'valitun projektin', [ 'nämä', 'projektia' ], true);
+        let projects = cardinal(count, 'valitun projektin', 'nämä 2 projektia');
         return `Haluatko letmasti palauttaa ${projects}?`;
     },
     'project-list-deleted': 'Poistettu',
@@ -186,12 +186,12 @@ const phrases = {
     'project-summary-title': 'Nimi',
 
     'project-tooltip-$count-others': (count) => {
-        return cardinal(count, 'muu', 'muuta');
+        return cardinal(count, '1 muu', '2 muuta');
     },
 
     'repo-list-cancel': 'Peruutta',
     'repo-list-confirm-remove-$count': (count) => {
-        let repositories = cardinal(count, 'tämän arkiston', [ 'nämä', 'arkistoa' ], true);
+        let repositories = cardinal(count, 'tämän arkiston', 'nämä 2 arkistoa');
         return `Haluatko letmasti poistaa ${repositories} projektista?`;
     },
     'repo-list-edit': 'Muokkaa arkistoluetteloa',
@@ -223,17 +223,17 @@ const phrases = {
     'repo-summary-title': 'Nimi',
 
     'repository-tooltip-$count': (count) => {
-        return cardinal(count, 'arkisto', 'arkistoa');
+        return cardinal(count, '1 arkisto', '2 arkistoa');
     },
 
     'role-list-add': 'Lisää uusi rooli',
     'role-list-cancel': 'Peruutta',
     'role-list-confirm-disable-$count': (count) => {
-        let roles = cardinal(count, 'tämän roolin', [ 'nämä', 'roolia' ], true);
+        let roles = cardinal(count, 'tämän roolin', 'nämä 2 roolia');
         return `Haluatko letmasti deaktivoida ${roles}?`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        let roles = cardinal(count, 'tämän roolin', [ 'nämä', 'roolia' ], true);
+        let roles = cardinal(count, 'tämän roolin', 'nämä 2 roolia');
         return `Haluatko letmasti reaktivoida ${roles}?`
     },
     'role-list-edit': 'Muokkaa rooliluetteloa',
@@ -272,7 +272,7 @@ const phrases = {
     'role-summary-users': 'Käyttäjät',
 
     'role-tooltip-$count-others': (count) => {
-        return cardinal(count, 'muu', 'muuta');
+        return cardinal(count, '1 muu', '2 muuta');
     },
 
     'server-list-add': 'Lisää uusi palvelin',
@@ -280,11 +280,11 @@ const phrases = {
     'server-list-api-access-true': 'Hankittu',
     'server-list-cancel': 'Peruutta',
     'server-list-confirm-disable-$count': (count) => {
-        let servers = cardinal(count, 'tämän palvelin', [ 'nämä', 'palvelinta' ], true);
+        let servers = cardinal(count, 'tämän palvelin', 'nämä 2 palvelinta');
         return `Haluatko letmasti deaktivoida ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        let servers = cardinal(count, 'tämän palvelin', [ 'nämä', 'palvelinta' ], true);
+        let servers = cardinal(count, 'tämän palvelin', 'nämä 2 palvelinta');
         return `Haluatko letmasti reaktivoida ${servers}?`
     },
     'server-list-edit': 'Muokkaa palvelinluetteloa',
@@ -416,31 +416,31 @@ const phrases = {
         return (seconds === 1) ? `1 sekunti` : `${seconds} sekuntia`;
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'commitin kommentti', 'commitin kommenttia');
+        let comments = cardinal(count, '1 commitin kommentti', '2 commitin kommenttia');
         return `Tuotu ${comments} arkistosta “${repo}”`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        let events = cardinal(count, 'tapahtuma', 'tapahtumat');
+        let events = cardinal(count, '1 tapahtuma', '2 tapahtumat');
         return `Tuotu ${events} arkistosta “${repo}”`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'asian kommentti', 'asian kommenttia');
+        let comments = cardinal(count, '1 asian kommentti', '2 asian kommenttia');
         return `Tuotu ${comments} arkistosta “${repo}”`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'yhdistämispyynnön kommentti', 'yhdistämispyynnön kommenttia');
+        let comments = cardinal(count, '1 yhdistämispyynnön kommentti', '2 yhdistämispyynnön kommenttia');
         return `Tuotu ${comments} arkistosta “${repo}”`;
     },
     'task-imported-$count-repos': (count) => {
-        let repos = cardinal(count, 'arkisto', 'arkistoa');
+        let repos = cardinal(count, '1 arkisto', '2 arkistoa');
         return `Tuotu ${repos}`;
     },
     'task-imported-$count-users': (count) => {
-        let users = cardinal(count, 'käyttäjä', 'käyttäjää');
+        let users = cardinal(count, '1 käyttäjä', '2 käyttäjää');
         return `Tuotu ${users}`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        let commits = cardinal(count, 'commiti', 'commitia');
+        let commits = cardinal(count, '1 commiti', '2 commitia');
         return `Tuotu työntö jossa ${commits} haarasta “${branch}” arkiston “${repo}”`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
@@ -461,29 +461,29 @@ const phrases = {
     'task-importing-repos': 'Tuodaan arkistot',
     'task-importing-users': 'Tuodaan käyttäjät',
     'task-installed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'koukku', 'koukkua');
+        let hooks = cardinal(count, '1 koukku', '2 koukkua');
         return `Asennettu ${hooks}`;
     },
     'task-installing-hooks': 'Asentamalla koukut',
     'task-removed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'koukku', 'koukkua');
+        let hooks = cardinal(count, '1 koukku', '2 koukkua');
         return `Poistetut ${hooks}`;
     },
     'task-removed-$count-repos': (count) => {
-        let repos = cardinal(count, 'arkisto', 'arkistoa');
+        let repos = cardinal(count, '1 arkisto', '2 arkistoa');
         return `Poistetut ${repos}`;
     },
     'task-removed-$count-users': (count) => {
-        let users = cardinal(count, 'käyttäjä', 'käyttäjää');
+        let users = cardinal(count, '1 käyttäjä', '2 käyttäjää');
         return `Poistetut ${users}`;
     },
     'task-removing-hooks': 'Poistamalla koukut',
     'task-updated-$count-repos': (count) => {
-        let repos = cardinal(count, 'arkisto', 'arkistoa');
+        let repos = cardinal(count, '1 arkisto', '2 arkistoa');
         return `Päivitetty ${repos}`;
     },
     'task-updated-$count-users': (count) => {
-        let users = cardinal(count, 'käyttäjä', 'käyttäjää');
+        let users = cardinal(count, '1 käyttäjä', '2 käyttäjää');
         return `Päivitetty ${users}`;
     },
 
@@ -495,7 +495,7 @@ const phrases = {
     'tooltip-more': 'Lisää',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        let files = cardinal(count, 'tiedosto', 'tiedostoa');
+        let files = cardinal(count, '1 tiedosto', '2 tiedostoa');
         return `Lataaminen ${files}, ${size} jäljellä`;
     },
 
@@ -503,11 +503,11 @@ const phrases = {
     'user-list-approve-all': 'Hyväksy kaikki pyynnöt',
     'user-list-cancel': 'Peruutta',
     'user-list-confirm-disable-$count': (count) => {
-        let accounts = cardinal(count, 'tämän käyttäjätili', [ 'nämä', 'käyttäjätilejä' ], true);
+        let accounts = cardinal(count, 'tämän käyttäjätili', 'nämä 2 käyttäjätilejä');
         return `Haluatko letmasti deaktivoida ${accounts}?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        let accounts = cardinal(count, 'tämän käyttäjätili', [ 'nämä', 'käyttäjätilejä' ], true);
+        let accounts = cardinal(count, 'tämän käyttäjätili', 'nämä 2 käyttäjätilejä');
         return `Haluatko letmasti reaktivoida ${accounts}?`
     },
     'user-list-edit': 'Muokkaa käyttäjäluetteloa',
@@ -574,7 +574,7 @@ const phrases = {
     'user-summary-username': 'Käyttäjänimi',
 
     'user-tooltip-$count': (count) => {
-        return cardinal(count, 'käyttäjä', 'käyttäjää');
+        return cardinal(count, '1 käyttäjä', '2 käyttäjää');
     },
 
     'validation-duplicate-project-name': 'Projekti, jolla on sama tunniste, on jo olemassa',

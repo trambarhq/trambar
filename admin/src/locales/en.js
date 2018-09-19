@@ -29,46 +29,46 @@ const phrases = {
     'activity-chart-legend-wiki': 'Wiki edits',
 
     'activity-tooltip-$count': (count) => {
-        return cardinal(count, 'story', 'stories');
+        return cardinal(count, '1 story', '2 stories');
     },
     'activity-tooltip-$count-branch': (count) => {
-        return cardinal(count, 'branch', 'branches');
+        return cardinal(count, '1 branch', '2 branches');
     },
     'activity-tooltip-$count-issue': (count) => {
-        return cardinal(count, 'issue', 'issues');
+        return cardinal(count, '1 issue', '2 issues');
     },
     'activity-tooltip-$count-member': (count) => {
-        return cardinal(count, 'membership change', 'membership changes');
+        return cardinal(count, '1 membership change', '2 membership changes');
     },
     'activity-tooltip-$count-merge': (count) => {
-        return cardinal(count, 'merge', 'merges');
+        return cardinal(count, '1 merge', '2 merges');
     },
     'activity-tooltip-$count-merge-request': (count) => {
-        return cardinal(count, 'merge request', 'merge requests');
+        return cardinal(count, '1 merge request', '2 merge requests');
     },
     'activity-tooltip-$count-milestone': (count) => {
-        return cardinal(count, 'milestone', 'milestones');
+        return cardinal(count, '1 milestone', '2 milestones');
     },
     'activity-tooltip-$count-post': (count) => {
-        return cardinal(count, 'post', 'posts');
+        return cardinal(count, '1 post', '2 posts');
     },
     'activity-tooltip-$count-push': (count) => {
-        return cardinal(count, 'push', 'pushes');
+        return cardinal(count, '1 push', '2 pushes');
     },
     'activity-tooltip-$count-repo': (count) => {
-        return cardinal(count, 'repository change', 'repository changes');
+        return cardinal(count, '1 repository change', '2 repository changes');
     },
     'activity-tooltip-$count-survey': (count) => {
-        return cardinal(count, 'survey', 'surveys');
+        return cardinal(count, '1 survey', '2 surveys');
     },
     'activity-tooltip-$count-tag': (count) => {
-        return cardinal(count, 'tag', 'tags');
+        return cardinal(count, '1 tag', '2 tags');
     },
     'activity-tooltip-$count-task-list': (count) => {
-        return cardinal(count, 'task list', 'task lists');
+        return cardinal(count, '1 task list', '2 task lists');
     },
     'activity-tooltip-$count-wiki': (count) => {
-        return cardinal(count, 'wiki edit', 'wiki edits');
+        return cardinal(count, '1 wiki edit', '2 wiki edits');
     },
 
     'app-name': 'Trambar',
@@ -140,11 +140,11 @@ const phrases = {
     'project-list-add': 'Add new project',
     'project-list-cancel': 'Cancel',
     'project-list-confirm-archive-$count': (count) => {
-        let projects = cardinal(count, 'the selected project', [ 'these', 'projects' ], true);
+        let projects = cardinal(count, 'the selected project', 'these 2 projects');
         return `Are you sure you want to archive ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        let projects = cardinal(count, 'the selected project', [ 'these', 'projects' ], true);
+        let projects = cardinal(count, 'the selected project', 'these 2 projects');
         return `Are you sure you want to restore ${projects}?`;
     },
     'project-list-deleted': 'Deleted',
@@ -190,12 +190,12 @@ const phrases = {
     'project-summary-title': 'Name',
 
     'project-tooltip-$count-others': (count) => {
-        return cardinal(count, 'other', 'others');
+        return cardinal(count, '1 other', '2 others');
     },
 
     'repo-list-cancel': 'Cancel',
     'repo-list-confirm-remove-$count': (count) => {
-        let repositories = cardinal(count, 'this repository', [ 'these', 'repositories' ], true);
+        let repositories = cardinal(count, 'this repository', 'these 2 repositories');
         return `Are you sure you want to remove ${repositories} from the project?`;
     },
     'repo-list-edit': 'Edit repository list',
@@ -227,17 +227,17 @@ const phrases = {
     'repo-summary-title': 'Name',
 
     'repository-tooltip-$count': (count) => {
-        return cardinal(count, 'repository', 'repositories');
+        return cardinal(count, '1 repository', '2 repositories');
     },
 
     'role-list-add': 'Add new role',
     'role-list-cancel': 'Cancel',
     'role-list-confirm-disable-$count': (count) => {
-        let roles = cardinal(count, 'this role', [ 'these', 'roles' ], true);
+        let roles = cardinal(count, 'this role', 'these 2 roles');
         return `Are you sure you want to disable ${roles}?`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        let roles = cardinal(count, 'this role', [ 'these', 'roles' ], true);
+        let roles = cardinal(count, 'this role', 'these 2 roles');
         return `Are you sure you want to reactivate ${roles}?`
     },
     'role-list-edit': 'Edit role list',
@@ -276,7 +276,7 @@ const phrases = {
     'role-summary-users': 'Users',
 
     'role-tooltip-$count-others': (count) => {
-        return cardinal(count, 'other', 'others');
+        return cardinal(count, '1 other', '2 others');
     },
 
     'server-list-add': 'Add new server',
@@ -284,11 +284,11 @@ const phrases = {
     'server-list-api-access-true': 'Acquired',
     'server-list-cancel': 'Cancel',
     'server-list-confirm-disable-$count': (count) => {
-        let servers = cardinal(count, 'this server', [ 'these', 'servers' ], true);
+        let servers = cardinal(count, 'this server', 'these 2 servers');
         return `Are you sure you want to disable ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        let servers = cardinal(count, 'this server', [ 'these', 'servers' ], true);
+        let servers = cardinal(count, 'this server', 'these 2 servers');
         return `Are you sure you want to reactivate ${servers}?`
     },
     'server-list-edit': 'Edit server list',
@@ -420,31 +420,31 @@ const phrases = {
         return (seconds === 1) ? `1 second` : `${seconds} seconds`;
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'commit comment', 'commit comments');
+        let comments = cardinal(count, '1 commit comment', '2 commit comments');
         return `Imported ${comments} from “${repo}”`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        let events = cardinal(count, 'event', 'events');
+        let events = cardinal(count, '1 event', '2 events');
         return `Imported ${events} from “${repo}”`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'issue comment', 'issue comments');
+        let comments = cardinal(count, '1 issue comment', '2 issue comments');
         return `Imported ${comments} from “${repo}”`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'merge-request comment', 'merge-request comments');
+        let comments = cardinal(count, '1 merge-request comment', '2 merge-request comments');
         return `Imported ${comments} from “${repo}”`;
     },
     'task-imported-$count-repos': (count) => {
-        let repos = cardinal(count, 'repository', 'repositories');
+        let repos = cardinal(count, '1 repository', '2 repositories');
         return `Imported ${repos}`;
     },
     'task-imported-$count-users': (count) => {
-        let users = cardinal(count, 'user', 'users');
+        let users = cardinal(count, '1 user', '2 users');
         return `Imported ${users}`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        let commits = cardinal(count, 'commit', 'commits');
+        let commits = cardinal(count, '1 commit', '2 commits');
         return `Imported push with ${commits} from “${branch}” of “${repo}”`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
@@ -465,29 +465,29 @@ const phrases = {
     'task-importing-repos': 'Importing repositories',
     'task-importing-users': 'Importing users',
     'task-installed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'hook', 'hooks');
+        let hooks = cardinal(count, '1 hook', '2 hooks');
         return `Installed ${hooks}`;
     },
     'task-installing-hooks': 'Installing hooks',
     'task-removed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'hook', 'hooks');
+        let hooks = cardinal(count, '1 hook', '2 hooks');
         return `Uninstalled ${hooks}`;
     },
     'task-removed-$count-repos': (count) => {
-        let repos = cardinal(count, 'repository', 'repositories');
+        let repos = cardinal(count, '1 repository', '2 repositories');
         return `Removed ${repos}`;
     },
     'task-removed-$count-users': (count) => {
-        let users = cardinal(count, 'user', 'users');
+        let users = cardinal(count, '1 user', '2 users');
         return `Removed ${users}`;
     },
     'task-removing-hooks': 'Uninstalling hooks',
     'task-updated-$count-repos': (count) => {
-        let repos = cardinal(count, 'repository', 'repositories');
+        let repos = cardinal(count, '1 repository', '2 repositories');
         return `Updated ${repos}`;
     },
     'task-updated-$count-users': (count) => {
-        let users = cardinal(count, 'user', 'users');
+        let users = cardinal(count, '1 user', '2 users');
         return `Updated ${users}`;
     },
 
@@ -499,7 +499,7 @@ const phrases = {
     'tooltip-more': 'More',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        let files = cardinal(count, 'file', 'files');
+        let files = cardinal(count, '1 file', '2 files');
         return `Uploading ${files}, ${size} remaining`;
     },
 
@@ -507,11 +507,11 @@ const phrases = {
     'user-list-approve-all': 'Approve all requests',
     'user-list-cancel': 'Cancel',
     'user-list-confirm-disable-$count': (count) => {
-        let accounts = cardinal(count, 'this user account', [ 'these', 'user accounts' ], true);
+        let accounts = cardinal(count, 'this user account', 'these 2 user accounts');
         return `Are you sure you want to disable ${accounts}?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        let accounts = cardinal(count, 'this user account', [ 'these', 'user accounts' ], true);
+        let accounts = cardinal(count, 'this user account', 'these 2 user accounts');
         return `Are you sure you want to reactivate ${accounts}?`
     },
     'user-list-edit': 'Edit user List',
@@ -578,7 +578,7 @@ const phrases = {
     'user-summary-username': 'User name',
 
     'user-tooltip-$count': (count) => {
-        return cardinal(count, 'user', 'users');
+        return cardinal(count, '1 user', '2 users');
     },
 
     'validation-duplicate-project-name': 'A project with that identifier already exists',

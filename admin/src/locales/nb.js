@@ -25,46 +25,46 @@ const phrases = {
     'activity-chart-legend-wiki': 'Wiki redigeringer',
 
     'activity-tooltip-$count': (count) => {
-        return cardinal(count, 'historie', 'historier');
+        return cardinal(count, '1 historie', '2 historier');
     },
     'activity-tooltip-$count-branch': (count) => {
-        return cardinal(count, 'branch', 'brancher');
+        return cardinal(count, '1 branch', '2 brancher');
     },
     'activity-tooltip-$count-issue': (count) => {
-        return cardinal(count, 'problem', 'problemer');
+        return cardinal(count, '1 problem', '2 problemer');
     },
     'activity-tooltip-$count-member': (count) => {
-        return cardinal(count, 'medlemskapsendring', 'medlemskapsendringer');
+        return cardinal(count, '1 medlemskapsendring', '2 medlemskapsendringer');
     },
     'activity-tooltip-$count-merge': (count) => {
-        return cardinal(count, 'merge', 'merger');
+        return cardinal(count, '1 merge', '2 merger');
     },
     'activity-tooltip-$count-merge-request': (count) => {
-        return cardinal(count, 'merge-request', 'merge-requester');
+        return cardinal(count, '1 merge-request', '2 merge-requester');
     },
     'activity-tooltip-$count-milestone': (count) => {
-        return cardinal(count, 'Milepæl', 'milepæler');
+        return cardinal(count, '1 Milepæl', '2 milepæler');
     },
     'activity-tooltip-$count-post': (count) => {
-        return cardinal(count, 'innlegg', 'innlegg');
+        return cardinal(count, '1 innlegg', '2 innlegg');
     },
     'activity-tooltip-$count-push': (count) => {
-        return cardinal(count, 'push', 'pusher');
+        return cardinal(count, '1 push', '2 pusher');
     },
     'activity-tooltip-$count-repo': (count) => {
-        return cardinal(count, 'repo endring', 'repo endringer');
+        return cardinal(count, '1 repo endring', '2 repo endringer');
     },
     'activity-tooltip-$count-survey': (count) => {
-        return cardinal(count, 'undersøkelse', 'undersøkelser');
+        return cardinal(count, '1 undersøkelse', '2 undersøkelser');
     },
     'activity-tooltip-$count-tag': (count) => {
-        return cardinal(count, 'tagg', 'tagger');
+        return cardinal(count, '1 tagg', '2 tagger');
     },
     'activity-tooltip-$count-task-list': (count) => {
-        return cardinal(count, 'oppgaveliste', 'oppgavelister');
+        return cardinal(count, '1 oppgaveliste', '2 oppgavelister');
     },
     'activity-tooltip-$count-wiki': (count) => {
-        return cardinal(count, 'wiki redigering', 'wiki redigeringer');
+        return cardinal(count, '1 wiki redigering', '2 wiki redigeringer');
     },
 
     'app-name': 'Trambar',
@@ -136,11 +136,11 @@ const phrases = {
     'project-list-add': 'Legg til nytt prosjekt',
     'project-list-cancel': 'Avbryt',
     'project-list-confirm-archive-$count': (count) => {
-        let projects = cardinal(count, 'det valgte prosjektet', [ 'disse', 'prosjektene' ], true);
+        let projects = cardinal(count, 'det valgte prosjektet', 'disse 2 prosjektene');
         return `Er du sikker på at du vil arkivere ${projects}?`
     },
     'project-list-confirm-restore-$count': (count) => {
-        let projects = cardinal(count, 'det valgte prosjektet', [ 'disse', 'prosjektene' ], true);
+        let projects = cardinal(count, 'det valgte prosjektet', 'disse 2 prosjektene');
         return `Er du sikker på at du vil gjenopprette ${projects}?`
     },
     'project-list-deleted': 'Slettet',
@@ -191,7 +191,7 @@ const phrases = {
 
     'repo-list-cancel': 'Avbryt',
     'repo-list-confirm-remove-$count': (count) => {
-        let repositories = cardinal(count, 'denne repoen', [ 'disse', 'repoene' ], true);
+        let repositories = cardinal(count, 'denne repoen', 'disse 2 repoene');
         return `Er du sikker på at du vil fjerne ${repositories} fra prosjektet?`;
     },
     'repo-list-edit': 'Rediger repo listen',
@@ -223,17 +223,17 @@ const phrases = {
     'repo-summary-title': 'Navn',
 
     'repository-tooltip-$count': (count) => {
-        return cardinal(count, 'repo', 'repoer');
+        return cardinal(count, '1 repo', '2 repoer');
     },
 
     'role-list-add': 'Legg til ny rolle',
     'role-list-cancel': 'Avbryt',
     'role-list-confirm-disable-$count': (count) => {
-        let roles = cardinal(count, 'denne rollen', [ 'disse', 'rollene' ], true);
+        let roles = cardinal(count, 'denne rollen', 'disse 2 rollene');
         return `Er du sikker på at du vil slette ${roles}?`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        let roles = cardinal(count, 'denne rollen', [ 'disse', 'rollene' ], true);
+        let roles = cardinal(count, 'denne rollen', 'disse 2 rollene');
         return `Er du sikker på at du vil reaktivere ${roles}?`
     },
     'role-list-edit': 'Rediger rollelisten',
@@ -280,11 +280,11 @@ const phrases = {
     'server-list-api-access-true': 'Fikk',
     'server-list-cancel': 'Avbryt',
     'server-list-confirm-disable-$count': (count) => {
-        let servers = cardinal(count, 'denne serveren', [ 'disse', 'serverene' ], true);
+        let servers = cardinal(count, 'denne serveren', 'disse 2 serverene');
         return `Er du sikker på at du vil slette ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        let servers = cardinal(count, 'denne serveren', [ 'disse', 'serverene' ], true);
+        let servers = cardinal(count, 'denne serveren', 'disse 2 serverene');
         return `Er du sikker på at du vil reaktivere ${servers}?`
     },
     'server-list-edit': 'Rediger serverlisten',
@@ -416,31 +416,31 @@ const phrases = {
         return (seconds === 1) ? `1 sekund` : `${seconds} sekunder`;
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'commit kommentar', 'commit kommentarer');
+        let comments = cardinal(count, '1 commit kommentar', '2 commit kommentarer');
         return `Importert ${comments} fra “${repo}”`;
     },
     'task-imported-$count-events-from-$repo': (count, repo) => {
-        let events = cardinal(count, 'hendelse', 'hendelser');
+        let events = cardinal(count, '1 hendelse', '2 hendelser');
         return `Importert ${events} fra “${repo}”`;
     },
     'task-imported-$count-issue-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'issue kommentar', 'issue kommentarer');
+        let comments = cardinal(count, '1 issue kommentar', '2 issue kommentarer');
         return `Importert ${comments} fra “${repo}”`;
     },
     'task-imported-$count-merge-request-comments-from-$repo': (count, repo) => {
-        let comments = cardinal(count, 'merge-request kommentar', 'merge-request kommentarer');
+        let comments = cardinal(count, '1 merge-request kommentar', '2 merge-request kommentarer');
         return `Importert ${comments} fra “${repo}”`;
     },
     'task-imported-$count-repos': (count) => {
-        let repos = cardinal(count, 'repo', 'repoer');
+        let repos = cardinal(count, '1 repo', '2 repoer');
         return `Importert ${repos}`;
     },
     'task-imported-$count-users': (count) => {
-        let users = cardinal(count, 'bruker', 'brukere');
+        let users = cardinal(count, '1 bruker', '2 brukere');
         return `Importert ${users}`;
     },
     'task-imported-push-with-$count-commits-from-$repo-$branch': (count, repo, branch) => {
-        let commits = cardinal(count, 'commit', 'commiter');
+        let commits = cardinal(count, '1 commit', '2 commiter');
         return `Importert en push med ${commits} fra “${branch}” av “${repo}”`;
     },
     'task-importing-commit-comments-from-$repo': (repo) => {
@@ -461,29 +461,29 @@ const phrases = {
     'task-importing-repos': 'Importerer repoer',
     'task-importing-users': 'Importerer brukere',
     'task-installed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'krok', 'kroker');
+        let hooks = cardinal(count, '1 krok', '2 kroker');
         return `Installert ${hooks}`;
     },
     'task-installing-hooks': 'Installere kroker',
     'task-removed-$count-hooks': (count) => {
-        let hooks = cardinal(count, 'krok', 'kroker');
+        let hooks = cardinal(count, '1 krok', '2 kroker');
         return `Avinstallert ${hooks}`;
     },
     'task-removed-$count-repos': (count) => {
-        let repos = cardinal(count, 'repo', 'repoer');
+        let repos = cardinal(count, '1 repo', '2 repoer');
         return `Fjernet ${repos}`;
     },
     'task-removed-$count-users': (count) => {
-        let users = cardinal(count, 'bruker', 'brukere');
+        let users = cardinal(count, '1 bruker', '2 brukere');
         return `Fjernet ${users}`;
     },
     'task-removing-hooks': 'Avinstallere kroker',
     'task-updated-$count-repos': (count) => {
-        let repos = cardinal(count, 'repo', 'repoer');
+        let repos = cardinal(count, '1 repo', '2 repoer');
         return `Oppdatert ${repos}`;
     },
     'task-updated-$count-users': (count) => {
-        let users = cardinal(count, 'bruker', 'brukere');
+        let users = cardinal(count, '1 bruker', '2 brukere');
         return `Oppdatert ${users}`;
     },
 
@@ -495,7 +495,7 @@ const phrases = {
     'tooltip-more': 'Flere',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        let files = cardinal(count, 'fil', 'filer');
+        let files = cardinal(count, '1 fil', '2 filer');
         return `Laster opp ${files}, ${size} gjenværende`;
     },
 
@@ -503,11 +503,11 @@ const phrases = {
     'user-list-approve-all': 'Godkjenn alle forespørsler',
     'user-list-cancel': 'Avbryt',
     'user-list-confirm-disable-$count': (count) => {
-        let accounts = cardinal(count, 'denne brukerkontoen', [ 'disse', 'brukerkontoene' ], true);
+        let accounts = cardinal(count, 'denne brukerkontoen', 'disse 2 brukerkontoene');
         return `Er du sikker på at du vil slette ${accounts}?`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        let accounts = cardinal(count, 'denne brukerkontoen', [ 'disse', 'brukerkontoene' ], true);
+        let accounts = cardinal(count, 'denne brukerkontoen', 'disse 2 brukerkontoene');
         return `Er du sikker på at du vil reaktivere ${accounts}?`
     },
     'user-list-edit': 'Rediger brukerlisten',
@@ -574,7 +574,7 @@ const phrases = {
     'user-summary-username': 'Brukernavn',
 
     'user-tooltip-$count': (count) => {
-        return cardinal(count, 'bruker', 'brukere');
+        return cardinal(count, '1 bruker', '2 brukere');
     },
 
     'validation-duplicate-project-name': 'Et prosjekt med den identifikatoren eksisterer allerede',

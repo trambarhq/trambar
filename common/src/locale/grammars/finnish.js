@@ -1,27 +1,17 @@
-function cardinal(num, sg, sgPartitive, omitDigitOne) {
+function cardinal(num, sg, sgPartitive) {
     if (num === 1) {
-        if (omitDigitOne) {
-            if (sg instanceof Array) {
-                return sg[0] + ' ' + sg[1];
-            } else {
-                return sg;
-            }
-        } else {
-            if (sg instanceof Array) {
-                return sg[0] + ' 1 ' + sg[1];
-            } else {
-                return '1 ' + sg;
-            }
-        }
+        return replaceNumber(sg, num);
     } else {
-        if (sgPartitive instanceof Array) {
-            return sgPartitive[0] + ' ' + num + ' ' + sgPartitive[1];
-        } else {
-            return num + ' ' + sgPartitive;
-        }
+        return replaceNumber(sgPartitive, num);
     }
 }
 
-export {
+var numberRegExp = /\d+/;
+
+function replaceNumber(s, n) {
+    return s.replace(numberRegExp, n);
+}
+
+module.exports = {
     cardinal,
 };

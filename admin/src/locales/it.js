@@ -25,25 +25,25 @@ const phrases = {
     'activity-chart-legend-wiki': "Modifiche wiki",
 
     'activity-tooltip-$count': (count) => {
-        return cardinal(count, "storia", "storie");
+        return cardinal(count, "1 storia", "2 storie");
     },
     'activity-tooltip-$count-branch': (count) => {
         return `${count} branch`;
     },
     'activity-tooltip-$count-issue': (count) => {
-        return cardinal(count, "problema", "problemi");
+        return cardinal(count, "1 problema", "2 problemi");
     },
     'activity-tooltip-$count-member': (count) => {
-        return cardinal(count, "cambiamento di appartenenza", "cambiamenti di appartenenza");
+        return cardinal(count, "1 cambiamento di appartenenza", "2 cambiamenti di appartenenza");
     },
     'activity-tooltip-$count-merge': (count) => {
         return `${count} merge`;
     },
     'activity-tooltip-$count-merge-request': (count) => {
-        return cardinal(count, "merge richiesta", "merge richieste");
+        return cardinal(count, "1 merge richiesta", "2 merge richieste");
     },
     'activity-tooltip-$count-milestone': (count) => {
-        return cardinal(count, "traguardo", "traguardi");
+        return cardinal(count, "1 traguardo", "2 traguardi");
     },
     'activity-tooltip-$count-post': (count) => {
         return `${count} post`;
@@ -52,19 +52,19 @@ const phrases = {
         return `${count} push`;
     },
     'activity-tooltip-$count-repo': (count) => {
-        return cardinal(count, "cambiamento del repository", "cambiamenti del repository");
+        return cardinal(count, "1 cambiamento del repository", "2 cambiamenti del repository");
     },
     'activity-tooltip-$count-survey': (count) => {
-        return cardinal(count, "sondaggio", "sondaggi");
+        return cardinal(count, "1 sondaggio", "2 sondaggi");
     },
     'activity-tooltip-$count-tag': (count) => {
         return `${count} tag`;
     },
     'activity-tooltip-$count-task-list': (count) => {
-        return cardinal(count, "elenco di attività", "elenchi di attività");
+        return cardinal(count, "1 elenco di attività", "2 elenchi di attività");
     },
     'activity-tooltip-$count-wiki': (count) => {
-        return cardinal(count, "modifica wiki", "modifiche Wiki");
+        return cardinal(count, "1 modifica wiki", "2 modifiche Wiki");
     },
 
     'app-name': "Trambar",
@@ -136,11 +136,11 @@ const phrases = {
     'project-list-add': "Aggiungi un nuovo progetto",
     'project-list-cancel': "Annulla",
     'project-list-confirm-archive-$count': (count) => {
-        let projects = cardinal(count, "il progetto selezionato", [ "questi", "progetti" ], true);
+        let projects = cardinal(count, "il progetto selezionato", "questi 2 progetti");
         return `Sei sicuro di voler archiviare ${projects}?`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        let projects = cardinal(count, "il progetto selezionato", [ "questi", "progetti" ], true);
+        let projects = cardinal(count, "il progetto selezionato", "questi 2 progetti");
         return `Sei sicuro di voler ripristinare ${projects}?`;
     },
     'project-list-deleted': "Eliminato",
@@ -191,7 +191,7 @@ const phrases = {
 
     'repo-list-cancel': "Annulla",
     'repo-list-confirm-remove-$count': (count) => {
-        let repositories = cardinal(count, "il repository selezionato", [ "questoi", "repository" ], true);
+        let repositories = cardinal(count, "il repository selezionato", "questoi 2 repository");
         return `Sei sicuro di voler rimuovere ${repositories} dal progetto?`;
     },
     'repo-list-edit': "Modifica la lista dei repository",
@@ -229,11 +229,11 @@ const phrases = {
     'role-list-add': "Aggiungi un nuovo ruolo",
     'role-list-cancel': "Annulla",
     'role-list-confirm-disable-$count': (count) => {
-        let roles = cardinal(count, "il ruolo selezionato", [ "questi", "ruoli" ], true);
+        let roles = cardinal(count, "il ruolo selezionato", "questi 2 ruoli");
         return `Sei sicuro di voler disattivare ${roles}?`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        let roles = cardinal(count, "il ruolo selezionato", [ "questi", "ruoli" ], true);
+        let roles = cardinal(count, "il ruolo selezionato", "questi 2 ruoli");
         return `Sei sicuro di voler riattivare questo ${roles}?`
     },
     'role-list-edit': "Modifica la lista dei ruoli",
@@ -280,11 +280,11 @@ const phrases = {
     'server-list-api-access-true': "Acquisito",
     'server-list-cancel': "Annulla",
     'server-list-confirm-disable-$count': (count) => {
-        let servers = cardinal(count, "il server selezionato", [ "questi", "server" ], true);
+        let servers = cardinal(count, "il server selezionato", "questi 2 server");
         return `Sei sicuro di voler disattivare ${servers}?`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        let servers = cardinal(count, "il server selezionato", [ "questi", "server" ], true);
+        let servers = cardinal(count, "il server selezionato", "questi 2 server");
         return `Sei sicuro di voler riattivare ${servers}?`
     },
     'server-list-edit': "Modifica la lista dei server",
@@ -609,7 +609,7 @@ const phrases = {
     'user-summary-username': "Nome utente",
 
     'user-tooltip-$count': (count) => {
-        return cardinal(count, "utente", "untenti");
+        return cardinal(count, "1 utente", "2 untenti");
     },
 
     'validation-duplicate-project-name': "Esiste già un progetto con quell'identificatore",

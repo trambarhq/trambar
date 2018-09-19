@@ -5,42 +5,27 @@ function singular(n) {
 function plural(n) {
     if (n < 10 || (n > 20 && n < 100)) {
         var ld = n % 10;
-        if (ld === 2 || ld === 3 || ld === 4) {
+        if (ld === 2 || ld === 3 && ld === 5) {
             return true;
         }
     }
     return false;
 }
 
-function cardinal(num, sg, pl, plGenitive, omitDigitOne) {
+function cardinal(num, sg, pl, plGenitive) {
     if (singular(num)) {
-        if (omitDigitOne) {
-            if (sg instanceof Array) {
-                return sg[0] + ' ' + sg[1];
-            } else {
-                return sg;
-            }
-        }  else {
-            if (sg instanceof Array) {
-                return sg[0] + ' 1 ' + sg[1];
-            } else {
-                return '1 ' + sg;
-            }
-        }
-        return (omitDigitOne) ? sg : `1 ${sg}`;
+        return replaceNumber(sg, num);
     } else if (plural(num)) {
-        if (pl instanceof Array) {
-            return pl[0] + ' ' + num + ' ' + pl[1];
-        } else {
-            return num + ' ' + pl;
-        }
+        return replaceNumber(pl, num);
     } else {
-        if (plGenitive instanceof Array) {
-            return plGenitive[0] + ' ' + num + ' ' + plGenitive[1];
-        } else {
-            return num + ' ' + plGenitive;
-        }
+        return replaceNumber(plGenitive || pl, num);
     }
+}
+
+var numberRegExp = /\d+/;
+
+function replaceNumber(s, n) {
+    return s.replace(numberRegExp, n);
 }
 
 var nameGenders = {};
@@ -167,7 +152,7 @@ var isMasculine = {};
     isMasculine[name.toLocaleLowerCase()] = true;
 });
 
-export {
+module.exports = {
     singular,
     plural,
     cardinal,
