@@ -24,7 +24,8 @@ class UserViewOptions extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        if (this.props.section === 'both') {
+        let { section } = this.props;
+        if (section === 'both') {
             return (
                 <div className="user-view-options">
                     {this.renderButtons('main')}
@@ -35,7 +36,7 @@ class UserViewOptions extends PureComponent {
         } else {
             return (
                 <div className="user-view-options">
-                    {this.renderButtons(this.props.section)}
+                    {this.renderButtons(section)}
                 </div>
             );
         }
@@ -49,75 +50,87 @@ class UserViewOptions extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons(section) {
-        let t = this.props.locale.translate;
-        let details = _.get(this.props.user, 'details', {});
+        let { env, user, options } = this.props;
+        let { t } = env.locale;
+        let details = _.get(user, 'details', {});
         if (section === 'main') {
+            let {
+                phone,
+                email,
+                skype_username: skypeUsername,
+                ichat_username: ichatUsername,
+                twitter_username: twitterUsername,
+                gitlab_url: gitlabURL,
+                github_url: githubURL,
+                linkedin_url: linkedinURL,
+                stackoverflow_url: stackoverflowURL,
+            } = _.get(user, 'details', {});
             let phoneProps = {
                 label: t('action-contact-by-phone'),
                 icon: 'phone-square',
-                url: `tel:${details.phone}`,
-                hidden: !details.phone,
+                url: `tel:${phone}`,
+                hidden: !phone,
                 onClick: this.handlePhoneClick,
             };
             let emailProps = {
                 label: t('action-contact-by-email'),
                 icon: 'envelope',
-                url: `mailto:${details.email}`,
-                hidden: !details.email,
+                url: `mailto:${email}`,
+                hidden: !email,
                 onClick: this.handleLinkClick,
             };
             let skypeProps = {
                 label: t('action-contact-by-skype'),
                 icon: 'skype',
-                url: `skype:${details.skype_username}`,
-                hidden: !details.skype_username,
+                url: `skype:${skypeUsername}`,
+                hidden: !skypeUsername,
                 onClick: this.handleLinkClick,
             };
             let ichatProps = {
                 label: t('action-contact-by-ichat'),
                 icon: 'apple',
-                url: `ichat:${details.ichat_username}`,
-                hidden: !details.ichat_username,
+                url: `ichat:${ichatUsername}`,
+                hidden: !ichatUsername,
                 onClick: this.handleLinkClick,
             };
             let twitterProps = {
                 label: t('action-contact-by-twitter'),
                 icon: 'twitter',
-                url: `https://twitter.com/${details.twitter_username}`,
+                url: `https://twitter.com/${twitterUsername}`,
                 target: '_blank',
-                hidden: !details.twitter_username,
+                hidden: !twitterUsername,
                 onClick: this.handleLinkClick,
             };
             let gitlabProps = {
                 label: t('action-view-gitlab-page'),
                 icon: 'gitlab',
-                url: details.gitlab_url,
+                url: gitlabURL,
                 target: '_blank',
-                hidden: !details.gitlab_url,
+                hidden: !gitlabURL,
                 onClick: this.handleLinkClick,
             };
             let githubProps = {
                 label: t('action-view-github-page'),
                 icon: 'github',
-                url: details.github_url,
+                url: githubURL,
                 target: '_blank',
-                hidden: !details.github_url,
+                hidden: !githubURL,
                 onClick: this.handleLinkClick,
             };
             let linkedInProps = {
                 label: t('action-view-linkedin-page'),
                 icon: 'linkedin',
-                url: details.linkedin_url,
+                url: linkedinURL,
                 target: '_blank',
-                hidden: !details.linkedin_url,
+                hidden: !linkedinURL,
                 onClick: this.handleLinkClick,
             };
             let stackOverflowProps = {
                 label: t('action-view-stackoverflow-page'),
                 icon: 'stack-overflow',
-                url: details.stackoverflow_url,
+                url: stackoverflowURL,
                 target: '_blank',
-                hidden: !details.stackoverflow_url,
+                hidden: !stackoverflowURL,
                 onClick: this.handleLinkClick,
             };
             return (
@@ -135,7 +148,6 @@ class UserViewOptions extends PureComponent {
                 </div>
             );
         } else {
-            let options = this.props.options;
             let twoWeekProps = {
                 label: t('option-statistics-biweekly'),
                 selected: options.chartRange === 'biweekly' || !options.chartRange,
@@ -167,15 +179,16 @@ class UserViewOptions extends PureComponent {
      * @return {ReactElement|null}
      */
     renderPhoneDialog() {
-        if (process.env.PLATFORM !== 'browser') return null;
-
-        if (!this.state.renderingPhoneDialog) {
+        let { env, user } = this.props;
+        let { renderingPhoneDialog } = this.state;
+        if (!renderingPhoneDialog) {
             return null;
         }
+        let { phone } = user.details;
         let dialogProps = {
-            show: this.state.showingPhoneDialog,
-            number: this.props.user.details.phone,
-            locale: this.props.locale,
+            show: showingPhoneDialog,
+            number: phone,
+            env,
             onClose: this.handlePhoneDialogClose,
         };
         return <TelephoneNumberDialogBox {...dialogProps} />;
@@ -187,9 +200,10 @@ class UserViewOptions extends PureComponent {
      * @param  {Object} changes
      */
     triggerChangeEvent(changes) {
-        let options = _.assign({}, this.props.options, changes);
-        if (this.props.onChange) {
-            this.props.onChange({
+        let { options, onChange } = this.props;
+        options = _.assign({}, options, changes);
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 options
@@ -203,8 +217,9 @@ class UserViewOptions extends PureComponent {
      * @param  {Object} changes
      */
     triggerCompleteEvent() {
-        if (this.props.onComplete) {
-            this.props.onComplete({
+        let { onComplete } = this.props;
+        if (onComplete) {
+            onComplete({
                 type: 'complete',
                 target: this,
             });
@@ -217,8 +232,6 @@ class UserViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handlePhoneClick = (evt) => {
-        if (process.env.PLATFORM !== 'browser') return;
-
         evt.preventDefault();
         this.setState({
             renderingPhoneDialog: true,
@@ -232,12 +245,11 @@ class UserViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handlePhoneDialogClose = (evt) => {
-        if (process.env.PLATFORM !== 'browser') return;
-
         this.setState({ showingPhoneDialog: false }, () => {
             this.triggerCompleteEvent();
             setTimeout(() => {
-                if (!this.state.showingPhoneDialog) {
+                let { showingPhoneDialog } = this.state;
+                if (!showingPhoneDialog) {
                     this.setState({ renderingPhoneDialog: false });
                 }
             }, 500);
@@ -250,8 +262,9 @@ class UserViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleBiweeklyActivitiesClick = (evt) => {
+        let { options } = this.props;
         let chartRange = 'biweekly';
-        let chartType = this.props.options.chartType || 'bar';
+        let chartType = options.chartType || 'bar';
         this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
     }
@@ -262,8 +275,9 @@ class UserViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleMonthlyActivitiesClick = (evt) => {
+        let { options } = this.props;
         let chartRange = 'monthly';
-        let chartType = this.props.options.chartType || 'bar';
+        let chartType = options.chartType || 'bar';
         this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
     }
@@ -274,8 +288,9 @@ class UserViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleActivitiesToDateClick = (evt) => {
+        let { options } = this.props;
         let chartRange = 'full';
-        let chartType = this.props.options.chartType || 'bar';
+        let chartType = options.chartType || 'bar';
         this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
     }

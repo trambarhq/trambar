@@ -28,7 +28,8 @@ class StoryViewOptions extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <div className="story-view-options">
                 {this.renderButtons('main')}
@@ -44,12 +45,8 @@ class StoryViewOptions extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons(section) {
-        let t = this.props.locale.translate;
-        let options = this.props.options;
-        let access = this.props.access;
-        let user = this.props.currentUser;
-        let story = this.props.story;
-        let repos = this.props.repos;
+        let { env, story, currentUser, repos, options, access } = this.props;
+        let { t } = env.locale;
         if (section === 'main') {
             let bookmarkProps;
             if (options.keepBookmark === undefined) {
@@ -129,18 +126,17 @@ class StoryViewOptions extends PureComponent {
      * @return {ReactElement|null}
      */
     renderRecipientDialogBox() {
-        if (!this.state.renderingRecipientDialogBox) {
+        let { database, route, env, options } = this.props;
+        let { selectingRecipients, renderingRecipientDialogBox } = this.state;
+        if (!renderingRecipientDialogBox) {
             return null;
         }
         let props = {
-            show: this.state.selectingRecipients,
-            selection: this.props.options.bookmarkRecipients,
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            show: selectingRecipients,
+            selection: options.bookmarkRecipients,
+            database,
+            route,
+            env,
             onSelect: this.handleRecipientsSelect,
             onCancel: this.handleRecipientsCancel,
         };
@@ -153,20 +149,19 @@ class StoryViewOptions extends PureComponent {
      * @return {ReactElement}
      */
     renderIssueDialogBox() {
+        let { env, story, reactions, repos, options } = this.props;
+        let { enteringIssueDetails, renderingIssueDialogBox } = this.state;
         if (!this.state.renderingIssueDialogBox) {
             return null;
         }
         // don't allow issue to be deleted once someone has been assigned to it
         let props = {
-            show: this.state.enteringIssueDetails,
-            allowDeletion: !_.some(this.props.reactions, { type: 'assignment '}),
-            story: this.props.story,
-            issue: this.props.options.issueDetails,
-            repos: this.props.repos,
-
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            show: enteringIssueDetails,
+            allowDeletion: !_.some(reactions, { type: 'assignment '}),
+            story,
+            issue: options.issueDetails,
+            repos,
+            env,
             onConfirm: this.handleIssueConfirm,
             onCancel: this.handleIssueCancel,
         };
@@ -179,8 +174,9 @@ class StoryViewOptions extends PureComponent {
      * @param  {Object} options
      */
     triggerChangeEvent(options) {
-        if (this.props.onChange) {
-            this.props.onChange({
+        let { onChange } = this.props;
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 options,
@@ -192,8 +188,9 @@ class StoryViewOptions extends PureComponent {
      * Inform parent component the action requested is either done or canceled
      */
     triggerCompleteEvent() {
-        if (this.props.onComplete) {
-            this.props.onComplete({
+        let { onComplete } = this.props;
+        if (onComplete) {
+            onComplete({
                 type: 'complete',
                 target: this,
             });
@@ -206,7 +203,8 @@ class StoryViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     openSelectionDialogBox(evt) {
-        if (!this.state.selectingRecipients) {
+        let { selectingRecipients } = this.state;
+        if (!selectingRecipients) {
             this.setState({
                 selectingRecipients: true,
                 renderingRecipientDialogBox: true
@@ -218,10 +216,12 @@ class StoryViewOptions extends PureComponent {
      * Close dialog box
      */
     closeSelectionDialogBox() {
-        if (this.state.selectingRecipients) {
+        let { selectingRecipients } = this.state;
+        if (selectingRecipients) {
             this.setState({ selectingRecipients: false });
             setTimeout(() => {
-                if (!this.state.selectingRecipients) {
+                let { selectingRecipients } = this.state;
+                if (!selectingRecipients) {
                     this.setState({ renderingRecipientDialogBox: false });
                 }
             }, 500);
@@ -234,7 +234,8 @@ class StoryViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     openIssueDialogBox(evt) {
-        if (!this.state.enteringIssueDetails) {
+        let { enteringIssueDetails } = this.state;
+        if (!enteringIssueDetails) {
             this.setState({
                 enteringIssueDetails: true,
                 renderingIssueDialogBox: true
@@ -246,10 +247,12 @@ class StoryViewOptions extends PureComponent {
      * Close dialog box
      */
     closeIssueDialogBox() {
-        if (this.state.enteringIssueDetails) {
+        let { enteringIssueDetails } = this.state;
+        if (enteringIssueDetails) {
             this.setState({ enteringIssueDetails: false });
             setTimeout(() => {
-                if (!this.state.enteringIssueDetails) {
+                let { enteringIssueDetails } = this.state;
+                if (!enteringIssueDetails) {
                     this.setState({ renderingIssueDialogBox: false });
                 }
             }, 500);
@@ -262,12 +265,12 @@ class StoryViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleAddBookmarkClick = (evt) => {
-        let options = _.clone(this.props.options);
-        let userId = this.props.currentUser.id;
-        if (_.includes(options.bookmarkRecipients, userId)) {
-            options.bookmarkRecipients = _.difference(options.bookmarkRecipients, [ userId ]);
+        let { options, currentUser } = this.props;
+        options = _.clone(this.props.options);
+        if (_.includes(options.bookmarkRecipients, currentUser.id)) {
+            options.bookmarkRecipients = _.without(options.bookmarkRecipients, currentUser.id);
         } else {
-            options.bookmarkRecipients = _.union(options.bookmarkRecipients, [ userId ]);
+            options.bookmarkRecipients = _.concat(options.bookmarkRecipients || [], currentUser.id);
         }
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
@@ -279,8 +282,8 @@ class StoryViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleKeepBookmarkClick = (evt) => {
-        let options = _.clone(this.props.options);
-        let userId = this.props.currentUser.id;
+        let { options } = this.props;
+        options = _.clone(options);
         options.keepBookmark = false;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
@@ -310,7 +313,8 @@ class StoryViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleHideClick = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.hideStory = !options.hideStory;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
@@ -322,7 +326,8 @@ class StoryViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleEditClick = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.editStory = true;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
@@ -334,7 +339,8 @@ class StoryViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleRemoveClick = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.removeStory = true;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
@@ -346,7 +352,8 @@ class StoryViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleBumpClick = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.bumpStory = true;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
@@ -358,7 +365,8 @@ class StoryViewOptions extends PureComponent {
      * @param  {Object} evt
      */
     handleRecipientsSelect = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.bookmarkRecipients = evt.selection;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
@@ -381,7 +389,8 @@ class StoryViewOptions extends PureComponent {
      * @param  {Object} evt
      */
     handleIssueConfirm = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.issueDetails = evt.issue;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();

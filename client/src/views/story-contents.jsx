@@ -8,6 +8,7 @@ import * as PlainText from 'utils/plain-text';
 import ComponentRefs from 'utils/component-refs';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 import * as UserUtils from 'objects/utils/user-utils';
+import * as RepoUtils from 'objects/utils/repo-utils';
 import Payload from 'transport/payload';
 
 // widgets
@@ -47,9 +48,10 @@ class StoryContents extends PureComponent {
      * @return {String}
      */
     getAuthorName() {
-        let n = this.props.locale.name;
+        let { env, authors } = this.props;
+        let { g } = env.locale;
         let author = _.first(this.props.authors);
-        let name = (author) ? n(author.details.name, author.details.gender) : '';
+        let name = UserUtils.getDisplayName(author, env);
         return name;
     }
 
@@ -59,8 +61,9 @@ class StoryContents extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
+        let { story } = this.props;
         let nextState = _.clone(this.state);
-        if (this.props.story !== nextProps.story) {
+        if (nextProps.story !== story) {
             this.updateUserAnswers(nextState, nextProps);
         }
         let changes = _.shallowDiff(nextState, this.state);
@@ -76,10 +79,11 @@ class StoryContents extends PureComponent {
      * @param  {Object} nextProps
      */
     updateUserAnswers(nextState, nextProps) {
-        if (nextProps.story) {
-            if (nextProps.story.type === 'survey') {
-                let p = nextProps.locale.pick;
-                let langText = p(nextProps.story.details.text);
+        let { env, story } = nextProps;
+        let { p } = env.locale;
+        if (story) {
+            if (story.type === 'survey') {
+                let langText = p(story.details.text);
                 let tokens = ListParser.extract(langText);
                 let answers = nextState.userAnswers;
                 _.each(tokens, (list, listIndex) => {
@@ -92,21 +96,10 @@ class StoryContents extends PureComponent {
                     });
                 });
                 nextState.userAnswers = answers;
-            } else if (nextProps.story.type === 'task-list') {
+            } else if (story.type === 'task-list') {
                 nextState.userAnswers = null;
             }
         }
-    }
-
-    /**
-     * Return true if the current user is one of the story's author
-     *
-     * @return {Boolean}
-     */
-    isCurrentUserAuthor() {
-        let userIds = this.props.story.user_ids;
-        let currentUserId = this.props.currentUser.id;
-        return _.includes(userIds, currentUserId);
     }
 
     /**
@@ -115,10 +108,11 @@ class StoryContents extends PureComponent {
      * @return {Boolean|undefined}
      */
     hasUserVoted() {
-        if (this.props.reactions === null) {
+        let { reactions, currentUser } = this.props;
+        if (reactions === null) {
             return undefined;
         }
-        let vote = getUserVote(this.props.reactions, this.props.currentUser);
+        let vote = getUserVote(reactions, currentUser);
         return !!vote;
     }
 
@@ -128,18 +122,21 @@ class StoryContents extends PureComponent {
      * @return {Boolean}
      */
     canUserVote() {
-        return (this.props.access === 'read-write');
+        let { access } = this.props;
+        return (access === 'read-write');
     }
 
     /**
      * Clear state.voteSubmitted once vote has been recorded
      *
-     * @param  {Object} nextProps
+     * @param  {Object} prevProps
      */
-    componentDidUpdate(nextProps) {
-        if (this.props.reactions !== nextProps.reactions) {
-            if (this.state.voteSubmitted) {
-                let vote = getUserVote(nextProps.reactions, nextProps.currentUser);
+    componentDidUpdate(prevProps) {
+        let { reactions, currentUser } = this.props;
+        let { voteSubmitted } = this.state;
+        if (prevProps.reactions !== reactions) {
+            if (voteSubmitted) {
+                let vote = getUserVote(reactions, currentUser);
                 if (vote) {
                     this.setState({ voteSubmitted: false });
                 }
@@ -171,7 +168,8 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderText() {
-        let story = this.props.story;
+        let { story } = this.props;
+        let { exported } = story.details;
         this.resourcesReferenced = [];
         switch (story.type) {
             case 'post':
@@ -191,7 +189,7 @@ class StoryContents extends PureComponent {
             case 'tag':
                 return this.renderBranchText();
             case 'issue':
-                if (story.details.exported) {
+                if (exported) {
                     return this.renderStoryText();
                 } else {
                     return this.renderIssueText();
@@ -211,28 +209,29 @@ class StoryContents extends PureComponent {
      * @return {ReactElement|null}
      */
     renderStoryText() {
-        let p = this.props.locale.pick;
-        let story = this.props.story;
-        let text = _.trimEnd(p(story.details.text));
+        let { env, story } = this.props;
+        let { p } = env.locale;
+        let { text, markdown, labels } = story.details;
+        let langText = _.trimEnd(p(text));
         let tags;
-        if (story.details.labels) {
+        if (labels) {
             tags = this.renderLabels();
         }
-        if (!text && !tags) {
+        if (!langText && !tags) {
             return null;
         }
-        if (story.details.markdown) {
+        if (markdown) {
             return (
                 <div className="text story markdown" onClick={this.handleMarkdownClick}>
-                    {Markdown.render(text, this.handleReference)}
+                    {Markdown.render(langText, this.handleReference)}
                     {tags}
                 </div>
             );
         } else {
             let className = 'text story plain-text';
-            let emoji = PlainText.findEmoji(text);
+            let emoji = PlainText.findEmoji(langText);
             if (emoji) {
-                if (_.join(emoji, '') === text) {
+                if (_.join(emoji, '') === langText) {
                     className += ` emoji-${emoji.length}`;
                 }
             }
@@ -251,24 +250,25 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderTaskListText() {
-        let p = this.props.locale.pick;
-        let story = this.props.story;
-        let text = _.trimEnd(p(story.details.text));
-        if (!text) {
+        let { env, story, currentUser } = this.props;
+        let { userAnswers } = this.state;
+        let { p } = env.locale;
+        let { text, markdown } = story.details;
+        let langText = _.trimEnd(p(text));
+        if (!langText) {
             return null;
         }
-        let answers = this.state.userAnswers;
-        let onChange = this.isCurrentUserAuthor() ? this.handleTaskListItemChange : null;
+        let onChange = _.includes(story.user_ids, currentUser.id) ? this.handleTaskListItemChange : null;
         let onReference = this.handleReference;
-        if (story.details.markdown) {
-            let list = Markdown.renderTaskList(text, answers, onChange, onReference);
+        if (markdown) {
+            let list = Markdown.renderTaskList(langText, userAnswers, onChange, onReference);
             return (
                 <div className="text task-list markdown" onClick={this.handleMarkdownClick}>
                     {list}
                 </div>
             );
         } else {
-            let list = PlainText.renderTaskList(text, answers, onChange);
+            let list = PlainText.renderTaskList(langText, userAnswers, onChange);
             return <div className="text task-list plain-text"><p>{list}</p></div>;
         }
     }
@@ -279,38 +279,39 @@ class StoryContents extends PureComponent {
      * @return {ReactElement|null}
      */
     renderSurveyText() {
-        let p = this.props.locale.pick;
-        let story = this.props.story;
-        let text = _.trimEnd(p(story.details.text));
-        if (!text) {
+        let { env, story, reactions } = this.props;
+        let { userAnswers } = this.state;
+        let { p } = env.locale;
+        let { text, markdown } = story.details;
+        let langText = _.trimEnd(p(text));
+        if (!langText) {
             return null;
         }
         let onChange = this.handleSurveyItemChange;
         let onReference = this.handleReference;
         if (this.canUserVote() && !this.hasUserVoted()) {
-            let answers = this.state.userAnswers;
-            if (story.details.markdown) {
-                let survey = Markdown.renderSurvey(text, answers, onChange, onReference);
+            if (markdown) {
+                let survey = Markdown.renderSurvey(langText, userAnswers, onChange, onReference);
                 return (
                     <div className="text survey markdown" onClick={this.handleMarkdownClick}>
                         {survey}
                     </div>
                 );
             } else {
-                let survey = PlainText.renderSurvey(text, answers, onChange);
+                let survey = PlainText.renderSurvey(langText, userAnswers, onChange);
                 return <div className="text survey plain-text"><p>{survey}</p></div>;
             }
         } else {
-            let voteCounts = countVotes(this.props.reactions) || {};
-            if (story.details.markdown) {
-                let results = Markdown.renderSurveyResults(text, voteCounts, onReference);
+            let voteCounts = countVotes(reactions) || {};
+            if (markdown) {
+                let results = Markdown.renderSurveyResults(langText, voteCounts, onReference);
                 return (
                     <div className="text survey markdown" onClick={this.handleMarkdownClick}>
                         {results}
                     </div>
                 );
             } else {
-                let results = PlainText.renderSurveyResults(text, voteCounts);
+                let results = PlainText.renderSurveyResults(langText, voteCounts);
                 return <div className="text survey plain-text"><p>{results}</p></div>;
             }
         }
@@ -322,14 +323,14 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderRepoText() {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
-        let story = this.props.story;
-        let name = this.getAuthorName();
-        let action = story.details.action;
-        let repo = this.props.repo;
-        let repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
-        let url = _.get(repo, 'details.web_url');
+        let { env, story, authors, repo } = this.props;
+        let { t, p, g } = env.locale;
+        let { action } = story.details;
+        let name = UserUtils.getDisplayName(authors[0], env);
+        let gender = UserUtils.getGender(authors[0]);
+        g(name, gender);
+        let repoName = RepoUtils.getDisplayName(repo, env);
+        let url = RepoUtils.getURL(repo);
         return (
             <div className="text repo">
                 <p>
@@ -347,14 +348,14 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderMemberText() {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
-        let story = this.props.story;
-        let name = this.getAuthorName();
-        let action = story.details.action;
-        let repo = this.props.repo;
-        let repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
-        let url = _.get(repo, 'details.web_url');
+        let { env, story, authors, repo } = this.props;
+        let { t, p, g } = env.locale;
+        let { action } = story.details;
+        let name = UserUtils.getDisplayName(authors[0], env);
+        let gender = UserUtils.getGender(authors[0]);
+        g(name, gender);
+        let repoName = RepoUtils.getDisplayName(repo, env);
+        let url = RepoUtils.getURL(repo);
         return (
             <div className="text member">
                 <p>
@@ -372,22 +373,19 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderIssueText() {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
+        let { env, story, authors, currentUser, repo } = this.props;
+        let { t, p, g } = env.locale;
+        let { title } = story.details;
         let story = this.props.story;
-        let name = this.getAuthorName();
-        let title = story.details.title;
-        let repo = this.props.repo;
+        let name = UserUtils.getDisplayName(authors[0], env);
+        let gender = UserUtils.getGender(authors[0]);
+        g(name, gender);
+        let number = RepoUtils.getIssueNumber(repo, story);
         let url, target;
-        let issueLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'issue');
-        if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
-            if (issueLink) {
-                let issueNumber = issueLink.issue.number;
-                url = `${repo.details.web_url}/issues/${issueNumber}`;
-                target = issueLink.type;
-            }
+        if (UserUtils.canAccessRepo(currentUser, repo)) {
+            url = RepoUtils.getIssueURL(repo, story);
+            target = repo.type;
         }
-        let number = (issueLink) ? issueLink.issue.number : '';
         return (
             <div className="text issue">
                 <p>
@@ -407,18 +405,15 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderMilestoneText() {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
-        let story = this.props.story;
-        let name = this.getAuthorName();
-        let repo = this.props.repo;
-        let title = story.details.title;
+        let { env, story, authors, repo, currentUser } = this.props;
+        let { t, p, g } = env.locale;
+        let { title } = story.details;
+        let name = UserUtils.getDisplayName(authors[0], env);
+        let gender = UserUtils.getGender(authors[0]);
+        g(name, gender);
         let url;
-        if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
-            let milestoneLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'milestone');
-            if (milestoneLink) {
-                url = `${repo.details.web_url}/milestones/${milestoneLink.milestone.id}`;
-            }
+        if (UserUtils.canAccessRepo(currentUser, repo)) {
+            url = RepoUtils.getMilestoneURL(repo, story);
         }
         return (
             <div className="text milestone">
@@ -437,19 +432,15 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderMergeRequestText() {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
-        let story = this.props.story;
-        let name = this.getAuthorName();
-        let repo = this.props.repo;
-        let branch1 = _.get(story, 'details.source_branch');
-        let branch2 = _.get(story, 'details.branch');
+        let { env, story, authors, repo, currentUser } = this.props;
+        let { t, p, g } = env.locale;
+        let { source_branch: branch1, branch: branch2 } = story.details;
+        let name = UserUtils.getDisplayName(authors[0], env);
+        let gender = UserUtils.getGender(authors[0]);
+        g(name, gender);
         let url;
-        if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
-            let mergeRequestLink = ExternalDataUtils.findLinkByRelations(this.props.story, 'merge_request');
-            if (mergeRequestLink) {
-                url = `${repo.details.web_url}/merge_requests/${mergeRequestLink.merge_request.id}`;
-            }
+        if (UserUtils.canAccessRepo(currentUser, repo)) {
+            url = RepoUtils.getMergeRequestURL(repo, story);
         }
         return (
             <div className="text merge-request">
@@ -470,20 +461,21 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderWikiText() {
-        let t = this.props.locale.translate;
-        let story = this.props.story;
-        let name = this.getAuthorName();
-        let url = story.details.url;
-        let title = _.capitalize(story.details.title);
-        let action = story.details.action + 'd';
-        if (action === 'deleted') {
+        let { env, story, authors } = this.props;
+        let { t, p, g } = env.locale;
+        let { action, title, url } = story.details;
+        let name = UserUtils.getDisplayName(authors[0], env);
+        let gender = UserUtils.getGender(authors[0]);
+        g(name, gender);
+        title = _.capitalize(title);
+        if (action === 'delete') {
             url = undefined;
         }
         return (
             <div className="text wiki">
                 <p>
                     <a href={url} target="_blank">
-                        {t(`story-$name-${action}-$page`, name, title)}
+                        {t(`story-$name-${action}d-$page`, name, title)}
                     </a>
                 </p>
             </div>
@@ -496,29 +488,26 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderPushText() {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
-        let story = this.props.story;
-        let name = this.getAuthorName();
-        let commits = _.get(this.props.story, 'details.commit_ids.length');
-        let repo = this.props.repo;
-        let repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
-        let branch = story.details.branch;
+        let { env, story, authors, repo, currentUser } = this.props;
+        let { t, g } = env.locale;
+        let {
+            comment_ids: commitIDs,
+            branch,
+            source_branches: sourceBranches
+        } = story.details;
+        let name = UserUtils.getDisplayName(authors[0]);
+        let gender = UserUtils.getGender(authors[0]);
+        g(name, gender);
+        let commits = _.size(commitIDs);
+        let repoName = RepoUtils.getDisplayName(repo, env);
         let url;
-        if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
-            let commitBefore = story.details.commit_before;
-            let commitAfter = story.details.commit_after;
-            if (commitBefore) {
-                url = `${repo.details.web_url}/compare/${commitBefore}...${commitAfter}`;
-            } else {
-                url = `${repo.details.web_url}/commit/${commitAfter}`;
-            }
+        if (UserUtils.canAccessRepo(currentUser, repo)) {
+            url = RepoUtils.getPushURL(repo, story);
         }
         let text;
         if (story.type === 'push') {
             text = t(`story-$name-pushed-to-$branch-of-$repo`, name, branch, repoName);
         } else if (story.type === 'merge') {
-            let sourceBranches = story.details.source_branches;
             text = t(`story-$name-merged-$branches-into-$branch-of-$repo`, name, sourceBranches, branch, repoName);
         }
         return (
@@ -537,20 +526,16 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderBranchText() {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
-        let story = this.props.story;
-        let name = this.getAuthorName();
-        let repo = this.props.repo;
-        let repoName = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
-        let branch = story.details.branch;
+        let { env, story, authors, repo, currentUser } = this.props;
+        let { t, g } = env.locale;
+        let { branch } = story.details;
+        let name = UserUtils.getDisplayName(authors[0]);
+        let gender = UserUtils.getGender(authors[0]);
+        g(name, gender);
+        let repoName = RepoUtils.getDisplayName(repo, env);
         let url;
-        if (UserUtils.canAccessRepo(this.props.currentUser, repo)) {
-            if (story.type === 'branch') {
-                url = `${repo.details.web_url}/commits/${branch}`;
-            } else if (story.type === 'tag') {
-                url = `${repo.details.web_url}/tags/${branch}`;
-            }
+        if (UserUtils.canAccessRepo(currentUser, repo)) {
+            url = RepoUtils.getBranchURL(repo, story);
         }
         let text;
         if (story.type === 'branch') {
@@ -574,8 +559,9 @@ class StoryContents extends PureComponent {
      * @return {ReactElement|null}
      */
     renderChanges() {
-        let t = this.props.locale.translate;
-        let files = _.get(this.props.story, 'details.files');
+        let { env, story } = this.props;
+        let { t } = env.locale;
+        let files = _.get(story, 'details.files');
         if (_.isEmpty(files)) {
             return null;
         }
@@ -590,7 +576,7 @@ class StoryContents extends PureComponent {
                 );
             }
         }, []);
-        let lines = _.get(this.props.story, 'details.lines');
+        let lines = _.get(story, 'details.lines');
         let lineChangeTypes = [ 'added', 'deleted', 'modified' ];
         let lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
             let count = lines[type];
@@ -616,8 +602,9 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderStatus() {
-        let t = this.props.locale.translate;
-        let state = this.props.story.details.state;
+        let { env, story } = this.props;
+        let { t } = env.locale;
+        let { state } = story.details;
         if (!state) {
             return null;
         }
@@ -636,20 +623,13 @@ class StoryContents extends PureComponent {
      * @return {ReactElement|null}
      */
     renderLabels() {
-        let labels = _.sortBy(this.props.story.details.labels);
+        let { story, repo } = this.props;
+        let { labels } = story.details;
         if (_.isEmpty(labels)) {
             return null;
         }
-        let repo = this.props.repo;
         let tags = _.map(labels, (label, i) => {
-            let style;
-            if (repo) {
-                let index = _.indexOf(repo.details.labels, label);
-                let color = _.get(repo.details.label_colors, index);
-                if (color) {
-                    style = { backgroundColor: color };
-                }
-            }
+            let style = RepoUtils.getLabelStyle(repo, label);
             return <span key={i} className="tag" style={style}>{label}</span>;
         });
         // inserting actual spaces between the tags for the sake of copy-and-pasting
@@ -665,7 +645,10 @@ class StoryContents extends PureComponent {
      * @return {ReactElement|null}
      */
     renderButtons() {
-        if (this.props.story.type !== 'survey') {
+        let { env, story } = this.props;
+        let { voteSubmitted, userAnswers } = this.state;
+        let { t } = env.locale;
+        if (story.type !== 'survey') {
             return null;
         }
         if (!this.canUserVote()) {
@@ -674,11 +657,10 @@ class StoryContents extends PureComponent {
         if (this.hasUserVoted() !== false) {
             return null;
         }
-        let t = this.props.locale.translate;
         let submitProps = {
             label: t('story-vote-submit'),
-            emphasized: !_.isEmpty(this.state.userAnswers),
-            disabled: this.state.voteSubmitted || _.isEmpty(this.state.userAnswers),
+            emphasized: !_.isEmpty(userAnswers),
+            disabled: voteSubmitted || _.isEmpty(userAnswers),
             onClick: this.handleVoteSubmitClick,
         };
         return (
@@ -694,12 +676,14 @@ class StoryContents extends PureComponent {
      * @return {ReactElement|null}
      */
     renderAudioPlayer() {
-        if (!this.state.audioURL) {
+        let { audioURL } = this.state;
+        let { setters } = this.components;
+        if (!audioURL) {
             return null;
         }
         let audioProps = {
-            ref: this.components.setters.audioPlayer,
-            src: this.state.audioURL,
+            ref: setters.audioPlayer,
+            src: audioURL,
             autoPlay: true,
             controls: true,
             onEnded: this.handleAudioEnded,
@@ -713,7 +697,8 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderMedia() {
-        let resources = _.get(this.props.story, 'details.resources');
+        let { env, story } = this.props;
+        let resources = _.get(story, 'details.resources');
         if (!_.isEmpty(this.resourcesReferenced)) {
             // exclude the ones that are shown in Markdown
             resources = _.difference(resources, this.resourcesReferenced);
@@ -722,10 +707,9 @@ class StoryContents extends PureComponent {
             return null;
         }
         let props = {
-            locale: this.props.locale,
-            theme: this.props.theme,
             resources,
-            width: Math.min(512, screen.width),
+            width: Math.min(512, env.viewportWidth),
+            env,
         };
         return <MediaView {...props} />
     }
@@ -736,11 +720,17 @@ class StoryContents extends PureComponent {
      * @return {ReactElement|null}
      */
     renderReferencedMediaDialog() {
-        if (!this.state.renderingReferencedMediaDialog) {
+        let { env, story } = this.story;
+        let {
+            renderingReferencedMediaDialog,
+            showingReferencedMediaDialog,
+            selectedResourceName
+        } = this.state;
+        if (!renderingReferencedMediaDialog) {
             return null;
         }
-        let resources = this.props.story.details.resources;
-        let res = Markdown.findReferencedResource(resources, this.state.selectedResourceName);
+        let resources = _.get(story, 'details.resources');
+        let res = Markdown.findReferencedResource(resources, selectedResourceName);
         if (!res) {
             return null;
         }
@@ -750,13 +740,10 @@ class StoryContents extends PureComponent {
             return null;
         }
         let dialogProps = {
-            show: this.state.showingReferencedMediaDialog,
+            show: showingReferencedMediaDialog,
             resources: zoomableResources,
             selectedIndex: zoomableIndex,
-
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            env,
             onClose: this.handleReferencedMediaDialogClose,
         };
         return <MediaDialogBox {...dialogProps} />;
@@ -768,18 +755,22 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderAppComponents() {
-        let t = this.props.locale.translate;
-        let type = _.get(this.props.story, 'type');
-        let components = _.get(this.props.story, 'details.components');
+        let { env, story } = this.props;
+        let { t } = env.locale;
+        let components = _.get(story, 'details.components');
         if (_.isEmpty(components)) {
             return null;
         }
-        components = sortComponents(components, this.props.locale);
+        components = sortComponents(components, env);
         return (
             <div className="impact">
                 <p className="message">{t('story-push-components-changed')}</p>
                 <Scrollable>
-                    {_.map(components, this.renderAppComponent)}
+                {
+                    _.map(components, (component, i) => {
+                        return this.renderAppComponent(component, i);
+                    })
+                }
                 </Scrollable>
                 {this.renderAppComponentDialog()}
             </div>
@@ -792,10 +783,10 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderAppComponent(component, i) {
+        let { env } = this.props;
         let componentProps = {
-            component: component,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            component,
+            env,
             onSelect: this.handleComponentSelect,
         };
         return <AppComponent key={i} {...componentProps} />
@@ -807,14 +798,19 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderAppComponentDialog() {
-        if (!this.state.renderingComponentDialog) {
+        let { env } = this.props;
+        let {
+            showingComponentDialog,
+            renderingComponentDialog,
+            selectedComponent,
+        } = this.state;
+        if (!renderingComponentDialog) {
             return null;
         }
         let dialogProps = {
-            show: this.state.showingComponentDialog,
-            component: this.state.selectedComponent,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            show: showingComponentDialog,
+            component: selectedComponent,
+            env,
             onClose: this.handleComponentDialogClose,
         };
         return <AppComponentDialogBox {...dialogProps} />;
@@ -826,8 +822,9 @@ class StoryContents extends PureComponent {
      * @param  {Story} story
      */
     triggerChangeEvent(story) {
-        if (this.props.onChange) {
-            this.props.onChange({
+        let { onChange } = this.props;
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 story,
@@ -841,8 +838,9 @@ class StoryContents extends PureComponent {
      * @param  {Story} story
      */
     triggerReactionEvent(reaction) {
-        if (this.props.onReaction) {
-            this.props.onReaction({
+        let { onReaction } = this.props;
+        if (onReaction) {
+            onReaction({
                 type: 'reaction',
                 target: this,
                 reaction,
@@ -856,20 +854,20 @@ class StoryContents extends PureComponent {
      * @param  {Object} evt
      */
     handleReference = (evt) => {
-        let resources = this.props.story.details.resources;
+        let { env, story } = this.props;
+        let resources = _.get(story, 'details.resources');
         let res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
-            let theme = this.props.theme;
             let url;
             if (evt.forImage)  {
                 if (res.type === 'audio') {
                     url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
                 } else {
                     // images are style at height = 1.5em
-                    url = theme.getImageURL(res, { height: 24 });
+                    url = env.getImageURL(res, { height: 24 });
                 }
             } else {
-                url = theme.getURL(res);
+                url = env.getURL(res);
             }
             // remember that resource is referenced in Markdown
             this.resourcesReferenced.push(res);
@@ -886,6 +884,8 @@ class StoryContents extends PureComponent {
      * @param  {Event} evt
      */
      handleMarkdownClick = (evt) => {
+         let { env, story } = this.props;
+         let resources = _.get(story, 'details.resources');
          let target = evt.target;
          if (target.viewportElement) {
              target = target.viewportElement;
@@ -900,7 +900,6 @@ class StoryContents extends PureComponent {
              name = evt.target.title;
          }
          if (name) {
-             let resources = this.props.story.details.resources;
              let res = Markdown.findReferencedResource(resources, name);
              if (res) {
                  if (res.type === 'image' || res.type === 'video') {
@@ -913,7 +912,7 @@ class StoryContents extends PureComponent {
                      window.open(res.url, '_blank');
                  } else if (res.type === 'audio') {
                      let version = chooseAudioVersion(res);
-                     let audioURL = this.props.theme.getAudioURL(res, { version });
+                     let audioURL = env.getAudioURL(res, { version });
                      this.setState({ audioURL });
                  }
              }
@@ -936,26 +935,28 @@ class StoryContents extends PureComponent {
      * @param  {Event} evt
      */
     handleTaskListItemChange = (evt) => {
+        let { story, reactions, currentUser } = this.props;
+        let { userAnswers } = this.state;
         let target = evt.currentTarget;
         let list = parseInt(target.name);
         let item = parseInt(target.value);
         let selected = target.checked;
 
         // save the answer in state for immediately UI response
-        let userAnswers = _.decoupleSet(this.state.userAnswers, [ list, item ], selected);
+        userAnswers = _.decoupleSet(userAnswers, [ list, item ], selected);
         this.setState({ userAnswers });
 
         // update the text of the story
-        let story = _.cloneDeep(this.props.story);
-        let counts = [];
+        story = _.cloneDeep(story);
+        let taskCounts = [];
         story.details.text = _.mapValues(story.details.text, (langText) => {
             let tokens = ListParser.extract(langText);
             ListParser.set(tokens, list, item, selected);
             let unfinished = ListParser.count(tokens, false);
-            counts.push(unfinished);
+            taskCounts.push(unfinished);
             return ListParser.join(tokens);
         });
-        story.unfinished_tasks = _.max(counts);
+        story.unfinished_tasks = _.max(taskCounts);
         this.triggerChangeEvent(story);
 
         // add or remove reaction
@@ -964,16 +965,17 @@ class StoryContents extends PureComponent {
             let reaction = {
                 type: 'task-completion',
                 story_id: story.id,
-                user_id: this.props.currentUser.id,
+                user_id: currentUser.id,
                 published: true,
                 public: true,
                 details: { task },
             };
             this.triggerReactionEvent(reaction);
         } else {
-            let reaction = _.find(this.props.reactions, (r) => {
+            // delete the task completion reaction when the task is unselected
+            let reaction = _.find(reactions, (r) => {
                 if (r.type === 'task-completion') {
-                    if (r.user_id === this.props.currentUser.id) {
+                    if (r.user_id === currentUser.id) {
                         return _.isEqual(r.details.task, task);
                     }
                 }
@@ -992,10 +994,11 @@ class StoryContents extends PureComponent {
      * @param  {Event} evt
      */
     handleSurveyItemChange = (evt) => {
+        let { userAnswers } = this.state;
         let target = evt.currentTarget;
         let list = target.name;
         let item = target.value;
-        let userAnswers = _.decoupleSet(this.state.userAnswers, [ list ], item);
+        userAnswers = _.decoupleSet(userAnswers, [ list ], item);
         this.setState({ userAnswers });
     }
 
@@ -1005,15 +1008,16 @@ class StoryContents extends PureComponent {
      * @param  {Event} evt
      */
     handleVoteSubmitClick = (evt) => {
-        let story = this.props.story;
+        let { story, currentUser } = this.props;
+        let { userAnswers } = this.state;
         let reaction = {
             type: 'vote',
             story_id: story.id,
-            user_id: this.props.currentUser.id,
+            user_id: currentUser.id,
             published: true,
             public: true,
             details: {
-                answers: this.state.userAnswers
+                answers: userAnswers
             }
         };
         this.triggerReactionEvent(reaction);
@@ -1039,9 +1043,11 @@ class StoryContents extends PureComponent {
      * @param  {Object} evt
      */
     handleComponentDialogClose = (evt) => {
+        let { showingComponentDialog } = this.state;
         this.setState({ showingComponentDialog: false }, () => {
             setTimeout(() => {
-                if (!this.state.showingComponentDialog) {
+                let { showingComponentDialog } = this.state;
+                if (!showingComponentDialog) {
                     this.setState({
                         renderingComponentDialog: false,
                         selectedComponent: null
@@ -1059,7 +1065,8 @@ class StoryContents extends PureComponent {
     handleReferencedMediaDialogClose = (evt) => {
         this.setState({ showingReferencedMediaDialog: false }, () => {
             setTimeout(() => {
-                if (!this.state.showingReferencedMediaDialog) {
+                let { showingReferencedMediaDialog } = this.state;
+                if (!showingReferencedMediaDialog) {
                     this.setState({
                         renderingReferencedMediaDialog: false,
                         selectedResourceURL: null
@@ -1125,8 +1132,8 @@ function chooseAudioVersion(res) {
     return _.first(_.keys(res.versions)) || null;
 }
 
-let sortComponents = Memoize(function(components, locale) {
-    let p = locale.pick;
+let sortComponents = Memoize(function(components, env) {
+    let { p } = env.locale;
     return _.sortBy(components, (component) => {
         return _.toLower(p(component.text));
     });

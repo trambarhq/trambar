@@ -29,12 +29,13 @@ class UserStatistics extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
+        let { env } = this.props;
         let diff = _.shallowDiff(nextProps, this.props);
         let needUpdate = false;
         if (diff.chartRange || diff.dailyActivities || diff.selectedDate) {
             needUpdate = true;
         } else if (diff.env) {
-            if (this.props.env.date !== nextProps.env.date) {
+            if (env.date !== nextProps.env.date) {
                 needUpdate = true;
             }
         }
@@ -117,11 +118,13 @@ class UserStatistics extends PureComponent {
      * @return {ReactElement|null}
      */
     renderLegend() {
-        if (!this.props.chartType) {
+        let { env, chartType } = this.props;
+        let { indices } = this.state;
+        let { t } = env.locale;
+        if (!chartType) {
             return null;
         }
-        let t = this.props.locale.translate;
-        let items = _.map(this.state.indices, (index, type) => {
+        let items = _.map(indices, (index, type) => {
             let props = {
                 series: String.fromCharCode('a'.charCodeAt(0) + index),
                 label: t(`user-statistics-legend-${type}`),
@@ -140,7 +143,8 @@ class UserStatistics extends PureComponent {
      * @return {ReactElement|null}
      */
     renderChart() {
-        switch (this.props.chartType) {
+        let { chartType } = this.props;
+        switch (chartType) {
             case 'bar': return this.renderBarChart();
             case 'line': return this.renderLineChart();
             case 'pie': return this.renderPieChart();
@@ -154,26 +158,25 @@ class UserStatistics extends PureComponent {
      * @return {ReactElement}
      */
     renderBarChart() {
+        let { chartRange } = this.props;
+        let { labels, series, dates, upperRange } = this.state;
         let chartProps = {
             type: 'bar',
-            data: {
-                labels: this.state.labels,
-                series: this.state.series,
-            },
+            data: { labels, series, },
             options: {
                 stackBars: true,
                 chartPadding: {
                     left: -25,
                     right: 30
                 },
-                high: this.state.upperRange,
+                high: upperRange,
                 low: 0,
             },
             onDraw: this.handleChartDraw,
             onClick: this.handleChartClick,
         };
         return (
-            <ChartContainer scrollable={this.props.chartRange === 'full'} columns={this.state.dates.length}>
+            <ChartContainer scrollable={chartRange === 'full'} columns={dates.length}>
                 <Chartist {...chartProps} />
             </ChartContainer>
         );
@@ -185,12 +188,11 @@ class UserStatistics extends PureComponent {
      * @return {ReactElement}
      */
     renderLineChart() {
+        let { chartRange } = this.props;
+        let { labels, series, dates, upperRange } = this.state;
         let chartProps = {
             type: 'line',
-            data: {
-                labels: this.state.labels,
-                series: this.state.series,
-            },
+            data: { labels, series },
             options: {
                 fullWidth: true,
                 chartPadding: {
@@ -198,13 +200,13 @@ class UserStatistics extends PureComponent {
                     right: 30
                 },
                 showPoint: false,
-                high: this.state.upperRange,
+                high: upperRange,
                 low: 0,
             },
             onDraw: this.handleChartDraw,
         };
         return (
-            <ChartContainer scrollable={this.props.chartRange === 'full'} columns={this.state.dates.length}>
+            <ChartContainer scrollable={chartRange === 'full'} columns={dates.length}>
                 <Chartist {...chartProps} />
             </ChartContainer>
         );
@@ -216,10 +218,11 @@ class UserStatistics extends PureComponent {
      * @return {ReactElement}
      */
     renderPieChart() {
+        let { series } = this.state;
         let chartProps = {
             type: 'pie',
             data: {
-                series: _.map(this.state.series, (series) => {
+                series: _.map(series, (series) => {
                     let sum = _.sum(series.data);
                     return sum;
                 })
@@ -241,14 +244,22 @@ class UserStatistics extends PureComponent {
      * @param  {Object} cxt
      */
     handleChartDraw = (cxt) => {
+        let { chartType, chartRange } = this.props;
+        let {
+            labels,
+            dates,
+            selectedDateIndex,
+            selectedDateLabel,
+            tooltips
+        } = this.state;
         // move y-axis to the right side
         if(cxt.type === 'label' && cxt.axis.units.pos === 'y') {
             cxt.element.attr({
                 x: cxt.axis.chartRect.width() + 5
             });
         } else if (cxt.type === 'grid' && cxt.axis.units.pos === 'x') {
-            if (cxt.index === this.state.dates.length - 1) {
-                if (this.props.chartType === 'bar') {
+            if (cxt.index === dates.length - 1) {
+                if (chartType === 'bar') {
                     // add missing grid line
                     let line = new Chartist.Svg('line');
                     line.attr({
@@ -261,23 +272,23 @@ class UserStatistics extends PureComponent {
                     cxt.group.append(line);
                 }
             }
-            if (this.props.chartRange === 'full') {
+            if (chartRange === 'full') {
                 // style grid line differently when it's the first day
                 // (when we have a label)
-                let label = this.state.labels[cxt.index];
+                let label = labels[cxt.index];
                 if (label) {
                     cxt.element.addClass('month-start');
                 }
             }
-            if (cxt.index === this.state.selectedDateIndex) {
+            if (cxt.index === selectedDateIndex) {
                 // add selected date (or today) label
                 let x = cxt.x2;
-                if (this.props.chartType === 'bar') {
+                if (chartType === 'bar') {
                     x += cxt.axis.stepLength * 0.5;
                 }
                 let y = cxt.y1 + 12;
                 let text = new Chartist.Svg('text');
-                text.text(this.state.selectedDateLabel);
+                text.text(selectedDateLabel);
                 text.attr({
                     x: x,
                     y: y,
@@ -311,8 +322,8 @@ class UserStatistics extends PureComponent {
             }
         } else if (cxt.type === 'bar') {
             // add mouseover title
-            let tooltip = _.get(this.state.tooltips, [ cxt.seriesIndex, cxt.index ]);
-            let date = this.state.dates[cxt.index];
+            let tooltip = _.get(tooltips, [ cxt.seriesIndex, cxt.index ]);
+            let date = dates[cxt.index];
             let title = new Chartist.Svg('title');
             title.text(tooltip);
             cxt.element.append(title);
@@ -326,16 +337,11 @@ class UserStatistics extends PureComponent {
      * @param  {Event} evt
      */
     handleChartClick = (evt) => {
+        let { route, user } = this.props;
         let date = evt.target.getAttribute('data-date');
         if (date) {
             // go to the user's personal page on that date
-            let route = this.props.route;
-            let params = {
-                schema: route.parameters.schema,
-                user: this.props.user.id,
-                date: date,
-            };
-            route.push(require('pages/people-page'), params);
+            route.push('person-page', { userID: user.id, date });
         }
     }
 }
@@ -541,7 +547,6 @@ if (process.env.NODE_ENV !== 'production') {
         chartRange: PropTypes.oneOf([ 'biweekly', 'monthly', 'full' ]),
         dailyActivities: PropTypes.object,
         selectedDate: PropTypes.string,
-        today: PropTypes.string,
         user: PropTypes.object,
 
         route: PropTypes.instanceOf(Route).isRequired,

@@ -50,8 +50,9 @@ class StoryView extends PureComponent {
      * @return {String}
      */
     getClassName() {
+        let { highlighting } = this.props;
         let className = 'story-view';
-        if (this.props.highlighting) {
+        if (highlighting) {
             className += ' highlighting';
         }
         return className;
@@ -63,9 +64,10 @@ class StoryView extends PureComponent {
      * @return {Boolean}
      */
     hasUserDraft() {
-        return _.some(this.props.reactions, (r) => {
+        let { reactions, currentUser } = this.props;
+        return _.some(reactions, (r) => {
             if (!r.published) {
-                if (r.user_id === this.props.currentUser.id) {
+                if (r.user_id === currentUser.id) {
                     return true;
                 }
             }
@@ -80,22 +82,22 @@ class StoryView extends PureComponent {
      * @return {Boolean|undefined}
      */
     shouldExpandComments(props) {
-        if (!props.reactions || !props.respondents) {
+        let { reactions, respondents, story, currentUser, selectedReactionID } = props;
+        if (!reactions || !respondents) {
             return;
         }
         // expand automatically when it's the current user's story
-        let currentUserId = _.get(this.props.currentUser, 'id');
-        if (_.includes(props.story.user_ids, currentUserId)) {
+        if (_.includes(story.user_ids, currentUser.id)) {
             return true;
         }
         // expand automatically when the current user has reacted to story
-        if (_.some(props.reactions, { user_id: currentUserId })) {
+        if (_.some(reactions, { user_id: currentUser.id })) {
             return true;
         }
 
         // expand if a reaction is selected
-        if (props.selectedReactionId) {
-            if (_.some(props.reactions, { id: props.selectedReactionId })) {
+        if (selectedReactionID) {
+            if (_.some(props.reactions, { id: selectedReactionID })) {
                 return true;
             }
         }
@@ -108,11 +110,12 @@ class StoryView extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
+        let { story, recommendations, reactions, respondents } = this.props;
         let nextState = _.clone(this.state);
-        if (this.props.story !== nextProps.story || this.props.recommendations !== nextProps.recommendations) {
+        if (nextProps.story !== story || nextProps.recommendations !== recommendations) {
             this.updateOptions(nextState, nextProps);
         }
-        if (this.props.reactions !== nextProps.reactions || this.props.respondents !== nextProps.respondents) {
+        if (nextProps.reactions !== reactions || nextProps.respondents !== respondents) {
             if (nextState.commentsExpanded !== true) {
                 if (this.shouldExpandComments(nextProps)) {
                     nextState.commentsExpanded = true;
@@ -145,13 +148,13 @@ class StoryView extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        switch (this.props.theme.mode) {
-            case 'single-col':
-                return this.renderSingleColumn();
-            case 'double-col':
-                return this.renderDoubleColumn();
-            case 'triple-col':
-                return this.renderTripleColumn();
+        let { env } = this.props;
+        if (env.isWiderThan('triple-col')) {
+            return this.renderTripleColumn();
+        } else if (env.isWiderThan('double-col')) {
+            return this.renderDoubleColumn();
+        } else {
+            return this.renderSingleColumn();
         }
     }
 
@@ -239,7 +242,8 @@ class StoryView extends PureComponent {
      * @return {ReactElement}
      */
     renderTripleColumn() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <div className={this.getClassName()}>
                 <div className="header">
@@ -277,17 +281,15 @@ class StoryView extends PureComponent {
      * @return {ReactElement}
      */
     renderProfileImage() {
-        let leadAuthor = _.get(this.props.authors, 0);
+        let { route, env, authors } = this.props;
+        let leadAuthor = _.get(authors, 0);
         let props = {
             user: leadAuthor,
             theme: this.props.theme,
             size: 'medium',
         };
         if (leadAuthor) {
-            props.href = this.props.route.find(require('pages/people-page'), {
-                schema: this.props.route.parameters.schema,
-                user: leadAuthor.id,
-            });
+            props.href = route.find('person-page', { userID: leadAuthor.id });
         }
         return <ProfileImage {...props} />;
     }
@@ -298,11 +300,8 @@ class StoryView extends PureComponent {
      * @return {ReactElement}
      */
     renderAuthorNames() {
-        let props = {
-            authors: this.props.authors,
-            locale: this.props.locale,
-            theme: this.props.theme,
-        };
+        let { env, authors } = this.props;
+        let props = { authors, env };
         return <AuthorNames {...props} />;
     }
 
@@ -312,18 +311,17 @@ class StoryView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderReactionToolbar() {
-        let access = this.props.access;
+        let { env, story, reactions, respondents, currentUser, access } = this.props;
         if (access !== 'read-comment' && access !== 'read-write') {
             return null;
         }
         let props = {
-            access: access,
-            currentUser: this.props.currentUser,
-            reactions: this.props.reactions,
-            respondents: this.props.respondents,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            disabled: !StoryUtils.isSaved(this.props.story),
+            access,
+            currentUser,
+            reactions,
+            respondents,
+            env,
+            disabled: !StoryUtils.isSaved(story),
             onAction: this.handleAction,
         };
         return <ReactionToolbar {...props} />;
@@ -335,14 +333,16 @@ class StoryView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderReactionLink() {
-        let count = _.size(this.props.reactions);
+        let { env, reaction } = this.props;
+        let { commentsExpanded } = this.state;
+        let { t } = env.locale;
+        let count = _.size(reactions);
         if (count === 0) {
             return null;
         }
-        if (this.state.commentsExpanded) {
+        if (commentsExpanded) {
             return '\u00a0';
         }
-        let t = this.props.locale.translate;
         return (
             <span className="reaction-link" onClick={this.handleExpansionClick}>
                 {t('story-$count-reactions', count)}
@@ -356,15 +356,16 @@ class StoryView extends PureComponent {
      * @return {ReactElement}
      */
     renderProgress() {
+        let { payloads, env, story, pending } = this.props;
         let uploadStatus;
-        if (this.props.story.ready === false) {
-            uploadStatus = this.props.payloads.inquire(this.props.story);
+        if (story.ready === false) {
+            uploadStatus = payloads.inquire(story);
         }
         let props = {
             status: uploadStatus,
-            story: this.props.story,
-            pending: this.props.pending,
-            locale: this.props.locale,
+            story,
+            pending,
+            env,
         };
         return <StoryProgress {...props} />;
     }
@@ -375,9 +376,8 @@ class StoryView extends PureComponent {
      * @return {ReactElement}
      */
     renderEmblem() {
-        let props = {
-            story: this.props.story,
-        };
+        let { story } = this.props;
+        let props = { story };
         return <StoryEmblem {...props} />
     }
 
@@ -387,16 +387,15 @@ class StoryView extends PureComponent {
      * @return {ReactElement}
      */
     renderContents() {
+        let { env, story, authors, reactions, currentUser, repos, access } = this.props;
         let props = {
-            access: this.props.access,
-            story: this.props.story,
-            authors: this.props.authors,
-            currentUser: this.props.currentUser,
-            reactions: this.props.reactions,
-            repo: findRepo(this.props.repos, this.props.story),
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            access,
+            story,
+            authors,
+            currentUser,
+            reactions,
+            repo: findRepo(repos, story),
+            env,
             onChange: this.handleStoryChange,
             onReaction: this.handleStoryReaction,
         };
@@ -409,31 +408,45 @@ class StoryView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderReactions() {
-        if (_.isEmpty(this.props.reactions)) {
+        let {
+            database,
+            route,
+            payloads,
+            env,
+            story,
+            authors,
+            reactions,
+            respondents,
+            currentUser,
+            repos,
+            access,
+            selectedReactionID,
+        } = this.props;
+        let { commentsExpanded, isTall } = this.state;
+        let { setters } = this.components;
+        if (_.isEmpty(reactions)) {
             return null;
         }
-        if (this.props.theme.mode === 'single-col') {
-            if (!this.state.commentsExpanded) {
+        if (!env.isWiderThan('double-col')) {
+            if (!commentsExpanded) {
                 return null;
             }
         }
-        let setters = this.components.setters;
         let listProps = {
-            access: this.props.access,
-            story: this.props.story,
-            reactions: this.props.reactions,
-            respondents: this.props.respondents,
-            repo: findRepo(this.props.repos, this.props.story),
-            currentUser: this.props.currentUser,
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            selectedReactionId: this.props.selectedReactionId,
+            access,
+            story,
+            reactions,
+            respondents,
+            repo: findRepo(repos, story),
+            currentUser,
+            database,
+            payloads,
+            route,
+            env,
+            selectedReactionID,
         };
         let className = 'scrollable';
-        if (this.state.isTall && this.props.theme.mode !== 'single-col') {
+        if (isTall && env.isWiderThan('double-col')) {
             className += ' abs';
         }
         return (
@@ -449,18 +462,19 @@ class StoryView extends PureComponent {
      * instead so there's no gap at the bottom.
      */
     adjustReactionContainer() {
-        if (this.props.theme.mode !== 'single-col') {
-            let container = this.components.reactionContainer;
-            if (container) {
-                let cell = container.parentNode;
+        if (env.isWiderThan('double-col')) {
+            let { isTall } = this.state;
+            let { reactionContainer } = this.components;
+            if (reactionContainer) {
+                let cell = reactionContainer.parentNode;
                 if (!reactionContainerMaxHeight) {
                     // calculate this once
-                    let containerStyle = getComputedStyle(container);
+                    let containerStyle = getComputedStyle(reactionContainer);
                     reactionContainerMaxHeight = parseInt(containerStyle.maxHeight);
                 }
-                let isTall = (cell.offsetHeight > reactionContainerMaxHeight);
-                if (this.state.isTall !== isTall) {
-                    this.setState({ isTall });
+                let isTallAfter = (cell.offsetHeight > reactionContainerMaxHeight);
+                if (isTall !== isTallAfter) {
+                    this.setState({ isTall: isTallAfter });
                 }
             }
         }
@@ -474,7 +488,8 @@ class StoryView extends PureComponent {
      * @return {ReactElement}
      */
     renderPopUpMenu(section) {
-        let ref = this.components.setters[section + 'PopUp'];
+        let { setters } = this.components;
+        let ref = setters[section + 'PopUp'];
         return (
             <CornerPopUp ref={ref}>
                 {this.renderOptions(section)}
@@ -490,20 +505,28 @@ class StoryView extends PureComponent {
      * @return {ReactElement}
      */
     renderOptions(section) {
+        let {
+            database,
+            route,
+            env,
+            story,
+            reactions,
+            repos,
+            currentUser,
+            options,
+            access,
+        } = this.props;
         let props = {
             section,
-            access: this.props.access,
-            story: this.props.story,
-            reactions: this.props.reactions,
-            repos: this.props.repos,
-            currentUser: this.props.currentUser,
-            options: this.state.options,
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            access,
+            story,
+            reactions,
+            repos,
+            currentUser,
+            options,
+            database,
+            route,
+            env,
             onChange: this.handleOptionsChange,
             onComplete: this.handleOptionsComplete,
         };
@@ -536,7 +559,8 @@ class StoryView extends PureComponent {
      * @return {Promise<Story>}
      */
     saveStory(story, immediate) {
-        let params = this.props.route.parameters;
+        let { database } = this.props;
+        let { options } = this.state;
         let options = {
             delay: (immediate) ? undefined : AUTOSAVE_DURATION,
             onConflict: (evt) => {
@@ -547,10 +571,10 @@ class StoryView extends PureComponent {
                 }
             },
         };
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let db = database.use({ by: this });
         return db.start().then(() => {
             let newStory = !StoryUtils.isSaved(story);
-            let bookmarkRecipients = this.state.options.bookmarkRecipients;
+            let bookmarkRecipients = options.bookmarkRecipients;
             return db.saveOne({ table: 'story' }, story, options).then((story) => {
                 if (newStory && !_.isEmpty(bookmarkRecipients)) {
                     // bookmarks were added after the story was published but
@@ -572,8 +596,8 @@ class StoryView extends PureComponent {
      * @return {Promise<Story>}
      */
     removeStory(story) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let { database } = this.props;
+        let db = database.use({ by: this });
         return db.removeOne({ table: 'story' }, story);
     }
 
@@ -585,8 +609,8 @@ class StoryView extends PureComponent {
      * @return {Promise<Reaction>}
      */
     saveReaction(reaction) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let { database } = this.props;
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'reaction' }, reaction);
         });
@@ -600,8 +624,8 @@ class StoryView extends PureComponent {
      * @return {Promise<Reaction>}
      */
     removeReaction(reaction) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let { database } = this.props;
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.removeOne({ table: 'reaction' }, reaction);
         });
@@ -615,11 +639,11 @@ class StoryView extends PureComponent {
      * @return {Promise<Array<Bookmark>>}
      */
     saveBookmarks(bookmarks) {
+        let { database } = this.props;
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.save({ table: 'bookmark' }, bookmarks);
         });
@@ -633,11 +657,11 @@ class StoryView extends PureComponent {
      * @return {Promise<Array<Bookmark>>}
      */
     removeBookmarks(bookmarks) {
+        let { database } = this.props;
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.remove({ table: 'bookmark' }, bookmarks);
         });
@@ -652,14 +676,14 @@ class StoryView extends PureComponent {
      * @return {Promise<Array<Bookmark>>}
      */
     sendBookmarks(story, recipientIds) {
-        let bookmarks = this.props.recommendations;
+        let { database, recommendations, currentUser } = this.props;
         let newBookmarks = [];
         // add bookmarks that don't exist yet
         _.each(recipientIds, (recipientId) => {
-            if (!_.some(bookmarks, { target_user_id: recipientId })) {
+            if (!_.some(recommendations, { target_user_id: recipientId })) {
                 let newBookmark = {
                     story_id: story.published_version_id || story.id,
-                    user_ids: [ this.props.currentUser.id ],
+                    user_ids: [ currentUser.id ],
                     target_user_id: recipientId,
                 };
                 newBookmarks.push(newBookmark);
@@ -668,7 +692,7 @@ class StoryView extends PureComponent {
         // delete bookmarks that aren't needed anymore
         // the backend will handle the fact a bookmark can belong to multiple users
         let redundantBookmarks = [];
-        _.each(bookmarks, (bookmark) => {
+        _.each(recommendations, (bookmark) => {
             if (!_.includes(recipientIds, bookmark.target_user_id)) {
                 redundantBookmarks.push(bookmark);
             }
@@ -689,14 +713,14 @@ class StoryView extends PureComponent {
      * @return {Promise<Task>}
      */
     sendTask(action, options) {
+        let { database, currentUser } = this.props;
         let task = {
             action,
             options,
-            user_id: this.props.currentUser.id,
+            user_id: currentUser.id,
             token: RandomToken.generate(),
         };
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'task' }, task);
         });
@@ -708,9 +732,9 @@ class StoryView extends PureComponent {
      * @param  {Object} options
      */
     setOptions(options) {
-        let before = this.state.options;
+        let { story, bookmark, onBump } = this.props;
+        let { options: before } = this.state;
         this.setState({ options }, () => {
-            let story = this.props.story;
             if (options.editStory && !before.editStory) {
                 if (story.id > 1) {
                     // create a temporary object linked to this one
@@ -732,8 +756,8 @@ class StoryView extends PureComponent {
                 storyAfter.bump = true;
                 storyAfter.btime = Moment().toISOString();
                 this.saveStory(storyAfter);
-                if (this.props.onBump) {
-                    this.props.onBump({
+                if (onBump) {
+                    onBump({
                         type: 'bump',
                         target: this,
                     });
@@ -745,8 +769,8 @@ class StoryView extends PureComponent {
                 this.saveStory(storyAfter);
             }
             if (options.keepBookmark !== before.keepBookmark) {
-                if (this.props.bookmark && !options.keepBookmark) {
-                    this.removeBookmarks([ this.props.bookmark ]);
+                if (bookmark && !options.keepBookmark) {
+                    this.removeBookmarks([ bookmark ]);
                 }
             }
             if (!_.isEqual(options.issueDetails, before.issueDetails)) {
@@ -756,7 +780,7 @@ class StoryView extends PureComponent {
             }
             if (!_.isEqual(options.bookmarkRecipients, before.bookmarkRecipients)) {
                 if (StoryUtils.isSaved(story)) {
-                    this.sendBookmarks(this.props.story, options.bookmarkRecipients);
+                    this.sendBookmarks(story, options.bookmarkRecipients);
                 } else {
                     // to create the bookmarks we need the story id
                     this.saveStory(story);
@@ -829,12 +853,14 @@ class StoryView extends PureComponent {
      * @param  {Object} evt
      */
     handleAction = (evt) => {
+        let { story, reactions, currentUser } = this.props;
+        let { commentsExpanded } = this.state;
         switch (evt.action) {
             case 'like-add':
                 let like = {
                     type: 'like',
-                    story_id: this.props.story.id,
-                    user_id: this.props.currentUser.id,
+                    story_id: story.id,
+                    user_id: currentUser.id,
                     published: true,
                     public: true,
                 };
@@ -844,20 +870,18 @@ class StoryView extends PureComponent {
                 this.removeReaction(evt.like);
                 break;
             case 'reaction-add':
-                if (!this.state.commentsExpanded) {
-                    this.setState({
-                        commentsExpanded: true
-                    });
+                if (!commentsExpanded) {
+                    this.setState({ commentsExpanded: true });
                 }
-                let existing = _.some(this.props.reactions, {
-                    user_id: this.props.currentUser.id,
+                let existing = _.some(reactions, {
+                    user_id: currentUser.id,
                     published: false,
                 });
                 if (!existing) {
                     let comment = {
                         type: 'comment',
-                        story_id: this.props.story.id,
-                        user_id: this.props.currentUser.id,
+                        story_id: story.id,
+                        user_id: currentUser.id,
                         details: {},
                         published: false,
                         public: true,
@@ -866,8 +890,8 @@ class StoryView extends PureComponent {
                 }
                 FocusManager.focus({
                     type: 'ReactionEditor',
-                    story_id: this.props.story.id,
-                    user_id: this.props.currentUser.id,
+                    story_id: story.id,
+                    user_id: currentUser.id,
                 });
                 break;
             case 'reaction-expand':

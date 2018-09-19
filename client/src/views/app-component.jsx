@@ -2,8 +2,6 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import MarkGor from 'mark-gor/react';
 
-import Environment from 'env/environment';
-
 // widgets
 import ResourceView from 'widgets/resource-view';
 
@@ -92,6 +90,13 @@ class AppComponent extends PureComponent {
         }
     }
 }
+
+export {
+    AppComponent as default,
+    AppComponent,
+};
+
+import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

@@ -16,8 +16,9 @@ class BookmarkView extends PureComponent {
      * @return {ReactElement}
      */
     render() {
+        let { highlighting, children } = this.props;
         let className = 'bookmark-view';
-        if (this.props.highlighting) {
+        if (highlighting) {
             className += ' highlighting';
         }
         return (
@@ -26,7 +27,7 @@ class BookmarkView extends PureComponent {
                     {this.renderSenderNames()}
                 </div>
                 <div className="story">
-                    {this.props.children}
+                    {children}
                 </div>
             </div>
         );

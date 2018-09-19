@@ -32,36 +32,6 @@ class MediaView extends PureComponent {
     }
 
     /**
-     * Return the number of resources
-     *
-     * @return {Number}
-     */
-    getResourceCount() {
-        return this.props.resources.length;
-    }
-
-    /**
-     * Return the index of the currently selected resource
-     *
-     * @return {Number}
-     */
-    getSelectedResourceIndex() {
-        let maxIndex = this.getResourceCount() - 1;
-        let index = Math.min(this.state.selectedIndex, maxIndex);
-        return index;
-    }
-
-    /**
-     * Return the currently selected resource
-     *
-     * @return {Number}
-     */
-    getSelectedResource() {
-        let index = this.getSelectedResourceIndex();
-        return (index !== -1) ? this.props.resources[index] : null;
-    }
-
-    /**
      * Select a resource by index
      *
      * @param  {Number} index
@@ -69,15 +39,16 @@ class MediaView extends PureComponent {
      * @return {Promise<Number>}
      */
     selectResource(index) {
+        let { resources } = this.props;
         return new Promise((resolve, reject) => {
-            let count = this.getResourceCount();
-            if (index >= 0 && index < count) {
-                this.setState({ selectedIndex: index }, () => {
-                    resolve(index);
-                });
-            } else {
-                resolve(this.getSelectedResourceIndex());
+            if (index < 0) {
+                index = 0;
+            } else if (index > resources.length - 1) {
+                index = resources.length - 1;
             }
+            this.setState({ selectedIndex: index }, () => {
+                resolve(index);
+            });
         });
     }
 
@@ -105,14 +76,17 @@ class MediaView extends PureComponent {
      * @return {ReactElement}
      */
     renderNavigation() {
-        let count = this.getResourceCount();
-        if (count <= 1) {
+        let { resources } = this.props;
+        let { selectedIndex } = this.state;
+        if (resources.length <= 1) {
             return null;
         }
-        let index = Math.min(count - 1, this.state.selectedIndex);
+        if (selectedIndex > resources.length - 1) {
+            selectedIndex = resources.length - 1;
+        }
         let directionProps = {
-            index,
-            count,
+            index: selectedIndex,
+            count: resources.length,
             onBackwardClick: this.handleBackwardClick,
             onForwardClick: this.handleForwardClick,
         };
@@ -131,12 +105,14 @@ class MediaView extends PureComponent {
      * @return {[type]}
      */
     renderAudioPlayer() {
-        if (!this.state.audioURL) {
+        let { setters } = this.components;
+        let { audioURL } = this.state;
+        if (!audioURL) {
             return null;
         }
         let audioProps = {
-            ref: this.components.setters.audioPlayer,
-            src: this.state.audioURL,
+            ref: setters.audioPlayer,
+            src: audioURL,
             autoPlay: true,
             controls: true,
             onEnded: this.handleAudioEnded,
@@ -150,20 +126,25 @@ class MediaView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDialogBox() {
-        if (!this.state.renderingDialogBox) {
+        let { resources } = this.props;
+        let { showingDialogBox, renderingDialogBox, selectedIndex } = this.state;
+        if (!renderingDialogBox) {
             return null;
         }
-        let zoomableResources = getZoomableResources(this.props.resources);
-        let index = this.getSelectedResourceIndex();
-        let zoomableIndex = _.indexOf(zoomableResources, this.props.resources[index]);
+        if (selectedIndex > resources.length - 1) {
+            selectedIndex = resources.length - 1;
+        }
+        let res = resources[selectedIndex];
+        if (!res) {
+            return null;
+        }
+        let zoomableResources = getZoomableResources(resources);
+        let zoomableIndex = _.indexOf(zoomableResources, res);
         let dialogProps = {
-            show: this.state.showingDialogBox,
+            show: showingDialogBox,
             resources: zoomableResources,
             selectedIndex: zoomableIndex,
-
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            env,
             onClose: this.handleDialogClose,
         };
         return <MediaDialogBox {...dialogProps} />;
@@ -175,14 +156,20 @@ class MediaView extends PureComponent {
      * @return {ReactElement}
      */
     renderResource() {
-        let count = this.props.resources.length;
-        let index = Math.min(count - 1, this.state.selectedIndex);
-        let res = this.props.resources[index];
+        let { resources } = this.props;
+        let { selectedIndex } = this.state;
+        if (selectedIndex > resources.length - 1) {
+            selectedIndex = resources.length - 1;
+        }
+        let res = resources[selectedIndex];
+        if (!res) {
+            return null;
+        }
         switch (res.type) {
-            case 'image': return this.renderImage(res, index);
-            case 'video': return this.renderVideo(res, index);
-            case 'audio': return this.renderAudio(res, index);
-            case 'website': return this.renderWebsite(res, index);
+            case 'image': return this.renderImage(res, selectedIndex);
+            case 'video': return this.renderVideo(res, selectedIndex);
+            case 'audio': return this.renderAudio(res, selectedIndex);
+            case 'website': return this.renderWebsite(res, selectedIndex);
         }
     }
 
@@ -240,12 +227,14 @@ class MediaView extends PureComponent {
      * @return {ReactElement}
      */
     renderAudio(res, key) {
+        let { env } = this.props;
+        let { audioURL } = this.state;
         let className = 'audio';
         let url = this.props.theme.getImageURL(res);
         if (!url) {
             className += ' posterless';
         }
-        let action = (!this.state.audioURL) ? 'play' : 'stop';
+        let action = (!audioURL) ? 'play' : 'stop';
         return (
             <div key={key} className={className} onClick={this.handleAudioClick}>
                 {this.renderImageElement(res)}
@@ -292,12 +281,13 @@ class MediaView extends PureComponent {
      * @return {[type]}
      */
     renderImageElement(res) {
+        let { env, width } = this.props;
         let props = {
             resource: res,
-            theme: this.props.theme,
-            width: this.props.width,
-            height: this.props.width,
+            width: width,
+            height: width,
             mosaic: true,
+            env,
         };
         return <ResourceView {...props} />;
     }
@@ -306,7 +296,7 @@ class MediaView extends PureComponent {
      * Stop playing audio
      */
     pauseAudio() {
-        let audioPlayer = this.components.audioPlayer;
+        let { audioPlayer } = this.components;
         if (audioPlayer) {
             audioPlayer.pause();
         }
@@ -320,8 +310,8 @@ class MediaView extends PureComponent {
      * @return {Promise<Number>}
      */
     handleBackwardClick = (evt) => {
-        let index = this.getSelectedResourceIndex();
-        return this.selectResource(index - 1);
+        let { selectedIndex } = this.state;
+        return this.selectResource(selectedIndex - 1);
     }
 
     /**
@@ -332,8 +322,8 @@ class MediaView extends PureComponent {
      * @return {Promise<Number>}
      */
     handleForwardClick = (evt) => {
-        let index = this.getSelectedResourceIndex();
-        return this.selectResource(index + 1);
+        let { selectedIndex } = this.state;
+        return this.selectResource(selectedIndex + 1);
     }
 
     /**
@@ -367,10 +357,15 @@ class MediaView extends PureComponent {
      * @param  {Event} evt
      */
     handleAudioClick = (evt) => {
-        if (!this.state.audioURL) {
-            let res = this.getSelectedResource();
+        let { env, resources } = this.props;
+        let { selectedIndex, audioURL } = this.state;
+        if (!audioURL) {
+            if (selectedIndex > resources.length - 1) {
+                selectedIndex = resources.length - 1;
+            }
+            let res = resources[selectedIndex];
             let version = chooseAudioVersion(res);
-            let audioURL = this.props.theme.getAudioURL(res, { version });
+            let audioURL = env.getAudioURL(res, { version });
             this.setState({ audioURL });
         } else {
             this.setState({ audioURL: null });

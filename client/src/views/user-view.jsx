@@ -33,10 +33,10 @@ class UserView extends PureComponent {
      * @return {String}
      */
     getChartType() {
-        let chartType = this.props.options.chartType;
-        if (!chartType) {
+        let { env, options } = this.props;
+        if (!options.chartType) {
             // always show statistics in double and triple column mode
-            if (this.props.theme.mode !== 'single-col') {
+            if (env.isWiderThan('double-col')) {
                 chartType = 'bar';
             }
         }
@@ -49,6 +49,7 @@ class UserView extends PureComponent {
      * @return {String}
      */
     getChartRange() {
+        let { options } = this.props;
         let chartRange = this.props.options.chartRange;
         if (!chartRange) {
             chartRange = 'biweekly';
@@ -63,17 +64,14 @@ class UserView extends PureComponent {
      * @return {Number|undefined}
      */
     getStoryCountEstimate() {
+        let { dailyActivities, selectedDate, search } = this.props;
         if (!this.props.dailyActivities) {
             return;
         }
-        let params = this.props.route.parameters;
         let tags;
-        if (params.search) {
-            if (!TagScanner.removeTags(params.search)) {
-                tags = TagScanner.findTags(params.search);
-                if (_.isEmpty(tags)) {
-                    tags = null;
-                }
+        if (search) {
+            if (!TagScanner.removeTags(search)) {
+                tags = TagScanner.findTags(search);
             } else {
                 // we don't generate stats for text search
                 return;
@@ -81,13 +79,13 @@ class UserView extends PureComponent {
         }
         let total = 0;
         let list;
-        if (this.props.selectedDate) {
+        if (selectedDate) {
             // check just the selected date
-            let stats = this.props.dailyActivities.daily[this.props.selectedDate];
+            let stats = dailyActivities.daily[selectedDate];
             list = (stats) ? [ stats ] : [];
         } else {
             // go through all dates
-            list = _.values(this.props.dailyActivities.daily);
+            list = _.values(dailyActivities.daily);
         }
         _.each(list, (stats) => {
             _.each(stats, (count, type) => {
@@ -108,13 +106,13 @@ class UserView extends PureComponent {
      * @return {String|null}
      */
     getUserPageURL() {
-        if (this.props.link !== 'user') {
+        let { route, user, link } = this.props;
+        if (link !== 'user') {
             return null;
         }
-        let route = this.props.route;
-        let params = _.pick(route.parameters, 'schema', 'date', 'search');
+        let params = _.pick(route.params, 'schema', 'date', 'search');
         params.user = this.props.user.id;
-        return route.find(require('pages/people-page'), params);
+        return route.find('person-page', params);
     }
 
     /**
@@ -123,16 +121,13 @@ class UserView extends PureComponent {
      * @return {String|null}
      */
     getTeamPageURL() {
-        if (this.props.link !== 'team') {
+        let { route, user, link } = this.props;
+        if (link !== 'team') {
             return null;
         }
-        let route = this.props.route;
-        let params = _.pick(route.parameters, 'schema', 'date', 'search');
-        let url = route.find(require('pages/people-page'), params);
-        let hash = UserList.getHash({
-            user: this.props.user.id
-        });
-        return url + '#' + hash;
+        let params = _.pick(route.params, 'schema', 'date', 'search');
+        params.scrollToUserID = user.id;
+        return route.find('people-page', params);
     }
 
     /**
@@ -141,13 +136,13 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        switch (this.props.theme.mode) {
-            case 'single-col':
-                return this.renderSingleColumn();
-            case 'double-col':
-                return this.renderDoubleColumn();
-            case 'triple-col':
-                return this.renderTripleColumn();
+        let { env } = this.props;
+        if (env.isWiderThan('triple-col')) {
+            return this.renderTripleColumn();
+        } else if (env.isWiderThan('double-col')) {
+            return this.renderDoubleColumn();
+        } else {
+            return this.renderSingleColumn();
         }
     }
 
@@ -268,15 +263,11 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     renderProfileImage() {
-        let props = {
-            user: this.props.user,
-            theme: this.props.theme,
-            size: 'large',
-        };
+        let { env, user } = this.props;
         let url = this.getUserPageURL();
         return (
             <a href={url}>
-                <ProfileImage {...props} />
+                <ProfileImage user={user} env={env} size="large" />
             </a>
         );
     }
@@ -287,8 +278,9 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     renderRoles() {
-        let p = this.props.locale.pick;
-        let names = _.map(this.props.roles, (role) => {
+        let { env, roles } = this.props;
+        let { p } = env.locale;
+        let names = _.map(roles, (role) => {
             return p(role.details.title) || role.name;
         });
         return (
@@ -304,9 +296,10 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     renderChartToolbar() {
+        let { env } = this.props;
         let props = {
             chartType: this.getChartType(),
-            locale: this.props.locale,
+            env,
             onAction: this.handleAction,
         };
         return <ChartToolbar {...props} />;
@@ -318,7 +311,8 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     renderName() {
-        let name = UserUtils.getDisplayName(this.props.user, this.props.locale);
+        let { env, user } = this.props;
+        let name = UserUtils.getDisplayName(user, env);
         let url = this.getUserPageURL();
         return (
             <h2 className="name">
@@ -333,17 +327,12 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     renderTag() {
-        let t = this.props.locale.translate;
-        let user = this.props.user;
+        let { route, env, user } = this.props;
+        let { t } = env.locale;
         let tag, url;
         if (user) {
-            let route = this.props.route;
-            let params = route.parameters;
             tag = `@${user.username}`;
-            url = route.find(require('pages/news-page'), {
-                schema: params.schema,
-                search: tag,
-            });
+            url = route.find('news-page', { search: tag });
         }
         return (
             <h3 className="tag">
@@ -358,14 +347,14 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     renderRecentActivities() {
-        let estimate = this.getStoryCountEstimate();
+        let { route, env, stories, user } = this.props;
+        let storyCountEstimate = this.getStoryCountEstimate();
         let props = {
-            stories: this.props.stories,
-            storyCountEstimate: estimate,
-            user: this.props.user,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            stories,
+            storyCountEstimate,
+            user,
+            route,
+            env,
         };
         return <UserActivityList {...props} />;
     }
@@ -376,12 +365,12 @@ class UserView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderBackLink() {
+        let { env } = this.props;
+        let { t } = env.locale;
         let url = this.getTeamPageURL();
         if (!url) {
             return null;
         }
-        let t = this.props.locale.translate;
-        let route = this.props.route;
         return (
             <div className="back-link">
                 <a href={url}>
@@ -399,20 +388,25 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     renderStatistics() {
+        let {
+            database,
+            route,
+            env,
+            user,
+            story,
+            dailyActivities,
+            selectedDate,
+        } = this.props;
         let props = {
-            user: this.props.user,
-            story: this.props.story,
-            dailyActivities: this.props.dailyActivities,
+            user,
+            story,
+            dailyActivities,
             chartType: this.getChartType(),
             chartRange: this.getChartRange(),
-
-            selectedDate: this.props.selectedDate,
-            today: this.props.today,
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            selectedDate,
+            database,
+            route,
+            env,
         };
         return <UserStatistics {...props} />;
     }
@@ -441,12 +435,12 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     renderOptions(section) {
+        let { env, user, options } = this.props;
         let props = {
             section,
-            user: this.props.user,
-            options: this.props.options,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            user,
+            options,
+            env,
             onChange: this.handleOptionChange,
             onComplete: this.handleOptionComplete,
         };
@@ -459,10 +453,11 @@ class UserView extends PureComponent {
      * @param  {Object} evt
      */
     handleAction = (evt) => {
+        let { env, user, options, onOptionChange } = this.props;
         switch (evt.action) {
             case 'chart-type-set':
-                let options = _.clone(this.props.options);
-                if (this.props.theme.mode === 'single-col') {
+                options = _.clone(options);
+                if (!env.isWiderThan('double-col')) {
                     if (options.chartType === evt.value) {
                         options.chartType = null;
                     } else {
@@ -471,11 +466,11 @@ class UserView extends PureComponent {
                 } else {
                     options.chartType = evt.value;
                 }
-                if (this.props.onOptionChange) {
-                    this.props.onOptionChange({
+                if (onOptionChange) {
+                    onOptionChange({
                         type: 'optionchange',
                         target: this,
-                        user: this.props.user,
+                        user,
                         options,
                     });
                 }
@@ -489,11 +484,12 @@ class UserView extends PureComponent {
      * @param  {Object} evt
      */
     handleOptionChange = (evt) => {
-        if (this.props.onOptionChange) {
-            this.props.onOptionChange({
+        let { user, onOptionChange } = this.props;
+        if (onOptionChange) {
+            onOptionChange({
                 type: 'optionchange',
                 target: this,
-                user: this.props.user,
+                user,
                 options: evt.options,
             });
         }
@@ -524,7 +520,7 @@ import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
-    
+
     UserView.propTypes = {
         user: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
@@ -533,7 +529,7 @@ if (process.env.NODE_ENV !== 'production') {
         dailyActivities: PropTypes.object,
         currentUser: PropTypes.object,
         selectedDate: PropTypes.string,
-        today: PropTypes.string,
+        search: PropTypes.string,
         link: PropTypes.oneOf([ 'user', 'team' ]),
 
         database: PropTypes.instanceOf(Database).isRequired,

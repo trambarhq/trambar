@@ -471,6 +471,18 @@ function getDisplayName(user, env) {
     return name;
 }
 
+/**
+ * Return the gender of the user if it's defined
+ *
+ * @param  {User} user
+ */
+function getGender(user) {
+    if (!user || user.details) {
+        return undefined;
+    }
+    return user.details.gender;
+}
+
 export {
     isMember,
     isPendingMember,
@@ -492,5 +504,6 @@ export {
     canRemoveReaction,
     canReceiveNotification,
     getDisplayName,
+    getGender,
     mergeRemoteChanges,
 };

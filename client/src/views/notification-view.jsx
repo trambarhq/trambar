@@ -27,23 +27,12 @@ class NotificationView extends PureComponent {
             case 'survey':
             case 'issue':
             case 'mention':
-                let components = [
-                    require('pages/news-page'),
-                    require('lists/story-list'),
-                    require('lists/reaction-list'),
-                ];
-                params.story = notification.story_id;
-                params.reaction = notification.reaction_id || undefined;
-                params.highlighting = true;
-                return route.find(components, params);
+                params.highlightStoryID = notification.story_id;
+                params.highlightReactionID = notification.reaction_id || undefined;
+                return route.find('news-page', params);
             case 'bookmark':
-                let components = [
-                    require('pages/bookmarks-page'),
-                    require('lists/story-list'),
-                ];
-                params.story = notification.story_id;
-                params.highlighting = true;
-                return route.find(components, params);
+                params.highlightStoryID = notification.story_id;
+                return route.find('bookmarks-page', params);
             case 'join-request':
                 let projectId = _.get(notification, 'details.project_id');
                 return `/admin/projects/${projectId}/members/`;
@@ -64,17 +53,18 @@ class NotificationView extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let props = {
-            className: `notification-view ${this.props.theme.mode}`,
+        let { notification } = this.props;
+        let linkProps = {
+            className: 'notification-view',
             href: this.getNotificationURL(),
             target: this.getNotificationTarget(),
             onClick: this.handleClick,
         };
-        if (!this.props.notification.seen) {
-            props.className += ' unread';
+        if (!notification.seen) {
+            linkProps.className += ' unread';
         }
         return (
-            <a {...props}>
+            <a {...linkProps}>
                 <div className="event">
                     {this.renderProfileImage()}
                     {this.renderText()}
@@ -93,9 +83,10 @@ class NotificationView extends PureComponent {
      * @return {ReactElement}
      */
     renderProfileImage() {
+        let { env, user } = this.props;
         let props = {
-            user: this.props.user,
-            theme: this.props.theme,
+            user,
+            env,
             size: 'small',
         };
         return <ProfileImage {...props} />;
@@ -117,9 +108,10 @@ class NotificationView extends PureComponent {
      * @return {ReactElement}
      */
     renderTime() {
+        let { env, notification } = this.props;
         let props = {
-            time: this.props.notification.ctime,
-            locale: this.props.locale,
+            time: notification.ctime,
+            env,
         };
         return <Time {...props} />;
     }
@@ -130,7 +122,8 @@ class NotificationView extends PureComponent {
      * @return {ReactElement}
      */
     renderIcon() {
-        return <i className={`fa fa-${this.getNotificationIcon()} fa-fw`}/>;
+        let icon = this.getNotificationIcon();
+        return <i className={`fa fa-${icon} fa-fw`}/>;
     }
 
     /**
@@ -139,7 +132,8 @@ class NotificationView extends PureComponent {
      * @return {String}
      */
     getNotificationURL() {
-        return NotificationView.getNotificationURL(this.props.notification, this.props.route);
+        let { notification, route } = this.props;
+        return NotificationView.getNotificationURL(notification, route);
     }
 
     /**
@@ -148,7 +142,8 @@ class NotificationView extends PureComponent {
      * @return {String|undefined}
      */
     getNotificationTarget() {
-        return NotificationView.getNotificationTarget(this.props.notification);
+        let { notification, route } = this.props;
+        return NotificationView.getNotificationTarget(notification);
     }
 
     /**
@@ -157,14 +152,16 @@ class NotificationView extends PureComponent {
      * @return {String}
      */
     getNotificationText() {
-        let t = this.props.locale.translate;
-        let notification = this.props.notification;
-        let name = UserUtils.getDisplayNameWithGender(this.props.user, this.props.locale);
+        let { env, notification, user }
+        let { t, g } = env.locale;
+        let { story_type: storyType,  branch, reaction_type: reactionType } = notification.details;
+        let name = UserUtils.getDisplayName(user, env);
+        g(name, user.details.gender);
         switch (notification.type) {
             case 'like':
-                return t('notification-$name-likes-your-$story', name, notification.details.story_type);
+                return t('notification-$name-likes-your-$story', name, storyType);
             case 'comment':
-                return t('notification-$name-commented-on-your-$story', name, notification.details.story_type);
+                return t('notification-$name-commented-on-your-$story', name, storyType);
             case 'issue':
                 return t('notification-$name-opened-an-issue', name);
             case 'vote':
@@ -174,22 +171,22 @@ class NotificationView extends PureComponent {
             case 'coauthor':
                 return t('notification-$name-added-you-as-coauthor', name);
             case 'note':
-                return t('notification-$name-posted-a-note-about-your-$story', name, notification.details.story_type);
+                return t('notification-$name-posted-a-note-about-your-$story', name, storyType);
             case 'assignment':
                 return t('notification-$name-is-assigned-to-your-issue', name);
             case 'push':
-                return t('notification-$name-pushed-code-to-$branch', name, notification.details.branch);
+                return t('notification-$name-pushed-code-to-$branch', name, branch);
             case 'merge':
-                return t('notification-$name-merged-code-to-$branch', name, notification.details.branch);
+                return t('notification-$name-merged-code-to-$branch', name, branch);
             case 'survey':
                 return t('notification-$name-posted-a-survey', name);
             case 'bookmark':
-                return t('notification-$name-sent-bookmark-to-$story', name, notification.details.story_type);
+                return t('notification-$name-sent-bookmark-to-$story', name, storyType);
             case 'mention':
-                if (notification.details.story_type) {
-                    return t('notification-$name-mentioned-you-in-$story', name, notification.details.story_type);
-                } else if (notification.details.reaction_type) {
-                    return t('notification-$name-mentioned-you-in-$reaction', name, notification.details.reaction_type);
+                if (storyType) {
+                    return t('notification-$name-mentioned-you-in-$story', name, storyType);
+                } else if (reactionType) {
+                    return t('notification-$name-mentioned-you-in-$reaction', name, reactionType);
                 } else {
                     break;
                 }
@@ -204,7 +201,7 @@ class NotificationView extends PureComponent {
      * @return {String}
      */
     getNotificationIcon() {
-        let notification = this.props.notification;
+        let { notification } = this.props;
         switch (notification.type) {
             case 'like': return 'thumbs-up';
             case 'comment': return 'comment';
