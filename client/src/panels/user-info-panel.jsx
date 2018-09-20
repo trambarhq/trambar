@@ -125,7 +125,8 @@ class UserInfoPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderGenderSelector() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t, p } = env.locale;
         let selectProps = {
             id: 'gender',
             value: this.getUserProperty('details.gender') || '',

@@ -45,7 +45,19 @@ function replaceNumberS(s, num) {
     return s.replace(numberRegExp, num);
 }
 
+function list(items) {
+    items = items.map((item) => {
+        return `${item}`;
+    });
+    if (items.length >= 2) {
+        var lastItem = items.pop();
+        items[items.length - 1] += `和${lastItem}`;
+    }
+    return items.join('，');
+}
+
 export {
     cardinalT,
     cardinalS,
+    list,
 };

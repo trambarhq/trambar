@@ -12,6 +12,17 @@ function replaceNumber(s, n) {
     return s.replace(numberRegExp, n);
 }
 
+function list(items) {
+    items = items.map((item) => {
+        return `${item}`;
+    });
+    if (items.length >= 2) {
+        var lastItem = items.pop();
+        items[items.length - 1] += ` og ${lastItem}`;
+    }
+    return items.join(', ');
+}
+
 module.exports = {
     cardinal,
 };

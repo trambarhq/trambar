@@ -1,13 +1,22 @@
-require('moment/locale/en-au');
-require('moment/locale/en-ca');
-require('moment/locale/en-gb');
-require('moment/locale/en-ie');
-require('moment/locale/en-nz');
+import 'moment/locale/en-au';
+import 'moment/locale/en-ca';
+import 'moment/locale/en-gb';
+import 'moment/locale/en-ie';
+import 'moment/locale/en-nz';
+import { cardinal, list } from 'locale/grammars/english';
 
-module.exports = function(localeCode) {
-    let freedomLoving = true;
-    if (/\-(au|ca|gb|ie|nz)$/.test(localeCode)) {
-        freedomLoving = false;
+function chooseVariant(countryCode) {
+    let freedomLoving;
+    switch (countryCode) {
+        case 'au':
+        case 'ca':
+        case 'gb':
+        case 'ie':
+        case 'nz':
+            freedomLoving = false;
+            break;
+        default:
+            freedomLoving = true;
     }
     if (freedomLoving) {
         return americanPhrases;
@@ -39,13 +48,13 @@ let americanPhrases = {
     'activation-schema': 'Project',
 
     'alert-$count-new-bookmarks': (count) => {
-        return (count === 1) ? `1 new bookmark` : `${count} new bookmarks`;
+        return cardinal(count, '1 new bookmark', '2 new bookmarks');
     },
     'alert-$count-new-notifications': (count) => {
-        return (count === 1) ? `1 new notification` : `${count} new notifications`;
+        return cardinal(count, '1 new notification', '2 new notifications');
     },
     'alert-$count-new-stories': (count) => {
-        return (count === 1) ? `1 new story` : `${count} new stories`;
+        return cardinal(count, '1 new story', '2 new stories');
     },
 
     'app-component-close': 'Close',
@@ -61,10 +70,10 @@ let americanPhrases = {
     'audio-capture-stop': 'Stop',
 
     'bookmark-$count-other-users': (count) => {
-        return (count === 1) ? `1 other user` : `${count} other users`;
+        return cardinal(count, '1 other user', '2 other users');
     },
     'bookmark-$count-users': (count) => {
-        return (count === 1) ? `1 user` : `${count} users`;
+        return cardinal(count, '1 user', '2 users');
     },
     'bookmark-$name-recommends-this': (name) => {
         return `${name} recommends this`;
@@ -118,13 +127,13 @@ let americanPhrases = {
     'issue-export-$names-posted-$photos-$videos-$audios': (names, photos, videos, audios) => {
         let objects = [];
         if (photos > 0) {
-            objects.push(photos === 1 ? 'picture' : 'pictures');
+            objects.push(cardinal(photos, 'picture', 'pictures'));
         }
         if (videos > 0) {
-            objects.push(videos === 1 ? 'video clip' : 'video clips');
+            objects.push(cardinal(videos, 'video clip', 'video clips'));
         }
         if (audios > 0) {
-            objects.push(audios === 1 ? 'audio clip' : 'audio clips');
+            objects.push(cardinal(audios, 'audio clip', 'audio clips'));
         }
         return `${list(names)} posted the following ${list(objects)}:`;
     },
@@ -281,7 +290,7 @@ let americanPhrases = {
     'option-remove-story': 'Remove story',
     'option-send-bookmarks': 'Send bookmarks to other users',
     'option-send-bookmarks-to-$count-users': (count) => {
-        let users = (count === 1) ? `${count} user` : `${count} users`;
+        let users = cardinal(count, '1 user', '2 users');
         return `Send bookmarks to ${users}`;
     },
     'option-show-media-preview': 'Show attached media',
@@ -448,7 +457,7 @@ let americanPhrases = {
     'statistics-pie': 'Pie',
 
     'story-$count-reactions': (count) => {
-        return (count === 1) ? `1 reaction` : `${count} reactions`;
+        return cardinal(count, '1 reaction', '2 reactions');
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `Created branch “${branch}” in project “${repo}”`;
@@ -564,32 +573,32 @@ let americanPhrases = {
     'story-photo': 'Photo',
     'story-post': 'Post',
     'story-push-added-$count-files': (count) => {
-        let files = (count === 1) ? `1 file` : `${count} files`;
+        let files = cardinal(count, '1 file', '2 files');
         return `${files} added`;
     },
     'story-push-added-$count-lines': (count) => {
-        let lines = (count === 1) ? `1 line` : `${count} lines`;
+        let lines = cardinal(count, '1 line', '2 lines');
         return `${lines} added`;
     },
     'story-push-components-changed': 'The following parts were changed:',
     'story-push-deleted-$count-files': (count) => {
-        let files = (count === 1) ? `1 file` : `${count} files`;
+        let files = cardinal(count, '1 file', '2 files');
         return `${files} removed`;
     },
     'story-push-deleted-$count-lines': (count) => {
-        let lines = (count === 1) ? `1 line` : `${count} lines`;
+        let lines = cardinal(count, '1 line', '2 lines');
         return `${lines} removed`;
     },
     'story-push-modified-$count-files': (count) => {
-        let files = (count === 1) ? `1 file` : `${count} files`;
+        let files = cardinal(count, '1 file', '2 files');
         return `${files} modified`;
     },
     'story-push-modified-$count-lines': (count) => {
-        let lines = (count === 1) ? `1 line` : `${count} lines`;
+        let lines = cardinal(count, '1 line', '2 lines');
         return `${lines} modified`;
     },
     'story-push-renamed-$count-files': (count) => {
-        let files = (count === 1) ? `1 file` : `${count} files`;
+        let files = cardinal(count, '1 file', '2 files');
         return `${files} renamed`;
     },
     'story-remove-yourself': 'Remove yourself',
@@ -609,7 +618,8 @@ let americanPhrases = {
     'telephone-dialog-close': 'Close',
 
     'time-$hours-ago': (hours) => {
-        return (hours === 1) ? `An hour ago` : `${hours} hours ago`;
+        let time = cardinal(count, 'An hour', '2 hours');
+        return `${time} ago`;
     },
     'time-$hr-ago': (hr) => {
         return `${hr} hr ago`;
@@ -618,13 +628,14 @@ let americanPhrases = {
         return `${min} min ago`;
     },
     'time-$minutes-ago': (minutes) => {
-        return (minutes === 1) ? `A minute ago` : `${minutes} minutes ago`;
+        let time = cardinal(count, 'A minute', '2 minutes');
+        return `${time} ago`;
     },
     'time-just-now': 'Just now',
     'time-yesterday': 'Yesterday',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        let files = (count === 1) ? `1 file` : `${count} files`;
+        let files = cardinal(count, '1 file', '2 files');
         return `Uploading ${files}, ${size} remaining`;
     },
 
@@ -642,20 +653,20 @@ let americanPhrases = {
     'user-activity-$name-left-repo': 'Left a git project',
     'user-activity-$name-merged-code': 'Performed a code merge',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        let audios = (count === 1) ? `a audio clip` : `${count} audio clips`;
+        let audios = cardinal(count, 'a audio clip', '2 audio clips');
         return `Posted ${audios}`;
     },
     'user-activity-$name-posted-$count-links': (name, count) => {
-        let links = (count === 1) ? `a link` : `links`;
-        let website = (count === 1) ? `a website` : `${count} websites`;
+        let links = cardinal(count, 'a link', 'links');
+        let website = cardinal(count, 'a website', '2 websites');
         return `Posted ${links} to ${website}`
     },
     'user-activity-$name-posted-$count-pictures': (name, count) => {
-        let pictures = (count === 1) ? `a picture` : `${count} pictures`;
+        let pictures = cardinal(count, 'a picture', '2 pictures');
         return `Posted ${pictures}`;
     },
     'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        let videos = (count === 1) ? `a video clip` : `${count} video clips`;
+        let videos = cardinal(count, 'a video clip', '2 video clips');
         return `Posted ${videos}`;
     },
     'user-activity-$name-pushed-code': 'Pushed code to repo',
@@ -696,43 +707,43 @@ let americanPhrases = {
     'user-statistics-legend-wiki': 'Wiki edits',
     'user-statistics-today': 'Today',
     'user-statistics-tooltip-$count-branch': (count) => {
-        return (count === 1) ? `1 branch` : `${count} branches`;
+        return cardinal(count, '1 branch', '2 branches');
     },
     'user-statistics-tooltip-$count-issue': (count) => {
-        return (count === 1) ? `1 issue` : `${count} issues`;
+        return cardinal(count, '1 issue', '2 issues');
     },
     'user-statistics-tooltip-$count-member': (count) => {
-        return (count === 1) ? `1 membership change` : `${count} membership changes`;
+        return cardinal(count, '1 membership change', '2 membership changes');
     },
     'user-statistics-tooltip-$count-merge': (count) => {
-        return (count === 1) ? `1 merge` : `${count} merges`;
+        return cardinal(count, '1 merge', '2 merges');
     },
     'user-statistics-tooltip-$count-merge-request': (count) => {
-        return (count === 1) ? `1 merge request` : `${count} merge requests`;
+        return cardinal(count, '1 merge request', '2 merge requests');
     },
     'user-statistics-tooltip-$count-milestone': (count) => {
-        return (count === 1) ? `1 milestone` : `${count} milestones`;
+        return cardinal(count, '1 milestone', '2 milestones');
     },
     'user-statistics-tooltip-$count-post': (count) => {
-        return (count === 1) ? `1 post` : `${count} posts`;
+        return cardinal(count, '1 post', '2 posts');
     },
     'user-statistics-tooltip-$count-push': (count) => {
-        return (count === 1) ? `1 push` : `${count} pushes`;
+        return cardinal(count, '1 push', '2 pushes');
     },
     'user-statistics-tooltip-$count-repo': (count) => {
-        return (count === 1) ? `1 repository change` : `${count} repository changes`;
+        return cardinal(count, '1 repository change', '2 repository changes');
     },
     'user-statistics-tooltip-$count-survey': (count) => {
-        return (count === 1) ? `1 survey` : `${count} surveys`;
+        return cardinal(count, '1 survey', '2 surveys');
     },
     'user-statistics-tooltip-$count-tag': (count) => {
-        return (count === 1) ? `1 tag` : `${count} tags`;
+        return cardinal(count, '1 tag', '2 tags');
     },
     'user-statistics-tooltip-$count-task-list': (count) => {
-        return (count === 1) ? `1 task list` : `${count} task lists`;
+        return cardinal(count, '1 task list', '2 task lists');
     },
     'user-statistics-tooltip-$count-wiki': (count) => {
-        return (count === 1) ? `1 wiki edit` : `${count} wiki edits`;
+        return cardinal(count, '1 wiki edit', '2 wiki edits');
     },
 
     'video-capture-accept': 'Accept',
@@ -763,3 +774,7 @@ function list(items) {
     }
     return items.join(', ');
 }
+
+export {
+    chooseVariant as phrases,
+};
