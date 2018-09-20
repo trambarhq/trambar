@@ -16,7 +16,8 @@ class LanguagePanel extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <SettingsPanel className="language">
                 <header>
@@ -35,7 +36,9 @@ class LanguagePanel extends PureComponent {
      * @return {Array<ReactElement>}
      */
     renderList() {
-        let languages = _.filter(this.props.locale.directory, (language) => {
+        let { env } = this.props;
+        let { directory } = env.locale;
+        let languages = _.filter(directory, (language) => {
             return !!language.module;
         });
         return _.map(languages, (language) => {
@@ -51,10 +54,12 @@ class LanguagePanel extends PureComponent {
      * @return {ReactElement}
      */
     renderButton(language) {
+        let { env } = this.props;
+        let { languageCode } = env.locale;
         let countrySelect = this.renderCountrySelect(language);
         let buttonProps = {
             label: <span>{language.name}{countrySelect}</span>,
-            selected: (language.code === this.props.locale.languageCode),
+            selected: (language.code === languageCode),
             onClick: this.handleLanguageClick,
             id: language.code,
         };
@@ -69,8 +74,8 @@ class LanguagePanel extends PureComponent {
      * @return {ReactElement}
      */
     renderCountrySelect(language) {
-        let languageCode = this.props.locale.languageCode;
-        let countryCode = this.props.locale.countryCode;
+        let { env } = this.props;
+        let { languageCode, countryCode } = env.locale;
         if (!countryCode) {
             countryCode = language.defaultCountry;
         }
@@ -97,11 +102,13 @@ class LanguagePanel extends PureComponent {
      * @param  {Event} evt
      */
     handleLanguageClick = (evt) => {
+        let { env } = this.props;
+        let { languageCode, directory } = env.locale;
         let code = evt.currentTarget.id;
-        if (code !== this.props.locale.languageCode) {
-            let language = _.find(this.props.locale.directory, { code });
-            let dialectCode = language.code + '-' + language.defaultCountry;
-            this.props.locale.change(dialectCode);
+        if (code !== languageCode) {
+            let language = _.find(directory, { code });
+            let localeCode = `${language.code}-${language.defaultCountry}`;
+            env.locale.change(dialectCode);
         }
     }
 
@@ -111,10 +118,11 @@ class LanguagePanel extends PureComponent {
      * @param  {Event} evt
      */
     handleCountryChange = (evt) => {
+        let { env } = this.props;
+        let { languageCode, countryCode } = env.locale;
         let code = evt.currentTarget.value;
-        if (code !== this.props.locale.countryCode) {
-            let languageCode = this.props.locale.languageCode;
-            let localeCode = languageCode + '-' + code;
+        if (code !== countryCode) {
+            let localeCode = `${languageCode}-${code}`;
             this.props.locale.change(localeCode);
         }
     }
@@ -129,7 +137,7 @@ import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
-    
+
     LanguagePanel.propTypes = {
         env: PropTypes.instanceOf(Environment).isRequired,
     };

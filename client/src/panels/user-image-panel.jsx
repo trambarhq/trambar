@@ -40,7 +40,8 @@ class UserImagePanel extends PureComponent {
      * @return {*}
      */
     getUserProperty(path) {
-        return _.get(this.props.currentUser, path);
+        let { currentUser } = this.props;
+        return _.get(currentUser, path);
     }
 
     /**
@@ -49,8 +50,9 @@ class UserImagePanel extends PureComponent {
      * @return {[type]}
      */
     getImage() {
-        if (this.state.image) {
-            return this.state.image;
+        let { image } = this.state;
+        if (image) {
+            return image;
         } else {
             let resources = this.getUserProperty('details.resources');
             return _.find(resources, { type: 'image' });
@@ -64,12 +66,13 @@ class UserImagePanel extends PureComponent {
      * @param  {*} value
      */
     setUserProperty(path, value) {
-        if (!this.props.currentUser) {
+        let { currentUser, onChange } = this.props;
+        if (!currentUser) {
             return;
         }
-        let userAfter = _.decoupleSet(this.props.currentUser, path, value);
-        if (this.props.onChange) {
-            this.props.onChange({
+        let userAfter = _.decoupleSet(currentUser, path, value);
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 user: userAfter,
@@ -84,7 +87,8 @@ class UserImagePanel extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <SettingsPanel className="user-image">
                 <header>
@@ -107,16 +111,16 @@ class UserImagePanel extends PureComponent {
      * @return {ReactElement}
      */
     renderProfilePicture() {
+        let { action } = this.state;
         let contents;
         let image = this.getImage();
         if (image) {
             let props = {
                 resource: image,
-                locale: this.props.locale,
-                theme: this.props.theme,
                 previewWidth: 256,
                 previewHeight: 256,
-                disabled: (this.state.action !== 'adjust'),
+                disabled: (action !== 'adjust'),
+                env,
                 onChange: this.handleImageChange,
 
             };
@@ -137,12 +141,14 @@ class UserImagePanel extends PureComponent {
      * @return {ReactElement}
      */
     renderMediaImporter() {
-        let setters = this.components.setters;
+        let { payloads, currentUser } = this.props;
+        let { image } = this.state;
+        let { setters } = this.components;
         let resources;
-        if (this.state.image) {
-            resources = [ this.state.image ];
+        if (image) {
+            resources = [ image ];
         } else {
-            resources = _.get(this.props.currentUser, 'details.resources', []);
+            resources = _.get(currentUser, 'details.resources', []);
         }
         let props = {
             ref: setters.importer,
@@ -150,9 +156,8 @@ class UserImagePanel extends PureComponent {
             limit: 1,
             schema: 'global',
             resources: resources,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads.override({ schema: 'global' }),
+            env,
+            payloads: payloads.override({ schema: 'global' }),
             cameraDirection: 'front',
             onChange: this.handleChange,
             onCaptureEnd: this.handleCaptureEnd,
@@ -166,9 +171,11 @@ class UserImagePanel extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { action, hasCamera, image } = this.state;
+        let { t } = env.locale;
         let hasPicture = !!this.getImage();
-        if (this.state.action === 'adjust' && hasPicture) {
+        if (action === 'adjust' && hasPicture) {
             let cancelProps = {
                 label: t('user-image-cancel'),
                 onClick: this.handleCancelClick,
@@ -176,7 +183,7 @@ class UserImagePanel extends PureComponent {
             let saveProps = {
                 label: t('user-image-save'),
                 emphasized: true,
-                disabled: !this.state.image,
+                disabled: !image,
                 onClick: this.handleSaveClick,
             }
             return (
@@ -185,14 +192,14 @@ class UserImagePanel extends PureComponent {
                     <PushButton {...saveProps} />
                 </div>
             );
-        } else if (this.state.action === 'replace' && hasPicture) {
+        } else if (action === 'replace' && hasPicture) {
             let cancelProps = {
                 label: t('user-image-cancel'),
                 onClick: this.handleCancelClick,
             };
             let takeProps = {
                 label: t('user-image-snap'),
-                hidden: !PhotoCaptureDialogBox.isAvailable() || !this.state.hasCamera,
+                hidden: !PhotoCaptureDialogBox.isAvailable() || !hasCamera,
                 onClick: this.handleTakeClick,
             };
             let selectProps = {
@@ -308,8 +315,9 @@ class UserImagePanel extends PureComponent {
      * @param  {Event} evt
      */
     handleSaveClick = (evt) => {
-        if (this.state.image) {
-            this.setUserProperty('details.resources', [ this.state.image ]);
+        let { image } = this.state;
+        if (image) {
+            this.setUserProperty('details.resources', [ image ]);
             this.setState({ action: null, image: null });
         }
     }

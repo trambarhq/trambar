@@ -31,15 +31,14 @@ class ProjectPanel extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        let projectBefore = this.props.currentProject;
-        let projectAfter = nextProps.currentProject;
-        let user = this.props.currentUser;
-        if (projectBefore !== projectAfter) {
-            if (projectBefore && projectAfter && projectBefore.id === projectAfter.id) {
-                let isMemberBefore = UserUtils.isMember(user, projectBefore);
-                let isMemberAfter = UserUtils.isMember(user, projectAfter);
+        let { currentProject, currentUser } = this.props;
+        let { renderingDialog } = this.state;
+        if (nextProps.currentProject !== currentProject && currentProject) {
+            if (nextProps.currentProject && nextProps.currentProject.id === currentProject.id) {
+                let isMemberBefore = UserUtils.isMember(currentUser, currentProject);
+                let isMemberAfter = UserUtils.isMember(currentUser, nextProps.currentProject);
                 if (!isMemberBefore && isMemberAfter) {
-                    if (!this.state.renderingDialog) {
+                    if (!renderingDialog) {
                         this.setState({
                             renderingDialog: 'membership',
                             showingDialog: true,
@@ -56,7 +55,8 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <SettingsPanel className="project">
                 <header>
@@ -79,7 +79,8 @@ class ProjectPanel extends PureComponent {
      * @return {Array<ReactElement>}
      */
     renderProjects() {
-        return _.map(this.props.projectLinks, (link, index) => {
+        let { projectLinks } = this.props;
+        return _.map(projectLinks, (link, index) => {
             return this.renderProject(link, index);
         });
     }
@@ -93,18 +94,16 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderProject(link, i) {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
-        let params = this.props.route.parameters;
-        if (link.schema === params.schema && link.address == params.address) {
+        let { route, env, currentProject, currentUser } = this.props;
+        let { t, p } = env.locale;
+        let context = route.context;
+        if (link.schema === context.schema && link.address == context.address) {
             let isMember = true;
             let isApplying = false;
-            let project = this.props.currentProject;
-            let user = this.props.currentUser;
-            if (project && user) {
-                if (!_.includes(project.user_ids, user.id)) {
+            if (currentProject && currentUser) {
+                if (!_.includes(currentProject.user_ids, currentUser.id)) {
                     isMember = false;
-                    if (_.includes(user.requested_project_ids, project.id)) {
+                    if (_.includes(currentUser.requested_project_ids, currentProject.id)) {
                         isApplying = true;
                     }
                 }
@@ -169,7 +168,8 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let addProps = {
             label: t('project-management-add'),
             onClick: this.handleAddClick,
@@ -192,7 +192,8 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderDialogBox() {
-        if (!this.props.currentProject) {
+        let { currentProject } = this.props;
+        if (!currentProject) {
             return null;
         }
         return (
@@ -213,14 +214,14 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement|null}
      */
     renderSystemDescriptionDialogBox() {
-        if (this.state.renderingDialog !== 'system-description') {
+        let { env, system, showingDialog, renderingDialog } = this.state;
+        if (renderingDialog !== 'system-description') {
             return null;
         }
         let props = {
-            show: this.state.showingDialog,
-            system: this.props.system,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            show: showingDialog,
+            system,
+            env,
             onClose: this.handleDialogClose,
         };
         return <SystemDescriptionDialogBox {...props} />;
@@ -232,14 +233,15 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement|null}
      */
     renderProjectDescriptionDialogBox() {
-        if (this.state.renderingDialog !== 'project-description') {
+        let { env, currentProject } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        if (renderingDialog !== 'project-description') {
             return null;
         }
         let props = {
-            show: this.state.showingDialog,
-            project: this.props.currentProject,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            show: showingDialog,
+            project: currentProject,
+            env,
             onClose: this.handleDialogClose,
         };
         return <ProjectDescriptionDialogBox {...props} />;
@@ -251,15 +253,17 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement|null}
      */
     renderMobileSetupDialogBox() {
-        if (this.state.renderingDialog !== 'mobile-setup') {
+        let { database, route, env, system } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        if (renderingDialog !== 'mobile-setup') {
             return null;
         }
         let props = {
-            show: this.state.showingDialog,
-            system: this.props.system,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
+            show: showingDialog,
+            system,
+            database,
+            route,
+            env,
             onClose: this.handleDialogClose,
         };
         return <MobileSetupDialogBox {...props} />;
@@ -271,13 +275,15 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement|null}
      */
     renderSignOutDialogBox() {
-        if (this.state.renderingDialog !== 'sign-out') {
+        let { env } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        let { t } = env.locale;
+        if (renderingDialog !== 'sign-out') {
             return null;
         }
-        let t = this.props.locale.translate;
         let props = {
-            show: this.state.showingDialog,
-            locale: this.props.locale,
+            show: showingDialog,
+            env,
             onClose: this.handleDialogClose,
             onConfirm: this.handleSignOutConfirm,
         };
@@ -294,16 +300,18 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement|null}
      */
     renderMembershipDialogBox() {
-        if (this.state.renderingDialog !== 'membership') {
+        let { env, currentUser } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        let { t, g } = env.locale;
+        if (renderingDialog !== 'membership') {
             return null;
         }
-        let t = this.props.locale.translate;
-        let n = this.props.locale.name;
-        let user = this.props.currentUser;
-        let name = n(_.get(user, 'details.name'), _.get(user, 'details.gender'));
+        let name = UserUtils.getDisplayName(currentUser, env);
+        let gender = UserUtils.getGender(currentUser);
+        g(name, gender);
         let props = {
-            show: this.state.showingDialog,
-            locale: this.props.locale,
+            show: showingDialog,
+            env,
             onConfirm: this.handleDialogClose,
         };
         return (
@@ -319,14 +327,16 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement|null}
      */
     renderProjectManagementDialogBox() {
-        if (this.state.renderingDialog !== 'management') {
+        let { route, env, projectLinks } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        if (renderingDialog !== 'management') {
             return null;
         }
         let props = {
-            show: this.state.showingDialog,
-            projectLinks: this.props.projectLinks,
-            route: this.props.route,
-            locale: this.props.locale,
+            show: showingDialog,
+            projectLinks,
+            route,
+            env,
             onDelete: this.handleProjectDelete,
             onCancel: this.handleDialogClose,
         };
@@ -334,17 +344,18 @@ class ProjectPanel extends PureComponent {
     }
 
     handleProjectClick = (evt) => {
+        let { route, projectLinks } = this.props;
         let key = evt.currentTarget.getAttribute('data-key');
-        let link = _.find(this.props.projectLinks, { key });
+        let link = _.find(projectLinks, { key });
         if (link) {
             // redirect to settings page with new schema, possibly new address
             let siteAddress = window.location.origin;
-            let params = {
+            let context = {
                 address: link.address,
                 schema: link.schema,
                 cors: (siteAddress !== link.address),
             };
-            this.props.route.replace(require('pages/settings-page'), params);
+            route.replace('settings-page', {}, context);
         }
     }
 
@@ -354,7 +365,8 @@ class ProjectPanel extends PureComponent {
      * @param  {Event} evt
      */
     handleAddClick = (evt) => {
-        this.props.route.push(require('pages/start-page'), { add: true });
+        let { route } = this.props;
+        route.push('start-page', { add: true });
     }
 
     /**
@@ -411,10 +423,11 @@ class ProjectPanel extends PureComponent {
      * @param  {Event} evt
      */
     handleJoinClick = (evt) => {
-        let userAfter = _.cloneDeep(this.props.currentUser);
-        userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ this.props.currentProject.id ]);
-        if (this.props.onChange) {
-            this.props.onChange({
+        let { currentUser, currentProject, onChange } = this.props;
+        let userAfter = _.cloneDeep(currentUser);
+        userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ currentProject.id ]);
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 user: userAfter
@@ -428,10 +441,11 @@ class ProjectPanel extends PureComponent {
      * @param  {Event} evt
      */
     handleCancelJoinClick = (evt) => {
-        let userAfter = _.cloneDeep(this.props.currentUser);
-        _.pull(userAfter.requested_project_ids, this.props.currentProject.id);
-        if (this.props.onChange) {
-            this.props.onChange({
+        let { currentUser, currentProject, onChange } = this.props;
+        let userAfter = _.cloneDeep(currentUser);
+        _.pull(userAfter.requested_project_ids, currentProject.id);
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 user: userAfter
@@ -473,13 +487,14 @@ class ProjectPanel extends PureComponent {
         this.handleDialogClose();
 
         // redirect to start page if the current project was removed
-        let params = this.props.route.parameters;
-        let removingCurrent = _.includes(evt.selection, `${params.address}/${params.schema}`);
+        let { database, route } = this.props;
+        let context = route.context;
+        let removingCurrent = _.includes(evt.selection, `${context.address}/${context.schema}`);
         let links = _.map(evt.selection, (key) => { return { key } });
-        let db = this.props.database.use({ by: this });
+        let db = database.use({ by: this });
         db.remove({ schema: 'local', table: 'project_link' }, links).then(() => {
             if (removingCurrent) {
-                return this.props.route.replace(require('pages/start-page'));
+                return route.replace('start-page');
             }
         });
     }
@@ -490,13 +505,14 @@ class ProjectPanel extends PureComponent {
      * @param {Object} evt
      */
     handleSignOutConfirm = (evt) => {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ by: this });
+        let { database, route, projectLinks } = this.props;
+        let context = route.context;
+        let db = database.use({ by: this });
         db.endSession().then(() => {
             // delete links of all projects on server
-            let serverLinks = _.filter(this.props.projectLinks, { address: params.address });
+            let serverLinks = _.filter(projectLinks, { address: context.address });
             return db.remove({ schema: 'local', table: 'project_link' }, serverLinks).then(() => {
-                return this.props.route.replace(require('pages/start-page'));
+                return route.replace('start-page');
             });
         });
     }

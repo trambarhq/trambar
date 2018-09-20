@@ -16,7 +16,7 @@ class DevicePanel extends PureComponent {
         this.state = {
             renderingDialog: null,
             showingDialog: false,
-            selectedDeviceId: null,
+            selectedDeviceID: null,
         };
     }
 
@@ -26,9 +26,10 @@ class DevicePanel extends PureComponent {
      * @return {ReactElement|null}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env, devices } = this.props;
+        let { t } = env.locale;
         let title;
-        if (_.size(this.props.devices) === 1) {
+        if (_.size(devices) === 1) {
             title = t('settings-device');
         } else {
             title = t('settings-devices');
@@ -52,7 +53,8 @@ class DevicePanel extends PureComponent {
      * @return {Array<ReactElement>}
      */
     renderDevices() {
-        return _.map(this.props.devices, (device) => {
+        let { devices } = this.props;
+        return _.map(devices, (device) => {
             return this.renderDevice(device);
         });
     }
@@ -65,7 +67,8 @@ class DevicePanel extends PureComponent {
      * @return {ReactElement}
      */
     renderDevice(device) {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let deviceName = formatDeviceName(device);
         return (
             <div key={device.id} className="device-option-button selected">
@@ -90,13 +93,15 @@ class DevicePanel extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDialogBox() {
-        if (this.state.renderingDialog !== 'revoke') {
+        let { env } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        let { t } = env.locale;
+        if (renderingDialog !== 'revoke') {
             return null;
         }
-        let t = this.props.locale.translate;
         let props = {
-            show: this.state.showingDialog,
-            locale: this.props.locale,
+            show: showingDialog,
+            env,
             onClose: this.handleDialogClose,
             onConfirm: this.handleRevokeConfirm,
         };
@@ -113,11 +118,11 @@ class DevicePanel extends PureComponent {
      * @param  {Event} evt
      */
     handleRevokeClick = (evt) => {
-        let deviceId = parseInt(evt.currentTarget.getAttribute('data-device-id'));
+        let deviceID = parseInt(evt.currentTarget.getAttribute('data-device-id'));
         this.setState({
             renderingDialog: 'revoke',
             showingDialog: true,
-            selectedDeviceId: deviceId
+            selectedDeviceID: deviceID
         });
     }
 
@@ -127,8 +132,10 @@ class DevicePanel extends PureComponent {
      * @param  {Object} evt
      */
     handleRevokeConfirm = (evt) => {
-        let device = _.find(this.props.devices, { id: this.state.selectedDeviceId });
-        let db = this.props.database.use({ schema: 'global', by: this });
+        let { database, devices } = this.props;
+        let { selectedDeviceID } = this.state;
+        let device = _.find(this.props.devices, { id: selectedDeviceID });
+        let db = database.use({ by: this });
         db.removeOne({ table: 'device' }, device).then(() => {
             return db.endMobileSession(device.session_handle);
         }).finally(() => {
@@ -151,11 +158,12 @@ class DevicePanel extends PureComponent {
 }
 
 function DeviceIcon(props) {
+    let { type } = props;
     let icon;
-    switch (props.type) {
+    switch (type) {
         case 'ios':
         case 'osx': icon = 'apple'; break;
-        default: icon = props.type;
+        default: icon = type;
     }
     return (
         <div className="device-icon">

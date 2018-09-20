@@ -19,7 +19,8 @@ class UserInfoPanel extends PureComponent {
      * @return {*}
      */
     getUserProperty(path) {
-        return _.get(this.props.currentUser, path);
+        let { currentUser } = this.props;
+        return _.get(currentUser, path);
     }
 
     /**
@@ -29,12 +30,13 @@ class UserInfoPanel extends PureComponent {
      * @param  {*} value
      */
     setUserProperty(path, value) {
-        if (!this.props.currentUser) {
+        let { currentUser, onChange } = this.props;
+        if (!currentUser) {
             return;
         }
-        let userAfter = _.decoupleSet(this.props.currentUser, path, value);
-        if (this.props.onChange) {
-            this.props.onChange({
+        let userAfter = _.decoupleSet(currentUser, path, value);
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 user: userAfter
@@ -48,7 +50,8 @@ class UserInfoPanel extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <SettingsPanel className="user-info">
                 <header>
@@ -70,13 +73,13 @@ class UserInfoPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderNameInput() {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
+        let { env } = this.props;
+        let { t, p } = env.locale;
         let name = this.getUserProperty('details.name')
         let props = {
             id: 'name',
             value: p(name),
-            locale: this.props.locale,
+            env,
             onChange: this.handleNameChange,
         };
         return <TextField {...props}>{t('user-info-name')}</TextField>;
@@ -88,11 +91,12 @@ class UserInfoPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderEmailInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t, p } = env.locale;
         let props = {
             id: 'email',
             value: this.getUserProperty('details.email'),
-            locale: this.props.locale,
+            env,
             onChange: this.handleEmailChange,
         };
         return <TextField {...props}>{t('user-info-email')}</TextField>;
@@ -104,11 +108,12 @@ class UserInfoPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderPhoneInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t, p } = env.locale;
         let props = {
             id: 'email',
             value: this.getUserProperty('details.phone'),
-            locale: this.props.locale,
+            env,
             onChange: this.handlePhoneChange,
         };
         return <TextField {...props}>{t('user-info-phone')}</TextField>;

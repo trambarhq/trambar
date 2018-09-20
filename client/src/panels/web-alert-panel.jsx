@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as NotificationTypes from 'objects/types/notification-types';
+import NotificationTypes, { AdminNotificationTypes } from 'objects/types/notification-types';
 import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
@@ -19,12 +19,13 @@ class WebAlertPanel extends PureComponent {
      * @param  {*} value
      */
     setUserProperty(path, value) {
-        if (!this.props.currentUser) {
+        let { currentUser, onChange } = this.props;
+        if (!currentUser) {
             return;
         }
-        let userAfter = _.decoupleSet(this.props.currentUser, path, value);
-        if (this.props.onChange) {
-            this.props.onChange({
+        let userAfter = _.decoupleSet(currentUser, path, value);
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 user: userAfter
@@ -38,7 +39,8 @@ class WebAlertPanel extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let browserIcon = getBrowserIcon();
         return (
             <SettingsPanel className="web-alert">
@@ -63,10 +65,11 @@ class WebAlertPanel extends PureComponent {
      * @return {Array<ReactElement>}
      */
     renderOptions() {
+        let { currentUser } = this.props;
         let types = NotificationTypes;
-        let userType = _.get(this.props.currentUser, 'type');
+        let userType = _.get(currentUser, 'type');
         if (userType !== 'admin') {
-            types = _.without(types, NotificationTypes.admin);
+            types = _.without(types, AdminNotificationTypes);
         }
         return _.map(types, (type, index) => {
             return this.renderOption(type, index);
@@ -82,12 +85,13 @@ class WebAlertPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderOption(type, index) {
-        let t = this.props.locale.translate;
+        let { env, currentUser, repos } = this.props;
+        let { t } = env.locales;
         let optionName = _.snakeCase(type);
-        let settings = _.get(this.props.currentUser, 'settings', {});
+        let settings = _.get(currentUser, 'settings', {});
         let notificationEnabled = !!_.get(settings, `notification.${optionName}`);
         let alertEnabled = !!_.get(settings, `web_alert.${optionName}`);
-        let canReceive = UserUtils.canReceiveNotification(this.props.currentUser, this.props.repos, type);
+        let canReceive = UserUtils.canReceiveNotification(currentUser, repos, type);
         let buttonProps = {
             label: t(`notification-option-${type}`),
             selected: alertEnabled && notificationEnabled,
@@ -103,9 +107,10 @@ class WebAlertPanel extends PureComponent {
      * Called when an option is clicked
      */
     handleOptionClick = (evt) => {
+        let { currentUser } = this.props;
         let optionName = evt.currentTarget.id;
         let optionPath = `web_alert.${optionName}`;
-        let settings = _.clone(_.get(this.props.currentUser, 'settings', {}));
+        let settings = _.clone(_.get(currentUser, 'settings', {}));
         let enabled = !!_.get(settings, optionPath);
         if (enabled) {
             _.unset(settings, optionPath);

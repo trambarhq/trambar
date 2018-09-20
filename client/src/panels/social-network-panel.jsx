@@ -19,7 +19,8 @@ class SocialNetworkPanel extends PureComponent {
      * @return {*}
      */
     getUserProperty(path) {
-        return _.get(this.props.currentUser, path);
+        let { currentUser } = this.props;
+        return _.get(currentUser, path);
     }
 
     /**
@@ -29,12 +30,13 @@ class SocialNetworkPanel extends PureComponent {
      * @param  {*} value
      */
     setUserProperty(path, value) {
-        if (!this.props.currentUser) {
+        let { currentUser, onChange } = this.props;
+        if (!currentUser) {
             return;
         }
-        let userAfter = _.decoupleSet(this.props.currentUser, path, value);
-        if (this.props.onChange) {
-            this.props.onChange({
+        let userAfter = _.decoupleSet(currentUser, path, value);
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 user: userAfter
@@ -48,7 +50,8 @@ class SocialNetworkPanel extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <SettingsPanel className="user">
                 <header>
@@ -73,11 +76,12 @@ class SocialNetworkPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderSkypeNameInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let props = {
             id: 'skype',
             value: this.getUserProperty('details.skype_username'),
-            locale: this.props.locale,
+            env,
             onChange: this.handleSkypeUsernameChange,
         };
         return <TextField {...props}>{t('social-network-skype')}</TextField>;
@@ -89,11 +93,12 @@ class SocialNetworkPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderIChatInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let props = {
             id: 'ichat',
             value: this.getUserProperty('details.ichat_username'),
-            locale: this.props.locale,
+            env,
             onChange: this.handleIchatUsernameChange,
         };
         return <TextField {...props}>{t('social-network-ichat')}</TextField>;
@@ -105,11 +110,12 @@ class SocialNetworkPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderTwitterInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let props = {
             id: 'twitter',
             value: this.getUserProperty('details.twitter_username'),
-            locale: this.props.locale,
+            env,
             onChange: this.handleTwitterUsernameChange,
         };
         return <TextField {...props}>{t('social-network-twitter')}</TextField>;
@@ -121,11 +127,12 @@ class SocialNetworkPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderGithubURLInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let props = {
             id: 'github',
             value: this.getUserProperty('details.github_url'),
-            locale: this.props.locale,
+            env,
             onChange: this.handleGitHubURLChange,
         };
         return <TextField {...props}>{t('social-network-github')}</TextField>;
@@ -137,11 +144,12 @@ class SocialNetworkPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderGitlabURLInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let props = {
             id: 'github',
             value: this.getUserProperty('details.gitlab_url'),
-            locale: this.props.locale,
+            env,
             onChange: this.handleGitlabURLChange,
         };
         return <TextField {...props}>{t('social-network-gitlab')}</TextField>;
@@ -153,11 +161,12 @@ class SocialNetworkPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderLinkedInURLInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let props = {
             id: 'linkedin',
             value: this.getUserProperty('details.linkedin_url'),
-            locale: this.props.locale,
+            env,
             onChange: this.handleLinkedinURLChange,
         };
         return <TextField {...props}>{t('social-network-linkedin')}</TextField>;
@@ -169,11 +178,12 @@ class SocialNetworkPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderStackoverflowURLInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let props = {
             id: 'stackoverflow',
             value: this.getUserProperty('details.stackoverflow_url'),
-            locale: this.props.locale,
+            env,
             onChange: this.handleStackoverflowURLChange,
         };
         return <TextField {...props}>{t('social-network-stackoverflow')}</TextField>;

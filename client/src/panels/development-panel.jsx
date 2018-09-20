@@ -26,10 +26,11 @@ class DevelopmentPanel extends PureComponent {
      * @param  {*} value
      */
     setUserProperty(path, value) {
-        if (!this.props.currentUser) {
+        let { currentUser } = this.props;
+        if (!currentUser) {
             return;
         }
-        let userAfter = _.decoupleSet(this.props.currentUser, path, value);
+        let userAfter = _.decoupleSet(currentUser, path, value);
         if (this.props.onChange) {
             this.props.onChange({
                 type: 'change',
@@ -59,7 +60,8 @@ class DevelopmentPanel extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <SettingsPanel className="diagnostics">
                 <header>
@@ -117,9 +119,10 @@ class DevelopmentPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderDevelopmentOption(name, index) {
-        let t = this.props.locale.translate;
+        let { env, currentUser } = this.props;
+        let { t } = env.locale;
         let optionName = _.snakeCase(name);
-        let settings = _.get(this.props.currentUser, 'settings', {});
+        let settings = _.get(currentUser, 'settings', {});
         let enabled = !!_.get(settings, `development.${optionName}`);
         let buttonProps = {
             label: t(`development-${name}`),
@@ -140,10 +143,12 @@ class DevelopmentPanel extends PureComponent {
      */
     renderDeploymentOption(name, index) {
         if (process.env.PLATFORM !== 'cordova') return null;
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { selectedDeploymentName } = this.state;
+        let { t } = env.locale;
         let buttonProps = {
             label: t(`development-code-push-$deployment`, name),
-            selected: (name === this.state.selectedDeploymentName),
+            selected: (name === selectedDeploymentName),
             onClick: this.handleDeploymentOptionClick,
             id: name,
         };
@@ -156,7 +161,8 @@ class DevelopmentPanel extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let showProps = {
             label: t('development-show-diagnostics'),
             onClick: this.handleShowClick,
@@ -174,9 +180,10 @@ class DevelopmentPanel extends PureComponent {
       * @param  {Event} evt
       */
     handleDevelopmentOptionClick = (evt) => {
+        let { currentUser } = this.props;
         let optionName = evt.currentTarget.id;
         let optionPath = `development.${optionName}`;
-        let settings = _.clone(_.get(this.props.currentUser, 'settings', {}));
+        let settings = _.clone(_.get(currentUser, 'settings', {}));
         let enabled = !!_.get(settings, optionPath);
         if (enabled) {
             _.unset(settings, optionPath);
@@ -206,12 +213,8 @@ class DevelopmentPanel extends PureComponent {
      * @param  {Event} evt
      */
     handleShowClick = (evt) => {
-        let route = this.props.route;
-        let params = {
-            schema: route.parameters.schema,
-            diagnostics: true,
-        };
-        route.push(require('pages/settings-page'), params);
+        let { route } = this.props;
+        route.push('diagnostics-page');
     }
 }
 
