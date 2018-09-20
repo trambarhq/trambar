@@ -22,13 +22,14 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (!this.props.show && nextProps.show) {
+        let { show } = this.props;
+        if (nextProps.show && !show) {
             let camera = navigator.camera;
             if (camera) {
                 let direction;
-                if (this.props.cameraDirection === 'front') {
+                if (nextProps.cameraDirection === 'front') {
                     direction = Camera.Direction.FRONT;
-                } else if (this.props.cameraDirection === 'back') {
+                } else if (nextProps.cameraDirection === 'back') {
                     direction = Camera.Direction.BACK;
                 }
                 let options = {
@@ -58,8 +59,9 @@ class PhotoCaptureDialogBox extends PureComponent {
      * Inform parent component that dialog box should be closed
      */
     triggerCloseEvent() {
-        if (this.props.onClose) {
-            this.props.onClose({
+        let { onClose } = this.props;
+        if (onClose) {
+            onClose({
                 type: 'close',
                 target: this,
             });
@@ -72,8 +74,9 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @param  {Object} resource
      */
     triggerCaptureEvent(resource) {
-        if (this.props.onCapture) {
-            this.props.onCapture({
+        let { onCapture } = this.props;
+        if (onCapture) {
+            onCapture({
                 type: 'capture',
                 target: this,
                 resource,
@@ -86,8 +89,9 @@ class PhotoCaptureDialogBox extends PureComponent {
      *
      */
     triggerCapturePendingEvent() {
-        if (this.props.onCapturePending) {
-            this.props.onCapturePending({
+        let { onCapturePending } = this.props;
+        if (onCapturePending) {
+            onCapturePending({
                 type: 'capturepending',
                 target: this,
                 resourceType: 'image'
@@ -101,8 +105,9 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @param  {Error} err
      */
     triggerCaptureErrorEvent(err) {
-        if (this.props.onCaptureError) {
-            this.props.onCaptureError({
+        let { onCaptureError } = this.props;
+        if (onCaptureError) {
+            onCaptureError({
                 type: 'capturefailure',
                 target: this,
                 error: err
@@ -116,12 +121,13 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @param  {String} imageURL
      */
     handleCaptureSuccess = (imageURL) => {
+        let { payloads } = this.props;
         let file = new CordovaFile(imageURL);
         this.triggerCloseEvent();
         this.triggerCapturePendingEvent();
         file.obtainMetadata().then(() => {
             return MediaLoader.getImageMetadata(file).then((meta) => {
-                let payload = this.props.payloads.add('image').attachFile(file);
+                let payload = payloads.add('image').attachFile(file);
                 let res = {
                     type: 'image',
                     payload_token: payload.token,

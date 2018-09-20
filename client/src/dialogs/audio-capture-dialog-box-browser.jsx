@@ -54,7 +54,8 @@ class AudioCaptureDialogBox extends PureComponent {
      * Initialize microphone on mount
      */
     componentWillMount() {
-        if (this.props.show) {
+        let { show } = this.props;
+        if (show) {
             this.initializeMicrophone();
         }
     }
@@ -66,7 +67,8 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.props.show !== nextProps.show) {
+        let { show } = this.props;
+        if (nextProps.show !== show) {
             if (nextProps.show) {
                 this.clearCapturedAudio();
                 this.initializeMicrophone();
@@ -83,12 +85,10 @@ class AudioCaptureDialogBox extends PureComponent {
      * Clear captured audio
      */
     clearCapturedAudio() {
-        if (this.state.capturedAudio) {
-            URL.revokeObjectURL(this.state.previewURL);
-            this.setState({
-                capturedAudio: null,
-                previewURL: null,
-            });
+        let { capturedAudio, previewURL } = this.state;
+        if (capturedAudio) {
+            URL.revokeObjectURL(previewURL);
+            this.setState({ capturedAudio: null, previewURL: null });
         }
     }
 
@@ -119,10 +119,11 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {MediaStream} stream
      */
     setLiveAudioState(err, stream) {
-        if (this.state.liveAudioProcessor) {
+        let { liveAudioSource, liveAudioProcessor, liveAudioContext } = this.state;
+        if (liveAudioProcessor) {
             // disconnect
-            this.state.liveAudioSource.disconnect(this.state.liveAudioProcessor);
-            this.state.liveAudioProcessor.disconnect(this.state.liveAudioContext.destination);
+            liveAudioSource.disconnect(liveAudioProcessor);
+            liveAudioProcessor.disconnect(liveAudioContext.destination);
         }
 
         let url, audioCtx, audioProcessor, audioSource;
@@ -167,9 +168,10 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {HTMLAudioElement} node
      */
     setLiveAudioNode(node) {
+        let { liveAudioStream } = this.state;
         this.audioNode = node;
         if (this.audioNode) {
-            this.audioNode.srcObject = this.state.liveAudioStream;
+            this.audioNode.srcObject = liveAudioStream;
         }
     }
 
@@ -179,10 +181,8 @@ class AudioCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.handleCancelClick,
-        };
+        let { show } = this.props;
+        let overlayProps = { show, onBackgroundClick: this.handleCancelClick };
         return (
             <Overlay {...overlayProps}>
                 <div className="audio-capture-dialog-box">
@@ -204,9 +204,10 @@ class AudioCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderView() {
-        if (this.state.capturedAudio) {
+        let { capturedAudio, liveAudioStream } = this.state;
+        if (capturedAudio) {
             return this.renderCapturedAudio();
-        } else if (this.state.liveAudioStream) {
+        } else if (liveAudioStream) {
             return this.renderLiveAudio();
         } else {
             return this.renderPlaceholder();
@@ -219,8 +220,9 @@ class AudioCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderPlaceholder() {
+        let { liveAudioError } = this.state;
         let props = {
-            blocked: !!this.state.liveAudioError,
+            blocked: !!liveAudioError,
             icon: 'microphone',
         };
         return <DevicePlaceholder {...props} />;
@@ -232,12 +234,12 @@ class AudioCaptureDialogBox extends PureComponent {
      * @return {ReactElement|null}
      */
     renderLiveAudio() {
+        let { liveAudioLevel } = this.state;
         let audioProps = {
             ref: this.setLiveAudioNode,
             autoPlay: true,
             muted: true,
         };
-        let level = this.state.liveAudioLevel;
         let volumeIcon;
         if (level < 10) {
             volumeIcon = 'volume-off';
@@ -246,6 +248,7 @@ class AudioCaptureDialogBox extends PureComponent {
         } else {
             volumeIcon = 'volume-up';
         }
+        let width = liveAudioLevel + '%';
         return (
             <div>
                 <div className="volume-meter">
@@ -254,7 +257,7 @@ class AudioCaptureDialogBox extends PureComponent {
                     </div>
                     <div className="bar-container">
                         <div className="bar">
-                            <div className="fill" style={{ width: level + '%' }} />
+                            <div className="fill" style={{ width }} />
                         </div>
                     </div>
                 </div>
@@ -269,8 +272,9 @@ class AudioCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderCapturedAudio() {
+        let { previewURL } = this.state;
         let props = {
-            src: this.state.previewURL,
+            src: previewURL,
             controls: true
         };
         return <audio {...props} />;
@@ -282,13 +286,11 @@ class AudioCaptureDialogBox extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDuration() {
-        if (!this.state.mediaRecorder) {
+        let { mediaRecorder, duration, startTime } = this.state;
+        if (!mediaRecorder) {
             return null;
         }
-        let durationProps = {
-            duration: this.state.duration,
-            startTime: this.state.startTime,
-        };
+        let durationProps = { duration, startTime };
         return <DurationIndicator {...durationProps} />;
     }
 
@@ -298,9 +300,11 @@ class AudioCaptureDialogBox extends PureComponent {
      * @return {[type]}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
-        if (this.state.mediaRecorder) {
-            let paused = this.state.mediaRecorder.state === 'paused';
+        let { env } = this.props;
+        let { mediaRecorder, capturedAudio, liveAudioStream } = this.state;
+        let { t } = env.locale;
+        if (mediaRecorder) {
+            let paused = (mediaRecorder.state === 'paused');
             let pauseButtonProps = {
                 label: t('audio-capture-pause'),
                 onClick: this.handlePauseClick,
@@ -324,7 +328,7 @@ class AudioCaptureDialogBox extends PureComponent {
                     <PushButton {...stopButtonProps} />
                 </div>
             );
-        } else if (!this.state.capturedAudio) {
+        } else if (!capturedAudio) {
             let cancelButtonProps = {
                 label: t('audio-capture-cancel'),
                 onClick: this.handleCancelClick,
@@ -332,7 +336,7 @@ class AudioCaptureDialogBox extends PureComponent {
             let startButtonProps = {
                 label: t('audio-capture-start'),
                 onClick: this.handleStartClick,
-                disabled: !this.state.liveAudioStream,
+                disabled: !liveAudioStream,
                 emphasized: true,
             };
             return (
@@ -401,27 +405,29 @@ class AudioCaptureDialogBox extends PureComponent {
      * @return {Promise<MediaRecorder>}
      */
     beginRecording() {
+        let { payloads } = this.props;
+        let { liveAudioStream } = this.state;
         return Promise.try(() => {
             let segmentDuration = 3 * 1000;
             let options = {
                 audioBitsPerSecond : 128000,
                 mimeType : 'audio/webm'
             };
-            let recorder = new MediaRecorder(this.state.liveAudioStream, options);
-            let stream = this.props.payloads.stream();
-            recorder.promise = new Promise((resolve, reject) => {
-                recorder.resolve = resolve;
-                recorder.reject = reject;
+            let mediaRecorder = new MediaRecorder(liveAudioStream, options);
+            let stream = payloads.stream();
+            mediaRecorder.promise = new Promise((resolve, reject) => {
+                mediaRecorder.resolve = resolve;
+                mediaRecorder.reject = reject;
             });
-            recorder.outputStream = stream;
-            recorder.addEventListener('dataavailable', (evt) => {
+            mediaRecorder.outputStream = stream;
+            mediaRecorder.addEventListener('dataavailable', (evt) => {
                 this.outputStream.push(evt.data)
             });
-            recorder.addEventListener('stop', (evt) => {
+            mediaRecorder.addEventListener('stop', (evt) => {
                 this.outputStream.close();
-                recorder.resolve();
+                mediaRecorder.resolve();
             });
-            recorder.start(segmentDuration);
+            mediaRecorder.start(segmentDuration);
             // start uploading immediately upon receiving data from MediaRecorder
             stream.start();
             return recorder;
@@ -434,10 +440,10 @@ class AudioCaptureDialogBox extends PureComponent {
      * @return {Promise}
      */
     pauseRecording() {
+        let { mediaRecorder } = this.state;
         return Promise.try(() => {
-            let recorder = this.state.mediaRecorder;
-            if (recorder) {
-                recorder.pause();
+            if (mediaRecorder) {
+                mediaRecorder.pause();
             }
         });
     }
@@ -448,10 +454,10 @@ class AudioCaptureDialogBox extends PureComponent {
      * @return {Promise}
      */
     resumeRecording() {
+        let { mediaRecorder } = this.state;
         return Promise.try(() => {
-            let recorder = this.state.mediaRecorder;
-            if (recorder) {
-                recorder.resume();
+            if (mediaRecorder) {
+                mediaRecorder.resume();
             }
         });
     }
@@ -462,13 +468,13 @@ class AudioCaptureDialogBox extends PureComponent {
      * @return {Promise}
      */
     endRecording() {
+        let { mediaRecorder } = this.state;
         return Promise.try(() => {
-            let recorder = this.state.mediaRecorder;
-            if (recorder) {
-                recorder.stop();
+            if (mediaRecorder) {
+                mediaRecorder.stop();
 
                 // wait till all data is encoded
-                return recorder.promise;
+                return mediaRecorder.promise;
             }
         });
     }
@@ -479,8 +485,9 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param {Object} resource
      */
     triggerCaptureEvent(resource) {
-        if (this.props.onCapture) {
-            this.props.onCapture({
+        let { onCapture } = this.props;
+        if (onCapture) {
+            onCapture({
                 type: 'capture',
                 target: this,
                 resource,
@@ -492,8 +499,9 @@ class AudioCaptureDialogBox extends PureComponent {
      * Inform parent component that dialog box should be closed
      */
     triggerCloseEvent() {
-        if (this.props.onClose) {
-            this.props.onClose({
+        let { onClose } = this.props;
+        if (onClose) {
+            onClose({
                 type: 'close',
                 target: this,
             });
@@ -506,11 +514,12 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleStartClick = (evt) => {
-        return this.beginRecording().then((recorder) => {
+        let { payloads } = this.props;
+        return this.beginRecording().then((mediaRecorder) => {
             // start uploading immediately upon receiving data from MediaRecorder
-            this.props.payloads.stream(recorder.outputStream);
+            payloads.stream(mediaRecorder.outputStream);
             this.setState({
-                mediaRecorder: recorder,
+                mediaRecorder,
                 startTime: new Date,
                 duration: 0,
             });
@@ -524,10 +533,11 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handlePauseClick = (evt) => {
+        let { startTime, duration } = this.state;
         return this.pauseRecording().then(() => {
             let now = new Date;
-            let elapsed = now - this.state.startTime;
-            let duration = this.state.duration + elapsed;
+            let elapsed = now - startTime;
+            duration += elapsed;
             this.setState({ duration, startTime: null });
         });
     }
@@ -550,20 +560,20 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleStopClick = (evt) => {
+        let { mediaRecorder, startTime, duration } = this.state;
         return this.endRecording().then(() => {
-            let recorder = this.state.mediaRecorder;
-            let blob = recorder.outputStream.toBlob();
+            let blob = mediaRecorder.outputStream.toBlob();
             let url = URL.createObjectURL(blob);
             let elapsed = 0;
-            if (this.state.startTime) {
+            if (startTime) {
                 let now = new Date;
-                elapsed = now - this.state.startTime;
+                elapsed = now - startTime;
             }
             let audio = {
-                format: _.last(_.split(recorder.mimeType, '/')),
-                audioBitsPerSecond: recorder.audioBitsPerSecond,
-                stream: recorder.outputStream,
-                duration: this.state.duration + elapsed
+                format: _.last(_.split(mediaRecorder.mimeType, '/')),
+                audioBitsPerSecond: mediaRecorder.audioBitsPerSecond,
+                stream: mediaRecorder.outputStream,
+                duration: duration + elapsed
             };
             this.setState({
                 capturedAudio: audio,
@@ -588,8 +598,9 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleAcceptClick = (evt) => {
-        let capturedAudio = this.state.capturedAudio;
-        let payload = this.props.payloads.add('audio');
+        let { payloads } = this.props;
+        let { capturedAudio } = this.state;
+        let payload = payloads.add('audio');
         payload.attachStream(capturedAudio.stream);
         let res = {
             type: 'audio',

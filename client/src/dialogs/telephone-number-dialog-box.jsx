@@ -18,10 +18,8 @@ class TelephoneNumberDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.props.onClose,
-        };
+        let { show, onClose } = this.props;
+        let overlayProps = { show, onBackgroundClick: onClose };
         return (
             <Overlay {...overlayProps}>
                 <div className="telephone-number-dialog-box">
@@ -38,7 +36,7 @@ class TelephoneNumberDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderContents() {
-        let number = this.props.number;
+        let { number } = this.props;
         let url = `tel:${number}`;
         return (
             <div className="contents">
@@ -54,11 +52,12 @@ class TelephoneNumberDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env, onClose } = this.props;
+        let { t } = env.locale;
         let closeButtonProps = {
             label: t('telephone-dialog-close'),
             emphasized: true,
-            onClick: this.props.onClose,
+            onClick: onClose,
         };
         return (
             <div className="buttons">

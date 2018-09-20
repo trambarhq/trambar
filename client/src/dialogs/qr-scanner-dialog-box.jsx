@@ -51,9 +51,10 @@ class QRScannerDialogBox extends PureComponent {
      * @param  {Object]} prevState
      */
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.available && this.props.show) {
+        let { available, show } = this.state;
+        if (available && show) {
             this.show();
-        } else if (prevProps.show && !this.props.show) {
+        } else if (prevProps.show && !show) {
             this.hide();
         }
     }
@@ -69,14 +70,16 @@ class QRScannerDialogBox extends PureComponent {
      * Create (or update) the camera overlay
      */
     show() {
+        let { env, serverError, found, invalid, children, onResult } = this.props;
+        let { t } = env.locale;
         if (!this.overlayNode) {
             // show the camera preview, which appears behind the webview
             if (QRScanner) {
                 QRScanner.showAsync().then((status) => {
                     Async.do(() => {
                         return QRScanner.scanAsync().then((result) => {
-                            if (this.props.onResult) {
-                                this.props.onResult({
+                            if (onResult) {
+                                onResult({
                                     type: 'result',
                                     target: this,
                                     result,
@@ -91,7 +94,8 @@ class QRScannerDialogBox extends PureComponent {
                         });
                     });
                     Async.while(() => {
-                        return this.props.show;
+                        let { show } = this.props;
+                        return show;
                     });
                     return Async.end();
                 });
@@ -110,8 +114,8 @@ class QRScannerDialogBox extends PureComponent {
                     input.addEventListener('keydown', (evt) => {
                         if (evt.keyCode === 0x0d) {
                             let url = evt.target.value;
-                            if (this.props.onResult) {
-                                this.props.onResult({
+                            if (onResult) {
+                                onResult({
                                     type: 'result',
                                     target: this,
                                     result: url,
@@ -126,27 +130,25 @@ class QRScannerDialogBox extends PureComponent {
             document.body.appendChild(this.overlayNode);
         }
 
-        let t = this.props.locale.translate;
         let cancelProps = {
             label: t('qr-scanner-cancel'),
             onClick: this.handleCancelClick
         };
         let message;
-        let err = this.props.serverError;
-        if (err) {
-            let text = `${err.statusCode} - ${err.message}`;
+        if (serverError) {
+            let text = `${serverError.statusCode} - ${serverError.message}`;
             message = <span className="error">{text}</span>;
         } else {
-            if (this.props.found) {
+            if (found) {
                 message = <span className="success">{t('qr-scanner-qr-code-found')}</span>;
-            } else if (this.props.invalid) {
+            } else if (invalid) {
                 message = <span className="error">{t('qr-scanner-invalid-qr-code')}</span>;
             }
         }
         let element = (
             <CameraOverlay>
                 <top>
-                    {this.props.children}
+                    {children}
                 </top>
                 <bottom>
                     <div className="message">{message}</div>
@@ -187,8 +189,9 @@ class QRScannerDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleCancelClick = (evt) => {
-        if (this.props.onCancel) {
-            this.props.onCancel({
+        let { onCancel } = this.props;
+        if (onCancel) {
+            onCancel({
                 type: 'cancel',
                 target: this,
             });

@@ -32,7 +32,7 @@ class VideoCaptureDialogBox extends PureComponent {
             capturedImage: null,
             previewURL: null,
             videoDevices: devices,
-            selectedDeviceId: (preferredDevice) ? preferredDevice.deviceId : null,
+            selectedDeviceID: (preferredDevice) ? preferredDevice.deviceID : null,
             startTime: null,
             duration: 0,
         };
@@ -57,7 +57,8 @@ class VideoCaptureDialogBox extends PureComponent {
      * Initialize camera if component is mounted as shown (probably not)
      */
     componentWillMount() {
-        if (this.props.show) {
+        let { show } = this.props;
+        if (show) {
             this.initializeCamera();
         }
         DeviceManager.addEventListener('change', this.handleDeviceChange);
@@ -69,7 +70,8 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.props.show !== nextProps.show) {
+        let { show } = this.props;
+        if (nextProps.show !== show) {
             if (nextProps.show) {
                 this.clearCapturedVideo();
                 this.initializeCamera();
@@ -86,8 +88,9 @@ class VideoCaptureDialogBox extends PureComponent {
      * Removed video that was captured earlier
      */
     clearCapturedVideo() {
-        if (this.state.capturedVideo) {
-            URL.revokeObjectURL(this.state.previewURL);
+        let { capturedVideo, previewURL } = this.state;
+        if (capturedVideo) {
+            URL.revokeObjectURL(previewURL);
             this.setState({
                 capturedVideo: null,
                 capturedImage: null,
@@ -143,14 +146,15 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {HTMLVideoElement} node
      */
     setLiveVideoNode(node) {
+        let { liveVideoStream, liveVideoWidth, liveVideoHeight } = this.state;
         this.videoNode = node;
         if (this.videoNode) {
-            this.videoNode.srcObject = this.state.liveVideoStream;
+            this.videoNode.srcObject = liveVideoStream;
             this.videoNode.play();
 
             // fix the video dimensions if they're wrong
             MediaStreamUtils.getActualVideoDimensions(node, (dim) => {
-                if (this.state.liveVideoWidth !== dim.width || this.state.liveVideoHeight !== dim.height) {
+                if (liveVideoWidth !== dim.width || liveVideoHeight !== dim.height) {
                     this.setState({
                         liveVideoWidth: dim.width,
                         liveVideoHeight: dim.height,
@@ -166,10 +170,8 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.handleCancelClick,
-        };
+        let { show } = this.props;
+        let overlayProps = { show, onBackgroundClick: this.handleCancelClick };
         return (
             <Overlay {...overlayProps}>
                 <div className="video-capture-dialog-box">
@@ -192,9 +194,10 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderView() {
-        if (this.state.capturedVideo) {
+        let { capturedVideo, liveVideoStream } = this.state;
+        if (capturedVideo) {
             return this.renderCapturedVideo();
-        } else if (this.state.liveVideoStream) {
+        } else if (liveVideoStream) {
             return this.renderLiveVideo();
         } else {
             return this.renderPlaceholder();
@@ -207,8 +210,9 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderPlaceholder() {
+        let { liveVideoError } = this.state;
         let props = {
-            blocked: !!this.state.liveVideoError,
+            blocked: !!liveVideoError,
             icon: 'video-camera',
         };
         return <DevicePlaceholder {...props} />;
@@ -240,10 +244,11 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderSpacer() {
+        let { liveVideoWidth, liveVideoHeight } = this.state;
         let spacerProps = {
             className: 'spacer',
-            width: this.state.liveVideoWidth,
-            height: this.state.liveVideoHeight,
+            width: liveVideoWidth,
+            height: liveVideoHeight,
         };
         return <canvas {...spacerProps} />;
     }
@@ -254,10 +259,11 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderCapturedVideo() {
+        let { previewURL } = this.state;
         let videoProps = {
             key: 'preview',
             className: 'preview',
-            src: this.state.previewURL,
+            src: previewURL,
             controls: true
         };
         return (
@@ -274,17 +280,24 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDeviceSelector() {
-        if (this.state.mediaRecorder) {
+        let { env } = this.props;
+        let {
+            mediaRecorder,
+            capturedVideo,
+            videoDevices,
+            selectedDeviceID
+        } = this.state;
+        if (mediaRecorder) {
             return null;
         }
-        if (this.state.capturedVideo) {
+        if (capturedVideo) {
             return null;
         }
         let props = {
             type: 'video',
-            devices: this.state.videoDevices,
-            selectedDeviceId: this.state.selectedDeviceId,
-            locale: this.props.locale,
+            devices: videoDevices,
+            selectedDeviceID,
+            env,
             onSelect: this.handleDeviceSelect,
         };
         return <DeviceSelector {...props} />;
@@ -296,13 +309,11 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDuration() {
-        if (!this.state.mediaRecorder) {
+        let { mediaRecord, startTime, duration } = this.state;
+        if (!mediaRecorder) {
             return null;
         }
-        let durationProps = {
-            duration: this.state.duration,
-            startTime: this.state.startTime,
-        };
+        let durationProps = { duration, startTime };
         return <DurationIndicator {...durationProps} />
     }
 
@@ -312,9 +323,11 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
-        if (this.state.mediaRecorder) {
-            let paused = this.state.mediaRecorder.state === 'paused';
+        let { env } = this.props;
+        let { mediaRecorder, capturedVideo, liveVideoStream } = this.state;
+        let { t } = env.locale;
+        if (mediaRecorder) {
+            let paused = (mediaRecorder.state === 'paused');
             let pauseButtonProps = {
                 label: t('video-capture-pause'),
                 onClick: this.handlePauseClick,
@@ -338,7 +351,7 @@ class VideoCaptureDialogBox extends PureComponent {
                     <PushButton {...stopButtonProps} />
                 </div>
             );
-        } else if (!this.state.capturedVideo) {
+        } else if (!capturedVideo) {
             let cancelButtonProps = {
                 label: t('video-capture-cancel'),
                 onClick: this.handleCancelClick,
@@ -346,7 +359,7 @@ class VideoCaptureDialogBox extends PureComponent {
             let startButtonProps = {
                 label: t('video-capture-start'),
                 onClick: this.handleStartClick,
-                disabled: !this.state.liveVideoStream,
+                disabled: !liveVideoStream,
                 emphasized: true,
             };
             return (
@@ -378,8 +391,9 @@ class VideoCaptureDialogBox extends PureComponent {
      * Change the video's source object when user changes camera
      */
     componentDidUpdate(prevProps, prevState) {
+        let { liveVideoStream } = this.state;
         if (this.videoNode) {
-            if (prevState.liveVideoStream !== this.state.liveVideoStream) {
+            if (prevState.liveVideoStream !== liveVideoStream) {
                 this.setLiveVideoNode(this.videoNode);
             }
         }
@@ -400,8 +414,9 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {Promise<MediaStream>}
      */
     createLiveVideoStream() {
+        let { selectedDeviceID } = this.state;
         if (!this.videoStreamPromise) {
-            this.videoStreamPromise = MediaStreamUtils.getVideoStream(this.state.selectedDeviceId);
+            this.videoStreamPromise = MediaStreamUtils.getVideoStream(selectedDeviceID);
         }
         return this.videoStreamPromise;
     }
@@ -444,6 +459,8 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {Promise}
      */
     beginRecording() {
+        let { payloads } = this.props;
+        let { liveVideoStream } = this.state;
         return Promise.try(() => {
             let segmentDuration = 3 * 1000;
             let options = {
@@ -451,24 +468,24 @@ class VideoCaptureDialogBox extends PureComponent {
                 videoBitsPerSecond : 2500000,
                 mimeType : 'video/webm'
             };
-            let recorder = new MediaRecorder(this.state.liveVideoStream, options);
-            let stream = this.props.payloads.stream();
-            recorder.outputStream = stream;
-            recorder.promise = new Promise((resolve, reject) => {
-                recorder.resolve = resolve;
-                recorder.reject = reject;
+            let mediaRecorder = new MediaRecorder(liveVideoStream, options);
+            let stream = payloads.stream();
+            mediaRecorder.outputStream = stream;
+            mediaRecorder.promise = new Promise((resolve, reject) => {
+                mediaRecorder.resolve = resolve;
+                mediaRecorder.reject = reject;
             });
-            recorder.addEventListener('dataavailable', (evt) => {
+            mediaRecorder.addEventListener('dataavailable', (evt) => {
                 this.outputStream.push(evt.data)
             });
-            recorder.addEventListener('stop', (evt) => {
+            mediaRecorder.addEventListener('stop', (evt) => {
                 this.outputStream.close();
-                recorder.resolve();
+                mediaRecorder.resolve();
             });
-            recorder.start(segmentDuration);
+            mediaRecorder.start(segmentDuration);
             // start uploading immediately upon receiving data from MediaRecorder
             stream.start();
-            return recorder;
+            return mediaRecorder;
         });
     }
 
@@ -478,10 +495,10 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {Promise}
      */
     pauseRecording() {
+        let { mediaRecorder } = this.state;
         return Promise.try(() => {
-            let recorder = this.state.mediaRecorder;
-            if (recorder) {
-                recorder.pause();
+            if (mediaRecorder) {
+                mediaRecorder.pause();
             }
         });
     }
@@ -492,10 +509,10 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {Promise}
      */
     resumeRecording() {
+        let { mediaRecorder } = this.state;
         return Promise.try(() => {
-            let recorder = this.state.mediaRecorder;
-            if (recorder) {
-                recorder.resume();
+            if (mediaRecorder) {
+                mediaRecorder.resume();
             }
         });
     }
@@ -506,13 +523,13 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {Promise}
      */
     endRecording() {
+        let { mediaRecorder } = this.state;
         return Promise.try(() => {
-            let recorder = this.state.mediaRecorder;
-            if (recorder) {
-                recorder.stop();
+            if (mediaRecorder) {
+                mediaRecorder.stop();
 
                 // wait till all data is encoded
-                return recorder.promise;
+                return mediaRecorder.promise;
             }
         });
     }
@@ -523,8 +540,9 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Object} resource
      */
     triggerCaptureEvent(resource) {
-        if (this.props.onCapture) {
-            this.props.onCapture({
+        let { onCapture } = this.props;
+        if (onCapture) {
+            onCapture({
                 type: 'capture',
                 target: this,
                 resource,
@@ -536,8 +554,9 @@ class VideoCaptureDialogBox extends PureComponent {
      * Inform parent component that dialog box should be closed
      */
     triggerCloseEvent() {
-        if (this.props.onClose) {
-            this.props.onClose({
+        let { onClose } = this.props;
+        if (onClose) {
+            onClose({
                 type: 'close',
                 target: this,
             });
@@ -550,10 +569,10 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleStartClick = (evt) => {
-        return Promise.join(this.captureImage(), this.beginRecording(), (image, recorder) => {
+        return Promise.join(this.captureImage(), this.beginRecording(), (capturedImage, mediaRecorder) => {
             this.setState({
-                capturedImage: image,
-                mediaRecorder: recorder,
+                capturedImage,
+                mediaRecorder,
                 startTime: new Date,
                 duration: 0,
             });
@@ -569,10 +588,11 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handlePauseClick = (evt) => {
+        let { startTime, duration } = this.state;
         return this.pauseRecording().then(() => {
             let now = new Date;
-            let elapsed = now - this.state.startTime;
-            let duration = this.state.duration + elapsed;
+            let elapsed = now - startTime;
+            duration += elapsed;
             this.setState({ duration, startTime: null });
         });
     }
@@ -595,21 +615,21 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleStopClick = (evt) => {
+        let { mediaRecorder, startTime } = this.state;
         return this.endRecording().then(() => {
-            let recorder = this.state.mediaRecorder;
-            let blob = recorder.outputStream.toBlob();
+            let blob = mediaRecorder.outputStream.toBlob();
             let url = URL.createObjectURL(blob);
             let elapsed = 0;
-            if (this.state.startTime) {
+            if (startTime) {
                 let now = new Date;
-                elapsed = now - this.state.startTime;
+                elapsed = now - startTime;
             }
             let video = {
-                format: _.last(_.split(recorder.mimeType, '/')),
-                audioBitsPerSecond: recorder.audioBitsPerSecond,
-                videoBitsPerSecond: recorder.videoBitsPerSecond,
-                stream: recorder.outputStream,
-                duration: this.state.duration + elapsed,
+                format: _.last(_.split(mediaRecorder.mimeType, '/')),
+                audioBitsPerSecond: mediaRecorder.audioBitsPerSecond,
+                videoBitsPerSecond: mediaRecorder.videoBitsPerSecond,
+                stream: mediaRecorder.outputStream,
+                duration: duration + elapsed,
             };
             this.setState({
                 capturedVideo: video,
@@ -634,14 +654,14 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleAcceptClick = (evt) => {
-        let capturedVideo = this.state.capturedVideo;
-        let capturedImage = this.state.capturedImage;
-        let payload = this.props.payloads.add('video');
+        let { payloads } = this.props;
+        let { capturedVideo, capturedImage } = this.state;
+        let payload = payloads.add('video');
         payload.attachStream(capturedVideo.stream);
         payload.attachFile(capturedImage.blob, 'poster');
         let res = {
             type: 'video',
-            payload_token: payload.token,
+            payload_token: payload.id,
             width: capturedImage.width,
             height: capturedImage.height,
             duration: capturedVideo.duration,
@@ -670,8 +690,8 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleDeviceSelect = (evt) => {
-        let selectedDeviceId = evt.currentTarget.value;
-        this.setState({ selectedDeviceId }, () => {
+        let selectedDeviceID = evt.currentTarget.value;
+        this.setState({ selectedDeviceID }, () => {
             this.reinitializeCamera();
         });
     }
@@ -682,17 +702,17 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Object} evt
      */
     handleDeviceChange = (evt) => {
+        let { selectedDeviceID } = this.state;
         let videoDevices = DeviceManager.getDevices('videoinput');
-        let selectedDeviceId = this.state.selectedDeviceId;
         let reinitialize = false;
-        if (selectedDeviceId) {
-            if (!_.some(videoDevices, { deviceId: selectedDeviceId })) {
+        if (selectedDeviceID) {
+            if (!_.some(videoDevices, { deviceID: selectedDeviceID })) {
                 // reinitialize the camera when the one we were using disappears
-                selectedDeviceId = null;
+                selectedDeviceID = null;
                 reinitialize = true;
             }
         }
-        this.setState({ videoDevices, selectedDeviceId }, () => {
+        this.setState({ videoDevices, selectedDeviceID }, () => {
             if (reinitialize) {
                 this.reinitializeCamera();
             }

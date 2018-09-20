@@ -22,7 +22,8 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (!this.props.show && nextProps.show) {
+        let { show } = this.props;
+        if (nextProps.show && !show) {
             let capture = navigator.device.capture;
             if (capture) {
                 requestPermissions().then(() => {
@@ -49,8 +50,9 @@ class VideoCaptureDialogBox extends PureComponent {
      * Inform parent component that dialog box should be closed
      */
     triggerCloseEvent() {
-        if (this.props.onClose) {
-            this.props.onClose({
+        let { onClose } = this.props;
+        if (onClose) {
+            onClose({
                 type: 'close',
                 target: this,
             });
@@ -63,8 +65,9 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Object} resource
      */
     triggerCaptureEvent(resource) {
-        if (this.props.onCapture) {
-            this.props.onCapture({
+        let { onCapture } = this.props;
+        if (onCapture) {
+            onCapture({
                 type: 'capture',
                 target: this,
                 resource,
@@ -77,8 +80,9 @@ class VideoCaptureDialogBox extends PureComponent {
      *
      */
     triggerCapturePendingEvent() {
-        if (this.props.onCapturePending) {
-            this.props.onCapturePending({
+        let { onCapturePending } = this.props;
+        if (onCapturePending) {
+            onCapturePending({
                 type: 'capturepending',
                 target: this,
                 resourceType: 'video'
@@ -92,8 +96,9 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Error} err
      */
     triggerCaptureErrorEvent(err) {
-        if (this.props.onCaptureError) {
-            this.props.onCaptureError({
+        let { onCaptureError } = this.props;
+        if (onCaptureError) {
+            onCaptureError({
                 type: 'capturefailure',
                 target: this,
                 error: err
@@ -107,6 +112,7 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Array<MediaFiles>} mediaFiles
      */
     handleCaptureSuccess = (mediaFiles) => {
+        let { payloads } = this.props;
         this.triggerCloseEvent();
         let mediaFile = mediaFiles[0];
         if (mediaFile) {
@@ -119,7 +125,7 @@ class VideoCaptureDialogBox extends PureComponent {
                     fullPath = mediaFile.fullPath;
                 }
                 let file = new CordovaFile(fullPath, mediaFile.type, mediaFile.size);
-                let payload = this.props.payloads.add('video');
+                let payload = payloads.add('video');
                 payload.attachFile(file);
                 return createThumbnail(file).then((thumbnailURL) => {
                     let posterFile = new CordovaFile(thumbnailURL);

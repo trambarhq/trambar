@@ -15,10 +15,8 @@ class ConfirmationDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.props.onClose,
-        };
+        let { show, onClose } = this.props;
+        let overlayProps = { show, onBackgroundClick: onClose };
         return (
             <Overlay {...overlayProps}>
                 <div className="confirmation-dialog-box">
@@ -35,11 +33,8 @@ class ConfirmationDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderMessage() {
-        return (
-            <div className="message">
-                {this.props.children}
-            </div>
-        );
+        let { children } = this.props;
+        return <div className="message">{children}</div>;
     }
 
     /**
@@ -48,16 +43,17 @@ class ConfirmationDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env, onClose, onConfirm } = this.props;
+        let { t } = env.locale;
         let cancelProps = {
             label: t('confirmation-cancel'),
-            onClick: this.props.onClose,
-            hidden: !this.props.onClose,
+            onClick: onClose,
+            hidden: !onClose,
         };
         let confirmProps = {
             label: t('confirmation-confirm'),
-            onClick: this.props.onConfirm,
-            hidden: !this.props.onConfirm,
+            onClick: onConfirm,
+            hidden: !onConfirm,
             emphasized: true,
         };
         return (

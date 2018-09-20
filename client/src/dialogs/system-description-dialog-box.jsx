@@ -17,10 +17,8 @@ class SystemDescriptionDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.handleCloseClick,
-        };
+        let { show } = this.props;
+        let overlayProps = { show,  onBackgroundClick: this.handleCloseClick };
         return (
             <Overlay {...overlayProps}>
                 <div className="system-description-dialog-box">
@@ -37,8 +35,8 @@ class SystemDescriptionDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderText() {
-        let p = this.props.locale.pick;
-        let system = this.props.system;
+        let { env, system } = this.props;
+        let { p } = env.locale;
         let title = p(_.get(system, 'details.title'));
         let description = p(_.get(system, 'details.description'));
         return (
@@ -57,7 +55,8 @@ class SystemDescriptionDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let closeButtonProps = {
             label: t('project-description-close'),
             emphasized: true,
@@ -76,8 +75,9 @@ class SystemDescriptionDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleCloseClick = (evt) => {
-        if (this.props.onClose) {
-            this.props.onClose({ type: 'cancel', target: this });
+        let { onClose } = this.props;
+        if (onClose) {
+            onClose({ type: 'cancel', target: this });
         }
     }
 }

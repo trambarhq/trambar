@@ -14,30 +14,9 @@ class MediaDialogBox extends PureComponent {
     static displayName = 'MediaDialogBox';
 
     constructor(props) {
+        let { selectedIndex } = this.props;
         super(props);
-        this.state = {
-            selectedIndex: this.props.selectedIndex,
-        };
-    }
-
-    /**
-     * Return the number of resources
-     *
-     * @return {Number}
-     */
-    getResourceCount() {
-        return this.props.resources.length;
-    }
-
-    /**
-     * Return the currently selected resource
-     *
-     * @return {Number}
-     */
-    getSelectedResourceIndex() {
-        let maxIndex = this.getResourceCount() - 1;
-        let index = _.min([ this.state.selectedIndex, maxIndex ]);
-        return index;
+        this.state = { selectedIndex };
     }
 
     /**
@@ -48,15 +27,16 @@ class MediaDialogBox extends PureComponent {
      * @return {Promise<Number>}
      */
     selectResource(index) {
+        let { resources } = this.props;
         return new Promise((resolve, reject) => {
-            let count = this.getResourceCount();
-            if (index >= 0 && index < count) {
-                this.setState({ selectedIndex: index }, () => {
-                    resolve(index);
-                });
-            } else {
-                resolve(this.getSelectedResourceIndex());
+            if (index < 0) {
+                index = 0;
+            } else if (index > resources.length - 1) {
+                index = index > resources.length - 1;
             }
+            this.setState({ selectedIndex: index }, () => {
+                resolve(index);
+            });
         });
     }
 
@@ -92,7 +72,8 @@ class MediaDialogBox extends PureComponent {
      * Add listeners on mount
      */
     componentWillMount() {
-        if (this.props.show) {
+        let { show } = this.props;
+        if (show) {
             this.addListeners();
         }
     }
@@ -103,11 +84,10 @@ class MediaDialogBox extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.props.show !== nextProps.show) {
+        let { show } = this.props;
+        if (nextProps.show !== show) {
             if (nextProps.show) {
-                this.setState({
-                    selectedIndex: nextProps.selectedIndex,
-                });
+                this.setState({ selectedIndex: nextProps.selectedIndex });
                 this.addListeners();
             } else {
                 let video = this.refs.video;
@@ -125,10 +105,8 @@ class MediaDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.props.onClose,
-        };
+        let { show, onClose } = this.props;
+        let overlayProps = { show, onBackgroundClick: onClose };
         return (
             <Overlay {...overlayProps}>
                 <div className="media-dialog-box">
@@ -148,23 +126,25 @@ class MediaDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderView() {
-        let index = this.getSelectedResourceIndex();
-        let res = this.props.resources[index];
+        let { env, resources } = this.props;
+        let { selectedIndex } = this.state;
+        if (selectedIndex > resouces.length - 1) {
+            selectedIndex = resouces.length - 1;
+        }
+        let res = resources[selectedIndex];
         if (res) {
-            let viewport = document.body.parentNode;
-            let viewportWidth = viewport.clientWidth;
-            let viewportHeight = viewport.clientHeight;
-            if (this.props.theme.mode === 'single-col') {
-                viewportWidth -= 10;
-                viewportHeight -= 100;
-            } else {
+            let { viewportWidth, viewportHeight } = env;
+            if (env.isWiderThan('double-col')) {
                 viewportWidth -= 100;
                 viewportHeight -= 200;
+            } else {
+                viewportWidth -= 10;
+                viewportHeight -= 100;
             }
             let viewportAspect = viewportWidth / viewportHeight;
             let maxWidth, maxHeight;
-            _.each(this.props.resources, (res) => {
-                let dims = this.props.theme.getDimensions(res, { clip: null });
+            _.each(resources, (res) => {
+                let dims = env.getDimensions(res, { clip: null });
                 if (!(maxWidth >= dims.width)) {
                     maxWidth = dims.width;
                 }
@@ -212,17 +192,19 @@ class MediaDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderImage(res, maxWidth, maxHeight) {
+        let { env } = this.props;
+        let { selectedIndex } = this.state;
         let props = {
             // prevent image element from being reused, so when changing from
             // one image to the next the current image doesn't momentarily
             // appears with the dimensions of the next image
-            key: this.getSelectedResourceIndex(),
+            key: selectedIndex,
             resource: res,
             width: res.width,
             height: res.height,
-            theme: this.props.theme,
             clip: false,
             animation: true,
+            env,
         };
         if (props.width > maxWidth) {
             props.height = Math.round(maxWidth * (props.height / props.width));
@@ -245,10 +227,10 @@ class MediaDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderVideo(res) {
-        let theme = this.props.theme;
-        let url = theme.getVideoURL(res);
-        let dims = theme.getDimensions(res, { clip: null });
-        let posterURL = theme.getImageURL(res, {
+        let { env } = this.props;
+        let url = env.getVideoURL(res);
+        let dims = env.getDimensions(res, { clip: null });
+        let posterURL = env.getImageURL(res, {
             width: dims.width,
             height: dims.height,
             clip: null,
@@ -270,8 +252,9 @@ class MediaDialogBox extends PureComponent {
      * @return {ReactElement|null}
      */
     renderThumbnails(index) {
-        let selectedIndex = this.getSelectedResourceIndex();
-        let thumbnails = _.map(this.props.resources, (res, index) => {
+        let { env, resources } = this.props;
+        let { selectedIndex } = this.state;
+        let thumbnails = _.map(resources, (res, index) => {
             let frameProps = {
                 className: 'thumbnail',
                 'data-index': index,
@@ -282,9 +265,9 @@ class MediaDialogBox extends PureComponent {
             }
             let viewProps = {
                 resource: res,
-                theme: this.props.theme,
                 width: 28,
                 height: 28,
+                env,
             };
             return (
                 <div key={index} {...frameProps}>
@@ -301,17 +284,18 @@ class MediaDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env, onClose } = this.props;
+        let { t } = env.locale;
         let downloadButtonProps = {
             label: t('media-download-original'),
             emphasized: false,
-            hidden: (this.props.theme.mode === 'single-col'),
+            hidden: !env.isWiderThan('double-col'),
             onClick: this.handleDownloadClick,
         };
         let closeButtonProps = {
             label: t('media-close'),
             emphasized: true,
-            onClick: this.props.onClose,
+            onClick: onClose,
         };
         return (
             <div className="buttons">
@@ -344,16 +328,23 @@ class MediaDialogBox extends PureComponent {
      * @param  {Evt} evt
      */
     handleDownloadClick = (evt) => {
-        let index = this.getSelectedResourceIndex();
-        let res = this.props.resources[index];
+        let { env, resources } = this.props;
+        let { selectedIndex } = this.state;
+        if (selectedIndex > resources.length - 1) {
+            selectedIndex = resources.length - 1;
+        }
+        let res = resources[selectedIndex];
         if (res) {
             // create a link then simulate a click
             let link = document.createElement('A');
-            let theme = this.props.theme;
             let url;
             switch (res.type) {
-                case 'image': url = theme.getImageURL(res, { original: true }); break;
-                case 'video': url = theme.getVideoURL(res, { original: true }); break;
+                case 'image':
+                    url = env.getImageURL(res, { original: true });
+                    break;
+                case 'video':
+                    url = env.getVideoURL(res, { original: true });
+                    break;
             }
             link.href = url;
             link.download = res.filename || true;   // only works when it's same origin
@@ -367,16 +358,8 @@ class MediaDialogBox extends PureComponent {
      * @param  {Number} diff
      */
     changeSelection(diff) {
-        if (diff) {
-            let count = this.getResourceCount();
-            let index = this.getSelectedResourceIndex() + diff;
-            if (index >= count) {
-                index = 0;
-            } else if (index < 0){
-                index = count - 1;
-            }
-            this.selectResource(index);
-        }
+        let { selectedIndex } = this.state;
+        this.selectResource(selectedIndex + diff);
     }
 
     /**

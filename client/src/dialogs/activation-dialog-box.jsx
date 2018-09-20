@@ -27,10 +27,8 @@ class ActivationDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.props.onCancel,
-        };
+        let { show, onCancel } = this.props;
+        let overlayProps = { show, onBackgroundClick: onCancel };
         return (
             <Overlay {...overlayProps}>
                 <div className="activation-dialog-box">
@@ -64,12 +62,14 @@ class ActivationDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderAddressInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { address } = this.state;
+        let { t } = env.locale;
         let props = {
             id: 'address',
             type: 'url',
-            value: this.state.address,
-            locale: this.props.locale,
+            value: address,
+            env,
             onChange: this.handleAddressChange,
         };
         return <TextField {...props}>{t('activation-address')}</TextField>;
@@ -81,12 +81,14 @@ class ActivationDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderCodeInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { code } = this.state;
+        let { t } = env.locale;
         let props = {
             id: 'code',
-            value: this.state.code,
+            value: code,
             spellCheck: false,
-            locale: this.props.locale,
+            env,
             onChange: this.handleCodeChange,
         };
         return <TextField {...props}>{t('activation-code')}</TextField>;
@@ -98,12 +100,14 @@ class ActivationDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderSchemaInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { schema } = this.state;
+        let { t } = env.locale;
         let props = {
             id: 'schema',
-            value: this.state.schema,
+            value: schema,
             spellCheck: false,
-            locale: this.props.locale,
+            env,
             onChange: this.handleSchemaChange,
         };
         return <TextField {...props}>{t('activation-schema')}</TextField>;
@@ -115,15 +119,17 @@ class ActivationDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { address, code, schema } = this.state;
+        let { t } = env.locale;
         let acceptable = true;
-        if (!/^[0-9A-F]{16}$/i.test(_.replace(this.state.code, /\s/g, ''))) {
+        if (!/^[0-9A-F]{16}$/i.test(_.replace(code, /\s/g, ''))) {
             acceptable = false;
         }
-        if (!/https?:\/\/\w+/.test(this.state.address)) {
+        if (!/https?:\/\/\w+/.test(address)) {
             acceptable = false;
         }
-        if (!/\w+/.test(this.state.schema)) {
+        if (!/\w+/.test(schema)) {
             acceptable = false;
         }
         let cancelProps = {
@@ -153,8 +159,9 @@ class ActivationDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleCancelClick = (evt) => {
-        if (this.props.onCancel) {
-            this.props.onCancel({
+        let { onCancel } = this.props;
+        if (onCancel) {
+            onCancel({
                 type: 'cancel',
                 target: this,
             });
@@ -167,13 +174,15 @@ class ActivationDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleOKClick = (evt) => {
-        if (this.props.onConfirm) {
-            this.props.onConfirm({
+        let { onConfirm } = this.props;
+        let { address, code, schema } = this.state;
+        if (onConfirm) {
+            onConfirm({
                 type: 'close',
                 target: this,
-                address: this.state.address,
-                code: _.replace(this.state.code, /\s+/g, ''),
-                schema: this.state.schema,
+                address,
+                code: _.replace(code, /\s+/g, ''),
+                schema,
             });
         }
     }

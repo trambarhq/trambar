@@ -18,9 +18,10 @@ class PhotoCaptureDialogBox extends PureComponent {
     static displayName = 'PhotoCaptureDialogBox';
 
     constructor(props) {
+        let { cameraDirection } = props;
         super(props);
         let devices = DeviceManager.getDevices('videoinput');
-        let preferredDevice = DeviceSelector.choose(devices, props.cameraDirection);
+        let preferredDevice = DeviceSelector.choose(devices, cameraDirection);
         this.state = {
             liveVideoStream: null,
             liveVideoError : null,
@@ -28,7 +29,7 @@ class PhotoCaptureDialogBox extends PureComponent {
             liveVideoHeight: 480,
             capturedImage: null,
             videoDevices: devices,
-            selectedDeviceId: (preferredDevice) ? preferredDevice.deviceId : null,
+            selectedDeviceID: (preferredDevice) ? preferredDevice.deviceID : null,
         };
     }
 
@@ -53,7 +54,8 @@ class PhotoCaptureDialogBox extends PureComponent {
      * Initialize camera if component is mounted as shown (probably not)
      */
     componentWillMount() {
-        if (this.props.show) {
+        let { show } = this.props;
+        if (show) {
             this.initializeCamera();
         }
         DeviceManager.addEventListener('change', this.handleDeviceChange);
@@ -65,7 +67,8 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.props.show !== nextProps.show) {
+        let { show } = this.props;
+        if (nextProps.show !== show) {
             if (nextProps.show) {
                 this.setState({ capturedImage: null });
                 this.initializeCamera();
@@ -126,14 +129,15 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @param  {HTMLVideoElement} node
      */
     setLiveVideoNode(node) {
+        let { liveVideoStream, liveVideoWidth, liveVideoHeight } = this.state;
         this.videoNode = node;
         if (this.videoNode) {
-            this.videoNode.srcObject = this.state.liveVideoStream;
+            this.videoNode.srcObject = liveVideoStream;
             this.videoNode.play();
 
             // fix the video dimensions if they're wrong
             MediaStreamUtils.getActualVideoDimensions(node, (dim) => {
-                if (this.state.liveVideoWidth !== dim.width || this.state.liveVideoHeight !== dim.height) {
+                if (liveVideoWidth !== dim.width || liveVideoHeight !== dim.height) {
                     this.setState({
                         liveVideoWidth: dim.width,
                         liveVideoHeight: dim.height,
@@ -149,10 +153,8 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.handleCancelClick,
-        };
+        let { show } = this.props;
+        let overlayProps = { show, onBackgroundClick: this.handleCancelClick };
         return (
             <Overlay {...overlayProps}>
                 <div className="photo-capture-dialog-box">
@@ -174,9 +176,10 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderView() {
-        if (this.state.capturedImage) {
+        let { capturedImage, liveVideoStream } = this.state;
+        if (capturedImage) {
             return this.renderCapturedImage();
-        } else if (this.state.liveVideoStream) {
+        } else if (liveVideoStream) {
             return this.renderLiveVideo();
         } else {
             return this.renderPlaceholder();
@@ -189,8 +192,9 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderPlaceholder() {
+        let { liveVideoError } = this.state;
         let props = {
-            blocked: !!this.state.liveVideoError,
+            blocked: !!liveVideoError,
             icon: 'camera',
         };
         return <DevicePlaceholder {...props} />;
@@ -221,10 +225,11 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderSpacer() {
+        let { liveVideoWidth, liveVideoHeight } = this.state;
         let spacerProps = {
             className: 'spacer',
-            width: this.state.liveVideoWidth,
-            height: this.state.liveVideoHeight,
+            width: liveVideoWidth,
+            height: liveVideoHeight,
         };
         return <canvas {...spacerProps} />;
     }
@@ -235,9 +240,10 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderCapturedImage() {
+        let { capturedImage } = this.state;
         let imageProps = {
             className: 'preview',
-            src: this.state.capturedImage.url
+            src: capturedImage.url
         };
         return (
             <div>
@@ -253,14 +259,16 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDeviceSelector() {
-        if (this.state.capturedImage) {
+        let { env } = this.props;
+        let { capturedImage, videoDevices, selectedDeviceID } = this.state;
+        if (capturedImage) {
             return null;
         }
         let props = {
             type: 'video',
-            devices: this.state.videoDevices,
-            selectedDeviceId: this.state.selectedDeviceId,
-            locale: this.props.locale,
+            devices: videoDevices,
+            selectedDeviceID,
+            env,
             onSelect: this.handleDeviceSelect,
         };
         return <DeviceSelector {...props} />;
@@ -272,8 +280,10 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
-        if (!this.state.capturedImage) {
+        let { env } = this.props;
+        let { capturedImage, liveVideoStream } = this.state;
+        let { t } = env.locale;
+        if (!capturedImage) {
             let cancelButtonProps = {
                 label: t('photo-capture-cancel'),
                 onClick: this.handleCancelClick,
@@ -281,7 +291,7 @@ class PhotoCaptureDialogBox extends PureComponent {
             let snapButtonProps = {
                 label: t('photo-capture-snap'),
                 onClick: this.handleSnapClick,
-                disabled: !this.state.liveVideoStream,
+                disabled: !liveVideoStream,
                 emphasized: true,
             };
             return (
@@ -313,8 +323,9 @@ class PhotoCaptureDialogBox extends PureComponent {
      * Change the video's source object when user changes camera
      */
     componentDidUpdate(prevProps, prevState) {
+        let { liveVideoStream } = this.state;
         if (this.videoNode) {
-            if (prevState.liveVideoStream !== this.state.liveVideoStream) {
+            if (prevState.liveVideoStream !== liveVideoStream) {
                 this.setLiveVideoNode(this.videoNode);
             }
         }
@@ -335,7 +346,7 @@ class PhotoCaptureDialogBox extends PureComponent {
      */
     createLiveVideoStream() {
         if (!this.videoStreamPromise) {
-            this.videoStreamPromise = MediaStreamUtils.getSilentVideoStream(this.state.selectedDeviceId);
+            this.videoStreamPromise = MediaStreamUtils.getSilentVideoStream(this.state.selectedDeviceID);
         }
         return this.videoStreamPromise;
     }
@@ -381,8 +392,9 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @param  {Object} resource
      */
     triggerCaptureEvent(resource) {
-        if (this.props.onCapture) {
-            this.props.onCapture({
+        let { onCapture } = this.props;
+        if (onCapture) {
+            onCapture({
                 type: 'capture',
                 target: this,
                 resource,
@@ -394,8 +406,9 @@ class PhotoCaptureDialogBox extends PureComponent {
      * Inform parent component that dialog box should be closed
      */
     triggerCloseEvent() {
-        if (this.props.onClose) {
-            this.props.onClose({
+        let { onClose } = this.onClose;
+        if (onClose) {
+            onClose({
                 type: 'close',
                 target: this,
             });
@@ -421,7 +434,8 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleRetakeClick = (evt) => {
-        BlobManager.release(this.state.capturedImage.blob);
+        let { capturedImage } = this.state;
+        BlobManager.release(capturedImage.blob);
         this.setState({ capturedImage: null });
     }
 
@@ -431,8 +445,9 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleAcceptClick = (evt) => {
-        let capturedImage = this.state.capturedImage;
-        let payload = this.props.payloads.add('image');
+        let { payloads } = this.props;
+        let { capturedImage } = this.state;
+        let payload = payloads.add('image');
         payload.attachFile(capturedImage.blob);
         let url = payload.token;
         let res = {
@@ -461,8 +476,8 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleDeviceSelect = (evt) => {
-        let selectedDeviceId = evt.currentTarget.value;
-        this.setState({ selectedDeviceId }, () => {
+        let selectedDeviceID = evt.currentTarget.value;
+        this.setState({ selectedDeviceID }, () => {
             this.reinitializeCamera();
         });
     }
@@ -473,17 +488,17 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @param  {Object} evt
      */
     handleDeviceChange = (evt) => {
+        let { selectedDeviceID } = this.state;
         let videoDevices = DeviceManager.getDevices('videoinput');
-        let selectedDeviceId = this.state.selectedDeviceId;
         let reinitialize = false;
-        if (selectedDeviceId) {
-            if (!_.some(videoDevices, { deviceId: selectedDeviceId })) {
+        if (selectedDeviceID) {
+            if (!_.some(videoDevices, { deviceID: selectedDeviceID })) {
                 // reinitialize the camera when the one we were using disappears
-                selectedDeviceId = null;
+                selectedDeviceID = null;
                 reinitialize = true;
             }
         }
-        this.setState({ videoDevices, selectedDeviceId }, () => {
+        this.setState({ videoDevices, selectedDeviceID }, () => {
             if (reinitialize) {
                 this.reinitializeCamera();
             }

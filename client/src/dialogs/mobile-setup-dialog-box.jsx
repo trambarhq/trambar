@@ -24,21 +24,22 @@ class MobileSetupDialogBox extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let db = this.props.database.use({ by: this });
+        let { database, route, env, system, show, onClose } = this.props;
+        let db = database.use({ by: this });
         let props = {
             activationCode: null,
             currentUser: null,
             devices: null,
 
-            show: this.props.show,
-            system: this.props.system,
-            route: this.props.route,
-            locale: this.props.locale,
-            onClose: this.props.onClose,
+            show,
+            system,
+            route,
+            env,
+            onClose,
         };
         meanwhile.show(<MobileSetupDialogBoxSync {...props} />);
-        return db.start().then((currentUserId) => {
-            return UserFinder.findUser(db, currentUserId).then((user) => {
+        return db.start().then((currentUserID) => {
+            return UserFinder.findUser(db, currentUserID).then((user) => {
                 props.currentUser = user;
             });
         }).then(() => {
@@ -58,7 +59,8 @@ class MobileSetupDialogBox extends AsyncComponent {
      * Release the mobile session, assuming the device has acquired it
      */
     componentWillUnmount() {
-        let db = this.props.database.use({ by: this });
+        let { database } = this.props;
+        let db = database.use({ by: this });
         db.releaseMobileSession();
     }
 }
@@ -70,13 +72,14 @@ class MobileSetupDialogBoxSync extends PureComponent {
      * Check for change in props.devices
      */
     componentWillReceiveProps(nextProps) {
-        if (this.props.devices !== nextProps.devices) {
+        let { devices, onClose } = this.props;
+        if (nextProps.devices !== devices) {
             let handle = nextProps.activationCode;
             if (handle) {
                 if (_.some(nextProps.devices, { session_handle: handle })) {
                     // a device has acquire the session--close dialog box automatically
-                    if (this.props.onClose) {
-                        this.props.onClose({
+                    if (onClose) {
+                        onClose({
                             type: 'close',
                             target: this,
                         });
@@ -92,10 +95,8 @@ class MobileSetupDialogBoxSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.props.onClose,
-        };
+        let { show, onClose } = this.props;
+        let overlayProps = { show, onBackgroundClick: onClose };
         return (
             <Overlay {...overlayProps}>
                 <div className="mobile-setup-dialog-box">
@@ -107,29 +108,27 @@ class MobileSetupDialogBoxSync extends PureComponent {
     }
 
     /**
-     * Render QR-code and number
+     * Render QR-code and activation code
      *
      * @return {ReactElement}
      */
     renderContents() {
-        let t = this.props.locale.translate;
-        let number = this.props.number;
-        let route = this.props.route;
-        let url;
-        let address = _.get(this.props.system, 'settings.address');
+        let { route, env, system, activationCode } = this.props;
+        let { t } = env.locale;
+        let universalLink;
+        let address = _.get(system, 'settings.address');
         if (!address) {
-            address = route.parameters.address;
+            address = route.params.address;
         }
-        let schema = route.parameters.schema;
-        let activationCode = this.props.activationCode;
+        let schema = route.params.schema;
         if (activationCode) {
-            let urlParts = StartPage.getURL({ activationCode, schema });
-            url = UniversalLink.form(address, urlParts.path, urlParts.query);
-            console.log(url);
+            let relativeURL = route.find({ activationCode, schema });
+            universalLink = UniversalLink.form(address, relativeURL);
+            console.log(universalLink);
         }
         return (
             <div className="contents">
-                <QRCode text={url} scale={6} />
+                <QRCode text={universalLink} scale={6} />
                 <div className="info">
                     <div className="label">{t('mobile-setup-address')}</div>
                     <div className="value">{address}</div>
@@ -148,11 +147,12 @@ class MobileSetupDialogBoxSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env, onClose } = this.props;
+        let { t } = env.locale;
         let closeButtonProps = {
             label: t('mobile-setup-close'),
             emphasized: true,
-            onClick: this.props.onClose,
+            onClick: onClose,
         };
         return (
             <div className="buttons">

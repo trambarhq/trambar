@@ -18,10 +18,8 @@ class ProjectDescriptionDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.handleCloseClick,
-        };
+        let { show } = this.props;
+        let overlayProps = { show, onBackgroundClick: this.handleCloseClick };
         return (
             <Overlay {...overlayProps}>
                 <div className="project-description-dialog-box">
@@ -38,15 +36,17 @@ class ProjectDescriptionDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderText() {
-        let p = this.props.locale.pick;
-        let project = this.props.project;
-        let image = _.find(project.details.resources, { type: 'image' });
+        let { env, project } = this.props;
+        let { name } = project;
+        let { resources, title } = project.details;
+        let { p } = env.locale;
+        let image = _.find(resources, { type: 'image' });
         return (
             <Scrollable>
-                <div className="title">{p(project.details.title) || project.name}</div>
+                <div className="title">{p(title) || name}</div>
                 <div className="description">
                     <div className="image">
-                        <ResourceView resource={image} width={160} theme={this.props.theme} />
+                        <ResourceView resource={image} width={160} env={env} />
                     </div>
                     {p(project.details.description)}
                 </div>
@@ -60,7 +60,8 @@ class ProjectDescriptionDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let closeButtonProps = {
             label: t('project-description-close'),
             emphasized: true,
@@ -79,8 +80,9 @@ class ProjectDescriptionDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleCloseClick = (evt) => {
-        if (this.props.onClose) {
-            this.props.onClose({ type: 'cancel', target: this });
+        let { onClose } = this.props;
+        if (onClose) {
+            onClose({ type: 'cancel', target: this });
         }
     }
 }

@@ -17,13 +17,11 @@ class AppComponentDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        if (!this.props.component) {
+        let { component, show, onClose } = this.props;
+        if (!component) {
             return null;
         }
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.props.onClose,
-        };
+        let overlayProps = { show, onBackgroundClick: onClose };
         return (
             <Overlay {...overlayProps}>
                 <div className="app-component-dialog-box">
@@ -43,11 +41,11 @@ class AppComponentDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderPicture() {
-        let component = this.props.component;
+        let { env, component } = this.props;
         if (component.image) {
             return (
                 <div className="picture">
-                    <ResourceView resource={component.image} height={48} theme={this.props.theme} />
+                    <ResourceView resource={component.image} height={48} env={env} />
                 </div>
             );
         } else {
@@ -73,8 +71,9 @@ class AppComponentDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderText() {
-        let p = this.props.locale.pick;
-        let text = p(this.props.component.text);
+        let { env, component } = this.props;
+        let { p } = env.locale;
+        let text = p(component.text);
         let elements = MarkGor.parse(text);
         return (
             <div className="text">
@@ -89,11 +88,12 @@ class AppComponentDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env, onClose } = this.props;
+        let { t } = env.locale;
         let closeButtonProps = {
             label: t('app-component-close'),
             emphasized: true,
-            onClick: this.props.onClose,
+            onClick: onClose,
         };
         return (
             <div className="buttons">

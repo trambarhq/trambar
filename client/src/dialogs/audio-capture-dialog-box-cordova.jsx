@@ -23,7 +23,8 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (!this.props.show && nextProps.show) {
+        let { show } = this.props;
+        if (!show && nextProps.show) {
             let capture = navigator.device.capture;
             if (capture) {
                 requestPermissions().then(() => {
@@ -50,8 +51,9 @@ class AudioCaptureDialogBox extends PureComponent {
      * Inform parent component that dialog box should be closed
      */
     triggerCloseEvent() {
-        if (this.props.onClose) {
-            this.props.onClose({
+        let { onClose } = this.props;
+        if (onClose) {
+            onClose({
                 type: 'close',
                 target: this,
             });
@@ -64,8 +66,9 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {Object} resource
      */
     triggerCaptureEvent(resource) {
-        if (this.props.onCapture) {
-            this.props.onCapture({
+        let { onCapture } = this.props;
+        if (onCapture) {
+            onCapture({
                 type: 'capture',
                 target: this,
                 resource,
@@ -78,8 +81,9 @@ class AudioCaptureDialogBox extends PureComponent {
      *
      */
     triggerCapturePendingEvent() {
-        if (this.props.onCapturePending) {
-            this.props.onCapturePending({
+        let { onCapturePending } = this.props;
+        if (onCapturePending) {
+            onCapturePending({
                 type: 'capturepending',
                 target: this,
                 resourceType: 'audio'
@@ -93,8 +97,9 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {Error} err
      */
     triggerCaptureErrorEvent(err) {
-        if (this.props.onCaptureError) {
-            this.props.onCaptureError({
+        let { onCaptureError } = this.props;
+        if (onCaptureError) {
+            onCaptureError({
                 type: 'capturefailure',
                 target: this,
                 error: err
@@ -108,6 +113,7 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {Array<MediaFiles>} mediaFiles
      */
     handleCaptureSuccess(mediaFiles) {
+        let { payloads } = this.props;
         this.triggerCloseEvent();
         let mediaFile = mediaFiles[0];
         if (mediaFile) {
@@ -115,7 +121,7 @@ class AudioCaptureDialogBox extends PureComponent {
             MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
                 let file = new CordovaFile(mediaFile.fullPath);
                 let [ type, format ] = _.split(mediaFile.type, '/');
-                let payload = this.props.payloads.add('audio');
+                let payload = payloads.add('audio');
                 payload.attachFile(file);
                 let res = {
                     type: 'audio',

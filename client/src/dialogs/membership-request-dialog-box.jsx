@@ -27,10 +27,8 @@ class MembershipRequestDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.handleCloseClick,
-        };
+        let { show } = this.props;
+        let overlayProps = { show, onBackgroundClick: this.handleCloseClick };
         let classNames = [ 'membership-request-dialog-box' ];
         return (
             <Overlay {...overlayProps}>
@@ -49,17 +47,19 @@ class MembershipRequestDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderText() {
-        let p = this.props.locale.pick;
-        let project = this.props.project;
-        let image = _.find(project.details.resources, { type: 'image' });
+        let { env, project } = this.props;
+        let { p } = env.locale;
+        let { name } = project;
+        let { title, description, resources } = project.details;
+        let image = _.find(resources, { type: 'image' });
         return (
             <Scrollable>
-                <div className="title">{p(project.details.title) || project.name}</div>
+                <div className="title">{p(title) || name}</div>
                 <div className="description">
                     <div className="image">
-                        <ResourceView resource={image} width={160} theme={this.props.theme} />
+                        <ResourceView resource={image} width={160} env={env} />
                     </div>
-                    {p(project.details.description)}
+                    {p(description)}
                 </div>
             </Scrollable>
         );
@@ -71,21 +71,22 @@ class MembershipRequestDialogBox extends PureComponent {
      * @return {ReactElement|null}
      */
     renderMessage() {
-        let t = this.props.locale.translate;
-        let n = this.props.locale.name;
-        let user = this.props.currentUser;
-        let project = this.props.project;
-        let you = (user) ? n(user.details.name, user.details.gender) : null;
+        let { env, project, currentUser } = this.props;
+        let { userJustJoined } = this.state;
+        let { t, g } = env.locale;
+        let you = UserUtils.getDisplayName(currentUser, env);
+        let gender = UserUtils.getGender(currentUser);
+        g(you, gender);
         let className = '', icon = '', message = '';
-        if (UserUtils.isMember(user, project)) {
+        if (UserUtils.isMember(currentUser, project)) {
             className = 'accepted';
             icon = 'user-circle-o';
-            if (this.state.userJustJoined) {
+            if (userJustJoined) {
                 message = t('membership-request-$you-are-now-member', you);
             } else {
                 message = t('membership-request-$you-are-member', you);
             }
-        } else if (UserUtils.isPendingMember(user, project)) {
+        } else if (UserUtils.isPendingMember(currentUser, project)) {
             className = 'requested';
             icon = 'clock-o';
             message = t('membership-request-$you-have-requested-membership', you);
@@ -107,10 +108,9 @@ class MembershipRequestDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
-        let user = this.props.currentUser;
-        let project = this.props.project;
-        if (UserUtils.isMember(user, project)) {
+        let { env, project, currentUser } = this.props;
+        let { t } = env.locale;
+        if (UserUtils.isMember(currentUser, project)) {
             let cancelButtonProps = {
                 label: t('membership-request-cancel'),
                 onClick: this.handleCloseClick,
@@ -126,7 +126,7 @@ class MembershipRequestDialogBox extends PureComponent {
                     <PushButton {...proceedButtonProps} />
                 </div>
             );
-        } else if (UserUtils.isPendingMember(user, project)) {
+        } else if (UserUtils.isPendingMember(currentUser, project)) {
             let cancelButtonProps = {
                 label: t('membership-request-cancel'),
                 onClick: this.handleCloseClick,
@@ -138,7 +138,7 @@ class MembershipRequestDialogBox extends PureComponent {
             let browseButtonProps = {
                 label: t('membership-request-browse'),
                 onClick: this.handleProceedClick,
-                hidden: !UserUtils.canViewProject(user, project),
+                hidden: !UserUtils.canViewProject(currentUser, project),
                 emphasized: true,
             };
             return (
@@ -156,13 +156,13 @@ class MembershipRequestDialogBox extends PureComponent {
             let browseButtonProps = {
                 label: t('membership-request-browse'),
                 onClick: this.handleProceedClick,
-                hidden: !UserUtils.canViewProject(user, project),
-                emphasized: !UserUtils.canJoinProject(user, project),
+                hidden: !UserUtils.canViewProject(currentUser, project),
+                emphasized: !UserUtils.canJoinProject(currentUser, project),
             };
             let joinButtonProps = {
                 label: t('membership-request-join'),
                 onClick: this.handleJoinClick,
-                hidden: !UserUtils.canJoinProject(user, project),
+                hidden: !UserUtils.canJoinProject(currentUser, project),
                 emphasized: true,
             };
             return (
@@ -181,9 +181,10 @@ class MembershipRequestDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleJoinClick = (evt) => {
+        let { onConfirm } = this.props;
         this.setState({ userJustJoined: true });
-        if (this.props.onConfirm) {
-            this.props.onConfirm({ type: 'confirm', target: this });
+        if (onConfirm) {
+            onConfirm({ type: 'confirm', target: this });
         }
     }
 
@@ -193,8 +194,9 @@ class MembershipRequestDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleWithdrawClick = (evt) => {
-        if (this.props.onRevoke) {
-            this.props.onRevoke({ type: 'revoke', target: this });
+        let { onRevoke } = this.props;
+        if (onRevoke) {
+            onRevoke({ type: 'revoke', target: this });
         }
     }
 
@@ -204,8 +206,9 @@ class MembershipRequestDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleCloseClick = (evt) => {
-        if (this.props.onClose) {
-            this.props.onClose({ type: 'cancel', target: this });
+        let { onClose } = this.props;
+        if (onClose) {
+            onClose({ type: 'cancel', target: this });
         }
     }
 
@@ -215,8 +218,9 @@ class MembershipRequestDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleProceedClick = (evt) => {
-        if (this.props.onProceed) {
-            this.props.onProceed({ type: 'proceed', target: this });
+        let { onProceed } = this.props;
+        if (onProceed) {
+            onProceed({ type: 'proceed', target: this });
         }
     }
 }

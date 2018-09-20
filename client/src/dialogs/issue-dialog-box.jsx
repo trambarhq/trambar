@@ -3,6 +3,7 @@ import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import ComponentRefs from 'utils/component-refs';
 import * as TagScanner from 'utils/tag-scanner';
+import * as RepoUtils from 'objects/utils/repo-utils';
 
 
 // widgets
@@ -16,12 +17,13 @@ class IssueDialogBox extends PureComponent {
     static displayName = 'IssueDialogBox';
 
     constructor(props) {
+        let { issue } = props;
         super(props);
         this.components = ComponentRefs({
             textField: TextField
         });
         this.state = {
-            issue: this.props.issue ? null : this.getDefaultIssue(),
+            newIssue: issue ? null : this.getDefaultIssue(),
         };
     }
 
@@ -33,8 +35,9 @@ class IssueDialogBox extends PureComponent {
      * @return {*}
      */
     getIssueProperty(path) {
-        let issue = this.state.issue || this.props.issue || {};
-        return _.get(issue, path);
+        let { issue } = this.props;
+        let { newIssue } = this.state;
+        return _.get(newIssue || issue, path);
     }
 
     /**
@@ -44,13 +47,14 @@ class IssueDialogBox extends PureComponent {
      * @param  {*} value
      */
     setIssueProperty(path, value) {
-        let issue = this.state.issue || this.props.issue || {};
-        issue = _.decoupleSet(issue, path, value);
+        let { issue } = this.props;
+        let { newIssue } = this.state;
+        let newIssueAfter = _.decoupleSet(newIssue || issue, path, value);
         if (path === 'repo_id') {
-            lastSelectedRepoId = value;
+            lastSelectedRepoID = value;
             window.localStorage.last_selected_repo_id = value;
         }
-        this.setState({ issue });
+        this.setState({ newIssue: newIssueAfter });
     }
 
     /**
@@ -59,10 +63,12 @@ class IssueDialogBox extends PureComponent {
      * @return {Object|null}
      */
     getDefaultIssue() {
+        let { env, story, repos } = this.props;
+        let { p } = env.locale;
+        let { text } = story.details;
+        let langText = p(text);
         // look for a title in the text
-        let t = this.props.locale.translate;
-        let text = t(this.props.story.details.text);
-        let paragraphs = _.split(_.trim(text), /[\r\n]+/);
+        let paragraphs = _.split(_.trim(langText), /[\r\n]+/);
         let first = TagScanner.removeTags(paragraphs[0]);
         // use first paragraph as title only if it isn't very long
         let title = '';
@@ -71,10 +77,10 @@ class IssueDialogBox extends PureComponent {
         }
 
         // look for tags that match labels
-        let allLabels = _.uniq(_.flatten(_.map(this.props.repos, 'details.labels')));
+        let allLabels = _.uniq(_.flatten(_.map(repos, 'details.labels')));
         let labels = _.filter(allLabels, (label) => {
             let tag = `#${_.replace(label, /\s+/g, '-')}`;
-            return _.includes(this.props.story.tags, tag);
+            return _.includes(story.tags, tag);
         });
 
         if (!title && _.isEmpty(labels)) {
@@ -89,16 +95,16 @@ class IssueDialogBox extends PureComponent {
      * @return {Repo}
      */
     getSelectedRepo() {
-        let repoId = this.getIssueProperty('repo_id');
+        let repoID = this.getIssueProperty('repo_id');
         let repos = this.getAvailableRepos();
-        let repo = _.find(this.props.repos, { id: repoId });
+        let repo = _.find(repos, { id: repoID });
         if (!repo) {
-            repo = _.find(this.props.repos, { id: lastSelectedRepoId });
+            repo = _.find(repos, { id: lastSelectedRepoID });
         }
         if (!repo) {
             // find one with labels--if a repo has no labels, then its
             // issue tracker probably isn't being used
-            repo = _.last(_.sortBy(this.props.repos, (repo) => {
+            repo = _.last(_.sortBy(repos, (repo) => {
                 return _.size(repo.details.labels);
             }));
         }
@@ -114,8 +120,8 @@ class IssueDialogBox extends PureComponent {
      * @return {Array<Object>}
      */
     getAvailableRepos() {
-        let p = this.props.locale.pick;
-        let repos = this.props.repos;
+        let { env, repos } = this.props;
+        let { p } = env.locale;
         repos = _.filter(repos, (repo) => {
             return repo.details.issues_enabled;
         });
@@ -358,18 +364,19 @@ class IssueDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleOKClick = (evt) => {
-        let story = this.props.story;
-        let issue = _.clone(this.state.issue);
+        let { story, onConfirm } = this.props;
+        let { newIssue } = this.state;
+        newIssue = _.clone(newIssue);
         let repo = this.getSelectedRepo();
         // make sure id is set
         issue.repo_id = repo.id;
         // make use the selected labels exist in the selected repo only
         issue.labels = _.intersection(issue.labels, repo.details.labels);
-        if (this.props.onConfirm) {
-            this.props.onConfirm({
+        if (onConfirm) {
+            onConfirm({
                 type: 'close',
                 target: this,
-                issue
+                issue: newIssue
             });
         }
     }
@@ -390,8 +397,8 @@ class IssueDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleRepoChange = (evt) => {
-        let repoId = parseInt(evt.target.value);
-        this.setIssueProperty('repo_id', repoId);
+        let repoID = parseInt(evt.target.value);
+        this.setIssueProperty('repo_id', repoID);
     }
 
     /**
@@ -413,7 +420,7 @@ class IssueDialogBox extends PureComponent {
     }
 }
 
-let lastSelectedRepoId = parseInt(window.localStorage.last_selected_repo_id) || undefined;
+let lastSelectedRepoID = parseInt(window.localStorage.last_selected_repo_id) || undefined;
 
 export {
     IssueDialogBox as default,

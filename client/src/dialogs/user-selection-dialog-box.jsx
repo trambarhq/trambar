@@ -13,9 +13,10 @@ class UserSelectionDialogBox extends PureComponent {
     static displayName = 'UserSelectionDialogBox';
 
     constructor(props) {
+        let { selection } = props;
         super(props);
         this.state = {
-            selection: this.props.selection,
+            selection,
         };
     }
 
@@ -25,7 +26,8 @@ class UserSelectionDialogBox extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.props.selection !== nextProps.selection) {
+        let { selection } = this.props;
+        if (nextProps.selection !== selection) {
             this.setState({ selection: nextProps.selection });
         }
     }
@@ -36,10 +38,8 @@ class UserSelectionDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.handleCancelClick,
-        };
+        let { show } = this.props;
+        let overlayProps = { show, onBackgroundClick: this.handleCancelClick };
         return (
             <Overlay {...overlayProps}>
                 <div className="user-selection-dialog-box">
@@ -56,15 +56,14 @@ class UserSelectionDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderList() {
+        let { database, route, env, disabled } = this.props;
+        let { selection } = this.state;
         let listProps = {
-            selection: this.state.selection,
-            disabled: this.props.disabled,
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            selection,
+            disabled,
+            database,
+            route,
+            env,
             onSelect: this.handleListSelect,
         };
         return (
@@ -80,7 +79,8 @@ class UserSelectionDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let cancelButtonProps = {
             label: t('selection-cancel'),
             onClick: this.handleCancelClick,
@@ -104,11 +104,11 @@ class UserSelectionDialogBox extends PureComponent {
      * @param  {Object} evt
      */
     handleListSelect = (evt) => {
-        let selection = evt.selection;
-        if (_.isEqual(selection, this.props.selection)) {
-            selection = this.props.selection;
+        let { selection } = this.state;
+        if (!_.isEqual(selection, evt.selection)) {
+            selection = evt.selection;
+            this.setState({ selection });
         }
-        this.setState({ selection });
     }
 
     /**
@@ -117,11 +117,13 @@ class UserSelectionDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleOKClick = (evt) => {
-        if (this.props.onSelect) {
-            this.props.onSelect({
+        let { onSelect } = this.props;
+        let { selection } = this.state;
+        if (onSelect) {
+            onSelect({
                 type: 'select',
                 target: this,
-                selection: this.state.selection,
+                selection,
             });
         }
     }
@@ -132,8 +134,9 @@ class UserSelectionDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleCancelClick = (evt) => {
-        if (this.props.onCancel) {
-            this.props.onCancel({
+        let { onCancel } = this.props;
+        if (onCancel) {
+            onCancel({
                 type: 'cancel',
                 target: this,
             });

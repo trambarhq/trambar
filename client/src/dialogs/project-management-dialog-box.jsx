@@ -25,10 +25,8 @@ class ProjectManagementDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.handleCancelClick,
-        };
+        let { show } = this.props;
+        let overlayProps = { show, onBackgroundClick: this.handleCancelClick };
         return (
             <Overlay {...overlayProps}>
                 <div className="project-management-dialog-box">
@@ -45,9 +43,14 @@ class ProjectManagementDialogBox extends PureComponent {
      * @return {Array<ReactElement>}
      */
     renderList() {
+        let { projectLinks } = this.props;
         return (
             <Scrollable>
-                {_.map(this.props.projectLinks, this.renderProjectButton)}
+            {
+                _.map(projectLinks, (projectLink, i) => {
+                    return this.renderProjectButton(projectLink, i);
+                })
+            }
             </Scrollable>
         );
     }
@@ -56,20 +59,22 @@ class ProjectManagementDialogBox extends PureComponent {
      * Render button for project
      *
      * @param  {Object} link
-     * @param  {Number} index
+     * @param  {Number} i
      *
      * @return {ReactElement}
      */
-    renderProjectButton(link, index) {
-        let p = this.props.locale.pick;
+    renderProjectButton(link, i) {
+        let { env } = this.props;
+        let { selection } = this.state;
+        let { p } = env.locale;
         let props = {
             id: link.key,
             label: p(link.name),
             iconOn: 'times-circle',
-            selected: _.includes(this.state.selection, link.key),
+            selected: _.includes(selection, link.key),
             onClick: this.handleProjectClick,
         };
-        return <OptionButton key={index} {...props} />;
+        return <OptionButton key={i} {...props} />;
     }
 
     /**
@@ -78,7 +83,9 @@ class ProjectManagementDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { selection } = this.state;
+        let { t } = env.locale;
         let cancelProps = {
             label: t('project-management-cancel'),
             onClick: this.handleCancelClick,
@@ -87,7 +94,7 @@ class ProjectManagementDialogBox extends PureComponent {
             label: t('project-management-remove'),
             onClick: this.handleRemoveClick,
             emphasized: true,
-            disabled: _.isEmpty(this.state.selection),
+            disabled: _.isEmpty(selection),
         };
         return (
             <div className="buttons">
@@ -103,12 +110,13 @@ class ProjectManagementDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleProjectClick = (evt) => {
+        let { selection } = this.state;
         let key = evt.currentTarget.id;
-        let selection = _.slice(this.state.selection);
         if (_.includes(selection, key)) {
+            selection = _.without(selection, key);
             _.pull(selection, key);
         } else {
-            selection.push(key);
+            selection = _.concat(selection, key);
         }
         this.setState({ selection });
     }
@@ -119,11 +127,13 @@ class ProjectManagementDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleRemoveClick = (evt) => {
-        if (this.props.onDelete) {
-            this.props.onDelete({
+        let { onDelete } = this.props;
+        let { selection } = this.state;
+        if (onDelete) {
+            onDelete({
                 type: 'delete',
                 target: this,
-                selection: this.state.selection,
+                selection,
             })
         }
     }
@@ -134,8 +144,9 @@ class ProjectManagementDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleCancelClick = (evt) => {
-        if (this.props.onCancel) {
-            this.props.onCancel({
+        let { onCancel } = this.props;
+        if (onCancel) {
+            onCancel({
                 type: 'cancel',
                 target: this,
             });
