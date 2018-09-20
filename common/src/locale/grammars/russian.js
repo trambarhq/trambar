@@ -16,9 +16,9 @@ function cardinal(num, sg, sgGenitive, plGenitive) {
     if (singular(num)) {
         return replaceNumber(sg, num);
     } else if (plural(num)) {
-        return replaceNumber(sgGenitive, num);
+        return replaceNumber(sgGenitive || sg, num);
     } else {
-        return replaceNumber(sgGenitive || plGenitive, num);
+        return replaceNumber(plGenitive || sgGenitive || sg, num);
     }
 }
 

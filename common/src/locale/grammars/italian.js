@@ -2,7 +2,7 @@ function cardinal(num, sg, pl) {
     if (num === 1) {
         return replaceNumber(sg, num);
     } else {
-        return replaceNumber(pl, num);
+        return replaceNumber(pl || sg, num);
     }
 }
 

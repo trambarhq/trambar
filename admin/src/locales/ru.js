@@ -68,7 +68,7 @@ const phrases = {
         return cardinal(count, '1 список задач', '2 списка задач', '5 списков задач');
     },
     'activity-tooltip-$count-wiki': (count) => {
-        return cardinal(count, '1 правка wiki', '2 правки wiki', '5 правок wiki')f;
+        return cardinal(count, '1 правка wiki', '2 правки wiki', '5 правок wiki');
     },
 
     'app-name': 'Трамбар',
