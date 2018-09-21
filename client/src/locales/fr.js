@@ -1,7 +1,7 @@
 import 'moment/locale/fi';
 import { cardinal, list } from 'locale/grammars/french';
 
-const phrases {
+const phrases = {
     'action-contact-by-email': "Contacter par email",
     'action-contact-by-ichat': "Contacter avec iChat",
     'action-contact-by-phone': "Contacter par téléphone",

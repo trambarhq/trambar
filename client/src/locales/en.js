@@ -763,18 +763,6 @@ let unamericanPhrases = {
     'start-error-existing-users-only': 'Only authorised personnel can access this system',
 };
 
-function list(items) {
-    items = items.map((item) => {
-        return `${item}`;
-    });
-    if (items.length >= 2) {
-        let oxfordComma = (items.length > 2) ? ',' : '';
-        let lastItem = items.pop();
-        items[items.length - 1] += `${oxfordComma} and ${lastItem}`;
-    }
-    return items.join(', ');
-}
-
 export {
     chooseVariant as phrases,
 };

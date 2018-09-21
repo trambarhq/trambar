@@ -183,6 +183,5 @@ if (process.env.NODE_ENV !== 'production') {
         options: PropTypes.object.isRequired,
 
         env: PropTypes.instanceOf(Environment).isRequired,
-        theme: PropTypes.instanceOf(Theme),
     };
 }

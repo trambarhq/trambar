@@ -160,7 +160,7 @@ module.exports = {
     plugins: [
         new DefinePlugin(constants),
         new HtmlWebpackPlugin({
-            template: `${folders.assets}/index.html`,
+            template: `${folders.assets}/browser.html`,
             filename: `${folders.www}/index.html`,
         }),
         new ExtractTextPlugin({

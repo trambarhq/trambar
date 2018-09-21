@@ -117,7 +117,7 @@ class BottomNavigation extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { database, env } = this.props;
+        let { database, route, env, settings } = this.props;
         let { stacking } = this.state;
         let { setters } = this.components;
         let { t } = env.locale;

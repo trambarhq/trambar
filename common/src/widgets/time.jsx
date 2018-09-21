@@ -188,6 +188,8 @@ export {
 import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
     Time.propTypes = {
         time: PropTypes.string,
         compact: PropTypes.bool,

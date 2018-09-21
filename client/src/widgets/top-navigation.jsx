@@ -172,8 +172,7 @@ class TopNavigation extends PureComponent {
         let connectionProps = {
             uploading: payloads.uploading,
             searching: database.searching,
-            online: env.online,
-            connected: true,
+            env,
         };
         return (
             <div>
@@ -279,7 +278,7 @@ function Button(props) {
 }
 
 function ConnectionIndicator(props) {
-    let { env, uploading, searching, online, connected } = props;
+    let { env, uploading, searching, connected } = props;
     let { t } = env.locale;
     if (uploading) {
         let size = _.fileSize(uploading.bytes);
@@ -296,7 +295,7 @@ function ConnectionIndicator(props) {
                 <i className="fa fa-refresh"/>
             </span>
         );
-    } else if (!online) {
+    } else if (!env.online) {
         return (
             <span className="connection">
                 <i className="fa fa-wifi" />
@@ -304,7 +303,7 @@ function ConnectionIndicator(props) {
             </span>
         );
     } else if (!connected) {
-        let title = t('warning-no-connection', count, size);
+        let title = t('warning-no-connection');
         return (
             <span className="connection" title={title}>
                 <i className="fa fa-warning" />

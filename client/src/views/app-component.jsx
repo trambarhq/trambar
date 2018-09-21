@@ -103,7 +103,6 @@ if (process.env.NODE_ENV !== 'production') {
 
     AppComponent.propTypes = {
         component: PropTypes.object.isRequired,
-        theme: PropTypes.instanceOf(Theme),
         env: PropTypes.instanceOf(Environment).isRequired,
         onSelect: PropTypes.func,
     };

@@ -3,7 +3,6 @@ import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
-import Empty from 'data/empty';
 import ComponentRefs from 'utils/component-refs';
 import * as UserFinder from 'objects/finders/user-finder';
 import * as RepoFinder from 'objects/finders/repo-finder';
@@ -409,7 +408,7 @@ let findReactions = Memoize(function(reactions, story) {
             return list;
         }
     }
-    return Empty.array;
+    return [];
 });
 
 let findAuthors = Memoize(function(users, story) {
@@ -422,7 +421,7 @@ let findAuthors = Memoize(function(users, story) {
             return list;
         }
     }
-    return Empty.array;
+    return [];
 });
 
 let findRespondents = Memoize(function(users, reactions) {
@@ -434,7 +433,7 @@ let findRespondents = Memoize(function(users, reactions) {
     if (!_.isEmpty(list)) {
         return list;
     }
-    return Empty.array;
+    return [];
 });
 
 let findRecommendations = Memoize(function(recommendations, story) {
@@ -445,7 +444,7 @@ let findRecommendations = Memoize(function(recommendations, story) {
             return list;
         }
     }
-    return Empty.array;
+    return [];
 });
 
 let findRecipients = Memoize(function(recipients, recommendations) {
@@ -455,7 +454,7 @@ let findRecipients = Memoize(function(recipients, recommendations) {
     if (!_.isEmpty(list)) {
         return list;
     }
-    return Empty.array;
+    return [];
 });
 
 function getAuthorIDs(stories) {

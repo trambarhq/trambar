@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import ComponentRefs from 'utils/component-refs';
+import AppCore from 'app-core';
+import { routes } from 'routing';
 import CORSRewriter from 'routing/cors-rewriter';
 import SchemaRewriter from 'routing/schema-rewriter';
 
@@ -9,6 +11,7 @@ import Database from 'data/database';
 import Route from 'routing/route';
 import Payloads from 'transport/payloads';
 import Locale from 'locale/locale';
+import Environment from 'env/environment';
 
 // widgets
 import TopNavigation from 'widgets/top-navigation';
@@ -107,7 +110,7 @@ class Application extends PureComponent {
             }
         }
         let CurrentPage = module.default;
-        let settings = CurrentPage.configureUI(route);
+        let settings = route.params.io;
         let topNavProps = {
             searching: false, // TODO
             settings,
@@ -122,12 +125,12 @@ class Application extends PureComponent {
             route,
             env,
         };
-        let pageProps = {
+        let pageProps = _.assign({
             database,
             route,
             payloads,
             env,
-        };
+        }, route.params);
         let className = this.getClassName();
         let key = route.path + route.search;
         return (
@@ -230,4 +233,5 @@ class Application extends PureComponent {
 export {
     Application as default,
     Application,
+    AppCore,
 };

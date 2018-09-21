@@ -11,5 +11,5 @@ module.exports = {
     'sockjs-client': () => import('sockjs-client' /* webpackChunkName: "sockjs-client" */),
     'react': () => import('react' /* webpackChunkName: "react" */),
     'react-dom': () => import('react-dom' /* webpackChunkName: "react-dom" */),
-    'relaks': () => import('relaks/legacy' /* webpackChunkName: "relaks" */)
+    'relaks': () => import('relaks' /* webpackChunkName: "relaks" */)
 };

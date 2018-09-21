@@ -18,10 +18,10 @@ const routes = {
             date: '${date}',
         },
         hash: [
-            's${anchoredStoryID}',
-            'S${highlightedStoryID}',
-            'r${anchoredReactionID}',
-            'R{$highlightedReactionID}',
+            'S${highlightStoryID}',
+            's${scrollToStoryID}',
+            'R${highlightReactionID}',
+            'r${scrollToReactionID}',
         ],
         params: {
             roleIDs: NumberArray,
@@ -98,8 +98,13 @@ const routes = {
         query: {
             search: '${search}',
             date: '${date}',
-        }
-        hash: [ 'S${story}', 'R${reaction}' ],
+        },
+        hash: [
+            'S${highlightStoryID}',
+            's${scrollToStoryID}',
+            'R${highlightReactionID}',
+            'r${scrollToReactionID}',
+        ],
         params: {
             schema: String,
             search: String,
@@ -171,4 +176,17 @@ const routes = {
             });
         },
     }
+};
+
+const NumberArray = {
+    from: (s) => {
+        return s.split(',').map(parseInt);
+    },
+    to: (a) => {
+        return a.join(',');
+    }
+};
+
+export {
+    routes,
 };

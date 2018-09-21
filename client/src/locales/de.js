@@ -647,7 +647,7 @@ const phrases = {
     'user-activity-$name-left-repo': 'Hat ein Git-Projekt verlassen',
     'user-activity-$name-merged-code': 'Hat einen Merge durchgeführt',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        let cardinal(count, 'einen Audioclip', '2 Audioclips');
+        let videos = cardinal(count, 'einen Audioclip', '2 Audioclips');
         return `Hat ${videos} gepostet`;
     },
     'user-activity-$name-posted-$count-links': (name, count) => {

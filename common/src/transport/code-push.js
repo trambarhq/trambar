@@ -1,58 +1,32 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Moment = require('moment');
-var FileError = require('errors/file-error');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import FileError from 'errors/file-error';
 
-// mixins
-var UpdateCheck = require('mixins/update-check');
-
-// widgets
-var Diagnostics = require('widgets/diagnostics');
-var DiagnosticsSection = require('widgets/diagnostics-section');
-
-module.exports = React.createClass({
-    displayName: 'CodePush',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        inForeground: PropTypes.bool,
-        keys: PropTypes.object.isRequired,
-    },
-
-    statics: {
-        instance: null,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
-            lastSyncStatus: null,
-            lastSyncTime: null,
-            currentPackage: null,
-            pendingPackage: null,
-        };
-    },
+class CodePush {
+    constructor(props) {
+        this.lastSyncStatus = null;
+        this.lastSyncTime = null;
+        this.currentPackage = null;
+        this.pendingPackage = null;
+    }
 
     /**
      * Return available deployment names
      *
      * @return {Array<String>}
      */
-    getDeploymentNames: function() {
+    getDeploymentNames() {
         var keys = _.flatten(_.map(this.props.keys, _.keys));
         return _.uniq(keys);
-    },
+    }
 
     /**
      * Get the deployment name from a file stored on device
      *
      * @return {Promise<String>}
      */
-    loadDeploymentName: function() {
+    loadDeploymentName() {
         var names = this.getDeploymentNames();
         return readTextFile('codepush').then((name) => {
             if (!_.includes(names, name)) {
@@ -62,26 +36,26 @@ module.exports = React.createClass({
         }).catch((err) => {
             return _.first(names);
         });
-    },
+    }
 
     /**
      * Write the desired deployment name to a file stored on device
      *
      * @return {Promise}
      */
-    saveDeploymentName: function(type) {
+    saveDeploymentName(type) {
         return writeTextFile('codepush', type).then(() => {
             this.checkForUpdate();
             return null;
         });
-    },
+    }
 
     /**
      * Retrieves metadata about currently installed package
      *
      * @return {Promise<Object>}
      */
-    getCurrentPackage: function() {
+    getCurrentPackage() {
         return new Promise((resolve, reject) => {
             if (window.codePush) {
                 codePush.getCurrentPackage((pkg) => {
@@ -93,14 +67,14 @@ module.exports = React.createClass({
                 resolve(null);
             }
         });
-    },
+    }
 
     /**
      * Retrieves metadata about pending package
      *
      * @return {Promise<Object>}
      */
-    getPendingPackage: function() {
+    getPendingPackage() {
         return new Promise((resolve, reject) => {
             if (window.codePush) {
                 codePush.getPendingPackage((pkg) => {
@@ -112,12 +86,12 @@ module.exports = React.createClass({
                 resolve(null);
             }
         });
-    },
+    }
 
     /**
      * Run code synchronization
      */
-    checkForUpdate: function() {
+    checkForUpdate() {
         this.loadDeploymentName().then((deployment) => {
             if (process.env.NODE_ENV !== 'production') {
                 return 'NOT_PRODUCTION';
@@ -159,76 +133,7 @@ module.exports = React.createClass({
             }
             return null;
         });
-    },
-
-    /**
-     * Check for update on wake
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps: function(nextProps) {
-        if (!this.props.inForeground && nextProps.inForeground) {
-            var hoursAgo = Moment().subtract(4, 'hour').toISOString();
-            if (hoursAgo >= this.state.codePushSyncTime) {
-                if (this.state.codePushSyncResult !== 'UPDATE_INSTALLED') {
-                    this.checkForUpdate();
-                }
-            }
-        }
-    },
-
-    /**
-     * Check for update after mount
-     */
-    componentDidMount: function() {
-        this.checkForUpdate();
-        this.constructor.instance = this;
-        this.getCurrentPackage().then((pkg) => {
-            this.setState({ currentPackage: pkg });
-        });
-    },
-
-    /**
-     * Remove singleton on unmount
-     */
-    componentWillUnmount: function() {
-        this.constructor.instance = null;
-    },
-
-    /**
-     * Render diagnostics
-     *
-     * @return {ReactElement}
-     */
-    render: function() {
-        return (
-            <Diagnostics type="code-push">
-                <DiagnosticsSection label="Update check">
-                    <div>Last check: {this.state.lastSyncTime}</div>
-                    <div>Result: {this.state.lastSyncStatus}</div>
-                </DiagnosticsSection>
-                <CodePushPackageDiagnostics label="Current package" package={this.state.currentPackage} />
-                <CodePushPackageDiagnostics label="Pending package" package={this.state.pendingPackage} />
-            </Diagnostics>
-        );
-    },
-});
-
-function CodePushPackageDiagnostics(props) {
-    if (!props.package) {
-        return null;
     }
-    var pkg = props.package;
-    return (
-        <DiagnosticsSection label={props.label}>
-            <div>Label: {pkg.label}</div>
-            <div>Description: {pkg.description}</div>
-            <div>First run: {pkg.isFristRun ? 'yes' : 'no'}</div>
-            <div>Mandatory: {pkg.isMandatory ? 'yes' : 'no'}</div>
-            <div>Package hash: {_.truncate(pkg.packageHash, { length: 15 })}</div>
-            <div>Package size: {pkg.packageSize}</div>
-        </DiagnosticsSection>
-    );
 }
 
 function readTextFile(filename) {

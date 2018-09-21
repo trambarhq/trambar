@@ -7,7 +7,7 @@ import * as MediaTagReader from 'media/media-tag-reader';
 import * as LinkParser from 'utils/link-parser';
 import * as QuickStart from 'media/quick-start';
 import * as BlobReader from 'transport/blob-reader';
-import * as ResourceTypes from 'objects/types/resource-types';
+import ResourceTypes from 'objects/types/resource-types';
 
 // widgets
 import PhotoCaptureDialogBox from 'dialogs/photo-capture-dialog-box';
