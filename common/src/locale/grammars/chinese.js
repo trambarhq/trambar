@@ -28,21 +28,21 @@ var traditionalChineseNumbers = [ '零', '一', '兩', '三', '四', '五', '六
 var simplifiedChineseNumbers = [ '〇', '一', '两', '三', '四', '五', '六', '七', '八', '九' ]
 
 function replaceNumberT(s, num) {
-    var n = number(num, traditionalChineseNumbers);
-    var r = s.replace(chineseNumberRegExp, n);
-    if (r !== s) {
-        return r;
+    if (numberRegExp.test(s)) {
+        return s.replace(numberRegExp, num);
+    } else {
+        var n = number(num, traditionalChineseNumbers);
+        return s.replace(chineseNumberRegExp, n);
     }
-    return s.replace(numberRegExp, num);
 }
 
 function replaceNumberS(s, num) {
-    var n = number(num, simplifiedChineseNumbers);
-    var r = s.replace(chineseNumberRegExp, n);
-    if (r !== s) {
-        return r;
+    if (numberRegExp.test(s)) {
+        return s.replace(numberRegExp, num);
+    } else {
+        var n = number(num, simplifiedChineseNumbers);    
+        return s.replace(chineseNumberRegExp, n);
     }
-    return s.replace(numberRegExp, num);
 }
 
 function list(items) {

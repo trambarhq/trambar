@@ -14,29 +14,21 @@ require('moment').defineLocale('zh-mo', { parentLocale: 'zh-hk' });
     }
 });
 
-module.exports = function(localeCode) {
-    let cantonese = false;
-    let traditional = false;
-    if (/\-(mo|hk)$/.test(localeCode)) {
-        cantonese = true;
-        traditional = true;
-    } else if (/\-(tw)$/.test(localeCode)) {
-        traditional = true;
-    }
-    if (traditional) {
-        if (cantonese) {
+function chooseVariant(countryCode) {
+    switch (countryCode) {
+        case 'mo':
+        case 'hk':
             let merged = {};
             for (let name in traditionalPhrases) {
                 merged[name] = cantonesePhrases[name] || traditionalPhrases[name];
             }
             return merged
-        } else {
+        case 'tw':
             return traditionalPhrases;
-        }
-    } else {
-        return simplifiedPhrases;
+        default:
+            return simplifiedPhrases;
     }
-};
+}
 
 let traditionalPhrases = {
     'action-contact-by-email': '用電子郵件聯繫',
@@ -57,16 +49,13 @@ let traditionalPhrases = {
     'activation-schema': '項目',
 
     'alert-$count-new-bookmarks': (count) => {
-        let num = cardinalT(count);
-        return `${num}張新書籤`;
+        return cardinalT(count, '一張新書籤');
     },
     'alert-$count-new-notifications': (count) => {
-        let num = cardinalT(count);
-        return `${num}個新通知`;
+        return cardinalT(count, '一個新通知');
     },
     'alert-$count-new-stories': (count) => {
-        let num = cardinalT(count);
-        return `${num}個新故事`;
+        return cardinalT(count, '一個新故事');
     },
 
     'app-component-close': '關閉',
@@ -82,12 +71,10 @@ let traditionalPhrases = {
     'audio-capture-stop': '停止',
 
     'bookmark-$count-other-users': (count) => {
-        let num = cardinalT(count);
-        return `另外${num}個人`;
+        return cardinalT(count, '另外一個人');
     },
     'bookmark-$count-users': (count) => {
-        let num = cardinalT(count);
-        return `${num}個人`;
+        return cardinalT(count, '一個人');
     },
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推薦這個`;
@@ -159,8 +146,7 @@ let traditionalPhrases = {
     'issue-title': '標題',
 
     'list-$count-more': (count) => {
-        let num = cardinalT(count);
-        return `重有${num}個⋯⋯`;
+        return cardinalT(count, '重有一個⋯⋯');
     },
 
     'media-close': '關閉',
@@ -307,8 +293,7 @@ let traditionalPhrases = {
     'option-remove-story': '刪除故事',
     'option-send-bookmarks': '發送書籤給其他人',
     'option-send-bookmarks-to-$count-users': (count) => {
-        let num = cardinalT(count);
-        return `發送書籤給${num}個人`;
+        return cardinalT(count, '發送書籤給一個人');
     },
     'option-show-media-preview': '顯示附件媒體',
     'option-show-text-preview': '顯示課文預覽',
@@ -469,8 +454,7 @@ let traditionalPhrases = {
     'statistics-pie': '餅圖',
 
     'story-$count-reactions': (count) => {
-        let num = cardinalT(count);
-        return `${num}個反應`;
+        return cardinalT(count, '一個反應');
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `在《${repo}》數據庫中創建了《${branch}》分支`;
@@ -566,8 +550,7 @@ let traditionalPhrases = {
     'story-add-remove-coauthor': '替代合著者',
     'story-audio': '音頻',
     'story-author-$count-others': (count) => {
-        let num = cardinalT(count);
-        return `另外${num}個人`;
+        return cardinalT(count, '另外一個人');
     },
     'story-author-$name1-and-$name2': (name1, name2) => {
         return [ name1, `和`, name2 ];
@@ -667,20 +650,16 @@ let traditionalPhrases = {
     'user-activity-$name-left-repo': '離開了數據庫',
     'user-activity-$name-merged-code': '合併了代碼',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        let num = cardinalT(count);
-        return `新增了${num}個音頻剪輯`;
+        return cardinalT(count, '新增了一個音頻剪輯');
     },
     'user-activity-$name-posted-$count-links': (name, count) => {
-        let num = cardinalT(count);
-        return `新增了${num}個網頁鏈接`;
+        return cardinalT(count, '新增了一個網頁鏈接');
     },
     'user-activity-$name-posted-$count-pictures': (name, count) => {
-        let num = cardinalT(count);
-        return `新增了${num}張相片`;
+        return cardinalT(count, '新增了一張相片');
     },
     'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        let num = cardinalT(count);
-        return `新增了${num}張影片`;
+        return cardinalT(count, '新增了一張影片');
     },
     'user-activity-$name-pushed-code': '將代碼推送到數據庫',
     'user-activity-$name-reported-issue': '報告了一個問題',
@@ -789,16 +768,13 @@ let simplifiedPhrases = {
     'activation-schema': '项目',
 
     'alert-$count-new-bookmarks': (count) => {
-        let num = cardinalS(count);
-        return `${num}张新书签`;
+        return cardinalS(count, '一张新书签');
     },
     'alert-$count-new-notifications': (count) => {
-        let num = cardinalS(count);
-        return `${num}个新通知`;
+        return cardinalS(count, '一个新通知');
     },
     'alert-$count-new-stories': (count) => {
-        let num = cardinalS(count);
-        return `${num}个新故事`;
+        return cardinalS(count, '一个新故事');
     },
 
     'app-component-close': '关闭',
@@ -814,12 +790,10 @@ let simplifiedPhrases = {
     'audio-capture-stop': '停止',
 
     'bookmark-$count-other-users': (count) => {
-        let num = cardinalS(count);
-        return `另外${num}个人`;
+        return cardinalS(count, '另外一个人');
     },
     'bookmark-$count-users': (count) => {
-        let num = cardinalS(count);
-        return `${num}个人`;
+        return cardinalS(count, '一个人');
     },
     'bookmark-$name-recommends-this': (name) => {
         return `${name}推荐这个`;
@@ -891,8 +865,7 @@ let simplifiedPhrases = {
     'issue-title': '标题',
 
     'list-$count-more': (count) => {
-        let num = cardinalS(count);
-        return `重有${num}个⋯⋯`;
+        return cardinalS(count, '重有一个⋯⋯');
     },
 
     'media-close': '关闭',
@@ -1039,8 +1012,7 @@ let simplifiedPhrases = {
     'option-remove-story': '删除故事',
     'option-send-bookmarks': '发送书签给其他人',
     'option-send-bookmarks-to-$count-users': (count) => {
-        let num = cardinalS(count);
-        return `发送书签给${num}个人`;
+        return cardinalS(count, '发送书签给一个人');
     },
     'option-show-media-preview': '显示附件媒体',
     'option-show-text-preview': '显示课文预览',
@@ -1201,8 +1173,7 @@ let simplifiedPhrases = {
     'statistics-pie': '饼图',
 
     'story-$count-reactions': (count) => {
-        let num = cardinalS(count);
-        return `${num}个反应`;
+        return cardinalS(count, '一个反应');
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         return `在《${repo}》数据库中创建了《${branch}》分支`;
@@ -1298,8 +1269,7 @@ let simplifiedPhrases = {
     'story-add-remove-coauthor': '替代合著者',
     'story-audio': '音频',
     'story-author-$count-others': (count) => {
-        let num = cardinalS(count);
-        return `另外${num}个人`;
+        return cardinalS(count, '另外一个人');
     },
     'story-author-$name1-and-$name2': (name1, name2) => {
         return [ name1, `和`, name2 ];
@@ -1399,20 +1369,16 @@ let simplifiedPhrases = {
     'user-activity-$name-left-repo': '离开了数据库',
     'user-activity-$name-merged-code': '合并了代码',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        let num = cardinalS(count);
-        return `新增了${num}个音频剪辑`;
+        return cardinalS(count, '新增了一个音频剪辑');
     },
     'user-activity-$name-posted-$count-links': (name, count) => {
-        let num = cardinalS(count);
-        return `新增了${num}个网页链接`;
+        return cardinalS(count, '新增了一个网页链接');
     },
     'user-activity-$name-posted-$count-pictures': (name, count) => {
-        let num = cardinalS(count);
-        return `新增了${num}张相片`;
+        return cardinalS(count, '新增了一张相片');
     },
     'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        let num = cardinalS(count);
-        return `新增了${num}张影片`;
+        return cardinalS(count, '新增了一张影片');
     },
     'user-activity-$name-pushed-code': '将代码推送到数据库',
     'user-activity-$name-reported-issue': '报告了一个问题',
@@ -1634,8 +1600,7 @@ let cantonesePhrases = {
     'option-hide-story': '訪客用戶睇唔到',
     'option-send-bookmarks': '發送書籤俾其他人',
     'option-send-bookmarks-to-$count-users': (count) => {
-        let num = cardinalT(count);
-        return `發送書籤俾${num}個人`;
+        return cardinalT(count, '發送書籤俾一個人');
     },
     'option-statistics-biweekly': '顯示前十四日嘅活動',
     'option-statistics-monthly': '顯示呢個月嘅活動',
@@ -1861,20 +1826,16 @@ let cantonesePhrases = {
     'user-activity-$name-left-repo': '離開咗數據庫',
     'user-activity-$name-merged-code': '合併咗一啲代碼',
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        let num = cardinalT(count);
-        return `新增咗${num}個音頻剪輯`;
+        return cardinalT(count, '新增咗一個音頻剪輯');
     },
     'user-activity-$name-posted-$count-links': (name, count) => {
-        let num = cardinalT(count);
-        return `新增咗${num}個網頁鏈接`;
+        return cardinalT(count, '新增咗一個網頁鏈接');
     },
     'user-activity-$name-posted-$count-pictures': (name, count) => {
-        let num = cardinalT(count);
-        return `新增咗${num}張相片`;
+        return cardinalT(count, '新增咗一張相片');
     },
     'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        let num = cardinalT(count);
-        return `新增咗${num}張影片`;
+        return cardinalT(count, '新增咗一張影片');
     },
     'user-activity-$name-reported-issue': '報告咗一個問題',
     'user-activity-$name-started-survey': '發布咗一個調查',
@@ -1890,44 +1851,6 @@ let cantonesePhrases = {
     'warning-no-connection': '唔可以即時更新',
 };
 
-let chineseNumbers = [ '〇', '一', '二', '三', '四', '五', '六', '七', '八', '九' ];
-
-function cardinalT(num) {
-    return cardinal(num, true);
-}
-
-function cardinalS(num) {
-    return cardinal(num, false);
-}
-
-function cardinal(num, traditional) {
-    if (num === 2) {
-        return (traditional) ? '兩' : '两';
-    } else if (num < 10) {
-        return chineseNumbers[num];
-    } else if (num < 100) {
-        let text = '十';
-        let tens = Math.floor(num / 10);
-        let ones = Math.floor(num % 10);
-        if (tens > 1) {
-            text = chineseNumbers[tens] + text;
-        }
-        if (ones) {
-            text = text + chineseNumbers[ones];
-        }
-        return text;
-    } else {
-        return String(num);
-    }
-}
-
-function list(items) {
-    items = items.map((item) => {
-        return `${item}`;
-    });
-    if (items.length >= 2) {
-        let lastItem = items.pop();
-        items[items.length - 1] += `和${lastItem}`;
-    }
-    return items.join('，');
-}
+export {
+    chooseVariant as phrases
+};

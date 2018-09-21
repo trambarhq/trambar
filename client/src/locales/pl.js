@@ -7,7 +7,7 @@ import {
     pastTenseEnding,
 } from 'locale/grammars/polish';
 
-let phrases = {
+const phrases = {
     'action-contact-by-email': 'Skontaktuj się przez e-mail',
     'action-contact-by-ichat': 'Skontaktuj się przez iChat',
     'action-contact-by-phone': 'Skontaktuj się telefonicznie',
