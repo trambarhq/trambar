@@ -297,7 +297,8 @@ class StoryEditorOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleHidePostClick = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.hidePost = !options.hidePost;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
@@ -309,7 +310,8 @@ class StoryEditorOptions extends PureComponent {
      * @param  {Object} evt
      */
     handleRecipientsSelect = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.bookmarkRecipients = evt.selection;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
@@ -332,7 +334,8 @@ class StoryEditorOptions extends PureComponent {
      * @param  {Object} evt
      */
     handleIssueConfirm = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.issueDetails = evt.issue;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
@@ -355,7 +358,8 @@ class StoryEditorOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleShowMediaPreviewClick = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.preview = 'media';
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
@@ -367,7 +371,8 @@ class StoryEditorOptions extends PureComponent {
      * @param  {Event} evt
      */
     handleShowTextPreviewClick = (evt) => {
-        let options = _.clone(this.props.options);
+        let { options } = this.props;
+        options = _.clone(options);
         options.preview = 'text';
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();

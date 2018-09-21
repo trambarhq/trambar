@@ -376,7 +376,6 @@ class StoryContents extends PureComponent {
         let { env, story, authors, currentUser, repo } = this.props;
         let { t, p, g } = env.locale;
         let { title } = story.details;
-        let story = this.props.story;
         let name = UserUtils.getDisplayName(authors[0], env);
         let gender = UserUtils.getGender(authors[0]);
         g(name, gender);

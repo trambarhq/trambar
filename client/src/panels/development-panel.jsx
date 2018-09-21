@@ -26,13 +26,13 @@ class DevelopmentPanel extends PureComponent {
      * @param  {*} value
      */
     setUserProperty(path, value) {
-        let { currentUser } = this.props;
+        let { currentUser, onChange } = this.props;
         if (!currentUser) {
             return;
         }
         let userAfter = _.decoupleSet(currentUser, path, value);
-        if (this.props.onChange) {
-            this.props.onChange({
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 user: userAfter

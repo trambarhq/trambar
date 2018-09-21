@@ -38,8 +38,8 @@ class SettingsPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let { database, route, payloads, env } = this.props;
+        let db = database.use({ by: this });
         let props = {
             currentUser: null,
             currentProject: null,
@@ -48,15 +48,14 @@ class SettingsPage extends AsyncComponent {
             devices: null,
             system: null,
 
-            database: this.props.database,
-            payloads: this.props.payloads,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            payloads,
+            route,
+            env,
         };
         meanwhile.show(<SettingsPageSync {...props} />);
-        return db.start().then((currentUserId) => {
-            return UserFinder.findUser(db, currentUserId).then((user) => {
+        return db.start().then((currentUserID) => {
+            return UserFinder.findUser(db, currentUserID).then((user) => {
                 props.currentUser = user;
             });
         }).then(() => {
@@ -132,7 +131,8 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     render() {
-        if (!this.props.currentUser) {
+        let { currentUser } = this.props;
+        if (!currentUser) {
             return null;
         }
         return (
@@ -358,8 +358,8 @@ class SettingsPageSync extends PureComponent {
      * @return {Promise<User>}
      */
     saveUser(user, immediate) {
-        let schema = 'global';
-        let original = this.state.original;
+        let { database, payloads } = this.props;
+        let { original } = this.state;
         let options = {
             delay: (immediate) ? undefined : AUTOSAVE_DURATION,
             onConflict: (evt) => {
@@ -370,10 +370,10 @@ class SettingsPageSync extends PureComponent {
                 }
             },
         };
-        let db = this.props.database.use({ schema, by: this });
+        let db = database.use({ schema: 'global', by: this });
         return db.saveOne({ table: 'user' }, user, options).then((user) => {
             // start file upload
-            this.props.payloads.dispatch(user);
+            payloads.dispatch(user);
             return user;
         });
     }

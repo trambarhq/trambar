@@ -115,7 +115,7 @@ class RoleFilterButton extends PureComponent {
      * @return {ReactElement|null}
      */
     renderUserCount() {
-        let { users } this.props;
+        let { users } = this.props;
         if (!users) {
             return null;
         }

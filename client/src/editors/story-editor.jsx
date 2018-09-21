@@ -916,13 +916,13 @@ class StoryEditor extends PureComponent {
      * @return {Promise<Story>}
      */
     removeSelf() {
-        let { story, currentUser } = this.props;
+        let { database, story, currentUser } = this.props;
         let userIDs = _.without(story.user_ids, currentUser.id);
         let columns = {
             id: story.id,
             user_ids: userIDs,
         };
-        let db = this.props.database.use({ by: this });
+        let db = database.use({ by: this });
         return db.start().then(() => {
             return db.saveOne({ table: 'story' }, columns);
         });
@@ -973,14 +973,14 @@ class StoryEditor extends PureComponent {
      * @return {Promise<Array<Bookmark>>}
      */
     sendBookmarks(story, recipientIDs) {
-        let { bookmarks } = this.props;
+        let { bookmarks, currentUser } = this.props;
         let newBookmarks = [];
         // add bookmarks that don't exist yet
         _.each(recipientIDs, (recipientID) => {
             if (!_.some(bookmarks, { target_user_id: recipientID })) {
                 let newBookmark = {
                     story_id: story.published_version_id || story.id,
-                    user_ids: [ this.props.currentUser.id ],
+                    user_ids: [ currentUser.id ],
                     target_user_id: recipientID,
                 };
                 newBookmarks.push(newBookmark);
@@ -1034,7 +1034,7 @@ class StoryEditor extends PureComponent {
         if (!draft.type) {
             draft.type = 'post';
         }
-        let roleIDs = _.map(.authors, 'role_ids');
+        let roleIDs = _.map(authors, 'role_ids');
         draft.role_ids = _.uniq(_.flatten(roleIDs));
         draft.published = true;
 
@@ -1216,10 +1216,11 @@ class StoryEditor extends PureComponent {
      * @return {Promise<Story>}
      */
     handleCancelClick = (evt) => {
+        let { isStationary } = this.props;
         let action;
         if (this.isCoauthoring()) {
             action = 'remove-self';
-        } else if (this.props.isStationary) {
+        } else if (isStationary) {
             action = 'delete-post';
         } else {
             action = 'cancel-edit';

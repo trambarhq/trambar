@@ -238,7 +238,7 @@ class BookmarkListSync extends PureComponent {
                 // suppress highlighting after a second
                 setTimeout(() => {
                     // TODO
-                    //this.props.route.reanchor(_.toLower(hash));
+                    //route.reanchor(_.toLower(hash));
                 }, 1000);
             }
         }

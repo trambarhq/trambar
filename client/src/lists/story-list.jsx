@@ -134,7 +134,6 @@ class StoryListSync extends PureComponent {
             currentUser,
         } = this.props;
         let { setters } = this.components;
-        let setters = this.components.setters;
         stories = sortStories(stories, pendingStories);
         if (acceptNewStory) {
             stories = attachDrafts(stories, draftStories, currentUser);

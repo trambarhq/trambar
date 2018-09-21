@@ -561,7 +561,7 @@ class StoryView extends PureComponent {
     saveStory(story, immediate) {
         let { database } = this.props;
         let { options } = this.state;
-        let options = {
+        let saveOptions = {
             delay: (immediate) ? undefined : AUTOSAVE_DURATION,
             onConflict: (evt) => {
                 // perform merge on conflict, if the object still exists
@@ -575,7 +575,7 @@ class StoryView extends PureComponent {
         return db.start().then(() => {
             let newStory = !StoryUtils.isSaved(story);
             let bookmarkRecipients = options.bookmarkRecipients;
-            return db.saveOne({ table: 'story' }, story, options).then((story) => {
+            return db.saveOne({ table: 'story' }, story, saveOptions).then((story) => {
                 if (newStory && !_.isEmpty(bookmarkRecipients)) {
                     // bookmarks were added after the story was published but
                     // not yet saved

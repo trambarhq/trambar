@@ -137,7 +137,8 @@ class IssueDialogBox extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.props.show !== nextProps.show) {
+        let { show } = this.props;
+        if (nextProps.show !== show) {
             if (nextProps.show) {
                 let issue;
                 if (!nextProps.issue) {
@@ -154,10 +155,8 @@ class IssueDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.props.onClose,
-        };
+        let { show, onClose } = this.props;
+        let overlayProps = { show, onBackgroundClick: onClose };
         return (
             <Overlay {...overlayProps}>
                 <div className="issue-dialog-box">
@@ -193,13 +192,14 @@ class IssueDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderTitleInput() {
-        let t = this.props.locale.translate;
-        let setters = this.components.setters;
+        let { env } = this.props;
+        let { t } = env.locale;
+        let { setters } = this.components;
         let props = {
             id: 'title',
             ref: setters.textField,
             value: this.getIssueProperty('title'),
-            locale: this.props.locale,
+            env,
             onChange: this.handleTitleChange,
         };
         return <TextField {...props}>{t('issue-title')}</TextField>;
@@ -211,15 +211,15 @@ class IssueDialogBox extends PureComponent {
      * @return {[type]}
      */
     renderRepoSelector() {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
+        let { env } = this.props;
+        let { t, p } = env.locale;
         let repos = this.getAvailableRepos();
         if (repos.length <= 1) {
             return null;
         }
         let repo = this.getSelectedRepo();
         let options = _.map(repos, (repo, index) => {
-            let title = p(repo.details.title) || repo.name;
+            let title = RepoUtils.getDisplayName(repo);
             return <option key={index} value={repo.id}>{title}</option>;
         });
         return (
@@ -243,14 +243,11 @@ class IssueDialogBox extends PureComponent {
             return null;
         }
         let selectedLabels = this.getIssueProperty('labels') || [];
-        let labels = repo.details.labels;
-        let labelColors = repo.details.label_colors;
+        let { labels } = repo.details;
         let tags = _.map(labels, (label, index) => {
             let props = {
                 className: 'tag',
-                style: {
-                    backgroundColor: labelColors[index],
-                },
+                style: RepoUtils.getLabelStyle(repo, label),
                 'data-label': label,
                 onClick: this.handleTagClick,
             };
@@ -271,22 +268,24 @@ class IssueDialogBox extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let t = this.props.locale.translate;
+        let { env, issue, allowDeletion } = this.props;
+        let { newIssue } = this.state;
+        let { t } = env.locale;
         let repo = this.getSelectedRepo();
         let text = this.getIssueProperty('title');
         let changed = !!_.trim(text);
         let canDelete = false;
-        if (this.props.issue) {
-            if (this.state.issue) {
-                changed = !_.isEqual(this.state.issue, this.props.issue);
+        if (issue) {
+            if (newIssue) {
+                changed = !_.isEqual(newIssue, issue);
             } else {
                 changed = false;
             }
-            if (this.props.issue && this.props.issue.id) {
+            if (issue && issue.id) {
                 canDelete = true;
             }
         }
-        if (!this.props.allowDeletion) {
+        if (!allowDeletion) {
             canDelete = false;
         }
         let deleteProps = {
@@ -323,9 +322,10 @@ class IssueDialogBox extends PureComponent {
      * Focus text field on mount
      */
     componentDidMount() {
+        let { textField } = this.components;
         // only if the title is currently empty
         if (!this.getIssueProperty('title')) {
-            this.components.textField.focus();
+            textField.focus();
         }
     }
 
@@ -335,8 +335,9 @@ class IssueDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleDeleteClick = (evt) => {
-        if (this.props.onConfirm) {
-            this.props.onConfirm({
+        let { onConfirm } = this.props;
+        if (onConfirm) {
+            onConfirm({
                 type: 'confirm',
                 target: this,
                 issue: null,
@@ -350,8 +351,9 @@ class IssueDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleCancelClick = (evt) => {
-        if (this.props.onCancel) {
-            this.props.onCancel({
+        let { onCancel } = this.props;
+        if (onCancel) {
+            onCancel({
                 type: 'cancel',
                 target: this,
             });
@@ -369,9 +371,9 @@ class IssueDialogBox extends PureComponent {
         newIssue = _.clone(newIssue);
         let repo = this.getSelectedRepo();
         // make sure id is set
-        issue.repo_id = repo.id;
+        newIssue.repo_id = repo.id;
         // make use the selected labels exist in the selected repo only
-        issue.labels = _.intersection(issue.labels, repo.details.labels);
+        newIssue.labels = _.intersection(newIssue.labels, repo.details.labels);
         if (onConfirm) {
             onConfirm({
                 type: 'close',

@@ -152,7 +152,7 @@ class NotificationView extends PureComponent {
      * @return {String}
      */
     getNotificationText() {
-        let { env, notification, user }
+        let { env, notification, user } = this.props;
         let { t, g } = env.locale;
         let { story_type: storyType,  branch, reaction_type: reactionType } = notification.details;
         let name = UserUtils.getDisplayName(user, env);

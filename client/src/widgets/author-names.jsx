@@ -14,31 +14,26 @@ function AuthorNames(props) {
         return UserUtils.getDisplayName(author, env);
     });
     let contents;
-    switch (_.size(authors)) {
-        // the list can be empty during loading
-        case 0:
-            contents = '\u00a0';
-            break;
-        case 1:
-            contents = <span key={1} className="sole author">{names[0]}</span>;
-            break;
-        case 2:
-            let name1 = <span key={1} className="lead author">{names[0]}</span>;
-            let name2 = <span key={3} className="co author">{names[1]}</span>
-            contents = t('story-author-$name1-and-$name2', name1, name2);
-            break;
-        default:
-            let name1 = <span key={1} className="lead author">{names[0]}</span>;
-            let coauthors = _.slice(authors, 1);
-            let props = {
-                users: coauthors,
-                label: t('story-author-$count-others', coauthors.length),
-                title: t('story-coauthors'),
-                locale: props.locale,
-                theme: props.theme,
-            };
-            let others = <MultipleUserNames key={3} {...props} />
-            contents = t('story-author-$name1-and-$name2', name1, others);
+    if (authors.length === 0) {
+        contents = '\u00a0';
+    } else if (authors.length === 1) {
+        contents = <span key={1} className="sole author">{names[0]}</span>;
+    } else if (authors.length === 2) {
+        let name1 = <span key={1} className="lead author">{names[0]}</span>;
+        let name2 = <span key={3} className="co author">{names[1]}</span>
+        contents = t('story-author-$name1-and-$name2', name1, name2);
+    } else {
+        let name1 = <span key={1} className="lead author">{names[0]}</span>;
+        let coauthors = _.slice(authors, 1);
+        let props = {
+            users: coauthors,
+            label: t('story-author-$count-others', coauthors.length),
+            title: t('story-coauthors'),
+            locale: props.locale,
+            theme: props.theme,
+        };
+        let others = <MultipleUserNames key={3} {...props} />
+        contents = t('story-author-$name1-and-$name2', name1, others);
     }
     return <span className="author-names selectable">{contents}</span>;
 }

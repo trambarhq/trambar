@@ -35,16 +35,14 @@ class StartPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: 'global', by: this });
+        let { database, route, env, address, add, activationCode } = this.props;
+        let db = database.use({ schema: 'global', by: this });
         let props = {
             currentUser: null,
             system: this.sessionStartSystem || null,
             servers: null,
             projects: null,
             projectLinks: null,
-            canAccessServer: this.props.canAccessServer,
-            canAccessSchema: this.props.canAccessSchema,
 
             database: this.props.database,
             route: this.props.route,
@@ -55,7 +53,7 @@ class StartPage extends AsyncComponent {
             onExit: this.props.onExit,
             onAvailableSchemas: this.props.onAvailableSchemas,
         };
-        if (!this.props.canAccessServer) {
+        if (!db.hasAccess) {
             if (process.env.PLATFORM === 'browser') {
                 // start authorization process--will receive system description
                 // and list of OAuth providers along with links
@@ -75,34 +73,31 @@ class StartPage extends AsyncComponent {
                 });
             }
             if (process.env.PLATFORM === 'cordova') {
-                if (params.address && params.activationCode) {
+                if (address && activationCode) {
                     meanwhile.show(<StartPageSync {...props} />);
-                    return db.acquireMobileSession(params.activationCode).then((userId) => {
+                    return db.acquireMobileSession(activationCode).then((userID) => {
                         // create entry in device table
                         let device = {
                             type: getDeviceType(),
                             uuid: getDeviceUUID(),
                             details: getDeviceDetails(),
-                            user_id: userId,
-                            session_handle: _.toLower(params.activationCode),
+                            user_id: userID,
+                            session_handle: _.toLower(activationCode),
                         };
                         return db.saveOne({ table: 'device' }, device);
                     }).then((device) => {
                         // if no error was encounted, an onAuthorization event
                         // should have caused rerendering at this point
-                        // with props.canAccessServer = true
                         return <StartPageSync {...props} />;
                     }).catch((err) => {
                         props.serverError = err;
                         // start over after a few seconds
                         setTimeout(() => {
                             let params = {
-                                cors: false,
                                 address: null,
-                                schema: null,
                                 activationCode: null
                             };
-                            this.props.route.replace(StartPage, params);
+                            route.replace(route.name, params);
                         }, 10000);
                         return <StartPageSync {...props} />;
                     });
@@ -115,14 +110,14 @@ class StartPage extends AsyncComponent {
             }
         } else {
             // handle things normally after we've gained authorization
-            if (!params.add) {
+            if (!add) {
                 // need to adjust the progressive rendering delay since Relaks
                 // by default disables it once a page has fully rendered
                 meanwhile.delay(undefined, 300);
             }
             meanwhile.show(<StartPageSync {...props} />);
-            return db.start().then((currentUserId) => {
-                return UserFinder.findUser(db, currentUserId).then((user) => {
+            return db.start().then((currentUserID) => {
+                return UserFinder.findUser(db, currentUserID).then((user) => {
                     props.currentUser = user;
                 });
             }).then(() => {
@@ -155,7 +150,7 @@ class StartPageSync extends PureComponent {
         if (process.env.PLATFORM === 'browser') {
             this.state = {
                 transition: null,
-                selectedProjectId: 0,
+                selectedProjectID: 0,
                 oauthErrors: {},
                 renderingProjectDialog: false,
                 showingProjectDialog: false,
@@ -234,11 +229,11 @@ class StartPageSync extends PureComponent {
         if (this.props.projects !== nextProps.projects) {
             if (this.state.renderingProjectDialog) {
                 // close the dialog box if the project has disappeared
-                if (!_.some(nextProps.projects, { id: this.state.selectedProjectId })) {
+                if (!_.some(nextProps.projects, { id: this.state.selectedProjectID })) {
                     this.setState({
                         renderingProjectDialog: false,
                         showingProjectDialog: false,
-                        selectedProjectId: 0
+                        selectedProjectID: 0
                     });
                 }
             }
@@ -842,7 +837,7 @@ class StartPageSync extends PureComponent {
         if (!this.state.renderingProjectDialog) {
             return null;
         }
-        let selectedProject = _.find(this.props.projects, { id: this.state.selectedProjectId });
+        let selectedProject = _.find(this.props.projects, { id: this.state.selectedProjectID });
         if (!selectedProject) {
             return null;
         }
@@ -999,9 +994,9 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleProjectButtonClick = (evt) => {
-        let projectId = parseInt(evt.currentTarget.getAttribute('data-project-id'));
+        let projectID = parseInt(evt.currentTarget.getAttribute('data-project-id'));
         this.setState({
-            selectedProjectId: projectId,
+            selectedProjectID: projectID,
             showingProjectDialog: true,
             renderingProjectDialog: true,
         });
@@ -1013,11 +1008,11 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestConfirm = (evt) => {
-        let projectId = this.state.selectedProjectId;
-        let project = _.find(this.props.projects, { id: projectId });
+        let projectID = this.state.selectedProjectID;
+        let project = _.find(this.props.projects, { id: projectID });
         let db = this.props.database.use({ schema: 'global', by: this });
         let userAfter = _.clone(this.props.currentUser);
-        userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ projectId ]);
+        userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ projectID ]);
         return db.saveOne({ table: 'user' }, userAfter);
     }
 
@@ -1027,11 +1022,11 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestRevoke = (evt) => {
-        let projectId = this.state.selectedProjectId;
-        let project = _.find(this.props.projects, { id: projectId });
+        let projectID = this.state.selectedProjectID;
+        let project = _.find(this.props.projects, { id: projectID });
         let db = this.props.database.use({ schema: 'global', by: this });
         let userAfter = _.clone(this.props.currentUser);
-        userAfter.requested_project_ids = _.difference(userAfter.requested_project_ids, [ projectId ]);
+        userAfter.requested_project_ids = _.difference(userAfter.requested_project_ids, [ projectID ]);
         return db.saveOne({ table: 'user' }, userAfter);
     }
 
@@ -1055,8 +1050,8 @@ class StartPageSync extends PureComponent {
     handleMembershipRequestProceed = (evt) => {
         this.setState({ showingProjectDialog: false, renderingProjectDialog: false });
 
-        let projectId = this.state.selectedProjectId;
-        let project = _.find(this.props.projects, { id: projectId });
+        let projectID = this.state.selectedProjectID;
+        let project = _.find(this.props.projects, { id: projectID });
         this.props.route.push(this.getTargetPage(), { schema: project.name });
     }
 
@@ -1251,7 +1246,7 @@ if (process.env.PLATFORM === 'cordova') {
      */
     let getDeviceType = function() {
         if (window.cordova) {
-            return cordova.platformId;
+            return cordova.platformID;
         }
         if (process.env.NODE_ENV !== 'production') {
             return 'android';
@@ -1314,9 +1309,6 @@ if (process.env.NODE_ENV) {
     const PropTypes = require('prop-types');
 
     StartPage.propTypes = {
-        canAccessServer: PropTypes.bool,
-        canAccessSchema: PropTypes.bool,
-
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
@@ -1331,8 +1323,6 @@ if (process.env.NODE_ENV) {
         servers: PropTypes.arrayOf(PropTypes.object),
         projects: PropTypes.arrayOf(PropTypes.object),
         projectLinks: PropTypes.arrayOf(PropTypes.object),
-        canAccessServer: PropTypes.bool,
-        canAccessSchema: PropTypes.bool,
         serverError: PropTypes.instanceOf(Error),
 
         database: PropTypes.instanceOf(Database).isRequired,

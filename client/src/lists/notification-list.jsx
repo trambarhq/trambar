@@ -134,7 +134,9 @@ class NotificationListSync extends PureComponent {
      * @param  {Object} prevState
      */
     componentDidUpdate(prevProps, prevState) {
-        if (prevProps.notifications !== this.props.notifications || prevState.hiddenNotificationIDs !== this.state.hiddenNotificationIDs) {
+        let { notifications } = this.props;
+        let { hiddenNotificationIDs } = this.state;
+        if (prevProps.notifications !== notifications || prevState.hiddenNotificationIDs !== hiddenNotificationIDs) {
             this.scheduleNotificationRead();
         }
     }
@@ -143,12 +145,14 @@ class NotificationListSync extends PureComponent {
      * Mark unread notification as read after some time
      */
     scheduleNotificationRead() {
+        let { notifications } = this.props;
+        let { hiddenNotificationIDs } = this.state;
         // need a small delay here, since hiddenNotificationIDs isn't updated
         // until the SmartList's componentDidUpdate() is called
         setTimeout(() => {
-            let unread = _.filter(this.props.notifications, (notification) => {
+            let unread = _.filter(notifications, (notification) => {
                 if (!notification.seen) {
-                    if (!_.includes(this.state.hiddenNotificationIDs, notification.id)) {
+                    if (!_.includes(hiddenNotificationIDs, notification.id)) {
                         return true;
                     }
                 }
@@ -192,16 +196,16 @@ class NotificationListSync extends PureComponent {
      * @return {ReactElement}
      */
     handleNotificationRender = (evt) => {
+        let { database, route, env, users } = this.props;
         if (evt.needed) {
             let notification = evt.item;
-            let user = findUser(this.props.users, notification);
+            let user = findUser(users, notification);
             let props = {
                 notification,
                 user,
-                database: this.props.database,
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
+                database,
+                route,
+                env,
                 onClick: this.handleNotificationClick,
             };
             return <NotificationView key={notification.id} {...props} />;
@@ -219,8 +223,8 @@ class NotificationListSync extends PureComponent {
      * @return {Promise<Array>}
      */
     markAsSeen(notifications) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let { database } = this.props;
+        let db = database.use({ by: this });
         let notificationsAfter = _.map(notifications, (notification) => {
             return { id: notification.id, seen: true };
         });
@@ -245,11 +249,14 @@ class NotificationListSync extends PureComponent {
      * @return {Object}
      */
     handleNotificationAnchorChange = (evt) => {
+        // TODO
+        /*
         let params = {
             notification: _.get(evt.item, 'id')
         };
         let hash = NotificationList.getHash(params);
         this.props.route.reanchor(hash);
+        */
     }
 
     /**

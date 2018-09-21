@@ -185,7 +185,7 @@ class MediaEditor extends PureComponent {
     handleRemoveClick = (evt) => {
         let { payloads, resources, resourceIndex } = this.props;
         let res = resources[resourceIndex];
-        let resources = _.slice(resources);
+        resources = _.slice(resources);
         resources.splice(index, 1);
         let newIndex = resourceIndex;
         if (resourceIndex >= resources.length) {

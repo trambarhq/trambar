@@ -14,7 +14,7 @@ class MediaDialogBox extends PureComponent {
     static displayName = 'MediaDialogBox';
 
     constructor(props) {
-        let { selectedIndex } = this.props;
+        let { selectedIndex } = props;
         super(props);
         this.state = { selectedIndex };
     }

@@ -136,6 +136,7 @@ class ReactionView extends PureComponent {
         g(name, gender);
         this.resourcesReferenced = {};
         if (reaction.published && reaction.ready !== false) {
+            let url, target;
             switch (reaction.type) {
                 case 'like':
                     return (
@@ -177,9 +178,7 @@ class ReactionView extends PureComponent {
                         </span>
                     );
                 case 'note':
-                    let url, target;
                     if (UserUtils.canAccessRepo(currentUser, repo)) {
-                        let hash = getNoteHash(link);
                         switch (story.type) {
                             case 'push':
                             case 'merge':
@@ -201,7 +200,6 @@ class ReactionView extends PureComponent {
                     );
                 case 'assignment':
                     if (story.type === 'issue' || story.type === 'post') {
-                        let url, target;
                         if (UserUtils.canAccessRepo(user, repo)) {
                             url = RepoUtils.getIssueNoteURL(repo, reaction);
                             target = repo.type;
@@ -212,7 +210,6 @@ class ReactionView extends PureComponent {
                             </a>
                         );
                     } else if (story.type === 'merge-request') {
-                        let url, target;
                         if (UserUtils.canAccessRepo(user, repo)) {
                             url = RepoUtils.getMergeRequestNoteURL(repo, reaction);
                             target = repo.type;
@@ -224,7 +221,6 @@ class ReactionView extends PureComponent {
                         );
                     }
                 case 'tracking':
-                    let url, target;
                     if (UserUtils.canAccessRepo(user, repo)) {
                         url = RepoUtils.getIssueNoteURL(repo, reaction);
                         target = repo.type;
@@ -329,8 +325,8 @@ class ReactionView extends PureComponent {
         }
         let props = {
             resources,
-            width: env.isWiderThan('double-col') ? 220 : 300
-            emv.
+            width: env.isWiderThan('double-col') ? 220 : 300,
+            env,
         };
         return <div className="media"><MediaView {...props} /></div>;
     }

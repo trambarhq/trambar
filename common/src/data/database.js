@@ -6,6 +6,7 @@ class Database {
     constructor(remoteDataSource, context) {
         this.context = context || {};
         this.remoteDataSource = remoteDataSource;
+        this.hasAccess = remoteDataSource.hasAuthorization(context);
     }
 
     /**

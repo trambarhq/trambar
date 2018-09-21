@@ -60,7 +60,7 @@ function getMergeRequestURL(repo, story) {
 function getPushURL(repo, story) {
     let url;
     let commitBefore = _.get(story, 'details.commit_before');
-    let commitAfter = _.get(story, 'details.commit_after';
+    let commitAfter = _.get(story, 'details.commit_after');
     let repoURL = getURL(repo);
     if (repoURL) {
         if (commitBefore) {
@@ -92,11 +92,10 @@ function getLabelStyle(repo, label) {
     let colors = _.get(repo, 'details.label_colors');
     let index = _.indexOf(repo.details.labels, label);
     let backgroundColor = _.get(colors, index);
-        if (backgroundColor) {
-            style = { backgroundColor };
-            if (isBright(backgroundColor)) {
-                style.color = '#000000';
-            }
+    if (backgroundColor) {
+        style = { backgroundColor };
+        if (isBright(backgroundColor)) {
+            style.color = '#000000';
         }
     }
     return style;

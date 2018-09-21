@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import React, { PureComponent } from 'react';
+import React, { PureComponent, Children } from 'react';
 import ReactDOM from 'react-dom';
 import Async from 'async-do-while';
 
@@ -241,7 +241,8 @@ class CameraOverlay extends PureComponent {
      * @return {ReactElement|null}
      */
     renderPart(tag) {
-        let children = React.Children.toArray(this.props.children);
+        let { children } = this.props;
+        children = Children.toArray(children);
         let element = _.find(children, { type: tag });
         if (!element) {
             return null;
