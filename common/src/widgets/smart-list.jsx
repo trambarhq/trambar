@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
+import ComponentRefs from 'utils/component-refs';
 
 require('./smart-list.scss');
 
@@ -14,7 +14,15 @@ class SmartList extends Component {
      */
     constructor(props) {
         super(props);
+        this.components = ComponentRefs({
+            container: HTMLDivElement,
+        });
         this.state = {};
+        this.scrolling = false;
+        this.scrollContainer = null;
+        this.scrollContainerWidth = 0;
+        this.scrollPositionInterval = 0;
+        this.scrollToAnchorNode = null;
         this.updateAnchor(props, this.state);
         this.updateSlots(props, this.state);
     }
@@ -32,11 +40,12 @@ class SmartList extends Component {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
+        let { anchor, items } = this.props;
         let nextState = _.clone(this.state);
-        if (this.props.anchor !== nextProps.anchor) {
+        if (nextProps.anchor !== anchor) {
             this.updateAnchor(nextProps, nextState);
         }
-        if (this.props.items !== nextProps.items) {
+        if (nextProps.items !== items) {
             this.updateSlots(nextProps, nextState);
         }
         let changes = _.shallowDiff(nextState, this.state);
@@ -65,6 +74,7 @@ class SmartList extends Component {
      * @param  {Object} nextState
      */
     updateSlots(nextProps, nextState) {
+        let { transitioning } = this.props;
         let items = nextProps.items;
         let identity = (item, index, alt) => {
             return nextProps.onIdentity({
@@ -144,16 +154,15 @@ class SmartList extends Component {
         // limit the number of transitioning elements
         let appearing = 0;
         let disappearing = 0;
-        let limit = this.props.transitioning;
         _.each(slots, (slot) => {
             if (slot.state === 'appearing') {
-                if (appearing < limit) {
+                if (appearing < transitioning) {
                     appearing++;
                 } else {
                     slot.state = 'present';
                 }
             } else if (slot.state === 'disappearing') {
-                if (disappearing < limit) {
+                if (disappearing < transitioning) {
                     disappearing++;
                 } else {
                     slot.state = 'gone';
@@ -207,19 +216,20 @@ class SmartList extends Component {
      * @return {ReactElement}
      */
     render() {
-        let slots = this.state.slots;
+        let { onRender, ahead, behind, inverted } = this.props;
+        let { slots, currentAnchor, estimatedHeight } = this.state;
+        let { setters } = this.components;
         let anchorIndex = 0;
-        if (this.state.currentAnchor) {
-            anchorIndex = _.findIndex(slots, { id: this.state.currentAnchor });
+        if (currentAnchor) {
+            anchorIndex = _.findIndex(slots, { id: currentAnchor });
         }
 
         // render some items behind (i.e. above) the anchored item
-        let startIndex = Math.max(0, anchorIndex - this.props.behind);
+        let startIndex = Math.max(0, anchorIndex - behind);
         // render some items ahead of (i.e. below) the anchored item
         // (presumably the number is sufficient to fill the viewport)
-        let endIndex = Math.min(_.size(slots), anchorIndex + this.props.ahead + 1);
+        let endIndex = Math.min(_.size(slots), anchorIndex + ahead + 1);
 
-        let onRender = this.props.onRender;
         let children = _.map(slots, (slot, index) => {
             let rendering = (startIndex <= index && index < endIndex);
             let contents;
@@ -233,7 +243,7 @@ class SmartList extends Component {
                     currentIndex: index,
                     endIndex: endIndex,
                     previousHeight: slot.height,
-                    estimatedHeight: this.state.estimatedHeight,
+                    estimatedHeight,
                 };
                 contents = slot.contents = onRender(evt)
             } else {
@@ -270,11 +280,11 @@ class SmartList extends Component {
         // remember the range where we have fully rendered the items
         this.startIndex = startIndex;
         this.endIndex = endIndex;
-        if (this.props.inverted) {
+        if (inverted) {
             _.reverse(children);
         }
         return (
-            <div className="smart-list" onTransitionEnd={this.handleTransitionEnd}>
+            <div ref={setters.container} className="smart-list" onTransitionEnd={this.handleTransitionEnd}>
                 {children}
             </div>
         );
@@ -286,8 +296,8 @@ class SmartList extends Component {
      */
     componentDidMount() {
         // find the list's DOM node and its scroll container
-        this.container = ReactDOM.findDOMNode(this);
-        for (let p = this.container.parentNode; p; p = p.parentNode) {
+        let { container } = this.components;
+        for (let p = container.parentNode; p; p = p.parentNode) {
             let style = getComputedStyle(p);
             if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
                 this.scrollContainer = p;
@@ -321,15 +331,17 @@ class SmartList extends Component {
      * Adjust scroll position so anchor remains at the same on-screen location
      */
     maintainScrollPosition() {
+        let { inverted } = this.props;
+        let { slots, currentAnchor } = this.state;
         // maintain the position of the anchor node
         let anchorSlot, anchorOffset;
-        if (this.state.currentAnchor) {
-            anchorSlot = _.find(this.state.slots, { id: this.state.currentAnchor });
+        if (currentAnchor) {
+            anchorSlot = _.find(slots, { id: currentAnchor });
             anchorOffset = this.anchorOffset;
         } else {
-            if (this.props.inverted) {
+            if (inverted) {
                 // the first slot is at the bottom
-                anchorSlot = _.first(this.state.slots);
+                anchorSlot = _.first(slots);
                 anchorOffset = Infinity;
             }
         }
@@ -338,7 +350,7 @@ class SmartList extends Component {
                 let containerOffsetTop = this.scrollContainer.offsetTop;
                 let containerScrollTop = this.scrollContainer.scrollTop;
                 let anchorTop = anchorSlot.node.offsetTop - containerOffsetTop;
-                if (!this.props.inverted) {
+                if (!inverted) {
                     let actualOffset = anchorTop - containerScrollTop;
                     if (actualOffset !== anchorOffset) {
                         // don't reposition when it's at the top
@@ -401,8 +413,9 @@ class SmartList extends Component {
      * Remember height of items that're being rendered
      */
     setSlotHeights() {
+        let { slots, estimatedHeight } = this.state;
         let heights = [];
-        _.each(this.state.slots, (slot) => {
+        _.each(slots, (slot) => {
             if (slot.rendering) {
                 let child = slot.node.firstChild;
                 let height = (child) ? child.offsetHeight : 0;
@@ -410,7 +423,7 @@ class SmartList extends Component {
                 heights.push(height);
             }
         });
-        if (this.state.estimatedHeight === undefined) {
+        if (estimatedHeight === undefined) {
             if (!_.isEmpty(heights)) {
                 let avg = _.sum(heights) / heights.length;
                 let estimatedHeight = Math.round(avg);
@@ -426,8 +439,8 @@ class SmartList extends Component {
      * list of unseen items changes
      */
     markUnseenSlots() {
-        let slots = this.state.slots;
-        let anchorSlotIndex = _.findIndex(slots, { id: this.state.currentAnchor });
+        let { slots, currentAnchor } = this.state;
+        let anchorSlotIndex = _.findIndex(slots, { id: currentAnchor });
         let changed = false;
         _.each(slots, (slot, index) => {
             if (slot.state === 'appearing') {
@@ -462,14 +475,15 @@ class SmartList extends Component {
      * Trigger transitions of slots that are appearing or disappearing
      */
     setTransitionState() {
-        let slots = _.clone(this.state.slots);
+        let { inverted } = this.props;
+        let { slots, currentAnchor } = this.state;
         let changed = false;
         _.each(slots, (slot) => {
             if (slot.state === 'appearing' || slot.state === 'disappearing') {
                 if (!slot.transition) {
                     let useTransition = this.isSlotVisible(slot);
-                    if (this.props.inverted) {
-                        if (slot.state === 'appearing' && !this.state.currentAnchor) {
+                    if (inverted) {
+                        if (slot.state === 'appearing' && !currentAnchor) {
                             // need to update the scroll position continually
                             // as the slot expands so the bottom of the container
                             // is visible
@@ -546,10 +560,11 @@ class SmartList extends Component {
      * @return {Object|null}
      */
     findAnchorSlot(slots) {
+        let { inverted } = this.props;
         let containerScrollTop = this.scrollContainer.scrollTop;
         let containerOffsetTop = this.scrollContainer.offsetTop;
         let anchorSlot;
-        if (!this.props.inverted) {
+        if (!inverted) {
             // release the anchor when user scrolls to the very top
             let anchorTop;
             if (containerScrollTop > 0) {
@@ -593,6 +608,7 @@ class SmartList extends Component {
      * @param  {Event} evt
      */
     handleScroll = (evt) => {
+        let { slots, currentAnchor } = this.state;
         if (this.scrollPositionInterval) {
             // don't do anything if the event is trigger by interval function
             return;
@@ -602,11 +618,11 @@ class SmartList extends Component {
             this.maintainScrollPosition();
             return;
         }
-        let anchorSlot = this.findAnchorSlot(this.state.slots);
-        let currentAnchor = (anchorSlot) ? anchorSlot.id : undefined;
-        if (this.state.currentAnchor !== currentAnchor) {
-            this.setState({ currentAnchor });
+        let anchorSlot = this.findAnchorSlot(slots);
+        if (anchorSlot && anchorSlot.id !== currentAnchor) {
+            currentAnchor = anchorSlot.id;
             this.triggerAnchorChangeEvent(anchorSlot);
+            this.setState({ currentAnchor });
         }
         this.scrolling = true;
         if (this.scrollingEndTimeout) {
@@ -623,11 +639,12 @@ class SmartList extends Component {
      *
      * @param  {Event} evt
      */
-    handleWindowResize() {
+    handleWindowResize = (evt) => {
+        let { slots }= this.state;
         // recalculate heights if the container width is different
         if (this.scrollContainerWidth !== this.scrollContainer.clientWidth) {
             this.scrollContainerWidth = this.scrollContainer.clientWidth;
-            let slots = _.slice(this.state.slots);
+            slots = _.slice(slots);
             _.each(slots, (slot) => {
                 slot.height = undefined;
             });
@@ -650,7 +667,8 @@ class SmartList extends Component {
      * @param  {Event}
      */
     handleTransitionEnd = (evt) => {
-        let slots = _.slice(this.state.slots);
+        let { slots, currentAnchor } = this.state;
+        slots = _.slice(slots);
         if (evt.propertyName === 'opacity') {
             let slot = _.find(slots, { node: evt.target });
             if (slot) {
@@ -678,8 +696,8 @@ class SmartList extends Component {
 
                     // find a new anchor
                     let anchorSlot = this.findAnchorSlot(slots);
-                    let currentAnchor = (anchorSlot) ? anchorSlot.id : undefined;
-                    if (currentAnchor !== this.state.currentAnchor) {
+                    if (anchorSlot && anchorSlot.id !== currentAnchor) {
+                        currentAnchor = anchorSlot.id;
                         this.triggerAnchorChangeEvent(anchorSlot);
                     }
                     this.setState({ slots, currentAnchor });

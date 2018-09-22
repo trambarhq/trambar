@@ -63,7 +63,7 @@ class Link extends PureComponent {
 }
 
 Link.defaultProps = {
-    alwaysAsLink: false,
+    alwaysAsLink: true, // TODO
 };
 
 export {

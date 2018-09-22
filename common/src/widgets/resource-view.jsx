@@ -178,7 +178,7 @@ class ResourceView extends PureComponent {
      *
      * @param  {Event} Evt
      */
-    handleRemoteImageLoad(Evt) {
+    handleRemoteImageLoad = (evt) => {
         this.setState({ remoteImageLoaded: true });
     }
 }
@@ -223,6 +223,6 @@ if (process.env.NODE_ENV !== 'production') {
         url: PropTypes.string,
         width: PropTypes.number,
         height: PropTypes.number,
-        env: PropTypes.instanceOf(Environment),
+        env: PropTypes.instanceOf(Environment).isRequired,
     };
 }

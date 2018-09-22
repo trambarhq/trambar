@@ -15,7 +15,14 @@ function ProfileImage(props) {
     let image;
     if (profileImage) {
         let width = imageResolutions[size];
-        image = <ResourceView resource={profileImage} mosaic={true} env={env} width={width} height={width} />;
+        let props = {
+            resource: profileImage,
+            showMosaic: true,
+            width: width,
+            height: width,
+            env,
+        };
+        image = <ResourceView {...props} />;
     } else {
         image = <div className="placeholder"><Icon /></div>;
     }

@@ -14,7 +14,7 @@ function AuthorNames(props) {
         return UserUtils.getDisplayName(author, env);
     });
     let contents;
-    if (authors.length === 0) {
+    if (!authors || authors.length === 0) {
         contents = '\u00a0';
     } else if (authors.length === 1) {
         contents = <span key={1} className="sole author">{names[0]}</span>;
@@ -29,8 +29,7 @@ function AuthorNames(props) {
             users: coauthors,
             label: t('story-author-$count-others', coauthors.length),
             title: t('story-coauthors'),
-            locale: props.locale,
-            theme: props.theme,
+            env,
         };
         let others = <MultipleUserNames key={3} {...props} />
         contents = t('story-author-$name1-and-$name2', name1, others);

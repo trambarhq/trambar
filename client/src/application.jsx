@@ -110,7 +110,7 @@ class Application extends PureComponent {
             }
         }
         let CurrentPage = module.default;
-        let settings = route.params.io;
+        let settings = route.params.ui;
         let topNavProps = {
             searching: false, // TODO
             settings,

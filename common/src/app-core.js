@@ -88,7 +88,7 @@ function start(cfg) {
     routeManager.addEventListener('beforechange', (evt) => {
         // see if a page requires authentication
         let { name, context, route } = evt;
-        if (route.public !== true) {
+        if (route && route.public !== true) {
             // page requires authorization--see if it's been acquired already
             let { address } = context;
             let location = { address };
@@ -317,6 +317,7 @@ function start(cfg) {
             // not watching anything
             return;
         }
+        return;
         dataSource.start(currentLocation).then((currentUserID) => {
             console.log('Updating data subscription');
             let { method, token, relay, details } = currentConnection;

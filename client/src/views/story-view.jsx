@@ -285,8 +285,8 @@ class StoryView extends PureComponent {
         let leadAuthor = _.get(authors, 0);
         let props = {
             user: leadAuthor,
-            theme: this.props.theme,
             size: 'medium',
+            env,
         };
         if (leadAuthor) {
             props.href = route.find('person-page', { userID: leadAuthor.id });
@@ -462,6 +462,7 @@ class StoryView extends PureComponent {
      * instead so there's no gap at the bottom.
      */
     adjustReactionContainer() {
+        let { env } = this.props;
         if (env.isWiderThan('double-col')) {
             let { isTall } = this.state;
             let { reactionContainer } = this.components;
@@ -513,9 +514,9 @@ class StoryView extends PureComponent {
             reactions,
             repos,
             currentUser,
-            options,
             access,
         } = this.props;
+        let { options } = this.state;
         let props = {
             section,
             access,

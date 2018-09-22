@@ -108,6 +108,11 @@ class DurationIndicator extends PureComponent {
     }
 }
 
+export {
+    DurationIndicator as default,
+    DurationIndicator,
+};
+
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 

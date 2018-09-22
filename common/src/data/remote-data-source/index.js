@@ -155,7 +155,7 @@ class RemoteDataSource extends EventEmitter {
      *
      * @return {Promise<Boolean>}
      */
-    checkAuthentication(location) {
+    checkAuthorization(location) {
         let session = this.obtainSession(location);
         if (session.authenticationPromise) {
             return session.authenticationPromise;

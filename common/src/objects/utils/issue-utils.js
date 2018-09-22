@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import ExternalDataUtils from 'objects/utils/external-data-utils';
-import TagScanner from 'utils/tag-scanner';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
+import * as TagScanner from 'utils/tag-scanner';
 
 /**
  * Extract information concerning an issue issue from a story and

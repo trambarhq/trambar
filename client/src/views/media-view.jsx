@@ -286,7 +286,7 @@ class MediaView extends PureComponent {
             resource: res,
             width: width,
             height: width,
-            mosaic: true,
+            showMosaic: true,
             env,
         };
         return <ResourceView {...props} />;

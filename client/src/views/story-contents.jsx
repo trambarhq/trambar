@@ -39,7 +39,7 @@ class StoryContents extends PureComponent {
             renderingReferencedMediaDialog: false,
             audioURL: null,
         };
-        this.updateUserAnswers({}, this.state);
+        this.updateUserAnswers(this.state, props);
     }
 
     /**
@@ -237,7 +237,7 @@ class StoryContents extends PureComponent {
             }
             return (
                 <div className={className}>
-                    <p>{PlainText.renderEmoji(text)}</p>
+                    <p>{PlainText.renderEmoji(langText)}</p>
                     {tags}
                 </div>
             );
@@ -494,7 +494,7 @@ class StoryContents extends PureComponent {
             branch,
             source_branches: sourceBranches
         } = story.details;
-        let name = UserUtils.getDisplayName(authors[0]);
+        let name = UserUtils.getDisplayName(authors[0], env);
         let gender = UserUtils.getGender(authors[0]);
         g(name, gender);
         let commits = _.size(commitIDs);
@@ -528,7 +528,7 @@ class StoryContents extends PureComponent {
         let { env, story, authors, repo, currentUser } = this.props;
         let { t, g } = env.locale;
         let { branch } = story.details;
-        let name = UserUtils.getDisplayName(authors[0]);
+        let name = UserUtils.getDisplayName(authors[0], env);
         let gender = UserUtils.getGender(authors[0]);
         g(name, gender);
         let repoName = RepoUtils.getDisplayName(repo, env);
@@ -719,7 +719,7 @@ class StoryContents extends PureComponent {
      * @return {ReactElement|null}
      */
     renderReferencedMediaDialog() {
-        let { env, story } = this.story;
+        let { env, story } = this.props;
         let {
             renderingReferencedMediaDialog,
             showingReferencedMediaDialog,

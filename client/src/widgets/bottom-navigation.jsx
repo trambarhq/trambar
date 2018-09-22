@@ -6,12 +6,6 @@ import HTTPError from 'errors/http-error';
 import * as NotificationFinder from 'objects/finders/notification-finder';
 import * as UserFinder from 'objects/finders/user-finder';
 
-import NewsPage from 'pages/news-page';
-import PeoplePage from 'pages/people-page';
-import NotificationsPage from 'pages/notifications-page';
-import BookmarksPage from 'pages/bookmarks-page';
-import SettingsPage from 'pages/settings-page';
-
 // widgets
 import Link from 'widgets/link';
 
@@ -135,7 +129,7 @@ class BottomNavigation extends PureComponent {
             icon: 'comments',
             active: (section === 'notifications'),
             stacking,
-            url: this.getPageURL(NotificationsPage),
+            url: this.getPageURL('notifications-page'),
             onClick: (section === 'notifications') ? this.handleActiveButtonClick : null,
         };
         let bookmarksProps = {
@@ -143,7 +137,7 @@ class BottomNavigation extends PureComponent {
             icon: 'bookmark',
             active: (section === 'bookmarks'),
             stacking,
-            url: this.getPageURL(BookmarksPage),
+            url: this.getPageURL('bookmarks-page'),
             onClick: (section === 'bookmarks') ? this.handleActiveButtonClick : null,
         };
         let peopleProps = {
@@ -151,7 +145,7 @@ class BottomNavigation extends PureComponent {
             icon: 'users',
             active: (section === 'people'),
             stacking,
-            url: this.getPageURL(PeoplePage),
+            url: this.getPageURL('people-page'),
             onClick: (section === 'people') ? this.handleActiveButtonClick : null,
         };
         let settingsProps = {
@@ -159,7 +153,7 @@ class BottomNavigation extends PureComponent {
             icon: 'gears',
             active: (section === 'settings'),
             stacking,
-            url: this.getPageURL(SettingsPage),
+            url: this.getPageURL('settings-page'),
             onClick: (section === 'settings') ? this.handleActiveButtonClick : null,
         };
         let newNotificationProps = { database, route };
@@ -290,7 +284,7 @@ class NewNotificationsBadge extends AsyncComponent {
             return null;
         }
         if (!database.authorized) {
-            return nul;
+            return null;
         }
         let db = database.use({ by: this });
         return db.start().then((currentUserID) => {
@@ -315,55 +309,53 @@ class NewNotificationsBadge extends AsyncComponent {
     }
 }
 
-if (process.env.PLATFORM === 'browser') {
-    let favIcons;
+let favIcons;
 
-    /**
-     * Use favicon with a badge if there are unread notifications
-     *
-     * @param  {Number} count
-     */
-    let changeFavIcon = function(count) {
-        if (!favIcons) {
-            // get the post-WebPack filenames of the favicons
-            let paths = require.context('favicon-notification', true, /\.png$/).keys();
-            favIcons = _.map(paths, (path) => {
-                // make the file extension part of the expression passed to require()
-                // so WebPack will filter out other files
-                let name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
-                let withoutBadge = require(`favicon/${name}.png`);
-                let withBadge = require(`favicon-notification/${name}.png`);
-                return { withoutBadge, withBadge };
-            });
-        }
-        let links = _.filter(document.head.getElementsByTagName('LINK'), (link) => {
-            if (link.rel === 'icon' || link.rel === 'apple-touch-icon-precomposed') {
-                return true;
-            }
-        });
-        _.each(links, (link) => {
-            let currentFilename = link.getAttribute('href');
-            if (count > 0) {
-                let icon = _.find(favIcons, { withoutBadge: currentFilename });
-                if (icon) {
-                    link.href = icon.withBadge;
-                }
-            } else {
-                let icon = _.find(favIcons, { withBadge: currentFilename });
-                if (icon) {
-                    link.href = icon.withoutBadge;
-                }
-            }
+/**
+ * Use favicon with a badge if there are unread notifications
+ *
+ * @param  {Number} count
+ */
+function changeFavIcon(count) {
+    if (!favIcons) {
+        // get the post-WebPack filenames of the favicons
+        let paths = require.context('favicon-notification', true, /\.png$/).keys();
+        favIcons = _.map(paths, (path) => {
+            // make the file extension part of the expression passed to require()
+            // so WebPack will filter out other files
+            let name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
+            let withoutBadge = require(`favicon/${name}.png`);
+            let withBadge = require(`favicon-notification/${name}.png`);
+            return { withoutBadge, withBadge };
         });
     }
-
-    let changeDocumentTitle = function(count) {
-        let title = _.replace(document.title, /^\(\d+\)\s*/, '');
+    let links = _.filter(document.head.getElementsByTagName('LINK'), (link) => {
+        if (link.rel === 'icon' || link.rel === 'apple-touch-icon-precomposed') {
+            return true;
+        }
+    });
+    _.each(links, (link) => {
+        let currentFilename = link.getAttribute('href');
         if (count > 0) {
-            title = `(${count}) ${title}`;
+            let icon = _.find(favIcons, { withoutBadge: currentFilename });
+            if (icon) {
+                link.href = icon.withBadge;
+            }
+        } else {
+            let icon = _.find(favIcons, { withBadge: currentFilename });
+            if (icon) {
+                link.href = icon.withoutBadge;
+            }
         }
-        document.title = title;
+    });
+}
+
+function changeDocumentTitle(count) {
+    let title = _.replace(document.title, /^\(\d+\)\s*/, '');
+    if (count > 0) {
+        title = `(${count}) ${title}`;
     }
+    document.title = title;
 }
 
 export {

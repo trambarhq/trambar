@@ -6,7 +6,7 @@ class Database {
     constructor(remoteDataSource, context) {
         this.context = context || {};
         this.remoteDataSource = remoteDataSource;
-        this.hasAccess = remoteDataSource.hasAuthorization(context);
+        this.authorized = remoteDataSource.hasAuthorization(context);
     }
 
     /**
@@ -187,8 +187,8 @@ class Database {
      *
      * @return {Promise<Boolean>}
      */
-    checkSession() {
-        return this.remoteDataSource.checkSession(this.context);
+    checkAuthorization() {
+        return this.remoteDataSource.checkAuthorization(this.context);
     }
 
     /**

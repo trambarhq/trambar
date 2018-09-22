@@ -44,16 +44,15 @@ class StartPage extends AsyncComponent {
             projects: null,
             projectLinks: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
 
             onEntry: this.props.onEntry,
             onExit: this.props.onExit,
             onAvailableSchemas: this.props.onAvailableSchemas,
         };
-        if (!db.hasAccess) {
+        if (!db.authorized) {
             if (process.env.PLATFORM === 'browser') {
                 // start authorization process--will receive system description
                 // and list of OAuth providers along with links
@@ -174,11 +173,8 @@ class StartPageSync extends PureComponent {
      * @return {ReactClass}
      */
     getTargetPage() {
-        if (this.props.route.parameters.add) {
-            return require('pages/settings-page');
-        } else {
-            return require('pages/news-page');
-        }
+        let { addingProject } = this.props;
+        return (addingProject) ? 'settings-page' : 'news-page';
     }
 
     /**
@@ -187,49 +183,12 @@ class StartPageSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        // begin transition out of page if user has gain access
-        if (this.props.route !== nextProps.route
-         || this.props.canAccessServer !== nextProps.canAccessServer
-         || this.props.canAccessSchema !== nextProps.canAccessSchema) {
-             if (nextProps.route.component !== StartPage) {
-                 // this page isn't the target--transition out if we have
-                 // access to the server and the schema
-                 if (!this.state.transition) {
-                     if (nextProps.canAccessSchema && nextProps.canAccessServer) {
-                         this.transitionOut(nextProps.route);
-                     }
-                 }
-             }
-             if (process.env.PLATFORM === 'cordova') {
-                 if (nextProps.canAccessServer) {
-                     let route = nextProps.route;
-                     let params = route.parameters;
-                     if (params.activationCode) {
-                         // we have gain access--redirect to news page if schema
-                         // was supplied or to this page again
-                         let targetPage;
-                         if (this.state.addingServer) {
-                             targetPage = require('pages/settings-page');
-                         } else if (params.schema) {
-                             targetPage = require('pages/news-page');
-                         } else {
-                             targetPage = require('pages/start-page');
-                         }
-                         if (targetPage !== StartPage) {
-                             // start transition here so the greeting is
-                             // rendered immediately
-                             this.transitionOut(nextProps.route);
-                         }
-                         params = _.omit(params, 'activationCode');
-                         route.replace(targetPage, params);
-                     }
-                 }
-             }
-        }
-        if (this.props.projects !== nextProps.projects) {
-            if (this.state.renderingProjectDialog) {
+        let { database, projects } = this.props;
+        let { renderingProjectDialog, selectedProjectID, } = this.state;
+        if (nextProps.projects !== projects) {
+            if (renderingProjectDialog) {
                 // close the dialog box if the project has disappeared
-                if (!_.some(nextProps.projects, { id: this.state.selectedProjectID })) {
+                if (!_.some(nextProps.projects, { id: selectedProjectID })) {
                     this.setState({
                         renderingProjectDialog: false,
                         showingProjectDialog: false,
@@ -243,11 +202,6 @@ class StartPageSync extends PureComponent {
                 receivedCorrectQRCode: false,
                 receivedInvalidQRCode: false,
             });
-        }
-        if (this.state.addingServer) {
-            if (this.props.route !== nextProps.route) {
-                this.setState({ addingServer: false });
-            }
         }
     }
 
@@ -271,20 +225,21 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderForBrowser() {
-        if (process.env.PLATFORM !== 'browser') return;
-        let t = this.props.locale.translate;
+        let { env, system } = this.props;
+        let { transition } = this.state;
+        let { t } = env.locale;
         let style;
-        if (this.props.system) {
-            let resources = _.get(this.props.system, 'details.resources');
+        if (system) {
+            let resources = _.get(system, 'details.resources');
             let backgroundImage = _.find(resources, { type: 'image' });
             if (backgroundImage) {
-                let imageURL = this.props.theme.getImageURL(backgroundImage, { width: 1024, quality: 40 });
+                let imageURL = env.getImageURL(backgroundImage, { width: 1024, quality: 40 });
                 style = { backgroundImage: `url(${imageURL})` };
             }
         }
         let className = 'start-page browser';
-        if (this.state.transition) {
-            className += ` ${this.state.transition}`;
+        if (transition) {
+            className += ` ${transition}`;
         }
         return (
             <div className={className} style={style}>
@@ -306,10 +261,11 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderForCordova() {
-        if (process.env.PLATFORM !== 'cordova') return;
+        let { database } = this.props;
+        let { transition, addingServer } = this.state;
         let className = 'start-page cordova';
-        if (this.state.transition) {
-            className += ` ${this.state.transition}`;
+        if (transition) {
+            className += ` ${transition}`;
             if (this.state.transition === 'transition-out-slow') {
                 // render a greeting during long transition
                 return (
@@ -323,7 +279,7 @@ class StartPageSync extends PureComponent {
                 );
             }
         }
-        if (!this.props.canAccessServer || this.state.addingServer) {
+        if (!database.authorized || addingServer) {
             // render only instructions for gaining access
             return (
                 <div className={className}>
@@ -352,20 +308,17 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDescription() {
-        if (process.env.PLATFORM !== 'browser') return;
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
-        let system = this.props.system;
+        let { env, system } = this.props;
+        let { t, p } = env.locale;
         if (!system) {
             return null;
         }
-        let title = p(_.get(system, 'details.title')) || t('start-system-title-default');
-        let description = p(_.get(system, 'details.description'));
+        let { title, description } = system.details;
         return (
             <div className="section description">
-                <h2>{title}</h2>
+                <h2>{p(title) || t('start-system-title-default')}</h2>
                 <Scrollable>
-                    <p>{description}</p>
+                    <p>{p(description)}</p>
                 </Scrollable>
             </div>
         );
@@ -378,15 +331,14 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderTitle() {
-        if (process.env.PLATFORM !== 'cordova') return;
-        let t = this.props.locale.translate;
+        let { database, env, system } = this.props;
+        let { addingServer } = this.state;
+        let { t, p } = env.locale;
         let title;
-        if (this.state.addingServer) {
+        if (addingServer) {
             title = t('start-activation-new-server');
-        } else if (this.props.canAccessServer) {
-            // show the name of the
-            let p = this.props.locale.pick;
-            let system = this.props.system;
+        } else if (database.authorized) {
+            // show the name of the site
             if (system) {
                 title = p(system.details.title);
             }
@@ -405,15 +357,14 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderMobileGreeting() {
-        if (process.env.PLATFORM !== 'cordova') return;
-        let t = this.props.locale.translate;
+        let { env, currentUser } = this.props;
+        let { qrCodeStatus } = this.state;
+        let { t, p } = env.locale;
         let className = 'welcome';
-        if (this.state.receivedCorrectQRCode) {
-            let n = this.props.locale.name;
-            let user = this.props.currentUser;
+        if (qrCodeStatus === 'correct') {
             let name;
             if (user) {
-                name = n(user.details.name, user.details.gender);
+                name = UserUtils.getDisplayName(currentUser);
                 className += ' user';
             } else {
                 name = '\u00a0';
@@ -461,8 +412,8 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderActivationInstructions() {
-        if (process.env.PLATFORM !== 'cordova') return;
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let ui = {
             settings: (
                 <span key="0" className="ui">
@@ -495,8 +446,8 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderActivationButtons() {
-        if (process.env.PLATFORM !== 'cordova') return;
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let manualProps = {
             label: t('start-activation-manual'),
             onClick: this.handleManualClick,
@@ -524,8 +475,8 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderActivationSelector() {
-        if (process.env.PLATFORM !== 'cordova') return;
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         let addProps = {
             label: t('start-activation-add-server'),
             onClick: this.handleAddClick,
@@ -596,9 +547,9 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderOAuthButtons() {
-        if (process.env.PLATFORM !== 'browser') return;
-        let t = this.props.locale.translate;
-        let servers = sortServers(this.props.servers, this.props.locale);
+        let { env, servers } = this.props;
+        let { t } = env.locale;
+        servers = sortServers(servers, env);
         if (!servers) {
             return null;
         }
@@ -607,7 +558,13 @@ class StartPageSync extends PureComponent {
                 <h2>{t('start-social-login')}</h2>
                 <Scrollable>
                     {this.renderEmptyMessage()}
-                    <p>{_.map(servers, this.renderOAuthButton)}</p>
+                    <p>
+                    {
+                        _.map(servers, (server, i) => {
+                            return this.renderOAuthButton(server, i);
+                        })
+                    }
+                    </p>
                 </Scrollable>
             </div>
         );
@@ -622,21 +579,21 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderOAuthButton(server, i) {
-        if (process.env.PLATFORM !== 'browser') return;
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
-        let name = p(server.details.title) || t(`server-type-${server.type}`);
-        let icon = getServerIcon(server.type);
-        let url = this.props.database.getOAuthURL(server);
+        let { database, env } = this.props;
+        let { oauthErrors } = this.state;
+        let { type } = server;
+        let { title } = server.details;
+        let { t, p } = env.locale;
+        let icon = getServerIcon(type);
+        let url = database.getOAuthURL(server);
         let props = {
             className: 'oauth-button',
             href: url,
             onClick: this.handleOAuthButtonClick,
-            'data-type': server.type,
+            'data-type': type,
         };
-        let error = this.state.oauthErrors[server.type];
+        let error = oauthErrors[type];
         if (error) {
-            let t = this.props.locale.translate;
             let text = t(`start-error-${error.reason}`);
             props.className += ' error';
             return (
@@ -653,7 +610,9 @@ class StartPageSync extends PureComponent {
                     <span className="icon">
                         <i className={`fa fa-fw fa-${icon}`}></i>
                     </span>
-                    <span className="label">{name}</span>
+                    <span className="label">
+                        {p(title) || t(`server-type-${type}`)}
+                    </span>
                 </a>
             );
         }
@@ -665,8 +624,9 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderProjectButtons() {
-        let t = this.props.locale.translate;
-        let projects = sortProjects(this.props.projects, this.props.locale);
+        let { env, projects } = this.props;
+        let { t } = env.locale;
+        projects = sortProjects(projects, env);
         if (process.env.PLATFORM == 'browser') {
             return (
                 <div className="section buttons">
@@ -702,17 +662,16 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderProjectButton(project, i) {
-        let t = this.props.locale.translate;
-        let p = this.props.locale.pick;
-        let name = p(project.details.title) || project.name;
-        let description = p(project.details.description);
+        let { env, route, projectLinks, currentUser, adding } = this.props;
+        let { t, p } = env.locale;
+        let { name } = project;
+        let { description, title, resources } = project.details;
 
         // project picture
         let icon;
-        let resources = _.get(project, 'details.resources');
         let image = _.find(resources, { type: 'image' });
         if (image) {
-            icon = <ResourceView resource={image} width={56} height={56} theme={this.props.theme} />;
+            icon = <ResourceView resource={image} width={56} height={56} env={env} />;
         } else {
             // use logo, with alternating background color
             let num = (project.id % 5) + 1;
@@ -721,11 +680,9 @@ class StartPageSync extends PureComponent {
 
         // add badge to indicate membership status
         let badge;
-        if (UserUtils.isMember(this.props.currentUser, project)) {
-            // is member
+        if (UserUtils.isMember(currentUser, project)) {
             badge = <i className="fa fa-user-circle-o badge" />;
-        } else if (UserUtils.isPendingMember(this.props.currentUser, project)) {
-            // pending
+        } else if (UserUtils.isPendingMember(currentUser, project)) {
             badge = <i className="fa fa-clock-o badge" />;
         }
 
@@ -734,35 +691,33 @@ class StartPageSync extends PureComponent {
             className: 'project-button'
         };
         let skipDialog = false;
-        let params = this.props.route.parameters;
         // always show dialog box when adding
-        if (!params.add) {
-            skipDialog = _.some(this.props.projectLinks, {
-                address: params.address,
+        if (!adding) {
+            skipDialog = _.some(projectLinks, {
+                address: route.context.address,
                 schema: project.name,
             });
         }
         if (skipDialog) {
             // link to the project's news or settings page
-            linkProps.href = this.props.route.find(this.getTargetPage(), {
+            linkProps.href = route.find(this.getTargetPage(), {}, {
                 schema: project.name
             });
         } else {
             // add handler for bringing up dialog box
             linkProps.onClick = this.handleProjectButtonClick;
         }
-
         return (
             <a key={project.id} {...linkProps}>
                 <div className="icon">{icon}</div>
                 <div className="text">
                     {badge}
                     <div className="title">
-                        {name}
+                        {p(title) || name}
                     </div>
                     <div className="description">
                         <div className="contents">
-                            {description}
+                            {p(description)}
                             <div className="ellipsis">
                                 <i className="fa fa-ellipsis-h" />
                             </div>
@@ -779,21 +734,26 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderAvailableServers() {
-        let t = this.props.locale.translate;
-        let servers = _.uniq(_.map(this.props.projectLinks, 'address')).sort();
+        let { database, env, projectLinks } = this.props;
+        let { t } = env.locale;
+        let servers = _.uniq(_.map(projectLinks, 'address')).sort();
         if (_.isEmpty(servers)) {
             return null;
         }
         let returnProps = {
             label: t('start-activation-return'),
-            hidden: !this.props.canAccessServer,
+            hidden: !databae.authorized,
             onClick: this.handleReturnClick,
         };
         return (
             <div className="other-servers">
                 <h2 className="title">{t('start-activation-others-servers')}</h2>
                 <ul>
-                    {_.map(servers, this.renderServerLink)}
+                {
+                    _.map(servers, (address, i) => {
+                        return this.renderServerLink(address, i);
+                    })
+                }
                 </ul>
                 <div className="activation-buttons">
                     <div className="right">
@@ -813,12 +773,12 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderServerLink(server, key) {
-        let route = this.props.route;
+        let { route } = this.props;
         let params = {
             address: server,
-            add: route.parameters.add
+            add: route.params.add
         };
-        let url = route.find(require('pages/start-page'), params);
+        let url = route.find('start-page', params);
         return (
             <li key={key}>
                 <a href={url}>
@@ -834,24 +794,26 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderProjectDialog() {
-        if (!this.state.renderingProjectDialog) {
+        let { database, route, env, projects, currentUser } = this.props;
+        let {
+            showingProjectDialog,
+            renderingProjectDialog,
+            selectedProjectID,
+        } = this.state;
+        if (!renderingProjectDialog) {
             return null;
         }
-        let selectedProject = _.find(this.props.projects, { id: this.state.selectedProjectID });
+        let selectedProject = _.find(projects, { id: selectedProjectID });
         if (!selectedProject) {
             return null;
         }
-        let currentUser = this.props.currentUser;
         let dialogProps = {
-            show: this.state.showingProjectDialog,
-            currentUser: currentUser,
+            show: showingProjectDialog,
+            currentUser,
             project: selectedProject,
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            database,
+            route,
+            env,
             onConfirm: this.handleMembershipRequestConfirm,
             onRevoke: this.handleMembershipRequestRevoke,
             onClose: this.handleMembershipRequestClose,
@@ -861,54 +823,17 @@ class StartPageSync extends PureComponent {
     }
 
     /**
-     * Check for changes to props
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    componentDidUpdate(prevProps, prevState) {
-        // let parent component know what projects the current user
-        // can access upon receiving a new list of projects
-        if (prevProps.projects !== this.props.projects
-         || prevProps.currentUser !== this.props.currentUser) {
-            let accessible = _.filter(this.props.projects, (project) => {
-                return UserUtils.canViewProject(this.props.currentUser, project);
-            });
-            if (!_.isEmpty(accessible)) {
-                if (this.props.onAvailableSchemas) {
-                    this.props.onAvailableSchemas({
-                        type: 'availableschemas',
-                        target: this,
-                        schemas: _.map(accessible, 'name'),
-                    });
-                }
-            }
-        }
-    }
-
-    /**
-     * Inform parent component that the page has mount
-     */
-    componentDidMount() {
-        if (this.props.onEntry) {
-            this.props.onEntry({
-                type: 'entry',
-                target: this,
-            });
-        }
-    }
-
-    /**
      * Transition out from this page
      */
     transitionOut(route) {
+        let { projectLinks } = this.props;
         let speed = 'fast';
         let duration = 1300;
-        let params = route.parameters;
+        let params = route.context;
         // determine whether the user has seen the project before
         let newProject = !_.some(this.props.projectLinks, {
-            address: params.address,
-            schema: params.schema,
+            address: route.context.address,
+            schema: route.context.schema,
         });
         if (newProject) {
             // show welcome message when we're heading to a new project
@@ -916,6 +841,8 @@ class StartPageSync extends PureComponent {
             duration = 3700;
         }
         this.setState({ transition: `transition-out-${speed}` }, () => {
+            // TODO
+            /*
             setTimeout(() => {
                 // tell parent component that we don't need to render
                 // the page anymore
@@ -926,6 +853,7 @@ class StartPageSync extends PureComponent {
                     });
                 }
             }, duration);
+            */
         });
     }
 
@@ -974,14 +902,17 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleOAuthButtonClick = (evt) => {
-        if (process.env.PLATFORM !== 'browser') return;
+        let { database } = this.props;
+        let { oauthErrors } = this.state;
         let url = evt.currentTarget.getAttribute('href');
         let provider = evt.currentTarget.getAttribute('data-type');
         evt.preventDefault();
         return this.openPopUpWindow(url).then(() => {
-            let db = this.props.database.use({ by: this });
-            return db.checkSession().catch((err) => {
-                let oauthErrors = _.clone(this.state.oauthErrors);
+            let db = database.use({ by: this });
+            return db.checkAuthorization().then((authorized) => {
+                console.log('Authorized:', authorized);
+            }).catch((err) => {
+                let oauthErrors = _.clone(oauthErrors);
                 oauthErrors[provider] = err;
                 this.setState({ oauthErrors });
             });
@@ -1008,12 +939,14 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestConfirm = (evt) => {
-        let projectID = this.state.selectedProjectID;
-        let project = _.find(this.props.projects, { id: projectID });
-        let db = this.props.database.use({ schema: 'global', by: this });
-        let userAfter = _.clone(this.props.currentUser);
-        userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ projectID ]);
-        return db.saveOne({ table: 'user' }, userAfter);
+        let { database, currentUser } = this.props;
+        let { selectedProjectID } = this.state;
+        if (!_.include(currentUser.requested_project_ids, selectedProjectID)) {
+            let db = database.use({ schema: 'global', by: this });
+            let userAfter = _.clone(currentUser);
+            userAfter.requested_project_ids = _.concat(userAfter.requested_project_ids, selectedProjectID);
+            db.saveOne({ table: 'user' }, userAfter);
+        }
     }
 
     /**
@@ -1022,12 +955,14 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestRevoke = (evt) => {
-        let projectID = this.state.selectedProjectID;
-        let project = _.find(this.props.projects, { id: projectID });
-        let db = this.props.database.use({ schema: 'global', by: this });
-        let userAfter = _.clone(this.props.currentUser);
-        userAfter.requested_project_ids = _.difference(userAfter.requested_project_ids, [ projectID ]);
-        return db.saveOne({ table: 'user' }, userAfter);
+        let { database, currentUser } = this.props;
+        let { selectedProjectID } = this.state;
+        if (_.includes(currentUser.requested_project_ids, selectedProjectID)) {
+            let userAfter = _.clone(currentUser);
+            userAfter.requested_project_ids = _.without(userAfter.requested_project_ids, selectedProjectID);
+            let db = database.use({ schema: 'global', by: this });
+            db.saveOne({ table: 'user' }, userAfter);
+        }
     }
 
     /**
@@ -1048,11 +983,11 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestProceed = (evt) => {
+        let { projects } = this.props;
+        let { selectedProjectID } = this.state;
         this.setState({ showingProjectDialog: false, renderingProjectDialog: false });
-
-        let projectID = this.state.selectedProjectID;
-        let project = _.find(this.props.projects, { id: projectID });
-        this.props.route.push(this.getTargetPage(), { schema: project.name });
+        let project = _.find(projects, { id: selectedProjectID });
+        route.push(this.getTargetPage(), {}, { schema: project.name });
     }
 
     /**
@@ -1061,14 +996,14 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderQRScannerDialogBox() {
-        if (process.env.PLATFORM !== 'cordova') return;
-        let t = this.props.locale.translate;
+        let { env, serverError } = this.props;
+        let { scanningQRCode, qrCodeStatus } = this.state;
+        let { t } = env.locale;
         let props = {
-            show: this.state.scanningQRCode,
-            found: this.state.receivedCorrectQRCode,
-            invalid: this.state.receivedInvalidQRCode,
-            serverError: this.props.serverError,
-            locale: this.props.locale,
+            show: scanningQRCode,
+            status: qrCodeStatus,
+            serverError,
+            env,
             onCancel: this.handleCancelScan,
             onResult: this.handleScanResult,
         };
@@ -1099,12 +1034,12 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderActivationDialogBox() {
-        if (process.env.PLATFORM !== 'cordova') return;
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { enteringManually } = this.state;
+        let { t } = env.locale;
         let props = {
-            show: this.state.enteringManually,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            show: enteringManually,
+            env,
             onCancel: this.handleActivationCancel,
             onConfirm: this.handleActivationConfirm,
         };
@@ -1119,8 +1054,7 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleScanClick = (evt) => {
-        if (process.env.PLATFORM !== 'cordova') return;
-        this.setState({ scanningQRCode: true, receivedInvalidQRCode: false });
+        this.setState({ scanningQRCode: true, qrCodeStatus: 'pending' });
     }
 
     /**
@@ -1156,7 +1090,6 @@ class StartPageSync extends PureComponent {
      * @param  {Object} evt
      */
     handleCancelScan = (evt) => {
-        if (process.env.PLATFORM !== 'cordova') return;
         this.setState({ scanningQRCode: false });
         if (this.invalidCodeTimeout) {
             clearTimeout(this.invalidCodeTimeout);
@@ -1169,7 +1102,6 @@ class StartPageSync extends PureComponent {
      * @param  {Object} evt
      */
     handleScanResult = (evt) => {
-        if (process.env.PLATFORM !== 'cordova') return;
         if (this.invalidCodeTimeout) {
             clearTimeout(this.invalidCodeTimeout);
         }
@@ -1177,12 +1109,12 @@ class StartPageSync extends PureComponent {
         let link = UniversalLink.parse(evt.result);
         let params = (link) ? StartPage.parseURL(link.path, link.query, link.hash) : null;
         if (params && params.activationCode) {
-            this.setState({ receivedCorrectQRCode: true, receivedInvalidQRCode: false })
+            this.setState({ qrCodeStatus: 'correct' })
             this.props.route.change(link.url);
         } else {
-            this.setState({ receivedCorrectQRCode: false, receivedInvalidQRCode: true });
+            this.setState({ qrCodeStatus: 'invalid' });
             this.invalidCodeTimeout = setTimeout(() => {
-                this.setState({ receivedInvalidQRCode: false })
+                this.setState({ qrCodeStatus: 'pending' })
             }, 5000);
         }
     }
@@ -1202,6 +1134,7 @@ class StartPageSync extends PureComponent {
      * @param  {Object} evt
      */
     handleActivationConfirm = (evt) => {
+        let { route } = this.props;
         this.handleActivationCancel();
         // redirect to start page, now with server address, schema, as well as
         // the activation code
@@ -1211,7 +1144,7 @@ class StartPageSync extends PureComponent {
             schema: evt.schema,
             activationCode: evt.code,
         };
-        this.props.route.push(StartPage, params);
+        route.push('start-page', params);
     }
 }
 
@@ -1224,75 +1157,73 @@ function getServerIcon(type) {
     }
 }
 
-let sortProjects = Memoize(function(projects, locale) {
-    let p = locale.pick;
+let sortProjects = Memoize(function(projects, env) {
+    let { p } = env.locale;
     return _.sortBy(projects, (project) => {
         return p(project.details.title) || project.name;
     });
 });
 
-let sortServers = Memoize(function(servers, locale) {
-    let p = locale.pick;
+let sortServers = Memoize(function(servers, env) {
+    let { p } = env.locale;
     return _.sortBy(servers, (server) => {
         return p(server.details.title) || server.name;
     });
 });
 
-if (process.env.PLATFORM === 'cordova') {
-    /**
-     * Return the device OS
-     *
-     * @return {String}
-     */
-    let getDeviceType = function() {
-        if (window.cordova) {
-            return cordova.platformID;
-        }
-        if (process.env.NODE_ENV !== 'production') {
-            return 'android';
-        }
-        return null;
-    };
+/**
+ * Return the device OS
+ *
+ * @return {String}
+ */
+function getDeviceType() {
+    if (window.cordova) {
+        return cordova.platformID;
+    }
+    if (process.env.NODE_ENV !== 'production') {
+        return 'android';
+    }
+    return null;
+}
 
-    /**
-     * Return device unique id
-     *
-     * @return {String}
-     */
-    let getDeviceUUID = function() {
-        let device = window.device;
-        if (device) {
-            return device.uuid;
-        }
-        if (process.env.NODE_ENV !== 'production') {
-            return '00000000000000000000000000000000';
-        }
-        return null;
-    };
+/**
+ * Return device unique id
+ *
+ * @return {String}
+ */
+function getDeviceUUID() {
+    let device = window.device;
+    if (device) {
+        return device.uuid;
+    }
+    if (process.env.NODE_ENV !== 'production') {
+        return '00000000000000000000000000000000';
+    }
+    return null;
+}
 
-    /**
-     * Return device details
-     *
-     * @return {Object}
-     */
-    let getDeviceDetails = function() {
-        let device = window.device;
-        if (device) {
-            let manufacturer = device.manufacturer;
-            let name = device.model;
-            if (manufacturer === 'MicrosoftMDG') {
-                manufacturer = 'Microsoft';
-            }
-            return { manufacturer, name };
+/**
+ * Return device details
+ *
+ * @return {Object}
+ */
+function getDeviceDetails() {
+    let device = window.device;
+    if (device) {
+        let manufacturer = device.manufacturer;
+        let name = device.model;
+        if (manufacturer === 'MicrosoftMDG') {
+            manufacturer = 'Microsoft';
         }
-        if (process.env.NODE_ENV !== 'production') {
-            return {
-                manufacturer: 'Apricot',
-                name: 'Apricot oPhone 5',
-            };
-        }
-        return {};
-    };
+        return { manufacturer, name };
+    }
+    if (process.env.NODE_ENV !== 'production') {
+        return {
+            manufacturer: 'Apricot',
+            name: 'Apricot oPhone 5',
+        };
+    }
+    return {};
 }
 
 export {
@@ -1305,7 +1236,7 @@ import Database from 'data/database';
 import Route from 'routing/route';
 import Environment from 'env/environment';
 
-if (process.env.NODE_ENV) {
+if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     StartPage.propTypes = {

@@ -26,13 +26,18 @@ class ReactionList extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { route, reactions, currentUser } = this.props;
-        let reactionID = route.params.showingReaction || route.params.highlightingReaction;
+        let {
+            reactions,
+            currentUser,
+            highlightReactionID,
+            scrollToReactionID,
+        } = this.props;
+        let anchorReactionID = scrollToReactionID || highlightReactionID;
         let props = {
             items: sortReactions(reactions, currentUser),
             behind: 5,
             ahead: 10,
-            anchor: (reactionID) ? `reaction-${reactionID}` : undefined,
+            anchor: (anchorReactionID) ? `reaction-${anchorReactionID}` : undefined,
             offset: 4,
             inverted: true,
             fresh: false,
@@ -102,6 +107,7 @@ class ReactionList extends PureComponent {
             respondents,
             repo,
             access,
+            highlightReactionID,
             onFinish,
         } = this.props;
         let reaction = evt.item;
@@ -120,7 +126,7 @@ class ReactionList extends PureComponent {
                     }
                 }
             }
-            if (reaction.id === route.params.highlightingReaction) {
+            if (reaction.id === highlightReactionID) {
                 highlighting = true;
             }
         }

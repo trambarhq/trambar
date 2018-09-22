@@ -32,10 +32,9 @@ class ErrorPage extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let params = this.props.route.parameters;
-        let error = new HTTPError(params.code)
+        let error = new HTTPError(404)
         let message;
-        if (params.code === 404) {
+        if (error.statusCode === 404) {
             message = `The page you're trying to reach doesn't exist. But then again, who does?`;
         } else {
             message = `The application is behaving in ways its maker never intended.`;

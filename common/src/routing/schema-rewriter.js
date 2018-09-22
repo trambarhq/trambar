@@ -4,6 +4,7 @@ const SchemaRewriter = {
         var m = regExp.exec(urlParts.path);
         if (m) {
             context.schema = m[1];
+            urlParts.path = urlParts.path.substr(m[0].length);
         }
     },
     to: (urlParts, context) => {

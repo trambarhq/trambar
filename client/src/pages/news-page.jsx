@@ -5,7 +5,7 @@ import { AsyncComponent } from 'relaks';
 import * as UserFinder from 'objects/finders/user-finder';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as StoryFinder from 'objects/finders/story-finder';
-import * as ProjectSettings from 'objects/settings/project-settings';
+import * as ProjectUtils from 'objects/utils/project-utils';
 import * as TagScanner from 'utils/tag-scanner';
 
 // widgets
@@ -27,17 +27,27 @@ class NewsPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, payloads, env } = this.props;
+        let {
+            database,
+            route,
+            payloads,
+            env,
+            search,
+            roles,
+            date,
+            highlightStoryID,
+            scrollToStory,
+        } = this.props;
         let db = database.use({ by: this });
         let filtering = false;
         let tags;
-        if (routes.params.search) {
-            if (!TagScanner.removeTags(route.params.search)) {
-                tags = TagScanner.findTags(route.params.search);
+        if (search) {
+            if (!TagScanner.removeTags(search)) {
+                tags = TagScanner.findTags(search);
             }
             filtering = true;
         }
-        if (route.params.date || !_.isEmpty(route.params.roles)) {
+        if (date || !_.isEmpty(roles)) {
             filtering = true;
         }
         let props = {
@@ -70,16 +80,16 @@ class NewsPage extends AsyncComponent {
                 return StoryFinder.findStoriesWithTags(db, tags, props.currentUser).then((stories) => {
                     props.stories = stories;
                 });
-            } else if (route.params.search) {
-                return StoryFinder.findStoriesMatchingText(db, route.params.search, env, props.currentUser).then((stories) => {
+            } else if (search) {
+                return StoryFinder.findStoriesMatchingText(db, search, env, props.currentUser).then((stories) => {
                     props.stories = stories;
                 });
-            } else if (route.params.date) {
-                return StoryFinder.findStoriesOnDate(db, route.params.date, props.currentUser).then((stories) => {
+            } else if (date) {
+                return StoryFinder.findStoriesOnDate(db, date, props.currentUser).then((stories) => {
                     props.stories = stories;
                 });
-            } else if (!_.isEmpty(route.params.roles)) {
-                return StoryFinder.findStoriesWithRolesInListing(db, 'news', route.params.roles, props.currentUser, freshListing).then((stories) => {
+            } else if (!_.isEmpty(roles)) {
+                return StoryFinder.findStoriesWithRolesInListing(db, 'news', roles, props.currentUser, freshListing).then((stories) => {
                     props.stories = stories;
                 });
             } else {
@@ -98,8 +108,8 @@ class NewsPage extends AsyncComponent {
             }
         }).then(() => {
             // when we're highlighting a story, make sure the story is actually there
-            if (!route.params.date) {
-                let storyID = route.params.highlightingStory;
+            if (!date) {
+                let storyID = highlightStoryID;
                 if (storyID) {
                     let allStories = _.concat(props.stories, props.draftStories, props.pendingStories);
                     if (!_.find(allStories, { id: storyID })) {
@@ -137,7 +147,7 @@ class NewsPage extends AsyncComponent {
             let params = {
                 schema: schema,
                 date: Moment(story.ptime).format('YYYY-MM-DD'),
-                highlightingStory: story.id,
+                highlightStoryID: story.id,
             };
             return route.replace(route.name, params);
         }
@@ -154,7 +164,7 @@ class NewsPageSync extends PureComponent {
      */
     getAccessLevel() {
         let { project, currentUser } = this.props;
-        return ProjectSettings.getUserAccessLevel(project, currentUser) || 'read-only';
+        return ProjectUtils.getUserAccessLevel(project, currentUser) || 'read-only';
     }
 
     /**

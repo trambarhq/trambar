@@ -6,7 +6,9 @@ import './story-emblem.scss';
 
 function StoryEmblem(props) {
     let { story } = props;
-    if (_.includes(story.tags, '#yippeekiyay')) {
+    let { type, tags } = story;
+    let { state } = story.details;
+    if (_.includes(tags, '#yippeekiyay')) {
         return (
             <div className="story-emblem die-hard">
                 <img src={require('explosion.gif')} />
@@ -22,7 +24,6 @@ function StoryEmblem(props) {
     }
     let Icon = StoryIcons[type];
     if (type === 'issue') {
-        let state = story.details.state;
         Icon = StoryIcons[type + '.' + state];
     }
     if (!Icon) {

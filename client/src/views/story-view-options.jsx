@@ -46,15 +46,15 @@ class StoryViewOptions extends PureComponent {
      */
     renderButtons(section) {
         let { env, story, currentUser, repos, options, access } = this.props;
+        let { selectingRecipients, enteringIssueDetails } = this.state;
         let { t } = env.locale;
         if (section === 'main') {
             let bookmarkProps;
             if (options.keepBookmark === undefined) {
-                let bookmarking = (user) ? _.includes(options.bookmarkRecipients, user.id) : false;
                 bookmarkProps = {
                     label: t('option-add-bookmark'),
-                    selected: bookmarking,
-                    hidden: !UserUtils.canCreateBookmark(user, story, access),
+                    selected: (currentUser) ? _.includes(options.bookmarkRecipients, currentUser.id) : false,
+                    hidden: !UserUtils.canCreateBookmark(currentUser, story, access),
                     onClick: this.handleAddBookmarkClick,
                 };
             } else {
@@ -65,42 +65,42 @@ class StoryViewOptions extends PureComponent {
                     onClick: this.handleKeepBookmarkClick,
                 };
             }
-            let otherRecipients = (user) ? _.without(options.bookmarkRecipients, user.id) : [];
+            let otherRecipients = (currentUser) ? _.without(options.bookmarkRecipients, currentUser.id) : [];
             let sendBookmarkProps = {
                 label: _.isEmpty(otherRecipients)
                     ? t('option-send-bookmarks')
                     : t('option-send-bookmarks-to-$count-users', _.size(otherRecipients)),
-                hidden: !UserUtils.canSendBookmarks(user, story, access),
-                selected: !_.isEmpty(otherRecipients) || this.state.selectingRecipients,
+                hidden: !UserUtils.canSendBookmarks(currentUser, story, access),
+                selected: !_.isEmpty(otherRecipients) || selectingRecipients,
                 onClick: this.handleSendBookmarkClick,
             };
             let addIssueProps = {
                 label: t('option-add-issue'),
-                hidden: !UserUtils.canAddIssue(user, story, repos, access),
-                selected: !!options.issueDetails || this.state.enteringIssueDetails,
+                hidden: !UserUtils.canAddIssue(currentUser, story, repos, access),
+                selected: !!options.issueDetails || enteringIssueDetails,
                 onClick: this.handleAddIssueClick,
             };
             let hideProps = {
                 label: t('option-hide-story'),
-                hidden: !UserUtils.canHideStory(user, story, access),
+                hidden: !UserUtils.canHideStory(currentUser, story, access),
                 selected: options.hideStory,
                 onClick: this.handleHideClick,
             };
             let editProps = {
                 label: t('option-edit-post'),
-                hidden: !UserUtils.canEditStory(user, story, access),
+                hidden: !UserUtils.canEditStory(currentUser, story, access),
                 selected: options.editStory,
                 onClick: this.handleEditClick,
             };
             let removeProps = {
                 label: t('option-remove-story'),
-                hidden: !UserUtils.canRemoveStory(user, story, access),
+                hidden: !UserUtils.canRemoveStory(currentUser, story, access),
                 selected: options.removeStory,
                 onClick: this.handleRemoveClick,
             };
             let bumpProps = {
                 label: t('option-bump-story'),
-                hidden: !UserUtils.canBumpStory(user, story, access),
+                hidden: !UserUtils.canBumpStory(currentUser, story, access),
                 selected: options.bumpStory,
                 onClick: this.handleBumpClick,
             };
@@ -151,7 +151,7 @@ class StoryViewOptions extends PureComponent {
     renderIssueDialogBox() {
         let { env, story, reactions, repos, options } = this.props;
         let { enteringIssueDetails, renderingIssueDialogBox } = this.state;
-        if (!this.state.renderingIssueDialogBox) {
+        if (!renderingIssueDialogBox) {
             return null;
         }
         // don't allow issue to be deleted once someone has been assigned to it

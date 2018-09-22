@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import ExternalDataUtils from 'objects/utils/external-data-utils';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
 const emptyArray = [];
 

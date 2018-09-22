@@ -42,6 +42,7 @@ class StoryList extends AsyncComponent {
             project,
             access,
             acceptNewStory,
+            highlightStoryID,
         } = this.props;
         let db = database.use({ by: this });
         let props = {
@@ -54,6 +55,7 @@ class StoryList extends AsyncComponent {
 
             access,
             acceptNewStory,
+            highlightStoryID,
             stories,
             draftStories,
             pendingStories,
@@ -131,24 +133,22 @@ class StoryListSync extends PureComponent {
             draftStories,
             acceptNewStory,
             currentUser,
+            highlightStoryID,
+            scrollToStoryID,
         } = this.props;
         let { setters } = this.components;
         stories = sortStories(stories, pendingStories);
         if (acceptNewStory) {
             stories = attachDrafts(stories, draftStories, currentUser);
         }
-        let anchor;
-        let hashParams = StoryList.parseHash(this.props.route.hash);
-        if (hashParams.story) {
-            anchor = `story-${hashParams.story}`;
-        }
+        let anchorStoryID = scrollToStoryID || highlightStoryID;
         let smartListProps = {
             ref: setters.list,
             items: stories,
             offset: 20,
             behind: 4,
             ahead: 8,
-            anchor: anchor,
+            anchor: (anchorStoryID) ? `story-${anchorStoryID}` : undefined,
 
             onIdentity: this.handleStoryIdentity,
             onRender: this.handleStoryRender,
@@ -196,16 +196,16 @@ class StoryListSync extends PureComponent {
      * @return {String}
      */
     handleStoryIdentity = (evt) => {
+        let { database, acceptNewStory } = this.props;
         if (evt.alternative && evt.item) {
             // look for temporary id
-            let params = this.props.route.parameters;
-            let location = { schema: params.schema, table: 'story' };
-            let temporaryID = this.props.database.findTemporaryID(location, evt.item.id);
+            let location = { table: 'story' };
+            let temporaryID = database.findTemporaryID(location, evt.item.id);
             if (temporaryID) {
                 return `story-${temporaryID}`;
             }
         } else {
-            if (this.props.acceptNewStory) {
+            if (acceptNewStory) {
                 // use a fixed id for the first editor, so we don't lose focus
                 // when the new story acquires an id after being saved automatically
                 if (evt.currentIndex === 0) {
@@ -224,16 +224,33 @@ class StoryListSync extends PureComponent {
      * @return {ReactElement}
      */
     handleStoryRender = (evt) => {
+        let {
+            database,
+            route,
+            payloads,
+            env,
+            stories,
+            draftStories,
+            authors,
+            reactions,
+            respondents,
+            recommendations,
+            recipients,
+            repos,
+            currentUser,
+            highlightStoryID,
+            access
+        } = this.props;
         let story = evt.item;
         // see if it's being editted
         let isDraft = false;
         let highlighting = false;
         if (story) {
-            if (this.props.access === 'read-write') {
+            if (access === 'read-write') {
                 if (!story.published) {
                     isDraft = true;
                 } else {
-                    let tempCopy = _.find(this.props.draftStories, { published_version_id: story.id });
+                    let tempCopy = _.find(draftStories, { published_version_id: story.id });
                     if (tempCopy) {
                         // edit the temporary copy
                         story = tempCopy;
@@ -242,26 +259,23 @@ class StoryListSync extends PureComponent {
                 }
             }
 
-            let hash = this.props.route.hash;
-            let hashParams = StoryList.parseHash(hash);
-            if (story.id === hashParams.story) {
-                if (hashParams.highlighting) {
-                    highlighting = true;
-                    // suppress highlighting after a second
-                    setTimeout(() => {
-                        this.props.route.reanchor(_.toLower(hash));
-                    }, 1000);
-                }
+            if (story.id === highlightStoryID) {
+                highlighting = true;
+                // suppress highlighting after a second
+                setTimeout(() => {
+                    // TODO
+                    // this.props.route.reanchor(_.toLower(hash));
+                }, 1000);
             }
         } else {
             isDraft = true;
         }
         if (isDraft) {
-            let authors = findAuthors(this.props.authors, story);
-            let recommendations = findRecommendations(this.props.recommendations, story);
-            let recipients = findRecipients(this.props.recipients, recommendations);
+            let authors = findAuthors(authors, story);
+            let recommendations = findRecommendations(recommendations, story);
+            let recipients = findRecipients(recipients, recommendations);
             if (!story) {
-                authors = array(this.props.currentUser);
+                authors = array(currentUser);
             }
             let editorProps = {
                 highlighting,
@@ -269,41 +283,39 @@ class StoryListSync extends PureComponent {
                 authors,
                 recommendations,
                 recipients,
-                repos: this.props.repos,
+                repos,
                 isStationary: evt.currentIndex === 0,
-                currentUser: this.props.currentUser,
-                database: this.props.database,
-                payloads: this.props.payloads,
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
+                currentUser,
+                database,
+                payloads,
+                route,
+                env,
             };
             return <StoryEditor {...editorProps}/>
         } else {
             if (evt.needed) {
-                let reactions = findReactions(this.props.reactions, story);
-                let authors = findAuthors(this.props.authors, story);
-                let respondents = findRespondents(this.props.respondents, reactions);
-                let recommendations = findRecommendations(this.props.recommendations, story);
-                let recipients = findRecipients(this.props.recipients, recommendations);
-                let pending = !_.includes(this.props.stories, story);
+                let storyReactions = findReactions(reactions, story);
+                let storyAuthors = findAuthors(authors, story);
+                let storyRespondents = findRespondents(respondents, reactions);
+                let storyRecommendations = findRecommendations(recommendations, story);
+                let storyRecipients = findRecipients(recipients, recommendations);
+                let pending = !_.includes(stories, story);
                 let storyProps = {
                     highlighting,
                     pending,
-                    access: this.props.access,
+                    access,
                     story,
-                    reactions,
-                    authors,
-                    respondents,
-                    recommendations,
-                    recipients,
-                    repos: this.props.repos,
-                    currentUser: this.props.currentUser,
-                    database: this.props.database,
-                    payloads: this.props.payloads,
-                    route: this.props.route,
-                    locale: this.props.locale,
-                    theme: this.props.theme,
+                    reactions: storyReactions,
+                    authors: storyAuthors,
+                    respondents: storyRespondents,
+                    recommendations: storyRecommendations,
+                    recipients: storyRecipients,
+                    repos,
+                    currentUser,
+                    database,
+                    payloads,
+                    route,
+                    env,
                     onBump: this.handleStoryBump,
                 };
                 return <StoryView {...storyProps} />
@@ -320,11 +332,14 @@ class StoryListSync extends PureComponent {
      * @param  {Object} evt
      */
     handleStoryAnchorChange = (evt) => {
+        // TODO
+        /*
         let params = {
             story: _.get(evt.item, 'id')
         };
         let hash = StoryList.getHash(params);
         this.props.route.reanchor(hash);
+        */
     }
 
     /**
@@ -483,6 +498,8 @@ if (process.env.NODE_ENV !== 'production') {
     StoryList.propTypes = {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         acceptNewStory: PropTypes.bool,
+        highlightStoryID: PropTypes.number,
+        scrollToStoryID: PropTypes.number,
         stories: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
         pendingStories: PropTypes.arrayOf(PropTypes.object),
@@ -497,6 +514,8 @@ if (process.env.NODE_ENV !== 'production') {
     StoryListSync.propTypes = {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
         acceptNewStory: PropTypes.bool,
+        highlightStoryID: PropTypes.number,
+        scrollToStoryID: PropTypes.number,
         stories: PropTypes.arrayOf(PropTypes.object),
         authors: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),

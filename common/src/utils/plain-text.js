@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import EmojiRegex from 'emoji-regex';
 import ReactEasyEmoji from 'react-easy-emoji';
-import ListParser from 'utils/list-parser';
+import * as ListParser from 'utils/list-parser';
 
 /**
  * Render text containing a survey
@@ -27,11 +27,19 @@ function renderSurvey(text, answers, onChange) {
                         checked = (item.key == answer);
                     }
                 }
+                let inputProps = {
+                    type: 'radio',
+                    name: item.list,
+                    value: item.key,
+                    readOnly: !onChange,
+                    checked,
+                    onChange,
+                };
                 return (
                     <span>
                         {item.before}
                         <label>
-                            <input type="radio" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
+                            <input {...inputProps} />
                             {item.between}
                             {renderEmoji(item.label)}
                         </label>
@@ -116,11 +124,19 @@ function renderTaskList(text, answers, onChange) {
                         }
                     }
                 }
+                let inputProps = {
+                    type: 'checkbox',
+                    name: item.list,
+                    value: item.key,
+                    readOnly: !onChange,
+                    checked,
+                    onChange,
+                };
                 return (
                     <span>
                         {item.before}
                         <label>
-                            <input type="checkbox" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
+                            <input {...inputProps} />
                             {item.between}
                             {renderEmoji(item.label)}
                         </label>

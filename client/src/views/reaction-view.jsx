@@ -200,7 +200,7 @@ class ReactionView extends PureComponent {
                     );
                 case 'assignment':
                     if (story.type === 'issue' || story.type === 'post') {
-                        if (UserUtils.canAccessRepo(user, repo)) {
+                        if (UserUtils.canAccessRepo(currentUser, repo)) {
                             url = RepoUtils.getIssueNoteURL(repo, reaction);
                             target = repo.type;
                         }
@@ -210,7 +210,7 @@ class ReactionView extends PureComponent {
                             </a>
                         );
                     } else if (story.type === 'merge-request') {
-                        if (UserUtils.canAccessRepo(user, repo)) {
+                        if (UserUtils.canAccessRepo(currentUser, repo)) {
                             url = RepoUtils.getMergeRequestNoteURL(repo, reaction);
                             target = repo.type;
                         }
@@ -221,7 +221,7 @@ class ReactionView extends PureComponent {
                         );
                     }
                 case 'tracking':
-                    if (UserUtils.canAccessRepo(user, repo)) {
+                    if (UserUtils.canAccessRepo(currentUser, repo)) {
                         url = RepoUtils.getIssueNoteURL(repo, reaction);
                         target = repo.type;
                     }

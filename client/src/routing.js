@@ -33,7 +33,7 @@ const routes = {
         load: (params, context) => {
             let route = {};
             let statistics = { type: 'daily-activities', public: 'guest' };
-            return {
+            params.ui = {
                 calendar: { route, statistics },
                 filter: { route },
                 search: { route, statistics },
@@ -149,15 +149,26 @@ const routes = {
     'start-page': {
         path: '/',
         query: {
-            add: '${add}',
+            add: '${addingServer}',
             ac: '${activationCode}',
             p: '${schema}',
         },
         params: {
             schema: String,
             activationCode: String,
-            add: Boolean,
+            addingServer: Boolean,
         },
+        load: (params, context) => {
+            params.ui = {
+                navigation: { top: false, bottom: false }
+            };
+            return import('pages/start-page' /* webpackChunkName: "page-start" */).then((module) => {
+                params.module = module;
+            });
+        },
+    },
+    'sign-in-page': {
+        path: '/',
         load: (params, context) => {
             params.ui = {
                 navigation: { top: false, bottom: false }
@@ -170,6 +181,7 @@ const routes = {
         signIn: true,
     },
     'error-page': {
+        path: '*',
         load: (params, context) => {
             return import('pages/error-page' /* webpackChunkName: "page-error" */).then((module) => {
                 params.module = module;
