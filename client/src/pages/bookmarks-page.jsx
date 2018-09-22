@@ -4,7 +4,7 @@ import { AsyncComponent } from 'relaks';
 import * as UserFinder from 'objects/finders/user-finder';
 import * as BookmarkFinder from 'objects/finders/bookmark-finder';
 import * as ProjectFinder from 'objects/finders/project-finder';
-import * as ProjectSettings from 'objects/settings/project-settings';
+import * as ProjectUtils from 'objects/utils/project-utils';
 
 // widgets
 import PageContainer from 'widgets/page-container';
@@ -66,7 +66,7 @@ class BookmarksPageSync extends PureComponent {
      */
     getAccessLevel() {
         let { project, currentUser } = this.props;
-        return ProjectSettings.getUserAccessLevel(project, currentUser) || 'read-only';
+        return ProjectUtils.getUserAccessLevel(project, currentUser) || 'read-only';
     }
 
     /**
@@ -142,12 +142,21 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     BookmarksPage.propTypes = {
+        scrollToStoryID: PropTypes.number,
+        highlightStoryID: PropTypes.number,
+        scrollToReactionID: PropTypes.number,
+        highlightReactionID: PropTypes.number,
+
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     BookmarksPageSync.propTypes = {
+        scrollToStoryID: PropTypes.number,
+        highlightStoryID: PropTypes.number,
+        scrollToReactionID: PropTypes.number,
+        highlightReactionID: PropTypes.number,
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         project: PropTypes.object,

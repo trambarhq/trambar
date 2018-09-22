@@ -36,7 +36,9 @@ class NewsPage extends AsyncComponent {
             roles,
             date,
             highlightStoryID,
-            scrollToStory,
+            scrollToStoryID,
+            highlightReactionID,
+            scrollToReactionID,
         } = this.props;
         let db = database.use({ by: this });
         let filtering = false;
@@ -58,6 +60,13 @@ class NewsPage extends AsyncComponent {
             currentUser: null,
 
             acceptNewStory: !filtering,
+            search,
+            roles,
+            date,
+            highlightStoryID,
+            scrollToStoryID,
+            highlightReactionID,
+            scrollToReactionID,
             database,
             payloads,
             route,
@@ -227,7 +236,7 @@ class NewsPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderEmptyMessage() {
-        let { route, env, stories } = this.props;
+        let { env, stories, date, roleIDs, search } = this.props;
         if (!_.isEmpty(stories)) {
             return null;
         }
@@ -236,11 +245,11 @@ class NewsPageSync extends PureComponent {
             return <LoadingAnimation />;
         } else {
             let phrase;
-            if (route.params.date) {
+            if (date) {
                 phrase = 'news-no-stories-on-date';
-            } else if (!_.isEmpty(route.params.roles)) {
+            } else if (!_.isEmpty(roleIDs)) {
                 phrase = 'news-no-stories-by-role';
-            } else if (route.params.search) {
+            } else if (search) {
                 phrase = 'news-no-stories-found';
             } else {
                 phrase = 'news-no-stories-yet';
@@ -266,12 +275,27 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     NewsPage.propTypes = {
+        roleIDs: PropTypes.arrayOf(PropTypes.number),
+        search: PropTypes.string,
+        date: PropTypes.string,
+        scrollToStoryID: PropTypes.number,
+        highlightStoryID: PropTypes.number,
+        scrollToReactionID: PropTypes.number,
+        highlightReactionID: PropTypes.number,
+
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     NewsPageSync.propTypes = {
+        roleIDs: PropTypes.arrayOf(PropTypes.number),
+        search: PropTypes.string,
+        date: PropTypes.string,
+        scrollToStoryID: PropTypes.number,
+        highlightStoryID: PropTypes.number,
+        scrollToReactionID: PropTypes.number,
+        highlightReactionID: PropTypes.number,
         acceptNewStory: PropTypes.bool,
         listing: PropTypes.object,
         stories: PropTypes.arrayOf(PropTypes.object),

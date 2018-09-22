@@ -1,6 +1,18 @@
 const routes = {
     'bookmarks-page': {
         path: '/bookmarks/',
+        hash: [
+            'S${highlightStoryID}',
+            's${scrollToStoryID}',
+            'R${highlightReactionID}',
+            'r${scrollToReactionID}',
+        ],
+        params: {
+            scrollToStoryID: Number,
+            highlightStoryID: Number,
+            scrollToReactionID: Number,
+            highlightReactionID: Number,
+        },
         load: (params, context) => {
             params.ui = {
                 navigation: { section: 'bookmarks' }
@@ -27,8 +39,10 @@ const routes = {
             roleIDs: NumberArray,
             search: String,
             date: String,
-            story: Number,
-            reaction: Number,
+            scrollToStoryID: Number,
+            highlightStoryID: Number,
+            scrollToReactionID: Number,
+            highlightReactionID: Number,
         },
         load: (params, context) => {
             let route = {};
@@ -49,9 +63,14 @@ const routes = {
         query: {
             date: '${date}',
         },
+        hash: [
+            'N${highlightNotificationID}',
+            'n${scrollToNotificationID}',
+        ],
         params: {
-            schema: String,
             date: String,
+            highlightNotificationID: Number,
+            scrollToNotificationID: Number,
         },
         load: (params, context) => {
             let route = {};

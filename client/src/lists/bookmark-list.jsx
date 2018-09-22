@@ -201,6 +201,7 @@ class BookmarkListSync extends PureComponent {
             currentUser,
             stories,
             reactions,
+            respondents,
             draftStories,
             authors,
             recommendations,
@@ -208,6 +209,7 @@ class BookmarkListSync extends PureComponent {
             recipients,
             repos,
             access,
+            highlightStoryID,
         } = this.props;
         let bookmark = evt.item;
         let story = findStory(stories, bookmark);
@@ -232,7 +234,7 @@ class BookmarkListSync extends PureComponent {
                 }
             }
 
-            if (story.id === route.params.highlightingStory) {
+            if (story.id === highlightStoryID) {
                 highlighting = true;
                 // suppress highlighting after a second
                 setTimeout(() => {
@@ -240,6 +242,19 @@ class BookmarkListSync extends PureComponent {
                     //route.reanchor(_.toLower(hash));
                 }, 1000);
             }
+        }
+        let bookmarkProps;
+        if (editing || evt.needed) {
+            let bookmarkSenders = findSenders(senders, bookmark);
+            bookmarkProps = {
+                highlighting,
+                bookmark,
+                senders: bookmarkSenders,
+                currentUser,
+                database,
+                route,
+                env,
+            };
         }
         if (editing) {
             let storyAuthors = findAuthors(authors, story);

@@ -25,12 +25,22 @@ class NotificationsPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env } = this.props;
+        let {
+            database,
+            route,
+            env,
+            date,
+            highlightNotificationID,
+            scrollToNotificationID,
+        } = this.props;
         let db = database.use({ by: this });
         let props = {
             currentUser: null,
             notifications: null,
 
+            date,
+            highlightNotificationID,
+            scrollToNotificationID,
             database,
             route,
             env,
@@ -41,8 +51,8 @@ class NotificationsPage extends AsyncComponent {
                 props.currentUser = user;
             });
         }).then(() => {
-            if (route.params.date) {
-                return NotificationFinder.findNotificationsForUserOnDate(db, props.currentUser, route.params.date).then((notifications) => {
+            if (date) {
+                return NotificationFinder.findNotificationsForUserOnDate(db, props.currentUser, date).then((notifications) => {
                     props.notifications = notifications;
                 });
             } else {
@@ -83,13 +93,12 @@ class NotificationsPageSync extends PureComponent {
             database,
             route,
             env,
-            notification,
+            notifications,
             currentUser,
         } = this.props;
         let listProps = {
             notifications,
             currentUser,
-
             database,
             route,
             env,
@@ -103,7 +112,7 @@ class NotificationsPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderEmptyMessage() {
-        let { route, notifications } = this.props;
+        let { env, notifications, date } = this.props;
         if (!_.isEmpty(notifications)) {
             return null;
         }
@@ -112,7 +121,7 @@ class NotificationsPageSync extends PureComponent {
             return <LoadingAnimation />;
         } else {
             let phrase;
-            if (params.date) {
+            if (date) {
                 phrase = 'notifications-no-notifications-on-date';
             } else {
                 phrase = 'notifications-no-notifications-yet';
@@ -137,11 +146,17 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     NotificationsPage.propTypes = {
+        date: PropTypes.string,
+        highlightNotificationID: PropTypes.number,
+        scrollToNotificationID: PropTypes.number,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     NotificationsPageSync.propTypes = {
+        date: PropTypes.string,
+        highlightNotificationID: PropTypes.number,
+        scrollToNotificationID: PropTypes.number,
         notifications: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 

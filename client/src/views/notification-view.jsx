@@ -12,7 +12,7 @@ class NotificationView extends PureComponent {
     static displayName = 'NotificationView';
 
     static getNotificationURL(notification, route) {
-        let params = _.clone(route.parameters);
+        let params = _.clone(route.params);
         switch (notification.type) {
             case 'like':
             case 'comment':

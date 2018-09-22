@@ -47,7 +47,7 @@ class BookmarkView extends PureComponent {
         });
         let contents;
         if (isOwner) {
-            let you = UserUtils.getDisplayName(user, env);
+            let you = UserUtils.getDisplayName(currentUser, env);
             g(you, currentUser.details.gender);
             if (others.length === 0) {
                 contents = t('bookmark-$you-bookmarked-it', you);
@@ -104,8 +104,8 @@ class BookmarkView extends PureComponent {
      * @return {Promise<Bookmark>}
      */
     removeBookmark(bookmark) {
-        let params = this.props.route.parameters;
-        let db = this.props.database.use({ schema: params.schema, by: this });
+        let { database } = this.props;
+        let db = database.use({ by: this });
         return db.removeOne({ table: 'bookmark' }, bookmark);
     }
 
@@ -115,7 +115,8 @@ class BookmarkView extends PureComponent {
      * @param  {Event} evt
      */
     handleCloseClick = (evt) => {
-        this.removeBookmark(this.props.bookmark);
+        let { bookmark } = this.props;
+        this.removeBookmark(bookmark);
     }
 }
 
