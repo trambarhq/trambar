@@ -49,7 +49,7 @@ class TopNavigation extends PureComponent {
             return 'search';
         } else if (params.date != undefined) {
             return 'calendar';
-        } else if (params.roles != undefined) {
+        } else if (params.roleIDs != undefined) {
             return 'filter';
         }
         return null;
@@ -69,7 +69,7 @@ class TopNavigation extends PureComponent {
         if (!controlSettings) {
             return null;
         }
-        let params = _.clone(controlSettings.route);
+        let params = _.clone(controlSettings.route) || {};
         if (control !== selected) {
             // add empty parameters to trigger the control's activation
             switch (control) {
@@ -80,7 +80,7 @@ class TopNavigation extends PureComponent {
                     params.date = '';
                     break;
                 case 'filter':
-                    params.roles = [];
+                    params.roleIDs = [];
                     break;
             }
         }
@@ -262,17 +262,17 @@ class TopNavigation extends PureComponent {
 }
 
 function Button(props) {
-    let { url, className, active } = props;
+    let { url, icon, className, active } = props;
     className = 'button' + ((className) ? ` ${className}` : '');
     if (active) {
         className += ` active`;
     }
-    if (url) {
+    if (!url) {
         className += ` disabled`;
     }
     return (
-        <Link className={className} url={props.url}>
-            <i className={`fa fa-${props.icon}`} />
+        <Link className={className} url={url}>
+            <i className={`fa fa-${icon}`} />
         </Link>
     );
 }

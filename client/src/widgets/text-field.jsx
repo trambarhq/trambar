@@ -28,7 +28,7 @@ class TextField extends PureComponent {
         let { t } = env.locale;
         let classNames = [ 'text-field' ];
         let Input = 'input';
-        let inputProps = _.omit(this.props, 'children', 'locale');
+        let inputProps = _.omit(this.props, 'children', 'env');
         if (type === 'textarea') {
             Input = AutosizeTextArea;
             inputProps = _.omit(inputProps, 'type');

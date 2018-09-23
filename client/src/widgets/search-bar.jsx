@@ -62,6 +62,7 @@ class SearchBarSync extends PureComponent {
         this.components = ComponentRefs({
             tags: HTMLDivElement,
         });
+        // TODO: shouldn't have properties derived from props in state
         this.state = {
             keywords: route.params.search || '',
             hashTags: extractTags(dailyActivities),
@@ -75,18 +76,19 @@ class SearchBarSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        if (this.props.route !== nextProps.route) {
+        let { route, dailyActivities } = this.props;
+        let { keywords } = this.state;
+        if (nextProps.route !== route) {
             let route = nextProps.route;
-            let keywordsBefore = this.state.keywords;
             let keywordsAfter = route.query.search || '';
-            if (!_.isEqual(normalize(keywordsBefore), normalize(keywordsAfter))) {
+            if (!_.isEqual(normalize(keywords), normalize(keywordsAfter))) {
                 this.setState({
                     keywords: keywordsAfter,
                     selectedHashTags: findTags(keywordsAfter),
                 });
             }
         }
-        if (this.props.dailyActivities !== nextProps.dailyActivities) {
+        if (nextProps.dailyActivities !== dailyActivities) {
             let hashTags = extractTags(nextProps.dailyActivities);
             this.setState({ hashTags });
         }
@@ -107,10 +109,12 @@ class SearchBarSync extends PureComponent {
     }
 
     renderTextInput() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { keywords } = this.state;
+        let { t } = env.locale;
         let inputProps = {
             type: 'text',
-            value: this.state.keywords,
+            value: keywords,
             placeholder: t('search-bar-keywords'),
             onChange: this.handleTextChange,
             onKeyDown: this.handleKeyDown,
@@ -129,11 +133,12 @@ class SearchBarSync extends PureComponent {
      * @return {ReactElement}
      */
     renderHashTags() {
-        let setters = this.components.setters;
+        let { setters } = this.components;
+        let { hashTags } = this.state;
         return (
             <div ref={setters.tags} className="tags">
             {
-                _.map(this.state.hashTags, (tag, index) => {
+                _.map(hashTags, (tag, index) => {
                     return this.renderHashTag(tag, index);
                 })
             }
@@ -150,16 +155,17 @@ class SearchBarSync extends PureComponent {
      * @return {ReactElement}
      */
     renderHashTag(tag, index) {
-        let route = this.props.route;
-        let params = _.assign({ search: tag.name }, this.props.settings.route);
-        let url = route.find(route.component, params);
+        let { route, settings } = this.props;
+        let { selectedHashTags } = this.state;
+        let params = _.assign({ search: tag.name }, settings.route);
+        let url = route.find(route.name, params);
         let props = {
             className: 'tag',
             onClick: this.handleHashTagClick,
             'data-tag': tag.name,
             href: url
         };
-        if (_.includes(this.state.selectedHashTags, _.toLower(tag.name))) {
+        if (_.includes(selectedHashTags, _.toLower(tag.name))) {
             props.className += ' selected'
         }
         return <a key={index} {...props}>{tag.name}</a>;
@@ -190,7 +196,8 @@ class SearchBarSync extends PureComponent {
      * Hide less popular tags until the remaining fit on one line
      */
     hideUnpopularTags() {
-        let container = this.components.tags;
+        let { hashTags } = this.state;
+        let { container } = this.components;
         if (container) {
             // first, make all node visible
             let nodes = {};
@@ -201,7 +208,7 @@ class SearchBarSync extends PureComponent {
                 let tag = node.getAttribute('data-tag');
                 nodes[tag] = node;
             });
-            let tagsByPopularity = _.sortBy(this.state.hashTags, 'score');
+            let tagsByPopularity = _.sortBy(hashTags, 'score');
             while (isWrapping(nodes)) {
                 let tag = tagsByPopularity.shift();
                 if (tag) {
@@ -219,14 +226,14 @@ class SearchBarSync extends PureComponent {
      * Perform search by inserting search terms into URL
      */
     performSearch() {
+        let { route, settings } = this.props;
+        let { keywords } = this.state;
         if (this.timeout) {
             clearTimeout(this.timeout);
             this.timeout = null;
         }
-        let route = this.props.route;
-        let params = _.clone(route.parameters);
-        params.search = normalize(this.state.keywords);
-        route.push(route.component, params);
+        let params = _.assign({ search: keywords }, settings.route);
+        route.push(route.name, params);
     }
 
     /**

@@ -91,7 +91,7 @@ class CalendarBarSync extends PureComponent {
                 month: month.month,
                 showYear: multiyear,
                 selection: selectedDate,
-                emv,
+                env,
                 onDateURL: this.handleDateURL,
             };
             return <Calendar key={index} {...props} />;
@@ -120,6 +120,11 @@ class CalendarBarSync extends PureComponent {
         }
     }
 }
+
+export {
+    CalendarBar as default,
+    CalendarBar,
+};
 
 import Database from 'data/database';
 import Route from 'routing/route';

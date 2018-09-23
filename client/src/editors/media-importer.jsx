@@ -340,7 +340,7 @@ class MediaImporter extends PureComponent {
      */
     renderPhotoDialog() {
         let { payloads, env, cameraDirection } = this.props;
-        let { capturing } = this.state.capturing;
+        let { capturing } = this.state;
         let props = {
             show: (capturing === 'image'),
             cameraDirection,
@@ -362,7 +362,7 @@ class MediaImporter extends PureComponent {
      */
     renderVideoDialog() {
         let { payloads, env, cameraDirection } = this.props;
-        let { capturing } = this.state.capturing;
+        let { capturing } = this.state;
         let props = {
             show: (capturing === 'video'),
             cameraDirection,
@@ -384,7 +384,7 @@ class MediaImporter extends PureComponent {
      */
     renderAudioDialog() {
         let { payloads, env, cameraDirection } = this.props;
-        let { capturing } = this.state.capturing;
+        let { capturing } = this.state;
         let props = {
             show: (capturing === 'audio'),
             payloads,

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import KonamiCode from 'utils/konami-code';
+import * as KonamiCode from 'utils/konami-code';
 import * as DeviceFinder from 'objects/finders/device-finder';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as RepoFinder from 'objects/finders/repo-finder';
@@ -329,8 +329,9 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderLanguagePanel() {
+        let { env } = this.props;
         let panelProps = {
-            locale: this.props.locale,
+            env,
         };
         return <LanguagePanel {...panelProps} />;
     }

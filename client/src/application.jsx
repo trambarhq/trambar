@@ -166,12 +166,118 @@ class Application extends PureComponent {
      * Attach event handlers
      */
     componentDidMount() {
+        let {
+            dataSource,
+            routeManager,
+            payloadManager,
+            envMonitor,
+            localeManager,
+            notifier,
+        } = this.props;
+        dataSource.addEventListener('change', this.handleDatabaseChange);
+        routeManager.addEventListener('beforechange', this.handleRouteBeforeChange, true);
+        routeManager.addEventListener('change', this.handleRouteChange);
+        payloadManager.addEventListener('change', this.handlePayloadsChange);
+        envMonitor.addEventListener('change', this.handleEnvironmentChange);
+        localeManager.addEventListener('change', this.handleLocaleChange);
+        notifier.addEventListener('alert', this.handleAlertClick);
+
+        window.addEventListener('beforeunload', this.handleBeforeUnload);
     }
 
     /**
-     * Remove event handlers
+     * Called when the database queries might yield new results
+     *
+     * @param  {RemoteDataSourceEvent} evt
      */
-    componentWillUnmount() {
+    handleDatabaseChange = (evt) => {
+        let { route } = this.state;
+        let { address, schema } = route.context;
+        let database = new Database(evt.target, { address, schema });
+        this.setState({ database });
+    }
+
+    /**
+     * Called when upload payloads changes
+     *
+     * @param  {PayloadManagerEvent} evt
+     */
+    handlePayloadsChange = (evt) => {
+        let { showingUploadProgress } = this.state;
+        let payloads = new Payloads(evt.target);
+        if (!payloads.uploading) {
+            // stop showing it once it's done
+            showingUploadProgress = false;
+        }
+        this.setState({ payloads, showingUploadProgress });
+    }
+
+    /**
+     * Called when the locale changes
+     *
+     * @param  {LocaleManagerEvent} evt
+     */
+    handleLocaleChange = (evt) => {
+        let { envMonitor, localeManager, routeManager } = this.props;
+        let { address } = routeManager.context;
+        let locale = new Locale(localeManager);
+        let env = new Environment(envMonitor, { locale, address, widthDefinitions });
+        this.setState({ env });
+        document.title = locale.t('app-title');
+    }
+
+    /**
+     * Called when the locale changes
+     *
+     * @param  {EnvironmentMonitorEvent} evt
+     */
+    handleEnvironmentChange = (evt) => {
+        let { envMonitor, routeManager } = this.props;
+        let { address } = routeManager.context;
+        let { locale } = this.state.env;
+        let env = new Environment(envMonitor, { locale, address, widthDefinitions });
+        this.setState({ env });
+    }
+
+    /**
+     * Called before a route change occurs
+     *
+     * @param  {RelaksRouteManagerEvent} evt
+     */
+    handleRouteBeforeChange = (evt) => {
+        let { route } = this.state;
+        if (!_.isEmpty(route.callbacks)) {
+            // postpone the route change until each callbacks has been called;
+            // if one returns false, then cancel the change
+            let promise = Promise.reduce(route.callbacks, (proceed, callback) => {
+                if (proceed === false) {
+                    return false;
+                }
+                return callback();
+            }, true);
+            evt.postponeDefault(promise);
+        }
+    }
+
+    /**
+     * Called when the route changes
+     *
+     * @param  {RelaksRouteManagerEvent} evt
+     */
+    handleRouteChange = (evt) => {
+        let { routeManager, dataSource, payloadManager } = this.props;
+        let route = new Route(routeManager);
+        let { address, schema } = route.context;
+        let { database, payloads, env } = this.state;
+        if (address !== database.context.address) {
+            // change database and payloads the server address changes
+            database = new Database(dataSource, { address, schema });
+            payloads = new Payloads(payloadManager, { address, schema });
+        }
+        if (address !== env.address) {
+            env = new Environment(envMonitor, { locale, address, widthDefinitions });
+        }
+        this.setState({ route, database, env });
     }
 
     /**
@@ -180,6 +286,7 @@ class Application extends PureComponent {
      * @param  {Object} evt
      */
     handleAlertClick = (evt) => {
+        let { database } = this.props;
         let alert = evt.alert;
         // create an object take has some of Notification's properties
         let notification = {
@@ -204,8 +311,7 @@ class Application extends PureComponent {
         }
 
         // mark as read
-        let params = this.state.route.parameters;
-        let db = this.state.database.use({ schema: params.schema, by: this });
+        let db = database.use({ by: this });
         db.start().then((userId) => {
             let columns = {
                 id: alert.notification_id,
@@ -221,8 +327,8 @@ class Application extends PureComponent {
      * @param  {Event} evt
      */
     handleBeforeUnload = (evt) => {
-        if (process.env.PLATFORM !== 'browser') return;
-        if (this.state.payloads && this.state.payloads.uploading) {
+        let { payloads } = this.state;
+        if (payloads.uploading) {
             // Chrome will repaint only after the modal dialog is dismissed
             this.setState({ showingUploadProgress: true });
             return (evt.returnValue = 'Are you sure?');
@@ -235,3 +341,37 @@ export {
     Application,
     AppCore,
 };
+
+// pull in modules here so they won't be placed in the JS files of the pages
+import 'chartist';
+import 'diff';
+import 'hammerjs';
+import 'mark-gor';
+import 'memoizee';
+import 'moment';
+import 'octicons';
+import 'sockjs-client';
+import 'react-dom';
+import 'relaks';
+
+// pull in all widgets for the same reason
+require.context('widgets', true);
+
+import EnvironmentMonitor from 'env/environment-monitor';
+import RouteManager from 'relaks-route-manager';
+import RemoteDataSource from 'data/remote-data-source';
+import PayloadManager from 'transport/payload-manager';
+import LocaleManager from 'locale/locale-manager';
+import Notifier from 'transport/notifier';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    Application.propTypes = {
+        envMonitor: PropTypes.instanceOf(EnvironmentMonitor).isRequired,
+        dataSource: PropTypes.instanceOf(RemoteDataSource).isRequired,
+        localeManager: PropTypes.instanceOf(LocaleManager).isRequired,
+        payloadManager: PropTypes.instanceOf(PayloadManager).isRequired,
+        notifier: PropTypes.instanceOf(Notifier),
+    };
+}

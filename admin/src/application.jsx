@@ -263,7 +263,6 @@ class Application extends PureComponent {
         let { routeManager, dataSource, payloadManager } = this.props;
         let route = new Route(routeManager);
         let { address } = route.context;
-        let { schema } = route.params;
         let { database, payloads, env } = this.state;
         if (address !== database.context.address) {
             // change database and payloads the server address changes

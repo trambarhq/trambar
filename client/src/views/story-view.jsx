@@ -289,7 +289,7 @@ class StoryView extends PureComponent {
             env,
         };
         if (leadAuthor) {
-            props.href = route.find('person-page', { userID: leadAuthor.id });
+            props.href = route.find('person-page', { selectedUserID: leadAuthor.id });
         }
         return <ProfileImage {...props} />;
     }

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as NotificationTypes from 'objects/types/notification-types';
+import NotificationTypes, { AdminNotificationTypes } from 'objects/types/notification-types';
 import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets

@@ -309,7 +309,7 @@ class VideoCaptureDialogBox extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDuration() {
-        let { mediaRecord, startTime, duration } = this.state;
+        let { mediaRecorder, startTime, duration } = this.state;
         if (!mediaRecorder) {
             return null;
         }

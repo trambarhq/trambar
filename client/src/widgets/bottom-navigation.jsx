@@ -47,9 +47,6 @@ class BottomNavigation extends PureComponent {
     getPageURL(pageName) {
         let { settings, route } = this.props;
         let params = _.get(settings, 'navigation.route');
-        if (!params) {
-            return null;
-        }
         let url = route.find(pageName, params);
         return url;
     }

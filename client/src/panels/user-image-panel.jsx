@@ -111,6 +111,7 @@ class UserImagePanel extends PureComponent {
      * @return {ReactElement}
      */
     renderProfilePicture() {
+        let { env } = this.props;
         let { action } = this.state;
         let contents;
         let image = this.getImage();
@@ -141,7 +142,7 @@ class UserImagePanel extends PureComponent {
      * @return {ReactElement}
      */
     renderMediaImporter() {
-        let { payloads, currentUser } = this.props;
+        let { env, payloads, currentUser } = this.props;
         let { image } = this.state;
         let { setters } = this.components;
         let resources;

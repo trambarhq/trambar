@@ -117,7 +117,7 @@ class Calendar extends PureComponent {
      * @return {String|undefined}
      */
     getDateURL(date) {
-        let { onDataURL } = this.props;
+        let { onDateURL } = this.props;
         if (onDateURL) {
             return onDateURL({
                 type: 'dateurl',

@@ -86,7 +86,7 @@ class WebAlertPanel extends PureComponent {
      */
     renderOption(type, index) {
         let { env, currentUser, repos } = this.props;
-        let { t } = env.locales;
+        let { t } = env.locale;
         let optionName = _.snakeCase(type);
         let settings = _.get(currentUser, 'settings', {});
         let notificationEnabled = !!_.get(settings, `notification.${optionName}`);
