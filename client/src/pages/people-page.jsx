@@ -6,7 +6,7 @@ import { AsyncComponent } from 'relaks';
 import Memoize from 'utils/memoize';
 import * as DateTracker from 'utils/date-tracker';
 import * as ProjectFinder from 'objects/finders/project-finder';
-import * as ProjectSettings from 'objects/settings/project-settings';
+import * as ProjectUtils from 'objects/utils/project-utils';
 import * as StatisticsFinder from 'objects/finders/statistics-finder';
 import * as StoryFinder from 'objects/finders/story-finder';
 import * as UserFinder from 'objects/finders/user-finder';
@@ -32,12 +32,23 @@ class PeoplePage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env } = this.props;
+        let {
+            database,
+            route,
+            payloads,
+            env,
+            date,
+            roleIDs,
+            search,
+            selectedUserID,
+            scrollToUserID,
+            highlightStoryID,
+        } = this.props;
         let db = database.use({ by: this });
         let tags;
-        if (params.search) {
-            if (!TagScanner.removeTags(params.search)) {
-                tags = TagScanner.findTags(params.search);
+        if (search) {
+            if (!TagScanner.removeTags(search)) {
+                tags = TagScanner.findTags(search);
             }
         }
         let props = {
@@ -48,10 +59,13 @@ class PeoplePage extends AsyncComponent {
             selectedUser: null,
             visibleUsers: null,
 
-            selectedDate: route.params.date,
+            date,
+            roleIDs,
+            search,
+            scrollToUserID,
             database,
-            payloads,
             route,
+            payloads,
             env,
         };
         // wait for retrieval of fresh story listing on initial render
@@ -68,15 +82,15 @@ class PeoplePage extends AsyncComponent {
         }).then((project) => {
             return UserFinder.findProjectMembers(db, props.project).then((users) => {
                 props.members = users;
-                if (params.user) {
+                if (selectedUserID) {
                     // find the selected user
-                    let user = _.find(users, { id: route.params.user });
+                    let user = _.find(users, { id: selectedUserID });
                     if (!user) {
                         props.selectedUser = user;
                         props.visibleUsers = [ user ];
                     } else {
                         // not on the member list
-                        return UserFinder.findUser(db, route.params.user).then((user) => {
+                        return UserFinder.findUser(db, selectedUserID).then((user) => {
                             props.selectedUser = user;
                             props.visibleUsers = [ user ];
                         });
@@ -84,10 +98,10 @@ class PeoplePage extends AsyncComponent {
                 } else {
                     // if we're not searching for stories, then we know which
                     // users to list at this point
-                    if (!(route.params.search || route.params.date)) {
-                        if (!_.isEmpty(route.params.roles)) {
+                    if (!(search || date)) {
+                        if (!_.isEmpty(roleIDs)) {
                             // show users with roles
-                            props.visibleUsers = findUsersWithRoles(users, route.params.roles);
+                            props.visibleUsers = findUsersWithRoles(users, roleIDs);
                         } else {
                             // all project members are shown
                             props.visibleUsers = users;
@@ -107,16 +121,16 @@ class PeoplePage extends AsyncComponent {
                 if (!props.visibleUsers) {
                     // find users with stories using stats
                     let users;
-                    if (route.params.date) {
-                        users = findUsersWithActivitiesOnDate(props.members, statistics, route.params.date);
-                    } else if (params.search) {
+                    if (date) {
+                        users = findUsersWithActivitiesOnDate(props.members, statistics, date);
+                    } else if (search) {
                         if (tags) {
                             users = findUsersWithStoriesWithTags(props.members, statistics, tags);
                         }
                     }
                     if (users) {
-                        if (!_.isEmpty(route.params.roles)) {
-                            props.visibleUsers = findUsersWithRoles(users, route.params.roles);
+                        if (!_.isEmpty(roleIDs)) {
+                            props.visibleUsers = findUsersWithRoles(users, roleIDs);
                         } else {
                             props.visibleUsers = users;
                         }
@@ -133,7 +147,7 @@ class PeoplePage extends AsyncComponent {
         }).then(() => {
             // force progress update initially to avoid flicking
             meanwhile.show(<PeoplePageSync {...props} />, 'initial');
-            if (route.params.search) {
+            if (search) {
                 if (tags) {
                     return StoryFinder.findStoriesWithTags(db, tags, 5).then((stories) => {
                         props.stories = stories;
@@ -143,7 +157,7 @@ class PeoplePage extends AsyncComponent {
                         }
                     });
                 } else {
-                    return StoryFinder.findStoriesMatchingText(db, route.params.search, env, 5).then((stories) => {
+                    return StoryFinder.findStoriesMatchingText(db, search, env, 5).then((stories) => {
                         props.stories = stories;
                         if (!props.selectedUser) {
                             // now that we have the stories, we can see whom should be shown
@@ -151,8 +165,8 @@ class PeoplePage extends AsyncComponent {
                         }
                     });
                 }
-            } else if (route.params.date) {
-                return StoryFinder.findStoriesOnDate(db, route.params.date, 5).then((stories) => {
+            } else if (date) {
+                return StoryFinder.findStoriesOnDate(db, date, 5).then((stories) => {
                     props.stories = stories;
                     if (!props.selectedUser) {
                         // do this for date search as well, even through
@@ -170,18 +184,18 @@ class PeoplePage extends AsyncComponent {
             meanwhile.show(<PeoplePageSync {...props} />);
             if (props.selectedUser) {
                 // load stories of selected user
-                if (params.search) {
+                if (search) {
                     if (tags) {
                         return StoryFinder.findStoriesByUserWithTags(db, props.selectedUser, tags).then((stories) => {
                             props.selectedUserStories = stories;
                         });
                     } else {
-                        return StoryFinder.findStoriesByUserMatchingText(db, props.selectedUser, params.search, this.props.locale).then((stories) => {
+                        return StoryFinder.findStoriesByUserMatchingText(db, props.selectedUser, search, env).then((stories) => {
                             props.selectedUserStories = stories;
                         });
                     }
-                } else if (params.date) {
-                    return StoryFinder.findStoriesByUserOnDate(db, props.selectedUser, params.date).then((stories) => {
+                } else if (date) {
+                    return StoryFinder.findStoriesByUserOnDate(db, props.selectedUser, date).then((stories) => {
                         props.selectedUserStories = stories;
                     });
                 } else {
@@ -210,12 +224,11 @@ class PeoplePage extends AsyncComponent {
             }
         }).then(() => {
             // when we're highlighting a story, make sure the story is actually there
-            if (!route.params.date) {
-                let storyID = route.params.highlightingStory;
-                if (storyID) {
+            if (!date) {
+                if (highlightStoryID) {
                     let allStories = props.selectedUserStories;
-                    if (!_.find(allStories, { id: storyID })) {
-                        return StoryFinder.findStory(db, storyID).then((story) => {
+                    if (!_.find(allStories, { id: highlightStoryID })) {
+                        return StoryFinder.findStory(db, highlightStoryID).then((story) => {
                             return this.redirectToStory(story);
                         }).catch((err) => {
                         });
@@ -235,8 +248,7 @@ class PeoplePage extends AsyncComponent {
      * @return {Promise}
      */
     redirectToStory(story) {
-        let { route } = this.props;
-        let { schema } = route.params;
+        let { route, selectedUserID } = this.props;
         if (story.ptime && story.published && story.ready !== false) {
             // don't redirect if the story is very recent
             let elapsed = Moment() - Moment(story.ptime);
@@ -245,10 +257,9 @@ class PeoplePage extends AsyncComponent {
             }
         }
         let params = {
-            schema,
             date: Moment(story.ptime).format('YYYY-MM-DD'),
-            user: route.params.user,
-            highlightingStory: story.id,
+            selectedUserID,
+            highlightStoryID: story.id,
         };
         return route.replace(route.name, params);
     }
@@ -271,15 +282,16 @@ class PeoplePageSync extends PureComponent {
      */
     getAccessLevel() {
         let { project, currentUser } = this.props;
-        return ProjectSettings.getUserAccessLevel(project, currentUser) || 'read-only';
+        return ProjectUtils.getUserAccessLevel(project, currentUser) || 'read-only';
     }
 
     /**
      * Remember the previously selected user
      */
     componentWillReceiveProps(nextProps) {
-        if (this.props.selectedUser && !nextProps.selectedUser) {
-            this.previouslySelectedUser = this.props.selectedUser;
+        let { selectedUser } = this.props;
+        if (nextProps.selectedUser !== selectedUser) {
+            this.previouslySelectedUser = selectedUser;
         }
     }
 
@@ -313,8 +325,8 @@ class PeoplePageSync extends PureComponent {
             listings,
             stories,
             currentUser,
-            selectedDate,
-            selectedUser,
+            date,
+            selectedUserID,
         } = this.props;
         let listProps = {
             users: visibleUsers,
@@ -322,8 +334,8 @@ class PeoplePageSync extends PureComponent {
             listings,
             stories,
             currentUser,
-            selectedDate,
-            link: (selectedUser) ? 'team' : 'user',
+            date,
+            link: (selectedUserID) ? 'team' : 'user',
             database,
             route,
             env,
@@ -370,12 +382,16 @@ class PeoplePageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderEmptyMessage() {
-        let list;
-        if (this.props.selectedUser) {
-            list = this.props.selectedUserStories;
-        } else {
-            list = this.props.visibleUsers;
-        }
+        let {
+            env,
+            selectedUser,
+            selectedUserStories,
+            visibleUsers,
+            date,
+            roleIDs,
+            search,
+        } = this.props;
+        let list = (selectedUser) ? selectedUserStories : visibleUsers;
         if (!_.isEmpty(list)) {
             return null;
         }
@@ -383,22 +399,17 @@ class PeoplePageSync extends PureComponent {
             // props.users and props.stories are null when they're being loaded
             return <LoadingAnimation />;
         } else {
-            let params = this.props.route.parameters;
             let phrase;
-            if (params.date) {
+            if (date) {
                 phrase = 'people-no-stories-on-date';
-            } else if (!_.isEmpty(params.roles)) {
+            } else if (!_.isEmpty(roleIDs)) {
                 phrase = 'people-no-users-by-role';
-            } else if (params.search) {
+            } else if (search) {
                 phrase = 'people-no-stories-found';
             } else {
                 phrase = 'people-no-users-yet';
             }
-            let props = {
-                locale: this.props.locale,
-                online: this.props.database.online,
-                phrase,
-            };
+            let props = { phrase, env };
             return <EmptyMessage {...props} />;
         }
     }
@@ -473,12 +484,22 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     PeoplePage.propTypes = {
+        roleIDs: PropTypes.arrayOf(PropTypes.number),
+        search: PropTypes.string,
+        date: PropTypes.string,
+        selectedUserID: PropTypes.number,
+        scrollToUserID: PropTypes.number,
+
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     PeoplePageSync.propTypes = {
+        roleIDs: PropTypes.arrayOf(PropTypes.number),
+        search: PropTypes.string,
+        date: PropTypes.string,
+        scrollToUserID: PropTypes.number,
         project: PropTypes.object,
         members: PropTypes.arrayOf(PropTypes.object),
         selectedUser: PropTypes.object,
@@ -488,9 +509,9 @@ if (process.env.NODE_ENV !== 'production') {
         stories: PropTypes.arrayOf(PropTypes.object),
         selectedUserStories: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
-        selectedDate: PropTypes.string,
 
         database: PropTypes.instanceOf(Database).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };

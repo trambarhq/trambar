@@ -88,14 +88,16 @@ function getBranchURL(repo, story) {
 
 function getLabelStyle(repo, label) {
     let style;
-    let labels = _.get(repo, 'details.labels');
-    let colors = _.get(repo, 'details.label_colors');
-    let index = _.indexOf(repo.details.labels, label);
-    let backgroundColor = _.get(colors, index);
-    if (backgroundColor) {
-        style = { backgroundColor };
-        if (isBright(backgroundColor)) {
-            style.color = '#000000';
+    if (repo) {
+        let labels = _.get(repo, 'details.labels');
+        let colors = _.get(repo, 'details.label_colors');
+        let index = _.indexOf(repo.details.labels, label);
+        let backgroundColor = _.get(colors, index);
+        if (backgroundColor) {
+            style = { backgroundColor };
+            if (isBright(backgroundColor)) {
+                style.color = '#000000';
+            }
         }
     }
     return style;

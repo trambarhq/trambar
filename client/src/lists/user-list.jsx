@@ -83,7 +83,7 @@ class UserList extends PureComponent {
             let user = evt.item;
             let userRoles = findRoles(roles, user);
             let userDailyActivities = _.get(dailyActivities, user.id);
-            let stories;
+            let userStories;
             if (listings) {
                 let listing = findListing(listings, user);
                 userStories = findListingStories(stories, listing);

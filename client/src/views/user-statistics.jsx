@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import Chartist from 'widgets/chartist';
+import Chartist, { Svg } from 'widgets/chartist';
 import Moment from 'moment';
 import Memoize from 'utils/memoize';
 import * as StoryTypes from 'objects/types/story-types';
@@ -261,7 +261,7 @@ class UserStatistics extends PureComponent {
             if (cxt.index === dates.length - 1) {
                 if (chartType === 'bar') {
                     // add missing grid line
-                    let line = new Chartist.Svg('line');
+                    let line = new Svg('line');
                     line.attr({
                         x1: cxt.x2 + cxt.axis.stepLength,
                         y1: cxt.y1,
@@ -287,7 +287,7 @@ class UserStatistics extends PureComponent {
                     x += cxt.axis.stepLength * 0.5;
                 }
                 let y = cxt.y1 + 12;
-                let text = new Chartist.Svg('text');
+                let text = new Svg('text');
                 text.text(selectedDateLabel);
                 text.attr({
                     x: x,
@@ -297,7 +297,7 @@ class UserStatistics extends PureComponent {
                 });
                 cxt.group.append(text);
 
-                let arrow = new Chartist.Svg('text');
+                let arrow = new Svg('text');
                 arrow.text('\uf0dd');
                 arrow.attr({
                     x: x,
@@ -324,7 +324,7 @@ class UserStatistics extends PureComponent {
             // add mouseover title
             let tooltip = _.get(tooltips, [ cxt.seriesIndex, cxt.index ]);
             let date = dates[cxt.index];
-            let title = new Chartist.Svg('title');
+            let title = new Svg('title');
             title.text(tooltip);
             cxt.element.append(title);
             cxt.element.attr({ 'data-date': date });

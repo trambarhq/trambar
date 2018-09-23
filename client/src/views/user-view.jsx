@@ -34,7 +34,8 @@ class UserView extends PureComponent {
      */
     getChartType() {
         let { env, options } = this.props;
-        if (!options.chartType) {
+        let chartType = options.chartType;
+        if (!chartType) {
             // always show statistics in double and triple column mode
             if (env.isWiderThan('double-col')) {
                 chartType = 'bar';
@@ -50,7 +51,7 @@ class UserView extends PureComponent {
      */
     getChartRange() {
         let { options } = this.props;
-        let chartRange = this.props.options.chartRange;
+        let chartRange = options.chartRange;
         if (!chartRange) {
             chartRange = 'biweekly';
         }
@@ -65,7 +66,7 @@ class UserView extends PureComponent {
      */
     getStoryCountEstimate() {
         let { dailyActivities, selectedDate, search } = this.props;
-        if (!this.props.dailyActivities) {
+        if (!dailyActivities) {
             return;
         }
         let tags;
@@ -110,8 +111,8 @@ class UserView extends PureComponent {
         if (link !== 'user') {
             return null;
         }
-        let params = _.pick(route.params, 'schema', 'date', 'search');
-        params.user = this.props.user.id;
+        let params = _.pick(route.params, 'date', 'search');
+        params.selectedUserID = user.id;
         return route.find('person-page', params);
     }
 
@@ -125,7 +126,7 @@ class UserView extends PureComponent {
         if (link !== 'team') {
             return null;
         }
-        let params = _.pick(route.params, 'schema', 'date', 'search');
+        let params = _.pick(route.params, 'date', 'search');
         params.scrollToUserID = user.id;
         return route.find('people-page', params);
     }
@@ -224,7 +225,8 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     renderTripleColumn() {
-        let t = this.props.locale.translate;
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <div className="user-view triple-col">
                 <div className="header">

@@ -87,15 +87,18 @@ const routes = {
     'people-page': {
         path: '/people/',
         query: {
-            roles: '${roles}',
+            roles: '${roleIDs}',
             search: '${search}',
             date: '${date}',
         },
+        hash: [
+            'u{scrollToUserID}',
+        ],
         params: {
-            schema: String,
-            roles: NumberArray,
+            roleIDs: NumberArray,
             search: String,
             date: String,
+            scrollToUserID: Number,
         },
         load: (params, context) => {
             let route = {};
@@ -113,7 +116,7 @@ const routes = {
         }
     },
     'person-page': {
-        path: '/people/${user}/',
+        path: '/people/${selectedUserID}/',
         query: {
             search: '${search}',
             date: '${date}',
@@ -128,9 +131,11 @@ const routes = {
             schema: String,
             search: String,
             date: String,
-            user: Number,
-            story: Number,
-            reaction: Number,
+            selectedUserID: Number,
+            scrollToStoryID: Number,
+            highlightStoryID: Number,
+            scrollToReactionID: Number,
+            highlightReactionID: Number,
         },
         load: (params, context) => {
             let { user } = params;
