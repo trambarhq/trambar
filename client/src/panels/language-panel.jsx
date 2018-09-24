@@ -108,7 +108,7 @@ class LanguagePanel extends PureComponent {
         if (code !== languageCode) {
             let language = _.find(directory, { code });
             let localeCode = `${language.code}-${language.defaultCountry}`;
-            env.locale.change(dialectCode);
+            env.locale.change(localeCode);
         }
     }
 
@@ -123,7 +123,7 @@ class LanguagePanel extends PureComponent {
         let code = evt.currentTarget.value;
         if (code !== countryCode) {
             let localeCode = `${languageCode}-${code}`;
-            this.props.locale.change(localeCode);
+            env.locale.change(localeCode);
         }
     }
 }

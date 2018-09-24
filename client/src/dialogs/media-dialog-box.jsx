@@ -128,8 +128,8 @@ class MediaDialogBox extends PureComponent {
     renderView() {
         let { env, resources } = this.props;
         let { selectedIndex } = this.state;
-        if (selectedIndex > resouces.length - 1) {
-            selectedIndex = resouces.length - 1;
+        if (selectedIndex > resources.length - 1) {
+            selectedIndex = resources.length - 1;
         }
         let res = resources[selectedIndex];
         if (res) {

@@ -126,7 +126,7 @@ class MediaView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDialogBox() {
-        let { resources } = this.props;
+        let { env, resources } = this.props;
         let { showingDialogBox, renderingDialogBox, selectedIndex } = this.state;
         if (!renderingDialogBox) {
             return null;

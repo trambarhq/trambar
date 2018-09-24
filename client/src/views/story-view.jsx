@@ -333,7 +333,7 @@ class StoryView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderReactionLink() {
-        let { env, reaction } = this.props;
+        let { env, reactions } = this.props;
         let { commentsExpanded } = this.state;
         let { t } = env.locale;
         let count = _.size(reactions);
