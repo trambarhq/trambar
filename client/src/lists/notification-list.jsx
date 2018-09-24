@@ -106,13 +106,13 @@ class NotificationListSync extends PureComponent {
         let { hiddenNotificationIDs } = this.state;
         let { t } = env.locale;
         let count = _.size(hiddenNotificationIDs);
-        let url = route.find(route.name, {
-            highlightingNotification: _.first(hiddenNotificationIDs)
-        });
-        let props = {
-            url,
-            onClick: this.handleNewNotificationAlertClick
-        };
+        let url;
+        if (!_.isEmpty(hiddenNotificationIDs)) {
+            url  = route.find(route.name, {
+                highlightingNotification: _.first(hiddenNotificationIDs)
+            });
+        }
+        let props = { url, onClick: this.handleNewNotificationAlertClick };
         return (
             <NewItemsAlert {...props}>
                 {t('alert-$count-new-notifications', count)}

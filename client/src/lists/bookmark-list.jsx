@@ -160,13 +160,13 @@ class BookmarkListSync extends PureComponent {
         let { hiddenStoryIDs } = this.state;
         let { t } = env.locale;
         let count = _.size(hiddenStoryIDs);
-        let url = route.find(route.name, {
-            highlightingStory: _.first(hiddenStoryIDs),
-        });
-        let props = {
-            url,
-            onClick: this.handleNewBookmarkAlertClick,
-        };
+        let url;
+        if (!_.isEmpty(hiddenStoryIDs)) {
+            url = route.find(route.name, {
+                highlightingStory: _.first(hiddenStoryIDs),
+            });
+        }
+        let props = { url, onClick: this.handleNewBookmarkAlertClick };
         return (
             <NewItemsAlert {...props}>
                 {t('alert-$count-new-bookmarks', count)}

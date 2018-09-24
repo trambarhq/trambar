@@ -107,7 +107,7 @@ class NewItemsAlertProxy extends PureComponent {
 }
 
 function NewItemsAlert(props) {
-    let url = { props };
+    let { url } = props;
     let anchorProps = {
         className: `new-items-alert ${props.show ? 'show' : 'hide'}`,
         href: url,
