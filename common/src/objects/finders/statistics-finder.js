@@ -16,22 +16,15 @@ function find(db, params) {
     let type, user, project, publicOnly = false;
     if (params) {
         type = params.type;
-        if (params.user) {
-            user = params.user;
-        } else if (params.user_id) {
+        if (params.user_id) {
             // we know that only the id is used
             user = { id: params.user_id };
         }
-        if (params.project) {
-            project = params.project;
-        } else if (params.schema) {
-            project = { name: params.schema };
-        } else if (params.project_name) {
-            project = { name: params.project_name };
+        if (db.context.schema) {
+            project = { name: db.context.schema };
         }
         publicOnly = params.public;
     }
-
     if (type === 'daily-activities') {
         if (user && project) {
             return findDailyActivitiesOfUser(db, project, user, publicOnly);

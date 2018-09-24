@@ -23,7 +23,6 @@ class CalendarBar extends AsyncComponent {
     renderAsync(meanwhile) {
         let { database, route, env, settings } = this.props;
         let db = database.use({ by: this });
-        let currentUserID;
         let props = {
             dailyActivities: null,
 

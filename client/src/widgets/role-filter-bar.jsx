@@ -98,13 +98,13 @@ class RoleFilterBarSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButton(role) {
-        let { route, users, settings } = this.props;
+        let { route, env, users, settings } = this.props;
         let roleUsers = findUsers(users, role);
-        let params = _.clone(settings.route);
-        if (_.includes(route.params.roles, role.id)) {
-            params.roles = _.without(roleIDs, role.id);
+        let params = _.clone(settings.route || {});
+        if (_.includes(route.params.roleIDs, role.id)) {
+            params.roleIDs = _.without(route.params.roleIDs, role.id);
         } else {
-            params.roles = _.concat(roleIDs, role.id);
+            params.roleIDs = _.concat(route.params.roleIDs, role.id);
         }
         let url = route.find(route.name, params);
         let props = {

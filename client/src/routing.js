@@ -1,3 +1,13 @@
+class NumberArray {
+    static from(s) {
+        return s.split(',').map(parseInt);
+    }
+
+    static to(a) {
+        return a.join(',');
+    }
+}
+
 const routes = {
     'bookmarks-page': {
         path: '/bookmarks/',
@@ -205,15 +215,6 @@ const routes = {
                 params.module = module;
             });
         },
-    }
-};
-
-const NumberArray = {
-    from: (s) => {
-        return s.split(',').map(parseInt);
-    },
-    to: (a) => {
-        return a.join(',');
     }
 };
 
