@@ -186,13 +186,14 @@ class BottomNavigation extends PureComponent {
      * Check if icon and text labels are on top of each other
      */
     detectStacking() {
-        let container = this.components.container;
+        let { stacking } = this.state;
+        let { container } = this.components;
         if (container) {
             let icon = container.getElementsByClassName('fa')[1];
             let label = container.getElementsByClassName('label')[1];
-            let stacking = (label.offsetTop >= icon.offsetTop + icon.offsetHeight);
-            if (this.state.stacking !== stacking) {
-                this.setState({ stacking });
+            let stackingAfter = (label.offsetTop >= icon.offsetTop + icon.offsetHeight);
+            if (stackingAfter !== stacking) {
+                this.setState({ stacking: stackingAfter });
             }
         }
     }

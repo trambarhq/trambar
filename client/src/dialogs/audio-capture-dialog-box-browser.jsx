@@ -119,7 +119,12 @@ class AudioCaptureDialogBox extends PureComponent {
      * @param  {MediaStream} stream
      */
     setLiveAudioState(err, stream) {
-        let { liveAudioSource, liveAudioProcessor, liveAudioContext } = this.state;
+        let {
+            liveAudioSource,
+            liveAudioProcessor,
+            liveAudioContext,
+            liveAudioLevel,
+        } = this.state;
         if (liveAudioProcessor) {
             // disconnect
             liveAudioSource.disconnect(liveAudioProcessor);
@@ -143,7 +148,7 @@ class AudioCaptureDialogBox extends PureComponent {
                     }
                 }
                 let level = Math.round(max * 100);
-                if (level !== this.state.liveAudioLevel) {
+                if (level !== liveAudioLevel) {
                     this.setState({ liveAudioLevel: level });
                 }
             });

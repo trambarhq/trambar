@@ -345,8 +345,9 @@ class PhotoCaptureDialogBox extends PureComponent {
      * @return {Promise<MediaStream>}
      */
     createLiveVideoStream() {
+        let { selectedDeviceID } = this.state;
         if (!this.videoStreamPromise) {
-            this.videoStreamPromise = MediaStreamUtils.getSilentVideoStream(this.state.selectedDeviceID);
+            this.videoStreamPromise = MediaStreamUtils.getSilentVideoStream(selectedDeviceID);
         }
         return this.videoStreamPromise;
     }

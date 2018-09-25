@@ -312,7 +312,7 @@ class Environment {
         if (params.hasOwnProperty('bitrate')) {
             return _.find(res.resources, { bitrates: { video: params.bitrate }}) || null;
         }
-        let bandwidth = this.getBandwidth();
+        let bandwidth = getBandwidth(this.connectionType);
         let bitrate = (version) => {
             return parseInt(_.get(version, 'bitrates.video'));
         };

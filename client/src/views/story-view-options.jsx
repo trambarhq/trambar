@@ -266,7 +266,7 @@ class StoryViewOptions extends PureComponent {
      */
     handleAddBookmarkClick = (evt) => {
         let { options, currentUser } = this.props;
-        options = _.clone(this.props.options);
+        options = _.clone(options);
         if (_.includes(options.bookmarkRecipients, currentUser.id)) {
             options.bookmarkRecipients = _.without(options.bookmarkRecipients, currentUser.id);
         } else {

@@ -30,11 +30,11 @@ class AppComponent extends PureComponent {
      * @return {ReactElement}
      */
     renderPicture() {
-        let component = this.props.component;
+        let { env, component } = this.props;
         if (component.image) {
             return (
                 <div className="picture">
-                    <ResourceView resource={component.image} height={48} theme={this.props.theme} />
+                    <ResourceView resource={component.image} height={48} env={env} />
                 </div>
             );
         } else {
@@ -60,9 +60,10 @@ class AppComponent extends PureComponent {
      * @return {ReactElement}
      */
     renderText() {
-        let p = this.props.locale.pick;
-        let text = p(this.props.component.text);
-        let elements = MarkGor.parse(text);
+        let { env, component } = this.props;
+        let { text } = component;
+        let { p } = env.locale;
+        let elements = MarkGor.parse(p(text));
         return (
             <div className="description">
                 <div className="description-contents">
@@ -81,11 +82,12 @@ class AppComponent extends PureComponent {
      * @param  {Event} evt
      */
     handleClick = (evt) => {
-        if (this.props.onSelect) {
-            this.props.onSelect({
+        let { component, onSelect } = this.props;
+        if (onSelect) {
+            onSelect({
                 type: 'select',
                 target: this,
-                component: this.props.component,
+                component,
             });
         }
     }

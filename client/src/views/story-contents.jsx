@@ -43,19 +43,6 @@ class StoryContents extends PureComponent {
     }
 
     /**
-     * Return the name the lead author
-     *
-     * @return {String}
-     */
-    getAuthorName() {
-        let { env, authors } = this.props;
-        let { g } = env.locale;
-        let author = _.first(this.props.authors);
-        let name = UserUtils.getDisplayName(author, env);
-        return name;
-    }
-
-    /**
      * Update state when props changes
      *
      * @param  {Object} nextProps

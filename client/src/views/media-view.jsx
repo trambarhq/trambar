@@ -230,7 +230,7 @@ class MediaView extends PureComponent {
         let { env } = this.props;
         let { audioURL } = this.state;
         let className = 'audio';
-        let url = this.props.theme.getImageURL(res);
+        let url = env.getImageURL(res);
         if (!url) {
             className += ' posterless';
         }

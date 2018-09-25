@@ -47,10 +47,6 @@ class StartPage extends AsyncComponent {
             database,
             route,
             env,
-
-            onEntry: this.props.onEntry,
-            onExit: this.props.onExit,
-            onAvailableSchemas: this.props.onAvailableSchemas,
         };
         if (!db.authorized) {
             if (process.env.PLATFORM === 'browser') {
@@ -184,7 +180,7 @@ class StartPageSync extends PureComponent {
      */
     componentWillReceiveProps(nextProps) {
         let { database, projects } = this.props;
-        let { renderingProjectDialog, selectedProjectID, } = this.state;
+        let { renderingProjectDialog, selectedProjectID, qrCodeStatus } = this.state;
         if (nextProps.projects !== projects) {
             if (renderingProjectDialog) {
                 // close the dialog box if the project has disappeared
@@ -197,11 +193,8 @@ class StartPageSync extends PureComponent {
                 }
             }
         }
-        if (this.state.receivedCorrectQRCode && nextProps.serverError) {
-            this.setState({
-                receivedCorrectQRCode: false,
-                receivedInvalidQRCode: false,
-            });
+        if (qrCodeStatus === 'correct') {
+            this.setState({ qrCodeStatus: 'pending' });
         }
     }
 
@@ -266,7 +259,7 @@ class StartPageSync extends PureComponent {
         let className = 'start-page cordova';
         if (transition) {
             className += ` ${transition}`;
-            if (this.state.transition === 'transition-out-slow') {
+            if (transition === 'transition-out-slow') {
                 // render a greeting during long transition
                 return (
                     <div className={className}>
@@ -372,7 +365,7 @@ class StartPageSync extends PureComponent {
             let imageProps = {
                 user: user,
                 size: 'large',
-                theme: this.props.theme,
+                env,
             };
             return (
                 <div className={className}>
@@ -496,8 +489,8 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderChoices() {
-        if (process.env.PLATFORM !== 'browser') return;
-        if (!this.props.canAccessServer) {
+        let { database } = this.state;
+        if (!database.authorized) {
             return this.renderOAuthButtons();
         } else {
             return this.renderProjectButtons();
@@ -505,37 +498,28 @@ class StartPageSync extends PureComponent {
     }
 
     /**
-     * Render a message if there're no stories
+     * Render a message if there're no servers or projects
      *
      * @return {ReactElement|null}
      */
     renderEmptyMessage() {
-        if (!this.props.canAccessServer) {
-            let servers = this.props.servers;
+        let { database, env, servers, projects } = this.state;
+        if (!database.unauthorized) {
             if (!_.isEmpty(servers)) {
                 return null;
             }
             if (servers) {
-                let props = {
-                    locale: this.props.locale,
-                    online: this.props.database.online,
-                    phrase: 'start-no-servers',
-                };
+                let props = { phrase: 'start-no-servers', env };
                 return <EmptyMessage {...props} />;
             }
         } else {
-            let projects = this.props.projects;
             if (!_.isEmpty(projects)) {
                 return null;
             }
             if (!projects) {
                 return <LoadingAnimation />;
             } else {
-                let props = {
-                    locale: this.props.locale,
-                    online: this.props.database.online,
-                    phrase: 'start-no-projects',
-                };
+                let props = { phrase: 'start-no-projects', env };
                 return <EmptyMessage {...props} />;
             }
         }
@@ -550,9 +534,6 @@ class StartPageSync extends PureComponent {
         let { env, servers } = this.props;
         let { t } = env.locale;
         servers = sortServers(servers, env);
-        if (!servers) {
-            return null;
-        }
         return (
             <div className="section buttons">
                 <h2>{t('start-social-login')}</h2>
@@ -831,7 +812,7 @@ class StartPageSync extends PureComponent {
         let duration = 1300;
         let params = route.context;
         // determine whether the user has seen the project before
-        let newProject = !_.some(this.props.projectLinks, {
+        let newProject = !_.some(projectLinks, {
             address: route.context.address,
             schema: route.context.schema,
         });
@@ -1102,15 +1083,16 @@ class StartPageSync extends PureComponent {
      * @param  {Object} evt
      */
     handleScanResult = (evt) => {
+        let { route } = this.props;
         if (this.invalidCodeTimeout) {
             clearTimeout(this.invalidCodeTimeout);
         }
         // see if the URL is a valid activation link
-        let link = UniversalLink.parse(evt.result);
-        let params = (link) ? StartPage.parseURL(link.path, link.query, link.hash) : null;
-        if (params && params.activationCode) {
+        let url = UniversalLink.parse(evt.result);
+        let match = (link) ? route.match(url) : null;
+        if (match && match.params.activationCode) {
             this.setState({ qrCodeStatus: 'correct' })
-            this.props.route.change(link.url);
+            route.change(url);
         } else {
             this.setState({ qrCodeStatus: 'invalid' });
             this.invalidCodeTimeout = setTimeout(() => {

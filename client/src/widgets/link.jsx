@@ -17,7 +17,7 @@ class Link extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { url, alwaysAsLink } = this.props;
+        let { url, alwaysAsLink, children } = this.props;
         let { hasFocus } = this.state;
         let props = _.omit(this.props, 'url', 'alwaysAsLink');
         if (url) {
@@ -39,7 +39,7 @@ class Link extends PureComponent {
             }
         }
         return (
-            <a {...props}>{this.props.children}</a>
+            <a {...props}>{children}</a>
         );
     }
 

@@ -195,7 +195,7 @@ class StoryEditor extends PureComponent {
      */
     updateLocaleCode(nextState, nextProps) {
         nextState.options = _.clone(nextState.options);
-        nextState.options.localeCode = this.chooseLocale(nextState.draft, nextProps.locale);
+        nextState.options.localeCode = this.chooseLocale(nextState.draft, nextProps.env);
     }
 
     /**
@@ -237,23 +237,24 @@ class StoryEditor extends PureComponent {
      * Choose locale based on selected locale and story contents
      *
      * @param  {Story} story
+     * @param  {Environment} env
      *
      * @return {String}
      */
-    chooseLocale(story, locale) {
+    chooseLocale(story, env) {
         let localeCode;
         let text = _.get(story, 'details.text');
         if (!_.isEmpty(text)) {
             // the country code may affect which dictionary is chosen
             // try to add it to the language code
             let languageCode = _.first(_.keys(text));
-            if (languageCode === locale.languageCode) {
+            if (languageCode === env.locale.languageCode) {
                 // great, the current user speaks the language
-                localeCode = locale.localeCode;
+                localeCode = env.locale.localeCode;
             } else {
                 // use the first country on the list if the language is in
                 // the directory
-                let entry = _.find(locale.directory, { code: languageCode });
+                let entry = _.find(env.locale.directory, { code: languageCode });
                 if (entry) {
                     let countryCode = entry.defaultCountry;
                     localeCode = `${languageCode}-${countryCode}`;
@@ -263,7 +264,7 @@ class StoryEditor extends PureComponent {
                 }
             }
         } else {
-            localeCode = locale.localeCode;
+            localeCode = env.locale.localeCode;
         }
         return localeCode;
     }

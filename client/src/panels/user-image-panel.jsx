@@ -233,7 +233,7 @@ class UserImagePanel extends PureComponent {
         } else {
             let takeProps = {
                 label: t('user-image-snap'),
-                hidden: !PhotoCaptureDialogBox.isAvailable() || !this.state.hasCamera,
+                hidden: !PhotoCaptureDialogBox.isAvailable() || !hasCamera,
                 onClick: this.handleTakeClick,
             };
             let selectProps = {

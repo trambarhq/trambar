@@ -226,8 +226,9 @@ class NotificationView extends PureComponent {
      * @param  {Event} evt
      */
     handleClick = (evt) => {
-        if (this.props.onClick) {
-            this.props.onClick({
+        let { onClick } = this.props;
+        if (onClick) {
+            onClick({
                 type: 'click',
                 target: this,
             });
