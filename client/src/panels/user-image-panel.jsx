@@ -297,7 +297,8 @@ class UserImagePanel extends PureComponent {
      * @param  {Event} evt
      */
     handleTakeClick = (evt) => {
-        this.components.importer.capture('image');
+        let { importer } = this.components;
+        importer.capture('image');
     }
 
     /**
@@ -306,8 +307,9 @@ class UserImagePanel extends PureComponent {
      * @param  {Event} evt
      */
     handleFileChange = (evt) => {
-        let files = evt.target.files;
-        this.components.importer.importFiles(files);
+        let { importer } = this.components;
+        let { files } = evt.target;
+        importer.importFiles(files);
     }
 
     /**

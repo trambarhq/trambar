@@ -421,7 +421,8 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     renderPopUpMenu(section) {
-        let ref = this.components.setters[section + 'PopUp'];
+        let { setters } = this.components;
+        let ref = setters[section + 'PopUp'];
         return (
             <CornerPopUp ref={ref}>
                 {this.renderOptions(section)}

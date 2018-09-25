@@ -367,7 +367,8 @@ class StoryListSync extends PureComponent {
      * @param  {Object} evt
      */
     handleStoryBump = (evt) => {
-        this.components.list.releaseAnchor();
+        let { list } = this.components;
+        list.releaseAnchor();
     }
 }
 
