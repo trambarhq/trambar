@@ -19,16 +19,13 @@ describe('LocaleManager', function() {
     ];
     var options = {
         defaultLocale: 'pl-PL',
-        initialLocale: 'en-US',
         directory,
     };
     var manager = new LocaleManager(options);
     before(() => {
-        return manager.initialize();
+        return manager.start('en-US');
     })
     it('should default to Polish as English is not supported', function() {
-        expect(manager.localeCode).to.equal('pl-pl');
-        expect(manager.localeCode).to.equal('pl-pl');
         expect(manager.localeCode).to.equal('pl-pl');
     })
     describe('#change()', function() {
@@ -173,6 +170,6 @@ describe('LocaleManager', function() {
         })
     })
     after(() => {
-        return manager.shutdown();
+        return manager.deactivate();
     })
 })

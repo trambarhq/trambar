@@ -3,7 +3,7 @@ function singular(n) {
 }
 
 function plural(n) {
-    if (n > 2 && n < 5) {
+    if (n === 2 || n === 3 || n === 4) {
         return true;
     }
     return false;

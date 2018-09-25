@@ -8,13 +8,7 @@ import {
 let phrases = {
     'hello': 'привет',
     '$num beers': function(num) {
-        if (num === 1) {
-            return `1 пиво`;
-        } else if (num === 2 || num === 3 || num === 4) {
-            return `${num} пива`;
-        } else {
-            return `${num} пив`;
-        }
+        return cardinal(num, '1 пиво', '2 пива', '5 пив');
     },
     '$name drank too much and died': (name) => {
         let e = pastTenseEnding(name);
