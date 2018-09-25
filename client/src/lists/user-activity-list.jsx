@@ -53,9 +53,9 @@ class UserActivityList extends PureComponent {
      */
     renderActivity(story) {
         let { route, env, user } = this.props;
-        let params = _.pick(route.params, 'schema', 'date', 'search');
-        params.user = user.id;
-        params.highlightingStory = story.id;
+        let params = _.pick(route.params, 'date', 'search');
+        params.selectedUserID = user.id;
+        params.highlightStoryID = story.id;
         let url = route.find('person-page', params);
         let text = this.renderText(story);
         let labelClass = 'label';

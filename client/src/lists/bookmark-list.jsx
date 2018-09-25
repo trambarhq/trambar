@@ -39,6 +39,8 @@ class BookmarkList extends AsyncComponent {
             bookmarks,
             currentUser,
             project,
+            highlightStoryID,
+            scrollToStoryID,
         } = this.props;
         let db = database.use({ by: this });
         let props = {
@@ -56,6 +58,8 @@ class BookmarkList extends AsyncComponent {
             bookmarks,
             currentUser,
             project,
+            highlightStoryID,
+            scrollToStoryID,
             database,
             route,
             payloads,
@@ -128,13 +132,13 @@ class BookmarkListSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { route, bookmarks } = this.props;
-        let storyID = route.params.showingStory || route.params.highlightingStory;
+        let { bookmarks, highlightStoryID, scrollToStoryID } = this.props;
+        let anchorStoryID = highlightStoryID || scrollToStoryID;
         let smartListProps = {
             items: bookmarks,
             behind: 4,
             ahead: 8,
-            anchor: (storyID) ? `story-${storyID}` : undefined,
+            anchor: (anchorStoryID) ? `story-${anchorStoryID}` : undefined,
             offset: 20,
 
             onIdentity: this.handleBookmarkIdentity,
@@ -449,7 +453,8 @@ if (process.env.NODE_ENV !== 'production') {
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         project: PropTypes.object,
-        selectedStoryID: PropTypes.number,
+        highlightStoryID: PropTypes.number,
+        scrollToStoryID: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -471,6 +476,8 @@ if (process.env.NODE_ENV !== 'production') {
         currentUser: PropTypes.object,
         project: PropTypes.object,
         repos: PropTypes.arrayOf(PropTypes.object),
+        highlightStoryID: PropTypes.number,
+        scrollToStoryID: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,

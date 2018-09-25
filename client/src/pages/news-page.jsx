@@ -206,7 +206,11 @@ class NewsPageSync extends PureComponent {
             pendingStories,
             currentUser,
             project,
-            acceptNewStory
+            acceptNewStory,
+            highlightStoryID,
+            scrollToStoryID,
+            highlightReactionID,
+            scrollToReactionID,
         } = this.props;
         // don't render when we haven't done loading
         if (!stories) {
@@ -216,6 +220,10 @@ class NewsPageSync extends PureComponent {
         let listProps = {
             access,
             acceptNewStory: acceptNewStory && access === 'read-write',
+            highlightStoryID,
+            scrollToStoryID,
+            highlightReactionID,
+            scrollToReactionID,
             stories,
             draftStories,
             pendingStories,

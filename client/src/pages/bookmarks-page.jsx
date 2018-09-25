@@ -25,13 +25,22 @@ class BookmarksPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env, payloads } = this.props;
+        let {
+            database,
+            route,
+            env,
+            payloads,
+            highlightStoryID,
+            scrollToStoryID,
+        } = this.props;
         let db = database.use({ by: this });
         let props = {
             bookmarks: null,
             currentUser: null,
             project: null,
 
+            highlightStoryID,
+            scrollToStoryID,
             database,
             route,
             payloads,
@@ -89,13 +98,24 @@ class BookmarksPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderList() {
-        let { database, route, env, payloads, bookmarks, currentUser, project } = this.props;
+        let {
+            database,
+            route,
+            env,
+            payloads,
+            bookmarks,
+            currentUser,
+            project,
+            highlightStoryID,
+            scrollToStoryID,
+        } = this.props;
         let listProps = {
             access: this.getAccessLevel(),
             bookmarks,
             currentUser,
             project,
-
+            highlightStoryID,
+            scrollToStoryID,
             database,
             payloads,
             route,
@@ -144,8 +164,6 @@ if (process.env.NODE_ENV !== 'production') {
     BookmarksPage.propTypes = {
         scrollToStoryID: PropTypes.number,
         highlightStoryID: PropTypes.number,
-        scrollToReactionID: PropTypes.number,
-        highlightReactionID: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -155,8 +173,6 @@ if (process.env.NODE_ENV !== 'production') {
     BookmarksPageSync.propTypes = {
         scrollToStoryID: PropTypes.number,
         highlightStoryID: PropTypes.number,
-        scrollToReactionID: PropTypes.number,
-        highlightReactionID: PropTypes.number,
         bookmarks: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         project: PropTypes.object,

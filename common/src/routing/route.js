@@ -17,20 +17,19 @@ class Route {
         return this.routeManager.change(url, options);
     }
 
-    find(name, params) {
-        return this.routeManager.find(name, params);
+    find(name, params, context) {
+        return this.routeManager.find(name, params, context);
     }
 
-    push(name, params) {
-        return this.routeManager.push(name, params);
+    push(name, params, context) {
+        return this.routeManager.push(name, params, context);
     }
 
-    replace(name, params) {
-        return this.routeManager.replace(name, params);
+    replace(name, params, context) {
+        return this.routeManager.replace(name, params, context);
     }
 
-    reanchor(has) {
-
+    reanchor(url) {
     }
 
     keep(callback) {

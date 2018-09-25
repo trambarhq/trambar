@@ -43,6 +43,7 @@ class PeoplePage extends AsyncComponent {
             selectedUserID,
             scrollToUserID,
             highlightStoryID,
+            scrollToStoryID,
         } = this.props;
         let db = database.use({ by: this });
         let tags;
@@ -63,6 +64,8 @@ class PeoplePage extends AsyncComponent {
             roleIDs,
             search,
             scrollToUserID,
+            highlightStoryID,
+            scrollToStoryID,
             database,
             route,
             payloads,
@@ -358,6 +361,8 @@ class PeoplePageSync extends PureComponent {
             project,
             selectedUserStories,
             currentUser,
+            highlightStoryID,
+            scrollToStoryID,
         } = this.props;
         if (!selectedUser || !selectedUserStories) {
             return null;
@@ -367,6 +372,8 @@ class PeoplePageSync extends PureComponent {
             stories: selectedUserStories,
             currentUser,
             project,
+            highlightStoryID,
+            scrollToStoryID,
 
             database,
             payloads,
@@ -489,6 +496,8 @@ if (process.env.NODE_ENV !== 'production') {
         date: PropTypes.string,
         selectedUserID: PropTypes.number,
         scrollToUserID: PropTypes.number,
+        highlightStoryID: PropTypes.number,
+        scrollToStoryID: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
@@ -500,6 +509,8 @@ if (process.env.NODE_ENV !== 'production') {
         search: PropTypes.string,
         date: PropTypes.string,
         scrollToUserID: PropTypes.number,
+        highlightStoryID: PropTypes.number,
+        scrollToStoryID: PropTypes.number,
         project: PropTypes.object,
         members: PropTypes.arrayOf(PropTypes.object),
         selectedUser: PropTypes.object,

@@ -94,10 +94,10 @@ class TopNavigation extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
+        let { container } = this.components;
         let hiddenBefore = this.isHidden();
         let hiddenAfter = this.isHidden(nextProps);
         if (hiddenBefore !== hiddenAfter) {
-            let container = this.refs.container;
             let contentHeight = container.offsetHeight;
             if (hiddenAfter) {
                 // hiding navigation:

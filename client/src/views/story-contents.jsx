@@ -481,8 +481,8 @@ class StoryContents extends PureComponent {
             branch,
             source_branches: sourceBranches
         } = story.details;
-        let name = UserUtils.getDisplayName(authors[0], env);
-        let gender = UserUtils.getGender(authors[0]);
+        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
+        let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         let commits = _.size(commitIDs);
         let repoName = RepoUtils.getDisplayName(repo, env);

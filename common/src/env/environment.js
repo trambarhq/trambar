@@ -16,6 +16,7 @@ class Environment {
         this.browser = envMonitor.browser;
         this.os = envMonitor.os;
         this.pointingDevice = envMonitor.pointingDevice;
+        this.date = envMonitor.date;
 
         this.locale = extra.locale;
         this.address = extra.address;

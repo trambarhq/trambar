@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import { mergeRemoteChanges } from 'objects/utils/story-utils';
 import * as ReactionUtils from 'objects/utils/reaction-utils';
+import * as StoryUtils from 'objects/utils/story-utils';
+import { mergeRemoteChanges } from 'objects/utils/story-utils';
 import {
     GitNotificationTypes,
     AdminNotificationTypes,

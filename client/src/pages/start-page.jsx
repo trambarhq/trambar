@@ -489,7 +489,7 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderChoices() {
-        let { database } = this.state;
+        let { database } = this.props;
         if (!database.authorized) {
             return this.renderOAuthButtons();
         } else {
@@ -503,7 +503,7 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderEmptyMessage() {
-        let { database, env, servers, projects } = this.state;
+        let { database, env, servers, projects } = this.props;
         if (!database.unauthorized) {
             if (!_.isEmpty(servers)) {
                 return null;
@@ -964,11 +964,12 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestProceed = (evt) => {
-        let { projects } = this.props;
+        let { route, projects } = this.props;
         let { selectedProjectID } = this.state;
         this.setState({ showingProjectDialog: false, renderingProjectDialog: false });
         let project = _.find(projects, { id: selectedProjectID });
-        route.push(this.getTargetPage(), {}, { schema: project.name });
+        let page = this.getTargetPage();
+        route.push(page, {}, { schema: project.name });
     }
 
     /**
