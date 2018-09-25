@@ -240,7 +240,7 @@ class ImageEditor extends PureComponent {
      */
     renderPlaceholder() {
         let {
-            plaeholderMessage,
+            placeholderMessage,
             placeholderIcon,
             fullImageURL,
             previewImageURL
@@ -248,7 +248,7 @@ class ImageEditor extends PureComponent {
         if (fullImageURL || previewImageURL) {
             return null;
         }
-        if (!plaeholderMessage && !placeholderIcon) {
+        if (!placeholderMessage && !placeholderIcon) {
             return null;
         }
         return (

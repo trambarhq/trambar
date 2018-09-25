@@ -669,7 +669,7 @@ const phrases = {
     'telephone-dialog-close': 'Zamknij',
 
     'time-$hours-ago': (hours) => {
-        let time = cardinal(hours, 'Godzina', 'godziny', 'godzin', true);
+        let time = cardinal(hours, 'Godzina', '2 godziny', '5 godzin', true);
         return `${time} temnu`;
     },
     'time-$hr-ago': (hr) => {
@@ -679,7 +679,7 @@ const phrases = {
         return `${min} min temu`;
     },
     'time-$minutes-ago': (minutes) => {
-        let time = cardinal(hours, 'Minuta', 'minuty', 'minut', true);
+        let time = cardinal(minutes, 'Minuta', '2 minuty', '5 minut', true);
         return `${time} temnu`;
     },
     'time-just-now': 'Właśnie teraz',

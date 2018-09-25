@@ -156,7 +156,8 @@ class Tooltip extends PureComponent {
      * @param  {Event} evt
      */
     handleMouseDown = (evt) => {
-        if (!isInside(evt.target, this.components.container)) {
+        let { container } = this.components;
+        if (!isInside(evt.target, container)) {
             this.setState({ open: false });
         }
     }

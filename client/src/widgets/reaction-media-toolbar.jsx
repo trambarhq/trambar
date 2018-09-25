@@ -132,7 +132,7 @@ class ReactionMediaToolbar extends PureComponent {
      * @param  {Object|undefined} props
      */
     triggerActionEvent(action, props) {
-        let { onAction } = props;
+        let { onAction } = this.props;
         if (onAction) {
             onAction(_.extend({
                 type: 'action',

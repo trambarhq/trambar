@@ -130,7 +130,7 @@ class PhotoCaptureDialogBox extends PureComponent {
                 let payload = payloads.add('image').attachFile(file);
                 let res = {
                     type: 'image',
-                    payload_token: payload.token,
+                    payload_token: payload.id,
                     format: meta.format,
                     width: meta.width,
                     height: meta.height,

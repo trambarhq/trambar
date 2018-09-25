@@ -604,7 +604,7 @@ const phrases = {
         return `${min} min fa`;
     },
     'time-$minutes-ago': (minutes) => {
-        let time = cardinal(hours, "Un minuto", "2 minuti");
+        let time = cardinal(minutes, "Un minuto", "2 minuti");
         return `${time} fa`;
     },
     'time-just-now': "Proprio ora",

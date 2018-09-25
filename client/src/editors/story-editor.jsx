@@ -85,7 +85,7 @@ class StoryEditor extends PureComponent {
         let { story, currentUser } = this.props;
         let userIDs = _.get(story, 'user_ids');
         let currentUserID = _.get(currentUser, 'id');
-        return _.includes(userIDs, currentUserID);
+        return _.indexOf(userIDs, currentUserID) > 0;
     }
 
     /**

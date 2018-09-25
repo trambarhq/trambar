@@ -647,7 +647,7 @@ let phrases = {
         return `Před ${min} min`;
     },
     'time-$minutes-ago': (minutes) => {
-        let time = cardinal(hours, 'minutou', '2 minutami');
+        let time = cardinal(minutes, 'minutou', '2 minutami');
         return `Před ${time}`;
     },
     'time-just-now': 'Právě teď',

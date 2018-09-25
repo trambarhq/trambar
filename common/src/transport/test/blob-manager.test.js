@@ -1,7 +1,7 @@
 import Promise from 'bluebird';
 import { expect } from 'chai';
 
-import BlobManager from 'transport/blob-manager';
+import * as BlobManager from 'transport/blob-manager';
 import CordovaFile from 'transport/cordova-file';
 import * as HTTPRequest from 'transport/http-request';
 

@@ -33,7 +33,7 @@ class MediaEditor extends PureComponent {
             );
         } else {
             return (
-                <div key={index} className="media-editor">
+                <div key={resourceIndex} className="media-editor">
                     <div className="resource">
                         {this.renderResource(resource)}
                         {this.renderNavigation()}
@@ -108,7 +108,7 @@ class MediaEditor extends PureComponent {
         let directionProps = {
             index: resourceIndex,
             count: resourceCount,
-            hidden: !(count > 1),
+            hidden: !(resourceCount > 1),
             onBackwardClick: this.handleBackwardClick,
             onForwardClick: this.handleForwardClick,
         };
@@ -186,7 +186,7 @@ class MediaEditor extends PureComponent {
         let { payloads, resources, resourceIndex } = this.props;
         let res = resources[resourceIndex];
         resources = _.slice(resources);
-        resources.splice(index, 1);
+        resources.splice(resourceIndex, 1);
         let newIndex = resourceIndex;
         if (resourceIndex >= resources.length) {
             newIndex = resources.length - 1;

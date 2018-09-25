@@ -145,7 +145,7 @@ class VideoCaptureDialogBox extends PureComponent {
      *
      * @param  {HTMLVideoElement} node
      */
-    setLiveVideoNode(node) {
+    setLiveVideoNode = (node) => {
         let { liveVideoStream, liveVideoWidth, liveVideoHeight } = this.state;
         this.videoNode = node;
         if (this.videoNode) {

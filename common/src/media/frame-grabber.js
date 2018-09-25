@@ -77,6 +77,7 @@ function capture(video, options) {
             }
         }
 
+        let timeout;
         if (live) {
             onSeeked();
         } else {
@@ -88,7 +89,7 @@ function capture(video, options) {
             video.currentTime = startTime;
 
             // set a timeout, in case we're not getting expected events from video
-            let timeout = setTimeout(() => {
+            timeout = setTimeout(() => {
                 onFailure(new Error('Unable to obtain an image within time limit'));
             }, timeLimit);
         }

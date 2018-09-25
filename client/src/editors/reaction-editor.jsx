@@ -245,7 +245,7 @@ class ReactionEditor extends PureComponent {
         let { t } = env.locale;
         let props = {
             ref: setters.mediaImporter,
-            resources: _.get(draft, 'details.resources'),
+            resources: _.get(draft, 'details.resources', []),
             payloads,
             env,
             cameraDirection: 'back',

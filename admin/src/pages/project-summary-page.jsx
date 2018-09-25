@@ -617,9 +617,10 @@ class ProjectSummaryPageSync extends PureComponent {
      */
     handleArchiveClick = (evt) => {
         let { env } = this.props;
+        let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('project-summary-confirm-archive');
-        return this.components.confirmation.ask(message).then((confirmed) => {
+        return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ archived: true }).then((project) => {
                     if (project) {
@@ -637,9 +638,10 @@ class ProjectSummaryPageSync extends PureComponent {
      */
     handleDeleteClick = (evt) => {
         let { env } = this.props;
+        let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('project-summary-confirm-delete');
-        return this.components.confirmation.ask(message).then((confirmed) => {
+        return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ deleted: true }).then((project) => {
                     if (project)  {
@@ -657,9 +659,10 @@ class ProjectSummaryPageSync extends PureComponent {
      */
     handleRestoreClick = (evt) => {
         let { env } = this.props;
+        let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('project-summary-confirm-restore');
-        return this.components.confirmation.ask(message).then((confirmed) => {
+        return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ archived: false, deleted: false });
             }

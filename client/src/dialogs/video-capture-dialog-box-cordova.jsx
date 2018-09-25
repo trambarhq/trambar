@@ -135,7 +135,7 @@ class VideoCaptureDialogBox extends PureComponent {
                         payload.attachFile(posterFile, 'poster');
                         return {
                             type: 'video',
-                            payload_token: payload.token,
+                            payload_token: payload.id,
                             format: MediaLoader.extractFileFormat(mediaFile.type),
                             width: poster.width,
                             height: poster.height,
@@ -148,7 +148,7 @@ class VideoCaptureDialogBox extends PureComponent {
                     payload.attachStep('main', 'poster')
                     return {
                         type: 'video',
-                        payload_token: payload.token,
+                        payload_token: payload.id,
                         format: MediaLoader.extractFileFormat(mediaFile.type),
                         filename: mediaFile.name,
                         duration: mediaFileData.duration * 1000,

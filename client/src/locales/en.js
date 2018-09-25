@@ -618,7 +618,7 @@ let americanPhrases = {
     'telephone-dialog-close': 'Close',
 
     'time-$hours-ago': (hours) => {
-        let time = cardinal(count, 'An hour', '2 hours');
+        let time = cardinal(hours, 'An hour', '2 hours');
         return `${time} ago`;
     },
     'time-$hr-ago': (hr) => {
@@ -628,7 +628,7 @@ let americanPhrases = {
         return `${min} min ago`;
     },
     'time-$minutes-ago': (minutes) => {
-        let time = cardinal(count, 'A minute', '2 minutes');
+        let time = cardinal(minutes, 'A minute', '2 minutes');
         return `${time} ago`;
     },
     'time-just-now': 'Just now',

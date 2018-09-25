@@ -8,7 +8,7 @@ function form(address, relativeURL) {
     return url;
 }
 
-const regExp = new RegExp('^' + baseURL + '/(https?)/(.*))');
+const regExp = new RegExp('^' + baseURL + '/(https?)/(.*)');
 
 /**
  * Parse a universal link

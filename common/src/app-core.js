@@ -8,7 +8,7 @@ import WebsocketNotifier from 'transport/websocket-notifier';
 import RemoteDataSource from 'data/remote-data-source';
 import IndexedDBCache from 'data/indexed-db-cache';
 import LocalStorageCache from 'data/local-storage-cache';
-import BlobManager from 'transport/blob-manager';
+import * as BlobManager from 'transport/blob-manager';
 
 import languages from 'languages';
 

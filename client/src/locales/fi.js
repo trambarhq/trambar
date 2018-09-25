@@ -603,7 +603,7 @@ const phrases = {
     'telephone-dialog-close': 'Sulje',
 
     'time-$hours-ago': (hours) => {
-        let time = cardinal(count, 'Tunti', '2 tuntia');
+        let time = cardinal(hours, 'Tunti', '2 tuntia');
         return `${time} sitten`;
     },
     'time-$hr-ago': (hr) => {
@@ -613,7 +613,7 @@ const phrases = {
         return `${min} m. sitten`;
     },
     'time-$minutes-ago': (minutes) => {
-        let time = cardinal(count, 'Minuutti', '2 minuuttia');
+        let time = cardinal(minutes, 'Minuutti', '2 minuuttia');
         return `${time} sitten`;
     },
     'time-just-now': 'Juuri nyt',

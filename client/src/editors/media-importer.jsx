@@ -135,7 +135,7 @@ class MediaImporter extends PureComponent {
         return MediaLoader.getImageMetadata(file).then((meta) => {
             return {
                 type: 'image',
-                payload_token: payload.token,
+                payload_token: payload.id,
                 width: meta.width,
                 height: meta.height,
                 format: meta.format,
@@ -146,7 +146,7 @@ class MediaImporter extends PureComponent {
             // not a format that the browser recognizes
             return {
                 type: 'image',
-                payload_token: payload.token,
+                payload_token: payload.id,
                 format: MediaLoader.extractFileFormat(file.type),
                 filename: file.name,
                 imported: true,
@@ -182,7 +182,7 @@ class MediaImporter extends PureComponent {
                 payload.attachFile(meta.poster, 'poster')
                 return {
                     type: 'video',
-                    payload_token: payload.token,
+                    payload_token: payload.id,
                     width: meta.width,
                     height: meta.height,
                     format: meta.format,
@@ -195,7 +195,7 @@ class MediaImporter extends PureComponent {
                 payload.attachStep('main', 'poster')
                 return {
                     type: 'video',
-                    payload_token: payload.token,
+                    payload_token: payload.id,
                     format: MediaLoader.extractFileFormat(file.type),
                     filename: file.name,
                     imported: true,
@@ -223,7 +223,7 @@ class MediaImporter extends PureComponent {
         return MediaLoader.getAudioMetadata(file).then((meta) => {
             let audio = {
                 type: 'audio',
-                payload_token: payload.token,
+                payload_token: payload.id,
                 format: meta.format,
                 duration: meta.duration,
                 filename: file.name,
@@ -243,7 +243,7 @@ class MediaImporter extends PureComponent {
         }).catch((err) => {
             return {
                 type: 'audio',
-                payload_token: payload.token,
+                payload_token: payload.id,
                 format: MediaLoader.extractFileFormat(file.type),
                 filename: file.name,
                 imported: true,
@@ -266,7 +266,7 @@ class MediaImporter extends PureComponent {
                 let payload = payloads.add('website').attachURL(link.url, 'poster');
                 return {
                     type: 'website',
-                    payload_token: payload.token,
+                    payload_token: payload.id,
                     url: link.url,
                     title: link.name || _.replace(file.name, /\.\w+$/, ''),
                 };
@@ -295,14 +295,14 @@ class MediaImporter extends PureComponent {
                         let payload = payloads.add('image').attachURL(url);
                         return {
                             type: 'image',
-                            payload_token: payload.token,
+                            payload_token: payload.id,
                             filename: filename,
                         };
                     } else if (type === 'website') {
                         let payload = payloads.add('website').attachURL(url, 'poster');
                         return {
                             type: 'website',
-                            payload_token: payload.token,
+                            payload_token: payload.id,
                             url: url,
                             title: getInnerText(html),
                         };
@@ -527,7 +527,7 @@ class MediaImporter extends PureComponent {
      * @param  {Object|undefined} resource
      */
     triggerCaptureEndEvent(resource) {
-        let { onCaptureStart } = this.props;
+        let { onCaptureEnd } = this.props;
         let { capturing } = this.state;
         if (onCaptureEnd) {
             onCaptureEnd({

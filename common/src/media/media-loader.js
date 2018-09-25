@@ -1,6 +1,6 @@
 import Promise from 'bluebird';
-import BlobManager from 'transport/blob-manager';
-import BlobReader from 'transport/blob-reader';
+import * as BlobManager from 'transport/blob-manager';
+import * as BlobReader from 'transport/blob-reader';
 import * as JPEGAnalyser from 'media/jpeg-analyser';
 import * as FrameGrabber from 'media/frame-grabber';
 import CordovaFile from 'transport/cordova-file';

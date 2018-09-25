@@ -656,7 +656,7 @@ let phrases = {
     'telephone-dialog-close': 'Закрыть',
 
     'time-$hours-ago': (hours) => {
-        let time = cardinal(hours, 'Час', 'часа', 'часов', true);
+        let time = cardinal(hours, 'Час', '2 часа', '5 часов', true);
         return `${time} назад`;
     },
     'time-$hr-ago': (hr) => {
@@ -666,7 +666,7 @@ let phrases = {
         return `${min} м. назад`;
     },
     'time-$minutes-ago': (minutes) => {
-        let time = cardinal(hours, 'Минута', 'минуты', 'минут', true);
+        let time = cardinal(hours, 'Минута', '2 минуты', '5 минут', true);
         return `${time} назад`;
     },
     'time-just-now': 'Прямо сейчас',

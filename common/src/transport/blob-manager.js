@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import Moment from 'moment';
-import HTTPRequest from 'transport/http-request';
+import * as HTTPRequest from 'transport/http-request';
 import CordovaFile from 'transport/cordova-file';
 
 let list = [];

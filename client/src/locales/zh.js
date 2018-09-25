@@ -614,20 +614,16 @@ let traditionalPhrases = {
     'telephone-dialog-close': '關閉',
 
     'time-$hours-ago': (hours) => {
-        let num = cardinal(hours);
-        return `${num}小時前`;
+        return cardinal(hours, '一小時前');
     },
     'time-$hr-ago': (hr) => {
-        let num = cardinal(hr);
-        return `${num}小時前`;
+        return cardinal(hr, '一小時前');
     },
     'time-$min-ago': (min) => {
-        let num = cardinal(min);
-        return `${num}分鐘前`;
+        return cardinal(hr, '一分鐘前');
     },
     'time-$minutes-ago': (minutes) => {
-        let num = cardinal(minutes);
-        return `${num}分鐘前`;
+        return cardinal(hr, '一分鐘前');
     },
     'time-just-now': '剛才',
     'time-yesterday': '昨天',
@@ -1333,20 +1329,16 @@ let simplifiedPhrases = {
     'telephone-dialog-close': '关闭',
 
     'time-$hours-ago': (hours) => {
-        let num = cardinal(hours);
-        return `${num}小时前`;
+        return cardinal(hours, '一小时前');
     },
     'time-$hr-ago': (hr) => {
-        let num = cardinal(hr);
-        return `${num}小时前`;
+        return cardinal(hr, '一小时前');
     },
     'time-$min-ago': (min) => {
-        let num = cardinal(min);
-        return `${num}分钟前`;
+        return cardinal(min, '一分钟前');
     },
     'time-$minutes-ago': (minutes) => {
-        let num = cardinal(minutes);
-        return `${num}分钟前`;
+        return cardinal(minutes, '一分钟前');
     },
     'time-just-now': '刚才',
     'time-yesterday': '昨天',
@@ -1801,12 +1793,10 @@ let cantonesePhrases = {
     },
 
     'time-$hours-ago': (hours) => {
-        let num = cardinal(hours);
-        return `${num}個鐘頭前`;
+        return cardinal(hours, '一個鐘頭前');
     },
     'time-$hr-ago': (hr) => {
-        let num = cardinal(hr);
-        return `${num}個鐘頭前`;
+        return cardinal(hr, '一個鐘頭前');
     },
     'time-just-now': '啱啱線',
     'time-yesterday': '尋日',

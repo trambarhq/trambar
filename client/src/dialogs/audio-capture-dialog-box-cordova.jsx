@@ -125,7 +125,7 @@ class AudioCaptureDialogBox extends PureComponent {
                 payload.attachFile(file);
                 let res = {
                     type: 'audio',
-                    payload_token: payload.token,
+                    payload_token: payload.id,
                     format: format,
                     width: mediaFileData.width,
                     height: mediaFileData.height,

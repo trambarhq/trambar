@@ -128,7 +128,7 @@ class PhotoCaptureDialogBox extends PureComponent {
      *
      * @param  {HTMLVideoElement} node
      */
-    setLiveVideoNode(node) {
+    setLiveVideoNode = (node) => {
         let { liveVideoStream, liveVideoWidth, liveVideoHeight } = this.state;
         this.videoNode = node;
         if (this.videoNode) {
@@ -407,7 +407,7 @@ class PhotoCaptureDialogBox extends PureComponent {
      * Inform parent component that dialog box should be closed
      */
     triggerCloseEvent() {
-        let { onClose } = this.onClose;
+        let { onClose } = this.props;
         if (onClose) {
             onClose({
                 type: 'close',
@@ -450,10 +450,9 @@ class PhotoCaptureDialogBox extends PureComponent {
         let { capturedImage } = this.state;
         let payload = payloads.add('image');
         payload.attachFile(capturedImage.blob);
-        let url = payload.token;
         let res = {
             type: 'image',
-            payload_token: payload.token,
+            payload_token: payload.id,
             width: capturedImage.width,
             height: capturedImage.height,
             format: 'jpeg'

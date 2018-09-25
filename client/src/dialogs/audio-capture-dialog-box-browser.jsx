@@ -609,7 +609,7 @@ class AudioCaptureDialogBox extends PureComponent {
         payload.attachStream(capturedAudio.stream);
         let res = {
             type: 'audio',
-            payload_token: payload.token,
+            payload_token: payload.id,
             duration: capturedAudio.duration,
             format: capturedAudio.format,
             bitrates: {

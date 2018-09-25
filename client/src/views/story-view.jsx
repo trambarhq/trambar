@@ -862,6 +862,7 @@ class StoryView extends PureComponent {
                     type: 'like',
                     story_id: story.id,
                     user_id: currentUser.id,
+                    details: {},
                     published: true,
                     public: true,
                 };

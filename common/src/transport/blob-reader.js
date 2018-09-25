@@ -1,5 +1,5 @@
 import Promise from 'bluebird';
-import BlobManager from 'transport/blob-manager';
+import * as BlobManager from 'transport/blob-manager';
 import CordovaFile from 'transport/cordova-file';
 
 /**

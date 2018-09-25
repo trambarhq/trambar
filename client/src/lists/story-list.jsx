@@ -271,18 +271,18 @@ class StoryListSync extends PureComponent {
             isDraft = true;
         }
         if (isDraft) {
-            let authors = findAuthors(authors, story);
-            let recommendations = findRecommendations(recommendations, story);
-            let recipients = findRecipients(recipients, recommendations);
-            if (!story) {
-                authors = array(currentUser);
+            let storyAuthors = findAuthors(authors, story);
+            let storyRecommendations = findRecommendations(recommendations, story);
+            let storyRecipients = findRecipients(recipients, recommendations);
+            if (_.isEmpty(storyAuthors) && currentUser) {
+                storyAuthors = [ currentUser ];
             }
             let editorProps = {
                 highlighting,
                 story,
-                authors,
-                recommendations,
-                recipients,
+                authors: storyAuthors,
+                recommendations: storyRecommendations,
+                recipients: storyRecipients,
                 repos,
                 isStationary: evt.currentIndex === 0,
                 currentUser,

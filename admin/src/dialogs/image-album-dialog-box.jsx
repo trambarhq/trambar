@@ -280,7 +280,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
                         purpose,
                         user_id: currentUserID,
                         details: {
-                            payload_token: payload.token,
+                            payload_token: payload.id,
                             width: meta.width,
                             height: meta.height,
                             format: meta.format,
