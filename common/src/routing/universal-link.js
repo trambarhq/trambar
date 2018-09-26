@@ -1,28 +1,34 @@
-import _ from 'lodash';
-
 const baseURL = 'https://trambar.io';
 
-function form(address, relativeURL) {
-    let hostPath = '/' + _.replace(address, '://', '/');
-    let url = baseURL + hostPath + relativeURL;
-    return url;
+/**
+ * Form a universal link
+ *
+ * @param  {String} address
+ * @param  {String} url
+ *
+ * @return {String}
+ */
+function form(address, url) {
+    let hostPath = address.replace('://', '/');
+    return baseURL + '/' + hostPath + url;
 }
-
-const regExp = new RegExp('^' + baseURL + '/(https?)/(.*)');
 
 /**
  * Parse a universal link
  *
- * @param  {String} url
+ * @param  {String} link
  *
- * @return {String|undefined}
+ * @return {Object|null}
  */
-function parse(url) {
-    let m = regExp.exec(url);
+function parse(link) {
+    let regExp = new RegExp('^' + baseURL + '/(https?)/(.*?)/(.*)');
+    let m = regExp.exec(link);
     if (!m) {
         return;
     }
-    return m[1] + '://' + m[2];
+    let address = m[1] + '://' + m[2];
+    let url = '/' + m[3];
+    return { address, url };
 }
 
 export {
