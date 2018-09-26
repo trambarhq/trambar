@@ -68,15 +68,6 @@ module.exports = function(config) {
                     'process.env.PLATFORM': '"browser"',
                 }),
             ],
-            externals: {
-                'react/addons': true,
-                'react/lib/ExecutionEnvironment': true,
-                'react/lib/ReactContext': true,
-
-                // these exist only in React 15.5+
-                'react-dom/test-utils': true,
-                'react-test-renderer/shallow': true,
-            }
         },
         webpackMiddleware: {
             noInfo: true,

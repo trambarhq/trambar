@@ -124,12 +124,14 @@ describe('BlobStream', function() {
                 let onUploadProgress = options.onUploadProgress;
                 return Promise.delay(20).then(() => {
                     sent++;
-                    onUploadProgress({
-                        type: 'progress',
-                        target: {},
-                        loaded: 20,
-                        total: 20,
-                    });
+                    if (onUploadProgress) {
+                        onUploadProgress({
+                            type: 'progress',
+                            target: {},
+                            loaded: 20,
+                            total: 20,
+                        });
+                    }
                     return {};
                 });
             };
@@ -163,12 +165,14 @@ describe('BlobStream', function() {
                         }
                     }
                     sent++;
-                    onUploadProgress({
-                        type: 'progress',
-                        target: {},
-                        loaded: 20,
-                        total: 20,
-                    });
+                    if (onUploadProgress) {
+                        onUploadProgress({
+                            type: 'progress',
+                            target: {},
+                            loaded: 20,
+                            total: 20,
+                        });
+                    }
                     return {};
                 });
             };
@@ -199,12 +203,14 @@ describe('BlobStream', function() {
                         throw new HTTPError(504);
                     }
                     sent++;
-                    onUploadProgress({
-                        type: 'progress',
-                        target: {},
-                        loaded: 20,
-                        total: 20,
-                    });
+                    if (onUploadProgress) {
+                        onUploadProgress({
+                            type: 'progress',
+                            target: {},
+                            loaded: 20,
+                            total: 20,
+                        });
+                    }
                     return {};
                 });
             };

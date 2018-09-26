@@ -2,7 +2,10 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React from 'react';
 import { expect } from 'chai';
-import * as Enzyme from 'enzyme';
+import Enzyme from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 import BitmapView from 'media/bitmap-view';
 

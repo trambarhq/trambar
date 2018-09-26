@@ -35,7 +35,7 @@ describe('RemoteDataSource', function() {
     let dataSource = new RemoteDataSource(dataSourceOptions);
     dataSource.activate();
     afterEach(() => {
-        dataSource.clearEventListeners();
+        dataSource.listeners = [];
     })
 
     describe('#beginSession()', function() {
