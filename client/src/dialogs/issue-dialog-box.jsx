@@ -219,7 +219,7 @@ class IssueDialogBox extends PureComponent {
         }
         let repo = this.getSelectedRepo();
         let options = _.map(repos, (repo, index) => {
-            let title = RepoUtils.getDisplayName(repo);
+            let title = RepoUtils.getDisplayName(repo, env);
             return <option key={index} value={repo.id}>{title}</option>;
         });
         return (

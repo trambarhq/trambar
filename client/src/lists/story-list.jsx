@@ -43,6 +43,9 @@ class StoryList extends AsyncComponent {
             access,
             acceptNewStory,
             highlightStoryID,
+            scrollToStoryID,
+            highlightReactionID,
+            scrollToReactionID,
         } = this.props;
         let db = database.use({ by: this });
         let props = {
@@ -56,6 +59,9 @@ class StoryList extends AsyncComponent {
             access,
             acceptNewStory,
             highlightStoryID,
+            scrollToStoryID,
+            highlightReactionID,
+            scrollToReactionID,
             stories,
             draftStories,
             pendingStories,
@@ -239,6 +245,8 @@ class StoryListSync extends PureComponent {
             repos,
             currentUser,
             highlightStoryID,
+            highlightReactionID,
+            scrollToReactionID,
             access
         } = this.props;
         let story = evt.item;
@@ -273,7 +281,7 @@ class StoryListSync extends PureComponent {
         if (isDraft) {
             let storyAuthors = findAuthors(authors, story);
             let storyRecommendations = findRecommendations(recommendations, story);
-            let storyRecipients = findRecipients(recipients, recommendations);
+            let storyRecipients = findRecipients(recipients, storyRecommendations);
             if (_.isEmpty(storyAuthors) && currentUser) {
                 storyAuthors = [ currentUser ];
             }
@@ -304,6 +312,8 @@ class StoryListSync extends PureComponent {
                     highlighting,
                     pending,
                     access,
+                    highlightReactionID,
+                    scrollToReactionID,
                     story,
                     reactions: storyReactions,
                     authors: storyAuthors,
@@ -501,6 +511,8 @@ if (process.env.NODE_ENV !== 'production') {
         acceptNewStory: PropTypes.bool,
         highlightStoryID: PropTypes.number,
         scrollToStoryID: PropTypes.number,
+        highlightReactionID: PropTypes.number,
+        scrollToReactionID: PropTypes.number,
         stories: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),
         pendingStories: PropTypes.arrayOf(PropTypes.object),
@@ -517,6 +529,8 @@ if (process.env.NODE_ENV !== 'production') {
         acceptNewStory: PropTypes.bool,
         highlightStoryID: PropTypes.number,
         scrollToStoryID: PropTypes.number,
+        highlightReactionID: PropTypes.number,
+        scrollToReactionID: PropTypes.number,
         stories: PropTypes.arrayOf(PropTypes.object),
         authors: PropTypes.arrayOf(PropTypes.object),
         draftStories: PropTypes.arrayOf(PropTypes.object),

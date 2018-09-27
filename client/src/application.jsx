@@ -270,7 +270,7 @@ class Application extends PureComponent {
         let route = new Route(routeManager);
         let { address, schema } = route.context;
         let { database, payloads, env } = this.state;
-        if (address !== database.context.address) {
+        if (address !== database.context.address || schema !== database.context.schema) {
             // change database and payloads the server address changes
             database = new Database(dataSource, { address, schema });
             payloads = new Payloads(payloadManager, { address, schema });

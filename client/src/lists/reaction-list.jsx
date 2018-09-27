@@ -211,6 +211,8 @@ if (process.env.NODE_ENV !== 'production') {
 
     ReactionList.propTypes = {
         access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+        highlightReactionID: PropTypes.number,
+        scrollToReactionID: PropTypes.number,
         story: PropTypes.object.isRequired,
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),

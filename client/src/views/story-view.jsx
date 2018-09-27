@@ -420,7 +420,8 @@ class StoryView extends PureComponent {
             currentUser,
             repos,
             access,
-            selectedReactionID,
+            highlightReactionID,
+            scrollToReactionID,
         } = this.props;
         let { commentsExpanded, isTall } = this.state;
         let { setters } = this.components;
@@ -443,7 +444,8 @@ class StoryView extends PureComponent {
             payloads,
             route,
             env,
-            selectedReactionID,
+            highlightReactionID,
+            scrollToReactionID,
         };
         let className = 'scrollable';
         if (isTall && env.isWiderThan('double-col')) {
@@ -948,6 +950,9 @@ if (process.env.NODE_ENV !== 'production') {
         pending: PropTypes.bool,
         story: PropTypes.object.isRequired,
         bookmark: PropTypes.object,
+        highlightReactionID: PropTypes.number,
+        scrollToReactionID: PropTypes.number,
+
         authors: PropTypes.arrayOf(PropTypes.object),
         reactions: PropTypes.arrayOf(PropTypes.object),
         respondents: PropTypes.arrayOf(PropTypes.object),
@@ -955,7 +960,6 @@ if (process.env.NODE_ENV !== 'production') {
         recipients: PropTypes.arrayOf(PropTypes.object),
         repos: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object.isRequired,
-        selectedReactionId: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         payloads: PropTypes.instanceOf(Payloads).isRequired,
