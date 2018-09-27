@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as RoleFinder from 'objects/finders/role-finder';
 import * as UserFinder from 'objects/finders/user-finder';
@@ -733,7 +733,7 @@ class MemberListPageSync extends PureComponent {
     }
 }
 
-let sortUsers = Memoize(function(users, roles, statistics, env, columns, directions) {
+let sortUsers = memoizeWeak(null, function(users, roles, statistics, env, columns, directions) {
     let { p } = env.locale;
     columns = _.map(columns, (column) => {
         switch (column) {
@@ -764,7 +764,7 @@ let sortUsers = Memoize(function(users, roles, statistics, env, columns, directi
     return _.orderBy(users, columns, directions);
 });
 
-let findUsers = Memoize(function(users, project) {
+let findUsers = memoizeWeak(null, function(users, project) {
     if (project) {
         let hash = _.keyBy(users, 'id');
         let existingUsers = _.filter(_.map(project.user_ids, (id) => {
@@ -778,17 +778,21 @@ let findUsers = Memoize(function(users, project) {
         //
         // this will happen right after the project is saved and the the updated
         // users (changed by backend) haven't been retrieved yet
-        return _.union(existingUsers, pendingUsers);
-    } else {
-        return [];
+        let list = _.union(existingUsers, pendingUsers);
+        if (!_.isEmpty(list)) {
+            return list;
+        }
     }
 });
 
-let findRoles = Memoize(function(roles, user) {
+let findRoles = memoizeWeak(null, function(roles, user) {
     let hash = _.keyBy(roles, 'id');
-    return _.filter(_.map(user.role_ids, (id) => {
+    let list = _.filter(_.map(user.role_ids, (id) => {
         return hash[id];
     }));
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
 export {

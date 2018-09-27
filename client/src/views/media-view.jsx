@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import HTTPRequest from 'transport/http-request';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import Payload from 'transport/payload';
 import * as ImageCropping from 'media/image-cropping';
@@ -395,7 +395,7 @@ class MediaView extends PureComponent {
     }
 }
 
-let getZoomableResources = Memoize(function(resources) {
+const getZoomableResources = memoizeWeak(null, function(resources) {
     return _.filter(resources, (res) => {
         switch (res.type) {
             case 'image':

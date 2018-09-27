@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import Merger from 'data/merger';
 
 // widgets
@@ -175,7 +175,7 @@ class ReactionList extends PureComponent {
     }
 }
 
-let sortReactions = Memoize(function(reactions, currentUser) {
+const sortReactions = memoizeWeak(null, function(reactions, currentUser) {
     // reactions are positioned from bottom up
     // place reactions with later ptime at towards the front of the list
     let sortedReactions = _.orderBy(reactions, [ 'ptime', 'id' ], [ 'desc', 'desc' ]);
@@ -188,11 +188,9 @@ let sortReactions = Memoize(function(reactions, currentUser) {
     return sortedReactions;
 });
 
-let findRespondent = Memoize(function(users, reaction) {
+const findRespondent = memoizeWeak(null, function(users, reaction) {
     if (reaction) {
         return _.find(users, { id: reaction.user_id });
-    } else {
-        return null;
     }
 });
 

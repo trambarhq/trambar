@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import * as Markdown from 'utils/markdown';
 import * as PlainText from 'utils/plain-text';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 import * as UserUtils from 'objects/utils/user-utils';
@@ -523,7 +523,7 @@ let defaultOptions = {
     removeReaction: false,
 };
 
-let getZoomableResources = Memoize(function(resources) {
+const getZoomableResources = memoizeWeak(null, function(resources) {
     return _.filter(resources, (res) => {
         switch (res.type) {
             case 'image':

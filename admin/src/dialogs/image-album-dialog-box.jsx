@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import * as MediaLoader from 'media/media-loader';
 import * as PictureFinder from 'objects/finders/picture-finder';
 
@@ -490,7 +490,7 @@ class ImageAlbumDialogBoxSync extends PureComponent {
     }
 }
 
-let sortPictures = Memoize(function(pictures) {
+let sortPictures = memoizeWeak(null, function(pictures) {
     return _.orderBy(pictures, 'mtime', 'desc');
 });
 

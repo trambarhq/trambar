@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import * as DateTracker from 'utils/date-tracker';
 import * as DateUtils from 'utils/date-utils';
 
@@ -145,7 +145,7 @@ class UserList extends PureComponent {
     }
 }
 
-let sortUsers = Memoize(function(users, env) {
+const sortUsers = memoizeWeak(null, function(users, env) {
     let { p } = env.locale;
     let name = (user) => {
         return p(user.details.name);
@@ -153,7 +153,7 @@ let sortUsers = Memoize(function(users, env) {
     return _.orderBy(users, [ name ], [ 'asc' ]);
 });
 
-let findRoles = Memoize(function(roles, user) {
+const findRoles = memoizeWeak(null, function(roles, user) {
     if (user) {
         let list = _.filter(_.map(user.role_ids, (roleId) => {
             return _.find(roles, { id: roleId });
@@ -162,22 +162,19 @@ let findRoles = Memoize(function(roles, user) {
             return list;
         }
     }
-    return [];
 });
 
-let findListing = Memoize(function(listings, user) {
+const findListing = memoizeWeak(null, function(listings, user) {
     if (user) {
         return _.find(listings, (listing) => {
             if (listing.filters.user_ids[0] === user.id) {
                 return true;
             }
         });
-    } else {
-        return null;
     }
 });
 
-let findListingStories = Memoize(function(stories, listing) {
+const findListingStories = memoizeWeak(null, function(stories, listing) {
     if (listing) {
         let hash = _.keyBy(stories, 'id');
         let list = _.filter(_.map(listing.story_ids, (id) => {
@@ -187,17 +184,15 @@ let findListingStories = Memoize(function(stories, listing) {
             return list;
         }
     }
-    return [];
 });
 
-let findUserStories = Memoize(function(stories, user) {
+const findUserStories = memoizeWeak(null, function(stories, user) {
     let list = _.filter(stories, (story) => {
         return _.includes(story.user_ids, user.id);
     });
     if (!_.isEmpty(list)) {
         return list;
     }
-    return [];
 });
 
 export {

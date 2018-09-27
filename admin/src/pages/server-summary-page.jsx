@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as RoleFinder from 'objects/finders/role-finder';
 import * as ServerFinder from 'objects/finders/server-finder';
@@ -1493,7 +1493,7 @@ function getServerIcon(type) {
     }
 }
 
-let sortRoles = Memoize(function(roles, env) {
+let sortRoles = memoizeWeak(null, function(roles, env) {
     let { p } = env.locale;
     let name = (role) => {
         return p(role.details.title) || role.name;

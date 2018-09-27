@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as UserFinder from 'objects/finders/user-finder';
 import * as RepoFinder from 'objects/finders/repo-finder';
@@ -283,7 +283,7 @@ class StoryListSync extends PureComponent {
             let storyRecommendations = findRecommendations(recommendations, story);
             let storyRecipients = findRecipients(recipients, storyRecommendations);
             if (_.isEmpty(storyAuthors) && currentUser) {
-                storyAuthors = [ currentUser ];
+                storyAuthors = array(currentUser);
             }
             let editorProps = {
                 highlighting,
@@ -382,11 +382,11 @@ class StoryListSync extends PureComponent {
     }
 }
 
-let array = Memoize(function(object) {
+const array = memoizeWeak([], function(object) {
     return [ object ];
 });
 
-let sortStories = Memoize(function(stories, pendingStories) {
+const sortStories = memoizeWeak(null, function(stories, pendingStories) {
     if (!_.isEmpty(pendingStories)) {
         stories = _.slice(stories);
         _.each(pendingStories, (story) => {
@@ -398,7 +398,7 @@ let sortStories = Memoize(function(stories, pendingStories) {
     return _.orderBy(stories, [ getStoryTime, 'id' ], [ 'desc', 'desc' ]);
 });
 
-let attachDrafts = Memoize(function(stories, drafts, currentUser) {
+const attachDrafts = memoizeWeak([ null ], function(stories, drafts, currentUser) {
     // add new drafts (drafts includes published stories being edited)
     let newDrafts = _.filter(drafts, (story) => {
         return !story.published_version_id && !story.published;
@@ -421,23 +421,22 @@ let attachDrafts = Memoize(function(stories, drafts, currentUser) {
         newDrafts.unshift(null);
     }
     return _.concat(newDrafts, stories);
-}, [ null ]);
+});
 
 let getStoryTime = function(story) {
     return story.btime || story.ptime;
 };
 
-let findReactions = Memoize(function(reactions, story) {
+const findReactions = memoizeWeak(null, function(reactions, story) {
     if (story) {
         let list = _.filter(reactions, { story_id: story.id });
         if (!_.isEmpty(list)) {
             return list;
         }
     }
-    return [];
 });
 
-let findAuthors = Memoize(function(users, story) {
+const findAuthors = memoizeWeak(null, function(users, story) {
     if (story) {
         let hash = _.keyBy(users, 'id');
         let list = _.filter(_.map(story.user_ids, (userID) => {
@@ -450,7 +449,7 @@ let findAuthors = Memoize(function(users, story) {
     return [];
 });
 
-let findRespondents = Memoize(function(users, reactions) {
+const findRespondents = memoizeWeak(null, function(users, reactions) {
     let respondentIDs = _.uniq(_.map(reactions, 'user_id'));
     let hash = _.keyBy(users, 'id');
     let list = _.filter(_.map(respondentIDs, (userID) => {
@@ -462,7 +461,7 @@ let findRespondents = Memoize(function(users, reactions) {
     return [];
 });
 
-let findRecommendations = Memoize(function(recommendations, story) {
+const findRecommendations = memoizeWeak(null, function(recommendations, story) {
     if (story) {
         let storyID = story.published_version_id || story.id;
         let list = _.filter(recommendations, { story_id: storyID });
@@ -473,7 +472,7 @@ let findRecommendations = Memoize(function(recommendations, story) {
     return [];
 });
 
-let findRecipients = Memoize(function(recipients, recommendations) {
+const findRecipients = memoizeWeak(null, function(recipients, recommendations) {
     let list = _.filter(recipients, (recipient) => {
         return _.some(recommendations, { target_user_id: recipient.id });
     });

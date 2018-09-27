@@ -3,7 +3,7 @@ import Promise from 'bluebird';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as RepoFinder from 'objects/finders/repo-finder';
@@ -663,7 +663,7 @@ class ProjectListPageSync extends PureComponent {
     }
 }
 
-let sortProjects = Memoize(function(projects, users, repos, statistics, env, columns, directions) {
+let sortProjects = memoizeWeak(null, function(projects, users, repos, statistics, env, columns, directions) {
     let { p } = env.locale;
     columns = _.map(columns, (column) => {
         switch (column) {
@@ -702,24 +702,33 @@ let sortProjects = Memoize(function(projects, users, repos, statistics, env, col
     return _.orderBy(projects, columns, directions);
 });
 
-let filterProjects = Memoize(function(projects) {
-    return _.filter(projects, (project) => {
+let filterProjects = memoizeWeak(null, function(projects) {
+    let list = _.filter(projects, (project) => {
         return !project.deleted && !project.archived;
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
-let findRepos = Memoize(function(repos, project) {
+let findRepos = memoizeWeak(null, function(repos, project) {
     let hash = _.keyBy(repos, 'id');
-    return _.filter(_.map(project.repo_ids, (id) => {
+    let list = _.filter(_.map(project.repo_ids, (id) => {
         return hash[id];
     }));
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
-let findUsers = Memoize(function(users, project) {
+let findUsers = memoizeWeak(null, function(users, project) {
     let hash = _.keyBy(users, 'id');
-    return _.filter(_.map(project.user_ids, (id) => {
+    let list = _.filter(_.map(project.user_ids, (id) => {
         return hash[id];
     }));
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
 export {

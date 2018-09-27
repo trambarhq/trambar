@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as RoleFinder from 'objects/finders/role-finder';
@@ -622,7 +622,7 @@ class UserListPageSync extends PureComponent {
     }
 }
 
-let sortUsers = Memoize(function(users, roles, projects, env, columns, directions) {
+let sortUsers = memoizeWeak(null, function(users, roles, projects, env, columns, directions) {
     let { p } = env.locale;
     columns = _.map(columns, (column) => {
         switch (column) {
@@ -663,23 +663,32 @@ let sortUsers = Memoize(function(users, roles, projects, env, columns, direction
     return _.orderBy(users, columns, directions);
 });
 
-let filterUsers = Memoize(function(users) {
-    return _.filter(users, (user) => {
+let filterUsers = memoizeWeak(null, function(users) {
+    let list = _.filter(users, (user) => {
         return (user.disabled !== true) && (user.deleted !== true);
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
-let findProjects = Memoize(function(projects, user) {
-    return _.filter(projects, (project) => {
+let findProjects = memoizeWeak(null, function(projects, user) {
+    let list = _.filter(projects, (project) => {
         return _.includes(project.user_ids, user.id);
-    })
+    });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
-let findRoles = Memoize(function(roles, user) {
+let findRoles = memoizeWeak(null, function(roles, user) {
     let hash = _.keyBy(roles, 'id');
-    return _.filter(_.map(user.role_ids, (id) => {
+    let list = _.filter(_.map(user.role_ids, (id) => {
         return hash[id];
     }));
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
 export {

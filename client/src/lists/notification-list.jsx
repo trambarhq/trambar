@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import Merger from 'data/merger';
 import * as UserFinder from 'objects/finders/user-finder';
 import * as StoryFinder from 'objects/finders/story-finder';
@@ -279,15 +279,13 @@ class NotificationListSync extends PureComponent {
     }
 }
 
-let sortNotifications = Memoize(function(notifications) {
+const sortNotifications = memoizeWeak(null, function(notifications) {
     return _.orderBy(notifications, [ 'ctime' ], [ 'desc' ]);
 });
 
-let findUser = Memoize(function(users, notification) {
+const findUser = memoizeWeak(null, function(users, notification) {
     if (notification) {
         return _.find(users, { id: notification.user_id });
-    } else {
-        return null;
     }
 });
 

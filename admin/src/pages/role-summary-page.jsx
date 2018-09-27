@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as RoleFinder from 'objects/finders/role-finder';
 import * as SystemFinder from 'objects/finders/system-finder';
@@ -741,7 +741,7 @@ class RoleSummaryPageSync extends PureComponent {
     }
 }
 
-let sortUsers = Memoize(function(users, env) {
+let sortUsers = memoizeWeak(null, function(users, env) {
     let { p } = env.locale;
     let name = (user) => {
         return p(user.details.name) || user.username;

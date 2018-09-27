@@ -3,7 +3,7 @@ import Promise from 'bluebird';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import * as DateTracker from 'utils/date-tracker';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as ProjectUtils from 'objects/utils/project-utils';
@@ -422,8 +422,8 @@ class PeoplePageSync extends PureComponent {
     }
 }
 
-let findUsersWithRoles = Memoize(function(users, roleIds) {
-    return _.filter(users, (user) => {
+const findUsersWithRoles = memoizeWeak(null, function(users, roleIds) {
+    let list = _.filter(users, (user) => {
         return _.some(user.role_ids, (roleId) => {
             return _.includes(roleIds, roleId);
         });
@@ -431,10 +431,9 @@ let findUsersWithRoles = Memoize(function(users, roleIds) {
     if (!_.isEmpty(list)) {
         return list;
     }
-    return [];
 });
 
-let findUsersWithActivitiesOnDate = Memoize(function(users, statistics, date) {
+const findUsersWithActivitiesOnDate = memoizeWeak(null, function(users, statistics, date) {
     let list = _.filter(users, (user) => {
         let userStats = statistics[user.id];
         if (userStats) {
@@ -444,10 +443,9 @@ let findUsersWithActivitiesOnDate = Memoize(function(users, statistics, date) {
     if (!_.isEmpty(list)) {
         return list;
     }
-    return list;
 });
 
-let findUsersWithStoriesWithTags = Memoize(function(users, statistics, tags) {
+const findUsersWithStoriesWithTags = memoizeWeak(null, function(users, statistics, tags) {
     let list = _.filter(users, (user) => {
         let userStats = statistics[user.id];
         if (userStats) {
@@ -461,10 +459,9 @@ let findUsersWithStoriesWithTags = Memoize(function(users, statistics, tags) {
     if (!_.isEmpty(list)) {
         return list;
     }
-    return list;
 });
 
-let findUsersWithStories = Memoize(function(users, stories) {
+const findUsersWithStories = memoizeWeak(null, function(users, stories) {
     let list = _.filter(users, (user) => {
         return _.some(stories, (story) => {
             return _.includes(story.user_ids, user.id);
@@ -473,7 +470,6 @@ let findUsersWithStories = Memoize(function(users, stories) {
     if (!_.isEmpty(list)) {
         return list;
     }
-    return list;
 });
 
 export {

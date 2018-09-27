@@ -3,7 +3,7 @@ import Promise from 'promise';
 import React, { PureComponent } from 'react';
 import Chartist from 'widgets/chartist';
 import Moment from 'moment';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 
 import * as StoryTypes from 'objects/types/story-types';
 
@@ -143,7 +143,7 @@ class ActivityChart extends PureComponent {
     }
 }
 
-let getDateStrings = Memoize(function(startDate, endDate) {
+let getDateStrings = memoizeWeak(null, function(startDate, endDate) {
     let dates = [];
     for (let d = startDate.clone(); d <= endDate; d.add(1, 'day')) {
         dates.push(d.format('YYYY-MM-DD'));
@@ -151,7 +151,7 @@ let getDateStrings = Memoize(function(startDate, endDate) {
     return dates;
 });
 
-let getDateLabels = Memoize(function(startDate, endDate) {
+let getDateLabels = memoizeWeak(null, function(startDate, endDate) {
     let labels = [];
     for (let d = startDate.clone(); d <= endDate; d.add(1, 'month')) {
         labels.push(d.format('ll'));
@@ -164,7 +164,7 @@ let getDateLabels = Memoize(function(startDate, endDate) {
     return labels;
 });
 
-let getActivitySeries = Memoize(function(activities, dates) {
+let getActivitySeries = memoizeWeak(null, function(activities, dates) {
     return _.map(StoryTypes, (type) => {
         // don't include series that are completely empty
         let empty = true;
@@ -179,7 +179,7 @@ let getActivitySeries = Memoize(function(activities, dates) {
     });
 });
 
-let getUpperRange = Memoize(function(series, additive) {
+let getUpperRange = memoizeWeak(0, (function(series, additive) {
     let highest = 0;
     if (additive) {
         let sums = [];

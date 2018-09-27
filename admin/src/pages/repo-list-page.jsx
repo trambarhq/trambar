@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 import * as ProjectFinder from 'objects/finders/project-finder';
@@ -618,7 +618,7 @@ class RepoListPageSync extends PureComponent {
     }
 }
 
-let sortRepos = Memoize(function(repos, servers, statistics, env, columns, directions) {
+let sortRepos = memoizeWeak(null, function(repos, servers, statistics, env, columns, directions) {
     let { t, p } = env.locale;
     columns = _.map(columns, (column) => {
         switch (column) {
@@ -659,21 +659,25 @@ let sortRepos = Memoize(function(repos, servers, statistics, env, columns, direc
     return _.orderBy(repos, columns, directions);
 });
 
-let findServer = Memoize(function(servers, repo) {
-    return _.find(servers, (server) => {
+let findServer = memoizeWeak(null, function(servers, repo) {
+    let list = _.find(servers, (server) => {
         let link = ExternalDataUtils.findLink(repo, server);
         return !!link;
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
-let findRepos = Memoize(function(repos, project) {
+let findRepos = memoizeWeak(null, function(repos, project) {
     if (project) {
         let hash = _.keyBy(repos, 'id');
-        return _.filter(_.map(project.repo_ids, (id) => {
+        let list = _.filter(_.map(project.repo_ids, (id) => {
             return hash[id];
         }));
-    } else {
-        return [];
+        if (!_.isEmpty(list)) {
+            return list;
+        }
     }
 });
 

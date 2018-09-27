@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import Moment from 'moment';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import * as DateUtils from 'utils/date-utils';
 
 /**
@@ -358,7 +358,7 @@ function isValidRange(dateRange) {
     return dateRange && !!dateRange.details.start_time && !!dateRange.details.end_time;
 }
 
-let summarizeStatistics = Memoize(function(dailyActivities, dateRange, project) {
+let summarizeStatistics = memoizeWeak(null, function(dailyActivities, dateRange, project) {
     let lastMonth = Moment().subtract(1, 'month').format('YYYY-MM');
     let thisMonth = Moment().format('YYYY-MM');
     let dailyStats = mergeDailyActivities(dailyActivities);

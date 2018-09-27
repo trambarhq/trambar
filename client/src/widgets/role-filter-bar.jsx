@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as RoleFinder from 'objects/finders/role-finder';
 import * as UserFinder from 'objects/finders/user-finder';
@@ -119,14 +119,13 @@ class RoleFilterBarSync extends PureComponent {
     }
 }
 
-let findUsers = Memoize(function(users, role) {
+const findUsers = memoizeWeak(null, function(users, role) {
     let list = _.filter(users, (user) => {
         return _.includes(user.role_ids, role.id);
     });
     if (!_.isEmpty(list)) {
         return list;
     }
-    return list;
 });
 
 export {

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as UserFinder from 'objects/finders/user-finder';
 import * as UserUtils from 'objects/utils/user-utils';
@@ -153,7 +153,7 @@ function User(props) {
     );
 }
 
-let sortUsers = Memoize(function(users, env) {
+const sortUsers = memoizeWeak(null, function(users, env) {
     let { p } = env.locale;
     let name = (user) => {
         return p(user.details.name);

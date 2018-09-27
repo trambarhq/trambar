@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import Merger from 'data/merger';
 import * as UserFinder from 'objects/finders/user-finder';
 import * as StoryFinder from 'objects/finders/story-finder';
@@ -265,7 +265,7 @@ class BookmarkListSync extends PureComponent {
             let storyRecommendations = findRecommendations(recommendations, story);
             let storyRecipients = findRecipients(recipients, recommendations);
             if (!story) {
-                authors = [ currentUser ];
+                authors = array(currentUser);
             }
             let editorProps = {
                 story,
@@ -355,33 +355,30 @@ class BookmarkListSync extends PureComponent {
     }
 }
 
-let array = Memoize(function(object) {
+const array = memoizeWeak([], function(object) {
     return [ object ];
 });
 
-let sortBookmark = Memoize(function(bookmarks) {
+const sortBookmark = memoizeWeak(null, function(bookmarks) {
     return _.orderBy(bookmarks, [ 'id' ], [ 'desc' ]);
 });
 
-let findStory = Memoize(function(stories, bookmark) {
+const findStory = memoizeWeak(null, function(stories, bookmark) {
     if (bookmark) {
         return _.find(stories, { id: bookmark.story_id });
-    } else {
-        return null;
     }
 });
 
-let findReactions = Memoize(function(reactions, story) {
+const findReactions = memoizeWeak(null, function(reactions, story) {
     if (story) {
         let list = _.filter(reactions, { story_id: story.id });
         if (!_.isEmpty(list)) {
             return list;
         }
     }
-    return [];
 });
 
-let findAuthors = Memoize(function(users, story) {
+const findAuthors = memoizeWeak(null, function(users, story) {
     if (story) {
         let list = _.filter(_.map(story.user_ids, (userID) => {
            return _.find(users, { id: userID });
@@ -390,11 +387,10 @@ let findAuthors = Memoize(function(users, story) {
             return list;
         }
     }
-    return [];
 });
 let findSenders = findAuthors;
 
-let findRespondents = Memoize(function(users, reactions) {
+const findRespondents = memoizeWeak(null, function(users, reactions) {
     let respondentIDs = _.uniq(_.map(reactions, 'user_id'));
     let list = _.filter(_.map(respondentIDs, (userID) => {
         return _.find(users, { id: userID });
@@ -402,10 +398,9 @@ let findRespondents = Memoize(function(users, reactions) {
     if (!_.isEmpty(list)) {
         return list;
     }
-    return [];
-})
+});
 
-let findRecommendations = Memoize(function(recommendations, story) {
+const findRecommendations = memoizeWeak(null, function(recommendations, story) {
     if (story) {
         let storyID = story.published_version_id || story.id;
         let list = _.filter(recommendations, { story_id: storyID });
@@ -413,17 +408,15 @@ let findRecommendations = Memoize(function(recommendations, story) {
             return list;
         }
     }
-    return [];
 });
 
-let findRecipients = Memoize(function(recipients, recommendations) {
+const findRecipients = memoizeWeak(null, function(recipients, recommendations) {
     let list = _.filter(recipients, (recipient) => {
         return _.some(recommendations, { target_user_id: recipient.id });
     });
     if (!_.isEmpty(list)) {
         return list;
     }
-    return [];
 });
 
 function getAuthorIDs(stories, currentUser) {

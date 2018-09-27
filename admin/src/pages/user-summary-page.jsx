@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as RoleFinder from 'objects/finders/role-finder';
@@ -1126,7 +1126,7 @@ let emptyUser = {
     settings: UserSettings.default,
 };
 
-let sortRoles = Memoize(function(roles, env) {
+let sortRoles = memoizeWeak(null, function(roles, env) {
     let { p } = env.locale;
     let name = (role) => {
         return p(role.details.title) || role.name;
@@ -1134,7 +1134,7 @@ let sortRoles = Memoize(function(roles, env) {
     return _.sortBy(roles, name);
 });
 
-let findRoles = Memoize(function(roles, user) {
+let findRoles = memoizeWeak(null, function(roles, user) {
     if (user.role_ids) {
         let hash = _.keyBy(roles, 'id');
         return _.filter(_.map(user.role_ids, (id) => {

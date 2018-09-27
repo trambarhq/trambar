@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as TaskFinder from 'objects/finders/task-finder';
 
@@ -374,7 +374,7 @@ class TaskListSync extends PureComponent {
     }
 }
 
-let sortTasks = Memoize(function(tasks) {
+let sortTasks = memoizeWeak(null, function(tasks) {
     return _.orderBy(tasks, 'id', 'desc');
 });
 

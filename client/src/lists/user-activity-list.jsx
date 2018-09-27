@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import * as DateTracker from 'utils/date-tracker';
 
 // widgets
@@ -142,9 +142,8 @@ class UserActivityList extends PureComponent {
     }
 }
 
-let sortStories = Memoize(function(stories) {
-    stories = _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
-    return stories;
+const sortStories = memoizeWeak(null, function(stories) {
+    return _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
 });
 
 let getStoryTime = function(story) {

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as FocusManager from 'utils/focus-manager';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
@@ -919,17 +919,17 @@ let defaultOptions = {
     keepBookmark: undefined,
 };
 
-let findRepo = Memoize(function(repos, story) {
+const findRepo = memoizeWeak(null, function(repos, story) {
     return _.find(repos, (repo) => {
         let link = ExternalDataUtils.findLinkByRelative(story, repo, 'project');
         return !!link;
     });
 });
 
-let countRespondents = Memoize(function(reactions) {
+const countRespondents = memoizeWeak(null, function(reactions) {
     let userIds = _.map(reactions, 'user_id');
     return _.size(_.uniq(userIds));
-}, 0);
+});
 
 export {
     StoryView as default,

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as RoleFinder from 'objects/finders/role-finder';
 import * as UserFinder from 'objects/finders/user-finder';
@@ -505,13 +505,16 @@ class RoleListPageSync extends PureComponent {
     }
 }
 
-let filterRoles = Memoize(function(roles) {
-    return _.filter(roles, (role) => {
+let filterRoles = memoizeWeak(null, function(roles) {
+    let list = _.filter(roles, (role) => {
         return !role.deleted && !role.disabled;
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
-let sortRoles = Memoize(function(roles, users, env, columns, directions) {
+let sortRoles = memoizeWeak(null, function(roles, users, env, columns, directions) {
     let { p } = env.locale;
     columns = _.map(columns, (column) => {
         switch (column) {
@@ -526,10 +529,13 @@ let sortRoles = Memoize(function(roles, users, env, columns, directions) {
     return _.orderBy(roles, columns, directions);
 });
 
-let findUsers = Memoize(function(users, role) {
-    return _.filter(users, (user) => {
+let findUsers = memoizeWeak(null, function(users, role) {
+    let list = _.filter(users, (user) => {
         return _.includes(user.role_ids, role.id);
-    })
+    });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
 export {

@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as ServerFinder from 'objects/finders/server-finder';
 import * as UserFinder from 'objects/finders/user-finder';
@@ -572,13 +572,13 @@ class ServerListPageSync extends PureComponent {
     }
 }
 
-let filterServers = Memoize(function(servers) {
+let filterServers = memoizeWeak(null, function(servers) {
     return _.filter(servers, (server) => {
         return !server.deleted && !server.disabled;
     });
 });
 
-let sortServers = Memoize(function(servers, users, env, columns, directions) {
+let sortServers = memoizeWeak(null, function(servers, users, env, columns, directions) {
     let { t, p } = env.locale;
     columns = _.map(columns, (column) => {
         switch (column) {
@@ -630,14 +630,17 @@ function hasAPICredentials(server) {
     return false;
 }
 
-let findUsers = Memoize(function(users, server) {
-    return _.filter(users, (user) => {
+let findUsers = memoizeWeak(null, function(users, server) {
+    let list = _.filter(users, (user) => {
         return _.some(user.external, (link) => {
             if (link.server_id === server.id) {
                 return true;
             }
         });
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
 export {

@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import Chartist, { Svg } from 'widgets/chartist';
 import Moment from 'moment';
-import Memoize from 'utils/memoize';
+import { memoizeWeak, memoizeStrong } from 'utils/memoize';
 import * as StoryTypes from 'objects/types/story-types';
 
 import './user-statistics.scss';
@@ -346,7 +346,7 @@ class UserStatistics extends PureComponent {
     }
 }
 
-let getActivityIndices = Memoize(function(activities, dates) {
+const getActivityIndices = memoizeWeak(null, function(activities, dates) {
     let present = {};
     _.each(dates, (date) => {
         let counts = activities[date];
@@ -365,7 +365,7 @@ let getActivityIndices = Memoize(function(activities, dates) {
     return indices;
 });
 
-let getActivitySeries = Memoize(function(activities, dates) {
+const getActivitySeries = memoizeWeak(null, function(activities, dates) {
     return _.map(StoryTypes, (type) => {
         // don't include series that are completely empty
         let empty = true;
@@ -386,7 +386,7 @@ let getActivitySeries = Memoize(function(activities, dates) {
     });
 });
 
-let getUpperRange = Memoize(function(series, additive) {
+const getUpperRange = memoizeWeak(null, function(series, additive) {
     let highest = 0;
     if (additive) {
         let sums = [];
@@ -422,19 +422,19 @@ let getUpperRange = Memoize(function(series, additive) {
     }
 });
 
-let getDateLabels = Memoize(function(dates, localeCode) {
+const getDateLabels = memoizeWeak(null, function(dates, localeCode) {
     return _.map(dates, (date) => {
         return Moment(date).locale(localeCode).format('l');
     });
 });
 
-let getDateOfWeekLabels = Memoize(function(dates, localeCode) {
+const getDateOfWeekLabels = memoizeWeak(null, function(dates, localeCode) {
     return _.map(dates, (date) => {
         return Moment(date).locale(localeCode).format('dd');
     });
 });
 
-let getDateOfMonthLabels = Memoize(function(dates, localeCode) {
+const getDateOfMonthLabels = memoizeWeak(null, function(dates, localeCode) {
     return _.map(dates, (date) => {
         let m = Moment(date);
         let d = m.date();
@@ -446,7 +446,7 @@ let getDateOfMonthLabels = Memoize(function(dates, localeCode) {
     });
 });
 
-let getMonthLabels = Memoize(function(dates, localeCode) {
+const getMonthLabels = memoizeWeak(null, function(dates, localeCode) {
     return _.map(dates, (date) => {
         let m = Moment(date);
         let d = m.date();
@@ -462,7 +462,7 @@ function getDateString(m) {
     return m.format('YYYY-MM-DD');
 }
 
-let getDates = Memoize(function(start, end) {
+const getDates = memoizeStrong([], function(start, end) {
     let s = Moment(start);
     let e = Moment(end);
     let dates = [];
@@ -473,27 +473,27 @@ let getDates = Memoize(function(start, end) {
         m.add(1, 'day');
     }
     return dates;
-}, [], false);
+});
 
-let getTwoWeeks = Memoize(function(date, offset) {
+const getTwoWeeks = memoizeStrong([], function(date, offset) {
     let m = Moment(date).add(offset, 'day');
     let end = getDateString(m);
     let start = getDateString(m.subtract(13, 'day'));
     return getDates(start, end);
-}, [], false);
+});
 
-let getMonth = Memoize(function(date) {
+const getMonth = memoizeStrong([], function(date) {
     let m = Moment(date).startOf('month');
     let start = getDateString(m);
     let end = getDateString(Moment(date).endOf('month'));
     return getDates(start, end);
-}, [], false);
+});
 
-let getMonths = Memoize(function(start, end) {
+const getMonths = memoizeStrong([], function(start, end) {
     start = getDateString(Moment(start).startOf('month'));
     end = getDateString(Moment(end).endOf('month'));
     return getDates(start, end);
-}, [], false);
+});
 
 function LegendItem(props) {
     return (

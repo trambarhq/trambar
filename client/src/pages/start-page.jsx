@@ -3,7 +3,7 @@ import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import HTTPRequest from 'transport/http-request';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import UniversalLink from 'routing/universal-link';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as SystemFinder from 'objects/finders/system-finder';
@@ -1140,14 +1140,14 @@ function getServerIcon(type) {
     }
 }
 
-let sortProjects = Memoize(function(projects, env) {
+const sortProjects = memoizeWeak(null, function(projects, env) {
     let { p } = env.locale;
     return _.sortBy(projects, (project) => {
         return p(project.details.title) || project.name;
     });
 });
 
-let sortServers = Memoize(function(servers, env) {
+const sortServers = memoizeWeak(null, function(servers, env) {
     let { p } = env.locale;
     return _.sortBy(servers, (server) => {
         return p(server.details.title) || server.name;

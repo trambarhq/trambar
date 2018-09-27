@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import * as DeviceManager from 'media/device-manager';
 import ComponentRefs from 'utils/component-refs';
 import * as TagScanner from 'utils/tag-scanner';
@@ -580,7 +580,7 @@ class ReactionEditor extends PureComponent {
  *
  * @return {Reaction}
  */
-let createBlankComment = Memoize(function(story, currentUser) {
+const createBlankComment = memoizeWeak(null, function(story, currentUser) {
     return {
         type: 'comment',
         story_id: story.id,

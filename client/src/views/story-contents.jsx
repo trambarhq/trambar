@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import Memoize from 'utils/memoize';
+import { memoizeWeak } from 'utils/memoize';
 import * as ListParser from 'utils/list-parser';
 import * as Markdown from 'utils/markdown';
 import * as PlainText from 'utils/plain-text';
@@ -1072,7 +1072,7 @@ class StoryContents extends PureComponent {
     }
 }
 
-let countVotes = Memoize(function(reactions) {
+const countVotes = memoizeWeak(null, function(reactions) {
     let tallies = {};
     _.each(reactions, (reaction) => {
         if (reaction.type === 'vote' ) {
@@ -1089,22 +1089,20 @@ let countVotes = Memoize(function(reactions) {
     return tallies;
 });
 
-let getUserVote = Memoize(function(reactions, user) {
+const getUserVote = memoizeWeak(null, function(reactions, user) {
     if (user) {
         return _.find(reactions, { type: 'vote', user_id: user.id })
-    } else {
-        return null;
     }
 });
 
-let getZoomableResources = Memoize(function(resources) {
+const getZoomableResources = memoizeWeak(null, function(resources) {
     return _.filter(resources, (res) => {
         switch (res.type) {
             case 'image':
             case 'video':
                 return true;
         }
-    })
+    });
 });
 
 /**
@@ -1118,7 +1116,7 @@ function chooseAudioVersion(res) {
     return _.first(_.keys(res.versions)) || null;
 }
 
-let sortComponents = Memoize(function(components, env) {
+const sortComponents = memoizeWeak(null, function(components, env) {
     let { p } = env.locale;
     return _.sortBy(components, (component) => {
         return _.toLower(p(component.text));

@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import Memoize from 'utils/memoize';
 import * as ListParser from 'utils/list-parser';
 import * as Markdown from 'utils/markdown';
 import * as PlainText from 'utils/plain-text';
