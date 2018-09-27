@@ -5,7 +5,12 @@ import QRCodeGenerator from 'qrcode';
 class QRCode extends PureComponent {
     static displayName = 'QRCode';
 
-
+    constructor(props) {
+        super(props);
+        this.components = ComponentRefs({
+            canvas: HTMLCanvasElement,
+        });
+    }
 
     /**
      * Render component

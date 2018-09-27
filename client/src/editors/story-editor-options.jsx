@@ -263,6 +263,7 @@ class StoryEditorOptions extends PureComponent {
      */
     handleBookmarkClick = (evt) => {
         let { options, currentUser } = this.props;
+        options = _.clone(options);
         let userID = currentUser.id;
         if (_.includes(options.bookmarkRecipients, userID)) {
             options.bookmarkRecipients = _.difference(options.bookmarkRecipients, [ userID ]);

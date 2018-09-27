@@ -337,7 +337,7 @@ class PeoplePageSync extends PureComponent {
             listings,
             stories,
             currentUser,
-            date,
+            selectedDate: date,
             link: (selectedUserID) ? 'team' : 'user',
             database,
             route,

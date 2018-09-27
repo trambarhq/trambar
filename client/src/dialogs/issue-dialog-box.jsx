@@ -322,11 +322,15 @@ class IssueDialogBox extends PureComponent {
      * Focus text field on mount
      */
     componentDidMount() {
-        let { textField } = this.components;
-        // only if the title is currently empty
-        if (!this.getIssueProperty('title')) {
-            textField.focus();
-        }
+        setTimeout(() => {
+            let { textField } = this.components;
+            // only if the title is currently empty
+            if (!this.getIssueProperty('title')) {
+                if (textField) {
+                    textField.focus();
+                }
+            }
+        }, 50)
     }
 
     /**

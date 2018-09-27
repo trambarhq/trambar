@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import MarkGor from 'mark-gor/react';
-import ListParser from 'utils/list-parser';
-import PlainText from 'utils/plain-text';
+import * as ListParser from 'utils/list-parser';
+import * as PlainText from 'utils/plain-text';
 
 // widgets
 import ResourceView from 'widgets/resource-view';

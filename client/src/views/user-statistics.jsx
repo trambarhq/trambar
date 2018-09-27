@@ -341,7 +341,7 @@ class UserStatistics extends PureComponent {
         let date = evt.target.getAttribute('data-date');
         if (date) {
             // go to the user's personal page on that date
-            route.push('person-page', { userID: user.id, date });
+            route.push('person-page', { selectedUserID: user.id, date });
         }
     }
 }

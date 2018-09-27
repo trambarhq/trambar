@@ -9,6 +9,7 @@ function register(component, props) {
     // see if a request for focus has been made
     requests = _.filter(requests, (request) => {
         if (_.isMatch(props, request)) {
+            debugger;
             component.focus();
             return false;
         } else {
@@ -26,6 +27,7 @@ function unregister(component) {
 function focus(props) {
     let entry = _.find(entries, { props });
     if (entry) {
+        debugger;
         entry.component.focus()
     } else {
         // store the request and set focus when component registers itself

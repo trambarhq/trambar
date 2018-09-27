@@ -180,7 +180,7 @@ class UserViewOptions extends PureComponent {
      */
     renderPhoneDialog() {
         let { env, user } = this.props;
-        let { renderingPhoneDialog } = this.state;
+        let { showingPhoneDialog, renderingPhoneDialog } = this.state;
         if (!renderingPhoneDialog) {
             return null;
         }

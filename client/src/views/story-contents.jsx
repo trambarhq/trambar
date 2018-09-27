@@ -313,8 +313,8 @@ class StoryContents extends PureComponent {
         let { env, story, authors, repo } = this.props;
         let { t, p, g } = env.locale;
         let { action } = story.details;
-        let name = UserUtils.getDisplayName(authors[0], env);
-        let gender = UserUtils.getGender(authors[0]);
+        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
+        let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         let repoName = RepoUtils.getDisplayName(repo, env);
         let url = RepoUtils.getURL(repo);
@@ -338,8 +338,8 @@ class StoryContents extends PureComponent {
         let { env, story, authors, repo } = this.props;
         let { t, p, g } = env.locale;
         let { action } = story.details;
-        let name = UserUtils.getDisplayName(authors[0], env);
-        let gender = UserUtils.getGender(authors[0]);
+        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
+        let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         let repoName = RepoUtils.getDisplayName(repo, env);
         let url = RepoUtils.getURL(repo);
@@ -363,8 +363,8 @@ class StoryContents extends PureComponent {
         let { env, story, authors, currentUser, repo } = this.props;
         let { t, p, g } = env.locale;
         let { title } = story.details;
-        let name = UserUtils.getDisplayName(authors[0], env);
-        let gender = UserUtils.getGender(authors[0]);
+        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
+        let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         let number = RepoUtils.getIssueNumber(repo, story);
         let url, target;
@@ -394,8 +394,8 @@ class StoryContents extends PureComponent {
         let { env, story, authors, repo, currentUser } = this.props;
         let { t, p, g } = env.locale;
         let { title } = story.details;
-        let name = UserUtils.getDisplayName(authors[0], env);
-        let gender = UserUtils.getGender(authors[0]);
+        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
+        let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         let url;
         if (UserUtils.canAccessRepo(currentUser, repo)) {
@@ -421,8 +421,8 @@ class StoryContents extends PureComponent {
         let { env, story, authors, repo, currentUser } = this.props;
         let { t, p, g } = env.locale;
         let { source_branch: branch1, branch: branch2 } = story.details;
-        let name = UserUtils.getDisplayName(authors[0], env);
-        let gender = UserUtils.getGender(authors[0]);
+        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
+        let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         let url;
         if (UserUtils.canAccessRepo(currentUser, repo)) {
@@ -450,8 +450,8 @@ class StoryContents extends PureComponent {
         let { env, story, authors } = this.props;
         let { t, p, g } = env.locale;
         let { action, title, url } = story.details;
-        let name = UserUtils.getDisplayName(authors[0], env);
-        let gender = UserUtils.getGender(authors[0]);
+        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
+        let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         title = _.capitalize(title);
         if (action === 'delete') {
@@ -515,8 +515,8 @@ class StoryContents extends PureComponent {
         let { env, story, authors, repo, currentUser } = this.props;
         let { t, g } = env.locale;
         let { branch } = story.details;
-        let name = UserUtils.getDisplayName(authors[0], env);
-        let gender = UserUtils.getGender(authors[0]);
+        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
+        let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         let repoName = RepoUtils.getDisplayName(repo, env);
         let url;
