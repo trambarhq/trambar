@@ -138,6 +138,6 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     CollapsibleContainer.propTypes = {
-        open: React.PropTypes.bool,
+        open: PropTypes.bool,
     };
 }

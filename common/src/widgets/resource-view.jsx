@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { Component } from 'react';
 import * as MediaLoader from 'media/media-loader';
 import * as ImageCropping from 'media/image-cropping';
 
@@ -8,7 +8,7 @@ import VectorView from 'media/vector-view';
 
 require('./resource-view.scss');
 
-class ResourceView extends PureComponent {
+class ResourceView extends Component {
     static displayName = 'ResourceView';
 
     constructor(props) {

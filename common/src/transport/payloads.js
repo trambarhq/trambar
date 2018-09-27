@@ -80,11 +80,12 @@ class Payloads {
      * Create a new instance of object with a destination overriding that indicated
      * by the current route
      *
-     * @param  {Object} destination
+     * @param  {Object} newDestination
      *
      * @return {Payloads}
      */
-    override(destination) {
+    override(newDestination) {
+        let destination = _.assign({}, this.destination, newDestination);
         return new Payloads(this.payloadManager, destination);
     }
 }

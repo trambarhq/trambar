@@ -65,7 +65,11 @@ class UserSelectionListSync extends PureComponent {
         users = sortUsers(users, env);
         return (
             <div className="user-selection-list">
-                {_.map(users, this.renderUser)}
+            {
+                _.map(users, (user) => {
+                    return this.renderUser(user);
+                })
+            }
             </div>
         );
     }
