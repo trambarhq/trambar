@@ -1,9 +1,11 @@
+@import 'colors';
+
 * {
     box-sizing: border-box;
     font-family: sans-serif;
 
     &:focus {
-        outline-color: #fca326;
+        outline-color: $focus-outline-color;
     }
 }
 
@@ -40,7 +42,7 @@ body {
     flex-direction: column;
     align-items: center;
     position: relative;
-    background-color: #4d3936;
+    background-color: $viewport-background-color;
 }
 
 .single-col {
@@ -53,8 +55,8 @@ body {
 
 SELECT {
     border-radius: 0;
-    background-color: #eeeeee;
-    border: 1px solid #444444;
+    background-color: $text-field-background-color;
+    border: 1px solid $text-field-border-color;
     user-select: auto;
     -webkit-appearance: none;
 
@@ -71,8 +73,8 @@ INPUT[type=password],
 INPUT[type=number]
  {
     border-radius: 0;
-    background-color: #eeeeee;
-    border: 1px solid #444444;
+    background-color: $text-field-background-color;
+    border: 1px solid $text-field-border-color;
     padding: 2px 2px 2px 4px;
     font-size: 1em;
     user-select: text;
