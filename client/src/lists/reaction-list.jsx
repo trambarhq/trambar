@@ -7,6 +7,7 @@ import Merger from 'data/merger';
 import ReactionView from 'views/reaction-view';
 import ReactionEditor from 'editors/reaction-editor';
 import SmartList from 'widgets/smart-list';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import './reaction-list.scss';
 
@@ -145,7 +146,11 @@ class ReactionList extends PureComponent {
                 env,
                 onFinish,
             };
-            return <ReactionEditor key={key} {...props} />
+            return (
+                <ErrorBoundary env={env}>
+                    <ReactionEditor key={key} {...props} />
+                </ErrorBoundary>
+            );
         } else {
             let respondent = findRespondent(respondents, reaction);
             let props = {
@@ -160,7 +165,11 @@ class ReactionList extends PureComponent {
                 route,
                 env,
             };
-            return <ReactionView key={reaction.id} {...props} />
+            return (
+                <ErrorBoundary env={env}>
+                    <ReactionView key={reaction.id} {...props} />
+                </ErrorBoundary>
+            );
         }
     }
 

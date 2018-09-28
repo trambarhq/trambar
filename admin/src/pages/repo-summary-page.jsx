@@ -18,6 +18,7 @@ import ActivityChart from 'widgets/activity-chart';
 import ActionConfirmation from 'widgets/action-confirmation';
 import DataLossWarning from 'widgets/data-loss-warning';
 import UnexpectedError from 'widgets/unexpected-error';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import './repo-summary-page.scss';
 
@@ -380,9 +381,11 @@ class RepoSummaryPageSync extends PureComponent {
         };
         return (
             <div className="statistics">
-                <ActivityChart {...chartProps}>
-                    {t('repo-summary-statistics')}
-                </ActivityChart>
+                <ErrorBoundary env={env}>
+                    <ActivityChart {...chartProps}>
+                        {t('repo-summary-statistics')}
+                    </ActivityChart>
+                </ErrorBoundary>
             </div>
         );
     }

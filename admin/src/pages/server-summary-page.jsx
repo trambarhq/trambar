@@ -25,6 +25,7 @@ import InputError from 'widgets/input-error';
 import ActionConfirmation from 'widgets/action-confirmation';
 import DataLossWarning from 'widgets/data-loss-warning';
 import UnexpectedError from 'widgets/unexpected-error';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import './server-summary-page.scss';
 
@@ -1090,7 +1091,9 @@ class ServerSummaryPageSync extends PureComponent {
         return (
             <div className="task-history">
                 <h2>{t('server-summary-activities')}</h2>
-                <TaskList {...historyProps} />
+                <ErrorBoundary env={env}>
+                    <TaskList {...historyProps} />
+                </ErrorBoundary>
             </div>
         );
     }

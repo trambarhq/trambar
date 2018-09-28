@@ -18,6 +18,7 @@ import TopNavigation from 'widgets/top-navigation';
 import BottomNavigation from 'widgets/bottom-navigation';
 import UploadProgress from 'widgets/upload-progress';
 import NotificationView from 'views/notification-view';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import 'utils/lodash-extra';
 import 'application.scss';
@@ -137,7 +138,9 @@ class Application extends PureComponent {
             <div className={className} id="application">
                 <TopNavigation {...topNavProps} />
                 <section className="page-view-port">
-                    <CurrentPage key={key} {...pageProps} />
+                    <ErrorBoundary env={env}>
+                        <CurrentPage key={key} {...pageProps} />
+                    </ErrorBoundary>
                 </section>
                 <BottomNavigation {...bottomNavProps} />
                 {this.renderUploadProgress()}
@@ -183,6 +186,17 @@ class Application extends PureComponent {
         notifier.addEventListener('alert', this.handleAlertClick);
 
         window.addEventListener('beforeunload', this.handleBeforeUnload);
+    }
+
+    /**
+     * Catch errors during rendering cycle
+     *
+     * @param  {error} error
+     * @param  {Object} info
+     */
+    componentDidCatch(error, info) {
+        console.error(error);
+        console.error(info.componentStack);
     }
 
     /**

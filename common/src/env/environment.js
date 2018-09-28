@@ -358,6 +358,11 @@ class Environment {
         let versions = _.sortBy(res.versions, [ below, above ]);
         return _.first(versions) || null;
     }
+
+    logError(err, info) {
+        console.error(err);
+        console.info(info.componentStack);
+    }
 }
 
 function decodeLength(s) {

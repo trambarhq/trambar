@@ -21,6 +21,7 @@ import InputError from 'widgets/input-error';
 import ActionConfirmation from 'widgets/action-confirmation';
 import DataLossWarning from 'widgets/data-loss-warning';
 import UnexpectedError from 'widgets/unexpected-error';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import './project-summary-page.scss';
 
@@ -586,9 +587,11 @@ class ProjectSummaryPageSync extends PureComponent {
         };
         return (
             <div className="statistics">
-                <ActivityChart {...chartProps}>
-                    {t('project-summary-statistics')}
-                </ActivityChart>
+                <ErrorBoundary env={env}>
+                    <ActivityChart {...chartProps}>
+                        {t('project-summary-statistics')}
+                    </ActivityChart>
+                </ErrorBoundary>
             </div>
         );
     }

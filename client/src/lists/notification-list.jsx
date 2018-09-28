@@ -10,6 +10,7 @@ import * as StoryFinder from 'objects/finders/story-finder';
 import SmartList from 'widgets/smart-list';
 import NotificationView from 'views/notification-view';
 import NewItemsAlert from 'widgets/new-items-alert';
+import ErrorBoundary from 'widgets/error-boundary';
 
 require('./notification-list.scss');
 
@@ -208,7 +209,11 @@ class NotificationListSync extends PureComponent {
                 env,
                 onClick: this.handleNotificationClick,
             };
-            return <NotificationView key={notification.id} {...props} />;
+            return (
+                <ErrorBoundary env={env}>
+                    <NotificationView key={notification.id} {...props} />
+                </ErrorBoundary>
+            );
         } else {
             let height = evt.previousHeight || evt.estimatedHeight || 25;
             return <div className="notification-view" style={{ height }} />

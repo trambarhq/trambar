@@ -14,6 +14,7 @@ import SmartList from 'widgets/smart-list';
 import StoryView from 'views/story-view';
 import StoryEditor from 'editors/story-editor';
 import NewItemsAlert from 'widgets/new-items-alert';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import './story-list.scss';
 
@@ -299,7 +300,11 @@ class StoryListSync extends PureComponent {
                 route,
                 env,
             };
-            return <StoryEditor {...editorProps}/>
+            return (
+                <ErrorBoundary env={env}>
+                    <StoryEditor {...editorProps}/>
+                </ErrorBoundary>
+            );
         } else {
             if (evt.needed) {
                 let storyReactions = findReactions(reactions, story);
@@ -328,7 +333,11 @@ class StoryListSync extends PureComponent {
                     env,
                     onBump: this.handleStoryBump,
                 };
-                return <StoryView {...storyProps} />
+                return (
+                    <ErrorBoundary env={env}>
+                        <StoryView {...storyProps} />
+                    </ErrorBoundary>
+                );
             } else {
                 let height = evt.previousHeight || evt.estimatedHeight || 100;
                 return <div className="story-view" style={{ height }} />

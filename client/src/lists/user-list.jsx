@@ -8,6 +8,7 @@ import * as DateUtils from 'utils/date-utils';
 // widgets
 import SmartList from 'widgets/smart-list';
 import UserView from 'views/user-view';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import './user-list.scss';
 
@@ -108,7 +109,11 @@ class UserList extends PureComponent {
                 link,
                 onOptionChange: this.handleOptionChange,
             };
-            return <UserView {...userProps} />;
+            return (
+                <ErrorBoundary env={env}>
+                    <UserView {...userProps} />
+                </ErrorBoundary>
+            );
         } else {
             let height = evt.previousHeight || evt.estimatedHeight || 100;
             return <div className="user-view" style={{ height }} />;

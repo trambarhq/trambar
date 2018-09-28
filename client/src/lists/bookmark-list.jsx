@@ -16,6 +16,7 @@ import BookmarkView from 'views/bookmark-view';
 import StoryView from 'views/story-view';
 import StoryEditor from 'editors/story-editor';
 import NewItemsAlert from 'widgets/new-items-alert';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import './bookmark-list.scss';
 
@@ -279,9 +280,11 @@ class BookmarkListSync extends PureComponent {
                 env,
             };
             return (
-                <BookmarkView {...bookmarkProps}>
-                    <StoryEditor {...editorProps}/>
-                </BookmarkView>
+                <ErrorBoundary env={env}>
+                    <BookmarkView {...bookmarkProps}>
+                        <StoryEditor {...editorProps}/>
+                    </BookmarkView>
+                </ErrorBoundary>
             );
         } else {
             if (evt.needed) {
@@ -307,9 +310,11 @@ class BookmarkListSync extends PureComponent {
                     env,
                 };
                 return (
-                    <BookmarkView {...bookmarkProps}>
-                        <StoryView {...storyProps} />
-                    </BookmarkView>
+                    <ErrorBoundary env={env}>
+                        <BookmarkView {...bookmarkProps}>
+                            <StoryView {...storyProps} />
+                        </BookmarkView>
+                    </ErrorBoundary>
                 );
             } else {
                 let height = evt.previousHeight || evt.estimatedHeight || 100;

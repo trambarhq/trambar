@@ -20,6 +20,7 @@ import Environment from 'env/environment';
 import SideNavigation from 'widgets/side-navigation';
 import TaskAlertBar from 'widgets/task-alert-bar';
 import UploadProgress from 'widgets/upload-progress';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import 'setimmediate';
 import 'utils/lodash-extra';
@@ -120,7 +121,9 @@ class Application extends PureComponent {
                 <SideNavigation {...navProps} />
                 <section className="page-view-port">
                     <div className="scroll-box">
-                        <CurrentPage key={key} {...pageProps} />
+                        <ErrorBoundary env={env}>
+                            <CurrentPage key={key} {...pageProps} />
+                        </ErrorBoundary>
                     </div>
                     {this.renderTaskAlert()}
                     {this.renderUploadProgress()}
@@ -178,6 +181,16 @@ class Application extends PureComponent {
         notifier.addEventListener('alert', this.handleAlertClick);
 
         window.addEventListener('beforeunload', this.handleBeforeUnload);
+    }
+
+    /**
+     * Catch errors during rendering cycle
+     *
+     * @param  {error} error
+     * @param  {Object} info
+     */
+    componentDidCatch(error, info) {
+        console.error(error);
     }
 
     /**
