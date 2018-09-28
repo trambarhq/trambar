@@ -169,4 +169,7 @@ export {
     getPushURL,
     getBranchURL,
     getLabelStyle,
+    getCommitNoteURL,
+    getIssueNoteURL,
+    getMergeRequestNoteURL,
 };

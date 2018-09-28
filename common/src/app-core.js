@@ -317,7 +317,6 @@ function start(cfg) {
             // not watching anything
             return;
         }
-        return;
         dataSource.start(currentLocation).then((currentUserID) => {
             console.log('Updating data subscription');
             let { method, token, relay, details } = currentConnection;
