@@ -1,10 +1,12 @@
+@import '../colors';
+
 .user-view {
-    background-color: #362a2a;
-    border: 2px solid #211a1a;
+    background-color: $panel-background-color;
+    border: 2px solid $panel-border-color;
     width: 100%;
 
     .header {
-        background-color: #211a1a;
+        background-color: $panel-border-color;
 
         .profile-image {
             position: relative;

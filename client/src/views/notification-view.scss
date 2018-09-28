@@ -1,7 +1,9 @@
+@import '../colors';
+
 .notification-view {
     display: block;
-    background-color: #362a2a;
-    border: 2px solid #211a1a;
+    background-color: $panel-background-color;
+    border: 2px solid $panel-border-color;
     padding: 0.4em 0.4em 0.3em 0.4em;
     color: #666666;
     cursor: pointer;

@@ -26,8 +26,8 @@
 
             .icon {
                 display: inline-block;
-                color: #000000;
-                background-color: #fca326;
+                color: $app-component-icon-color;
+                background-color: $app-component-icon-background-color;
                 height: 8em;
                 width: 8em;
                 padding-top: 2em;
@@ -80,7 +80,7 @@
         flex: 0 0 auto;
         padding: 0.4em 0 0.2em 0.2em;
         text-align: right;
-        border-top: 1px solid #666666;
+        border-top: 1px solid $separator-color;
     }
 
     .single-col & {

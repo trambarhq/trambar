@@ -1,19 +1,46 @@
 $off-white: #eeeeee;
 $light-gray: #cccccc;
 $dark-grey: #444444;
-$bright-orange: #fca326;
+$orange: #fca326;
+$sharp-orange: #fc6d26;
 $brown: #4d3936;
 $dark-brown: #362a2a;
 $black: #000000;
 $white: #ffffff;
 
-$focus-outline-color: $bright-orange;
+$focus-outline-color: $orange;
+
+$button-background-color: #4d3936;
+$button-text-color: #666666;
+$button-hover-background-color: #806666;
+$button-hover-text-color: #eeeeee;
+$button-active-border-color: #333333;
+
+$panel-background-color: $dark-brown;
+$panel-border-color: #211a1a;
+$panel-highlighted-border-color: $sharp-orange;
+$panel-separator-color: #404040;
 
 $dialog-box-background-color: $dark-brown;
 $dialog-box-text-color: $light-gray;
 $dialog-box-shadow-color: $black;
 
+$navigation-background-color: #262626;
+$navigation-border-color: #323232;
+$navigation-text-color: #888888;
+
 $separator-color: #666666;
+
+$app-component-border-color: #211a1a;
+$app-component-background-color: #cccccc;
+$app-component-icon-color: $black;
+$app-component-icon-background-color: $orange;
+$app-component-text-color: #333333;
+
+$media-view-overlay-color: $black;
+$media-view-overlay-hover-color: #eeeeee;
+$media-view-overlay-hover-background-color: $black;
+$media-view-navigation-background-color: $black;
 
 $text-field-border-color: $dark-grey;
 $text-field-background-color: $off-white;

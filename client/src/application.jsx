@@ -224,7 +224,7 @@ class Application extends PureComponent {
         let locale = new Locale(localeManager);
         let env = new Environment(envMonitor, { locale, address, widthDefinitions });
         this.setState({ env });
-        document.title = locale.t('app-title');
+        document.title = locale.t('app-name');
     }
 
     /**

@@ -1,31 +1,33 @@
+@import '../colors';
+
 .push-button {
     min-width: 5em;
     margin-left: 0.4em;
     margin-bottom: 0.1em;
     padding: 0.4em 1em 0.4em 1em;
-    color: #666666;
+    color: $button-text-color;
     font-size: 0.9em;
-    background-color: #4d3936;
-    border: 2px solid #4d3936;
+    background-color: $button-background-color;
+    border: 2px solid $button-background-color;
     touch-action: manipulation;
 
     &:not(:disabled) {
         &.emphasized, &:active {
-            color: #eeeeee;
-            background-color: #806666;
-            border: 2px solid #806666;
+            color: $button-hover-text-color;
+            background-color: $button-hover-background-color;
+            border: 2px solid $button-hover-background-color;
         }
 
         .no-touch & {
             &:hover {
-                color: #eeeeee;
-                background-color: #806666;
-                border: 2px solid #806666;
+                color: $button-hover-text-color;
+                background-color: $button-hover-background-color;
+                border: 2px solid $button-hover-background-color;
             }
         }
 
         &:active {
-            border: 2px inset #333333;
+            border: 2px inset $button-active-border-color;
         }
     }
 
