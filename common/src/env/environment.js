@@ -1,5 +1,7 @@
+import Moment from 'moment';
 import * as BlobManager from 'transport/blob-manager';
 import * as ImageCropping from 'media/image-cropping';
+import { memoizeStrong } from 'utils/memoize';
 
 class Environment {
     constructor(envMonitor, extra) {
@@ -363,6 +365,10 @@ class Environment {
         console.error(err);
         console.info(info.componentStack);
     }
+
+    getRelativeDate(diff, unit) {
+        return getRelativeDate(this.date, diff, unit);
+    }
 }
 
 function decodeLength(s) {
@@ -411,6 +417,11 @@ function getClippingRect(res, params) {
     }
     return clip;
 }
+
+const getRelativeDate = memoizeStrong('', function(date, diff, unit) {
+    let m = Moment(date).add(diff, unit);
+    return m.toISOString();
+});
 
 export {
     Environment as default,

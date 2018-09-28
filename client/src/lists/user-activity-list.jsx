@@ -1,7 +1,7 @@
 import _ from 'lodash';
+import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { memoizeWeak } from 'utils/memoize';
-import * as DateTracker from 'utils/date-tracker';
 
 // widgets
 import ProfileImage from 'widgets/profile-image';
@@ -60,7 +60,8 @@ class UserActivityList extends PureComponent {
         let text = this.renderText(story);
         let labelClass = 'label';
         let time = story.btime || story.ptime;
-        if (time >= DateTracker.todayISO || time >= DateTracker.yesterdayISO) {
+        let yesterday = env.getRelativeDate(-1, 'day');
+        if (yesterday < time) {
             labelClass += ' recent';
         }
         return (
@@ -146,7 +147,7 @@ const sortStories = memoizeWeak(null, function(stories) {
     return _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
 });
 
-let getStoryTime = function(story) {
+function getStoryTime(story) {
     return story.btime || story.ptime;
 };
 

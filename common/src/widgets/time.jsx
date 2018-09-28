@@ -1,9 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import Moment from 'moment';
-import * as DateTracker from 'utils/date-tracker';
-
-import Locale from 'locale/locale';
 
 class Time extends PureComponent {
     static displayName = 'Time';
@@ -27,11 +24,12 @@ class Time extends PureComponent {
      * @param  {Object} nextState
      */
     updateClassName(nextProps, nextState) {
+        let { env } = nextProps;
         let className;
         if (nextState.time.isValid()) {
-            if (nextState.date === DateTracker.today) {
+            if (nextState.date >= env.date) {
                 className = 'today';
-            } else if (nextState.date === DateTracker.yesterday) {
+            } else if (nextState.date >= env.getRelativeDate(-1, 'day')) {
                 className = 'yesterday';
             } else {
                 className = 'older';

@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import * as DateTracker from 'utils/date-tracker';
 import * as DateUtils from 'utils/date-utils';
 
 const emptyArray = [];
@@ -92,10 +91,11 @@ function findDraftStories(db, user) {
  * @param  {Database} db
  * @param  {User} user
  * @param  {Array<Story>} listedStories
+ * @param  {String} limit
  *
  * @return {Promise<Array<Story>>}
  */
-function findUnlistedStories(db, user, listedStories) {
+function findUnlistedStories(db, user, listedStories, limit) {
     if (!user) {
         return Promise.resolve(emptyArray);
     }
@@ -104,7 +104,7 @@ function findUnlistedStories(db, user, listedStories) {
     }
     let recentStories = _.filter(listedStories, (story) => {
         if (_.includes(story.user_ids, user.id)) {
-            if (story.ptime > DateTracker.yesterdayISO) {
+            if (story.ptime > limit) {
                 return true;
             }
         }
@@ -115,7 +115,7 @@ function findUnlistedStories(db, user, listedStories) {
         criteria: {
             exclude: recentStoryIDs,
             user_ids: [ user.id ],
-            newer_than: DateTracker.yesterdayISO,
+            newer_than: limit,
             published: true,
         },
     });

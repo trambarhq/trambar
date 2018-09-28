@@ -4,7 +4,6 @@ import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import { memoizeWeak } from 'utils/memoize';
-import * as DateTracker from 'utils/date-tracker';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as ProjectUtils from 'objects/utils/project-utils';
 import * as StatisticsFinder from 'objects/finders/statistics-finder';

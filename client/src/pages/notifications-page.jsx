@@ -2,7 +2,6 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import * as DateTracker from 'utils/date-tracker';
 import * as UserFinder from 'objects/finders/user-finder';
 import * as NotificationFinder from 'objects/finders/notification-finder';
 

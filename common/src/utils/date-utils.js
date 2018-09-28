@@ -1,5 +1,4 @@
 import Moment from 'moment';
-import * as DateTracker from 'utils/date-tracker';
 
 /**
  * Return time range of given date

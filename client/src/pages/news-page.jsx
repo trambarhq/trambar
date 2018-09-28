@@ -110,7 +110,8 @@ class NewsPage extends AsyncComponent {
                         props.draftStories = stories;
                     });
                 }).then(() => {
-                    return StoryFinder.findUnlistedStories(db, props.currentUser, props.stories).then((stories) => {
+                    let limit = env.getRelativeDate(-1, 'date');
+                    return StoryFinder.findUnlistedStories(db, props.currentUser, props.stories, limit).then((stories) => {
                         props.pendingStories = stories;
                     });
                 });

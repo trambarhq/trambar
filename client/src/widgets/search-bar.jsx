@@ -2,7 +2,6 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import ComponentRefs from 'utils/component-refs';
-import * as DateTracker from 'utils/date-tracker';
 import * as TagScanner from 'utils/tag-scanner';
 import * as StatisticsFinder from 'objects/finders/statistics-finder';
 import * as UserFinder from 'objects/finders/user-finder';
@@ -58,14 +57,14 @@ class SearchBarSync extends PureComponent {
      */
     constructor(props) {
         super(props);
-        let { route, dailyActivities } = props;
+        let { env, route, dailyActivities } = props;
         this.components = ComponentRefs({
             tags: HTMLDivElement,
         });
         // TODO: shouldn't have properties derived from props in state
         this.state = {
             keywords: route.params.search || '',
-            hashTags: extractTags(dailyActivities),
+            hashTags: extractTags(dailyActivities, env),
             selectedHashTags: findTags(route.params.search),
         };
     }
@@ -76,7 +75,7 @@ class SearchBarSync extends PureComponent {
      * @param  {Object} nextProps
      */
     componentWillReceiveProps(nextProps) {
-        let { route, dailyActivities } = this.props;
+        let { env, route, dailyActivities } = this.props;
         let { keywords } = this.state;
         if (nextProps.route !== route) {
             let route = nextProps.route;
@@ -89,7 +88,7 @@ class SearchBarSync extends PureComponent {
             }
         }
         if (nextProps.dailyActivities !== dailyActivities) {
-            let hashTags = extractTags(nextProps.dailyActivities);
+            let hashTags = extractTags(nextProps.dailyActivities, env);
             this.setState({ hashTags });
         }
     }
@@ -320,7 +319,7 @@ function isWrapping(nodes) {
     });
 }
 
-function extractTags(dailyActivities) {
+function extractTags(dailyActivities, env) {
     if (!dailyActivities) {
         return [];
     }
@@ -330,13 +329,13 @@ function extractTags(dailyActivities) {
         _.each(activities, (count, key) => {
             // more recent usage count for more
             let multiplier;
-            if (date === DateTracker.today) {
+            if (date === env.date) {
                 multiplier = 4;
-            } else if (date === DateTracker.yesterday) {
+            } else if (date === env.getRelativeDate(-1, 'day')) {
                 multiplier = 2;
-            } else if (date >= DateTracker.oneWeekAgo) {
+            } else if (date >= env.getRelativeDate(-7, 'day')) {
                 multiplier = 1;
-            } else if (date >= DateTracker.twoWeeksAgo) {
+            } else if (date >= env.getRelativeDate(-14, 'day')) {
                 multiplier = 0.5;
             } else {
                 multiplier = 0.25;

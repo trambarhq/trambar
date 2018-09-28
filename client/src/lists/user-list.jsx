@@ -2,8 +2,6 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { memoizeWeak } from 'utils/memoize';
-import * as DateTracker from 'utils/date-tracker';
-import * as DateUtils from 'utils/date-utils';
 
 // widgets
 import SmartList from 'widgets/smart-list';

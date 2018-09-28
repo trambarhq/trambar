@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import * as DateTracker from 'utils/date-tracker';
 
 import './calendar.scss';
 
@@ -75,7 +74,7 @@ class Calendar extends PureComponent {
                 if (selection && selection === date) {
                     classNames.push('selected');
                 }
-                if (date === DateTracker.today) {
+                if (date === env.date) {
                     classNames.push('today');
                 }
                 return (
