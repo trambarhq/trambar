@@ -3,16 +3,4 @@
     font-size: 0.9em;
     float: right;
     margin-left: 0.5em;
-
-    .time {
-        user-select: text;
-
-        &.today {
-            color: #aaaaaa;
-        }
-
-        &.yesterday {
-            color: #999999;
-        }
-    }
 }

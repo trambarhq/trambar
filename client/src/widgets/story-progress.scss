@@ -3,18 +3,6 @@
     font-size: 0.9em;
     margin-left: 3.75em;
 
-    .time {
-        user-select: text;
-
-        &.today {
-            color: #aaaaaa;
-        }
-
-        &.yesterday {
-            color: #999999;
-        }
-    }
-
     .fa-spinner {
         opacity: 0.5;
         margin-left: 0.1em;

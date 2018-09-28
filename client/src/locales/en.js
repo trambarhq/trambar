@@ -617,6 +617,10 @@ let americanPhrases = {
 
     'telephone-dialog-close': 'Close',
 
+    'time-$day-ago': (day) => {
+        let time = cardinal(day, 'A day', '2 days');
+        return `${time} ago`;
+    },
     'time-$hours-ago': (hours) => {
         let time = cardinal(hours, 'An hour', '2 hours');
         return `${time} ago`;
