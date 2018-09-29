@@ -2,7 +2,6 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import SessionStartTime from 'data/session-start-time';
 import * as TaskFinder from 'objects/finders/task-finder';
 
 import './task-alert-bar.scss';
@@ -249,7 +248,7 @@ class TaskAlertBarSync extends PureComponent {
      * @param  {Object} prevState
      */
     componentDidUpdate(prevProps, prevState) {
-        let { showing, rendering } = this.state;
+        let { env, showing, rendering } = this.state;
         if (!prevState.showing && showing) {
             if (!rendering) {
                 this.setState({ rendering: true, hidden: true });
@@ -264,7 +263,7 @@ class TaskAlertBarSync extends PureComponent {
             }, 500);
         } else if (!prevState.rendering && rendering) {
             let delay = 10;
-            if (SessionStartTime > Moment().subtract(2, 'second').toISOString()) {
+            if (env.startTime > Moment().subtract(2, 'second').toISOString()) {
                 // use a longer delay when page is just loading
                 delay = 2000;
             }

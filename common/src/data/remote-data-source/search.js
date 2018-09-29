@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import Operation from 'data/remote-data-source/operation';
-import SessionStartTime from 'data/session-start-time';
 
 class Search extends Operation {
     constructor(query) {
@@ -111,10 +110,6 @@ class Search extends Operation {
         }
         let rtimes = _.map(this.results, 'rtime');
         let minRetrievalTime = _.min(rtimes);
-        if (minRetrievalTime < SessionStartTime) {
-            // one of the objects was retrieved in an earlier session
-            return false;
-        }
         let then = new Date(minRetrievalTime);
         let now = new Date;
         // see how much time has elapsed since the object was retrieved/last verified

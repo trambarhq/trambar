@@ -46,6 +46,7 @@ class RemoteDataSource extends EventEmitter {
         this.sessions = [];
         this.changeQueue = [];
         this.sessionCheckInterval = 0;
+        this.startTime = null;
     }
 
     activate() {
@@ -54,6 +55,7 @@ class RemoteDataSource extends EventEmitter {
                 this.clearExpiredSessions();
             }, 60 * 1000);
             this.active = true;
+            this.startTime = Moment();
         }
     }
 
@@ -594,6 +596,12 @@ class RemoteDataSource extends EventEmitter {
                 let status;
                 if (existingSearch.promise.isFulfilled()) {
                     let { refreshInterval } = this.options;
+                    let elapsed = Moment() - this.startTime;
+                    if (elapsed < refreshInterval) {
+                        // consider objects retrieved prior to the start of the
+                        // app to be stale
+                        refreshInterval = elapsed;
+                    }
                     if (existingSearch.isFresh(refreshInterval)) {
                         status = 'complete';
                     } else {
