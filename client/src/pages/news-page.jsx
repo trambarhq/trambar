@@ -33,7 +33,7 @@ class NewsPage extends AsyncComponent {
             payloads,
             env,
             search,
-            roles,
+            roleIDs,
             date,
             highlightStoryID,
             scrollToStoryID,
@@ -49,7 +49,7 @@ class NewsPage extends AsyncComponent {
             }
             filtering = true;
         }
-        if (date || !_.isEmpty(roles)) {
+        if (date || !_.isEmpty(roleIDs)) {
             filtering = true;
         }
         let props = {
@@ -61,7 +61,7 @@ class NewsPage extends AsyncComponent {
 
             acceptNewStory: !filtering,
             search,
-            roles,
+            roleIDs,
             date,
             highlightStoryID,
             scrollToStoryID,
@@ -97,8 +97,8 @@ class NewsPage extends AsyncComponent {
                 return StoryFinder.findStoriesOnDate(db, date, props.currentUser).then((stories) => {
                     props.stories = stories;
                 });
-            } else if (!_.isEmpty(roles)) {
-                return StoryFinder.findStoriesWithRolesInListing(db, 'news', roles, props.currentUser, freshListing).then((stories) => {
+            } else if (!_.isEmpty(roleIDs)) {
+                return StoryFinder.findStoriesWithRolesInListing(db, 'news', roleIDs, props.currentUser, freshListing).then((stories) => {
                     props.stories = stories;
                 });
             } else {

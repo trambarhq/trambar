@@ -1,6 +1,10 @@
 class NumberArray {
     static from(s) {
-        return s.split(',').map(parseInt);
+        if (s) {
+            return s.split(',').map(parseInt);
+        } else {
+            return [];
+        }
     }
 
     static to(a) {

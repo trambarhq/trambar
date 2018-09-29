@@ -111,7 +111,7 @@ class RoleFilterBarSync extends PureComponent {
             role,
             users: roleUsers,
             url,
-            selected: _.includes(route.params.roles, role.id),
+            selected: _.includes(route.params.roleIDs, role.id),
             env,
             onRoleClick: this.handleRoleClick,
         };

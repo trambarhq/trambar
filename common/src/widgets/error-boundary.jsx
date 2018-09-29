@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 require('./error-boundary.scss');
 
 class ErrorBoundary extends Component {
-    static displayName = 'ResourceView';
+    static displayName = 'ErrorBoundary';
 
     constructor(props) {
         super(props);
