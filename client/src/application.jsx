@@ -5,6 +5,8 @@ import AppCore from 'app-core';
 import { routes } from 'routing';
 import CORSRewriter from 'routing/cors-rewriter';
 import SchemaRewriter from 'routing/schema-rewriter';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as ProjectLinkFinder from 'objects/finders/project-link-finder';
 
 // non-visual components
 import Database from 'data/database';
@@ -189,14 +191,54 @@ class Application extends PureComponent {
     }
 
     /**
-     * Catch errors during rendering cycle
+     * Save a location to cache
      *
-     * @param  {error} error
-     * @param  {Object} info
+     * @param  {String} address
+     * @param  {String} schema
+     *
+     * @return {Promise<Object>}
      */
-    componentDidCatch(error, info) {
-        console.error(error);
-        console.error(info.componentStack);
+    saveLocation(address, schema) {
+        // get the project object so we have the project's display name
+        let { database } = this.state;
+        let db = database.use({ by: this });
+        return ProjectFinder.findProjectByName(db, schema).then((project) => {
+            let name = project.details.title;
+            let atime = (new Date).toISOString();
+            let key = `${address}/${schema}`;
+            let record = { key, address, schema, name, atime };
+            return db.saveOne({ schema: 'local', table: 'project_link' }, record);
+        });
+    }
+
+    /**
+     * Remove all links to address
+     *
+     * @param  {String} address
+     *
+     * @return {Promise<Array>}
+     */
+    removeLocations(address) {
+        let { database } = this.state;
+        let db = database.use({ by: this });
+        return ProjectLinkFinder.findLinksToServer(db, address).then((links) => {
+            return db.remove({ schema: 'local', table: 'project_link' }, links);
+        });
+    }
+
+    /**
+     * Remove links that to projects that no longer exist
+     *
+     * @param  {String} address
+     *
+     * @return {Promise<Array>}
+     */
+    removeDefunctLocations(address) {
+        let { database } = this.state;
+        let db = database.use({ by: this });
+        return ProjectLinkFinder.findDefunctLinks(db).then((links) => {
+            return db.remove({ schema: 'local', table: 'project_link' }, defunct);
+        });
     }
 
     /**
@@ -281,6 +323,7 @@ class Application extends PureComponent {
      */
     handleRouteChange = (evt) => {
         let { routeManager, dataSource, payloadManager } = this.props;
+        let { route: prevRoute } = this.state;
         let route = new Route(routeManager);
         let { address, schema } = route.context;
         let { database, payloads, env } = this.state;
@@ -293,6 +336,14 @@ class Application extends PureComponent {
             env = new Environment(envMonitor, { locale, address, widthDefinitions });
         }
         this.setState({ route, database, env });
+
+        let { address: prevAddress, schema: prevSchema } = (prevRoute) ? prevRoute.context : {};
+        if (prevAddress !== address || prevSchema !== schema) {
+            this.saveLocation(address, schema);
+        }
+        if (prevAddress !== address) {
+            this.removeDefunctLocations();
+        }
     }
 
     /**

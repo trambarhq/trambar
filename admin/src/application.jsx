@@ -184,16 +184,6 @@ class Application extends PureComponent {
     }
 
     /**
-     * Catch errors during rendering cycle
-     *
-     * @param  {error} error
-     * @param  {Object} info
-     */
-    componentDidCatch(error, info) {
-        console.error(error);
-    }
-
-    /**
      * Called when the database queries might yield new results
      *
      * @param  {RemoteDataSourceEvent} evt

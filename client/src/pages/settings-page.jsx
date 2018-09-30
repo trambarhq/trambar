@@ -4,6 +4,7 @@ import { AsyncComponent } from 'relaks';
 import * as KonamiCode from 'utils/konami-code';
 import * as DeviceFinder from 'objects/finders/device-finder';
 import * as ProjectFinder from 'objects/finders/project-finder';
+import * as ProjectLinkFinder from 'objects/finders/project-link-finder';
 import * as RepoFinder from 'objects/finders/repo-finder';
 import * as SystemFinder from 'objects/finders/system-finder';
 import * as UserFinder from 'objects/finders/user-finder';
@@ -59,7 +60,7 @@ class SettingsPage extends AsyncComponent {
                 props.currentUser = user;
             });
         }).then(() => {
-            return ProjectFinder.findProjectLinks(db).then((links) => {
+            return ProjectLinkFinder.findActiveLinks(db).then((links) => {
                 props.projectLinks = links;
             });
         }).then(() => {

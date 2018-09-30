@@ -214,7 +214,8 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement|null}
      */
     renderSystemDescriptionDialogBox() {
-        let { env, system, showingDialog, renderingDialog } = this.state;
+        let { env, system } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
         if (renderingDialog !== 'system-description') {
             return null;
         }

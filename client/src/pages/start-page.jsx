@@ -6,6 +6,7 @@ import HTTPRequest from 'transport/http-request';
 import { memoizeWeak } from 'utils/memoize';
 import UniversalLink from 'routing/universal-link';
 import * as ProjectFinder from 'objects/finders/project-finder';
+import * as ProjectLinkFinder from 'objects/finders/project-link-finder';
 import * as SystemFinder from 'objects/finders/system-finder';
 import * as UserFinder from 'objects/finders/user-finder';
 import * as UserUtils from 'objects/utils/user-utils';
@@ -97,7 +98,7 @@ class StartPage extends AsyncComponent {
                         return <StartPageSync {...props} />;
                     });
                 } else {
-                    return ProjectFinder.findProjectLinks(db).then((links) => {
+                    return ProjectLinkFinder.findActiveLinks(db).then((links) => {
                         props.projectLinks = links;
                         return <StartPageSync {...props} />;
                     });
@@ -127,7 +128,7 @@ class StartPage extends AsyncComponent {
                 });
             }).then(() => {
                 meanwhile.show(<StartPageSync {...props} />);
-                return ProjectFinder.findProjectLinks(db).then((links) => {
+                return ProjectLinkFinder.findActiveLinks(db).then((links) => {
                     props.projectLinks = links;
                 });
             }).then(() => {

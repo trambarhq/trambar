@@ -275,6 +275,7 @@ class RemoteDataSource extends EventEmitter {
         }
         let parentSession = this.obtainSession(location);
         let promise = parentSession.establishmentPromise.then(() => {
+            let { area } = this.options;
             let url = `${parentSession.address}/srv/session/`;
             let options = { responseType: 'json', contentType: 'json' };
             let payload = {
@@ -282,8 +283,8 @@ class RemoteDataSource extends EventEmitter {
                 area,
             };
             return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
-                session.handle = res.session.handle;
-                return session.handle;
+                mobileSession.handle = res.session.handle;
+                return mobileSession.handle;
             }).catch((err) => {
                 this.discardSession(mobileSession);
                 throw err;
@@ -491,6 +492,8 @@ class RemoteDataSource extends EventEmitter {
         session.etime = sessionInfo.etime;
         if (session.authorizationPromise && session.authorizationPromise.resolve) {
             session.authorizationPromise.resolve(true);
+        } else {
+            session.authorizationPromise = Promise.resolve(true);
         }
         this.triggerEvent(new RemoteDataSourceEvent('authorization', this, {
             session
@@ -501,6 +504,9 @@ class RemoteDataSource extends EventEmitter {
     restoreAuthorization(location, sessionInfo) {
         let session = this.obtainSession(location);
         try {
+            if (!session.establishmentPromise) {
+                session.establishmentPromise = Promise.resolve(true);
+            }
             this.grantAuthorization(session, sessionInfo);
             return true;
         } catch (err) {

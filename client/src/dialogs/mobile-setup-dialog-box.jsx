@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import UniversalLink from 'routing/universal-link';
+import * as UniversalLink from 'routing/universal-link';
 import * as DeviceFinder from 'objects/finders/device-finder';
 import * as UserFinder from 'objects/finders/user-finder';
 
@@ -115,14 +115,15 @@ class MobileSetupDialogBoxSync extends PureComponent {
     renderContents() {
         let { route, env, system, activationCode } = this.props;
         let { t } = env.locale;
+        let { address, schema } = route.context;
+        let systemAddress = _.get(system, 'settings.address');
         let universalLink;
-        let address = _.get(system, 'settings.address');
-        if (!address) {
-            address = route.params.address;
+        if (!systemAddress) {
+            // use the address in the system object if there's one
+            address = systemAddress;
         }
-        let schema = route.params.schema;
         if (activationCode) {
-            let relativeURL = route.find({ activationCode, schema });
+            let relativeURL = route.find('start-page', { activationCode, schema });
             universalLink = UniversalLink.form(address, relativeURL);
             console.log(universalLink);
         }
