@@ -98,21 +98,6 @@ class Application extends PureComponent {
      */
     render() {
         let { database, route, env, payloads } = this.state;
-        let { module } = route.params;
-        if (process.env.NODE_ENV !== 'production') {
-            if (!module) {
-                if (!route.name) {
-                    console.log('No routing information');
-                } else {
-                    console.log('No component for route: ' + route.name);
-                }
-                return null;
-            } else if (!module.default) {
-                console.log('Component not exported as default: ' + route.name);
-                return null;
-            }
-        }
-        let CurrentPage = module.default;
         let settings = route.params.ui;
         let topNavProps = {
             searching: false, // TODO
@@ -128,25 +113,59 @@ class Application extends PureComponent {
             route,
             env,
         };
+        let className = this.getClassName();
+        return (
+            <div className={className} id="application">
+                <TopNavigation {...topNavProps} />
+                <section className="page-view-port">
+                    {this.renderCurrentPage()}
+                    {this.renderPreviousPage()}
+                </section>
+                <BottomNavigation {...bottomNavProps} />
+                {this.renderUploadProgress()}
+            </div>
+        );
+    }
+
+    renderCurrentPage() {
+        let { database, route, env, payloads } = this.state;
+        let CurrentPage = getRouteClass(route);
+        if (!CurrentPage) {
+            return null;
+        }
         let pageProps = _.assign({
             database,
             route,
             payloads,
             env,
         }, route.params);
-        let className = this.getClassName();
-        let key = route.path + route.search;
+        let key = getRouteKey(route);
         return (
-            <div className={className} id="application">
-                <TopNavigation {...topNavProps} />
-                <section className="page-view-port">
-                    <ErrorBoundary env={env}>
-                        <CurrentPage key={key} {...pageProps} />
-                    </ErrorBoundary>
-                </section>
-                <BottomNavigation {...bottomNavProps} />
-                {this.renderUploadProgress()}
-            </div>
+            <ErrorBoundary key={key} env={env}>
+                <CurrentPage {...pageProps} />
+            </ErrorBoundary>
+        );
+    }
+
+    renderPreviousPage() {
+        let { database, prevRoute, env, payloads } = this.state;
+        let PreviousPage = getRouteClass(prevRoute);
+        if (!PreviousPage) {
+            return null;
+        }
+        let pageProps = _.assign({
+            database,
+            route: prevRoute,
+            payloads,
+            env,
+            transitionOut: true,
+            onTransitionOut: this.handlePageTransitionOut,
+        }, prevRoute.params);
+        let key = getRouteKey(prevRoute);
+        return (
+            <ErrorBoundary key={key} env={env}>
+                <PreviousPage {...pageProps} />
+            </ErrorBoundary>
         );
     }
 
@@ -324,6 +343,7 @@ class Application extends PureComponent {
     handleRouteChange = (evt) => {
         let { routeManager, dataSource, payloadManager } = this.props;
         let { route: prevRoute } = this.state;
+        let { address: prevAddress, schema: prevSchema } = (prevRoute) ? prevRoute.context : {};
         let route = new Route(routeManager);
         let { address, schema } = route.context;
         let { database, payloads, env } = this.state;
@@ -335,9 +355,21 @@ class Application extends PureComponent {
         if (address !== env.address) {
             env = new Environment(envMonitor, { locale, address, widthDefinitions });
         }
-        this.setState({ route, database, env });
+        let transitionOut = false;
+        if (prevRoute) {
+            let PreviousPage = getRouteClass(prevRoute);
+            if (PreviousPage && PreviousPage.useTransition) {
+                if (getRouteKey(prevRoute) !== getRouteKey(route)) {
+                    transitionOut = true;
+                }
+            }
+        }
+        if (!transitionOut) {
+            // don't retain the previous route when there's no transition effect
+            prevRoute = null;
+        }
+        this.setState({ route, prevRoute, database, env });
 
-        let { address: prevAddress, schema: prevSchema } = (prevRoute) ? prevRoute.context : {};
         if (prevAddress !== address || prevSchema !== schema) {
             this.saveLocation(address, schema);
         }
@@ -388,6 +420,16 @@ class Application extends PureComponent {
     }
 
     /**
+     * Called when page transition is done
+     *
+     * @param  {Objet} evt
+     */
+    handlePageTransitionOut = (evt) => {
+        console.log('handlePageTransitionOut');
+        this.setState({ prevRoute: null });
+    }
+
+    /**
      * Called when user navigate to another site or hit refresh
      *
      * @param  {Event} evt
@@ -400,6 +442,31 @@ class Application extends PureComponent {
             return (evt.returnValue = 'Are you sure?');
         }
     }
+}
+
+function getRouteClass(route) {
+    if (!route) {
+        return null;
+    }
+    let { module } = route.params;
+    if (process.env.NODE_ENV !== 'production') {
+        if (!module) {
+            if (!route.name) {
+                console.log('No routing information');
+            } else {
+                console.log('No component for route: ' + route.name);
+            }
+            return null;
+        } else if (!module.default) {
+            console.log('Component not exported as default: ' + route.name);
+            return null;
+        }
+    }
+    return module.default;
+}
+
+function getRouteKey(route) {
+    return (route) ? route.path + route.search : '';
 }
 
 export {

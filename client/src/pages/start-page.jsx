@@ -27,6 +27,7 @@ import './start-page.scss';
 
 class StartPage extends AsyncComponent {
     static displayName = 'StartPage';
+    static useTransition = (process.env.PLATFORM === 'browser');
 
     /**
      * Render the component asynchronously
@@ -36,7 +37,15 @@ class StartPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env, address, add, activationCode } = this.props;
+        let {
+            database,
+            route,
+            env,
+            transitionOut,
+            address,
+            addingServer,
+            activationCode,
+        } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
             currentUser: null,
@@ -45,6 +54,8 @@ class StartPage extends AsyncComponent {
             projects: null,
             projectLinks: null,
 
+            transitionOut,
+            addingServer,
             database,
             route,
             env,
@@ -106,7 +117,7 @@ class StartPage extends AsyncComponent {
             }
         } else {
             // handle things normally after we've gained authorization
-            if (!add) {
+            if (!addingServer) {
                 // need to adjust the progressive rendering delay since Relaks
                 // by default disables it once a page has fully rendered
                 meanwhile.delay(undefined, 300);
@@ -145,7 +156,7 @@ class StartPageSync extends PureComponent {
         super(props);
         if (process.env.PLATFORM === 'browser') {
             this.state = {
-                transition: null,
+                transitionMethod: 'fast',
                 selectedProjectID: 0,
                 oauthErrors: {},
                 renderingProjectDialog: false,
@@ -219,24 +230,25 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderForBrowser() {
-        let { env, system } = this.props;
-        let { transition } = this.state;
+        let { env, system, transitionOut } = this.props;
+        let { transitionMethod } = this.state;
         let { t } = env.locale;
+        let pageProps = { className: 'start-page browser' };
         let style;
         if (system) {
             let resources = _.get(system, 'details.resources');
             let backgroundImage = _.find(resources, { type: 'image' });
             if (backgroundImage) {
                 let imageURL = env.getImageURL(backgroundImage, { width: 1024, quality: 40 });
-                style = { backgroundImage: `url(${imageURL})` };
+                pageProps.style = { backgroundImage: `url(${imageURL})` };
             }
         }
-        let className = 'start-page browser';
-        if (transition) {
-            className += ` ${transition}`;
+        if (transitionOut) {
+            pageProps.className += ` transition-out-${transitionMethod}`;
+            pageProps.onTransitionEnd = this.handleTransitionEnd;
         }
         return (
-            <div className={className} style={style}>
+            <div {...pageProps}>
                 <div className="bar">
                     <h1 className="welcome">{t('start-welcome')}</h1>
                     <div className="content-area">
@@ -255,22 +267,21 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderForCordova() {
-        let { database } = this.props;
-        let { transition, addingServer } = this.state;
-        let className = 'start-page cordova';
-        if (transition) {
-            className += ` ${transition}`;
-            if (transition === 'transition-out-slow') {
+        let { database, transitionOut } = this.props;
+        let { transitionMethod, addingServer } = this.state;
+        let pageProps = { className: 'start-page cordova' };
+        if (transitionOut) {
+            pageProps.className += ` transition-out-${transitionMethod}`;
+            pageProps.onTransitionOut = this.handleTransitionEnd;
+            if (transitionMethod === 'slow') {
                 // render a greeting during long transition
                 return (
-                    <div className={className}>
+                    <div {...pageProps}>
                         {this.renderMobileGreeting()}
                     </div>
                 );
             } else {
-                return (
-                    <div className={className} />
-                );
+                return <div {...pageProps} />;
             }
         }
         if (!database.authorized || addingServer) {
@@ -755,10 +766,10 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderServerLink(server, key) {
-        let { route } = this.props;
+        let { route, addingServer } = this.props;
         let params = {
             address: server,
-            add: route.params.add
+            addingServer,
         };
         let url = route.find('start-page', params);
         return (
@@ -802,41 +813,6 @@ class StartPageSync extends PureComponent {
             onProceed: this.handleMembershipRequestProceed,
         };
         return <MembershipRequestDialogBox {...dialogProps} />;
-    }
-
-    /**
-     * Transition out from this page
-     */
-    transitionOut(route) {
-        let { projectLinks } = this.props;
-        let speed = 'fast';
-        let duration = 1300;
-        let params = route.context;
-        // determine whether the user has seen the project before
-        let newProject = !_.some(projectLinks, {
-            address: route.context.address,
-            schema: route.context.schema,
-        });
-        if (newProject) {
-            // show welcome message when we're heading to a new project
-            speed = 'slow';
-            duration = 3700;
-        }
-        this.setState({ transition: `transition-out-${speed}` }, () => {
-            // TODO
-            /*
-            setTimeout(() => {
-                // tell parent component that we don't need to render
-                // the page anymore
-                if (this.props.onExit) {
-                    this.props.onExit({
-                        type: 'exit',
-                        target: this,
-                    });
-                }
-            }, duration);
-            */
-        });
     }
 
     /**
@@ -891,9 +867,7 @@ class StartPageSync extends PureComponent {
         evt.preventDefault();
         return this.openPopUpWindow(url).then(() => {
             let db = database.use({ by: this });
-            return db.checkAuthorization().then((authorized) => {
-                console.log('Authorized:', authorized);
-            }).catch((err) => {
+            return db.checkAuthorization().catch((err) => {
                 let oauthErrors = _.clone(oauthErrors);
                 oauthErrors[provider] = err;
                 this.setState({ oauthErrors });
@@ -965,12 +939,21 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestProceed = (evt) => {
-        let { route, projects } = this.props;
+        let { database, route, projects } = this.props;
         let { selectedProjectID } = this.state;
         this.setState({ showingProjectDialog: false, renderingProjectDialog: false });
+
+        // see if user has visited project before
+        let db = database.use({ by: this });
         let project = _.find(projects, { id: selectedProjectID });
-        let page = this.getTargetPage();
-        route.push(page, {}, { schema: project.name });
+        return ProjectLinkFinder.findProjectLink(db, project).then((link) => {
+            if (!link) {
+                // if not, use a longer transition
+                this.setState({ transitionMethod: 'slow' });
+            }
+            let page = this.getTargetPage();
+            route.push(page, {}, { schema: project.name });
+        });
     }
 
     /**
@@ -1130,6 +1113,23 @@ class StartPageSync extends PureComponent {
         };
         route.push('start-page', params);
     }
+
+    /**
+     * Called when transition out is complete
+     *
+     * @param  {Event} evt
+     */
+    handleTransitionEnd = (evt) => {
+        let { onExit } = this.props;
+        if (evt.propertyName === 'opacity') {
+            if (onExit) {
+                onExit({
+                    type: 'exit',
+                    target: this,
+                });
+            }
+        }
+    }
 }
 
 function getServerIcon(type) {
@@ -1224,15 +1224,15 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     StartPage.propTypes = {
+        transitionOut: PropTypes.bool,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
 
-        onEntry: PropTypes.func,
         onExit: PropTypes.func,
-        onAvailableSchemas: PropTypes.func,
     };
     StartPageSync.propTypes = {
+        transitionOut: PropTypes.bool,
         currentUser: PropTypes.object,
         system: PropTypes.object,
         servers: PropTypes.arrayOf(PropTypes.object),
@@ -1244,8 +1244,6 @@ if (process.env.NODE_ENV !== 'production') {
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
 
-        onEntry: PropTypes.func,
         onExit: PropTypes.func,
-        onAvailableSchemas: PropTypes.func,
     };
 }

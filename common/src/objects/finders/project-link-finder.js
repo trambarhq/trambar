@@ -85,9 +85,32 @@ function findDefunctLinks(db) {
     });
 }
 
+/**
+ * Find link of project
+ *
+ * @param  {Database} db
+ * @param  {Project} project
+ *
+ * @return {Promise<Project|null>}
+ */
+function findProjectLink(db, project) {
+    if (!project) {
+        return Promise.resolve(null);
+    }
+    let { address } = db.context;
+    let schema = project.name;
+    let key = `${address}/${schema}`;
+    return db.findOne({
+        schema: 'local',
+        table: 'project_link',
+        criteria: { key }
+    });
+}
+
 export {
     findAllLinks,
     findLinksToServer,
     findActiveLinks,
     findDefunctLinks,
+    findProjectLink,
 };
