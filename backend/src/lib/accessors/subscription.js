@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Data = require('accessors/data');
 var HTTPError = require('errors/http-error');
-var ProjectSettings = require('objects/settings/project-settings');
+var ProjectUtils = require('objects/utils/project-utils');
 
 module.exports = _.create(Data, {
     schema: 'global',
@@ -143,7 +143,7 @@ module.exports = _.create(Data, {
                     deleted: false,
                 };
                 return Project.findOne(db, schema, criteria, 'user_ids, settings').then((project) => {
-                    var access = ProjectSettings.getUserAccessLevel(project, credentials.user);
+                    var access = ProjectUtils.getUserAccessLevel(project, credentials.user);
                     if (!access) {
                         throw new HTTPError(400);
                     }

@@ -9,7 +9,7 @@ var LodashExtra = require('utils/lodash-extra');
 var Database = require('database');
 var Shutdown = require('shutdown');
 var HTTPError = require('errors/http-error');
-var ProjectSettings = require('objects/settings/project-settings');
+var ProjectUtils = require('objects/utils/project-utils');
 
 // global accessors
 var Device = require('accessors/device');
@@ -432,7 +432,7 @@ function fetchCredentials(db, userId, schema) {
         var unrestricted = false;
 
         if (projectCriteria) {
-            var access = ProjectSettings.getUserAccessLevel(project, user);
+            var access = ProjectUtils.getUserAccessLevel(project, user);
             if (!access) {
                 // user has no access to project at all
                 throw new HTTPError(403);

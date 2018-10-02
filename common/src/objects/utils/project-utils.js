@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 /**
  * Return the user's access level to a project
  *
