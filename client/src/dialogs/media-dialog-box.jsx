@@ -145,7 +145,7 @@ class MediaDialogBox extends PureComponent {
             let viewportAspect = viewportWidth / viewportHeight;
             let maxWidth, maxHeight;
             _.each(resources, (res) => {
-                let dims = ResourceUtils.getDimensions(res, { clip: null });
+                let dims = ResourceUtils.getDimensions(res, { clip: null }, env);
                 if (!(maxWidth >= dims.width)) {
                     maxWidth = dims.width;
                 }
@@ -230,7 +230,7 @@ class MediaDialogBox extends PureComponent {
     renderVideo(res) {
         let { env } = this.props;
         let url = env.getVideoURL(res);
-        let dims = ResourceUtils.getDimensions(res, { clip: null });
+        let dims = ResourceUtils.getDimensions(res, { clip: null }, env);
         let posterURL = env.getImageURL(res, {
             width: dims.width,
             height: dims.height,

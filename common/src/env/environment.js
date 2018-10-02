@@ -98,7 +98,7 @@ class Environment {
         let url = `${this.address}${res.url}`;
         // pick suitable version unless specified otherwise
         if (!params || !params.original) {
-            let version = this.pickVideoVersion(res, params);
+            let version = ResourceUtils.pickVideoVersion(res, params, this);
             if (version) {
                 url += `.${version.name}.${version.format}`;
             }
@@ -123,71 +123,12 @@ class Environment {
         }
         let url = `${this.address}${res.url}`;
         if (!params || !params.original) {
-            let version = this.pickAudioVersion(res, params);
+            let version = ResourceUtils.pickAudioVersion(res, params, this);
             if (version) {
                 url += `.${version.name}.${version.format}`;
             }
         }
         return url;
-    }
-
-    /**
-     * Get a version of the video with the highest bitrate that is below
-     * the available bandwidth
-     *
-     * @param  {Object} res
-     * @param  {Object} params
-     *
-     * @return {Object}
-     */
-    pickVideoVersion(res, params) {
-        if (params.hasOwnProperty('bitrate')) {
-            return _.find(res.resources, { bitrates: { video: params.bitrate }}) || null;
-        }
-        let bandwidth = getBandwidth(this.connectionType);
-        let bitrate = (version) => {
-            return parseInt(_.get(version, 'bitrates.video'));
-        };
-        let below = (version) => {
-            let b = bitrate(version);
-            return (b <= bandwidth) ? bandwidth - b : Infinity;
-        };
-        let above = (version) => {
-            let b = bitrate(version);
-            return (b > bandwidth) ? b - bandwidth : 0;
-        };
-        let versions = _.sortBy(res.versions, [ below, above ]);
-        return _.first(versions) || null;
-    }
-
-    /**
-     * Get a version of the video with the highest bitrate that is below
-     * the available bandwidth
-     *
-     * @param  {Object} res
-     * @param  {Object} params
-     *
-     * @return {Object|null}
-     */
-    pickAudioVersion(res, params) {
-        if (params.hasOwnProperty('bitrate')) {
-            return _.find(res.resources, { bitrates: { audio: params.bitrate }}) || null;
-        }
-        let bandwidth = this.getBandwidth();
-        let bitrate = (version) => {
-            return parseInt(_.get(version, 'bitrates.audio'));
-        };
-        // find bitrate closest to bandwidth, below it if possible
-        let below = (version) => {
-            let b = bitrate(version);
-            return (b <= bandwidth) ? bandwidth - b : Infinity;
-        };
-        let above = (version) => {
-            let b = bitrate(version);
-            return (b > bandwidth) ? b - bandwidth : 0;
-        };
-        let versions = _.sortBy(res.versions, [ below, above ]);
-        return _.first(versions) || null;
     }
 
     logError(err, info) {
@@ -197,24 +138,6 @@ class Environment {
 
     getRelativeDate(diff, unit) {
         return getRelativeDate(this.date, diff, unit);
-    }
-}
-
-const KBPS = 1000;
-
-function getBandwidth(networkType) {
-    switch (networkType) {
-        case 'cellular':
-        case '2g':
-            return 50 * KBPS;
-        case '3g':
-            return 400 * KBPS;
-        case '4g':
-            return 5000 * KBPS;
-        case 'ethernet':
-        case 'wifi':
-        default:
-            return 10000 * KBPS;
     }
 }
 

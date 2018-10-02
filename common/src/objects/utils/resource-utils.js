@@ -130,10 +130,10 @@ function getClippingRect(res, params) {
  *
  * @return {Object}
  */
-function getDimensions(res, params) {
+function getDimensions(res, params, env) {
     if (res.type === 'video') {
         if (!params.original) {
-            let version = this.pickVideoVersion(res, params);
+            let version = pickVideoVersion(res, params, env);
             if (version && version.width && version.height) {
                 return {
                     width: version.width,
@@ -275,6 +275,67 @@ function getRemoteImageURL(res, params, env) {
     return `${env.address}${resURL}${versionPath}`;
 }
 
+/**
+ * Get a version of the video with the highest bitrate that is below
+ * the available bandwidth
+ *
+ * @param  {Object} res
+ * @param  {Object} params
+ * @param  {Environment} env
+ *
+ * @return {Object}
+ */
+function pickVideoVersion(res, params, env) {
+    if (params.hasOwnProperty('bitrate')) {
+        return _.find(res.resources, { bitrates: { video: params.bitrate }}) || null;
+    }
+    let bandwidth = getBandwidth(env.connectionType);
+    let bitrate = (version) => {
+        return parseInt(_.get(version, 'bitrates.video'));
+    };
+    let below = (version) => {
+        let b = bitrate(version);
+        return (b <= bandwidth) ? bandwidth - b : Infinity;
+    };
+    let above = (version) => {
+        let b = bitrate(version);
+        return (b > bandwidth) ? b - bandwidth : 0;
+    };
+    let versions = _.sortBy(res.versions, [ below, above ]);
+    return _.first(versions) || null;
+}
+
+/**
+ * Get a version of the video with the highest bitrate that is below
+ * the available bandwidth
+ *
+ * @param  {Object} res
+ * @param  {Object} params
+ * @param  {Environment} env
+ *
+ * @return {Object|null}
+ */
+function pickAudioVersion(res, params, env) {
+    if (params.hasOwnProperty('bitrate')) {
+        return _.find(res.resources, { bitrates: { audio: params.bitrate }}) || null;
+    }
+    let bandwidth = getBandwidth(env.connectionType);
+    let bitrate = (version) => {
+        return parseInt(_.get(version, 'bitrates.audio'));
+    };
+    // find bitrate closest to bandwidth, below it if possible
+    let below = (version) => {
+        let b = bitrate(version);
+        return (b <= bandwidth) ? bandwidth - b : Infinity;
+    };
+    let above = (version) => {
+        let b = bitrate(version);
+        return (b > bandwidth) ? b - bandwidth : 0;
+    };
+    let versions = _.sortBy(res.versions, [ below, above ]);
+    return _.first(versions) || null;
+}
+
 function decodeLength(s) {
     let m;
     if (typeof(s) === 'number') {
@@ -288,6 +349,24 @@ function decodeLength(s) {
     }
 }
 
+const KBPS = 1000;
+
+function getBandwidth(networkType) {
+    switch (networkType) {
+        case 'cellular':
+        case '2g':
+            return 50 * KBPS;
+        case '3g':
+            return 400 * KBPS;
+        case '4g':
+            return 5000 * KBPS;
+        case 'ethernet':
+        case 'wifi':
+        default:
+            return 10000 * KBPS;
+    }
+}
+
 export {
     mergeLists,
     getImageDimensions,
@@ -295,4 +374,6 @@ export {
     getClippingRect,
     getLocalImageURL,
     getRemoteImageURL,
+    pickVideoVersion,
+    pickAudioVersion,
 };
