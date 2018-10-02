@@ -3,8 +3,8 @@ import React, { Component } from 'react';
 import * as MediaLoader from 'media/media-loader';
 import * as ImageCropping from 'media/image-cropping';
 
-import BitmapView from 'media/bitmap-view';
-import VectorView from 'media/vector-view';
+import BitmapView from 'widgets/bitmap-view';
+import VectorView from 'widgets/vector-view';
 
 require('./resource-view.scss');
 

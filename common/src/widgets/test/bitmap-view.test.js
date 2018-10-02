@@ -7,7 +7,7 @@ import Adapter from 'enzyme-adapter-react-16';
 
 Enzyme.configure({ adapter: new Adapter() });
 
-import BitmapView from 'media/bitmap-view';
+import BitmapView from 'widgets/bitmap-view';
 
 import imageWithOrientation from './images/jpeg-orientation-sample.jpg';
 
