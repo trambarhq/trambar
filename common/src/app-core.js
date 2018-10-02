@@ -190,7 +190,7 @@ function start(cfg) {
                 let { address } = destination;
                 let url = address + response.url;
                 console.log(url + ' => (blob)');
-                BlobManager.associate(part.file, url);
+                BlobManager.associate(file, url);
             }
         }
     });

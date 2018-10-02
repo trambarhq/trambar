@@ -3,6 +3,7 @@ import React from 'react';
 import MarkGor from 'mark-gor/react';
 import * as ListParser from 'utils/list-parser';
 import * as PlainText from 'utils/plain-text';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 
 // widgets
 import ResourceView from 'widgets/resource-view';
@@ -313,10 +314,15 @@ function createRenderer() {
  * @return {ReactElement}
  */
 function renderImage(token, key) {
-    let href = token.href;
+    let url = token.href;
     let title = token.title;
     let text = token.text;
-    return <ResourceView key={key} url={href} alt={text} title={title} />;
+    let resource = ResourceUtils.parseJSONEncodedURL(url);
+    if (resource) {
+        return <ResourceView key={key} resource={resource} alt={text} title={title} />;
+    } else {
+        return <img key={key} src={url} alt={text} title={title} />;
+    }
 };
 
 /**

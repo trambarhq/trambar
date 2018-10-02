@@ -121,6 +121,9 @@ function getImageDimensions(res, params) {
  * @return {Object}
  */
 function getClippingRect(res, params) {
+    if (!params) {
+        params = {};
+    }
     if (params.original) {
         return null;
     }
@@ -168,35 +171,42 @@ function getDimensions(res, params, env) {
  *
  * @param  {Object} res
  * @param  {Object} params
+ * @param  {Environment} env
  *
  * @return {String|undefined}
  */
-function getLocalImageURL(res, params) {
-    if (!res.payload_token) {
+function getLocalImageURL(res, params, env) {
+    let blob;
+    if (res.payload_token) {
+        let name;
+        switch (res.type) {
+            case 'video':
+            case 'audio':
+            case 'website':
+                name = 'poster';
+                break;
+            default:
+                name = 'main';
+                break;
+        }
+        let payloadURL = `payload:${res.payload_token}/${name}`;
+        blob = BlobManager.find(payloadURL);
+    }
+    if (!blob) {
+        let remoteURL = getRemoteImageURL(res, params, env);
+        if (remoteURL) {
+            blob = BlobManager.find(remoteURL);
+        }
+    }
+    if (!blob) {
         return;
     }
-    let name;
-    switch (res.type) {
-        case 'video':
-        case 'audio':
-        case 'website':
-            name = 'poster';
-            break;
-        default:
-            name = 'main';
-            break;
+    if (params.jsonURL) {
+        // encode the resource as JSON
+        return `json:${JSON.stringify(res)}`;
+    } else if (params.original) {
+        return BlobManager.url(blob);
     }
-    let url = `payload:${res.payload_token}/${name}`;
-    let blob = BlobManager.find(url);
-    if (!blob) {
-        return null;
-    }
-    let data = {
-        url: BlobManager.url(blob),
-        clip: getClippingRect(res, params),
-        format: res.format,
-    };
-    return `json:${JSON.stringify(data)}`;
 }
 
 /**
@@ -382,10 +392,13 @@ function getImageURL(res, params, env) {
     if (!params) {
         params = {};
     }
-    let url = getRemoteImageURL(res, params, env);
+    let url;
+    if (!params.local) {
+        url = getRemoteImageURL(res, params, env);
+    }
     if (!url) {
         if (!params.remote) {
-            url = getLocalImageURL(res, params);
+            url = getLocalImageURL(res, params, env);
         }
     }
     return url;
@@ -452,13 +465,31 @@ function getMarkdownIconURL(res, forImage, env) {
             // images are style at height = 1.5em
             let params = {
                 height: 24,
-                useJSONEncoding: true
+                jsonURL: true
             };
             return getImageURL(res, params, env);
         }
     } else {
         return getURL(res, {}, env);
     }
+}
+
+/**
+ * Parse a JSON URL crated by getLocalImageURL()
+ *
+ * @param  {String} url
+ *
+ * @return {Object|null}
+ */
+function parseJSONEncodedURL(url) {
+    if (_.startsWith(url, 'json:')) {
+        let json = url.substr(5);
+        try {
+            return JSON.parse(json);
+        } catch(err) {
+        }
+    }
+    return null;
 }
 
 function decodeLength(s) {
@@ -497,8 +528,6 @@ export {
     getImageDimensions,
     getDimensions,
     getClippingRect,
-    getLocalImageURL,
-    getRemoteImageURL,
     pickVideoVersion,
     pickAudioVersion,
     getURL,
@@ -507,4 +536,5 @@ export {
     getAudioURL,
     getMarkdownIconURL,
     hasPoster,
+    parseJSONEncodedURL,
 };

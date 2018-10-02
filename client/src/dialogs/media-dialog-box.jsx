@@ -204,7 +204,7 @@ class MediaDialogBox extends PureComponent {
             width: res.width,
             height: res.height,
             clip: false,
-            animation: true,
+            showAnimation: true,
             env,
         };
         if (props.width > maxWidth) {
