@@ -79,6 +79,20 @@ function findIndexMapping(listA, listB) {
     return map;
 }
 
+function hasPoster(res) {
+    if (!res) {
+        if (res.poster_url) {
+            return true;
+        }
+        let url = `payload:${res.payload_token}/poster`;
+        let blob = BlobManager.find(url);
+        if (blob) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function getImageDimensions(res, params) {
     if (!params) {
         params = {};
@@ -430,6 +444,23 @@ function getAudioURL(res, params, env) {
     return url;
 }
 
+function getMarkdownIconURL(res, forImage, env) {
+    if (forImage)  {
+        if (res.type === 'audio') {
+            return require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
+        } else {
+            // images are style at height = 1.5em
+            let params = {
+                height: 24,
+                useJSONEncoding: true
+            };
+            return getImageURL(res, params, env);
+        }
+    } else {
+        return getURL(res, {}, env);
+    }
+}
+
 function decodeLength(s) {
     let m;
     if (typeof(s) === 'number') {
@@ -474,4 +505,6 @@ export {
     getImageURL,
     getVideoURL,
     getAudioURL,
+    getMarkdownIconURL,
+    hasPoster,
 };

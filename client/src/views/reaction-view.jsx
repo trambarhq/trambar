@@ -424,23 +424,10 @@ class ReactionView extends PureComponent {
         let resources = _.get(reaction, 'details.resources');
         let res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
-            let url;
-            if (evt.forImage)  {
-                if (res.type === 'audio') {
-                    url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
-                } else {
-                    // images are style at height = 1.5em
-                    url = ResourceUtils.getImageURL(res, { height: 24 }, env);
-                }
-            } else {
-                url = ResourceUtils.getURL(res, {}, env);
-            }
             // remember the resource and the url
             this.resourcesReferenced[url] = res;
-            return {
-                href: url,
-                title: undefined
-            };
+            let url = ResourceUtils.getMarkdownIconURL(res, evt.forImage, env);
+            return { href: url, title: undefined };
         }
     }
 

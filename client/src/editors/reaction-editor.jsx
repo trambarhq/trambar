@@ -528,19 +528,10 @@ class ReactionEditor extends PureComponent {
         let { evn } = this.props;
         let { draft } = this.state;
         let resources = draft.details.resources;
-        let resource = Markdown.findReferencedResource(resources, evt.name);
-        if (resource) {
-            let url;
-            if (evt.forImage)  {
-                // images are style at height = 1.5em
-                url = ResourceUtils.getImageURL(resource, { height: 24 }, env);
-            } else {
-                url = ResourceUtils.getURL(resource, env);
-            }
-            return {
-                href: url,
-                title: undefined
-            };
+        let res = Markdown.findReferencedResource(resources, evt.name);
+        if (res) {
+            let url = ResourceUtils.getMarkdownIconURL(res, evt.forImage, env);
+            return { href: url, title: undefined };
         }
     }
 

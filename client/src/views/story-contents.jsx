@@ -847,23 +847,10 @@ class StoryContents extends PureComponent {
         let resources = _.get(story, 'details.resources');
         let res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
-            let url;
-            if (evt.forImage)  {
-                if (res.type === 'audio') {
-                    url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
-                } else {
-                    // images are style at height = 1.5em
-                    url = ResourceUtils.getImageURL(res, { height: 24 }, env);
-                }
-            } else {
-                url = ResourceUtils.getURL(res, {}, env);
-            }
             // remember that resource is referenced in Markdown
             this.resourcesReferenced.push(res);
-            return {
-                href: url,
-                title: evt.name
-            };
+            let url = ResourceUtils.getMarkdownIconURL(res, evt.forImage, env);
+            return { href: url, title: evt.name };
         }
     }
 
@@ -901,7 +888,7 @@ class StoryContents extends PureComponent {
                      window.open(res.url, '_blank');
                  } else if (res.type === 'audio') {
                      let version = chooseAudioVersion(res);
-                     let audioURL = ResourceUtils.getAudioURL(res, { version });
+                     let audioURL = ResourceUtils.getAudioURL(res, { version }, env);
                      this.setState({ audioURL });
                  }
              }

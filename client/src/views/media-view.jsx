@@ -228,11 +228,9 @@ class MediaView extends PureComponent {
      * @return {ReactElement}
      */
     renderAudio(res, key) {
-        let { env } = this.props;
         let { audioURL } = this.state;
         let className = 'audio';
-        let url = ResourceUtils.getImageURL(res, {}, env);
-        if (!url) {
+        if (!ResourceUtils.hasPoster(res)) {
             className += ' posterless';
         }
         let action = (!audioURL) ? 'play' : 'stop';
