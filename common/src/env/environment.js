@@ -1,7 +1,7 @@
 import Moment from 'moment';
 import * as BlobManager from 'transport/blob-manager';
-import * as ImageCropping from 'media/image-cropping';
 import { memoizeStrong } from 'utils/memoize';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 
 class Environment {
     constructor(envMonitor, extra) {
@@ -111,7 +111,7 @@ class Environment {
         }
         let data = {
             url: BlobManager.url(blob),
-            clip: getClippingRect(res, params),
+            clip: ResourceUtils.getClippingRect(res, params),
             format: res.format,
         };
         return `json:${JSON.stringify(data)}`;
@@ -144,7 +144,7 @@ class Environment {
         if (!params.original) {
             let filters = [];
             // apply clipping rect
-            let clip = getClippingRect(res, params);
+            let clip = ResourceUtils.getClippingRect(res, params);
             if (clip) {
                 // run number through Math.round() just in case error elsewhere left fractional pixel dimensions
                 let rect = _.map([ clip.left, clip.top, clip.width, clip.height ], Math.round);
@@ -257,52 +257,6 @@ class Environment {
         return url;
     }
 
-    getImageDimensions(res, params) {
-        if (!params) {
-            params = {};
-        }
-        let clip = getClippingRect(res, params);
-        if (clip && !params.original) {
-            // return the dimensions of the clipping rect
-            return {
-                width: clip.width,
-                height: clip.height,
-            }
-        } else {
-            return {
-                width: res.width,
-                height: res.height,
-            };
-        }
-    }
-
-    /**
-     * Return a resource's dimensions
-     *
-     * @param  {Object} res
-     * @param  {Object} params
-     *
-     * @return {Object}
-     */
-    getDimensions(res, params) {
-        if (res.type === 'video') {
-            if (!params.original) {
-                let version = this.pickVideoVersion(res, params);
-                if (version && version.width && version.height) {
-                    return {
-                        width: version.width,
-                        height: version.height,
-                    };
-                }
-            }
-            return {
-                width: res.width,
-                height: res.height,
-            };
-        }
-        return this.getImageDimensions(res, params);
-    }
-
     /**
      * Get a version of the video with the highest bitrate that is below
      * the available bandwidth
@@ -401,22 +355,6 @@ function getBandwidth(networkType) {
         default:
             return 10000 * KBPS;
     }
-}
-
-function getClippingRect(res, params) {
-    if (params.original) {
-        return null;
-    }
-    var clip = res.clip;
-    if (params.hasOwnProperty('clip')) {
-        // override the one stored in res
-        clip = params.clip;
-    } else {
-        if (!clip) {
-            clip = ImageCropping.apply(res.width, res.height);
-        }
-    }
-    return clip;
 }
 
 const getRelativeDate = memoizeStrong('', function(date, diff, unit) {

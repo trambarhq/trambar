@@ -2,6 +2,7 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 import * as MediaLoader from 'media/media-loader';
 import * as ImageCropping from 'media/image-cropping';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 
 import BitmapView from 'widgets/bitmap-view';
 import VectorView from 'widgets/vector-view';
@@ -63,7 +64,7 @@ class ResourceView extends Component {
     getDimensions(props) {
         let { env, resource, width, height, clip } = props || this.props;
         if (resource) {
-            let dims = env.getImageDimensions(resource, {
+            let dims = ResourceUtils.getImageDimensions(resource, {
                 original: !clip
             });
             if (width) {

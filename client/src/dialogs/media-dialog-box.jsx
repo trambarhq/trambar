@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import Hammer from 'hammerjs';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 
 // widgets
 import Overlay from 'widgets/overlay';
@@ -144,7 +145,7 @@ class MediaDialogBox extends PureComponent {
             let viewportAspect = viewportWidth / viewportHeight;
             let maxWidth, maxHeight;
             _.each(resources, (res) => {
-                let dims = env.getDimensions(res, { clip: null });
+                let dims = ResourceUtils.getDimensions(res, { clip: null });
                 if (!(maxWidth >= dims.width)) {
                     maxWidth = dims.width;
                 }
@@ -229,7 +230,7 @@ class MediaDialogBox extends PureComponent {
     renderVideo(res) {
         let { env } = this.props;
         let url = env.getVideoURL(res);
-        let dims = env.getDimensions(res, { clip: null });
+        let dims = ResourceUtils.getDimensions(res, { clip: null });
         let posterURL = env.getImageURL(res, {
             width: dims.width,
             height: dims.height,
