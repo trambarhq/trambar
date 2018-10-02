@@ -1,5 +1,4 @@
 import Moment from 'moment';
-import * as BlobManager from 'transport/blob-manager';
 import { memoizeStrong } from 'utils/memoize';
 import * as ResourceUtils from 'objects/utils/resource-utils';
 
@@ -72,138 +71,13 @@ class Environment {
         if (!params) {
             params = {};
         }
-        let url = this.getRemoteImageURL(res, params);
+        let url = ResourceUtils.getRemoteImageURL(res, params, this);
         if (!url) {
             if (!params.remote) {
-                url = this.getLocalImageURL(res, params);
+                url = ResourceUtils.getLocalImageURL(res, params);
             }
         }
         return url;
-    }
-
-    /**
-     * Return URL of a resource's image at that has not been uploaded yet
-     *
-     * @param  {Object} res
-     * @param  {Object} params
-     *
-     * @return {String|undefined}
-     */
-    getLocalImageURL(res, params) {
-        if (!res.payload_token) {
-            return;
-        }
-        let name;
-        switch (res.type) {
-            case 'video':
-            case 'audio':
-            case 'website':
-                name = 'poster';
-                break;
-            default:
-                name = 'main';
-                break;
-        }
-        let url = `payload:${res.payload_token}/${name}`;
-        let blob = BlobManager.find(url);
-        if (!blob) {
-            return null;
-        }
-        let data = {
-            url: BlobManager.url(blob),
-            clip: ResourceUtils.getClippingRect(res, params),
-            format: res.format,
-        };
-        return `json:${JSON.stringify(data)}`;
-    }
-
-    /**
-     * Return URL of a resource's image at remote server
-     *
-     * @param  {Object} res
-     * @param  {Object} params
-     *
-     * @return {String|undefined}
-     */
-    getRemoteImageURL(res, params) {
-        let resURL;
-        switch(res.type) {
-            case 'video':
-            case 'audio':
-            case 'website':
-                resURL = res.poster_url;
-                break;
-            default:
-                resURL = res.url;
-        }
-        if (!resURL) {
-            return;
-        }
-
-        let versionPath = '';
-        if (!params.original) {
-            let filters = [];
-            // apply clipping rect
-            let clip = ResourceUtils.getClippingRect(res, params);
-            if (clip) {
-                // run number through Math.round() just in case error elsewhere left fractional pixel dimensions
-                let rect = _.map([ clip.left, clip.top, clip.width, clip.height ], Math.round);
-                filters.push(`cr${rect.join('-')}`)
-            }
-            // resize image (if dimensions are specified)
-            let width = decodeLength(params.width);
-            let height = decodeLength(params.height);
-            if (this.devicePixelRatio !== 1) {
-                // request higher resolution image when pixel density is higher
-                width = width * this.devicePixelRatio;
-                height = height * this.devicePixelRatio;
-            }
-            width = Math.round(width);
-            height = Math.round(height);
-            let resizing = width || height;
-            if (resizing) {
-                if (width && height) {
-                    filters.push(`re${width}-${height}`);
-                } else if (!width && height) {
-                    filters.push(`h${height}`);
-                } else if (!height && width) {
-                    filters.push(`w${width}`);
-                }
-                if (res.format === 'png' || res.format === 'gif') {
-                    // add sharpen filter to reduce blurriness
-                    filters.push(`sh`);
-                }
-            }
-            // set quality
-            if (params.quality !== undefined) {
-                filters.push(`q${params.quality}`);
-            }
-            // choose format
-            let ext;
-            if (res.format === 'svg') {
-                // stick with SVG
-                ext = 'svg';
-            } else {
-                if (this.webpSupport) {
-                    ext = 'webp';
-                    if (res.format === 'png' || res.format === 'gif') {
-                        if (!resizing) {
-                            // use lossless compression (since it'll likely produce a smaller file)
-                            filters.push(`l`);
-                        }
-                    }
-                } else {
-                    if (res.format === 'png' || res.format === 'gif') {
-                        // use PNG to preserve alpha channel
-                        ext = `png`;
-                    } else {
-                        ext = 'jpg';
-                    }
-                }
-            }
-            versionPath = `/${filters.join('+')}.${ext}`;
-        }
-        return `${this.address}${resURL}${versionPath}`;
     }
 
     /**
@@ -323,19 +197,6 @@ class Environment {
 
     getRelativeDate(diff, unit) {
         return getRelativeDate(this.date, diff, unit);
-    }
-}
-
-function decodeLength(s) {
-    let m;
-    if (typeof(s) === 'number') {
-        return s;
-    } else if (m = /^(\d+)\s*vw/.exec(s)) {
-        let n = parseInt(m[1]);
-        return Math.round(n * document.body.offsetWidth / 100);
-    } else if (m = /^(\d+)\s*vh/.exec(s)) {
-        let n = parseInt(m[1]);
-        return Math.round(n * document.body.offsetHeight / 100);
     }
 }
 

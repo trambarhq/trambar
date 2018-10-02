@@ -3,6 +3,7 @@ import * as BlobManager from 'transport/blob-manager';
 import * as BlobReader from 'transport/blob-reader';
 import * as JPEGAnalyser from 'media/jpeg-analyser';
 import * as FrameGrabber from 'media/frame-grabber';
+import * as ImageOrientation from 'media/image-orientation';
 import CordovaFile from 'transport/cordova-file';
 
 /**
@@ -138,55 +139,54 @@ function getImageMetadata(blob) {
                 };
             });
         });
+    }
+    let format = extractFileFormat(blob.type);
+    if (format === 'svg') {
+        // naturalWidth and naturalHeight aren't correct when the SVG file
+        // doesn't have width and height set
+        return loadSVG(blob).then((svg) => {
+            let width = svg.width.baseVal.value;
+            let height = svg.height.baseVal.value;
+            let viewBox = svg.viewBox.baseVal;
+            if (!width) {
+                width = viewBox.width;
+            }
+            if (!height) {
+                height = viewBox.height;
+            }
+            if (!width) {
+                width = 1000;
+            }
+            if (!height) {
+                height = 1000;
+            }
+            return { width, height, format };
+        });
+    } else if (format === 'jpeg') {
+        return BlobReader.loadUint8Array(blob).then((bytes) => {
+            let dimensions = JPEGAnalyser.getDimensions(bytes);
+            let orientation = JPEGAnalyser.getOrientation(bytes);
+            if (!dimensions) {
+                throw new Error('Invalid JPEG file');
+            }
+            let width, height;
+            if (orientation >= 5) {
+                width = dimensions.height;
+                height = dimensions.width;
+            } else {
+                width = dimensions.width;
+                height = dimensions.height;
+            }
+            return { width, height, format };
+        });
     } else {
-        let format = extractFileFormat(blob.type);
-        if (format === 'svg') {
-            // naturalWidth and naturalHeight aren't correct when the SVG file
-            // doesn't have width and height set
-            return loadSVG(blob).then((svg) => {
-                let width = svg.width.baseVal.value;
-                let height = svg.height.baseVal.value;
-                let viewBox = svg.viewBox.baseVal;
-                if (!width) {
-                    width = viewBox.width;
-                }
-                if (!height) {
-                    height = viewBox.height;
-                }
-                if (!width) {
-                    width = 1000;
-                }
-                if (!height) {
-                    height = 1000;
-                }
-                return { width, height, format };
-            });
-        } else if (format === 'jpeg') {
-            return BlobReader.loadUint8Array(blob).then((bytes) => {
-                let dimensions = JPEGAnalyser.getDimensions(bytes);
-                let orientation = JPEGAnalyser.getOrientation(bytes);
-                if (!dimensions) {
-                    throw new Error('Invalid JPEG file');
-                }
-                let width, height;
-                if (orientation >= 5) {
-                    width = dimensions.height;
-                    height = dimensions.width;
-                } else {
-                    width = dimensions.width;
-                    height = dimensions.height;
-                }
-                return { width, height, format };
-            });
-        } else {
-            return loadImage(blob).then((img) => {
-                return {
-                    width: img.naturalWidth,
-                    height: img.naturalHeight,
-                    format: format,
-                }
-            });
-        }
+        return loadImage(blob).then((img) => {
+            return {
+                width: img.naturalWidth,
+                height: img.naturalHeight,
+                format: format,
+            }
+        });
     }
 }
 
@@ -217,19 +217,18 @@ function getVideoMetadata(blob) {
                 });
             });
         });
-    } else {
-        return loadVideo(blob).then((video) => {
-            return FrameGrabber.capture(video).then((posterBlob) => {
-                return {
-                    width: video.videoWidth,
-                    height: video.videoHeight,
-                    duration: Math.round(video.duration * 1000),
-                    format: extractFileFormat(blob.type),
-                    poster: posterBlob,
-                };
-            });
-        });
     }
+    return loadVideo(blob).then((video) => {
+        return FrameGrabber.capture(video).then((posterBlob) => {
+            return {
+                width: video.videoWidth,
+                height: video.videoHeight,
+                duration: Math.round(video.duration * 1000),
+                format: extractFileFormat(blob.type),
+                poster: posterBlob,
+            };
+        });
+    });
 }
 
 /**
@@ -254,14 +253,13 @@ function getAudioMetadata(blob) {
                 };
             });
         });
-    } else {
-        return loadAudio(blob).then((audio) => {
-            return {
-                duration: Math.round(audio.duration * 1000),
-                format: extractFileFormat(blob.type),
-            };
-        });
     }
+    return loadAudio(blob).then((audio) => {
+        return {
+            duration: Math.round(audio.duration * 1000),
+            format: extractFileFormat(blob.type),
+        };
+    });
 }
 
 /**
@@ -322,6 +320,56 @@ function extractFileFormat(mimeType) {
 }
 
 /**
+ * Extract a 4x4 mosiac of an image file
+ *
+ * @param  {Blob|CordovaFile|String} blob
+ * @param  {Object} rect
+ *
+ * @return {Promise<Object>}
+ */
+function extractMosaic(blob, rect) {
+    if (typeof(blob) === 'string') {
+        let url = blob;
+        return BlobManager.fetch(url).then((blob) => {
+            return extractMosaic(blob, rect);
+        }).catch((err) => {
+        });
+    }
+    // load the image and its bytes
+    let imageP = MediaLoader.loadImage(blob);
+    let bytesP = BlobReader.loadUint8Array(blob);
+    return Promise.join(imageP, bytesP, (image, bytes) => {
+        let orientation = JPEGAnalyser.getOrientation(bytes) || 1;
+        let matrix = ImageOrientation.getOrientationMatrix(orientation, image.naturalWidth, image.naturalHeight);
+        let inverse = ImageOrientation.invertMatrix(matrix);
+        let src = ImageOrientation.transformRect(inverse, rect);
+        let dst = ImageOrientation.transformRect(inverse, { left: 0, top: 0, width: 4, height: 4 });
+
+        let canvas = document.createElement('CANVAS');
+        canvas.width = 4;
+        canvas.height = 4;
+        let context = canvas.getContext('2d');
+        context.transform.apply(context, matrix);
+        context.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);
+        let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        let pixels = imageData.data;
+        if (_.size(pixels) >= 64) {
+            let colors = [];
+            for (let i = 0; i < 16; i++) {
+                let r = pixels[i * 4 + 0];
+                let g = pixels[i * 4 + 1];
+                let b = pixels[i * 4 + 2];
+                let rgb = (r << 16) | (g << 8) | (b << 0);
+                colors.push(rgb.toString(16));
+            }
+            return colors;
+        }
+    }).catch((err) => {
+        console.log(err.message);
+    });
+}
+
+/**
  * Return information about a MediaFile
  *
  * @param  {MediaFile} mediaFile
@@ -332,7 +380,7 @@ function getFormatData(mediaFile) {
     return new Promise((resolve, reject) => {
         mediaFile.getFormatData(resolve, reject);
     });
-};
+}
 
 export {
     loadImage,
@@ -344,5 +392,6 @@ export {
     getAudioMetadata,
     extractFileCategory,
     extractFileFormat,
+    extractMosaic,
     getFormatData,
 };
