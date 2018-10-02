@@ -308,7 +308,6 @@ class ImageEditor extends PureComponent {
         let { imageCropper } = this.components;
         resource = _.clone(resource);
         resource.clip = evt.rect;
-        resource.mosaic = imageCropper.extractMosaic();
         this.triggerChangeEvent(resource);
     }
 
@@ -322,13 +321,6 @@ class ImageEditor extends PureComponent {
         let { imageCropper } = this.components;
         let url = evt.target.props.url;
         this.setState({ loadedImageURL: url });
-
-        // set mosaic if there isn't one
-        if (!resource.mosaic) {
-            resource = _.clone(resource);
-            resource.mosaic = imageCropper.extractMosaic();
-            this.triggerChangeEvent(resource);
-        }
     }
 }
 

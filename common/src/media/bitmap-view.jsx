@@ -5,6 +5,7 @@ import * as BlobManager from 'transport/blob-manager';
 import * as BlobReader from 'transport/blob-reader';
 import * as MediaLoader from 'media/media-loader';
 import * as JPEGAnalyser from 'media/jpeg-analyser';
+import * as ImageOrientation from 'media/image-orientation';
 import ComponentRefs from 'utils/component-refs';
 
 class BitmapView extends PureComponent {
@@ -153,44 +154,7 @@ class BitmapView extends PureComponent {
             this.redrawNeeded = true;
             return;
         }
-        let orientation = this.orientation;
-        let imageWidth = image.naturalWidth;
-    	let imageHeight = image.naturalHeight;
-    	let matrix;
-    	switch (orientation) {
-    		case 1:
-    			// normal
-    			matrix = [1, 0, 0, 1, 0, 0];
-    			break;
-    		case 2:
-    			// flip horizontally
-    			matrix = [-1, 0, 0, 1, imageWidth, 0];
-    			break;
-    		case 3:
-    			// rotate 180
-    			matrix = [-1, 0, 0, -1, imageWidth, imageHeight];
-    			break;
-    		case 4:
-    			// flip vertically
-    			matrix = [1, 0, 0, -1, 0, imageHeight];
-    			break;
-    		case 5:
-    			// transpose
-    			matrix = [0, 1, 1, 0, 0, 0];
-    			break;
-    		case 6:
-    			// rotate 90
-    			matrix = [0, 1, -1, 0, imageHeight, 0];
-    			break;
-    		case 7:
-    			// transverse
-    			matrix = [0, -1, -1, 0, imageHeight, imageWidth]
-    			break;
-    		case 8:
-    			// rotate 270
-    			matrix = [0, -1, 1, 0, 0, imageWidth];
-    			break;
-    	}
+    	let matrix = ImageOrientation.getOrientationMatrix(this.orientation, image.naturalWidth, image.naturalHeight);
         if (!rect) {
             rect = {
                 left: 0,
@@ -202,45 +166,14 @@ class BitmapView extends PureComponent {
         this.width = rect.width;
         this.height = rect.height;
 
-        let inverse = invert(matrix);
-    	let src = transformRect(inverse, rect);
-    	let dst = transformRect(inverse, { left: 0, top: 0, width: rect.width, height: rect.height });
+        let inverse = ImageOrientation.invertMatrix(matrix);
+    	let src = ImageOrientation.transformRect(inverse, rect);
+    	let dst = ImageOrientation.transformRect(inverse, { left: 0, top: 0, width: rect.width, height: rect.height });
     	canvas.width = dst.width;
     	canvas.height = dst.height;
     	let context = canvas.getContext('2d');
     	context.transform.apply(context, matrix);
         context.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);
-    }
-
-    extractMosaic() {
-        let { canvas } = this.components;
-        try {
-            let miniCanvas = document.createElement('CANVAS');
-            miniCanvas.width = 48;
-            miniCanvas.height = 48;
-            let miniContext = miniCanvas.getContext('2d');
-            miniContext.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, miniCanvas.width, miniCanvas.height);
-            let microCanvas = document.createElement('CANVAS');
-            microCanvas.width = 4;
-            microCanvas.height = 4;
-            let microContext = microCanvas.getContext('2d');
-            microContext.drawImage(miniCanvas, 0, 0, miniCanvas.width, miniCanvas.height, 0, 0, microCanvas.width, microCanvas.height);
-            let imageData = microContext.getImageData(0, 0, microCanvas.width, microCanvas.height);
-            let pixels = imageData.data;
-            if (_.size(pixels) >= 64) {
-                let colors = [];
-                for (let i = 0; i < 16; i++) {
-                    let r = pixels[i * 4 + 0];
-                    let g = pixels[i * 4 + 1];
-                    let b = pixels[i * 4 + 2];
-                    let rgb = (r << 16) | (g << 8) | (b << 0);
-                    colors.push(rgb.toString(16));
-                }
-                return colors;
-            }
-        } catch (err) {
-
-        }
     }
 
     /**
@@ -257,64 +190,6 @@ class BitmapView extends PureComponent {
         this.height = 0;
         this.orientation = undefined;
     }
-}
-
-/**
- * Calculate inverse of affine matrix
- *
- * @param  {Array<Number>} m
- *
- * @return {Array<Number>}
- */
-function invert(m) {
-	let [a, b, c, d, e, f] = m;
-	let dt = (a * d - b * c);
-	return [
-		d / dt,
-		-b / dt,
-		-c / dt,
-		a / dt,
-		(c * f - d * e) / dt,
-		-(a * f - b * e) / dt,
-	];
-}
-
-/**
- * Transform a point using affine matrix
- *
- * @param  {Array<Number>} m
- * @param  {Array<Number>} p
- *
- * @return {Array<Number>}
- */
-function transform(m, p) {
-	let [a, b, c, d, e, f] = m;
-	let [x, y] = p;
-	return [
-		a * x + c * y + e,
-		b * x + d * y + f,
-	];
-}
-
-/**
- * Transform a rectangle using affine matrix
- *
- * @param  {Array<Number>} m
- * @param  {Object} r
- *
- * @return {Object}
- */
-function transformRect(m, r) {
-	let c1 = [ r.left, r.top ];
-	let c2 = [ r.left + r.width, r.top + r.height ];
-	c1 = transform(m, c1);
-	c2 = transform(m, c2);
-	return {
-		width: Math.abs(c2[0] - c1[0]),
-		height: Math.abs(c2[1] - c1[1]),
-		left: Math.min(c2[0], c1[0]),
-		top: Math.min(c2[1], c1[1]),
-	};
 }
 
 export {
