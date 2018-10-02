@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import Merger from 'data/merger';
-import ResourceUtils from 'objects/utils/resource-utils';
+import { mergeObjects } from 'data/merger';
+import { mergeLists } from 'objects/utils/resource-utils';
 import {
     TrackableStoryTypes,
     EditableStoryTypes
@@ -157,10 +157,10 @@ function mergeRemoteChanges(local, remote, common) {
     }
     let resolveFns = {
         details: {
-            resources: ResourceUtils.mergeLists
+            resources: mergeLists
         }
     };
-    let merged = Merger.mergeObjects(local, remote, common, resolveFns);
+    let merged = mergeObjects(local, remote, common, resolveFns);
     _.assign(local, merged);
     return true;
 }

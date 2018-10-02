@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import Merger from 'data/merger';
 import ReactionTypes from 'objects/types/reaction-types';
 import { mergeRemoteChanges } from 'objects/utils/story-utils';
 

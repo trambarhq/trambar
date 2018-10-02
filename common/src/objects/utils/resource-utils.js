@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Merger from 'data/merger';
+import { mergeObjects } from 'data/merger';
 
 /**
  * Merge remote resource list into local one
@@ -26,7 +26,7 @@ function mergeLists(local, remote, common) {
             let a = { resource: resL, index: indexL };
             let b = { resource: resR, index: indexR };
             let c = { resource: resC, index: indexC };
-            let d = Merger.mergeObjects(a, b, c);
+            let d = mergeObjects(a, b, c);
             list.push(d);
         }
     });
