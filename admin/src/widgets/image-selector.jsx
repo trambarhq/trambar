@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import * as MediaLoader from 'media/media-loader';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 
 // widgets
 import ImageCroppingDialogBox from 'dialogs/image-cropping-dialog-box';
@@ -111,7 +112,7 @@ class ImageSelector extends PureComponent {
         let height = 120, width;
         let image = this.getImage();
         if (image) {
-            let fullResURL = env.getImageURL(image, { clip: null, remote: true });
+            let fullResURL = ResourceUtils.getImageURL(image, { clip: null, remote: true }, env);
             let linkProps = {
                 href: fullResURL,
                 target: '_blank',

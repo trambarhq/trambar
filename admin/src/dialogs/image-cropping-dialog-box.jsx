@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 
 // widgets
 import Overlay from 'widgets/overlay';
@@ -101,7 +102,7 @@ class ImageCroppingDialogBox extends PureComponent {
     renderImage() {
         let { env, image, desiredWidth, desiredHeight } = this.props;
         let { clippingRect } = this.state;
-        let url = env.getImageURL(image, { clip: null });
+        let url = ResourceUtils.getImageURL(image, { clip: null }, env);
         if (isJSONEncoded(imageURL)) {
             // a blob that hasn't been uploaded yet
             let info = parseJSONEncodedURL(imageURL)

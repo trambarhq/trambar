@@ -4,6 +4,7 @@ import HTTPRequest from 'transport/http-request';
 import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import Payload from 'transport/payload';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 import * as ImageCropping from 'media/image-cropping';
 
 // widgets
@@ -230,7 +231,7 @@ class MediaView extends PureComponent {
         let { env } = this.props;
         let { audioURL } = this.state;
         let className = 'audio';
-        let url = env.getImageURL(res);
+        let url = ResourceUtils.getImageURL(res, {}, env);
         if (!url) {
             className += ' posterless';
         }
@@ -365,7 +366,7 @@ class MediaView extends PureComponent {
             }
             let res = resources[selectedIndex];
             let version = chooseAudioVersion(res);
-            let audioURL = env.getAudioURL(res, { version });
+            let audioURL = ResourceUtils.getAudioURL(res, { version }, env);
             this.setState({ audioURL });
         } else {
             this.setState({ audioURL: null });

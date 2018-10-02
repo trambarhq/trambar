@@ -229,14 +229,14 @@ class MediaDialogBox extends PureComponent {
      */
     renderVideo(res) {
         let { env } = this.props;
-        let url = env.getVideoURL(res);
+        let url = ResourceUtils.getVideoURL(res, {}, env);
         let dims = ResourceUtils.getDimensions(res, { clip: null }, env);
-        let posterURL = env.getImageURL(res, {
+        let posterURL = ResourceUtils.getImageURL(res, {
             width: dims.width,
             height: dims.height,
             clip: null,
             quality: 60
-        });
+        }, env);
         let props = {
             ref: 'video',
             src: url,
@@ -341,10 +341,10 @@ class MediaDialogBox extends PureComponent {
             let url;
             switch (res.type) {
                 case 'image':
-                    url = env.getImageURL(res, { original: true });
+                    url = ResourceUtils.getImageURL(res, { original: true }, env);
                     break;
                 case 'video':
-                    url = env.getVideoURL(res, { original: true });
+                    url = ResourceUtils.getVideoURL(res, { original: true }, env);
                     break;
             }
             link.href = url;

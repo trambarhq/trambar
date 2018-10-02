@@ -8,6 +8,7 @@ import * as TagScanner from 'utils/tag-scanner';
 import * as Markdown from 'utils/markdown';
 import * as FocusManager from 'utils/focus-manager';
 import * as ReactionUtils from 'objects/utils/reaction-utils';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 
 // widgets
 import AutosizeTextArea from 'widgets/autosize-text-area';
@@ -532,9 +533,9 @@ class ReactionEditor extends PureComponent {
             let url;
             if (evt.forImage)  {
                 // images are style at height = 1.5em
-                url = env.getImageURL(resource, { height: 24 });;
+                url = ResourceUtils.getImageURL(resource, { height: 24 }, env);
             } else {
-                url = env.getURL(resource);
+                url = ResourceUtils.getURL(resource, env);
             }
             return {
                 href: url,

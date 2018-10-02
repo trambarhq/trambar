@@ -5,6 +5,7 @@ import * as BlobManager from 'transport/blob-manager';
 import Payload from 'transport/payload';
 import * as ImageCropping from 'media/image-cropping';
 import * as FocusManager from 'utils/focus-manager';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 import ComponentRefs from 'utils/component-refs';
 
 // widgets
@@ -64,7 +65,7 @@ class ImageEditor extends PureComponent {
             placeholderMessage: null,
             placeholderIcon: null,
         };
-        let fullImageRemoteURL = env.getImageURL(resource, { original: true });
+        let fullImageRemoteURL = ResourceUtils.getImageURL(resource, { original: true }, env);
         if (fullImageRemoteURL) {
             if (isJSONEncoded(fullImageRemoteURL)) {
                 // a blob that hasn't been uploaded yet
@@ -80,10 +81,10 @@ class ImageEditor extends PureComponent {
             if (!newState.fullImageURL) {
                 // we don't have a blob--show a preview image (clipped) while the
                 // full image is retrieved
-                newState.previewImageURL = env.getImageURL(resource, {
+                newState.previewImageURL = ResourceUtils.getImageURL(resource, {
                     width: previewWidth,
                     height: previewHeight
-                });
+                }, env);
 
                 // load it, unless control is disabled
                 if (!disabled) {

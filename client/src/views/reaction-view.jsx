@@ -7,6 +7,7 @@ import ComponentRefs from 'utils/component-refs';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 import * as UserUtils from 'objects/utils/user-utils';
 import * as RepoUtils from 'objects/utils/repo-utils';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 
 // widgets
 import ProfileImage from 'widgets/profile-image';
@@ -429,10 +430,10 @@ class ReactionView extends PureComponent {
                     url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
                 } else {
                     // images are style at height = 1.5em
-                    url = env.getImageURL(res, { height: 24 });
+                    url = ResourceUtils.getImageURL(res, { height: 24 }, env);
                 }
             } else {
-                url = env.getURL(res);
+                url = ResourceUtils.getURL(res, {}, env);
             }
             // remember the resource and the url
             this.resourcesReferenced[url] = res;
@@ -465,7 +466,7 @@ class ReactionView extends PureComponent {
                     window.open(res.url);
                 } else if (res.type === 'audio') {
                     let version = chooseAudioVersion(res);
-                    let audioURL = env.getAudioURL(res, { version });
+                    let audioURL = ResourceUtils.getAudioURL(res, { version }, env);
                     this.setState({ audioURL });
                 }
             } else {

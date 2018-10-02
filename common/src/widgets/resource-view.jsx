@@ -48,7 +48,7 @@ class ResourceView extends Component {
                     params.height = height;
                 }
             }
-            return env.getImageURL(resource, params);
+            return ResourceUtils.getImageURL(resource, params, env);
         } else {
             return url;
         }

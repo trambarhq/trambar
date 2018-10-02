@@ -7,6 +7,7 @@ import { memoizeWeak } from 'utils/memoize';
 import UniversalLink from 'routing/universal-link';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as ProjectLinkFinder from 'objects/finders/project-link-finder';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 import * as SystemFinder from 'objects/finders/system-finder';
 import * as UserFinder from 'objects/finders/user-finder';
 import * as UserUtils from 'objects/utils/user-utils';
@@ -239,7 +240,7 @@ class StartPageSync extends PureComponent {
             let resources = _.get(system, 'details.resources');
             let backgroundImage = _.find(resources, { type: 'image' });
             if (backgroundImage) {
-                let imageURL = env.getImageURL(backgroundImage, { width: 1024, quality: 40 });
+                let imageURL = ResourceUtils.getImageURL(backgroundImage, { width: 1024, quality: 40 }, env);
                 pageProps.style = { backgroundImage: `url(${imageURL})` };
             }
         }

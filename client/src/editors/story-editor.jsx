@@ -9,6 +9,7 @@ import * as FocusManager from 'utils/focus-manager';
 import ComponentRefs from 'utils/component-refs';
 import * as StoryUtils from 'objects/utils/story-utils';
 import * as IssueUtils from 'objects/utils/issue-utils';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 import * as TemporaryID from 'data/remote-data-source/temporary-id';
 import * as RandomToken from 'utils/random-token';
 
@@ -1303,7 +1304,7 @@ class StoryEditor extends PureComponent {
                     url = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
                 } else {
                     // images are style at height = 1.5em
-                    url = env.getImageURL(res, { height: 24 });
+                    url = ResourceUtils.getImageURL(res, { height: 24 }, env);
                 }
             } else {
                 url = env.getURL(res);

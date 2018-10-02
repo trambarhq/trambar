@@ -336,6 +336,100 @@ function pickAudioVersion(res, params, env) {
     return _.first(versions) || null;
 }
 
+function getURL(res, params, env) {
+    if (!res) {
+        return undefined;
+    }
+    switch (res.type) {
+        case 'image':
+            return getImageURL(res, params, env);
+        case 'audio':
+            return getAudioURL(res, params, env);
+        case 'video':
+            return getVideoURL(res, params, env);
+        case 'website':
+            return res.url;
+    }
+}
+
+/**
+ * Return URL of image file
+ *
+ * @param  {Object} res
+ * @param  {Object} params
+ * @param  {Environment} env
+ *
+ * @return {String|undefined}
+ */
+function getImageURL(res, params, env) {
+    if (!res) {
+        return undefined;
+    }
+    if (!params) {
+        params = {};
+    }
+    let url = getRemoteImageURL(res, params, env);
+    if (!url) {
+        if (!params.remote) {
+            url = getLocalImageURL(res, params);
+        }
+    }
+    return url;
+}
+
+/**
+ * Return URL to video resource
+ *
+ * @param  {Object} res
+ * @param  {Object} params
+ * @param  {Environment} env
+ *
+ * @return {String|null}
+ */
+function getVideoURL(res, params, env) {
+    if (!res.url) {
+        return null;
+    }
+    if (!params) {
+        params = {};
+    }
+    let url = `${env.address}${res.url}`;
+    // pick suitable version unless specified otherwise
+    if (!params || !params.original) {
+        let version = pickVideoVersion(res, params, env);
+        if (version) {
+            url += `.${version.name}.${version.format}`;
+        }
+    }
+    return url;
+}
+
+/**
+ * Return URL to audio resource
+ *
+ * @param  {Object} res
+ * @param  {Object} params
+ * @param  {Environment} env
+ *
+ * @return {String|null}
+ */
+function getAudioURL(res, params, env) {
+    if (!res.url) {
+        return null;
+    }
+    if (!params) {
+        params = {};
+    }
+    let url = `${env.address}${res.url}`;
+    if (!params || !params.original) {
+        let version = pickAudioVersion(res, params, env);
+        if (version) {
+            url += `.${version.name}.${version.format}`;
+        }
+    }
+    return url;
+}
+
 function decodeLength(s) {
     let m;
     if (typeof(s) === 'number') {
@@ -376,4 +470,8 @@ export {
     getRemoteImageURL,
     pickVideoVersion,
     pickAudioVersion,
+    getURL,
+    getImageURL,
+    getVideoURL,
+    getAudioURL,
 };
