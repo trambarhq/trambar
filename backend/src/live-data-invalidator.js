@@ -296,10 +296,6 @@ function findListingsImpactedByStatisticsChange(db, schema, events) {
     });
 }
 
-if (process.argv[1] === __filename) {
-    start();
-}
-
 /**
  * Extract the values of columns prior to a change from database change events.
  * Only columns provided to createNotificationTriggers() when the database
@@ -343,4 +339,7 @@ function extractPreviousValues(events, columns) {
     }));
 }
 
-Shutdown.on(stop);
+if (process.argv[1] === __filename) {
+    start();
+    Shutdown.on(stop);
+}
