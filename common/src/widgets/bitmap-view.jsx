@@ -49,11 +49,13 @@ class BitmapView extends PureComponent {
      * @return {ReactElement}
      */
     render() {
+        let { width, height } = this.props;
         let { setters } = this.components;
         let props = _.omit(this.props, 'onLoad', 'url', 'clippingRect');
         // give empty canvas a size so it scale correctly when empty
         props.width = 4;
         props.height = 4;
+        props.style = _.assign({ width, height }, props.style);
         return <canvas ref={setters.canvas} {...props} />
     }
 

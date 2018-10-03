@@ -339,8 +339,14 @@ class MediaDialogBox extends PureComponent {
             // create a link then simulate a click
             let link = document.createElement('A');
             let url = ResourceUtils.getURL(res, { original: true }, env);
+            let pageAddress = `${location.protocol}//${location.host}`;
             link.href = url;
-            link.download = res.filename || true;   // only works when it's same origin
+            // download only works when it's same origin
+            if (env.address === pageAddress) {
+                link.download = res.filename || '';
+            } else {
+                link.target = '_blank';
+            }
             link.click();
         }
     }

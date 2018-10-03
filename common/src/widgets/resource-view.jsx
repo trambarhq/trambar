@@ -15,8 +15,8 @@ class ResourceView extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            loadingRemoteImage: false,
-            remoteImageLoaded: false,
+            loadingRemoteImage: '',
+            remoteImageLoaded: '',
         };
     }
 
@@ -74,12 +74,14 @@ class ResourceView extends PureComponent {
     }
 
     renderLocalImage() {
-        let { env, resource, clip } = this.props;
+        let { env, resource, clip, width, height } = this.props;
         let url = this.getLocalImageURL();
         let clippingRect = (clip) ? ResourceUtils.getClippingRect(resource) : null;
         let props = _.omit(this.props, propNames);
         props.url = url;
         props.clippingRect = clippingRect;
+        props.width = width;
+        props.height = height;
         if (resource.format === 'svg') {
             return <VectorView {...props} />;
         } else {
@@ -87,20 +89,33 @@ class ResourceView extends PureComponent {
         }
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    /**
+     * Check for need to preload remote image on mount
+     */
+    componentDidMount() {
         let { remoteImageLoaded, loadingRemoteImage } = this.state;
-        if (!remoteImageLoaded && !loadingRemoteImage) {
-            let localURL = this.getLocalImageURL();
-            let remoteURL = this.getRemoteImageURL();
-            if (localURL && remoteURL) {
+        let localURL = this.getLocalImageURL();
+        let remoteURL = this.getRemoteImageURL();
+        if (localURL && remoteURL) {
+            if (remoteImageLoaded !== remoteURL && loadingRemoteImage !== remoteURL) {
                 // the image has just become available on the remote server
                 // pre-cache it before switching from the local copy
-                this.setState({ loadingRemoteImage: true });
+                this.setState({ loadingRemoteImage: remoteURL });
                 MediaLoader.loadImage(remoteURL).then(() => {
-                    this.setState({ remoteImageLoaded: true });
+                    this.setState({ remoteImageLoaded: remoteURL });
                 });
             }
         }
+    }
+
+    /**
+     * Check for need to preload remote image on update
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate(prevProps, prevState) {
+        this.componentDidMount();
     }
 
     /**
@@ -141,14 +156,9 @@ class ResourceView extends PureComponent {
                 // don't apply clip rectangle
                 params.clip = null;
             }
-            if (width) {
-                // resize source image
-                params.width = width;
-            }
-            if (height) {
-                // ditto
-                params.height = height;
-            }
+            // resize source image
+            params.width = width;
+            params.height = height;
         }
         return ResourceUtils.getImageURL(resource, params, env);
     }
@@ -165,7 +175,8 @@ class ResourceView extends PureComponent {
      * @param  {Event} Evt
      */
     handleRemoteImageLoad = (evt) => {
-        this.setState({ remoteImageLoaded: true });
+        let url = evt.target.getAttribute('src');
+        this.setState({ remoteImageLoaded: url });
     }
 }
 
