@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as MediaLoader from 'media/media-loader';
+import * as BlobManager from 'transport/blob-manager';
 import * as ImageCropping from 'media/image-cropping';
 import * as ResourceUtils from 'objects/utils/resource-utils';
 
@@ -41,6 +41,11 @@ class ResourceView extends PureComponent {
         }
     }
 
+    /**
+     * Render image stored at server
+     *
+     * @return {ReactElement}
+     */
     renderRemoteImage() {
         let { resource, width, height, clip, showMosaic } = this.props;
         let { remoteImageLoaded } = this.state;
@@ -73,6 +78,11 @@ class ResourceView extends PureComponent {
         );
     }
 
+    /**
+     * Render an image stored in a blob
+     *
+     * @return {ReactElement}
+     */
     renderLocalImage() {
         let { env, resource, clip, width, height } = this.props;
         let url = this.getLocalImageURL();
@@ -93,19 +103,7 @@ class ResourceView extends PureComponent {
      * Check for need to preload remote image on mount
      */
     componentDidMount() {
-        let { remoteImageLoaded, loadingRemoteImage } = this.state;
-        let localURL = this.getLocalImageURL();
-        let remoteURL = this.getRemoteImageURL();
-        if (localURL && remoteURL) {
-            if (remoteImageLoaded !== remoteURL && loadingRemoteImage !== remoteURL) {
-                // the image has just become available on the remote server
-                // pre-cache it before switching from the local copy
-                this.setState({ loadingRemoteImage: remoteURL });
-                MediaLoader.loadImage(remoteURL).then(() => {
-                    this.setState({ remoteImageLoaded: remoteURL });
-                });
-            }
-        }
+        this.componentDidUpdate();
     }
 
     /**
@@ -115,7 +113,19 @@ class ResourceView extends PureComponent {
      * @param  {Object} prevState
      */
     componentDidUpdate(prevProps, prevState) {
-        this.componentDidMount();
+        let { remoteImageLoaded, loadingRemoteImage } = this.state;
+        let localURL = this.getLocalImageURL();
+        let remoteURL = this.getRemoteImageURL();
+        if (localURL && remoteURL) {
+            if (remoteImageLoaded !== remoteURL && loadingRemoteImage !== remoteURL) {
+                // the image has just become available on the remote server
+                // pre-cache it before switching from the local copy
+                this.setState({ loadingRemoteImage: remoteURL });
+                BlobManager.fetch(remoteURL).then(() => {
+                    this.setState({ remoteImageLoaded: remoteURL });
+                });
+            }
+        }
     }
 
     /**
@@ -145,6 +155,11 @@ class ResourceView extends PureComponent {
         return style;
     }
 
+    /**
+     * Return URL to clipped image from server
+     *
+     * @return {String|undefined}
+     */
     getRemoteImageURL() {
         let { env, resource, width, height, clip, showAnimation } = this.props;
         let params = { remote: true };
@@ -163,6 +178,11 @@ class ResourceView extends PureComponent {
         return ResourceUtils.getImageURL(resource, params, env);
     }
 
+    /**
+     * Return URL to file just uploaded by the user
+     *
+     * @return {String}
+     */
     getLocalImageURL() {
         let { env, resource } = this.props;
         let params = { local: true, original: true };

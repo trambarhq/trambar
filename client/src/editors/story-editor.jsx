@@ -1398,7 +1398,7 @@ class StoryEditor extends PureComponent {
         let { draft, selectedResourceIndex } = this.state;
         let resourcesBefore = draft.resources;
         let resourcesAfter = evt.resources;
-        if (evt.selection) {
+        if (evt.selection !== undefined) {
             selectedResourceIndex = evt.selection;
         }
         if (resourcesBefore !== resourcesAfter) {

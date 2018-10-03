@@ -14,39 +14,16 @@ class ImageCropper extends PureComponent {
     static displayName = 'ImageCropper';
 
     constructor(props) {
+        let { clippingRect } = props;
         super(props);
         this.components = ComponentRefs({
             container: HTMLElement,
             image: BitmapView,
         });
         this.state = {
-            clippingRect: this.props.clippingRect,
+            uncommittedClippingRect: null,
             hasFocus: false,
         };
-    }
-
-    /**
-     * Update state when props changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { clippingRect, url } = this.props;
-        if (nextProps.clippingRect !== clippingRect) {
-            if (!this.zoomChangeTimeout) {
-                this.setState({ clippingRect: nextProps.clippingRect });
-            } else {
-                console.log('Ignoring incoming clipping rect');
-            }
-        }
-        if (nextProps.url !== url) {
-            if (this.zoomChangeTimeout) {
-                // set the deferred zoom changes before we switch to a different image
-                clearTimeout(this.zoomChangeTimeout);
-                this.triggerChangeEvent(this.state.clippingRect);
-                this.zoomChangeTimeout = 0;
-            }
-        }
     }
 
     /**
@@ -56,8 +33,9 @@ class ImageCropper extends PureComponent {
      */
     render() {
         let { url, disabled, vector, onLoad } = this.props;
-        let { hasFocus, clippingRect } = this.state;
+        let { hasFocus } = this.state;
         let { setters } = this.components;
+        let clippingRect = this.getClippingRect();
         let containerProps = {
             ref: setters.container,
             className: 'image-cropper',
@@ -94,6 +72,44 @@ class ImageCropper extends PureComponent {
     }
 
     /**
+     * Activate touch handling when container div gains focus
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate(prevProps, prevState) {
+        let { clippingRect } = this.props;
+        let { hasFocus, uncommittedClippingRect } = this.state;
+        if (!prevState.hasFocus && hasFocus) {
+            this.activateTouchHandling();
+        } else if (prevState.hasFocus && !hasFocus) {
+            this.deactivateTouchHandling();
+        }
+        if (prevProps.clippingRect !== clippingRect) {
+            if (uncommittedClippingRect) {
+                if (_.isEqual(uncommittedClippingRect, clippingRect)) {
+                    // change has been committed
+                    this.setState({ uncommittedClippingRect: null });
+                }
+            }
+        }
+    }
+
+    /**
+     * Remove handler and timeout function on unmount
+     */
+    componentWillUnmount() {
+        if (this.dragStart) {
+            this.handleMouseUp();
+        }
+        if (this.zoomChangeTimeout) {
+            clearTimeout(this.zoomChangeTimeout);
+            this.handleZoomTimeout();
+        }
+        this.deactivateTouchHandling();
+    }
+
+    /**
      * Set focus
      */
     focus() {
@@ -102,15 +118,14 @@ class ImageCropper extends PureComponent {
     }
 
     /**
-     * Return an array containing the colors of a 4x4 mosaic of the image
+     * Return clipping rect from either props or state
      *
-     * @return {Array<String>|undefined}
+     * @return {Object}
      */
-    extractMosaic() {
-        let { image } = this.components;
-        if (image instanceof BitmapView) {
-            return image.extractMosaic();
-        }
+    getClippingRect() {
+        let { clippingRect } = this.props;
+        let { uncommittedClippingRect } = this.state;
+        return uncommittedClippingRect || clippingRect;
     }
 
     /**
@@ -162,50 +177,19 @@ class ImageCropper extends PureComponent {
     }
 
     /**
-     * Activate touch handling when container div gains focus
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    componentDidUpdate(prevProps, prevState) {
-        let { hasFocus } = this.state;
-        if (!prevState.hasFocus && hasFocus) {
-            this.activateTouchHandling();
-        } else if (prevState.hasFocus && !hasFocus) {
-            this.deactivateTouchHandling();
-        }
-    }
-
-    /**
-     * Remove handler and timeout function on unmount
-     */
-    componentWillUnmount() {
-        if (this.dragStart) {
-            this.handleMouseUp();
-        }
-        if (this.zoomChangeTimeout) {
-            clearTimeout(this.zoomChangeTimeout);
-            this.triggerChangeEvent(this.state.clippingRect);
-        }
-        this.deactivateTouchHandling();
-    }
-
-    /**
      * Inform parent component that clipping rect has changed
-     *
-     * @param  {Object} clippingRect
      */
-    triggerChangeEvent(rect) {
-        let { clippingRect, onChange } = this.props;
-        if (_.isEqual(clippingRect, rect)) {
-            return;
-        }
-        if (onChange) {
-            onChange({
-                type: 'change',
-                target: this,
-                rect,
-            });
+    triggerChangeEvent() {
+        let { onChange } = this.props;
+        let { uncommittedClippingRect } = this.state;
+        if (uncommittedClippingRect) {
+            if (onChange) {
+                onChange({
+                    type: 'change',
+                    target: this,
+                    rect: uncommittedClippingRect,
+                });
+            }
         }
     }
 
@@ -234,7 +218,7 @@ class ImageCropper extends PureComponent {
      */
     handleMouseDown = (evt) => {
         let { image, container } = this.components;
-        let { clippingRect } = this.state;
+        let clippingRect = this.getClippingRect();
         if (evt.button !== 0) {
             // not the primary mouse button (usually left)
             return;
@@ -280,7 +264,7 @@ class ImageCropper extends PureComponent {
 
         // keep rect within the image
         constrainPosition(clippingRect, this.dragStart.naturalWidth, this.dragStart.naturalHeight);
-        this.setState({ clippingRect });
+        this.setState({ uncommittedClippingRect: clippingRect });
     }
 
     /**
@@ -294,7 +278,7 @@ class ImageCropper extends PureComponent {
         }
         document.removeEventListener('mousemove', this.handleMouseMove);
         document.removeEventListener('mouseup', this.handleMouseUp);
-        this.triggerChangeEvent(this.state.clippingRect);
+        this.triggerChangeEvent();
         this.dragStart = null;
     }
 
@@ -305,7 +289,7 @@ class ImageCropper extends PureComponent {
      */
     handleMouseWheel = (evt) => {
         let { image, container } = this.components;
-        let { clippingRect } = this.state;
+        let clippingRect = this.getClippingRect();
         evt.preventDefault();
 
         if (!image || !container || !clippingRect) {
@@ -356,14 +340,11 @@ class ImageCropper extends PureComponent {
         clippingRect.width = newClippingWidth;
         clippingRect.height = newClippingHeight;
         constrainPosition(clippingRect, image.naturalWidth, image.naturalHeight);
-        this.setState({ clippingRect }, () => {
+        this.setState({ uncommittedClippingRect: clippingRect }, () => {
             if (this.zoomChangeTimeout) {
                 clearTimeout(this.zoomChangeTimeout);
             }
-            this.zoomChangeTimeout = setTimeout(() => {
-                this.triggerChangeEvent(clippingRect);
-                this.zoomChangeTimeout = 0;
-            }, 1000);
+            this.zoomChangeTimeout = setTimeout(this.handleZoomTimeout, 1000);
         });
 
         // if the zooming occur during dragging, update the drag-start state
@@ -377,6 +358,14 @@ class ImageCropper extends PureComponent {
                 naturalHeight: image.naturalHeight,
             };
         }
+    }
+
+    /**
+     * Called when zoom timeout ends
+     */
+    handleZoomTimeout = () => {
+        this.triggerChangeEvent();
+        this.zoomChangeTimeout = 0;
     }
 
     /**
@@ -420,7 +409,7 @@ class ImageCropper extends PureComponent {
         clippingRect.left += Math.round(dX);
         clippingRect.top += Math.round(dY);
         constrainPosition(clippingRect, this.panStart.naturalWidth, this.panStart.naturalHeight);
-        this.setState({ clippingRect });
+        this.setState({ uncommittedClippingRect: clippingRect });
     }
 
     /**
@@ -432,7 +421,7 @@ class ImageCropper extends PureComponent {
         if (!this.panStart) {
             return;
         }
-        this.triggerChangeEvent(this.state.clippingRect);
+        this.triggerChangeEvent();
         this.panStart = null;
     }
 
@@ -443,7 +432,7 @@ class ImageCropper extends PureComponent {
      */
     handlePinchStart = (evt) => {
         let { image, container } = this.components;
-        let { clippingRect } = this.state;
+        let clippingRect = this.getClippingRect();
         if (evt.pointerType === 'mouse') {
             return;
         }
@@ -517,7 +506,7 @@ class ImageCropper extends PureComponent {
         clippingRect.width = newClippingWidth;
         clippingRect.height = newClippingHeight;
         constrainPosition(clippingRect, image.naturalWidth, image.naturalHeight);
-        this.setState({ clippingRect });
+        this.setState({ uncommittedClippingRect: clippingRect });
     }
 
     /**
@@ -529,7 +518,7 @@ class ImageCropper extends PureComponent {
         if (!this.pinchStart) {
             return;
         }
-        this.triggerChangeEvent(this.state.clippingRect);
+        this.triggerChangeEvent();
         this.pinchStart = null;
     }
 
@@ -539,8 +528,8 @@ class ImageCropper extends PureComponent {
      * @param  {Event} evt
      */
     handleKeyDown = (evt) => {
+        let { container } = this.components;
         if (evt.keyCode === 27) {
-            let container = this.components.container;
             container.blur();
         }
     }

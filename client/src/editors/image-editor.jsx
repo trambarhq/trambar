@@ -22,108 +22,9 @@ class ImageEditor extends PureComponent {
             imageCropper: ImageCropper,
         });
         this.state = {
-            fullImageURL: null,
-            loadedImageURL: null,
-            previewImageURL: null,
-            placeholderMessage: null,
-            placeholderIcon: null,
+            loadingFullImage: '',
+            fullImageLoaded: '',
         };
-    }
-
-    /**
-     * Prepare the image on mount
-     */
-    componentWillMount() {
-        let { resource, disabled } = this.props;
-        this.prepareImage(resource, disabled);
-    }
-
-    /**
-     * Prepare the image when it changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { resource, disabled } = this.props;
-        if (nextProps.resource !== resource || nextProps.disabled !== disabled) {
-            this.prepareImage(nextProps.resource, nextProps.disabled);
-        }
-    }
-
-    /**
-     * Load the image if it isn't available locally
-     *
-     * @param  {Object} resource
-     * @param  {Boolean} disabled
-     */
-    prepareImage(resource, disabled) {
-        let { env, previewWidth, previewHeight } = this.props;
-        let { t } = env.locale;
-        let newState = {
-            fullImageURL: null,
-            previewImageURL: null,
-            placeholderMessage: null,
-            placeholderIcon: null,
-        };
-        let fullImageRemoteURL = ResourceUtils.getImageURL(resource, { original: true }, env);
-        if (fullImageRemoteURL) {
-            if (isJSONEncoded(fullImageRemoteURL)) {
-                // a blob that hasn't been uploaded yet
-                let image = parseJSONEncodedURL(fullImageRemoteURL)
-                newState.fullImageURL = image.url;
-            } else {
-                // the remote URL might point to a file we had uploaded
-                let blob = BlobManager.find(fullImageRemoteURL);
-                if (blob) {
-                    newState.fullImageURL = BlobManager.url(blob);
-                }
-            }
-            if (!newState.fullImageURL) {
-                // we don't have a blob--show a preview image (clipped) while the
-                // full image is retrieved
-                newState.previewImageURL = ResourceUtils.getImageURL(resource, {
-                    width: previewWidth,
-                    height: previewHeight
-                }, env);
-
-                // load it, unless control is disabled
-                if (!disabled) {
-                    BlobManager.fetch(fullImageRemoteURL).then((blob) => {
-                        this.setState({
-                            fullImageURL: BlobManager.url(blob),
-                            previewImageURL: null,
-                            placeholderMessage: null,
-                            placeholderIcon: null,
-                        });
-                    });
-                }
-            }
-        }
-        if (!newState.fullImageURL && !newState.previewImageURL) {
-            // image isn't available locally
-            if (resource.width && resource.height) {
-                // when the dimensions are known, then the image was available to
-                // the client
-                newState.placeholderMessage = t('image-editor-upload-in-progress');
-                newState.placeholderIcon = 'cloud-upload';
-            } else {
-                if (!resource.pending) {
-                    // not pending locally--we're wait for remote action to complete
-                    if (resource.type === 'video') {
-                        // poster is being generated in the backend
-                        newState.placeholderMessage = t('image-editor-poster-extraction-in-progress');
-                        newState.placeholderIcon = 'film';
-                    } else if (resource.type === 'website') {
-                        // web-site preview is being generated
-                        newState.placeholderMessage = t('image-editor-page-rendering-in-progress');
-                        newState.placeholderIcon = 'file-image-o';
-                    }
-                }
-            }
-        }
-        if (!_.isMatch(this.state, newState)) {
-            this.setState(newState);
-        }
     }
 
     /**
@@ -149,10 +50,11 @@ class ImageEditor extends PureComponent {
      * @return {ReactElement}
      */
     renderImage() {
-        let { fullImageURL, previewImageURL } = this.state;
-        if (fullImageURL) {
+        let localURL = this.getLocalImageURL();
+        let previewURL = this.getPreviewImageURL();
+        if (localURL) {
             return this.renderImageCropper();
-        } else if (previewImageURL) {
+        } else if (previewURL) {
             return this.renderPreviewImage();
         } else {
             return this.renderPlaceholder();
@@ -166,13 +68,13 @@ class ImageEditor extends PureComponent {
      */
     renderPreviewImage() {
         let { previewWidth, previewHeight, disabled } = this.props;
-        let { previewImageURL } = this.state;
+        let previewURL = this.getPreviewImageURL();
         let className = 'preview';
         if (disabled) {
             className += ' disabled';
         }
         let imageProps = {
-            src: previewImageURL,
+            src: previewURL,
             width: previewWidth,
             height: previewHeight
         };
@@ -190,21 +92,13 @@ class ImageEditor extends PureComponent {
      */
     renderSpinner() {
         let { disabled } = this.props;
-        let {
-            plaeholderMessage,
-            placeholderIcon,
-            fullImageURL,
-            loadedImageURL
-        } = this.state;
         if (disabled) {
             return null;
         }
-        if (plaeholderMessage || placeholderIcon) {
+        let localURL = this.getLocalImageURL();
+        let previewURL = this.getPreviewImageURL();
+        if (localURL || !previewURL) {
             return null;
-        } else if (fullImageURL) {
-            if (fullImageURL === loadedImageURL) {
-                return null;
-            }
         }
         return (
             <div className="spinner">
@@ -220,12 +114,13 @@ class ImageEditor extends PureComponent {
      */
     renderImageCropper() {
         let { resource, disabled } = this.props;
-        let { fullImageURL } = this.state;
         let { setters } = this.components;
+        let url = this.getLocalImageURL();
+        let clippingRect = ResourceUtils.getClippingRect(resource, {});
         let props = {
             ref: setters.imageCropper,
-            url: fullImageURL,
-            clippingRect: resource.clip || ImageCropping.apply(resource.width, resource.height),
+            url,
+            clippingRect,
             vector: (resource.format === 'svg'),
             disabled,
             onChange: this.handleClipRectChange,
@@ -240,24 +135,34 @@ class ImageEditor extends PureComponent {
      * @return {ReactELement|null}
      */
     renderPlaceholder() {
-        let {
-            placeholderMessage,
-            placeholderIcon,
-            fullImageURL,
-            previewImageURL
-        } = this.state;
-        if (fullImageURL || previewImageURL) {
-            return null;
-        }
-        if (!placeholderMessage && !placeholderIcon) {
-            return null;
+        let { env, resource } = this.props;
+        let { t } = env.locale;
+        let message, icon;
+        if (resource.width && resource.height) {
+            // when the dimensions are known, then the image was available to
+            // the client
+            message = t('image-editor-upload-in-progress');
+            icon = 'cloud-upload';
+        } else {
+            if (!resource.pending) {
+                // not pending locally--we're wait for remote action to complete
+                if (resource.type === 'video') {
+                    // poster is being generated in the backend
+                    message = t('image-editor-poster-extraction-in-progress');
+                    icon = 'film';
+                } else if (resource.type === 'website') {
+                    // web-site preview is being generated
+                    message = t('image-editor-page-rendering-in-progress');
+                    icon = 'file-image-o';
+                }
+            }
         }
         return (
             <div className="placeholder">
                 <div className="icon">
-                    <i className={`fa fa-${placeholderIcon}`} />
+                    <i className={`fa fa-${icon}`} />
                 </div>
-                <div className="message">{placeholderMessage}</div>
+                <div className="message">{message}</div>
             </div>
         );
     }
@@ -269,6 +174,27 @@ class ImageEditor extends PureComponent {
         FocusManager.register(this, {
             type: 'ImageEditor',
         });
+        this.componentDidUpdate();
+    }
+
+    /**
+     * Retrieve full image if it's not there
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate(prevProps, prevState) {
+        let { loadingFullImage } = this.state;
+        let localURL = this.getLocalImageURL();
+        let remoteURL = this.getRemoteImageURL();
+        if (!localURL && remoteURL) {
+            if (loadingFullImage !== remoteURL) {
+                this.setState({ loadingFullImage: remoteURL });
+                BlobManager.fetch(remoteURL).then(() => {
+                    this.setState({ fullImageLoaded: remoteURL });
+                });
+            }
+        }
     }
 
     /**
@@ -276,6 +202,40 @@ class ImageEditor extends PureComponent {
      */
     componentWillUnmount() {
         FocusManager.unregister(this);
+    }
+
+    /**
+     * Return URL to original image at server
+     *
+     * @return {String}
+     */
+    getRemoteImageURL() {
+        let { env, resource } = this.props;
+        let params = { remote: true, original: true };
+        return ResourceUtils.getImageURL(resource, params, env);
+    }
+
+    /**
+     * Return URL to blob, either downloaded again from server or a file
+     * just selected by the user
+     *
+     * @return {String|undefined}
+     */
+    getLocalImageURL() {
+        let { env, resource } = this.props;
+        let params = { local: true, original: true };
+        return ResourceUtils.getImageURL(resource, params, env);
+    }
+
+    /**
+     * Return clipped version of image
+     *
+     * @return {String|undefined}
+     */
+    getPreviewImageURL() {
+        let { env, resource, previewWidth, previewHeight } = this.props;
+        let params = { remote: true, width: previewWidth, height: previewHeight };
+        return ResourceUtils.getImageURL(resource, params, env);
     }
 
     /**
@@ -325,15 +285,6 @@ class ImageEditor extends PureComponent {
     }
 }
 
-function isJSONEncoded(url) {
-    return _.startsWith(url, 'json:');
-}
-
-function parseJSONEncodedURL(url) {
-    let json = url.substr(5);
-    return JSON.parse(json);
-}
-
 ImageEditor.defaultProps = {
     previewWidth: 512,
     previewHeight: 512,
@@ -352,10 +303,10 @@ if (process.env.NODE_ENV !== 'production') {
 
     ImageEditor.propTypes = {
         resource: PropTypes.object,
-        env: PropTypes.instanceOf(Environment).isRequired,
         previewWidth: PropTypes.number,
         previewHeight: PropTypes.number,
         disabled: PropTypes.bool,
+        env: PropTypes.instanceOf(Environment).isRequired,
         onChange: PropTypes.func,
     };
 }
