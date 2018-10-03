@@ -90,11 +90,12 @@ class OverlayProxy extends PureComponent {
      * @param  {Boolean} shown
      */
     redraw(shown) {
+        let { children } = this.props;
         let props = {
             show: shown,
             onClick: this.handleClick,
             onTouchMove: this.handleTouchMove,
-            children: this.props.children
+            children
         };
         ReactDOM.render(<Overlay {...props} />, this.containerNode);
     }

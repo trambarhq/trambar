@@ -102,11 +102,12 @@ class CollapsibleContainer extends PureComponent {
      * Get the height of the contents, saving it if it's different
      */
     updateHeight = () => {
+        let { contentHeight } = this.state;
         let { contents } = this.components;
         if (contents) {
-            let contentHeight = getContentHeight(contents);
-            if (this.state.contentHeight !== contentHeight) {
-                this.setState({ contentHeight });
+            let contentHeightAfter = getContentHeight(contents);
+            if (contentHeightAfter !== contentHeight) {
+                this.setState({ contentHeight: contentHeightAfter });
             }
         }
     }

@@ -192,7 +192,7 @@ class WebsocketNotifier extends Notifier {
                 // show attach image only if there's no text
                 options.image = alert.attached_image;
             }
-            options.lang = _.get(this.props.locale, 'languageCode');
+            options.lang = alert.locale;
             let notification = new Notification(alert.title, options);
             notification.addEventListener('click', () => {
                 let evt = new NotifierEvent(this, 'alert', { alert });

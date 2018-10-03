@@ -82,15 +82,15 @@ class AutosizeTextArea extends PureComponent {
      * @param  {Object} prevState
      */
     componentDidUpdate(prevProps, prevState) {
+        let { value } = this.props;
+        let { actual } = this.components;
         if (this.caretPosition) {
             // restore cursor position, using text in front of and after the
             // cursor as anchors
-
-            let { actual } = this.components;
             let startBefore = this.caretPosition.selectionStart;
             let endBefore = this.caretPosition.selectionEnd;
             let textBefore = this.caretPosition.text;
-            let textAfter = this.props.value;
+            let textAfter = value;
             let textPrecedingCaretBefore = textBefore.substring(0, startBefore);
             let textFollowingCaretBefore = textBefore.substring(endBefore);
             let textSelectedBefore = textBefore.substring(startBefore, endBefore);
@@ -122,7 +122,7 @@ class AutosizeTextArea extends PureComponent {
             }
             this.caretPosition = null;
         }
-        if (prevProps.value !== this.props.value) {
+        if (prevProps.value !== value) {
             this.updateSize();
         }
     }
@@ -147,6 +147,7 @@ class AutosizeTextArea extends PureComponent {
      * Update the size of the textarea
      */
     updateSize() {
+        let { height, requiredHeight } = this.state;
         let { shadow, actual } = this.components;
         if (!shadow || !actual) {
             return;
@@ -155,14 +156,14 @@ class AutosizeTextArea extends PureComponent {
         let sHeight = shadow.scrollHeight;
         let cHeight = shadow.clientHeight;
         let aHeight = actual.offsetHeight;
-        let requiredHeight = sHeight + (oHeight - cHeight) + 1;
-        if (this.state.height !== requiredHeight) {
-            if (aHeight > requiredHeight && aHeight > this.state.requiredHeight) {
+        let requiredHeightAfter = sHeight + (oHeight - cHeight) + 1;
+        if (height !== requiredHeightAfter) {
+            if (aHeight > requiredHeightAfter && aHeight > requiredHeight) {
                 // don't apply the new height if it's the textarea is taller than
                 // expected--i.e. the user has manually resized it
                 return;
             }
-            this.setState({ requiredHeight })
+            this.setState({ requiredHeight: requiredHeightAfter });
         }
     }
 

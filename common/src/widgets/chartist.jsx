@@ -87,12 +87,12 @@ class Chartist extends PureComponent {
      * Create Chartist instance
      */
     createChart() {
-        let { type, data, options, responsiveOptions } = this.props;
+        let { type, data, options, responsiveOptions, onDraw } = this.props;
         let { container } = this.components;
         let ChartClass = chartClasses[type];
         this.chartist = new ChartClass(container, data, options, responsiveOptions);
-        if (this.props.onDraw) {
-            this.chartist.on('draw', this.props.onDraw);
+        if (onDraw) {
+            this.chartist.on('draw', onDraw);
         }
     }
 
