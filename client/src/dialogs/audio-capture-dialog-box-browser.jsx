@@ -172,7 +172,7 @@ class AudioCaptureDialogBox extends PureComponent {
      *
      * @param  {HTMLAudioElement} node
      */
-    setLiveAudioNode(node) {
+    setLiveAudioNode = (node) => {
         let { liveAudioStream } = this.state;
         this.audioNode = node;
         if (this.audioNode) {
@@ -246,9 +246,9 @@ class AudioCaptureDialogBox extends PureComponent {
             muted: true,
         };
         let volumeIcon;
-        if (level < 10) {
+        if (liveAudioLevel < 10) {
             volumeIcon = 'volume-off';
-        } else if (level < 50) {
+        } else if (liveAudioLevel < 50) {
             volumeIcon = 'volume-down';
         } else {
             volumeIcon = 'volume-up';
@@ -426,16 +426,16 @@ class AudioCaptureDialogBox extends PureComponent {
             });
             mediaRecorder.outputStream = stream;
             mediaRecorder.addEventListener('dataavailable', (evt) => {
-                this.outputStream.push(evt.data)
+                stream.push(evt.data)
             });
             mediaRecorder.addEventListener('stop', (evt) => {
-                this.outputStream.close();
+                stream.close();
                 mediaRecorder.resolve();
             });
             mediaRecorder.start(segmentDuration);
             // start uploading immediately upon receiving data from MediaRecorder
             stream.start();
-            return recorder;
+            return mediaRecorder;
         });
     }
 

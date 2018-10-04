@@ -476,10 +476,10 @@ class VideoCaptureDialogBox extends PureComponent {
                 mediaRecorder.reject = reject;
             });
             mediaRecorder.addEventListener('dataavailable', (evt) => {
-                this.outputStream.push(evt.data)
+                stream.push(evt.data)
             });
             mediaRecorder.addEventListener('stop', (evt) => {
-                this.outputStream.close();
+                stream.close();
                 mediaRecorder.resolve();
             });
             mediaRecorder.start(segmentDuration);
@@ -615,7 +615,7 @@ class VideoCaptureDialogBox extends PureComponent {
      * @param  {Event} evt
      */
     handleStopClick = (evt) => {
-        let { mediaRecorder, startTime } = this.state;
+        let { mediaRecorder, startTime, duration } = this.state;
         return this.endRecording().then(() => {
             let blob = mediaRecorder.outputStream.toBlob();
             let url = URL.createObjectURL(blob);
