@@ -488,7 +488,9 @@ class SmartList extends Component {
                             // as the slot expands so the bottom of the container
                             // is visible
                             if (!this.scrollPositionInterval) {
-                                this.scrollPositionInterval = setInterval(this.maintainScrollPosition, 10);
+                                this.scrollPositionInterval = setInterval(() => {
+                                    this.maintainScrollPosition();
+                                }, 10);
                             }
                             this.scrollToAnchorNode = slot.node;
                             useTransition = true;
