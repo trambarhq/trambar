@@ -1,8 +1,10 @@
+@import '../colors';
+
 .confirmation-dialog-box {
     display: flex;
     flex-direction: column;
-    background-color: #362a2a;
-    box-shadow: 2px 2px 2px #000000;
+    background-color: $dialog-box-background-color;
+    box-shadow: 2px 2px 2px $dialog-box-shadow-color;
     max-width: 40em;
     width: 80%;
     color: #cccccc;

@@ -1,16 +1,7 @@
-var _ = require('lodash');
-
-module.exports = {
-    extract,
-    detect,
-    set,
-    find,
-    count,
-    join,
-};
+import _ from 'lodash';
 
 // look for in Latin x, Cyrillic х, and Greek χ
-var regExp = /^([ \t]*)\*\s+\[([ xхχ])\]([ \t]*)(.*?)([ \t]*?)$/mig;
+const regExp = /^([ \t]*)\*\s+\[([ xхχ])\]([ \t]*)(.*?)([ \t]*?)$/mig;
 
 /**
  * Extract "[ ] label..." item lists from text
@@ -22,14 +13,14 @@ var regExp = /^([ \t]*)\*\s+\[([ xхχ])\]([ \t]*)(.*?)([ \t]*?)$/mig;
 function extract(text) {
     text = (text) ? text : '';
 
-    var tokens = [];
-    var si = 0;
-    var m;
-    var currentList = null;
-    var key = 1;
-    var list = 1;
+    let tokens = [];
+    let si = 0;
+    let m;
+    let currentList = null;
+    let key = 1;
+    let list = 1;
     while (m = regExp.exec(text)) {
-        var textBefore = text.substring(si, m.index);
+        let textBefore = text.substring(si, m.index);
         if (textBefore) {
             // if there's text before the item, then close out then current list
             if (currentList) {
@@ -39,20 +30,20 @@ function extract(text) {
                     tokens.push(textBefore);
                 } else {
                     // append the whitespaces onto the last time
-                    var lastItem = _.last(currentList);
+                    let lastItem = _.last(currentList);
                     lastItem.after += textBefore;
                 }
             } else {
                 tokens.push(textBefore);
             }
         }
-        var before = m[1];
-        var answer = m[2];
-        var checked = !!_.trim(answer);
-        var between = m[3]
-        var label = m[4];
-        var after = m[5];
-        var item = { label, checked, answer, before, between, after, list, key };
+        let before = m[1];
+        let answer = m[2];
+        let checked = !!_.trim(answer);
+        let between = m[3]
+        let label = m[4];
+        let after = m[5];
+        let item = { label, checked, answer, before, between, after, list, key };
         if (currentList) {
             currentList.push(item);
         } else {
@@ -62,7 +53,7 @@ function extract(text) {
         si = m.index + m[0].length;
         key++;
     }
-    var textAfter = text.substring(si);
+    let textAfter = text.substring(si);
     if (textAfter) {
         tokens.push(textAfter);
     }
@@ -80,7 +71,7 @@ function detect(text) {
     if (typeof(text) === 'object') {
         return _.some(text, detect);
     }
-    var tokens = extract(text);
+    let tokens = extract(text);
     return _.some(tokens, (token) => {
         // lists are arrays
         return token instanceof Array;
@@ -183,7 +174,7 @@ function join(tokens) {
 
 function updateAnswerText(item) {
     if (item.checked) {
-        var x;
+        let x;
         if (/[\u0x0400-\u0x04ff]/.test(item.label)) {
             x = 'х';
         } else if (/[\u0x0370-\u0x03ff]/.test(item.label)) {
@@ -196,3 +187,12 @@ function updateAnswerText(item) {
         item.answer = ' ';
     }
 }
+
+export {
+    extract,
+    detect,
+    set,
+    find,
+    count,
+    join,
+};

@@ -1,33 +1,13 @@
-var _ = require('lodash');
-var Moment = require('moment');
-var StoryUtils = require('objects/utils/story-utils');
-var ReactionUtils = require('objects/utils/reaction-utils');
-var NotificationTypes = require('objects/types/notification-types');
-
-module.exports = {
-    isMember,
-    isPendingMember,
-    isAuthor,
-    isRespondent,
-    canJoinProject,
-    canViewProject,
-    canModerate,
-    canEditStory,
-    canHideStory,
-    canRemoveStory,
-    canBumpStory,
-    canAddIssue,
-    canAccessRepo,
-    canCreateBookmark,
-    canSendBookmarks,
-    canEditReaction,
-    canHideReaction,
-    canRemoveReaction,
-    canReceiveNotification,
-    getDisplayName,
-    getDisplayNameWithGender,
-    mergeRemoteChanges: StoryUtils.mergeRemoteChanges,
-};
+import _ from 'lodash';
+import Moment from 'moment';
+import * as ReactionUtils from 'objects/utils/reaction-utils';
+import * as StoryUtils from 'objects/utils/story-utils';
+import { mergeRemoteChanges } from 'objects/utils/story-utils';
+import {
+    GitNotificationTypes,
+    AdminNotificationTypes,
+    MembershipNotificationTypes
+} from 'objects/types/notification-types';
 
 /**
  * Return true if user is a member of the project
@@ -447,13 +427,13 @@ function canHideReaction(user, story, reaction, access) {
  * @return {Boolean}
  */
 function canReceiveNotification(user, repos, type) {
-    if (_.includes(NotificationTypes.git, type)) {
+    if (_.includes(GitNotificationTypes, type)) {
         // assume user can receive notification if loading isn't done
         if (repos) {
             if (_.isEmpty(repos)) {
                 return false;
             }
-            if (_.includes(NotificationTypes.git.membership, type)) {
+            if (_.includes(GitNotificationTypes.membership, type)) {
                 if (user) {
                     var hasAccess = _.some(repos, (repo) => {
                         return canAccessRepo(user, repo)
@@ -464,7 +444,7 @@ function canReceiveNotification(user, repos, type) {
                 }
             }
         }
-    } else if (_.includes(NotificationTypes.admin, type)) {
+    } else if (_.includes(AdminNotificationTypes, type)) {
         if (user && user.type !== 'admin') {
             return false;
         }
@@ -476,15 +456,16 @@ function canReceiveNotification(user, repos, type) {
  * Return the display name of the user
  *
  * @param  {User} user
- * @param  {Locale} locale
+ * @param  {Environment} env
  *
  * @return {String}
  */
-function getDisplayName(user, locale) {
+function getDisplayName(user, env) {
+    let { p } = env.locale;
     if (!user) {
         return '\u00a0';
     }
-    var name = locale.pick(user.details.name);
+    var name = p(user.details.name);
     if (!_.trim(name)) {
         name = _.capitalize(user.username);
     }
@@ -492,20 +473,38 @@ function getDisplayName(user, locale) {
 }
 
 /**
- * Return the display name of the user
+ * Return the gender of the user if it's defined
  *
  * @param  {User} user
- * @param  {Locale} locale
- *
- * @return {Object|String}
  */
-function getDisplayNameWithGender(user, locale) {
-    if (!user) {
-        return '\u00a0';
+function getGender(user) {
+    if (!user || user.details) {
+        return undefined;
     }
-    var name = locale.name(user.details.name, user.details.gender);
-    if (!_.trim(name)) {
-        name = locale.name(_.capitalize(user.username), user.details.gender);
-    }
-    return name;
+    return user.details.gender;
 }
+
+export {
+    isMember,
+    isPendingMember,
+    isAuthor,
+    isRespondent,
+    canJoinProject,
+    canViewProject,
+    canModerate,
+    canEditStory,
+    canHideStory,
+    canRemoveStory,
+    canBumpStory,
+    canAddIssue,
+    canAccessRepo,
+    canCreateBookmark,
+    canSendBookmarks,
+    canEditReaction,
+    canHideReaction,
+    canRemoveReaction,
+    canReceiveNotification,
+    getDisplayName,
+    getGender,
+    mergeRemoteChanges,
+};

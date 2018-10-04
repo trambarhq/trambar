@@ -1,51 +1,30 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-var Payloads = require('transport/payloads');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
 
 // widgets
-var MediaButton = require('widgets/media-button');
-var ImageEditor = require('editors/image-editor');
-var VideoEditor = require('editors/video-editor');
-var AudioEditor = require('editors/audio-editor');
+import MediaButton from 'widgets/media-button';
+import ImageEditor from 'editors/image-editor';
+import VideoEditor from 'editors/video-editor';
+import AudioEditor from 'editors/audio-editor';
 
-require('./media-editor.scss');
+import './media-editor.scss';
 
-module.exports = React.createClass({
-    displayName: 'MediaEditor',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        allowEmbedding: PropTypes.bool,
-        allowShifting: PropTypes.bool,
-        resources: PropTypes.arrayOf(PropTypes.object),
-        resourceIndex: PropTypes.number,
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-
-        onChange: PropTypes.func.isRequired,
-        onEmbed: PropTypes.func,
-    },
+class MediaEditor extends PureComponent {
+    static displayName = 'MediaEditor';
 
     /**
      * Render component
      *
      * @return {ReactELement}
      */
-    render: function() {
-        var index = this.props.resourceIndex;
-        var res = _.get(this.props.resources, index);
-        if (!res) {
-            var placeholder;
-            if (this.props.theme.mode !== 'single-col') {
-                placeholder = this.props.children;
+    render() {
+        let { env, resources, resourceIndex, children } = this.props;
+        let resource = _.get(resources, resourceIndex);
+        if (!resource) {
+            let placeholder;
+            if (env.isWiderThan('double-col')) {
+                placeholder = children;
             }
             return (
                 <div className="media-editor empty">
@@ -54,32 +33,32 @@ module.exports = React.createClass({
             );
         } else {
             return (
-                <div key={index} className="media-editor">
+                <div key={resourceIndex} className="media-editor">
                     <div className="resource">
-                        {this.renderResource(res)}
+                        {this.renderResource(resource)}
                         {this.renderNavigation()}
                     </div>
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render editor for the given resource
      *
-     * @param  {Object} res
+     * @param  {Object} resource
      *
      * @return {ReactElement}
      */
-    renderResource: function(res) {
-        var props = {
-            resource: res,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
+    renderResource(resource) {
+        let { payloads, env } = this.props;
+        let props = {
+            resource,
+            payloads,
+            env,
             onChange: this.handleResourceChange,
         };
-        switch (res.type) {
+        switch (resource.type) {
             case 'image':
             case 'website':
                 return <ImageEditor {...props} />;
@@ -88,42 +67,48 @@ module.exports = React.createClass({
             case 'audio':
                 return <AudioEditor {...props} />;
         }
-    },
+    }
 
     /**
      * Render navigation bar for selecting resource
      *
      * @return {ReactElement}
      */
-    renderNavigation: function() {
-        var t = this.props.locale.translate;
-        var index = this.props.resourceIndex;
-        var count = _.size(this.props.resources);
-        if (count === 0) {
+    renderNavigation() {
+        let {
+            env,
+            resources,
+            resourceIndex,
+            allowEmbedding,
+            allowShifting,
+        } = this.props;
+        let { t } = env.locale;
+        let resourceCount = _.size(resources);
+        if (resourceCount === 0) {
             return null;
         }
-        var removeProps = {
+        let removeProps = {
             label: t('media-editor-remove'),
             icon: 'remove',
             onClick: this.handleRemoveClick,
         };
-        var embedProps = {
+        let embedProps = {
             label: t('media-editor-embed'),
             icon: 'code',
-            hidden: !this.props.allowEmbedding,
+            hidden: !allowEmbedding,
             onClick: this.handleEmbedClick,
         };
-        var shiftProps = {
+        let shiftProps = {
             label: t('media-editor-shift'),
             icon: 'chevron-left',
-            hidden: !this.props.allowShifting || !(count > 1),
-            disabled: !(index > 0),
+            hidden: !allowShifting || !(resourceCount > 1),
+            disabled: !(resourceIndex > 0),
             onClick: this.handleShiftClick,
         };
-        var directionProps = {
-            index,
-            count,
-            hidden: !(count > 1),
+        let directionProps = {
+            index: resourceIndex,
+            count: resourceCount,
+            hidden: !(resourceCount > 1),
             onBackwardClick: this.handleBackwardClick,
             onForwardClick: this.handleForwardClick,
         };
@@ -139,7 +124,7 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Call onChange handler
@@ -147,66 +132,70 @@ module.exports = React.createClass({
      * @param  {Array<Object>} resources
      * @param  {Number} selection
      */
-    triggerChangeEvent: function(resources, selection) {
-        return this.props.onChange({
-            type: 'change',
-            target: this,
-            resources,
-            selection,
-        });
-    },
+    triggerChangeEvent(resources, selection) {
+        let { onChange } = this.props;
+        if (onChange) {
+            return onChange({
+                type: 'change',
+                target: this,
+                resources,
+                selection,
+            });
+        }
+    }
 
     /**
      * Call onEmbed handler
      *
      * @param  {Object} resource
      */
-    triggerEmbedEvent: function(resource) {
-        if (this.props.onEmbed) {
-            this.props.onEmbed({
+    triggerEmbedEvent(resource) {
+        let { onEmbed } = this.props;
+        if (onEmbed) {
+            onEmbed({
                 type: 'embed',
                 target: this,
                 resource,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks shift button
      *
      * @param  {Event} evt
      */
-    handleShiftClick: function(evt) {
-        var index = this.props.resourceIndex;
-        if (index < 1) {
+    handleShiftClick = (evt) => {
+        let { resources, resourceIndex } = this.props;
+        if (resourceIndex < 1) {
             return;
         }
-        var resources = _.slice(this.props.resources);
-        var res = resources[index];
+        let res = resources[resourceIndex];
+        resources = _.slice(resources);
         resources.splice(index, 1);
         resources.splice(index - 1, 0, res);
         this.triggerChangeEvent(resources, index - 1);
-    },
+    }
 
     /**
      * Called when user clicks remove button
      *
      * @param  {Event} evt
      */
-    handleRemoveClick: function(evt) {
-        var index = this.props.resourceIndex;
-        var resources = _.slice(this.props.resources);
-        var res = resources[index];
-        resources.splice(index, 1);
-        var newIndex = index;
-        if (index >= resources.length) {
+    handleRemoveClick = (evt) => {
+        let { payloads, resources, resourceIndex } = this.props;
+        let res = resources[resourceIndex];
+        resources = _.slice(resources);
+        resources.splice(resourceIndex, 1);
+        let newIndex = resourceIndex;
+        if (resourceIndex >= resources.length) {
             newIndex = resources.length - 1;
         }
         this.triggerChangeEvent(resources, newIndex);
         if (res && res.payload_token) {
-            this.props.payloads.cancel(res.payload_token);
+            payloads.cancel(res.payload_token);
         }
-    },
+    }
 
     /**
      * Called when user clicks embed button
@@ -215,11 +204,11 @@ module.exports = React.createClass({
      *
      * @return {Promise}
      */
-    handleEmbedClick: function(evt) {
-        var index = this.props.resourceIndex;
-        var resource = this.props.resources[index];
-        this.triggerEmbedEvent(resource);
-    },
+    handleEmbedClick = (evt) => {
+        let { resources, resourceIndex } = this.props;
+        let res = resources[resourceIndex];
+        this.triggerEmbedEvent(res);
+    }
 
     /**
      * Called when user clicks backward button
@@ -228,14 +217,13 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    handleBackwardClick: function(evt) {
-        var index = this.props.resourceIndex;
-        var resources = this.props.resources;
-        if (index <= 0) {
+    handleBackwardClick = (evt) => {
+        let { resources, resourceIndex } = this.props;
+        if (resourceIndex <= 0) {
             return;
         }
-        this.triggerChangeEvent(resources, index - 1);
-    },
+        this.triggerChangeEvent(resources, resourceIndex - 1);
+    }
 
     /**
      * Called when user clicks forward button
@@ -244,24 +232,48 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    handleForwardClick: function(evt) {
-        var index = this.props.resourceIndex;
-        var resources = this.props.resources;
-        if (index >= _.size(resources) - 1) {
+    handleForwardClick = (evt) => {
+        let { resources, resourceIndex } = this.props;
+        if (resourceIndex >= _.size(resources) - 1) {
             return;
         }
-        this.triggerChangeEvent(resources, index + 1);
-    },
+        this.triggerChangeEvent(resources, resourceIndex + 1);
+    }
 
     /**
      * Called when a resource has been edited
      *
      * @param  {Object} evt
      */
-    handleResourceChange: function(evt) {
-        var index = this.props.resourceIndex;
-        var resources = _.slice(this.props.resources);
-        resources[index] = evt.resource;
-        this.triggerChangeEvent(resources, index);
-    },
-});
+    handleResourceChange = (evt) => {
+        let { resources, resourceIndex } = this.props;
+        resources = _.slice(resources);
+        resources[resourceIndex] = evt.resource;
+        this.triggerChangeEvent(resources, resourceIndex);
+    }
+}
+
+export {
+    MediaEditor as default,
+    MediaEditor,
+};
+
+import Environment from 'env/environment';
+import Payloads from 'transport/payloads';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MediaEditor.propTypes = {
+        allowEmbedding: PropTypes.bool,
+        allowShifting: PropTypes.bool,
+        resources: PropTypes.arrayOf(PropTypes.object),
+        resourceIndex: PropTypes.number,
+
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onChange: PropTypes.func.isRequired,
+        onEmbed: PropTypes.func,
+    };
+}

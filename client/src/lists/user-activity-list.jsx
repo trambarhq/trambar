@@ -1,55 +1,48 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Memoize = require('utils/memoize');
-var DateTracker = require('utils/date-tracker');
-
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import { memoizeWeak } from 'utils/memoize';
 
 // widgets
-var ProfileImage = require('widgets/profile-image');
-var Time = require('widgets/time');
+import ProfileImage from 'widgets/profile-image';
+import Time from 'widgets/time';
 
-require('./user-activity-list.scss');
+import './user-activity-list.scss';
 
-module.exports = React.createClass({
-    displayName: 'UserActivityList',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        user: PropTypes.object,
-        stories: PropTypes.arrayOf(PropTypes.object),
-        storyCountEstimate: PropTypes.number,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class UserActivityList extends PureComponent {
+    static displayName = 'UserActivityList';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        if (this.props.stories) {
-            var stories = sortStories(this.props.stories);
+    render() {
+        let { stories, storyCountEstimate } = this.props;
+        if (stories) {
+            stories = sortStories(stories);
             return (
                 <div className="user-activity-list">
-                    {_.map(stories, this.renderActivity)}
+                {
+                    _.map(stories, (story) => {
+                        return this.renderActivity(story);
+                    })
+                }
                 </div>
             );
         } else {
-            var indices = _.range(0, this.props.storyCountEstimate);
+            let indices = _.range(0, storyCountEstimate);
             return (
                 <div className="user-activity-list">
-                    {_.map(indices, this.renderActivityPlaceholder)}
+                {
+                    _.map(indices, (index) => {
+                        return this.renderActivityPlaceholder(index);
+                    })
+                }
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render a brief description about a story
@@ -58,32 +51,28 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderActivity: function(story) {
-        var route = this.props.route;
-        var components = [
-            require('pages/people-page'),
-            require('lists/story-list')
-        ];
-        var params = _.pick(route.parameters, 'schema', 'date', 'search');
-        params.user = this.props.user.id;
-        params.story = story.id;
-        params.highlighting = true;
-        var url = route.find(components, params);
-        var text = this.renderText(story);
-        var labelClass = 'label';
-        var time = story.btime || story.ptime;
-        if (time >= DateTracker.todayISO || time >= DateTracker.yesterdayISO) {
+    renderActivity(story) {
+        let { route, env, user } = this.props;
+        let params = _.pick(route.params, 'date', 'search');
+        params.selectedUserID = user.id;
+        params.highlightStoryID = story.id;
+        let url = route.find('person-page', params);
+        let text = this.renderText(story);
+        let labelClass = 'label';
+        let time = story.btime || story.ptime;
+        let yesterday = env.getRelativeDate(-1, 'day');
+        if (yesterday < time) {
             labelClass += ' recent';
         }
         return (
             <div key={story.id} className="activity">
-                <Time time={story.ptime} locale={this.props.locale} compact={true} />
+                <Time time={story.ptime} env={env} compact={true} />
                 <div className={labelClass}>
                     <a href={url}>{text}</a>
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render a placeholder
@@ -92,9 +81,9 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderActivityPlaceholder: function(index) {
+    renderActivityPlaceholder(index) {
         return <div key={index} className="activity">{'\u00a0'}</div>;
-    },
+    }
 
     /**
      * Return short summary about story
@@ -103,11 +92,12 @@ module.exports = React.createClass({
      *
      * @return {String}
      */
-    renderText: function(story) {
-        var t = this.props.locale.translate;
-        var n = this.props.locale.name;
-        var user = this.props.user;
-        var name = n(_.get(user, 'details.name'), _.get(user, 'details.gender'));
+    renderText(story) {
+        let { env, user } = this.props;
+        let { t, g } = env.locale;
+        let name = _.get(user, 'details.name');
+        let gender = _.get(user, 'details.gender');
+        g(name, gender);
         switch (story.type) {
             case 'push':
                 return t(`user-activity-$name-pushed-code`, name);
@@ -127,11 +117,11 @@ module.exports = React.createClass({
                 return t(`user-activity-$name-edited-wiki-page`, name);
             case 'member':
             case 'repo':
-                var action = story.details.action;
+                let action = story.details.action;
                 return t(`user-activity-$name-${action}-repo`, name);
             case 'post':
-                var resources = story.details.resources;
-                var counts = _.countBy(resources, 'type');
+                let resources = story.details.resources;
+                let counts = _.countBy(resources, 'type');
                 if (counts.video > 0) {
                     return t(`user-activity-$name-posted-$count-video-clips`, name, counts.video);
                 } else if (counts.image > 0) {
@@ -150,14 +140,33 @@ module.exports = React.createClass({
             default:
                 return story.type;
         }
-    },
+    }
+}
+
+const sortStories = memoizeWeak(null, function(stories) {
+    return _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
 });
 
-var sortStories = Memoize(function(stories) {
-    stories = _.orderBy(stories, [ getStoryTime ], [ 'desc' ]);
-    return stories;
-});
-
-var getStoryTime = function(story) {
+function getStoryTime(story) {
     return story.btime || story.ptime;
 };
+
+export {
+    UserActivityList as default,
+    UserActivityList,
+};
+
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UserActivityList.propTypes = {
+        user: PropTypes.object,
+        stories: PropTypes.arrayOf(PropTypes.object),
+        storyCountEstimate: PropTypes.number,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

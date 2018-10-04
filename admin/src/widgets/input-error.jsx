@@ -1,17 +1,18 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React, { PureComponent } from 'react';
 
-var Locale = require('locale/locale');
+import Environment from 'env/environment';
 
 module.exports = InputError;
 
-require('./input-error.scss');
+import './input-error.scss';
 
 function InputError(props) {
+    let { children, type } = props;
     if (!props.children) {
         return null;
     }
-    var className = 'input-error';
-    var icon = 'exclamation-circle';
+    let className = 'input-error';
+    let icon = 'exclamation-circle';
     if (props.type === 'warning') {
         className += ' warning';
         icon = 'exclamation-triangle';
@@ -23,4 +24,17 @@ function InputError(props) {
             {props.children}
         </div>
     )
+}
+
+export {
+    InputError as default,
+    InputError,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    InputError.propTypes = {
+        type: PropTypes.oneOf([ 'error', 'warning' ]),
+    };
 }

@@ -1,59 +1,31 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var OptionButton = require('widgets/option-button');
-var TelephoneNumberDialogBox = require('dialogs/telephone-number-dialog-box');
+import OptionButton from 'widgets/option-button';
+import TelephoneNumberDialogBox from 'dialogs/telephone-number-dialog-box';
 
-require('./user-view-options.scss');
+import './user-view-options.scss';
 
-module.exports = React.createClass({
-    displayName: 'UserViewOptions',
-    propTypes: {
-        section: PropTypes.oneOf([ 'main', 'statistics', 'both' ]),
-        user: PropTypes.object,
-        options: PropTypes.object.isRequired,
+class UserViewOptions extends PureComponent {
+    static displayName = 'UserViewOptions';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onChange: PropTypes.func,
-        onComplete: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            section: 'both',
-        }
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             showingPhoneDialog: false,
             renderingPhoneDialog: false,
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        if (this.props.section === 'both') {
+    render() {
+        let { section } = this.props;
+        if (section === 'both') {
             return (
                 <div className="user-view-options">
                     {this.renderButtons('main')}
@@ -64,11 +36,11 @@ module.exports = React.createClass({
         } else {
             return (
                 <div className="user-view-options">
-                    {this.renderButtons(this.props.section)}
+                    {this.renderButtons(section)}
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render buttons
@@ -77,76 +49,88 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderButtons: function(section) {
-        var t = this.props.locale.translate;
-        var details = _.get(this.props.user, 'details', {});
+    renderButtons(section) {
+        let { env, user, options } = this.props;
+        let { t } = env.locale;
+        let details = _.get(user, 'details', {});
         if (section === 'main') {
-            var phoneProps = {
+            let {
+                phone,
+                email,
+                skype_username: skypeUsername,
+                ichat_username: ichatUsername,
+                twitter_username: twitterUsername,
+                gitlab_url: gitlabURL,
+                github_url: githubURL,
+                linkedin_url: linkedinURL,
+                stackoverflow_url: stackoverflowURL,
+            } = _.get(user, 'details', {});
+            let phoneProps = {
                 label: t('action-contact-by-phone'),
                 icon: 'phone-square',
-                url: `tel:${details.phone}`,
-                hidden: !details.phone,
+                url: `tel:${phone}`,
+                hidden: !phone,
                 onClick: this.handlePhoneClick,
             };
-            var emailProps = {
+            let emailProps = {
                 label: t('action-contact-by-email'),
                 icon: 'envelope',
-                url: `mailto:${details.email}`,
-                hidden: !details.email,
+                url: `mailto:${email}`,
+                hidden: !email,
                 onClick: this.handleLinkClick,
             };
-            var skypeProps = {
+            let skypeProps = {
                 label: t('action-contact-by-skype'),
                 icon: 'skype',
-                url: `skype:${details.skype_username}`,
-                hidden: !details.skype_username,
+                url: `skype:${skypeUsername}`,
+                hidden: !skypeUsername,
                 onClick: this.handleLinkClick,
             };
-            var ichatProps = {
+            let ichatProps = {
                 label: t('action-contact-by-ichat'),
                 icon: 'apple',
-                url: `ichat:${details.ichat_username}`,
-                hidden: !details.ichat_username,
+                url: `ichat:${ichatUsername}`,
+                hidden: !ichatUsername,
                 onClick: this.handleLinkClick,
             };
-            var twitterProps = {
+            let twitterProps = {
                 label: t('action-contact-by-twitter'),
                 icon: 'twitter',
-                url: `https://twitter.com/${details.twitter_username}`,
+                url: `https://twitter.com/${twitterUsername}`,
                 target: '_blank',
-                hidden: !details.twitter_username,
+                hidden: !twitterUsername,
                 onClick: this.handleLinkClick,
             };
-            var gitlabProps = {
+            let gitlabProps = {
                 label: t('action-view-gitlab-page'),
                 icon: 'gitlab',
-                url: details.gitlab_url,
+                url: gitlabURL,
                 target: '_blank',
-                hidden: !details.gitlab_url,
+                hidden: !gitlabURL,
                 onClick: this.handleLinkClick,
             };
-            var githubProps = {
+            let githubProps = {
                 label: t('action-view-github-page'),
                 icon: 'github',
-                url: details.github_url,
+                url: githubURL,
                 target: '_blank',
-                hidden: !details.github_url,
+                hidden: !githubURL,
                 onClick: this.handleLinkClick,
             };
-            var linkedInProps = {
+            let linkedInProps = {
                 label: t('action-view-linkedin-page'),
                 icon: 'linkedin',
-                url: details.linkedin_url,
+                url: linkedinURL,
                 target: '_blank',
-                hidden: !details.linkedin_url,
+                hidden: !linkedinURL,
                 onClick: this.handleLinkClick,
             };
-            var stackOverflowProps = {
+            let stackOverflowProps = {
                 label: t('action-view-stackoverflow-page'),
                 icon: 'stack-overflow',
-                url: details.stackoverflow_url,
+                url: stackoverflowURL,
                 target: '_blank',
-                hidden: !details.stackoverflow_url,
+                hidden: !stackoverflowURL,
                 onClick: this.handleLinkClick,
             };
             return (
@@ -164,18 +148,17 @@ module.exports = React.createClass({
                 </div>
             );
         } else {
-            var options = this.props.options;
-            var twoWeekProps = {
+            let twoWeekProps = {
                 label: t('option-statistics-biweekly'),
                 selected: options.chartRange === 'biweekly' || !options.chartRange,
                 onClick: this.handleBiweeklyActivitiesClick,
             };
-            var lastMonthProps = {
+            let lastMonthProps = {
                 label: t('option-statistics-monthly'),
                 selected: options.chartRange === 'monthly',
                 onClick: this.handleMonthlyActivitiesClick,
             };
-            var toDateProps = {
+            let toDateProps = {
                 label: t('option-statistics-to-date'),
                 selected: options.chartRange === 'full',
                 onClick: this.handleActivitiesToDateClick,
@@ -188,133 +171,162 @@ module.exports = React.createClass({
                 </div>
             )
         }
-    },
+    }
 
     /**
      * Render dialog box showing telephone number
      *
      * @return {ReactElement|null}
      */
-    renderPhoneDialog: function() {
-        if (process.env.PLATFORM !== 'browser') return null;
-
-        if (!this.state.renderingPhoneDialog) {
+    renderPhoneDialog() {
+        let { env, user } = this.props;
+        let { showingPhoneDialog, renderingPhoneDialog } = this.state;
+        if (!renderingPhoneDialog) {
             return null;
         }
-        var dialogProps = {
-            show: this.state.showingPhoneDialog,
-            number: this.props.user.details.phone,
-            locale: this.props.locale,
+        let { phone } = user.details;
+        let dialogProps = {
+            show: showingPhoneDialog,
+            number: phone,
+            env,
             onClose: this.handlePhoneDialogClose,
         };
         return <TelephoneNumberDialogBox {...dialogProps} />;
-    },
+    }
 
     /**
      * Inform parent component that new options have been selected
      *
      * @param  {Object} changes
      */
-    triggerChangeEvent: function(changes) {
-        var options = _.assign({}, this.props.options, changes);
-        if (this.props.onChange) {
-            this.props.onChange({
+    triggerChangeEvent(changes) {
+        let { options, onChange } = this.props;
+        options = _.assign({}, options, changes);
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 options
             });
         }
-    },
+    }
 
     /**
      * Inform parent component that some action has taken place
      *
      * @param  {Object} changes
      */
-    triggerCompleteEvent: function() {
-        if (this.props.onComplete) {
-            this.props.onComplete({
+    triggerCompleteEvent() {
+        let { onComplete } = this.props;
+        if (onComplete) {
+            onComplete({
                 type: 'complete',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Called when user click on "contact by phone"
      *
      * @param  {Event} evt
      */
-    handlePhoneClick: function(evt) {
-        if (process.env.PLATFORM !== 'browser') return;
-
+    handlePhoneClick = (evt) => {
         evt.preventDefault();
         this.setState({
             renderingPhoneDialog: true,
             showingPhoneDialog: true,
         });
-    },
+    }
 
     /**
      * Called when user closes telephone number dialog
      *
      * @param  {Event} evt
      */
-    handlePhoneDialogClose: function(evt) {
-        if (process.env.PLATFORM !== 'browser') return;
-
+    handlePhoneDialogClose = (evt) => {
         this.setState({ showingPhoneDialog: false }, () => {
             this.triggerCompleteEvent();
             setTimeout(() => {
-                if (!this.state.showingPhoneDialog) {
+                let { showingPhoneDialog } = this.state;
+                if (!showingPhoneDialog) {
                     this.setState({ renderingPhoneDialog: false });
                 }
             }, 500);
         });
-    },
+    }
 
     /**
      * Called when user clicks biweekly activities button
      *
      * @param  {Event} evt
      */
-    handleBiweeklyActivitiesClick: function(evt) {
-        var chartRange = 'biweekly';
-        var chartType = this.props.options.chartType || 'bar';
+    handleBiweeklyActivitiesClick = (evt) => {
+        let { options } = this.props;
+        let chartRange = 'biweekly';
+        let chartType = options.chartType || 'bar';
         this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user clicks monthly activities button
      *
      * @param  {Event} evt
      */
-    handleMonthlyActivitiesClick: function(evt) {
-        var chartRange = 'monthly';
-        var chartType = this.props.options.chartType || 'bar';
+    handleMonthlyActivitiesClick = (evt) => {
+        let { options } = this.props;
+        let chartRange = 'monthly';
+        let chartType = options.chartType || 'bar';
         this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user clicks activities to-date button
      *
      * @param  {Event} evt
      */
-    handleActivitiesToDateClick: function(evt) {
-        var chartRange = 'full';
-        var chartType = this.props.options.chartType || 'bar';
+    handleActivitiesToDateClick = (evt) => {
+        let { options } = this.props;
+        let chartRange = 'full';
+        let chartType = options.chartType || 'bar';
         this.triggerChangeEvent({ chartRange, chartType });
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user clicks a link
      *
      * @param  {Event} evt
      */
-    handleLinkClick: function(evt) {
+    handleLinkClick = (evt) => {
         this.triggerCompleteEvent();
     }
-});
+}
+
+UserViewOptions.defaultProps = {
+    section: 'both',
+};
+
+export {
+    UserViewOptions as default,
+    UserViewOptions,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UserViewOptions.propTypes = {
+        section: PropTypes.oneOf([ 'main', 'statistics', 'both' ]),
+        user: PropTypes.object,
+        options: PropTypes.object.isRequired,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onChange: PropTypes.func,
+        onComplete: PropTypes.func,
+    };
+}

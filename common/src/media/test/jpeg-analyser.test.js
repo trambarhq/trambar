@@ -1,10 +1,10 @@
-var _ = require('lodash');
-var Chai = require('chai'), expect = Chai.expect;
+import _ from 'lodash';
+import { expect } from 'chai';
 
-var JPEGAnalyser = require('media/jpeg-analyser');
+import * as JPEGAnalyser from 'media/jpeg-analyser';
 
-var imageWithPaths = require('./images/malgorzata-socha.jpg');
-var imagesWithOrientation = [
+import imageWithPaths from './images/malgorzata-socha.jpg';
+let imagesWithOrientation = [
     require('./images/orientation-1.jpg'),
     require('./images/orientation-2.jpg'),
     require('./images/orientation-3.jpg'),
@@ -18,14 +18,14 @@ var imagesWithOrientation = [
 describe('JPEGAnalyser', function() {
     describe('#getDimensions()', function() {
         it('should find dimensions of a JPEG file', function() {
-            var dimensions = JPEGAnalyser.getDimensions(imageWithPaths);
+            let dimensions = JPEGAnalyser.getDimensions(imageWithPaths);
             expect(dimensions).to.have.property('width', 640);
             expect(dimensions).to.have.property('height', 463);
         })
     })
     describe('#getOrientation()', function() {
         it('should find orientation of JPEG files', function() {
-            var orientations = _.map(imagesWithOrientation, (image) => {
+            let orientations = _.map(imagesWithOrientation, (image) => {
                 return JPEGAnalyser.getOrientation(image);
             });
             expect(orientations).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8]);
@@ -33,9 +33,9 @@ describe('JPEGAnalyser', function() {
     })
     describe('#extractPaths()', function() {
         it('should extract paths from a JPEG file', function() {
-            var paths = JPEGAnalyser.extractPaths(imageWithPaths);
+            let paths = JPEGAnalyser.extractPaths(imageWithPaths);
             expect(paths).to.not.be.empty;
-            for(var name in paths) {
+            for(let name in paths) {
                 expect(paths[name]).to.not.be.emtpy;
             }
         })

@@ -1,4 +1,4 @@
-module.exports = exports = [
+const StoryTypes = [
     'push',
     'merge',
     'branch',
@@ -14,17 +14,17 @@ module.exports = exports = [
     'task-list',
 ];
 
-exports.editable = [
+const EditableStoryTypes = [
     'post',
     'task-list',
     'survey',
 ];
 
-exports.trackable = [
+const TrackableStoryTypes = [
     'post',
 ];
 
-exports.git = [
+const GitStoryTypes = [
     'push',
     'merge',
     'branch',
@@ -37,9 +37,10 @@ exports.git = [
     'repo',
 ];
 
-var isNodeJs = Object.prototype.toString.call(typeof process !== 'undefined' ? process : 0) === '[object process]';
+const isNodeJs = Object.prototype.toString.call(typeof process !== 'undefined' ? process : 0) === '[object process]';
+let StoryIcons;
 if (!isNodeJs) {
-    exports.icons = {
+    StoryIcons = {
         'push': require('octicons/build/svg/repo-push.svg'),
         'merge': require('octicons/build/svg/git-merge.svg'),
         'branch': require('octicons/build/svg/git-branch.svg'),
@@ -58,3 +59,12 @@ if (!isNodeJs) {
         'task-list': require('octicons/build/svg/list-ordered.svg'),
     };
 }
+
+export {
+    StoryTypes as default,
+    StoryTypes,
+    EditableStoryTypes,
+    TrackableStoryTypes,
+    GitStoryTypes,
+    StoryIcons,
+};

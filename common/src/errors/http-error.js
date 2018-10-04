@@ -1,30 +1,31 @@
-module.exports = HTTPError;
-
-function HTTPError() {
-    for (var i = 0; i < arguments.length; i++) {
-        var arg = arguments[i];
-        if (typeof(arg) === 'number') {
-            this.statusCode = arg;
-        } else if (typeof(arg) === 'string') {
-            this.message = arg;
-        } else if (typeof(arg) === 'object') {
-            for (var key in arg) {
-                this[key] = arg[key];
+class HTTPError extends Error {
+    constructor() {
+        super();
+        for (let i = 0; i < arguments.length; i++) {
+            let arg = arguments[i];
+            if (typeof(arg) === 'number') {
+                this.statusCode = arg;
+            } else if (typeof(arg) === 'string') {
+                this.message = arg;
+            } else if (typeof(arg) === 'object') {
+                for (let key in arg) {
+                    this[key] = arg[key];
+                }
             }
         }
-    }
-    if (!this.statusCode) {
-        this.statusCode = 500;
-    }
-    if (!this.hasOwnProperty('name')) {
-        this.name = httpErrorNames[this.statusCode];
-    }
-    if (!this.hasOwnProperty('message')) {
-        this.message = this.name;
+        if (!this.statusCode) {
+            this.statusCode = 500;
+        }
+        if (!this.hasOwnProperty('name')) {
+            this.name = errorNames[this.statusCode];
+        }
+        if (!this.hasOwnProperty('message')) {
+            this.message = this.name;
+        }
     }
 }
 
-var httpErrorNames = {
+const errorNames = {
     400: 'Bad Request',
     401: 'Unauthorized',
     402: 'Payment Required',
@@ -51,4 +52,7 @@ var httpErrorNames = {
     504: 'Gateway Timeout',
 };
 
-HTTPError.prototype = Object.create(Error.prototype)
+export {
+    HTTPError as default,
+    HTTPError,
+};

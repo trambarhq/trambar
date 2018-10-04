@@ -1,58 +1,13 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var SystemFinder = require('objects/finders/system-finder');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import * as SystemFinder from 'objects/finders/system-finder';
 
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import './start-page.scss';
 
-require('./start-page.scss');
-
-module.exports = Relaks.createClass({
-    displayName: 'StartPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/:extra?'
-            ], (params) => {
-                if (_.trimEnd(params.extra, '/')) {
-                    // there's extra stuff--not a match
-                    return null;
-                }
-                return params;
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/`, query;
-            return { path, query };
-        },
-    },
+class StartPage extends AsyncComponent {
+    static displayName = 'StartPage';
 
     /**
      * Render the component asynchronously
@@ -61,21 +16,22 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ by: this });
-        var props = {
-            locale: this.props.locale,
+    renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let db = database.use({ by: this });
+        let props = {
+            env,
         };
-        return db.start().then((currentUserId) => {
+        return db.start().then((currentUserID) => {
             return SystemFinder.findSystem(db).then((system) => {
                 if (_.isEmpty(system)) {
                     if (!this.redirectTimeout) {
                         this.redirectTimeout = setTimeout(() => {
-                            this.props.route.replace(require('pages/settings-page'), { edit: true });
+                            route.replace('settings-page', { edit: true });
                         }, 2500);
                     }
                 } else {
-                    return this.props.route.replace(require('pages/project-list-page'));
+                    return route.replace('project-list-page');
                 }
             });
         }).then((system) => {
@@ -83,26 +39,47 @@ module.exports = Relaks.createClass({
         }).catch((err) => {
             return null;
         });
-    },
-});
+    }
+}
 
-var StartPageSync = module.exports.Sync = React.createClass({
-    displayName: 'StartPage.Sync',
-    propType: {
-        locale: PropTypes.instanceOf(Locale).isRequired,
-    },
+class StartPageSync extends PureComponent {
+    static displayName = 'StartPage.Sync';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
+    render() {
+        let { env, stage } = this.props;
+        let { t } = env.locale;
         return (
-            <div className={`start-page ${this.props.stage}`}>
+            <div className={`start-page ${stage}`}>
                 <h2>{t('welcome')}</h2>
             </div>
         );
     }
-});
+}
+
+export {
+    StartPage as default,
+    StartPage,
+    StartPageSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StartPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    StartPage.propType = {
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

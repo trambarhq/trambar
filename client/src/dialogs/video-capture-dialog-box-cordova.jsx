@@ -1,48 +1,33 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var MediaLoader = require('media/media-loader');
-var CordovaFile = require('transport/cordova-file');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import * as MediaLoader from 'media/media-loader';
+import CordovaFile from 'transport/cordova-file';
 
-var Payloads = require('transport/payloads');
-var Locale = require('locale/locale');
+class VideoCaptureDialogBox extends PureComponent {
+    static displayName = 'VideoCaptureDialogBox';
 
-module.exports = React.createClass({
-    displayName: 'VideoCaptureDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onClose: PropTypes.func,
-        onCapturePending: PropTypes.func,
-        onCaptureError: PropTypes.func,
-        onCapture: PropTypes.func,
-    },
-
-    statics: {
-        /**
-         * Return true if the browser has the necessary functionalities
-         *
-         * @return {Boolean}
-         */
-        isAvailable: function() {
-            return !!window.cordova && !!navigator.device;
-        },
-    },
+    /**
+     * Return true if the browser has the necessary functionalities
+     *
+     * @return {Boolean}
+     */
+    static isAvailable() {
+        return !!window.cordova && !!navigator.device;
+    }
 
     /**
      * Activate plugin when props.show goes from false to true
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (!this.props.show && nextProps.show) {
-            var capture = navigator.device.capture;
+    componentWillReceiveProps(nextProps) {
+        let { show } = this.props;
+        if (nextProps.show && !show) {
+            let capture = navigator.device.capture;
             if (capture) {
                 requestPermissions().then(() => {
-                    var options = {
+                    let options = {
                         duration: 5 * 60 * 60,
                         limit: 1,
                     };
@@ -50,102 +35,107 @@ module.exports = React.createClass({
                 });
             }
         }
-    },
+    }
 
     /**
      * Render function
      *
      * @return {null}
      */
-    render: function() {
+    render() {
         return null;
-    },
+    }
 
     /**
      * Inform parent component that dialog box should be closed
      */
-    triggerCloseEvent: function() {
-        if (this.props.onClose) {
-            this.props.onClose({
+    triggerCloseEvent() {
+        let { onClose } = this.props;
+        if (onClose) {
+            onClose({
                 type: 'close',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Report back to parent component that a video is ready
      *
      * @param  {Object} resource
      */
-    triggerCaptureEvent: function(resource) {
-        if (this.props.onCapture) {
-            this.props.onCapture({
+    triggerCaptureEvent(resource) {
+        let { onCapture } = this.props;
+        if (onCapture) {
+            onCapture({
                 type: 'capture',
                 target: this,
                 resource,
             });
         }
-    },
+    }
 
     /**
      * Report back to parent component that a video is being loaded
      *
      */
-    triggerCapturePendingEvent: function() {
-        if (this.props.onCapturePending) {
-            this.props.onCapturePending({
+    triggerCapturePendingEvent() {
+        let { onCapturePending } = this.props;
+        if (onCapturePending) {
+            onCapturePending({
                 type: 'capturepending',
                 target: this,
                 resourceType: 'video'
             });
         }
-    },
+    }
 
     /**
      * Report back to parent component that loading has failed
      *
      * @param  {Error} err
      */
-    triggerCaptureErrorEvent: function(err) {
-        if (this.props.onCaptureError) {
-            this.props.onCaptureError({
+    triggerCaptureErrorEvent(err) {
+        let { onCaptureError } = this.props;
+        if (onCaptureError) {
+            onCaptureError({
                 type: 'capturefailure',
                 target: this,
                 error: err
             });
         }
-    },
+    }
 
     /**
      * Called when plugin has capture an image
      *
      * @param  {Array<MediaFiles>} mediaFiles
      */
-    handleCaptureSuccess: function(mediaFiles) {
+    handleCaptureSuccess = (mediaFiles) => {
+        let { payloads } = this.props;
         this.triggerCloseEvent();
-        var mediaFile = mediaFiles[0];
+        let mediaFile = mediaFiles[0];
         if (mediaFile) {
             this.triggerCapturePendingEvent();
             MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
-                var fullPath;
+                let fullPath;
                 if (cordova.platformId === 'windows') {
                     fullPath = mediaFile.localURL;
                 } else {
                     fullPath = mediaFile.fullPath;
                 }
-                var file = new CordovaFile(fullPath, mediaFile.type, mediaFile.size);
-                var payload = this.props.payloads.add('video');
+                let file = new CordovaFile(fullPath, mediaFile.type, mediaFile.size);
+                let payload = payloads.add('video');
                 payload.attachFile(file);
                 return createThumbnail(file).then((thumbnailURL) => {
-                    var posterFile = new CordovaFile(thumbnailURL);
+                    let posterFile = new CordovaFile(thumbnailURL);
                     return MediaLoader.getImageMetadata(posterFile).then((poster) => {
                         // use the poster's width and height, as they're
                         // corrected for camera orientation
                         payload.attachFile(posterFile, 'poster');
                         return {
                             type: 'video',
-                            payload_token: payload.token,
+                            payload_token: payload.id,
                             format: MediaLoader.extractFileFormat(mediaFile.type),
                             width: poster.width,
                             height: poster.height,
@@ -158,7 +148,7 @@ module.exports = React.createClass({
                     payload.attachStep('main', 'poster')
                     return {
                         type: 'video',
-                        payload_token: payload.token,
+                        payload_token: payload.id,
                         format: MediaLoader.extractFileFormat(mediaFile.type),
                         filename: mediaFile.name,
                         duration: mediaFileData.duration * 1000,
@@ -172,34 +162,34 @@ module.exports = React.createClass({
                 return null;
             });
         }
-    },
+    }
 
     /**
      * Called when the operation failed for some reason
      */
-    handleCaptureFailure: function(err) {
+    handleCaptureFailure = (err) => {
         this.triggerCloseEvent();
         this.triggerCaptureErrorEvent(err);
-    },
-});
+    }
+}
 
 function createThumbnail(file) {
     return new Promise((resolve, reject) => {
-        var successCB = (path) => {
+        let successCB = (path) => {
             if (cordova.platformId === 'windows') {
                 // need to use ms-appdata: URL instead of win32 path
-                var backSlashIndex = _.lastIndexOf(path, '\\');
+                let backSlashIndex = _.lastIndexOf(path, '\\');
                 if (backSlashIndex !== -1) {
-                    var filename = path.substr(backSlashIndex + 1);
+                    let filename = path.substr(backSlashIndex + 1);
                     path = cordova.file.dataDirectory + filename;
                 }
             }
             resolve(path);
         };
-        var errorCB = (err) => {
+        let errorCB = (err) => {
             reject(new Error(err));
         };
-        var options = {
+        let options = {
             fileUri: file.fullPath,
             outputFileName: file.name,
             quality: 70
@@ -213,15 +203,15 @@ function createThumbnail(file) {
 }
 
 function requestPermissions() {
-    var permissions = cordova.plugins.permissions;
+    let permissions = cordova.plugins.permissions;
     if (!permissions || cordova.platformId !== 'android') {
         return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
-        var successCB = () => {
+        let successCB = () => {
             resolve();
         };
-        var errorCB = (err) => {
+        let errorCB = (err) => {
             reject(new Error('Unable to obtain permission'));
         };
         permissions.requestPermissions([
@@ -231,4 +221,28 @@ function requestPermissions() {
             permissions.WRITE_EXTERNAL_STORAGE,
         ], successCB, errorCB);
     });
+}
+
+export {
+    VideoCaptureDialogBox as default,
+    VideoCaptureDialogBox,
+};
+
+import Payloads from 'transport/payloads';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    VideoCaptureDialogBox.propTypes = {
+        show: PropTypes.bool,
+
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onClose: PropTypes.func,
+        onCapturePending: PropTypes.func,
+        onCaptureError: PropTypes.func,
+        onCapture: PropTypes.func,
+    };
 }

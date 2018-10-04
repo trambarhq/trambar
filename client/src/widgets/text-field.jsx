@@ -1,75 +1,76 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var ComponentRefs = require('utils/component-refs');
-
-var Locale = require('locale/locale');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import ComponentRefs from 'utils/component-refs';
 
 // widgets
-var AutosizeTextArea = require('widgets/autosize-text-area');
+import AutosizeTextArea from 'widgets/autosize-text-area';
 
-require('./text-field.scss');
+import './text-field.scss';
 
-module.exports = React.createClass({
-    displayName: 'TextField',
-    propTypes: {
-        locale: PropTypes.instanceOf(Locale).isRequired,
-    },
+class TextField extends PureComponent {
+    static displayName = 'TextField';
 
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            type: 'text',
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             input: HTMLInputElement
         });
-        return {};
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var classNames = [ 'text-field'];
-        var Input = 'input';
-        var inputProps = _.omit(this.props, 'children', 'locale');
-        if (this.props.type === 'textarea') {
+    render() {
+        let { env, id, type, children, readOnly } = this.props;
+        let { setters } = this.components;
+        let { t } = env.locale;
+        let classNames = [ 'text-field' ];
+        let Input = 'input';
+        let inputProps = _.omit(this.props, 'children', 'env');
+        if (type === 'textarea') {
             Input = AutosizeTextArea;
             inputProps = _.omit(inputProps, 'type');
         }
-        if (this.props.readOnly) {
+        if (readOnly) {
             classNames.push('readonly');
-            var t = this.props.locale.translate;
             inputProps.placeholder = t('text-field-placeholder-none');
             inputProps.spellCheck = false;
         }
         inputProps.value = inputProps.value || '';
         return (
             <div className={classNames.join(' ')}>
-                <label htmlFor={this.props.id}>{this.props.children}</label>
-                <Input ref={this.components.setters.input} {...inputProps} />
+                <label htmlFor={id}>{children}</label>
+                <Input ref={setters.input} {...inputProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Place focus on the text field
      */
-    focus: function() {
-        this.components.input.focus();
-    },
-});
+    focus() {
+        let { input } = this.components;
+        input.focus();
+    }
+}
+
+TextField.defaultProps = {
+    type: 'text',
+};
+
+export {
+    TextField as default,
+    TextField,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    TextField.propTypes = {
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

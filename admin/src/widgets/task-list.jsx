@@ -1,59 +1,18 @@
-var _ = require('lodash');
-var Moment = require('moment');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var TaskFinder = require('objects/finders/task-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import { memoizeWeak } from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import * as TaskFinder from 'objects/finders/task-finder';
 
 // widgets
-var SmartList = require('widgets/smart-list');
+import SmartList from 'widgets/smart-list';
 
-require('./task-list.scss');
+import './task-list.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'TaskList',
-    propTypes: {
-        server: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    statics: {
-        /**
-         * Extract id from URL hash
-         *
-         * @param  {String} hash
-         *
-         * @return {Object}
-         */
-        parseHash: function(hash) {
-            var task = Route.parseId(hash, /t(\d+)/);
-            return { task };
-        },
-
-        /**
-         * Get URL hash based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {String}
-         */
-        getHash: function(params) {
-            if (params.task) {
-                return `t${params.task}`;
-            }
-            return '';
-        },
-    },
-
+class TaskList extends AsyncComponent {
+    static displayName = 'TaskList';
 
     /**
      * Render the component asynchronously
@@ -62,49 +21,42 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env, server } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let props = {
             tasks: null,
-            server: this.props.server,
-            locale: this.props.locale,
-            route: this.props.route,
-            theme: this.props.theme,
+            server,
+            route,
+            env,
         };
         meanwhile.show(<TaskListSync {...props} />);
-        return db.start().then((userId) => {
-            if (this.props.server) {
-                return TaskFinder.findServerTasks(db, props.server).then((tasks) => {
+        return db.start().then((currentUserID) => {
+            if (server) {
+                return TaskFinder.findServerTasks(db, server).then((tasks) => {
                     props.tasks = tasks;
                 });
             }
         }).then(() => {
             return <TaskListSync {...props} />;
         });
-    },
-});
+    }
+}
 
-var TaskListSync = module.exports.Sync = React.createClass({
-    displayName: 'TaskList.Sync',
-    propTypes: {
-        tasks: PropTypes.arrayOf(PropTypes.object),
+class TaskListSync extends PureComponent {
+    static displayName = 'TaskList.Sync';
 
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        var hashParams = module.exports.parseHash(this.props.route.hash);
-        return {
-            expandedTaskIds: (hashParams.task) ? [ hashParams.task ] : [],
+    constructor(props) {
+        super(props);
+        let { route } = props;
+        this.components = ComponentRefs({
+            container: HTMLDivElement,
+        });
+        let taskID = route.params.task;
+        this.state = {
+            expandedTaskIDs: (taskID) ? [ taskID ] : [],
         };
-    },
+    }
 
     /**
      * Return text message describing task
@@ -113,14 +65,17 @@ var TaskListSync = module.exports.Sync = React.createClass({
      *
      * @return {String}
      */
-    getMessage: function(task) {
-        var t = this.props.locale.translate;
+    getMessage(task) {
+        let { env } = this.props;
+        let { t } = env.locale;
         if (task.completion === 100) {
+            let repo = task.options.repo;
+            let branch = task.options.branch;
+            let added = _.size(task.details.added);
+            let deleted = _.size(task.details.deleted);
+            let modified = _.size(task.details.modified);
             switch (task.action) {
                 case 'gitlab-repo-import':
-                    var added = _.size(task.details.added);
-                    var deleted = _.size(task.details.deleted);
-                    var modified = _.size(task.details.modified);
                     if (added) {
                         return t('task-imported-$count-repos', added);
                     } else if (deleted) {
@@ -130,9 +85,6 @@ var TaskListSync = module.exports.Sync = React.createClass({
                     }
                     break;
                 case 'gitlab-user-import':
-                    var added = _.size(task.details.added);
-                    var deleted = _.size(task.details.deleted);
-                    var modified = _.size(task.details.modified);
                     if (added) {
                         return t('task-imported-$count-users', added);
                     } else if (deleted) {
@@ -142,34 +94,22 @@ var TaskListSync = module.exports.Sync = React.createClass({
                     }
                     break;
                 case 'gitlab-hook-install':
-                    var added = _.size(task.details.added);
                     return t('task-installed-$count-hooks', added);
                 case 'gitlab-hook-remove':
-                    var deleted = _.size(task.details.deleted);
                     return t('task-removed-$count-hooks', deleted);
                 case 'gitlab-event-import':
-                    var added = _.size(task.details.added);
-                    var repo = task.options.repo;
                     return t('task-imported-$count-events-from-$repo', added, repo);
                 case 'gitlab-push-import':
-                    var added = _.size(task.details.added);
-                    var repo = task.options.repo;
-                    var branch = task.options.branch;
                     return t('task-imported-push-with-$count-commits-from-$repo-$branch', added, repo, branch);
                 case 'gitlab-commit-comment-import':
-                    var added = _.size(task.details.added);
-                    var repo = task.options.repo;
                     return t('task-imported-$count-commit-comments-from-$repo', added, repo);
                 case 'gitlab-issue-comment-import':
-                    var added = _.size(task.details.added);
-                    var repo = task.options.repo;
                     return t('task-imported-$count-issue-comments-from-$repo', added, repo);
                 case 'gitlab-merge-request-comment-import':
-                    var added = _.size(task.details.added);
-                    var repo = task.options.repo;
                     return t('task-imported-$count-merge-request-comments-from-$repo', added, repo);
             }
         } else {
+            let repo = task.options.repo;
             switch (task.action) {
                 case 'gitlab-repo-import':
                     return t('task-importing-repos');
@@ -180,23 +120,18 @@ var TaskListSync = module.exports.Sync = React.createClass({
                 case 'gitlab-hook-remove':
                     return t('task-removing-hooks');
                 case 'gitlab-event-import':
-                    var repo = task.options.repo;
                     return t('task-importing-events-from-$repo', repo);
                 case 'gitlab-push-import':
-                    var repo = task.options.repo;
                     return t('task-importing-push-from-$repo', repo);
                 case 'gitlab-commit-comment-import':
-                    var repo = task.options.repo;
                     return t('task-importing-commit-comments-from-$repo', repo);
                 case 'gitlab-issue-comment-import':
-                    var repo = task.options.repo;
                     return t('task-importing-issue-comments-from-$repo', repo);
                 case 'gitlab-merge-request-comment-import':
-                    var repo = task.options.repo;
                     return t('task-importing-merge-request-comments-from-$repo', repo);
             }
         }
-    },
+    }
 
     /**
      * Return text describing task in greater details
@@ -205,8 +140,9 @@ var TaskListSync = module.exports.Sync = React.createClass({
      *
      * @return {String}
      */
-    getDetails: function(task) {
-        var t = this.props.locale.translate;
+    getDetails(task) {
+        let { env } = this.props;
+        let { t } = env.locale;
         switch (task.action) {
             case 'gitlab-repo-import':
             case 'gitlab-user-import':
@@ -221,45 +157,34 @@ var TaskListSync = module.exports.Sync = React.createClass({
             default:
                 return '';
         }
-    },
-
-    /**
-     * Set container node
-     *
-     * @param  {HTMLDivElement} node
-     */
-    setContainerNode: function(node) {
-        this.containerNode = node;
-    },
+    }
 
     /**
      * Render component if it's active
      *
      * @return {ReactElement|null}
      */
-    render: function() {
-        var anchor;
-        var hashParams = module.exports.parseHash(this.props.route.hash);
-        if (hashParams.task) {
-            anchor = `task-${hashParams.task}`;
-        }
-        var smartListProps = {
-            items: sortTasks(this.props.tasks),
+    render() {
+        let { route, tasks } = this.props;
+        let { setters } = this.components;
+        let taskID = route.params.task;
+        let smartListProps = {
+            items: sortTasks(tasks),
             offset: 5,
             behind: 20,
             ahead: 20,
-            anchor: anchor,
+            anchor: (taskID) ? `task-${taskID}` : undefined,
 
             onIdentity: this.handleTaskIdentity,
             onRender: this.handleTaskRender,
             onAnchorChange: this.handleAnchorChange,
         };
         return (
-            <div className="task-list" ref={this.setContainerNode}>
+            <div className="task-list" ref={setters.container}>
                 <SmartList {...smartListProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render a task
@@ -268,12 +193,13 @@ var TaskListSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderTask: function(task) {
-        var className = 'task';
+    renderTask(task) {
+        let { expandedTaskIDs } = this.state;
+        let className = 'task';
         if (task.failed) {
             className += ' failure';
         }
-        if (_.includes(this.state.expandedTaskIds, task.id)) {
+        if (_.includes(expandedTaskIDs, task.id)) {
             className += ' expanded';
         }
         return (
@@ -286,7 +212,7 @@ var TaskListSync = module.exports.Sync = React.createClass({
                 {this.renderDetails(task)}
             </div>
         );
-    },
+    }
 
     /**
      * Render the task's start time
@@ -295,10 +221,10 @@ var TaskListSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderStartTime: function(task) {
-        var time = Moment(task.ctime).format('YYYY-MM-DD HH:mm:ss');
+    renderStartTime(task) {
+        let time = Moment(task.ctime).format('YYYY-MM-DD HH:mm:ss');
         return <div className="start-time">{time}</div>;
-    },
+    }
 
     /**
      * Render a brief description of the task
@@ -307,9 +233,9 @@ var TaskListSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderMessage: function(task) {
-        var message = this.getMessage(task);
-        var badge;
+    renderMessage(task) {
+        let message = this.getMessage(task);
+        let badge;
         if (!message) {
             message = task.action + ' (noop)';
         }
@@ -317,7 +243,7 @@ var TaskListSync = module.exports.Sync = React.createClass({
             badge = <i className="fa fa-exclamation-triangle" />;
         }
         return <div className="message">{message}{badge}</div>;
-    },
+    }
 
     /**
      * Render progress bar if task hasn't finished yet
@@ -326,21 +252,22 @@ var TaskListSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderProgress: function(task) {
+    renderProgress(task) {
+        let { env } = this.props;
+        let { t } = env.locale;
         if (task.completion === 100 && task.etime) {
-            var t = this.props.locale.translate;
-            var duration = Moment(task.etime) - Moment(task.ctime);
-            var seconds = Math.ceil(duration / 1000);
+            let duration = Moment(task.etime) - Moment(task.ctime);
+            let seconds = Math.ceil(duration / 1000);
             return <div className="duration">{t('task-$seconds', seconds)}</div>;
         } else {
-            var percent = task.completion + '%';
+            let percent = task.completion + '%';
             return (
                 <div className="progress-bar-frame">
                     <div className="bar" style={{ width: percent }} />
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render details of a task if it's expanded
@@ -349,18 +276,19 @@ var TaskListSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderDetails: function(task) {
-        if (!_.includes(this.state.expandedTaskIds, task.id)) {
+    renderDetails(task) {
+        let { expandedTaskIDs } = this.state;
+        if (!_.includes(expandedTaskIDs, task.id)) {
             return null;
         }
-        var message = this.getDetails(task);
+        let message = this.getDetails(task);
         return (
             <div>
                 <div className="details">{message}</div>
                 {this.renderError(task)}
             </div>
         );
-    },
+    }
 
     /**
      * Render error if task failed with one
@@ -369,28 +297,29 @@ var TaskListSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderError: function(task) {
+    renderError(task) {
         if (!task.failed) {
             return null;
         }
-        var error = _.get(task, 'details.error.stack');
+        let error = _.get(task, 'details.error.stack');
         if (!error) {
             error = _.get(task, 'details.error.message');
         }
         return <div className="error">{error}</div>;
-    },
+    }
 
     /**
      * Scroll component into view if a task is specified by a hash
      */
-    componentDidMount: function() {
-        var hashParams = module.exports.parseHash(this.props.route.hash);
-        if (hashParams.task) {
-            if (this.containerNode) {
-                this.containerNode.scrollIntoView();
+    componentDidMount() {
+        let { route } = this.props;
+        let { container } = this.components;
+        if (route.params.task) {
+            if (container) {
+                container.scrollIntoView();
             }
         }
-    },
+    }
 
     /**
      * Called when SmartList wants an item's id
@@ -399,9 +328,9 @@ var TaskListSync = module.exports.Sync = React.createClass({
      *
      * @return {String}
      */
-    handleTaskIdentity: function(evt) {
+    handleTaskIdentity = (evt) => {
         return `task-${evt.item.id}`;
-    },
+    }
 
     /**
      * Called when SmartList wants to render an item
@@ -410,46 +339,47 @@ var TaskListSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    handleTaskRender: function(evt) {
+    handleTaskRender = (evt) => {
         if (evt.needed) {
             return this.renderTask(evt.item);
         } else {
             return <div className="task" />;
         }
-    },
+    }
 
     /**
      * Called when user clicks on a task
      *
      * @param  {Event} evt
      */
-    handleTaskClick: function(evt) {
-        var taskId = parseInt(evt.currentTarget.getAttribute('data-task-id'));
-        var expandedTaskIds = _.slice(this.state.expandedTaskIds);
-        if (_.includes(expandedTaskIds, taskId)) {
-            _.pull(expandedTaskIds, taskId);
+    handleTaskClick = (evt) => {
+        let { expandedTaskIDs } = this.state;
+        let taskID = parseInt(evt.currentTarget.getAttribute('data-task-id'));
+        if (_.includes(expandedTaskIDs, taskID)) {
+            expandedTaskIDs = _.without(expandedTaskIDs, taskID);
         } else {
-            expandedTaskIds.push(taskId);
+            expandedTaskIDs = _.concat(expandedTaskIDs, taskID);
         }
-        this.setState({ expandedTaskIds });
-    },
+        this.setState({ expandedTaskIDs });
+    }
 
     /**
      * Called when user scrolls to a different item
      *
      * @param  {Object} evt
      */
-    handleAnchorChange: function(evt) {
-        this.props.route.reanchor('');
-    },
-});
+    handleAnchorChange = (evt) => {
+        let { route } = this.props;
+        route.reanchor('');
+    }
+}
 
-var sortTasks = Memoize(function(tasks) {
+let sortTasks = memoizeWeak(null, function(tasks) {
     return _.orderBy(tasks, 'id', 'desc');
 });
 
 function formatAddedDeleteChanged(object) {
-    var list = [];
+    let list = [];
     _.each(object.deleted, (s) => {
         pushItem(list, s, 'item deleted')
     });
@@ -463,10 +393,36 @@ function formatAddedDeleteChanged(object) {
 }
 
 function pushItem(list, text, className) {
-    var key = list.length;
+    let key = list.length;
     list.push(
         <span className={className} key={key}>
             {text}
         </span>
     );
+}
+
+export {
+    TaskList as default,
+    TaskList,
+    TaskListSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    TaskList.propTypes = {
+        server: PropTypes.object,
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    TaskListSync.propTypes = {
+        tasks: PropTypes.arrayOf(PropTypes.object),
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
 }

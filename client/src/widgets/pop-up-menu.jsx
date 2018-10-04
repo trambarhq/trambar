@@ -1,95 +1,76 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var ReactDOM = require('react-dom');
-var ScrollIntoViewIfNeeded = require('scroll-into-view-if-needed').default;
-var Overlay = require('widgets/overlay');
-var ComponentRefs = require('utils/component-refs');
+import _ from 'lodash';
+import React, { PureComponent, Children } from 'react';
+import ReactDOM from 'react-dom';
+import ScrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
+import Overlay from 'widgets/overlay';
+import ComponentRefs from 'utils/component-refs';
 
-require('./pop-up-menu.scss');
+import './pop-up-menu.scss';
 
-module.exports = React.createClass({
-    displayName: 'PopUpMenu',
-    propTypes: {
-        disabled: PropTypes.bool,
-        popOut: PropTypes.bool,
-    },
+class PopUpMenu extends PureComponent {
+    static displayName = 'PopUpMenu';
 
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            disabled: false,
-            popOut: false,
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             container: HTMLDivElement,
             menu: HTMLDivElement,
         });
-        return {
+        this.state = {
             open: false,
         };
-    },
+    }
 
     /**
      * Find child by tag name
      *
      * @return {tagName}
      */
-    getContents: function(tagName) {
-        var children = React.Children.toArray(this.props.children);
-        var child = _.find(children, { type: tagName });
+    getContents(tagName) {
+        let { children } = this.props;
+        children = Children.toArray(children);
+        let child = _.find(children, { type: tagName });
         if (child) {
             return child.props.children;
         }
-    },
+    }
 
     /**
      * Close menu
      */
-    close: function() {
+    close() {
         return this.setState({ open: false });
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var className = 'pop-up-menu';
-        if (this.props.className) {
-            className += ' ' + this.props.className;
-        }
-        if (this.state.open) {
+    render() {
+        let { className, popOut } = this.props;
+        let { open } = this.state;
+        className = 'pop-up-menu' + ((className) ? ` ${className}` : '');
+        if (open) {
             className += ' open';
         }
         return (
             <span className={className}>
                 {this.renderButton()}
-                {!this.props.popOut ? this.renderMenu() : null}
+                {!popOut ? this.renderMenu() : null}
             </span>
         );
-    },
+    }
 
     /**
      * Render button for opening the menu
      *
      * @return {ReactElement}
      */
-    renderButton: function() {
-        var className = 'button';
-        if (!this.props.disabled) {
+    renderButton() {
+        let { disabled } = this.props;
+        let className = 'button';
+        if (!disabled) {
             className += ' active';
         }
         return (
@@ -97,18 +78,19 @@ module.exports = React.createClass({
                 {this.getContents('button')}
             </span>
         );
-    },
+    }
 
     /**
      * Render the menu if it's open
      *
      * @return {ReactElement}
      */
-    renderMenu: function() {
-        if (!this.state.open) {
+    renderMenu() {
+        let { open } = this.state;
+        let { setters } = this.components;
+        if (!open) {
             return null;
         }
-        var setters = this.components.setters;
         return (
             <div ref={setters.container} className="container">
                 <div ref={setters.menu} className="menu">
@@ -116,26 +98,24 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render menu into pop-out container
      */
-    redrawPopOutMenu: function() {
-        var node = ReactDOM.findDOMNode(this);
-        var page = getPageNode();
-        var setters = this.components.setters;
-        var nodePos = getRelativePosition(node, page);
-        var style = {
+    redrawPopOutMenu() {
+        let { className } = this.props;
+        let { setters } = this.components;
+        let node = ReactDOM.findDOMNode(this);
+        let page = getPageNode();
+        let nodePos = getRelativePosition(node, page);
+        let style = {
             position: 'absolute',
             left: nodePos.left + node.offsetWidth,
             top: nodePos.top,
         };
-        var className = 'pop-up-menu';
-        if (this.props.className) {
-            className += ' ' + this.props.className;
-        }
-        var element = (
+        className = 'pop-up-menu' + ((className) ? ` ${className}` : '');
+        let element = (
             <div className={className} style={style}>
                 <div ref={setters.container} className="container">
                     <div ref={setters.menu} className="menu" onClick={this.handleMenuClick}>
@@ -145,7 +125,7 @@ module.exports = React.createClass({
             </div>
         );
         ReactDOM.render(element, this.popOutContainer);
-    },
+    }
 
     /**
      * Add/remove document-level mousedown handler when menu opens and closes
@@ -153,28 +133,30 @@ module.exports = React.createClass({
      * @param  {Object} prevProps
      * @param  {Object} prevState
      */
-    componentDidUpdate: function(prevProps, prevState) {
-        var appContainer = document.getElementById('application');
-        if (!prevState.open && this.state.open) {
+    componentDidUpdate(prevProps, prevState) {
+        let { popOut } = this.props;
+        let { open } = this.state;
+        let { menu } = this.components;
+        let appContainer = document.getElementById('application');
+        if (!prevState.open && open) {
             appContainer.addEventListener('mousedown', this.handleBodyMouseDown);
-            if (this.props.popOut) {
+            if (popOut) {
                 this.addPopOutContainer();
             }
-        } else if (prevState.open && !this.state.open) {
+        } else if (prevState.open && !open) {
             appContainer.removeEventListener('mousedown', this.handleBodyMouseDown);
-            if (this.props.popOut) {
+            if (popOut) {
                 this.removePopOutContainer();
             }
         }
 
-        if (this.state.open && this.props.popOut) {
+        if (open && popOut) {
             this.redrawPopOutMenu();
         }
-        if (this.state.open && !prevProps.open) {
+        if (open && !prevProps.open) {
             setTimeout(() => {
-                var menu = this.components.menu;
                 if (menu) {
-                    var options = {
+                    let options = {
                         behavior: 'smooth',
                         scrollMode: 'if-needed',
                         block: 'end',
@@ -183,89 +165,92 @@ module.exports = React.createClass({
                 }
             }, 50);
         }
-    },
+    }
 
     /**
      * Remove mousedown handler on unmount
      */
-    componentWillUnmount: function() {
-        var appContainer = document.getElementById('application');
+    componentWillUnmount() {
+        let appContainer = document.getElementById('application');
         appContainer.removeEventListener('mousedown', this.handleBodyMouseDown);
         this.removePopOutContainer();
-    },
+    }
 
     /**
      * Add pop-out container, used when menu cannot be positioned relatively
      * due to parent container having overflow of hidden or scroll
      */
-    addPopOutContainer: function() {
+    addPopOutContainer() {
         if (!this.popOutContainer) {
-            var page = getPageNode();
+            let page = getPageNode();
             this.popOutContainer = document.createElement('DIV');
             this.popOutContainer.style.left = '0';
             this.popOutContainer.style.top = '0';
             page.appendChild(this.popOutContainer);
             this.popOutContainer.style.position = 'absolute';
         }
-    },
+    }
 
     /**
      * Remove pop-out container if there's one
      */
-    removePopOutContainer: function() {
+    removePopOutContainer() {
         if (this.popOutContainer) {
             this.popOutContainer.parentNode.removeChild(this.popOutContainer);
             this.popOutContainer = null;
         }
-    },
+    }
 
     /**
      * Trigger onOpen or onClose event
      *
      * @param  {Boolean} open
      */
-    triggerEvent: function(open) {
+    triggerEvent(open) {
+        let { onOpen, onClose } = this.props;
         if (open) {
-            if (this.props.onOpen) {
-                this.props.onOpen({
+            if (onOpen) {
+                onOpen({
                     type: 'open',
                     target: this,
                 });
             }
         } else {
-            if (this.props.onClose) {
-                this.props.onClose({
+            if (onClose) {
+                onClose({
                     type: 'close',
                     target: this,
                 });
             }
         }
-    },
+    }
 
     /**
      * Called when user clicks the corner button
      *
      * @param  {Event} evt
      */
-    handleButtonClick: function(evt) {
-        if (!this.props.disabled) {
-            this.triggerEvent(!this.state.open);
-            this.setState({ open: !this.state.open });
+    handleButtonClick = (evt) => {
+        let { disabled } = this.props;
+        let { open } = this.state;
+        if (!disabled) {
+            this.triggerEvent(!open);
+            this.setState({ open: !open });
         }
-    },
+    }
 
     /**
      * Called when user clicks on the page somewhere
      *
      * @param  {Event} evt
      */
-    handleBodyMouseDown: function(evt) {
+    handleBodyMouseDown = (evt) => {
         if (evt.button !== 0) {
             return;
         }
         if (!Overlay.active) {
-            var containerNode = ReactDOM.findDOMNode(this);
-            var insideMenu = isInside(evt.target, containerNode);
+            let containerNode = ReactDOM.findDOMNode(this);
+            let insideMenu = isInside(evt.target, containerNode);
             if (!insideMenu && this.popOutContainer) {
                 insideMenu = isInside(evt.target, this.popOutContainer);
             }
@@ -274,11 +259,11 @@ module.exports = React.createClass({
                 this.triggerEvent(false);
             }
         }
-    },
-});
+    }
+}
 
 function isInside(node, container) {
-    for (var n = node; n !== document.body.parentNode; n = n.parentNode) {
+    for (let n = node; n !== document.body.parentNode; n = n.parentNode) {
         if (n === container) {
             return true;
         }
@@ -287,9 +272,9 @@ function isInside(node, container) {
 }
 
 function getRelativePosition(node, container) {
-    var left = node.offsetLeft;
-    var top = node.offsetTop;
-    for (var p = node.offsetParent; p && p !== container; p = p.offsetParent) {
+    let left = node.offsetLeft;
+    let top = node.offsetTop;
+    for (let p = node.offsetParent; p && p !== container; p = p.offsetParent) {
         left += p.offsetLeft - p.scrollLeft;
         top += p.offsetTop - p.scrollTop;
     }
@@ -297,6 +282,25 @@ function getRelativePosition(node, container) {
 }
 
 function getPageNode() {
-    var appContainer = document.getElementById('app-container');
+    let appContainer = document.getElementById('app-container');
     return appContainer.getElementsByClassName('page-container')[0];
+}
+
+PopUpMenu.defaultProps = {
+    disabled: false,
+    popOut: false,
+};
+
+export {
+    PopUpMenu as default,
+    PopUpMenu,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    PopUpMenu.propTypes = {
+        disabled: PropTypes.bool,
+        popOut: PropTypes.bool,
+    };
 }

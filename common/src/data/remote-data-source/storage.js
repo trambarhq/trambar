@@ -1,23 +1,26 @@
-var _ = require('lodash')
-var Operation = require('data/remote-data-source/operation');
+import _ from 'lodash'
+import Operation from 'data/remote-data-source/operation';
 
-module.exports = Storage;
+class Storage extends Operation {
+    constructor(location, objects, options) {
+        super(location);
+        this.objects = objects;
+        this.options = options || {};
+        this.canceled = false;
+    }
 
-function Storage(location, objects, options) {
-    Operation.call(this, location);
-    this.objects = objects;
-    this.options = options || {};
-    this.canceled = false;
+    finish(results) {
+        super.finish(results);
+
+        if (!this.isLocal()) {
+            _.each(this.results, (object) => {
+                object.rtime = this.finishTime;
+            });
+        }
+    }
 }
 
-Storage.prototype = Object.create(Operation.prototype)
-
-Storage.prototype.finish = function(results) {
-    Operation.prototype.finish.call(this, results);
-
-    if (!this.isLocal()) {
-        _.each(this.results, (object) => {
-            object.rtime = this.finishTime;
-        });
-    }
+export {
+    Storage as default,
+    Storage,
 };

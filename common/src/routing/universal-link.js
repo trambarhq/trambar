@@ -1,52 +1,37 @@
-var _ = require('lodash');
+const baseURL = 'https://trambar.io';
 
-module.exports = {
+/**
+ * Form a universal link
+ *
+ * @param  {String} address
+ * @param  {String} url
+ *
+ * @return {String}
+ */
+function form(address, url) {
+    let hostPath = address.replace('://', '/');
+    return baseURL + '/' + hostPath + url;
+}
+
+/**
+ * Parse a universal link
+ *
+ * @param  {String} link
+ *
+ * @return {Object|null}
+ */
+function parse(link) {
+    let regExp = new RegExp('^' + baseURL + '/(https?)/(.*?)/(.*)');
+    let m = regExp.exec(link);
+    if (!m) {
+        return;
+    }
+    let address = m[1] + '://' + m[2];
+    let url = '/' + m[3];
+    return { address, url };
+}
+
+export {
     parse,
     form,
 };
-
-var baseURL = 'https://trambar.io';
-
-function form(address, path, query, hash) {
-    var hostPath = '/' + _.replace(address, '://', '/');
-    var url = baseURL + hostPath + path;
-    if (!_.isEmpty(query)) {
-        var pairs = _.filter(_.map(query, (value, name) => {
-            if (value != undefined) {
-                return name + '=' + encodeURIComponent(value);
-            }
-        }));
-        url += '?' + pairs.join('&');
-    }
-    if (hash) {
-        url += '#' + hash;
-    }
-    return url;
-}
-
-var regExp = new RegExp('^' + baseURL + '((/https?/[^/]*)([^?]*)([^#]*)?(#(.*))?)');
-
-function parse(url) {
-    var m = regExp.exec(url);
-    if (!m) {
-        return null;
-    }
-    var url = m[1];
-    var hostPath = m[2];
-    var address = _.replace(hostPath.substr(1), '/', '://');
-    var path = m[3];
-    var queryString = m[4];
-    var query;
-    if (queryString) {
-        query = {};
-        var pairs = _.split(queryString.substr(1), '&');
-        _.each(pairs, (pair) => {
-            var parts = _.split(pair, '=');
-            var name = parts[0];
-            var value = decodeURIComponent(parts[1]);
-            query[name] = value;
-        });
-    }
-    var hash = m[6];
-    return { address, path, query, hash, url };
-}

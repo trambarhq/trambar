@@ -1,19 +1,22 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react');
-var Chai = require('chai'), expect = Chai.expect;
-var Enzyme = require('enzyme');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React from 'react';
+import { expect } from 'chai';
+import Enzyme from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
 
-var ComponentRefs = require('utils/component-refs');
+Enzyme.configure({ adapter: new Adapter() });
+
+import ComponentRefs from 'utils/component-refs';
 
 describe('ComponentRefs', function() {
     it('should capture references of sub-components', function() {
-        var components = ComponentRefs({
+        let components = ComponentRefs({
             dog: HTMLElement,
             cat: HTMLElement,
         });
-        var setters = components.setters;
-        var wrapper = Enzyme.mount(
+        let setters = components.setters;
+        let wrapper = Enzyme.mount(
             <div>
                 <span ref={setters.dog}>Dog</span>
                 <span ref={setters.cat}>Cat</span>

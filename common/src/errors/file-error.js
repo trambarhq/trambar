@@ -1,6 +1,15 @@
-module.exports = FileError;
+class FileError extends Error {
+    constructor(code) {
+        super();
+        if (code instanceof Object) {
+            code = code.code;
+        }
+        this.code = code;
+        this.message = errorMessages[code];
+    }
+}
 
-var errorMessages = {
+const errorMessages = {
     1: 'A required file or directory could not be found at the time an operation was processed',
     2: 'Access to the file was denied',
     3: 'Operation was aborted',
@@ -15,12 +24,7 @@ var errorMessages = {
     12: 'The file or directory with the same path already exists'
 };
 
-function FileError(code) {
-    if (code instanceof Object) {
-        code = code.code;
-    }
-    this.code = code;
-    this.message = errorMessages[code];
-}
-
-FileError.prototype = Object.create(Error.prototype)
+export {
+    FileError as default,
+    FileError,
+};

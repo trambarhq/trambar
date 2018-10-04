@@ -1,9 +1,4 @@
-var _ = require('lodash');
-
-module.exports = {
-    escape,
-    attachResources,
-};
+import _ from 'lodash';
 
 /**
  * Turn plain text into Markdown text by escaping special characters
@@ -160,3 +155,8 @@ function getDefaultClippingRect(width, height, align) {
     }
     return { left, top, width: length, height: length };
 }
+
+export {
+    escape,
+    attachResources,
+};

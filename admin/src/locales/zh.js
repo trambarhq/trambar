@@ -1,36 +1,34 @@
-require('moment/locale/zh-cn');
-require('moment/locale/zh-hk');
-require('moment/locale/zh-tw');
-require('moment').defineLocale('zh-sg', { parentLocale: 'zh-cn' });
-require('moment').defineLocale('zh-mo', { parentLocale: 'zh-hk' });
+import 'moment/locale/zh-cn';
+import 'moment/locale/zh-hk';
+import 'moment/locale/zh-tw';
+import { cardinalT, cardinalS } from 'locale/grammars/chinese';
+
+import Moment from 'moment';
+Moment.defineLocale('zh-sg', { parentLocale: 'zh-cn' });
+Moment.defineLocale('zh-mo', { parentLocale: 'zh-hk' });
 
 // remove white-spaces from relative time
 ['zh-cn', 'zh-hk', 'zh-tw'].forEach((locale) => {
-    var localeData = require('moment').localeData('zh-cn');
-    var relativeTime = localeData._relativeTime;
-    for (var key in relativeTime) {
-        var value = relativeTime[key];
+    let localeData = Moment.localeData('zh-cn');
+    let relativeTime = localeData._relativeTime;
+    for (let key in relativeTime) {
+        let value = relativeTime[key];
         relativeTime[key] = value.replace(/\s+/g, '');
     }
 });
 
-module.exports = function(localeCode) {
-    var cantonese = false;
-    var traditional = false;
-    if (/\-(mo|hk)$/.test(localeCode)) {
-        cantonese = true;
-        traditional = true;
-    } else if (/\-(tw)$/.test(localeCode)) {
-        traditional = true;
-    }
-    if (traditional) {
-        return traditionalPhrases;
-    } else {
-        return simplifiedPhrases;
+function chooseVariant(countryCode) {
+    switch (countryCode) {
+        case 'mo':
+        case 'hk':
+        case 'tw':
+            return traditionalPhrases;
+        default:
+            return simplifiedPhrases;
     }
 };
 
-var traditionalPhrases = {
+const traditionalPhrases = {
     'action-badge-add': '會添加',
     'action-badge-approve': '會批准',
     'action-badge-archive': '會歸檔',
@@ -165,12 +163,12 @@ var traditionalPhrases = {
     'project-list-add': '添加項目',
     'project-list-cancel': '取消',
     'project-list-confirm-archive-$count': (count) => {
-        var num = cardinalT(count);
-        return `你確定要存檔這${num}個項目？`;
+        let projects = cardinalT(count, '這個項目', '這三個項目');
+        return `你確定要存檔${projects}？`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        var num = cardinalT(count);
-        return `你確定要恢復這${num}個項目？`;
+        let projects = cardinalT(count, '這個項目', '這三個項目');
+        return `你確定要恢復${projects}？`;
     },
     'project-list-deleted': '已刪除',
     'project-list-edit': '編輯項目列表',
@@ -180,7 +178,7 @@ var traditionalPhrases = {
     'project-list-title': '項目',
 
     'project-summary-$title': (title) => {
-        var text = '項目';
+        let text = '項目';
         if (title) {
             text += `： ${title}`;
         }
@@ -215,14 +213,13 @@ var traditionalPhrases = {
     'project-summary-title': '名稱',
 
     'project-tooltip-$count-others': (count) => {
-        var num = cardinalT(count);
-        return `還有${num}個`;
+        return cardinalT(count, `還有一個`);
     },
 
     'repo-list-cancel': '取消',
     'repo-list-confirm-remove-$count': (count) => {
-        var num = cardinalT(count);
-        return `你確定要從項目解除這${num}個數據庫？`
+        let repos = cardinalT(count, '這個數據庫', '這三個數據庫');
+        return `你確定要從項目解除${repos}？`
     },
     'repo-list-edit': '編輯數據庫列表',
     'repo-list-issue-tracker-enabled-false': '',
@@ -231,7 +228,7 @@ var traditionalPhrases = {
     'repo-list-title': '數據庫',
 
     'repo-summary-$title': (title) => {
-        var text = `數據庫`;
+        let text = `數據庫`;
         if (title) {
             text += `： ${title}`;
         }
@@ -253,18 +250,18 @@ var traditionalPhrases = {
     'repo-summary-title': '名稱',
 
     'repository-tooltip-$count': (count) => {
-        return `${count}個數據庫`;
+        return cardinalT(count, '一個數據庫');
     },
 
     'role-list-add': '添加角色',
     'role-list-cancel': '取消',
     'role-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
-        return `你確定要停用這${num}個角色？`
+        let roles = cardinalT(count, '這個角色', '這三個角色');
+        return `你確定要停用${roles}？`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
-        return `你確定要啟用這${num}個角色？`
+        let roles = cardinalT(count, '這個角色', '這三個角色');
+        return `你確定要啟用${roles}？`
     },
     'role-list-edit': '編輯角色列表',
     'role-list-save': '保存角色列表',
@@ -273,7 +270,7 @@ var traditionalPhrases = {
     'role-list-title': '角色',
 
     'role-summary-$title': (title) => {
-        var text = '角色';
+        let text = '角色';
         if (title) {
             text += `： ${title}`;
         }
@@ -302,8 +299,7 @@ var traditionalPhrases = {
     'role-summary-users': '用戶',
 
     'role-tooltip-$count-others': (count) => {
-        var num = cardinalT(count);
-        return `還有${num}個`;
+        return cardinalT(coun, `還有一個`);
     },
 
     'server-list-add': '添加服務器',
@@ -311,12 +307,12 @@ var traditionalPhrases = {
     'server-list-api-access-true': '已取得',
     'server-list-cancel': '取消',
     'server-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
-        return `你確定要停用這${num}個服務器？`
+        let servers = cardinalT(count, '這個服務器', '這三個服務器');
+        return `你確定要停用${servers}？`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
-        return `你確定要啟用這${num}個服務器？`
+        let servers = cardinalT(count, '這個服務器', '這三個服務器');
+        return `你確定要啟用${servers}？`
     },
     'server-list-edit': '編輯服務器列表',
     'server-list-oauth-false': '',
@@ -404,7 +400,7 @@ var traditionalPhrases = {
     'settings-title': '設置',
 
     'sign-in-$title': (title) => {
-        var text = `登錄`;
+        let text = `登錄`;
         if (title) {
             text += `： ${title}`;
         }
@@ -513,20 +509,20 @@ var traditionalPhrases = {
     'tooltip-more': '更多',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        var num = cardinalT(count);
-        return `上傳${num}個文件，剩下${size}`;
+        let files = cardinalT(count, '一個文件');
+        return `上傳${files}，剩下${size}`;
     },
 
     'user-list-add': '添加用戶',
     'user-list-approve-all': '批准所有請求',
     'user-list-cancel': '取消',
     'user-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
-        return `你確定要關閉這${num}個用戶？`
+        let users = cardinalT(count, '這個用戶', '這三個用戶');
+        return `你確定要關閉${user}？`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
-        return `你確定要恢復這${num}個用戶？`
+        let users = cardinalT(count, '這個用戶', '這三個用戶');
+        return `你確定要恢復${users}？`;
     },
     'user-list-edit': '編輯用戶列表',
     'user-list-reject-all': '拒絕所有請求',
@@ -540,7 +536,7 @@ var traditionalPhrases = {
     'user-list-type-moderator': '檢查員',
     'user-list-type-regular': '普通用戶',
     'user-summary-$name': (name) => {
-        var text = '用戶';
+        let text = '用戶';
         if (name) {
             text += `： ${name}`;
         }
@@ -560,7 +556,7 @@ var traditionalPhrases = {
     'user-summary-ichat': 'iChat用戶名',
     'user-summary-linkedin': 'LinkedIn個人資料網址',
     'user-summary-member-$name': (name) => {
-        var text = '成員';
+        let text = '成員';
         if (name) {
             text += `： ${name}`;
         }
@@ -592,7 +588,7 @@ var traditionalPhrases = {
     'user-summary-username': '用戶名',
 
     'user-tooltip-$count': (count) => {
-        return `${count}個用戶`;
+        return cardinalT(count, '一個用戶');
     },
 
     'validation-duplicate-project-name': '具有該標識符的項目已經存在',
@@ -607,7 +603,7 @@ var traditionalPhrases = {
     'welcome': '歡迎!',
 };
 
-var simplifiedPhrases = {
+const simplifiedPhrases = {
     'action-badge-add': '会添加',
     'action-badge-approve': '会批准',
     'action-badge-archive': '会归档',
@@ -742,12 +738,12 @@ var simplifiedPhrases = {
     'project-list-add': '添加项目',
     'project-list-cancel': '取消',
     'project-list-confirm-archive-$count': (count) => {
-        var num = cardinalT(count);
-        return `你确定要存档这${num}个项目？`;
+        let projects = cardinalS(count, '这个项目', '这三个项目');
+        return `你确定要存档${projects}？`;
     },
     'project-list-confirm-restore-$count': (count) => {
-        var num = cardinalT(count);
-        return `你确定要恢复这${num}个项目？`;
+        let projects = cardinalS(count, '这个项目', '这三个项目');
+        return `你确定要恢复${projects}？`;
     },
     'project-list-deleted': '已删除',
     'project-list-edit': '编辑项目列表',
@@ -757,7 +753,7 @@ var simplifiedPhrases = {
     'project-list-title': '项目',
 
     'project-summary-$title': (title) => {
-        var text = '项目';
+        let text = '项目';
         if (title) {
             text += `： ${title}`;
         }
@@ -792,14 +788,13 @@ var simplifiedPhrases = {
     'project-summary-title': '名称',
 
     'project-tooltip-$count-others': (count) => {
-        var num = cardinalT(count);
-        return `还有${num}个`;
+        return cardinalS(count, '还有一个');
     },
 
     'repo-list-cancel': '取消',
     'repo-list-confirm-remove-$count': (count) => {
-        var num = cardinalT(count);
-        return `你确定要从项目解除这${num}个数据库？`
+        let repos = cardinalS(count, '这个数据库', '这三个数据库');
+        return `你确定要从项目解除${repos}？`
     },
     'repo-list-edit': '编辑数据库列表',
     'repo-list-issue-tracker-enabled-false': '',
@@ -808,7 +803,7 @@ var simplifiedPhrases = {
     'repo-list-title': '数据库',
 
     'repo-summary-$title': (title) => {
-        var text = `数据库`;
+        let text = `数据库`;
         if (title) {
             text += `： ${title}`;
         }
@@ -830,18 +825,18 @@ var simplifiedPhrases = {
     'repo-summary-title': '名称',
 
     'repository-tooltip-$count': (count) => {
-        return `${count}个数据库`;
+        return cardinalS(count, '一个数据库');
     },
 
     'role-list-add': '添加角色',
     'role-list-cancel': '取消',
     'role-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
-        return `你确定要停用这${num}个角色？`
+        let roles = cardinalS(count, '这个角色', '这三个角色');
+        return `你确定要停用${roles}？`
     },
     'role-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
-        return `你确定要启用这${num}个角色？`
+        let roles = cardinalS(count, '这个角色', '这三个角色');
+        return `你确定要启用${roles}？`
     },
     'role-list-edit': '编辑角色列表',
     'role-list-save': '保存角色列表',
@@ -850,7 +845,7 @@ var simplifiedPhrases = {
     'role-list-title': '角色',
 
     'role-summary-$title': (title) => {
-        var text = '角色';
+        let text = '角色';
         if (title) {
             text += `： ${title}`;
         }
@@ -879,8 +874,7 @@ var simplifiedPhrases = {
     'role-summary-users': '用户',
 
     'role-tooltip-$count-others': (count) => {
-        var num = cardinalT(count);
-        return `还有${num}个`;
+        return cardinalS(count, '还有一个');
     },
 
     'server-list-add': '添加服务器',
@@ -888,12 +882,12 @@ var simplifiedPhrases = {
     'server-list-api-access-true': '已取得',
     'server-list-cancel': '取消',
     'server-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
-        return `你确定要停用这${num}个服务器？`
+        let servers = cardinalS(count, '这个服务器', '这三个服务器')
+        return `你确定要停用${servers}？`
     },
     'server-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
-        return `你确定要启用这${num}个服务器？`
+        let servers = cardinalS(count, '这个服务器', '这三个服务器')
+        return `你确定要启用${servers}？`
     },
     'server-list-edit': '编辑服务器列表',
     'server-list-oauth-false': '',
@@ -981,7 +975,7 @@ var simplifiedPhrases = {
     'settings-title': '设置',
 
     'sign-in-$title': (title) => {
-        var text = `登录`;
+        let text = `登录`;
         if (title) {
             text += `： ${title}`;
         }
@@ -1090,20 +1084,20 @@ var simplifiedPhrases = {
     'tooltip-more': '更多',
 
     'upload-progress-uploading-$count-files-$size-remaining': (count, size) => {
-        var num = cardinalT(count);
-        return `上传${num}个文件，剩下${size}`;
+        let files = cardinalS(count, '一个文件');
+        return `上传${files}，剩下${size}`;
     },
 
     'user-list-add': '添加用户',
     'user-list-approve-all': '批准所有请求',
     'user-list-cancel': '取消',
     'user-list-confirm-disable-$count': (count) => {
-        var num = cardinalT(count);
-        return `你确定要关闭这${num}个用户？`
+        let users = cardinalS(count, '这个用户', '这三个用户');
+        return `你确定要关闭${users}？`
     },
     'user-list-confirm-reactivate-$count': (count) => {
-        var num = cardinalT(count);
-        return `你确定要恢复这${num}个用户？`
+        let users = cardinalS(count, '这个用户', '这三个用户');
+        return `你确定要恢复${users}？`
     },
     'user-list-edit': '编辑用户列表',
     'user-list-reject-all': '拒绝所有请求',
@@ -1117,7 +1111,7 @@ var simplifiedPhrases = {
     'user-list-type-moderator': '检查员',
     'user-list-type-regular': '普通用户',
     'user-summary-$name': (name) => {
-        var text = '用户';
+        let text = '用户';
         if (name) {
             text += `： ${name}`;
         }
@@ -1137,7 +1131,7 @@ var simplifiedPhrases = {
     'user-summary-ichat': 'iChat用户名',
     'user-summary-linkedin': 'LinkedIn个人资料网址',
     'user-summary-member-$name': (name) => {
-        var text = '成员';
+        let text = '成员';
         if (name) {
             text += `： ${name}`;
         }
@@ -1169,7 +1163,7 @@ var simplifiedPhrases = {
     'user-summary-username': '用户名',
 
     'user-tooltip-$count': (count) => {
-        return `${count}个用户`;
+        return cardinalS(count, '一个用户');
     },
 
     'validation-duplicate-project-name': '具有该标识符的项目已经存在',
@@ -1184,33 +1178,6 @@ var simplifiedPhrases = {
     'welcome': '欢迎!',
 };
 
-var chineseNumbers = [ '〇', '一', '二', '三', '四', '五', '六', '七', '八', '九' ];
-
-function cardinalT(num) {
-    return cardinal(num, true);
-}
-
-function cardinalS(num) {
-    return cardinal(num, false);
-}
-
-function cardinal(num, traditional) {
-    if (num === 2) {
-        return (traditional) ? '兩' : '两';
-    } else if (num < 10) {
-        return chineseNumbers[num];
-    } else if (num < 100) {
-        var text = '十';
-        var tens = Math.floor(num / 10);
-        var ones = Math.floor(num % 10);
-        if (tens > 1) {
-            text = chineseNumbers[tens] + text;
-        }
-        if (ones) {
-            text = text + chineseNumbers[ones];
-        }
-        return text;
-    } else {
-        return String(num);
-    }
-}
+export {
+    chooseVariant as phrases,
+};

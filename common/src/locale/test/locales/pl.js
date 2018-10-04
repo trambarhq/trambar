@@ -1,15 +1,22 @@
-module.exports = function(languageCode) {
-    return {
-        'hello': 'cześć',
-        '$num beers': function(num) {
-            var ld = num % 10;
-            if (num === 1) {
-                return `1 piwo`;
-            } else if ((num < 10 || (num > 20 && num < 100)) && (ld === 2 || ld === 3 || ld === 4)) {
-                return `${num} piwa`;
-            } else {
-                return `${num} piw`;
-            }
-        }
-    };
+import {
+    cardinal,
+    gender,
+    genderize,
+    pastTenseEnding,
+} from 'locale/grammars/polish';
+
+let phrases = {
+    'hello': 'cześć',
+    '$num beers': (num) => {
+        return cardinal(num, '1 piwo', '2 piwa', '5 piw');
+    },
+    '$name drank too much and died': (name) => {
+        let e = pastTenseEnding(name, 3);
+        return `${name} wypi${e} za dużo i umar${e}`;
+    }
+};
+
+export {
+    phrases,
+    genderize,
 };

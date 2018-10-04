@@ -1,15 +1,13 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
 // widgets
-var ImageEditor = require('editors/image-editor');
-var DurationIndicator = require('widgets/duration-indicator');
+import ImageEditor from 'editors/image-editor';
+import DurationIndicator from 'widgets/duration-indicator';
 
-module.exports = VideoEditor;
-
-require('./video-editor.scss');
+import './video-editor.scss';
 
 function VideoEditor(props) {
-    var duration = props.resource.duration;
+    let { duration } = props;
     return (
         <ImageEditor {...props}>
             <div className="video-duration">
@@ -19,4 +17,11 @@ function VideoEditor(props) {
     );
 }
 
-VideoEditor.propTypes = ImageEditor.propTypes;
+export {
+    VideoEditor as default,
+    VideoEditor,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    VideoEditor.propTypes = ImageEditor.propTypes;
+}

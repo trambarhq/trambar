@@ -1,76 +1,29 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var ComponentRefs = require('utils/component-refs');
-var ProjectFinder = require('objects/finders/project-finder');
-var RepoFinder = require('objects/finders/repo-finder');
-var StatisticsFinder = require('objects/finders/statistics-finder');
-var SystemFinder = require('objects/finders/system-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import ComponentRefs from 'utils/component-refs';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as RepoFinder from 'objects/finders/repo-finder';
+import * as StatisticsFinder from 'objects/finders/statistics-finder';
+import * as SystemFinder from 'objects/finders/system-finder';
 
 // widgets
-var PushButton = require('widgets/push-button');
-var ComboButton = require('widgets/combo-button');
-var InstructionBlock = require('widgets/instruction-block');
-var TextField = require('widgets/text-field');
-var MultilingualTextField = require('widgets/multilingual-text-field');
-var OptionList = require('widgets/option-list');
-var ActivityChart = require('widgets/activity-chart');
-var ActionConfirmation = require('widgets/action-confirmation');
-var DataLossWarning = require('widgets/data-loss-warning');
-var UnexpectedError = require('widgets/unexpected-error');
+import PushButton from 'widgets/push-button';
+import ComboButton from 'widgets/combo-button';
+import InstructionBlock from 'widgets/instruction-block';
+import TextField from 'widgets/text-field';
+import MultilingualTextField from 'widgets/multilingual-text-field';
+import OptionList from 'widgets/option-list';
+import ActivityChart from 'widgets/activity-chart';
+import ActionConfirmation from 'widgets/action-confirmation';
+import DataLossWarning from 'widgets/data-loss-warning';
+import UnexpectedError from 'widgets/unexpected-error';
+import ErrorBoundary from 'widgets/error-boundary';
 
-require('./repo-summary-page.scss');
+import './repo-summary-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'RepoSummaryPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/projects/:project/repos/:repo/?',
-            ], (params) => {
-                return {
-                    project: Route.parseId(params.project),
-                    repo: Route.parseId(params.repo),
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/projects/${params.project}/repos/${params.repo}/`, query;
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
+class RepoSummaryPage extends AsyncComponent {
+    static displayName = 'RepoSummaryPage';
 
     /**
      * Render the component asynchronously
@@ -79,32 +32,32 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env, projectID, repoID, editing } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let props = {
             system: null,
             project: null,
             repo: null,
             statistics: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
+            editing,
         };
         meanwhile.show(<RepoSummaryPageSync {...props} />);
-        return db.start().then((currentUserId) => {
+        return db.start().then((currentUserID) => {
             return SystemFinder.findSystem(db).then((system) => {
                 props.system = system;
             });
         }).then(() => {
-            return RepoFinder.findRepo(db, params.repo).then((repo) => {
+            return RepoFinder.findRepo(db, repoID).then((repo) => {
                 props.repo = repo;
             });
         }).then(() => {
             meanwhile.show(<RepoSummaryPageSync {...props} />);
-            return ProjectFinder.findProject(db, params.project).then((project) => {
+            return ProjectFinder.findProject(db, projectID).then((project) => {
                 props.project = project;
             });
         }).then(() => {
@@ -116,36 +69,22 @@ module.exports = Relaks.createClass({
             return <RepoSummaryPageSync {...props} />;
         });
     }
-});
+}
 
-var RepoSummaryPageSync = module.exports.Sync = React.createClass({
-    displayName: 'RepoSummaryPage.Sync',
-    propTypes: {
-        system: PropTypes.object,
-        repo: PropTypes.object,
-        project: PropTypes.object,
+class RepoSummaryPageSync extends PureComponent {
+    static displayName = 'RepoSummaryPage.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
         });
-        return {
+        this.state = {
             newRepo: null,
             saving: false,
             problems: {},
         };
-    },
+    }
 
     /**
      * Return edited copy of repo object or the original object
@@ -154,13 +93,15 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Object}
      */
-    getRepo: function(state) {
-        if (this.isEditing() && (!state || state === 'current')) {
-            return this.state.newRepo || this.props.repo || emptyRepo;
+    getRepo(state) {
+        let { repo, editing } = this.props;
+        let { newRepo } = this.state;
+        if (editing && (!state || state === 'current')) {
+            return newRepo || repo || emptyRepo;
         } else {
-            return this.props.repo || emptyRepo;
+            return repo || emptyRepo;
         }
-    },
+    }
 
     /**
      * Return a property of the repo object
@@ -170,10 +111,10 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {*}
      */
-    getRepoProperty: function(path, state) {
-        var repo = this.getRepo(state);
+    getRepoProperty(path, state) {
+        let repo = this.getRepo(state);
         return _.get(repo, path);
-    },
+    }
 
     /**
      * Modify a property of the repo object
@@ -181,28 +122,17 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setRepoProperty: function(path, value) {
-        var repo = this.getRepo();
-        var newRepo = _.decoupleSet(repo, path, value);
-        var hasChanges = true;
-        if (_.isEqual(newRepo, this.props.repo)) {
-            newRepo = null;
+    setRepoProperty(path, value) {
+        let { repo } = this.props;
+        let newRepo = this.getRepo();
+        let newRepoAfter = _.decoupleSet(newRepo, path, value);
+        let hasChanges = true;
+        if (_.isEqual(newRepoAfter, repo)) {
+            newRepoAfter = null;
             hasChanges = false;
         }
-        this.setState({ newRepo, hasChanges });
-    },
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object} props
-     *
-     * @return {Boolean}
-     */
-    isEditing: function(props) {
-        props = props || this.props;
-        return props.route.parameters.edit;
-    },
+        this.setState({ newRepo: newRepoAfter, hasChanges });
+    }
 
     /**
      * Change editability of page
@@ -211,41 +141,43 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    setEditability: function(edit) {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
-        params.edit = edit;
-        return route.replace(module.exports, params);
-    },
+    setEditability(edit) {
+        let { route } = this.props;
+        let params = _.clone(route.params);
+        params.editing = edit || undefined;
+        return route.replace(route.name, params);
+    }
 
     /**
      * Return to repo list
      *
      * @return {Promise}
      */
-    returnToList: function() {
-        var route = this.props.route;
-        var params = { project: route.parameters.project };
-        return route.push(require('pages/repo-list-page'), params);
-    },
+    returnToList() {
+        let { route } = this.props;
+        let params = { projectID: route.params.projectID };
+        return route.push('repo-list-page', params);
+    }
 
     /**
      * Return list of language codes
      *
      * @return {Array<String>}
      */
-    getInputLanguages: function() {
-        return _.get(this.props.system, 'settings.input_languages', [])
-    },
+    getInputLanguages() {
+        let { system } = this.props;
+        return _.get(system, 'settings.input_languages', [])
+    }
 
     /**
      * Reset edit state when edit starts
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+    componentWillReceiveProps(nextProps) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 this.setState({
                     newRepo: null,
                     hasChanges: false,
@@ -254,56 +186,59 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
                 this.setState({ problems: {} });
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var repo = this.getRepo();
-        var title = p(_.get(repo, 'details.title')) || repo.name;
+    render() {
+        let { route, env } = this.props;
+        let { hasChanges, problems } = this.state;
+        let { setters } = this.components;
+        let { t, p } = env.locale;
+        let repo = this.getRepo();
+        let title = p(_.get(repo, 'details.title')) || repo.name;
         return (
             <div className="repo-summary-page">
                 {this.renderButtons()}
                 <h2>{t('repo-summary-$title', title)}</h2>
-                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
+                <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderForm()}
                 {this.renderInstructions()}
                 {this.renderChart()}
-                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
-                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                <ActionConfirmation ref={setters.confirmation} env={env} />
+                <DataLossWarning changes={hasChanges} env={env} route={route} />
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons in top right corner
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        if (this.isEditing()) {
+    renderButtons() {
+        let { route, env, project, editing } = this.props;
+        let { hasChanges } = this.state;
+        let { t } = env.locale;
+        if (editing) {
             return (
                 <div key="edit" className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
                         {t('repo-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('repo-summary-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            var repoId = this.props.route.parameters.repo;
-            var project = this.props.project;
-            var active = (project) ? _.includes(project.repo_ids, repoId) : true;
-            var preselected = (!active) ? 'restore' : undefined;
+            let repoID = route.params.repo;
+            let active = (project) ? _.includes(project.repo_ids, repoID) : true;
+            let preselected = (!active) ? 'restore' : undefined;
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected}>
@@ -324,14 +259,14 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render form for entering repo details
      *
      * @return {ReactElement}
      */
-    renderForm: function() {
+    renderForm() {
         return (
             <div className="form">
                 {this.renderTitleInput()}
@@ -339,115 +274,121 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderIssueTrackingStatus()}
             </div>
         );
-    },
+    }
 
     /**
      * Render title input
      *
      * @return {ReactElement}
      */
-    renderTitleInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderTitleInput() {
+        let { env, editing } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'title',
             value: this.getRepoProperty('details.title'),
             availableLanguageCodes: this.getInputLanguages(),
-            locale: this.props.locale,
+            readOnly: !editing,
+            env,
             onChange: this.handleTitleChange,
-            readOnly: !this.isEditing(),
         };
         return (
             <MultilingualTextField {...props}>
                 {t('repo-summary-title')}
             </MultilingualTextField>
         );
-    },
+    }
 
     /**
      * Render repo name input (read only)
      *
      * @return {ReactElement}
      */
-    renderNameInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderNameInput() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'name',
             value: this.getRepoProperty('name'),
-            locale: this.props.locale,
             readOnly: true,
+            env,
         };
         return (
             <TextField {...props}>
                 {t('repo-summary-gitlab-name')}
             </TextField>
         );
-    },
+    }
 
     /**
      * Render issue tracker status
      *
      * @return {ReactElement}
      */
-    renderIssueTrackingStatus: function() {
-        var t = this.props.locale.translate;
-        var issueTrackStatus;
+    renderIssueTrackingStatus() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let issueTrackStatus;
         if (this.getRepoProperty('details.issues_enabled')) {
             issueTrackStatus = t('repo-summary-issue-tracker-enabled');
         } else {
             issueTrackStatus = t('repo-summary-issue-tracker-disabled');
         }
-        var props = {
+        let props = {
             id: 'issue-tracker',
             value: issueTrackStatus,
-            locale: this.props.locale,
-            readOnly: true
+            readOnly: true,
+            env,
         };
         return (
             <TextField {...props}>
                 {t('repo-summary-issue-tracker')}
             </TextField>
         );
-    },
+    }
 
     /**
      * Render instruction box
      *
      * @return {ReactElement}
      */
-    renderInstructions: function() {
-        var instructionProps = {
+    renderInstructions() {
+        let { env, editing } = this.props;
+        let instructionProps = {
             folder: 'repo',
             topic: 'repo-summary',
-            hidden: !this.isEditing(),
-            locale: this.props.locale,
+            hidden: !editing,
+            env,
         };
         return (
             <div className="instructions">
                 <InstructionBlock {...instructionProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render activity chart
      *
      * @return {ReactElement}
      */
-    renderChart: function() {
-        var t = this.props.locale.translate;
-        var chartProps = {
-            statistics: this.props.statistics,
-            locale: this.props.locale,
-            theme: this.props.theme,
+    renderChart() {
+        let { env, statistics } = this.props;
+        let { t } = env.locale;
+        let chartProps = {
+            statistics,
+            env,
         };
         return (
             <div className="statistics">
-                <ActivityChart {...chartProps}>
-                    {t('repo-summary-statistics')}
-                </ActivityChart>
+                <ErrorBoundary env={env}>
+                    <ActivityChart {...chartProps}>
+                        {t('repo-summary-statistics')}
+                    </ActivityChart>
+                </ErrorBoundary>
             </div>
         );
-    },
+    }
 
     /**
      * Save project with repo added or removed
@@ -456,31 +397,33 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise<Project>}
      */
-    changeInclusion: function(include) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var repo = this.props.repo;
-        var repoIds = this.props.project.repo_ids;
+    changeInclusion(include) {
+        let { database, project, repo } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let repoIDs = project.repo_ids;
         if (include) {
-            repoIds = _.union(repoIds, [ repo.id ]);
+            repoIDs = _.union(repoIDs, [ repo.id ]);
         } else {
-            repoIds = _.difference(repoIds, [ repo.id ]);
+            repoIDs = _.difference(repoIDs, [ repo.id ]);
         }
-        var projectAfter = _.assign({}, this.props.project, { repo_ids: repoIds });
+        let projectAfter = _.assign({}, project, { repo_ids: repoIDs });
         return db.saveOne({ table: 'project' }, projectAfter).catch((err) => {
-            var problems = { unexpected: err.message };
+            let problems = { unexpected: err.message };
             this.setState({ problems });
         });
-    },
+    }
 
     /**
      * Called when user clicks remove button
      *
      * @param  {Event} evt
      */
-    handleRemoveClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('repo-summary-confirm-remove');
-        return this.components.confirmation.ask(message).then((confirmed) => {
+    handleRemoveClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('repo-summary-confirm-remove');
+        return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeInclusion(false).then((project) => {
                     if (project) {
@@ -489,89 +432,123 @@ var RepoSummaryPageSync = module.exports.Sync = React.createClass({
                 });
             }
         });
-    },
+    }
 
     /**
      * Called when user clicks restore button
      *
      * @param  {Event} evt
      */
-    handleRestoreClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('repo-summary-confirm-restore');
-        return this.components.confirmation.ask(message).then((confirmed) => {
+    handleRestoreClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('repo-summary-confirm-restore');
+        return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeInclusion(true);
             }
         });
-    },
+    }
 
     /**
      * Called when user clicks return button
      *
      * @param  {Event} evt
      */
-    handleReturnClick: function(evt) {
+    handleReturnClick = (evt) => {
         return this.returnToList();
-    },
+    }
 
     /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
+    handleEditClick = (evt) => {
         return this.setEditability(true);
-    },
+    }
 
     /**
      * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         return this.setEditability(false);
-    },
+    }
 
     /**
      * Called when user clicks save button
      *
      * @param  {Event} evt
      */
-    handleSaveClick: function(evt) {
-        if (this.state.saving) {
+    handleSaveClick = (evt) => {
+        let { database } = this.props;
+        let { saving } = this.state;
+        if (saving) {
             return;
         }
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var repo = this.getRepo();
+        let db = database.use({ schema: 'global', by: this });
+        let repo = this.getRepo();
         this.setState({ saving: true, problems: {} }, () => {
-            return db.start().then((userId) => {
+            return db.start().then((currentUserID) => {
                 return db.saveOne({ table: 'repo' }, repo).then((repo) => {
                     this.setState({ hasChanges: false, saving: false }, () => {
                         this.setEditability(false);
                     });
                 });
             }).catch((err) => {
-                var problems = { unexpected: err.message };
+                let problems = { unexpected: err.message };
                 this.setState({ problems, saving: false });
             });
         });
-    },
+    }
 
     /**
      * Called when user changes the title
      *
      * @param  {Event} evt
      */
-    handleTitleChange: function(evt) {
+    handleTitleChange = (evt) => {
         this.setRepoProperty(`details.title`, evt.target.value);
-    },
-});
+    }
+}
 
-var emptyRepo = {
+const emptyRepo = {
     details: {}
 };
 
-function renderOption(props, i) {
-    return <option key={i} {...props} />;
+export {
+    RepoSummaryPage as default,
+    RepoSummaryPage,
+    RepoSummaryPageSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    RepoSummaryPage.propTypes = {
+        editing: PropTypes.bool,
+        projectID: PropTypes.number.isRequired,
+        repoID: PropTypes.number.isRequired,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    RepoSummaryPageSync.propTypes = {
+        editing: PropTypes.bool,
+        system: PropTypes.object,
+        repo: PropTypes.object,
+        project: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
 }

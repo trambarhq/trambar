@@ -1,9 +1,4 @@
-var _ = require('lodash');
-
-module.exports = {
-    match,
-    limit,
-};
+import _ from 'lodash';
 
 /**
  * Check if an object matches the provided criteria
@@ -17,14 +12,14 @@ module.exports = {
  * @return {Boolean}
  */
 function match(table, object, criteria) {
-    var matching = true;
-    for (var name in criteria) {
-        var desiredValue = criteria[name];
+    let matching = true;
+    for (let name in criteria) {
+        let desiredValue = criteria[name];
         if (desiredValue === undefined) {
             continue;
         }
         if (object.hasOwnProperty(name)) {
-            var actualValue = object[name];
+            let actualValue = object[name];
             if (desiredValue instanceof Array) {
                 if (actualValue instanceof Array) {
                     // array value matches an array when there's overlapping
@@ -35,7 +30,7 @@ function match(table, object, criteria) {
                 } else {
                     // array value matches a scalar or object when the former
                     // contains the latter
-                    var containing;
+                    let containing;
                     if (actualValue instanceof Object) {
                         containing = _.some(desiredValue, (desiredElement) => {
                             return _.isEqual(desiredElement, actualValue);
@@ -65,9 +60,9 @@ function match(table, object, criteria) {
             switch (name) {
                 case 'time_range':
                     if (desiredValue) {
-                        var times = desiredValue.substr(1, desiredValue.length - 2).split(',');
-                        var start = times[0];
-                        var end = times[1];
+                        let times = desiredValue.substr(1, desiredValue.length - 2).split(',');
+                        let start = times[0];
+                        let end = times[1];
                         if (!(start <= object.ptime && object.ptime < end)) {
                             matching = false;
                         }
@@ -119,23 +114,23 @@ function limit(table, objects, criteria) {
         }
         if (criteria.per_user_limit) {
             // apply per user limit
-            var limit = criteria.per_user_limit;
-            var countsByUser = {};
-            var excessObjects = [];
+            let limit = criteria.per_user_limit;
+            let countsByUser = {};
+            let excessObjects = [];
             _.eachRight(objects, (object) => {
-                var keep = false;
+                let keep = false;
                 if (object.hasOwnProperty('user_id')) {
-                    var userId = object.user_id;
-                    var count = countsByUser[userId] || 0;
+                    let userID = object.user_id;
+                    let count = countsByUser[userID] || 0;
                     if (count < limit) {
-                        countsByUser[userId] = count + 1;
+                        countsByUser[userID] = count + 1;
                         keep = true;
                     }
                 } else if (object.hasOwnProperty('user_ids')) {
-                    _.each(object.user_ids, (userId) => {
-                        var count = countsByUser[userId] || 0;
+                    _.each(object.user_ids, (userID) => {
+                        let count = countsByUser[userID] || 0;
                         if (count < limit) {
-                            countsByUser[userId] = count + 1;
+                            countsByUser[userID] = count + 1;
                             keep = true;
                         }
                     });
@@ -148,3 +143,8 @@ function limit(table, objects, criteria) {
         }
     }
 }
+
+export {
+    match,
+    limit,
+};

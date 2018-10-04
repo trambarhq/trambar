@@ -1,91 +1,62 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var ComponentRefs = require('utils/component-refs');
-var TagScanner = require('utils/tag-scanner');
-var UserUtils = require('objects/utils/user-utils');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import ComponentRefs from 'utils/component-refs';
+import * as TagScanner from 'utils/tag-scanner';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var ProfileImage = require('widgets/profile-image');
-var ChartToolbar = require('widgets/chart-toolbar');
-var HeaderButton = require('widgets/header-button');
-var UserActivityList = require('lists/user-activity-list');
-var UserStatistics = require('views/user-statistics');
-var UserViewOptions = require('views/user-view-options');
-var CornerPopUp = require('widgets/corner-pop-up');
+import ProfileImage from 'widgets/profile-image';
+import ChartToolbar from 'widgets/chart-toolbar';
+import HeaderButton from 'widgets/header-button';
+import UserActivityList from 'lists/user-activity-list';
+import UserStatistics from 'views/user-statistics';
+import UserViewOptions from 'views/user-view-options';
+import UserList from 'lists/user-list';
+import CornerPopUp from 'widgets/corner-pop-up';
 
-require('./user-view.scss');
+import './user-view.scss';
 
-module.exports = React.createClass({
-    displayName: 'UserView',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        user: PropTypes.object,
-        roles: PropTypes.arrayOf(PropTypes.object),
-        stories: PropTypes.arrayOf(PropTypes.object),
-        options: PropTypes.object.isRequired,
-        dailyActivities: PropTypes.object,
-        currentUser: PropTypes.object,
-        selectedDate: PropTypes.string,
-        today: PropTypes.string,
-        link: PropTypes.oneOf([ 'user', 'team' ]),
+class UserView extends PureComponent {
+    static displayName = 'UserView';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onOptionChange: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             mainPopUp: CornerPopUp,
             statisticsPopUp: CornerPopUp,
         });
-        return {};
-    },
+    }
 
     /**
      * Return the selected chart type, applying default selection where appropriate
      *
      * @return {String}
      */
-    getChartType: function() {
-        var chartType = this.props.options.chartType;
+    getChartType() {
+        let { env, options } = this.props;
+        let chartType = options.chartType;
         if (!chartType) {
             // always show statistics in double and triple column mode
-            if (this.props.theme.mode !== 'single-col') {
+            if (env.isWiderThan('double-col')) {
                 chartType = 'bar';
             }
         }
         return chartType;
-    },
+    }
 
     /**
      * Return the selected chart range, applying default selection where appropriate
      *
      * @return {String}
      */
-    getChartRange: function() {
-        var chartRange = this.props.options.chartRange;
+    getChartRange() {
+        let { options } = this.props;
+        let chartRange = options.chartRange;
         if (!chartRange) {
             chartRange = 'biweekly';
         }
         return chartRange;
-    },
+    }
 
     /**
      * Return the number of stories that'll appear in the activity list based
@@ -93,32 +64,29 @@ module.exports = React.createClass({
      *
      * @return {Number|undefined}
      */
-    getStoryCountEstimate: function() {
-        if (!this.props.dailyActivities) {
+    getStoryCountEstimate() {
+        let { dailyActivities, selectedDate, search } = this.props;
+        if (!dailyActivities) {
             return;
         }
-        var params = this.props.route.parameters;
-        var tags;
-        if (params.search) {
-            if (!TagScanner.removeTags(params.search)) {
-                tags = TagScanner.findTags(params.search);
-                if (_.isEmpty(tags)) {
-                    tags = null;
-                }
+        let tags;
+        if (search) {
+            if (!TagScanner.removeTags(search)) {
+                tags = TagScanner.findTags(search);
             } else {
                 // we don't generate stats for text search
                 return;
             }
         }
-        var total = 0;
-        var list;
-        if (this.props.selectedDate) {
+        let total = 0;
+        let list;
+        if (selectedDate) {
             // check just the selected date
-            var stats = this.props.dailyActivities.daily[this.props.selectedDate];
+            let stats = dailyActivities.daily[selectedDate];
             list = (stats) ? [ stats ] : [];
         } else {
             // go through all dates
-            list = _.values(this.props.dailyActivities.daily);
+            list = _.values(dailyActivities.daily);
         }
         _.each(list, (stats) => {
             _.each(stats, (count, type) => {
@@ -131,63 +99,60 @@ module.exports = React.createClass({
             }
         });
         return Math.min(5, total);
-    },
+    }
 
     /**
      * Return URL to user page when we're showing all users
      *
      * @return {String|null}
      */
-    getUserPageURL: function() {
-        if (this.props.link !== 'user') {
+    getUserPageURL() {
+        let { route, user, link } = this.props;
+        if (link !== 'user') {
             return null;
         }
-        var route = this.props.route;
-        var params = _.pick(route.parameters, 'schema', 'date', 'search');
-        params.user = this.props.user.id;
-        return route.find(require('pages/people-page'), params);
-    },
+        let params = _.pick(route.params, 'date', 'search');
+        params.selectedUserID = user.id;
+        return route.find('person-page', params);
+    }
 
     /**
      * Return URL to team page when we're showing one user
      *
      * @return {String|null}
      */
-    getTeamPageURL: function() {
-        if (this.props.link !== 'team') {
+    getTeamPageURL() {
+        let { route, user, link } = this.props;
+        if (link !== 'team') {
             return null;
         }
-        var route = this.props.route;
-        var params = _.pick(route.parameters, 'schema', 'date', 'search');
-        var url = route.find(require('pages/people-page'), params);
-        var hash = require('lists/user-list').getHash({
-            user: this.props.user.id
-        });
-        return url + '#' + hash;
-    },
+        let params = _.pick(route.params, 'date', 'search');
+        params.scrollToUserID = user.id;
+        return route.find('people-page', params);
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        switch (this.props.theme.mode) {
-            case 'single-col':
-                return this.renderSingleColumn();
-            case 'double-col':
-                return this.renderDoubleColumn();
-            case 'triple-col':
-                return this.renderTripleColumn();
+    render() {
+        let { env } = this.props;
+        if (env.isWiderThan('triple-col')) {
+            return this.renderTripleColumn();
+        } else if (env.isWiderThan('double-col')) {
+            return this.renderDoubleColumn();
+        } else {
+            return this.renderSingleColumn();
         }
-    },
+    }
 
     /**
      * Render single-column view
      *
      * @return {ReactElement}
      */
-    renderSingleColumn: function() {
+    renderSingleColumn() {
         return (
             <div className="user-view">
                 <div className="header">
@@ -218,14 +183,14 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render double-column view
      *
      * @return {ReactElement}
      */
-    renderDoubleColumn: function() {
+    renderDoubleColumn() {
         return (
             <div className="user-view">
                 <div className="header">
@@ -252,15 +217,16 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render triple-column view
      *
      * @return {ReactElement}
      */
-    renderTripleColumn: function() {
-        var t = this.props.locale.translate;
+    renderTripleColumn() {
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <div className="user-view triple-col">
                 <div className="header">
@@ -291,35 +257,32 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render the user's profile image
      *
      * @return {ReactElement}
      */
-    renderProfileImage: function() {
-        var props = {
-            user: this.props.user,
-            theme: this.props.theme,
-            size: 'large',
-        };
-        var url = this.getUserPageURL();
+    renderProfileImage() {
+        let { env, user } = this.props;
+        let url = this.getUserPageURL();
         return (
             <a href={url}>
-                <ProfileImage {...props} />
+                <ProfileImage user={user} env={env} size="large" />
             </a>
         );
-    },
+    }
 
     /**
      * Render the user's roles
      *
      * @return {ReactElement}
      */
-    renderRoles: function() {
-        var p = this.props.locale.pick;
-        var names = _.map(this.props.roles, (role) => {
+    renderRoles() {
+        let { env, roles } = this.props;
+        let { p } = env.locale;
+        let names = _.map(roles, (role) => {
             return p(role.details.title) || role.name;
         });
         return (
@@ -327,92 +290,89 @@ module.exports = React.createClass({
                 {names.join(', ') || '\u00a0'}
             </span>
         );
-    },
+    }
 
     /**
      * Render toolbar for changing chart type
      *
      * @return {ReactElement}
      */
-    renderChartToolbar: function() {
-        var props = {
+    renderChartToolbar() {
+        let { env } = this.props;
+        let props = {
             chartType: this.getChartType(),
-            locale: this.props.locale,
+            env,
             onAction: this.handleAction,
         };
         return <ChartToolbar {...props} />;
-    },
+    }
 
     /**
      * Render name of user
      *
      * @return {ReactElement}
      */
-    renderName: function() {
-        var name = UserUtils.getDisplayName(this.props.user, this.props.locale);
-        var url = this.getUserPageURL();
+    renderName() {
+        let { env, user } = this.props;
+        let name = UserUtils.getDisplayName(user, env);
+        let url = this.getUserPageURL();
         return (
             <h2 className="name">
                 <a href={url}>{name}</a>
             </h2>
         );
-    },
+    }
 
     /**
      * Render username
      *
      * @return {ReactElement}
      */
-    renderTag: function() {
-        var t = this.props.locale.translate;
-        var user = this.props.user;
-        var tag, url;
+    renderTag() {
+        let { route, env, user } = this.props;
+        let { t } = env.locale;
+        let tag, url;
         if (user) {
-            var route = this.props.route;
-            var params = route.parameters;
             tag = `@${user.username}`;
-            url = route.find(require('pages/news-page'), {
-                schema: params.schema,
-                search: tag,
-            });
+            url = route.find('news-page', { search: tag });
         }
         return (
             <h3 className="tag">
                 <a href={url}>{tag || '\u00a0'}</a>
             </h3>
         );
-    },
+    }
 
     /**
      * Render recent activity list
      *
      * @return {ReactElement}
      */
-    renderRecentActivities: function() {
-        var estimate = this.getStoryCountEstimate();
-        var props = {
-            stories: this.props.stories,
-            storyCountEstimate: estimate,
-            user: this.props.user,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+    renderRecentActivities() {
+        let { route, env, stories, user } = this.props;
+        let storyCountEstimate = this.getStoryCountEstimate();
+        let props = {
+            stories,
+            storyCountEstimate,
+            user,
+            route,
+            env,
         };
         return <UserActivityList {...props} />;
-    },
+    }
 
     /**
      * Render return to list link when showing one user
      *
      * @return {ReactElement|null}
      */
-    renderBackLink: function() {
-        var url = this.getTeamPageURL();
+    renderBackLink() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let url = this.getTeamPageURL();
         if (!url) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var route = this.props.route;
         return (
             <div className="back-link">
                 <a href={url}>
@@ -422,31 +382,36 @@ module.exports = React.createClass({
                 </a>
             </div>
         );
-    },
+    }
 
     /**
      * Render a chart showing daily activities
      *
      * @return {ReactElement}
      */
-    renderStatistics: function() {
-        var props = {
-            user: this.props.user,
-            story: this.props.story,
-            dailyActivities: this.props.dailyActivities,
+    renderStatistics() {
+        let {
+            database,
+            route,
+            env,
+            user,
+            story,
+            dailyActivities,
+            selectedDate,
+        } = this.props;
+        let props = {
+            user,
+            story,
+            dailyActivities,
             chartType: this.getChartType(),
             chartRange: this.getChartRange(),
-
-            selectedDate: this.props.selectedDate,
-            today: this.props.today,
-
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            selectedDate,
+            database,
+            route,
+            env,
         };
         return <UserStatistics {...props} />;
-    },
+    }
 
     /**
      * Render popup menu containing options for given section
@@ -455,14 +420,15 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderPopUpMenu: function(section) {
-        var ref = this.components.setters[section + 'PopUp'];
+    renderPopUpMenu(section) {
+        let { setters } = this.components;
+        let ref = setters[section + 'PopUp'];
         return (
             <CornerPopUp ref={ref}>
                 {this.renderOptions(section)}
             </CornerPopUp>
         );
-    },
+    }
 
     /**
      * Render options pane or simply the list of options when it's in a menu
@@ -471,29 +437,30 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOptions: function(section) {
-        var props = {
+    renderOptions(section) {
+        let { env, user, options } = this.props;
+        let props = {
             section,
-            user: this.props.user,
-            options: this.props.options,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            user,
+            options,
+            env,
             onChange: this.handleOptionChange,
             onComplete: this.handleOptionComplete,
         };
         return <UserViewOptions {...props} />;
-    },
+    }
 
     /**
      * Called when user clicks on one of the chart buttons
      *
      * @param  {Object} evt
      */
-    handleAction: function(evt) {
+    handleAction = (evt) => {
+        let { env, user, options, onOptionChange } = this.props;
         switch (evt.action) {
             case 'chart-type-set':
-                var options = _.clone(this.props.options);
-                if (this.props.theme.mode === 'single-col') {
+                options = _.clone(options);
+                if (!env.isWiderThan('double-col')) {
                     if (options.chartType === evt.value) {
                         options.chartType = null;
                     } else {
@@ -502,44 +469,76 @@ module.exports = React.createClass({
                 } else {
                     options.chartType = evt.value;
                 }
-                if (this.props.onOptionChange) {
-                    this.props.onOptionChange({
+                if (onOptionChange) {
+                    onOptionChange({
                         type: 'optionchange',
                         target: this,
-                        user: this.props.user,
+                        user,
                         options,
                     });
                 }
                 break;
         }
-    },
+    }
 
     /**
      * Called when user changes display options
      *
      * @param  {Object} evt
      */
-    handleOptionChange: function(evt) {
-        if (this.props.onOptionChange) {
-            this.props.onOptionChange({
+    handleOptionChange = (evt) => {
+        let { user, onOptionChange } = this.props;
+        if (onOptionChange) {
+            onOptionChange({
                 type: 'optionchange',
                 target: this,
-                user: this.props.user,
+                user,
                 options: evt.options,
             });
         }
-    },
+    }
 
     /**
      * Called when a change to the story options is complete
      *
      * @param  {Object} evt
      */
-    handleOptionComplete: function(evt) {
-        var section = evt.target.props.section;
-        var popUp = this.components[section + 'PopUp'];
+    handleOptionComplete = (evt) => {
+        let section = evt.target.props.section;
+        let popUp = this.components[section + 'PopUp'];
         if (popUp) {
             popUp.close();
         }
-    },
-});
+    }
+}
+
+export {
+    UserView as default,
+    UserView,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UserView.propTypes = {
+        user: PropTypes.object,
+        roles: PropTypes.arrayOf(PropTypes.object),
+        stories: PropTypes.arrayOf(PropTypes.object),
+        options: PropTypes.object.isRequired,
+        dailyActivities: PropTypes.object,
+        currentUser: PropTypes.object,
+        selectedDate: PropTypes.string,
+        search: PropTypes.string,
+        link: PropTypes.oneOf([ 'user', 'team' ]),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onOptionChange: PropTypes.func,
+    };
+}

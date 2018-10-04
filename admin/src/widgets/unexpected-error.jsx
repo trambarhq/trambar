@@ -1,16 +1,15 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-module.exports = UnexpectedError;
-
-require('./unexpected-error.scss');
+import './unexpected-error.scss';
 
 function UnexpectedError(props) {
-    if (!props.children) {
+    let { children, type } = props;
+    if (!children) {
         return null;
     }
-    var className = 'unexpected-error';
-    var icon = 'exclamation-circle';
-    if (props.type === 'warning') {
+    let className = 'unexpected-error';
+    let icon = 'exclamation-circle';
+    if (type === 'warning') {
         className += ' warning';
         icon = 'exclamation-triangle';
     }
@@ -21,4 +20,17 @@ function UnexpectedError(props) {
             {props.children}
         </div>
     )
+}
+
+export {
+    UnexpectedError as default,
+    UnexpectedError,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    UnexpectedError.propTypes = {
+        type: PropTypes.oneOf([ 'error', 'warning' ]),
+    };
 }

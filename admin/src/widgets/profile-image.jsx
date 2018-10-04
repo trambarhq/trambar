@@ -1,47 +1,55 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React from 'react';
 
 // widgets
-var ResourceView = require('widgets/resource-view');
+import ResourceView from 'widgets/resource-view';
+import Icon from 'octicons/build/svg/person.svg';
 
-module.exports = ProfileImage;
-
-require('./profile-image.scss');
+import './profile-image.scss';
 
 function ProfileImage(props) {
-    var classNames = [ 'profile-image', props.size ];
-    if (props.user) {
-        var resources = _.get(props.user, 'details.resources');
-        var image = _.find(resources, { type: 'image' });
+    let { env, user, size } = props;
+    let classNames = [ 'profile-image', size ];
+    if (user) {
+        let resources = _.get(user, 'details.resources');
+        let image = _.find(resources, { type: 'image' });
         if (image) {
-            var width = imageResolutions[props.size];
-            var props = {
+            let width = imageResolutions[size];
+            let props = {
                 className: classNames.join(' '),
                 resource: image,
                 width: width,
                 height: width,
-                theme: props.theme,
+                env,
             };
             return <ResourceView {...props} />;
         }
     }
-    var Icon = require('octicons/build/svg/person.svg');
     return <Icon className={classNames.join(' ')} />;
 }
 
-ProfileImage.propTypes = {
-    user: PropTypes.object,
-    size: PropTypes.oneOf([ 'small', 'large' ]),
-    theme: PropTypes.instanceOf(Theme),
+const imageResolutions = {
+    small: 24,
+    large: 96,
 };
 
 ProfileImage.defaultProps = {
     size: 'small'
 };
 
-var imageResolutions = {
-    small: 24,
-    large: 96,
+export {
+    ProfileImage as default,
+    ProfileImage,
 };
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ProfileImage.propTypes = {
+        user: PropTypes.object,
+        size: PropTypes.oneOf([ 'small', 'large' ]),
+        env: PropTypes.instanceOf(Environment),
+    };
+}

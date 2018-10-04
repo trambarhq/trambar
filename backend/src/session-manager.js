@@ -1343,6 +1343,5 @@ function deleteExpiredSessions() {
 
 if (process.argv[1] === __filename) {
     start();
+    Shutdown.on(stop);
 }
-
-Shutdown.on(stop);

@@ -1,13 +1,7 @@
-var _ = require('lodash');
+import _ from 'lodash';
 
-module.exports = {
-    register,
-    unregister,
-    focus,
-};
-
-var entries = [];
-var requests = [];
+let entries = [];
+let requests = [];
 
 function register(component, props) {
     entries.unshift({ component, props });
@@ -30,11 +24,18 @@ function unregister(component) {
 }
 
 function focus(props) {
-    var entry = _.find(entries, { props });
+    let entry = _.find(entries, { props });
     if (entry) {
+        debugger;
         entry.component.focus()
     } else {
         // store the request and set focus when component registers itself
         requests.push(props);
     }
 }
+
+export {
+    register,
+    unregister,
+    focus,
+};

@@ -1,32 +1,20 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var UniversalLink = require('routing/universal-link');
-var DeviceFinder = require('objects/finders/device-finder');
-var UserFinder = require('objects/finders/user-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import * as UniversalLink from 'routing/universal-link';
+import * as DeviceFinder from 'objects/finders/device-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var QRCode = require('widgets/qr-code');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import QRCode from 'widgets/qr-code';
 
-require('./mobile-setup-dialog-box.scss');
+import StartPage from 'pages/start-page';
 
-module.exports = Relaks.createClass({
-    displayName: 'MobileSetupDialogBox.Sync',
-    propTypes: {
-        show: PropTypes.bool,
-        system: PropTypes.object,
+import './mobile-setup-dialog-box.scss';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onClose: PropTypes.func,
-    },
+class MobileSetupDialogBox extends AsyncComponent {
+    static displayName = 'MobileSetupDialogBox';
 
     /**
      * Render the component asynchronously
@@ -35,22 +23,23 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env, system, show, onClose } = this.props;
+        let db = database.use({ by: this });
+        let props = {
             activationCode: null,
             currentUser: null,
             devices: null,
 
-            show: this.props.show,
-            system: this.props.system,
-            route: this.props.route,
-            locale: this.props.locale,
-            onClose: this.props.onClose,
+            show,
+            system,
+            route,
+            env,
+            onClose,
         };
         meanwhile.show(<MobileSetupDialogBoxSync {...props} />);
-        return db.start().then((currentUserId) => {
-            return UserFinder.findUser(db, currentUserId).then((user) => {
+        return db.start().then((currentUserID) => {
+            return UserFinder.findUser(db, currentUserID).then((user) => {
                 props.currentUser = user;
             });
         }).then(() => {
@@ -64,40 +53,33 @@ module.exports = Relaks.createClass({
         }).then(() => {
             return <MobileSetupDialogBoxSync {...props} />;
         });
-    },
+    }
 
     /**
      * Release the mobile session, assuming the device has acquired it
      */
-    componentWillUnmount: function() {
-        var db = this.props.database.use({ by: this });
+    componentWillUnmount() {
+        let { database } = this.props;
+        let db = database.use({ by: this });
         db.releaseMobileSession();
-    },
-})
+    }
+}
 
-var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
-    displayName: 'MobileSetupDialogBox.Sync',
-    propTypes: {
-        show: PropTypes.bool,
-        activationCode: PropTypes.string,
-        devices: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onClose: PropTypes.func,
-    },
+class MobileSetupDialogBoxSync extends PureComponent {
+    static displayName = 'MobileSetupDialogBox.Sync';
 
     /**
      * Check for change in props.devices
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.devices !== nextProps.devices) {
-            var handle = nextProps.activationCode;
+    componentWillReceiveProps(nextProps) {
+        let { devices, onClose } = this.props;
+        if (nextProps.devices !== devices) {
+            let handle = nextProps.activationCode;
             if (handle) {
                 if (_.some(nextProps.devices, { session_handle: handle })) {
                     // a device has acquire the session--close dialog box automatically
-                    if (this.props.onClose) {
-                        this.props.onClose({
+                    if (onClose) {
+                        onClose({
                             type: 'close',
                             target: this,
                         });
@@ -105,18 +87,16 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
                 }
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.props.onClose,
-        };
+    render() {
+        let { show, onClose } = this.props;
+        let overlayProps = { show, onBackgroundClick: onClose };
         return (
             <Overlay {...overlayProps}>
                 <div className="mobile-setup-dialog-box">
@@ -125,33 +105,31 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
-     * Render QR-code and number
+     * Render QR-code and activation code
      *
      * @return {ReactElement}
      */
-    renderContents: function() {
-        var t = this.props.locale.translate;
-        var number = this.props.number;
-        var route = this.props.route;
-        var url;
-        var address = _.get(this.props.system, 'settings.address');
-        if (!address) {
-            address = route.parameters.address;
+    renderContents() {
+        let { route, env, system, activationCode } = this.props;
+        let { t } = env.locale;
+        let { address, schema } = route.context;
+        let systemAddress = _.get(system, 'settings.address');
+        let universalLink;
+        if (!systemAddress) {
+            // use the address in the system object if there's one
+            address = systemAddress;
         }
-        var schema = route.parameters.schema;
-        var activationCode = this.props.activationCode;
         if (activationCode) {
-            var StartPage = require('pages/start-page');
-            var urlParts = StartPage.getURL({ activationCode, schema });
-            url = UniversalLink.form(address, urlParts.path, urlParts.query);
-            console.log(url);
+            let relativeURL = route.find('start-page', { activationCode, schema });
+            universalLink = UniversalLink.form(address, relativeURL);
+            console.log(universalLink);
         }
         return (
             <div className="contents">
-                <QRCode text={url} scale={6} />
+                <QRCode text={universalLink} scale={6} />
                 <div className="info">
                     <div className="label">{t('mobile-setup-address')}</div>
                     <div className="value">{address}</div>
@@ -162,32 +140,67 @@ var MobileSetupDialogBoxSync = module.exports.Sync = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var closeButtonProps = {
+    renderButtons() {
+        let { env, onClose } = this.props;
+        let { t } = env.locale;
+        let closeButtonProps = {
             label: t('mobile-setup-close'),
             emphasized: true,
-            onClick: this.props.onClose,
+            onClick: onClose,
         };
         return (
             <div className="buttons">
                 <PushButton {...closeButtonProps} />
             </div>
         );
-    },
-});
+    }
+}
 
 function insertSpacers(s) {
     if (!s) {
         return s;
     }
-    var parts = s.match(/.{1,4}/g);
+    let parts = s.match(/.{1,4}/g);
     return _.toUpper(parts.join(' '));
+}
+
+export {
+    MobileSetupDialogBox as default,
+    MobileSetupDialogBox,
+    MobileSetupDialogBoxSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MobileSetupDialogBox.propTypes = {
+        show: PropTypes.bool,
+        system: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onClose: PropTypes.func,
+    };
+    MobileSetupDialogBoxSync.propTypes = {
+        show: PropTypes.bool,
+        activationCode: PropTypes.string,
+        devices: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        onClose: PropTypes.func,
+    };
 }

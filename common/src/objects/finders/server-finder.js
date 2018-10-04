@@ -1,13 +1,8 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-module.exports = {
-    findServer,
-    findAllServers,
-    findServersOfRepos
-};
+const emptyArray = [];
 
 /**
  * Find server by ID
@@ -58,7 +53,7 @@ function findServersOfRepos(db, repos) {
         }
     }));
     if (_.isEmpty(ids)) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -67,3 +62,9 @@ function findServersOfRepos(db, repos) {
         criteria: { id: ids }
     });
 }
+
+export {
+    findServer,
+    findAllServers,
+    findServersOfRepos,
+};

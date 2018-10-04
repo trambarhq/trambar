@@ -1,65 +1,47 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
 
-require('./confirmation-dialog-box.scss');
+import './confirmation-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'ConfirmationDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        dangerous: PropTypes.bool,
+class ConfirmationDialogBox extends PureComponent {
+    static displayName = 'ConfirmationDialogBox';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onConfirm: PropTypes.func,
-        onCancel: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             show: true,
             dangerous: true,
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
-        var overlayProps = {
-            show: this.props.show,
+    render() {
+        let { env, show, dangerous, children } = this.props;
+        let { t } = env.locale;
+        let overlayProps = {
+            show,
             onBackgroundClick: this.handleCancelClick,
         };
-        var cancelProps = {
+        let cancelProps = {
             className: 'cancel',
             onClick: this.handleCancelClick
         };
-        var confirmProps = {
-            className: this.props.dangerous ? 'danger' : 'emphasis',
+        let confirmProps = {
+            className: dangerous ? 'danger' : 'emphasis',
             onClick: this.handleConfirmClick
         };
         return (
             <Overlay {...overlayProps}>
                 <div className="confirmation-dialog-box">
-                    <div className="message">
-                        {this.props.children}
-                    </div>
+                    <div className="message">{children}</div>
                     <div className="buttons">
                         <PushButton {...cancelProps}>
                             {t('confirmation-cancel')}
@@ -72,33 +54,54 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Called when user clicks cancel button or outside the dialog
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
-        if (this.props.onCancel) {
-            this.props.onCancel({
+    handleCancelClick = (evt) => {
+        let { onCancel } = this.props;
+        if (onCancel) {
+            onCancel({
                 type: 'cancel',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks confirm button
      *
      * @param  {Event} evt
      */
-    handleConfirmClick: function(evt) {
-        if (this.props.onConfirm) {
-            this.props.onConfirm({
+    handleConfirmClick = (evt) => {
+        let { onConfirm } = this.props;
+        if (onConfirm) {
+            onConfirm({
                 type: 'confirm',
                 target: this,
             });
         }
-    },
-})
+    }
+}
+
+export {
+    ConfirmationDialogBox as default,
+    ConfirmationDialogBox,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ConfirmationDialogBox.propTypes = {
+        show: PropTypes.bool,
+        dangerous: PropTypes.bool,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        onConfirm: PropTypes.func,
+        onCancel: PropTypes.func,
+    };
+}

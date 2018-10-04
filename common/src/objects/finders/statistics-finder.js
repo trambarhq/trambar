@@ -1,20 +1,8 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var Memoize = require('utils/memoize');
-var DateUtils = require('utils/date-utils');
-
-module.exports = {
-    find,
-    findDailyActivitiesOfProject,
-    findDailyActivitiesOfProjects,
-    findDailyActivitiesOfUser,
-    findDailyActivitiesOfUsers,
-    findDailyNotificationsOfUser,
-    findDailyNotificationsOfUsers,
-    findDailyActivitiesOfRepo,
-    findDailyActivitiesOfRepos,
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import { memoizeWeak } from 'utils/memoize';
+import * as DateUtils from 'utils/date-utils';
 
 /**
  * Fetch statistics, given certain parameters
@@ -25,25 +13,18 @@ module.exports = {
  * @return {Promise<Object>}
  */
 function find(db, params) {
-    var type, user, project, publicOnly = false;
+    let type, user, project, publicOnly = false;
     if (params) {
         type = params.type;
-        if (params.user) {
-            user = params.user;
-        } else if (params.user_id) {
+        if (params.user_id) {
             // we know that only the id is used
             user = { id: params.user_id };
         }
-        if (params.project) {
-            project = params.project;
-        } else if (params.schema) {
-            project = { name: params.schema };
-        } else if (params.project_name) {
-            project = { name: params.project_name };
+        if (db.context.schema) {
+            project = { name: db.context.schema };
         }
         publicOnly = params.public;
     }
-
     if (type === 'daily-activities') {
         if (user && project) {
             return findDailyActivitiesOfUser(db, project, user, publicOnly);
@@ -75,7 +56,7 @@ function findDailyActivitiesOfProject(db, project, publicOnly) {
         return null;
     }
     // load story-date-range statistics
-    var query = {
+    let query = {
         schema: project.name,
         table: 'statistics',
         criteria: {
@@ -90,16 +71,16 @@ function findDailyActivitiesOfProject(db, project, publicOnly) {
         if (!isValidRange(dateRange)) {
             return;
         }
-        var timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
-        var tzOffset = DateUtils.getTimeZoneOffset();
-        var filters = _.map(timeRanges, (timeRange) => {
+        let timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+        let tzOffset = DateUtils.getTimeZoneOffset();
+        let filters = _.map(timeRanges, (timeRange) => {
             return {
                 time_range: timeRange,
                 tz_offset: tzOffset,
                 public: publicOnly || undefined,
             };
         });
-        var query = {
+        let query = {
             schema: project.name,
             table: 'statistics',
             criteria: {
@@ -126,8 +107,8 @@ function findDailyActivitiesOfProjects(db, projects) {
     return Promise.mapSeries(projects, (project) => {
         return findDailyActivitiesOfProject(db, project);
     }).then((list) => {
-        var projectIds = _.map(projects, 'id');
-        return _.zipObject(projectIds, list);
+        let projectIDs = _.map(projects, 'id');
+        return _.zipObject(projectIDs, list);
     });
 }
 
@@ -163,18 +144,18 @@ function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
     if (!project) {
         return Promise.resolve(null);
     }
-    var schema = project.name;
+    let schema = project.name;
     // load story-date-range statistics
-    var currentUsers = _.filter(users, (user) => {
+    let currentUsers = _.filter(users, (user) => {
         return !user.deleted;
     });
-    var filters = _.map(currentUsers, (user) => {
+    let filters = _.map(currentUsers, (user) => {
         return {
             user_ids: [ user.id ],
             public: publicOnly || undefined,
         };
     });
-    var query = {
+    let query = {
         schema: project.name,
         table: 'statistics',
         criteria: { type: 'story-date-range', filters },
@@ -183,9 +164,9 @@ function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
     return db.find(query).then((dateRanges) => {
         dateRanges = _.filter(dateRanges, isValidRange);
         // load daily-activities statistics
-        var filterLists = _.map(dateRanges, (dateRange) => {
-            var timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
-            var tzOffset = DateUtils.getTimeZoneOffset();
+        let filterLists = _.map(dateRanges, (dateRange) => {
+            let timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+            let tzOffset = DateUtils.getTimeZoneOffset();
             return _.map(timeRanges, (timeRange) => {
                 return {
                     user_ids: dateRange.filters.user_ids,
@@ -195,11 +176,11 @@ function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
                 };
             });
         });
-        var filters = _.flatten(filterLists);
+        let filters = _.flatten(filterLists);
         if (_.isEmpty(filters)) {
             return {};
         }
-        var query = {
+        let query = {
             schema: project.name,
             table: 'statistics',
             criteria: { type: 'daily-activities', filters },
@@ -207,8 +188,8 @@ function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
         };
         return db.find(query).then((dailyActivitiesAllUsers) => {
             return _.transform(dateRanges, (results, dateRange) => {
-                var userId = dateRange.filters.user_ids[0];
-                var dailyActivities = _.filter(dailyActivitiesAllUsers, (d) => {
+                let userId = dateRange.filters.user_ids[0];
+                let dailyActivities = _.filter(dailyActivitiesAllUsers, (d) => {
                     return (d.filters.user_ids[0] === userId);
                 });
                 results[userId] = summarizeStatistics(dailyActivities, dateRange);
@@ -248,12 +229,12 @@ function findDailyNotificationsOfUsers(db, project, users) {
     if (!project) {
         return Promise.resolve(null);
     }
-    var schema = project.name;
+    let schema = project.name;
     // load notification-date-range statistics
-    var currentUsers = _.filter(users, (user) => {
+    let currentUsers = _.filter(users, (user) => {
         return !user.deleted;
     });
-    var criteria = {
+    let criteria = {
         type: 'notification-date-range',
         filters: _.map(currentUsers, (user) => {
             return {
@@ -264,9 +245,9 @@ function findDailyNotificationsOfUsers(db, project, users) {
     return db.find({ schema, table: 'statistics', criteria }).then((dateRanges) => {
         dateRanges = _.filter(dateRanges, isValidRange);
         // load daily-activities statistics
-        var filterLists = _.map(dateRanges, (dateRange) => {
-            var timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
-            var tzOffset = DateUtils.getTimeZoneOffset();
+        let filterLists = _.map(dateRanges, (dateRange) => {
+            let timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+            let tzOffset = DateUtils.getTimeZoneOffset();
             return _.map(timeRanges, (timeRange) => {
                 return {
                     target_user_id: dateRange.filters.target_user_id,
@@ -275,15 +256,15 @@ function findDailyNotificationsOfUsers(db, project, users) {
                 };
             });
         });
-        var filters = _.flatten(filterLists);
+        let filters = _.flatten(filterLists);
         if (_.isEmpty(filters)) {
             return {};
         }
-        var criteria = { type: 'daily-notifications', filters };
+        let criteria = { type: 'daily-notifications', filters };
         return db.find({ schema, table: 'statistics', criteria }).then((dailyNotificationsAllUsers) => {
             return _.transform(dateRanges, (results, dateRange) => {
-                var userId = dateRange.filters.target_user_id;
-                var dailyNotifications = _.filter(dailyNotificationsAllUsers, (d) => {
+                let userId = dateRange.filters.target_user_id;
+                let dailyNotifications = _.filter(dailyNotificationsAllUsers, (d) => {
                     return (d.filters.target_user_id === userId);
                 });
                 results[userId] = summarizeStatistics(dailyNotifications, dateRange);
@@ -323,15 +304,15 @@ function findDailyActivitiesOfRepos(db, project, repos) {
     if (!project) {
         return Promise.resolve(null);
     }
-    var schema = project.name;
+    let schema = project.name;
     // load story-date-range statistics
-    var currentRepos = _.filter(repos, (repo) => {
+    let currentRepos = _.filter(repos, (repo) => {
         return !repo.deleted;
     });
-    var criteria = {
+    let criteria = {
         type: 'story-date-range',
         filters: _.map(currentRepos, (repo) => {
-            var link = _.find(repo.external, { type: repo.type });
+            let link = _.find(repo.external, { type: repo.type });
             return {
                 external_object: link
             };
@@ -340,9 +321,9 @@ function findDailyActivitiesOfRepos(db, project, repos) {
     return db.find({ schema, table: 'statistics', criteria }).then((dateRanges) => {
         dateRanges = _.filter(dateRanges, isValidRange);
         // load daily-activities statistics
-        var filterLists = _.map(dateRanges, (dateRange) => {
-            var timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
-            var tzOffset = DateUtils.getTimeZoneOffset();
+        let filterLists = _.map(dateRanges, (dateRange) => {
+            let timeRanges = DateUtils.getMonthRanges(dateRange.details.start_time, dateRange.details.end_time);
+            let tzOffset = DateUtils.getTimeZoneOffset();
             return _.map(timeRanges, (timeRange) => {
                 return {
                     external_object: dateRange.filters.external_object,
@@ -351,20 +332,20 @@ function findDailyActivitiesOfRepos(db, project, repos) {
                 };
             });
         });
-        var filters = _.flatten(filterLists);
+        let filters = _.flatten(filterLists);
         if (_.isEmpty(filters)) {
             return {};
         }
-        var criteria = { type: 'daily-activities', filters };
+        let criteria = { type: 'daily-activities', filters };
         return db.find({ schema, table: 'statistics', criteria }).then((dailyActivitiesAllRepos) => {
             return _.transform(dateRanges, (results, dateRange) => {
                 // find stats associated with data range object
-                var link = dateRange.filters.external_object;
-                var dailyActivities = _.filter(dailyActivitiesAllRepos, (d) => {
+                let link = dateRange.filters.external_object;
+                let dailyActivities = _.filter(dailyActivitiesAllRepos, (d) => {
                     return _.isEqual(d.filters.external_object, link);
                 });
                 // find repo with external id
-                var repo = _.find(repos, (repo) => {
+                let repo = _.find(repos, (repo) => {
                     return _.some(repo.external, link);
                 });
                 results[repo.id] = summarizeStatistics(dailyActivities, dateRange);
@@ -377,17 +358,17 @@ function isValidRange(dateRange) {
     return dateRange && !!dateRange.details.start_time && !!dateRange.details.end_time;
 }
 
-var summarizeStatistics = Memoize(function(dailyActivities, dateRange, project) {
-    var lastMonth = Moment().subtract(1, 'month').format('YYYY-MM');
-    var thisMonth = Moment().format('YYYY-MM');
-    var dailyStats = mergeDailyActivities(dailyActivities);
-    var summaryLastMonth = summarizeDailyActivities(dailyActivities, lastMonth);
-    var summaryThisMonth = summarizeDailyActivities(dailyActivities, thisMonth);
-    var summaryToDate = summarizeDailyActivities(dailyActivities);
-    var start = dateRange.details.start_time;
-    var end = dateRange.details.end_time;
+let summarizeStatistics = memoizeWeak(null, function(dailyActivities, dateRange, project) {
+    let lastMonth = Moment().subtract(1, 'month').format('YYYY-MM');
+    let thisMonth = Moment().format('YYYY-MM');
+    let dailyStats = mergeDailyActivities(dailyActivities);
+    let summaryLastMonth = summarizeDailyActivities(dailyActivities, lastMonth);
+    let summaryThisMonth = summarizeDailyActivities(dailyActivities, thisMonth);
+    let summaryToDate = summarizeDailyActivities(dailyActivities);
+    let start = dateRange.details.start_time;
+    let end = dateRange.details.end_time;
     if (summaryLastMonth.total === 0) {
-        var startMonth = start.substr(0, 7);
+        let startMonth = start.substr(0, 7);
         if (!(startMonth <= lastMonth)) {
             // field is not applicable
             summaryLastMonth.total = undefined;
@@ -403,7 +384,7 @@ var summarizeStatistics = Memoize(function(dailyActivities, dateRange, project) 
 });
 
 function summarizeDailyActivities(dailyActivities, month) {
-    var stats = { total: 0 };
+    let stats = { total: 0 };
     _.each(dailyActivities, (monthlyStats) => {
         _.each(monthlyStats.details, (dailyCounts, date) => {
             if (month && date.substr(0, 7) !== month) {
@@ -425,9 +406,21 @@ function summarizeDailyActivities(dailyActivities, month) {
 }
 
 function mergeDailyActivities(dailyActivities) {
-    var stats = {};
+    let stats = {};
     _.each(dailyActivities, (monthlyStats) => {
         _.assign(stats, monthlyStats.details);
     });
     return stats;
 }
+
+export {
+    find,
+    findDailyActivitiesOfProject,
+    findDailyActivitiesOfProjects,
+    findDailyActivitiesOfUser,
+    findDailyActivitiesOfUsers,
+    findDailyNotificationsOfUser,
+    findDailyNotificationsOfUsers,
+    findDailyActivitiesOfRepo,
+    findDailyActivitiesOfRepos,
+};

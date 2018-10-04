@@ -1,27 +1,8 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
-var DateTracker = require('utils/date-tracker');
-var DateUtils = require('utils/date-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import * as DateUtils from 'utils/date-utils';
 
-module.exports = {
-    findStory,
-    findStories,
-    findDraftStories,
-    findUnlistedStories,
-    findStoriesMatchingText,
-    findStoriesWithTags,
-    findStoriesOnDate,
-    findStoriesInListing,
-    findStoriesByUserMatchingText,
-    findStoriesByUserWithTags,
-    findStoriesByUserOnDate,
-    findStoriesByUserInListing,
-    findStoriesByUsersInListings,
-    findStoriesWithRolesInListing,
-    findStoriesOfNotifications,
-    findStoriesOfBookmarks,
-};
+const emptyArray = [];
 
 /**
  * Find a story by ID
@@ -49,7 +30,7 @@ function findStory(db, id) {
  */
 function findStories(db, ids) {
     if (_.isEmpty(ids)) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -69,7 +50,7 @@ function findStories(db, ids) {
  */
 function findViewableStories(db, ids, currentUser) {
     if (_.isEmpty(ids) || !currentUser) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -93,7 +74,7 @@ function findViewableStories(db, ids, currentUser) {
  */
 function findDraftStories(db, user) {
     if (!user) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     return db.find({
         table: 'story',
@@ -110,30 +91,31 @@ function findDraftStories(db, user) {
  * @param  {Database} db
  * @param  {User} user
  * @param  {Array<Story>} listedStories
+ * @param  {String} limit
  *
  * @return {Promise<Array<Story>>}
  */
-function findUnlistedStories(db, user, listedStories) {
+function findUnlistedStories(db, user, listedStories, limit) {
     if (!user) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     if (!listedStories) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
-    var recentStories = _.filter(listedStories, (story) => {
+    let recentStories = _.filter(listedStories, (story) => {
         if (_.includes(story.user_ids, user.id)) {
-            if (story.ptime > DateTracker.yesterdayISO) {
+            if (story.ptime > limit) {
                 return true;
             }
         }
     });
-    var recentStoryIds = _.map(recentStories, 'id');
+    let recentStoryIDs = _.map(recentStories, 'id');
     return db.find({
         table: 'story',
         criteria: {
-            exclude: recentStoryIds,
+            exclude: recentStoryIDs,
             user_ids: [ user.id ],
-            newer_than: DateTracker.yesterdayISO,
+            newer_than: limit,
             published: true,
         },
     });
@@ -232,9 +214,9 @@ function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
  */
 function findStoriesInListing(db, type, currentUser, blockIfStale) {
     if (!currentUser) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
-    var query = {
+    let query = {
         table: 'listing',
         criteria: {
             type: type,
@@ -361,9 +343,9 @@ function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
  */
 function findStoriesByUserInListing(db, type, user, currentUser, blockIfStale) {
     if (!currentUser) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
-    var query = {
+    let query = {
         table: 'listing',
         criteria: {
             type: type,
@@ -409,7 +391,7 @@ function findStoriesByUserInListing(db, type, user, currentUser, blockIfStale) {
  * @return {Promise<Array<Story>|null>}
  */
 function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit, blockIfStale) {
-    var query = {
+    let query = {
         table: 'listing',
         criteria: {
             type: type,
@@ -427,15 +409,15 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
         query.blocking = 'stale';
     }
     return db.find(query).then((listings) => {
-        var storyIds = _.flatten(_.map(listings, (listing) => {
+        let storyIDs = _.flatten(_.map(listings, (listing) => {
             return _.slice(listing.story_ids, - perUserLimit);
         }));
-        if (_.isEmpty(storyIds)) {
+        if (_.isEmpty(storyIDs)) {
             if (_.some(listings, { dirty: true })) {
                 return null;
             }
         }
-        return findViewableStories(db, storyIds, currentUser);
+        return findViewableStories(db, storyIDs, currentUser);
     });
 }
 
@@ -444,23 +426,23 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
  *
  * @param  {Database} db
  * @param  {String} type
- * @param  {Array<Number>} roleIds
+ * @param  {Array<Number>} roleIDs
  * @param  {User} currentUser
  * @param  {Boolean|undefined} blockIfStale
  *
  * @return {Promise<Array<Story>|null>}
  */
-function findStoriesWithRolesInListing(db, type, roleIds, currentUser, blockIfStale) {
+function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blockIfStale) {
     if (!currentUser) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
-    var query = {
+    let query = {
         table: 'listing',
         criteria: {
             type: type,
             target_user_id: currentUser.id,
             filters: {
-                role_ids: roleIds,
+                role_ids: roleIDs,
                 public: publicOnly(currentUser)
             },
         },
@@ -490,7 +472,7 @@ function findStoriesWithRolesInListing(db, type, roleIds, currentUser, blockIfSt
  * @return {Promise<Array<Story>>}
  */
 function findStoriesOfNotifications(db, notifications, currentUser) {
-    var ids = _.filter(_.map(notifications, 'story_id'));
+    let ids = _.filter(_.map(notifications, 'story_id'));
     return findViewableStories(db, ids, currentUser);
 }
 
@@ -504,7 +486,7 @@ function findStoriesOfNotifications(db, notifications, currentUser) {
  * @return {Promise<Array<Story>>}
  */
 function findStoriesOfBookmarks(db, bookmarks, currentUser) {
-    var ids = _.map(bookmarks, 'story_id');
+    let ids = _.map(bookmarks, 'story_id');
     return findViewableStories(db, ids, currentUser);
 }
 
@@ -513,3 +495,22 @@ function publicOnly(currentUser) {
         return true;
     }
 }
+
+export {
+    findStory,
+    findStories,
+    findDraftStories,
+    findUnlistedStories,
+    findStoriesMatchingText,
+    findStoriesWithTags,
+    findStoriesOnDate,
+    findStoriesInListing,
+    findStoriesByUserMatchingText,
+    findStoriesByUserWithTags,
+    findStoriesByUserOnDate,
+    findStoriesByUserInListing,
+    findStoriesByUsersInListings,
+    findStoriesWithRolesInListing,
+    findStoriesOfNotifications,
+    findStoriesOfBookmarks,
+};

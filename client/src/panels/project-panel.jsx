@@ -1,55 +1,28 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var UserUtils = require('objects/utils/user-utils');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var SettingsPanel = require('widgets/settings-panel');
-var PushButton = require('widgets/push-button');
-var SystemDescriptionDialogBox = require('dialogs/system-description-dialog-box');
-var ProjectDescriptionDialogBox = require('dialogs/project-description-dialog-box');
-var MobileSetupDialogBox = require('dialogs/mobile-setup-dialog-box');
-var ConfirmationDialogBox = require('dialogs/confirmation-dialog-box');
-var ProjectManagementDialogBox = require ('dialogs/project-management-dialog-box');
+import SettingsPanel from 'widgets/settings-panel';
+import PushButton from 'widgets/push-button';
+import SystemDescriptionDialogBox from 'dialogs/system-description-dialog-box';
+import ProjectDescriptionDialogBox from 'dialogs/project-description-dialog-box';
+import MobileSetupDialogBox from 'dialogs/mobile-setup-dialog-box';
+import ConfirmationDialogBox from 'dialogs/confirmation-dialog-box';
+import ProjectManagementDialogBox from 'dialogs/project-management-dialog-box';
 
-require('./project-panel.scss');
+import './project-panel.scss';
 
-module.exports = React.createClass({
-    displayName: 'ProjectPanel',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        system: PropTypes.object,
-        currentUser: PropTypes.object,
-        currentProject: PropTypes.object,
-        projectLinks: PropTypes.arrayOf(PropTypes.object),
+class ProjectPanel extends PureComponent {
+    static displayName = 'ProjectPanel';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onChange: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             renderingDialog: null,
             showingDialog: false,
         };
-    },
+    }
 
     /**
      * Check if current user has gained membership and if so, bring up a
@@ -57,16 +30,15 @@ module.exports = React.createClass({
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        var projectBefore = this.props.currentProject;
-        var projectAfter = nextProps.currentProject;
-        var user = this.props.currentUser;
-        if (projectBefore !== projectAfter) {
-            if (projectBefore && projectAfter && projectBefore.id === projectAfter.id) {
-                var isMemberBefore = UserUtils.isMember(user, projectBefore);
-                var isMemberAfter = UserUtils.isMember(user, projectAfter);
+    componentWillReceiveProps(nextProps) {
+        let { currentProject, currentUser } = this.props;
+        let { renderingDialog } = this.state;
+        if (nextProps.currentProject !== currentProject && currentProject) {
+            if (nextProps.currentProject && nextProps.currentProject.id === currentProject.id) {
+                let isMemberBefore = UserUtils.isMember(currentUser, currentProject);
+                let isMemberAfter = UserUtils.isMember(currentUser, nextProps.currentProject);
                 if (!isMemberBefore && isMemberAfter) {
-                    if (!this.state.renderingDialog) {
+                    if (!renderingDialog) {
                         this.setState({
                             renderingDialog: 'membership',
                             showingDialog: true,
@@ -75,15 +47,16 @@ module.exports = React.createClass({
                 }
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
+    render() {
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <SettingsPanel className="project">
                 <header>
@@ -98,16 +71,19 @@ module.exports = React.createClass({
                 </footer>
             </SettingsPanel>
         );
-    },
+    }
 
     /**
      * Render list of projects
      *
      * @return {Array<ReactElement>}
      */
-    renderProjects: function() {
-        return _.map(this.props.projectLinks, this.renderProject);
-    },
+    renderProjects() {
+        let { projectLinks } = this.props;
+        return _.map(projectLinks, (link, index) => {
+            return this.renderProject(link, index);
+        });
+    }
 
     /**
      * Render a project option, with additional links if it's the current project
@@ -117,46 +93,44 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderProject: function(link, i) {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var params = this.props.route.parameters;
-        if (link.schema === params.schema && link.address == params.address) {
-            var isMember = true;
-            var isApplying = false;
-            var project = this.props.currentProject;
-            var user = this.props.currentUser;
-            if (project && user) {
-                if (!_.includes(project.user_ids, user.id)) {
+    renderProject(link, i) {
+        let { route, env, currentProject, currentUser } = this.props;
+        let { t, p } = env.locale;
+        let context = route.context;
+        if (link.schema === context.schema && link.address == context.address) {
+            let isMember = true;
+            let isApplying = false;
+            if (currentProject && currentUser) {
+                if (!_.includes(currentProject.user_ids, currentUser.id)) {
                     isMember = false;
-                    if (_.includes(user.requested_project_ids, project.id)) {
+                    if (_.includes(currentUser.requested_project_ids, currentProject.id)) {
                         isApplying = true;
                     }
                 }
             }
-            var serverProps = {
+            let serverProps = {
                 icon: 'home',
                 label: link.address,
                 onClick: this.handleSystemDescriptionClick,
             };
-            var descriptionProps = {
+            let descriptionProps = {
                 icon: 'info-circle',
                 label: t('project-management-description'),
                 onClick: this.handleProjectDescriptionClick,
             };
-            var mobileProps = {
+            let mobileProps = {
                 icon: 'qrcode',
                 label: t('project-management-mobile-set-up'),
                 hidden: (process.env.PLATFORM === 'cordova'),
                 onClick: this.handleMobileSetupClick,
             };
-            var membershipProps = {
+            let membershipProps = {
                 icon: isApplying ? 'clock-o' : 'user-circle-o',
                 label: t(`project-management-${isApplying ? 'withdraw-request' : 'join-project'}`),
                 hidden: isMember,
                 onClick: isApplying ? this.handleCancelJoinClick : this.handleJoinClick,
             };
-            var signOutProps = {
+            let signOutProps = {
                 icon: 'sign-out',
                 label: t('project-management-sign-out'),
                 onClick: this.handleSignOutClick,
@@ -186,20 +160,21 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var addProps = {
+    renderButtons() {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let addProps = {
             label: t('project-management-add'),
             onClick: this.handleAddClick,
         };
-        var manageProps = {
+        let manageProps = {
             label: t('project-management-manage'),
             onClick: this.handleManageClick,
         };
@@ -209,15 +184,16 @@ module.exports = React.createClass({
                 <PushButton {...addProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render opened dialog box
      *
      * @return {ReactElement}
      */
-    renderDialogBox: function() {
-        if (!this.props.currentProject) {
+    renderDialogBox() {
+        let { currentProject } = this.props;
+        if (!currentProject) {
             return null;
         }
         return (
@@ -230,79 +206,85 @@ module.exports = React.createClass({
                 {this.renderMembershipDialogBox()}
             </div>
         );
-    },
+    }
 
     /**
      * Render project description dialog box
      *
      * @return {ReactElement|null}
      */
-    renderSystemDescriptionDialogBox: function() {
-        if (this.state.renderingDialog !== 'system-description') {
+    renderSystemDescriptionDialogBox() {
+        let { env, system } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        if (renderingDialog !== 'system-description') {
             return null;
         }
-        var props = {
-            show: this.state.showingDialog,
-            system: this.props.system,
-            locale: this.props.locale,
-            theme: this.props.theme,
+        let props = {
+            show: showingDialog,
+            system,
+            env,
             onClose: this.handleDialogClose,
         };
         return <SystemDescriptionDialogBox {...props} />;
-    },
+    }
 
     /**
      * Render project description dialog box
      *
      * @return {ReactElement|null}
      */
-    renderProjectDescriptionDialogBox: function() {
-        if (this.state.renderingDialog !== 'project-description') {
+    renderProjectDescriptionDialogBox() {
+        let { env, currentProject } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        if (renderingDialog !== 'project-description') {
             return null;
         }
-        var props = {
-            show: this.state.showingDialog,
-            project: this.props.currentProject,
-            locale: this.props.locale,
-            theme: this.props.theme,
+        let props = {
+            show: showingDialog,
+            project: currentProject,
+            env,
             onClose: this.handleDialogClose,
         };
         return <ProjectDescriptionDialogBox {...props} />;
-    },
+    }
 
     /**
      * Render mobile setup dialog box
      *
      * @return {ReactElement|null}
      */
-    renderMobileSetupDialogBox: function() {
-        if (this.state.renderingDialog !== 'mobile-setup') {
+    renderMobileSetupDialogBox() {
+        let { database, route, env, system } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        if (renderingDialog !== 'mobile-setup') {
             return null;
         }
-        var props = {
-            show: this.state.showingDialog,
-            system: this.props.system,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
+        let props = {
+            show: showingDialog,
+            system,
+            database,
+            route,
+            env,
             onClose: this.handleDialogClose,
         };
         return <MobileSetupDialogBox {...props} />;
-    },
+    }
 
     /**
      * Render sign out dialog box
      *
      * @return {ReactElement|null}
      */
-    renderSignOutDialogBox: function() {
-        if (this.state.renderingDialog !== 'sign-out') {
+    renderSignOutDialogBox() {
+        let { env } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        let { t } = env.locale;
+        if (renderingDialog !== 'sign-out') {
             return null;
         }
-        var t = this.props.locale.translate;
-        var props = {
-            show: this.state.showingDialog,
-            locale: this.props.locale,
+        let props = {
+            show: showingDialog,
+            env,
             onClose: this.handleDialogClose,
             onConfirm: this.handleSignOutConfirm,
         };
@@ -311,24 +293,26 @@ module.exports = React.createClass({
                 {t('project-management-sign-out-are-you-sure')}
             </ConfirmationDialogBox>
         );
-    },
+    }
 
     /**
      * Render message when user joins project
      *
      * @return {ReactElement|null}
      */
-    renderMembershipDialogBox: function() {
-        if (this.state.renderingDialog !== 'membership') {
+    renderMembershipDialogBox() {
+        let { env, currentUser } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        let { t, g } = env.locale;
+        if (renderingDialog !== 'membership') {
             return null;
         }
-        var t = this.props.locale.translate;
-        var n = this.props.locale.name;
-        var user = this.props.currentUser;
-        var name = n(_.get(user, 'details.name'), _.get(user, 'details.gender'));
-        var props = {
-            show: this.state.showingDialog,
-            locale: this.props.locale,
+        let name = UserUtils.getDisplayName(currentUser, env);
+        let gender = UserUtils.getGender(currentUser);
+        g(name, gender);
+        let props = {
+            show: showingDialog,
+            env,
             onConfirm: this.handleDialogClose,
         };
         return (
@@ -336,196 +320,204 @@ module.exports = React.createClass({
                 {t('membership-request-$you-are-now-member', name)}
             </ConfirmationDialogBox>
         );
-    },
+    }
 
     /**
      * Render project management dialog box
      *
      * @return {ReactElement|null}
      */
-    renderProjectManagementDialogBox: function() {
-        if (this.state.renderingDialog !== 'management') {
+    renderProjectManagementDialogBox() {
+        let { route, env, projectLinks } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        if (renderingDialog !== 'management') {
             return null;
         }
-        var props = {
-            show: this.state.showingDialog,
-            projectLinks: this.props.projectLinks,
-            route: this.props.route,
-            locale: this.props.locale,
+        let props = {
+            show: showingDialog,
+            projectLinks,
+            route,
+            env,
             onDelete: this.handleProjectDelete,
             onCancel: this.handleDialogClose,
         };
         return <ProjectManagementDialogBox {...props} />
-    },
+    }
 
-    handleProjectClick: function(evt) {
-        var key = evt.currentTarget.getAttribute('data-key');
-        var link = _.find(this.props.projectLinks, { key });
+    handleProjectClick = (evt) => {
+        let { route, projectLinks } = this.props;
+        let key = evt.currentTarget.getAttribute('data-key');
+        let link = _.find(projectLinks, { key });
         if (link) {
             // redirect to settings page with new schema, possibly new address
-            var siteAddress = window.location.origin;
-            var params = {
+            let siteAddress = window.location.origin;
+            let context = {
                 address: link.address,
                 schema: link.schema,
                 cors: (siteAddress !== link.address),
             };
-            this.props.route.replace(require('pages/settings-page'), params);
+            route.replace('settings-page', {}, context);
         }
-    },
+    }
 
     /**
      * Called when user clicks add button
      *
      * @param  {Event} evt
      */
-    handleAddClick: function(evt) {
-        this.props.route.push(require('pages/start-page'), { add: true });
-    },
+    handleAddClick = (evt) => {
+        let { route } = this.props;
+        route.push('start-page', { add: true });
+    }
 
     /**
      * Called when user clicks manage list button
      *
      * @param  {Event} evt
      */
-    handleManageClick: function(evt) {
+    handleManageClick = (evt) => {
         this.setState({
             renderingDialog: 'management',
             showingDialog: true,
         });
-    },
+    }
 
     /**
      * Called when user clicks description button
      *
      * @param  {Event} evt
      */
-    handleSystemDescriptionClick: function(evt) {
+    handleSystemDescriptionClick = (evt) => {
         this.setState({
             renderingDialog: 'system-description',
             showingDialog: true,
         });
-    },
+    }
 
     /**
      * Called when user clicks description button
      *
      * @param  {Event} evt
      */
-    handleProjectDescriptionClick: function(evt) {
+    handleProjectDescriptionClick = (evt) => {
         this.setState({
             renderingDialog: 'project-description',
             showingDialog: true,
         });
-    },
+    }
 
     /**
      * Called when user clicks mobile-setup button
      *
      * @param  {Event} evt
      */
-    handleMobileSetupClick: function(evt) {
+    handleMobileSetupClick = (evt) => {
         this.setState({
             renderingDialog: 'mobile-setup',
             showingDialog: true,
         });
-    },
+    }
 
     /**
      * Called when user clicks withdraw-request button
      *
      * @param  {Event} evt
      */
-    handleJoinClick: function(evt) {
-        var userAfter = _.cloneDeep(this.props.currentUser);
-        userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ this.props.currentProject.id ]);
-        if (this.props.onChange) {
-            this.props.onChange({
+    handleJoinClick = (evt) => {
+        let { currentUser, currentProject, onChange } = this.props;
+        let userAfter = _.cloneDeep(currentUser);
+        userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ currentProject.id ]);
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 user: userAfter
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks join-project button
      *
      * @param  {Event} evt
      */
-    handleCancelJoinClick: function(evt) {
-        var userAfter = _.cloneDeep(this.props.currentUser);
-        _.pull(userAfter.requested_project_ids, this.props.currentProject.id);
-        if (this.props.onChange) {
-            this.props.onChange({
+    handleCancelJoinClick = (evt) => {
+        let { currentUser, currentProject, onChange } = this.props;
+        let userAfter = _.cloneDeep(currentUser);
+        _.pull(userAfter.requested_project_ids, currentProject.id);
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 user: userAfter
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks sign-out button
      *
      * @param  {Event} evt
      */
-    handleSignOutClick: function(evt) {
+    handleSignOutClick = (evt) => {
         this.setState({
             renderingDialog: 'sign-out',
             showingDialog: true,
         });
-    },
+    }
 
     /**
      * Called when user closes a dialog box
      *
      * @param  {Object} evt
      */
-    handleDialogClose: function(evt) {
+    handleDialogClose = (evt) => {
         this.setState({ showingDialog: false }, () => {
             setTimeout(() => {
                 this.setState({ renderingDialog: null });
             }, 500);
         });
-    },
+    }
 
     /**
      * Called when user choose to remove selected projects
      *
      * @param  {Object} evt
      */
-    handleProjectDelete: function(evt) {
+    handleProjectDelete = (evt) => {
         this.handleDialogClose();
 
         // redirect to start page if the current project was removed
-        var params = this.props.route.parameters;
-        var removingCurrent = _.includes(evt.selection, `${params.address}/${params.schema}`);
-        var links = _.map(evt.selection, (key) => { return { key } });
-        var db = this.props.database.use({ by: this });
+        let { database, route } = this.props;
+        let context = route.context;
+        let removingCurrent = _.includes(evt.selection, `${context.address}/${context.schema}`);
+        let links = _.map(evt.selection, (key) => { return { key } });
+        let db = database.use({ by: this });
         db.remove({ schema: 'local', table: 'project_link' }, links).then(() => {
             if (removingCurrent) {
-                return this.props.route.replace(require('pages/start-page'));
+                return route.replace('start-page');
             }
         });
-    },
+    }
 
     /**
      * Called when user confirms his intention to sign out
      *
      * @param {Object} evt
      */
-    handleSignOutConfirm: function(evt) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ by: this });
+    handleSignOutConfirm = (evt) => {
+        let { database, route, projectLinks } = this.props;
+        let context = route.context;
+        let db = database.use({ by: this });
         db.endSession().then(() => {
             // delete links of all projects on server
-            var serverLinks = _.filter(this.props.projectLinks, { address: params.address });
+            let serverLinks = _.filter(projectLinks, { address: context.address });
             return db.remove({ schema: 'local', table: 'project_link' }, serverLinks).then(() => {
-                return this.props.route.replace(require('pages/start-page'));
+                return route.replace('start-page');
             });
         });
-    },
-});
+    }
+}
 
 function SupplementalProjectOption(props) {
     if (props.hidden) {
@@ -539,4 +531,30 @@ function SupplementalProjectOption(props) {
             </span>
         </div>
     );
+}
+
+export {
+    ProjectPanel as default,
+    ProjectPanel,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ProjectPanel.propTypes = {
+        system: PropTypes.object,
+        currentUser: PropTypes.object,
+        currentProject: PropTypes.object,
+        projectLinks: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onChange: PropTypes.func,
+    };
 }

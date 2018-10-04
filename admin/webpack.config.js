@@ -75,12 +75,12 @@ module.exports = {
                 exclude: /node_modules/,
                 query: {
                     presets: [
-                        'babel-preset-es2015',
-                        'babel-preset-react',
-                    ].map(require.resolve),
+                        'env',
+                        'stage-0',
+                        'react',
+                    ],
                     plugins: [
-                        'babel-plugin-syntax-dynamic-import'
-                    ].map(require.resolve),
+                    ],
                 }
             },
             {
@@ -104,7 +104,12 @@ module.exports = {
                                 },
                             }
                         },
-                        'sass-loader',
+                        {
+                            loader: 'sass-loader',
+                            options: {
+                                includePaths: [ resolve('../common/node_modules') ]
+                            }
+                        }
                     ],
                 }),
             },
@@ -199,6 +204,33 @@ function resolve(path) {
     if (_.isArray(path)) {
         return _.map(path, resolve);
     } else {
-        return Path.resolve(`${__dirname}/${path}`);
+        return `${__dirname}/${path}`;
     }
 }
+
+function resolveBabel(type, module) {
+    if (module instanceof Array) {
+        module[0] = resolve(type, module[0]);
+        return module;
+    } else {
+        if (!/^[\w\-]+$/.test(module)) {
+            return module;
+        }
+        return Path.resolve(`../common/node_modules/babel-${type}-${module}`);
+    }
+}
+
+module.exports.module.rules.forEach((rule) => {
+    if (rule.loader === 'babel-loader' && rule.query) {
+        if (rule.query.presets) {
+            rule.query.presets = rule.query.presets.map((preset) => {
+                return resolveBabel('preset', preset);
+            })
+        }
+        if (rule.query.plugins) {
+            rule.query.plugins = rule.query.plugins.map((plugin) => {
+                return resolveBabel('plugin', plugin);
+            })
+        }
+    }
+});

@@ -1,14 +1,7 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
+import _ from 'lodash';
+import Promise from 'bluebird';
 
-module.exports = {
-    getDevices,
-    hasDevice,
-    addEventListener,
-    removeEventListener,
-};
-
-var availableDevices = [];
+let availableDevices = [];
 
 /**
  * Return a list of video or audio capture devices
@@ -38,11 +31,11 @@ function hasDevice(kind) {
         // since this should only happen on the an iPhone or a Mac
         return true;
     }
-    var devices = getDevices(kind);
+    let devices = getDevices(kind);
     return devices.length > 0;
 }
 
-var eventListeners = [];
+let eventListeners = [];
 
 /**
  * Add event listener
@@ -95,3 +88,10 @@ scan().then(() => {
         navigator.mediaDevices.addEventListener('devicechange', scan);
     }
 });
+
+export {
+    getDevices,
+    hasDevice,
+    addEventListener,
+    removeEventListener,
+};

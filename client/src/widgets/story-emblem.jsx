@@ -1,13 +1,14 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var StoryTypes = require('objects/types/story-types');
+import _ from 'lodash';
+import React from 'react';
+import { GitStoryTypes, StoryIcons } from 'objects/types/story-types';
 
-module.exports = StoryEmblem;
-
-require('./story-emblem.scss');
+import './story-emblem.scss';
 
 function StoryEmblem(props) {
-    if (_.includes(props.story.tags, '#yippeekiyay')) {
+    let { story } = props;
+    let { type, tags } = story;
+    let { state } = story.details;
+    if (_.includes(tags, '#yippeekiyay')) {
         return (
             <div className="story-emblem die-hard">
                 <img src={require('explosion.gif')} />
@@ -15,17 +16,15 @@ function StoryEmblem(props) {
         );
     }
 
-    var type = props.story.type;
-    var className = 'story-emblem';
-    if (_.includes(StoryTypes.git, type)) {
+    let className = 'story-emblem';
+    if (_.includes(GitStoryTypes, type)) {
         className += ' git';
     } else {
         return null;
     }
-    var Icon = StoryTypes.icons[type];
+    let Icon = StoryIcons[type];
     if (type === 'issue') {
-        var state = props.story.details.state;
-        Icon = StoryTypes.icons[type + '.' + state];
+        Icon = StoryIcons[type + '.' + state];
     }
     if (!Icon) {
         return null;
@@ -37,6 +36,15 @@ function StoryEmblem(props) {
     );
 }
 
-StoryEmblem.propTypes = {
-    story: PropTypes.object.isRequired,
+export {
+    StoryEmblem as default,
+    StoryEmblem,
 };
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryEmblem.propTypes = {
+        story: PropTypes.object.isRequired,
+    };
+}

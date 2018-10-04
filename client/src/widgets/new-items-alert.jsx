@@ -1,68 +1,62 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var ReactDOM = require('react-dom');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import ReactDOM from 'react-dom';
 
+import './new-items-alert.scss';
 
-var Route = require('routing/route');
-
-require('./new-items-alert.scss');
-
-module.exports = React.createClass({
-    displayName: 'NewItemsAlertProxy',
-    propTypes: {
-        hash: PropTypes.string,
-        route: PropTypes.instanceOf(Route).isRequired,
-        onClick: PropTypes.func,
-    },
+class NewItemsAlertProxy extends PureComponent {
+    static displayName = 'NewItemsAlertProxy';
 
     /**
      * Do not render anything
      *
      * @return {null}
      */
-    render: function() {
+    render() {
         return null;
-    },
+    }
 
     /**
      * Draw the alert if component is show on mount
      */
-    componentDidMount: function() {
-        if (this.props.hash) {
+    componentDidMount() {
+        let { url } = this.props;
+        if (url) {
             this.show(this.props);
         }
-    },
+    }
 
     /**
      * Show or hide the actual element when props.show changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (!this.props.hash && nextProps.hash) {
+    componentWillReceiveProps(nextProps) {
+        let { url, children } = this.props;
+        if (!url && nextProps.url) {
             this.show(nextProps);
-        } else if (this.props.hash && !nextProps.hash) {
+        } else if (url && !nextProps.url) {
             this.hide(this.props);
-        } else if (this.props.children !== nextProps.children || this.props.hash !== nextProps.hash) {
-            if (nextProps.hash) {
+        } else if (nextProps.children !== children || nextProps.url !== url) {
+            if (nextProps.url) {
                 this.redraw(nextProps, true);
             }
         }
-    },
+    }
 
     /**
      * Remove the alert on unmount
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         this.hide(this.props);
-    },
+    }
 
     /**
      * Render the actual component into the viewport element
      *
      * @param  {Object} props
      */
-    show: function(props) {
+    show(props) {
         if (!this.containerNode) {
             this.containerNode = document.createElement('DIV');
             this.viewport = document.getElementsByClassName('page-view-port')[0];
@@ -77,7 +71,7 @@ module.exports = React.createClass({
         setTimeout(() => {
             this.redraw(props, true);
         }, 10);
-    },
+    }
 
     /**
      * Redraw the actual component
@@ -85,17 +79,17 @@ module.exports = React.createClass({
      * @param  {Object} props
      * @param  {Boolean} show
      */
-    redraw: function(props, show) {
-        var route = this.props.route;
+    redraw(props, show) {
+        let { route } = this.props;
         ReactDOM.render(<NewItemsAlert {...props} show={show} />, this.containerNode);
-    },
+    }
 
     /**
      * Remove the actual component from the viewport element
      *
      * @param  {Object} props
      */
-    hide: function(props) {
+    hide(props) {
         if (!this.containerNode) {
             return;
         }
@@ -109,14 +103,14 @@ module.exports = React.createClass({
             }, 500);
         }
         this.redraw(props, false);
-    },
-});
+    }
+}
 
 function NewItemsAlert(props) {
-    var url = _.replace(props.route.url, /#(.*)/, '');
-    var anchorProps = {
+    let { url } = props;
+    let anchorProps = {
         className: `new-items-alert ${props.show ? 'show' : 'hide'}`,
-        href: url + '#' + props.hash,
+        href: url,
         onClick: props.onClick,
     };
     return (
@@ -125,4 +119,21 @@ function NewItemsAlert(props) {
             {props.children}
         </a>
     );
+}
+
+export {
+    NewItemsAlertProxy as default,
+    NewItemsAlertProxy,
+    NewItemsAlert,
+};
+
+import Route from 'routing/route';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    NewItemsAlertProxy.propTypes = {
+        url: PropTypes.string,
+        onClick: PropTypes.func,
+    };
 }

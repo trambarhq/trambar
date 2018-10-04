@@ -1,23 +1,20 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react');
-var Chai = require('chai'), expect = Chai.expect;
-var Enzyme = require('enzyme');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import { expect } from 'chai';
 
-var IndexedDBCache = require('data/indexed-db-cache');
+import IndexedDBCache from 'data/indexed-db-cache';
 
 describe('IndexedDBCache', function() {
-    var wrapper = Enzyme.mount(<IndexedDBCache databaseName="test"/>);
-    var cache = wrapper.instance();
+    let cache = new IndexedDBCache({ databaseName: 'test' });
 
     describe('#save()', function() {
         it('should save an object to IndexedDB', function() {
-            var location = {
+            let location = {
                 address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
-            var object = {
+            let object = {
                 id: 1,
                 gn: 2,
                 type: 'admin',
@@ -30,12 +27,12 @@ describe('IndexedDBCache', function() {
             return cache.save(location, [ object ]);
         })
         it('should overwrite an existing object', function() {
-            var location = {
+            let location = {
                 address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
-            var object = {
+            let object = {
                 id: 1,
                 gn: 2,
                 type: 'admin',
@@ -48,12 +45,12 @@ describe('IndexedDBCache', function() {
             return cache.save(location, [ object ]);
         })
         it('should save multiple objects', function() {
-            var location = {
+            let location = {
                 address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
-            var object1 = {
+            let object1 = {
                 id: 2,
                 gn: 2,
                 type: 'member',
@@ -63,7 +60,7 @@ describe('IndexedDBCache', function() {
                 },
                 rtime: ISODate('2017-02-01'),
             };
-            var object2 = {
+            let object2 = {
                 id: 3,
                 gn: 2,
                 type: 'member',
@@ -76,11 +73,11 @@ describe('IndexedDBCache', function() {
             return cache.save(location, [ object1, object2 ]);
         })
         it('should save an object to local schema', function() {
-            var location = {
+            let location = {
                 schema: 'local',
                 table: 'settings',
             };
-            var object = {
+            let object = {
                 key: 'what',
                 something: 5
             };
@@ -89,7 +86,7 @@ describe('IndexedDBCache', function() {
     })
     describe('#find()', function() {
         it('should be able to find object saved earlier', function() {
-            var query = {
+            let query = {
                 address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
@@ -102,7 +99,7 @@ describe('IndexedDBCache', function() {
             });
         })
         it('should be able to find object by multiple ids', function() {
-            var query = {
+            let query = {
                 address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
@@ -115,7 +112,7 @@ describe('IndexedDBCache', function() {
             });
         })
         it('should find object by other criteria', function() {
-            var query = {
+            let query = {
                 address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
@@ -128,7 +125,7 @@ describe('IndexedDBCache', function() {
             });
         })
         it('should find object saved earlier to local schema', function() {
-            var query = {
+            let query = {
                 schema: 'local',
                 table: 'settings',
                 key: 'what'
@@ -140,12 +137,12 @@ describe('IndexedDBCache', function() {
     })
     describe('#remove()', function() {
         it('should remove an object saved earlier', function() {
-            var location = {
+            let location = {
                 address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
-            var object = {
+            let object = {
                 id: 1,
                 gn: 2,
                 type: 'admin',
@@ -156,7 +153,7 @@ describe('IndexedDBCache', function() {
                 rtime: ISODate('2017-01-01'),
             };
             return cache.remove(location, [ object ]).then((objects) => {
-                var query = {
+                let query = {
                     address: 'http://somewhere.net',
                     schema: 'global',
                     table: 'user',
@@ -170,16 +167,16 @@ describe('IndexedDBCache', function() {
             })
         })
         it('should remove an object saved to local schema earlier', function() {
-            var location = {
+            let location = {
                 schema: 'local',
                 table: 'settings',
             };
-            var object = {
+            let object = {
                 key: 'what',
                 something: 5
             };
             return cache.remove(location, [ object ]).then((objects) => {
-                var query = {
+                let query = {
                     schema: 'local',
                     table: 'settings',
                     key: 'what'
@@ -192,16 +189,16 @@ describe('IndexedDBCache', function() {
     })
     describe('#clean()', function() {
         it('should remove objects by server name', function() {
-            var location1 = {
+            let location1 = {
                 schema: 'global',
                 table: 'comment',
             };
-            var location2 = {
+            let location2 = {
                 address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
-            var objects = _.map(_.range(1, 11), (num) => {
+            let objects = _.map(_.range(1, 11), (num) => {
                 return {
                     id: num,
                     rtime: ISODate(`1990-01-${num}`),
@@ -225,16 +222,16 @@ describe('IndexedDBCache', function() {
             });
         })
         it('should remove certain number of old objects', function() {
-            var location1 = {
+            let location1 = {
                 schema: 'global',
                 table: 'comment',
             };
-            var location2 = {
+            let location2 = {
                 address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
-            var objects = _.map(_.range(1, 11), (num) => {
+            let objects = _.map(_.range(1, 11), (num) => {
                 return {
                     id: num,
                     rtime: ISODate(`1990-01-${num}`),
@@ -258,16 +255,16 @@ describe('IndexedDBCache', function() {
             });
         })
         it('should remove objects older than a certain date', function() {
-            var location1 = {
+            let location1 = {
                 schema: 'global',
                 table: 'comment',
             };
-            var location2 = {
+            let location2 = {
                 address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
-            var objects = _.map(_.range(1, 11), (num) => {
+            let objects = _.map(_.range(1, 11), (num) => {
                 return {
                     id: num,
                     rtime: ISODate(`1990-01-${num}`),

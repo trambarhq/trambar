@@ -1,10 +1,7 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
+import _ from 'lodash';
+import Promise from 'bluebird';
 
-module.exports = {
-    findReactionsToStories,
-};
+const emptyArray = [];
 
 /**
  * Find reactions to given stories
@@ -17,18 +14,22 @@ module.exports = {
  * @return {Promise<Array<Reaction>>}
  */
 function findReactionsToStories(db, stories, currentUser, minimum) {
-    var storyIds = _.filter(_.uniq(_.map(stories, 'id')), (id) => {
+    var storyIDs = _.filter(_.uniq(_.map(stories, 'id')), (id) => {
         return (id >= 1);
     });
-    if (_.isEmpty(storyIds) || !currentUser) {
-        return Promise.resolve(Empty.array);
+    if (_.isEmpty(storyIDs) || !currentUser) {
+        return Promise.resolve(emptyArray);
     }
     return db.find({
         table: 'reaction',
         criteria: {
-            story_id: storyIds,
+            story_id: storyIDs,
             public: (currentUser.type === 'guest') ? true : undefined
         },
         minimum
     });
 }
+
+export {
+    findReactionsToStories,
+};

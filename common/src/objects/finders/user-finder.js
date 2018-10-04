@@ -1,21 +1,7 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
+import _ from 'lodash';
+import Promise from 'bluebird';
 
-module.exports = {
-    findUser,
-    findUsers,
-    findAllUsers,
-    findUsersWithRoles,
-    findProjectMembers,
-    findExistingUsers,
-    findActiveUsers,
-    findStoryAuthors,
-    findReactionAuthors,
-    findBookmarkRecipients,
-    findBookmarkSenders,
-    findNotificationTriggerers,
-};
+const emptyArray = [];
 
 /**
  * Find a user by ID
@@ -44,7 +30,7 @@ function findUser(db, id) {
  */
 function findUsers(db, ids) {
     if (_.isEmpty(ids)) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -80,14 +66,14 @@ function findAllUsers(db, minimum) {
  * @return {Promise<User>}
  */
 function findProjectMembers(db, projects) {
-    var userIds;
+    let userIDs;
     if (projects instanceof Array) {
-        userIds = _.flatten(_.map(projects, 'user_ids'));
+        userIDs = _.flatten(_.map(projects, 'user_ids'));
     } else {
-        var project = projects;
-        userIds = _.get(project, 'user_ids');
+        let project = projects;
+        userIDs = _.get(project, 'user_ids');
     }
-    return findUsers(db, userIds);
+    return findUsers(db, userIDs);
 }
 
 /**
@@ -137,7 +123,7 @@ function findActiveUsers(db, minimum) {
  * @return {Promise<User>}
  */
 function findUsersWithRoles(db, roles, minimum) {
-    var ids = _.map(roles, 'id');
+    let ids = _.map(roles, 'id');
     ids = _.sortBy(_.uniq(ids));
     return db.find({
         schema: 'global',
@@ -156,8 +142,8 @@ function findUsersWithRoles(db, roles, minimum) {
  * @return {Promise<User>}
  */
 function findStoryAuthors(db, stories) {
-    var userIds = _.flatten(_.map(stories, 'user_ids'));
-    return findUsers(db, userIds);
+    let userIDs = _.flatten(_.map(stories, 'user_ids'));
+    return findUsers(db, userIDs);
 }
 
 /**
@@ -169,8 +155,8 @@ function findStoryAuthors(db, stories) {
  * @return {Promise<User>}
  */
 function findReactionAuthors(db, reactions) {
-    var userIds = _.map(reactions, 'user_id');
-    return findUsers(db, userIds);
+    let userIDs = _.map(reactions, 'user_id');
+    return findUsers(db, userIDs);
 }
 
 /**
@@ -182,8 +168,8 @@ function findReactionAuthors(db, reactions) {
  * @return {Promise<User>}
  */
 function findBookmarkRecipients(db, bookmarks) {
-    var userIds = _.map(bookmarks, 'target_user_id');
-    return findUsers(db, userIds);
+    let userIDs = _.map(bookmarks, 'target_user_id');
+    return findUsers(db, userIDs);
 }
 
 /**
@@ -195,8 +181,8 @@ function findBookmarkRecipients(db, bookmarks) {
  * @return {Promise<User>}
  */
 function findBookmarkSenders(db, bookmarks) {
-    var userIds = _.flatten(_.map(bookmarks, 'user_ids'));
-    return findUsers(db, userIds);
+    let userIDs = _.flatten(_.map(bookmarks, 'user_ids'));
+    return findUsers(db, userIDs);
 }
 
 /**
@@ -208,6 +194,21 @@ function findBookmarkSenders(db, bookmarks) {
  * @return {Promise<User>}
  */
 function findNotificationTriggerers(db, notifications) {
-    var userIds = _.map(notifications, 'user_id');
-    return findUsers(db, userIds);
+    let userIDs = _.map(notifications, 'user_id');
+    return findUsers(db, userIDs);
 }
+
+export {
+    findUser,
+    findUsers,
+    findAllUsers,
+    findUsersWithRoles,
+    findProjectMembers,
+    findExistingUsers,
+    findActiveUsers,
+    findStoryAuthors,
+    findReactionAuthors,
+    findBookmarkRecipients,
+    findBookmarkSenders,
+    findNotificationTriggerers,
+};

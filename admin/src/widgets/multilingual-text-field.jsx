@@ -1,188 +1,172 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var AutosizeTextArea = require('widgets/autosize-text-area');
+import AutosizeTextArea from 'widgets/autosize-text-area';
 
-require('./multilingual-text-field.scss');
+import './multilingual-text-field.scss';
 
-module.exports = React.createClass({
-    displayName: 'MultilingualTextField',
-    propTypes: {
-        type: PropTypes.string,
-        value: PropTypes.oneOfType([
-            PropTypes.object,
-            PropTypes.string,
-        ]),
-        availableLanguageCodes: PropTypes.arrayOf(PropTypes.string),
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onChange: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            type: 'text',
-            value: {},
-            availableLanguageCodes: [],
-        };
-    },
+class MultilingualTextField extends PureComponent {
+    static displayName = 'MultilingualTextField';
 
     /**
      * Return initial state of component
      *
      * @return {Object}
      */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
+        let { env, value, availableLanguageCodes } = props;
+        let { languageCode } = env.locale;
         // choose initial language
-        var existing = _.keys(this.props.value);
-        var available = this.props.availableLanguageCodes;
-        var current = this.props.locale.languageCode;
-        var selected;
-        if (_.includes(existing, current)) {
+        let existingLanguageCodes = _.keys(value);
+        let selected;
+        if (_.includes(existingLanguageCodes, languageCode)) {
             // if there's existing text of the current language, use it
-            selected = current;
-        } else if (!_.isEmpty(existing)) {
+            selected = languageCode;
+        } else if (!_.isEmpty(existingLanguageCodes)) {
             // otherwise choose the first language of any existing text
-            selected = existing[0];
-        } else if (_.includes(available, current)) {
+            selected = existingLanguageCodes[0];
+        } else if (_.includes(availableLanguageCodes, languageCode)) {
             // if there's no text, use the current language if it's in the list
             // of available languages
-            selected = current;
-        } else if (!_.isEmpty(available)) {
+            selected = languageCode;
+        } else if (!_.isEmpty(availableLanguageCodes)) {
             // otherwise use the first language on that list
-            selected = available[0];
+            selected = availableLanguageCodes[0];
         } else {
             // if all else failed, use current language
-            selected = current;
+            selected = languageCode;
         }
-        return {
+        this.state = {
             selectedLanguageCode: selected,
             hoverLanguageCode: null,
             expandedByMouseOver: false,
             expandedByTouch: false,
             arrowPosition: 0,
         };
-    },
+    }
 
     /**
      * Return languages available
      *
      * @return {Array<String>}
      */
-    getLanguages: function() {
-        var existing = _.keys(this.props.value);
-        var available = this.props.availableLanguageCodes;
-        var codes = _.union(available, existing);
+    getLanguages() {
+        let { env, value, availableLanguageCodes } = this.props;
+        let { languageCode, directory } = env.locale;
+        let existingLanguageCodes = _.keys(value);
+        let codes = _.union(availableLanguageCodes, existingLanguageCodes);
         if (codes.length === 0) {
-            codes.push(this.props.locale.languageCode);
+            codes.push(languageCode);
         }
-        var hash = _.keyBy(this.props.locale.directory, 'code');
+        // include only codes of support languages
+        let hash = _.keyBy(directory, 'code');
         return _.filter(_.map(codes, (code) => {
             return hash[code];
         }));
-    },
+    }
 
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.locale !== nextProps.locale) {
-            // which to the language of the new locale if it's
+    /**
+     * Check for locale changes
+     *
+     * @param  {Object} nextProps
+     */
+    componentWillReceiveProps(nextProps) {
+        let { env, availableLanguageCodes } = this.props;
+        if (nextProps.env.locale !== env.locale) {
+            // switch to the language of the new locale if it's
             // one of the available languages
-            var lang = nextProps.locale.languageCode;
-            var available = this.props.availableLanguageCodes;
-            if (_.includes(available, lang)) {
-                this.setState({ selectedLanguageCode: lang });
+            let languageCode = nextProps.env.locale.languageCode;
+            if (_.includes(availableLanguageCodes, languageCode)) {
+                this.setState({ selectedLanguageCode: languageCode });
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var classNames = [ 'multilingual-text-field' ];
-        var Input = 'input';
-        var inputProps = _.omit(this.props, 'children', 'availableLanguageCodes', 'locale');
-        if (this.props.type === 'textarea') {
+    render() {
+        let { env, value, type, id, children, readOnly } = this.props;
+        let { selectedLanguageCode, expandedByMouseOver, expandedByTouch } = this.state;
+        let { t } = env.locale;
+        let classNames = [ 'multilingual-text-field' ];
+        let Input = 'input';
+        let inputProps = _.omit(this.props, 'children', 'availableLanguageCodes', 'env');
+        if (type === 'textarea') {
             Input = AutosizeTextArea;
             inputProps = _.omit(inputProps, 'type');
         }
-        if (this.props.readOnly) {
+        if (readOnly) {
             classNames.push('readonly');
-            if (!(this.state.expandedByMouseOver || this.state.expandedByTouch)) {
+            if (!(expandedByMouseOver || expandedByTouch)) {
                 classNames.push('collapsed');
             }
-            var t = this.props.locale.translate;
             inputProps.placeholder = t('text-field-placeholder-none');
             inputProps.spellCheck = false;
         }
-        var languages = this.getLanguages();
+        let languages = this.getLanguages();
         if (languages.length > 1) {
             classNames.push('multiple-languages');
         }
-        if (this.props.value instanceof Object) {
-            inputProps.value = this.props.value[this.state.selectedLanguageCode] || '';
-        } else if (typeof(this.props.value) === 'string') {
-            inputProps.value = this.props.value;
+        if (value instanceof Object) {
+            inputProps.value = value[selectedLanguageCode] || '';
+        } else if (typeof(value) === 'string') {
+            inputProps.value = value;
         } else {
             inputProps.value = '';
         }
-        if (inputProps.value && inputProps.spellCheck === false) {
-            // force redraw by adding zero-width no-break space
-            inputProps.value += '\ufeff';
-        }
-        inputProps.lang = this.state.selectedLangaugeCode;
+        inputProps.lang = selectedLanguageCode;
         inputProps.onChange = this.handleTextChange;
         return (
             <div className={classNames.join(' ')}>
-                <label htmlFor={this.props.id}>{this.props.children}</label>
+                <label htmlFor={id}>{children}</label>
                 <Input {...inputProps} />
                 {this.renderTabs()}
             </div>
         );
-    },
+    }
 
     /**
      * Render language tabs
      *
      * @return {ReactElement|null}
      */
-    renderTabs: function() {
-        var languages = this.getLanguages();
+    renderTabs() {
+        let languages = this.getLanguages();
         if (languages.length <= 1) {
             return null;
         }
         return (
             <div className="tabs">
-                {_.map(languages, this.renderTab)}
+                {
+                    _.map(languages, (language, i) => {
+                        return this.renderTab(language, i);
+                    })
+                }
                 {this.renderPopup()}
             </div>
         );
-    },
+    }
 
     /**
      * Render language tab
      *
      * @return {ReactElement}
      */
-    renderTab: function(language, i) {
-        var props = {
+    renderTab(language, i) {
+        let { selectedLanguageCode } = this.state;
+        let props = {
             className: 'tab',
             lang: language.code,
             onClick: this.handleLanguageClick,
             onMouseOver: this.handleLanguageMouseOver,
             onMouseOut: this.handleLanguageMouseOut,
         };
-        if (language.code === this.state.selectedLanguageCode) {
+        if (language.code === selectedLanguageCode) {
             props.className += ' selected';
             props.onClick = props.onMouseOver = props.onMouseOut = null;
         }
@@ -191,105 +175,139 @@ module.exports = React.createClass({
                 {language.name}
             </div>
         );
-    },
+    }
 
     /**
      * Render mouseover popup bubble
      *
      * @return {ReactElement|null}
      */
-    renderPopup: function() {
-        if (!this.state.hoverLanguageCode || this.props.readOnly) {
+    renderPopup() {
+        let { value, readyOnly } = this.props;
+        let { hoverLanguageCode, arrowPosition } = this.state;
+        if (!hoverLanguageCode || readOnly) {
             return null;
         }
-        var contents = this.props.value[this.state.hoverLanguageCode];
+        let contents = value[hoverLanguageCode];
         if (!_.trim(contents)) {
             return null;
         }
         return (
             <div className="bubble">
-                <div className="arrow" style={{ left: this.state.arrowPosition }} />
+                <div className="arrow" style={{ left: arrowPosition }} />
                 <div className="box">
                     {contents}
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Called when user edits the text
      *
      * @param  {Event} evt
      */
-    handleTextChange: function(evt) {
-        var text = evt.target.value;
-        var lang = this.state.selectedLanguageCode;
+    handleTextChange = (evt) => {
+        let { value, availableLanguageCodes, onChange } = this.props;
+        let { selectedLanguageCode } = this.state;
+        let text = evt.target.value;
         if (text) {
-            if (this.props.value instanceof Object) {
-                this.value = _.clone(this.props.value);
-            } else if (typeof(this.props.value) === 'string') {
+            if (value instanceof Object) {
+                value = _.clone(value);
+            } else if (typeof(value) === 'string') {
                 // convert a string to a multi-lingual object
-                this.value = _.transform(this.props.availableLanguageCodes, (text, code) => {
-                    text[code] = this.props.value;
+                value = _.transform(availableLanguageCodes, (text, code) => {
+                    text[code] = value;
                 }, {});
             } else {
-                this.value = {};
+                value = {};
             }
-            this.value[lang] = text;
+            value[selectedLanguageCode] = text;
         } else {
-            this.value = _.omit(this.props.value, lang);
-            if (!_.includes(this.props.availableLanguageCodes, lang)) {
-                // choose a new language when text of a no-longer-available
-                // language is removed
-                var language = _.first(this.getLanguages());
-                if (language) {
-                    this.setState({ selectedLanguageCode: language.code });
+            if (value instanceof Object) {
+                value = _.omit(value, selectedLanguageCode);
+                if (!_.includes(availableLanguageCodes, selectedLanguageCode)) {
+                    // choose a new language when text of a no-longer-available
+                    // language is removed
+                    let language = _.first(this.getLanguages());
+                    if (language) {
+                        this.setState({ selectedLanguageCode: language.code });
+                    }
                 }
+            } else {
+                value = {};
             }
         }
-        if (this.props.onChange) {
-            this.props.onChange({
+        this.value = value;
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks on a language tab
      *
      * @param  {Event} evt
      */
-    handleLanguageClick: function(evt) {
-        var lang = evt.currentTarget.lang;
+    handleLanguageClick = (evt) => {
+        let lang = evt.currentTarget.lang;
         this.setState({ selectedLanguageCode: lang, hoverLanguageCode: null });
-    },
+    }
 
     /**
      * Called when user moves mouse cursor over a language tab
      *
      * @param  {Event} evt
      */
-    handleLanguageMouseOver: function(evt) {
-        var tab = evt.currentTarget;
-        var tabs = tab.parentNode;
-        var tabsRect = tabs.getBoundingClientRect();
-        var tabRect = tab.getBoundingClientRect();
-        var pos = tabRect.left + (tabRect.width / 2) - tabsRect.left;
-        var lang = tab.lang;
+    handleLanguageMouseOver = (evt) => {
+        let tab = evt.currentTarget;
+        let tabs = tab.parentNode;
+        let tabsRect = tabs.getBoundingClientRect();
+        let tabRect = tab.getBoundingClientRect();
+        let pos = tabRect.left + (tabRect.width / 2) - tabsRect.left;
+        let lang = tab.lang;
         this.setState({ hoverLanguageCode: lang, arrowPosition: pos });
-    },
+    }
 
     /**
      * Called when user moves mouse cursor out of a language tab
      *
      * @param  {Event} evt
      */
-    handleLanguageMouseOut: function(evt) {
-        var tab = evt.currentTarget;
-        var lang = tab.lang;
-        if (lang === this.state.hoverLanguageCode) {
+    handleLanguageMouseOut = (evt) => {
+        let { hoverLanguageCode } = this.state;
+        let tab = evt.currentTarget;
+        let lang = tab.lang;
+        if (lang === hoverLanguageCode) {
             this.setState({ hoverLanguageCode: null });
         }
-    },
-});
+    }
+}
+
+MultilingualTextField.defaultProps = {
+    type: 'text',
+    value: {},
+    availableLanguageCodes: [],
+};
+
+export {
+    MultilingualTextField as default,
+    MultilingualTextField,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MultilingualTextField.propTypes = {
+        type: PropTypes.string,
+        value: PropTypes.oneOfType([ PropTypes.object, PropTypes.string ]),
+        availableLanguageCodes: PropTypes.arrayOf(PropTypes.string),
+        env: PropTypes.instanceOf(Environment).isRequired,
+        onChange: PropTypes.func,
+    };
+}

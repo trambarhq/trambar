@@ -1,174 +1,47 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var BlobManager = require('transport/blob-manager');
-var Payload = require('transport/payload');
-var ImageCropping = require('media/image-cropping');
-var FocusManager = require('utils/focus-manager');
-var ComponentRefs = require('utils/component-refs');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import * as BlobManager from 'transport/blob-manager';
+import Payload from 'transport/payload';
+import * as ImageCropping from 'media/image-cropping';
+import * as FocusManager from 'utils/focus-manager';
+import * as ResourceUtils from 'objects/utils/resource-utils';
+import ComponentRefs from 'utils/component-refs';
 
 // widgets
-var ImageCropper = require('widgets/image-cropper');
+import ImageCropper from 'widgets/image-cropper';
 
-require('./image-editor.scss');
+import './image-editor.scss';
 
-module.exports = React.createClass({
-    displayName: 'ImageEditor',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        resource: PropTypes.object,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        previewWidth: PropTypes.number,
-        previewHeight: PropTypes.number,
-        disabled: PropTypes.bool,
-        onChange: PropTypes.func,
-    },
+class ImageEditor extends PureComponent {
+    static displayName = 'ImageEditor';
 
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            previewWidth: 512,
-            previewHeight: 512,
-            disabled: false,
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             imageCropper: ImageCropper,
         });
-        return {
-            fullImageURL: null,
-            loadedImageURL: null,
-            previewImageURL: null,
-            placeholderMessage: null,
-            placeholderIcon: null,
+        this.state = {
+            loadingFullImage: '',
+            fullImageLoaded: '',
         };
-    },
-
-    /**
-     * Prepare the image on mount
-     */
-    componentWillMount: function() {
-        this.prepareImage(this.props.resource, this.props.disabled);
-    },
-
-    /**
-     * Prepare the image when it changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.resource !== nextProps.resource || this.props.disabled !== nextProps.disabled) {
-            this.prepareImage(nextProps.resource, nextProps.disabled);
-        }
-    },
-
-    /**
-     * Load the image if it isn't available locally
-     *
-     * @param  {Object} res
-     * @param  {Boolean} disabled
-     */
-    prepareImage: function(res, disabled) {
-        var newState = {
-            fullImageURL: null,
-            previewImageURL: null,
-            placeholderMessage: null,
-            placeholderIcon: null,
-        };
-        var fullImageRemoteURL = this.props.theme.getImageURL(res, { original: true });
-        if (fullImageRemoteURL) {
-            if (isJSONEncoded(fullImageRemoteURL)) {
-                // a blob that hasn't been uploaded yet
-                var image = parseJSONEncodedURL(fullImageRemoteURL)
-                newState.fullImageURL = image.url;
-            } else {
-                // the remote URL might point to a file we had uploaded
-                var blob = BlobManager.find(fullImageRemoteURL);
-                if (blob) {
-                    newState.fullImageURL = BlobManager.url(blob);
-                }
-            }
-            if (!newState.fullImageURL) {
-                // we don't have a blob--show a preview image (clipped) while the
-                // full image is retrieved
-                newState.previewImageURL = this.props.theme.getImageURL(res, {
-                    width: this.props.previewWidth,
-                    height: this.props.previewHeight
-                });
-
-                // load it, unless control is disabled
-                if (!disabled) {
-                    BlobManager.fetch(fullImageRemoteURL).then((blob) => {
-                        this.setState({
-                            fullImageURL: BlobManager.url(blob),
-                            previewImageURL: null,
-                            placeholderMessage: null,
-                            placeholderIcon: null,
-                        });
-                    });
-                }
-            }
-        }
-        if (!newState.fullImageURL && !newState.previewImageURL) {
-            // image isn't available locally
-            var t = this.props.locale.translate;
-            if (res.width && res.height) {
-                // when the dimensions are known, then the image was available to
-                // the client
-                newState.placeholderMessage = t('image-editor-upload-in-progress');
-                newState.placeholderIcon = 'cloud-upload';
-            } else {
-                if (!res.pending) {
-                    // not pending locally--we're wait for remote action to complete
-                    if (res.type === 'video') {
-                        // poster is being generated in the backend
-                        newState.placeholderMessage = t('image-editor-poster-extraction-in-progress');
-                        newState.placeholderIcon = 'film';
-                    } else if (res.type === 'website') {
-                        // web-site preview is being generated
-                        newState.placeholderMessage = t('image-editor-page-rendering-in-progress');
-                        newState.placeholderIcon = 'file-image-o';
-                    }
-                }
-            }
-        }
-        if (!_.isMatch(this.state, newState)) {
-            this.setState(newState);
-        }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
+        let { children } = this.props
         return (
             <div className="image-editor">
                 {this.renderImage()}
                 {this.renderSpinner()}
-                {this.props.children}
+                {children}
             </div>
         );
-    },
+    }
 
     /**
      * Render image cropper if full image is available; otherwise render
@@ -176,174 +49,264 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderImage: function() {
-        if (this.state.fullImageURL) {
+    renderImage() {
+        let localURL = this.getLocalImageURL();
+        let previewURL = this.getPreviewImageURL();
+        if (localURL) {
             return this.renderImageCropper();
-        } else if (this.state.previewImageURL) {
+        } else if (previewURL) {
             return this.renderPreviewImage();
         } else {
             return this.renderPlaceholder();
         }
-    },
+    }
 
     /**
      * Render preview image when we don't have the full image yet
      *
      * @return {ReactElement}
      */
-    renderPreviewImage: function() {
-        var className = 'preview';
-        if (this.props.disabled) {
+    renderPreviewImage() {
+        let { previewWidth, previewHeight, disabled } = this.props;
+        let previewURL = this.getPreviewImageURL();
+        let className = 'preview';
+        if (disabled) {
             className += ' disabled';
         }
-        var imageProps = {
-            src: this.state.previewImageURL,
-            width: this.props.previewWidth,
-            height: this.props.previewHeight
+        let imageProps = {
+            src: previewURL,
+            width: previewWidth,
+            height: previewHeight
         };
         return (
             <div className={className}>
                 <img {...imageProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render a spinner until full image is loaded
      *
      * @return {ReactElement|null}
      */
-    renderSpinner: function() {
-        if (this.props.disabled) {
+    renderSpinner() {
+        let { disabled } = this.props;
+        if (disabled) {
             return null;
         }
-        if (this.state.plaeholderMessage || this.state.placeholderIcon) {
+        let localURL = this.getLocalImageURL();
+        let previewURL = this.getPreviewImageURL();
+        if (localURL || !previewURL) {
             return null;
-        } else if (this.state.fullImageURL) {
-            if (this.state.fullImageURL === this.state.loadedImageURL) {
-                return null;
-            }
         }
         return (
             <div className="spinner">
                 <i className="fa fa-refresh fa-spin fa-fw" />
             </div>
         );
-    },
+    }
 
     /**
      * Render image with cropping handling
      *
      * @return {ReactElement}
      */
-    renderImageCropper: function() {
-        var setters = this.components.setters;
-        var res = this.props.resource;
-        var props = {
+    renderImageCropper() {
+        let { resource, disabled } = this.props;
+        let { setters } = this.components;
+        let url = this.getLocalImageURL();
+        let clippingRect = ResourceUtils.getClippingRect(resource, {});
+        let props = {
             ref: setters.imageCropper,
-            url: this.state.fullImageURL,
-            clippingRect: res.clip || ImageCropping.default(res.width, res.height),
-            vector: (res.format === 'svg'),
-            disabled: this.props.disabled,
+            url,
+            clippingRect,
+            vector: (resource.format === 'svg'),
+            disabled,
             onChange: this.handleClipRectChange,
             onLoad: this.handleFullImageLoad,
         };
         return <ImageCropper {...props} />;
-    },
+    }
 
     /**
      * Render message when image isn't available yet
      *
      * @return {ReactELement|null}
      */
-    renderPlaceholder: function() {
-        if (this.state.fullImageURL || this.state.previewImageURL) {
-            return null;
-        }
-        if (!this.state.plaeholderMessage && !this.state.placeholderIcon) {
-            return null;
+    renderPlaceholder() {
+        let { env, resource } = this.props;
+        let { t } = env.locale;
+        let message, icon;
+        if (resource.width && resource.height) {
+            // when the dimensions are known, then the image was available to
+            // the client
+            message = t('image-editor-upload-in-progress');
+            icon = 'cloud-upload';
+        } else {
+            if (!resource.pending) {
+                // not pending locally--we're wait for remote action to complete
+                if (resource.type === 'video') {
+                    // poster is being generated in the backend
+                    message = t('image-editor-poster-extraction-in-progress');
+                    icon = 'film';
+                } else if (resource.type === 'website') {
+                    // web-site preview is being generated
+                    message = t('image-editor-page-rendering-in-progress');
+                    icon = 'file-image-o';
+                }
+            }
         }
         return (
             <div className="placeholder">
                 <div className="icon">
-                    <i className={`fa fa-${this.state.placeholderIcon}`} />
+                    <i className={`fa fa-${icon}`} />
                 </div>
-                <div className="message">{this.state.placeholderMessage}</div>
+                <div className="message">{message}</div>
             </div>
         );
-    },
+    }
 
     /**
      * Register component with FocusManager so focus can be set by other
      */
-    componentDidMount: function() {
+    componentDidMount() {
         FocusManager.register(this, {
             type: 'ImageEditor',
         });
-    },
+        this.componentDidUpdate();
+    }
+
+    /**
+     * Retrieve full image if it's not there
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate(prevProps, prevState) {
+        let { loadingFullImage } = this.state;
+        let localURL = this.getLocalImageURL();
+        let remoteURL = this.getRemoteImageURL();
+        if (!localURL && remoteURL) {
+            if (loadingFullImage !== remoteURL) {
+                this.setState({ loadingFullImage: remoteURL });
+                BlobManager.fetch(remoteURL).then(() => {
+                    this.setState({ fullImageLoaded: remoteURL });
+                });
+            }
+        }
+    }
 
     /**
      * Unregister component
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         FocusManager.unregister(this);
-    },
+    }
+
+    /**
+     * Return URL to original image at server
+     *
+     * @return {String}
+     */
+    getRemoteImageURL() {
+        let { env, resource } = this.props;
+        let params = { remote: true, original: true };
+        return ResourceUtils.getImageURL(resource, params, env);
+    }
+
+    /**
+     * Return URL to blob, either downloaded again from server or a file
+     * just selected by the user
+     *
+     * @return {String|undefined}
+     */
+    getLocalImageURL() {
+        let { env, resource } = this.props;
+        let params = { local: true, original: true };
+        return ResourceUtils.getImageURL(resource, params, env);
+    }
+
+    /**
+     * Return clipped version of image
+     *
+     * @return {String|undefined}
+     */
+    getPreviewImageURL() {
+        let { env, resource, previewWidth, previewHeight } = this.props;
+        let params = { remote: true, width: previewWidth, height: previewHeight };
+        return ResourceUtils.getImageURL(resource, params, env);
+    }
 
     /**
      * Focus image cropper
      */
-    focus: function() {
-        var imageCropper = this.components.imageCropper;
+    focus() {
+        let { imageCropper } = this.components;
         if (imageCropper) {
             imageCropper.focus();
         }
-    },
+    }
 
-    triggerChangeEvent: function(res) {
-        if (this.props.onChange) {
-            this.props.onChange({
+    triggerChangeEvent(resource) {
+        let { onChange } = this.props;
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
-                resource: res
+                resource
             });
         }
-    },
+    }
 
     /**
      * Called after user has made adjustments to an image's clipping rect
      *
      * @param  {Object} evt
      */
-    handleClipRectChange: function(evt) {
-        var res = _.clone(this.props.resource);
-        res.clip = evt.rect;
-        res.mosaic = evt.target.extractMosaic();
-        this.triggerChangeEvent(res);
-    },
+    handleClipRectChange = (evt) => {
+        let { resource } = this.props;
+        let { imageCropper } = this.components;
+        resource = _.clone(resource);
+        resource.clip = evt.rect;
+        this.triggerChangeEvent(resource);
+    }
 
     /**
      * Called when ImageView has loaded the full image
      *
      * @param  {Object} evt
      */
-    handleFullImageLoad: function(evt) {
-        var url = evt.target.props.url;
+    handleFullImageLoad = (evt) => {
+        let { resource } = this.props;
+        let { imageCropper } = this.components;
+        let url = evt.target.props.url;
         this.setState({ loadedImageURL: url });
-
-        // set mosaic if there isn't one
-        var res = _.clone(this.props.resource);
-        if (!res.mosaic) {
-            res.mosaic = this.components.imageCropper.extractMosaic();
-            this.triggerChangeEvent(res);
-        }
-    },
-});
-
-function isJSONEncoded(url) {
-    return _.startsWith(url, 'json:');
+    }
 }
 
-function parseJSONEncodedURL(url) {
-    var json = url.substr(5);
-    return JSON.parse(json);
+ImageEditor.defaultProps = {
+    previewWidth: 512,
+    previewHeight: 512,
+    disabled: false,
+};
+
+export {
+    ImageEditor as default,
+    ImageEditor,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ImageEditor.propTypes = {
+        resource: PropTypes.object,
+        previewWidth: PropTypes.number,
+        previewHeight: PropTypes.number,
+        disabled: PropTypes.bool,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        onChange: PropTypes.func,
+    };
 }

@@ -1,10 +1,7 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
+import _ from 'lodash';
+import Promise from 'bluebird';
 
-module.exports = {
-    findSystem,
-};
+const emptyArray = [];
 
 /**
  * Find system object
@@ -23,3 +20,7 @@ function findSystem(db) {
         return system || {};
     });
 }
+
+export {
+    findSystem,
+};

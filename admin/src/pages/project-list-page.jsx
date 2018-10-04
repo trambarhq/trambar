@@ -1,84 +1,32 @@
-/**
- * ProjectListPage - React component
- *
- * Displays a table listing all active projects in the system.
- *
- */
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
-var ProjectFinder = require('objects/finders/project-finder');
-var RepoFinder = require('objects/finders/repo-finder');
-var UserFinder = require('objects/finders/user-finder');
-var StatisticsFinder = require('objects/finders/statistics-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import { memoizeWeak } from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as RepoFinder from 'objects/finders/repo-finder';
+import * as UserFinder from 'objects/finders/user-finder';
+import * as StatisticsFinder from 'objects/finders/statistics-finder';
 
 // widgets
-var PushButton = require('widgets/push-button');
-var ComboButton = require('widgets/combo-button');
-var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
-var UserTooltip = require('tooltips/user-tooltip');
-var RepositoryTooltip = require('tooltips/repository-tooltip');
-var ActivityTooltip = require('tooltips/activity-tooltip');
-var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
-var ActionBadge = require('widgets/action-badge');
-var ActionConfirmation = require('widgets/action-confirmation');
-var DataLossWarning = require('widgets/data-loss-warning');
-var UnexpectedError = require('widgets/unexpected-error');
+import PushButton from 'widgets/push-button';
+import ComboButton from 'widgets/combo-button';
+import SortableTable, { TH } from 'widgets/sortable-table';
+import UserTooltip from 'tooltips/user-tooltip';
+import RepositoryTooltip from 'tooltips/repository-tooltip';
+import ActivityTooltip from 'tooltips/activity-tooltip';
+import ModifiedTimeTooltip from 'tooltips/modified-time-tooltip'
+import ActionBadge from 'widgets/action-badge';
+import ActionConfirmation from 'widgets/action-confirmation';
+import DataLossWarning from 'widgets/data-loss-warning';
+import UnexpectedError from 'widgets/unexpected-error';
 
-require('./project-list-page.scss');
+import './project-list-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'ProjectListPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/projects/?'
-            ], (params) => {
-                return {
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/projects/`, query;
-            if (params && params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
+class ProjectListPage extends AsyncComponent {
+    static displayName = 'ProjectListPage';
 
     /**
      * Render the component asynchronously
@@ -87,21 +35,22 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env, editing } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let props = {
             projects: null,
             repos: null,
             users: null,
             statistics: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
+            editing,
         };
         meanwhile.show(<ProjectListPageSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserID) => {
             return ProjectFinder.findAllProjects(db).then((projects) => {
                 props.projects = projects;
             });
@@ -122,53 +71,27 @@ module.exports = Relaks.createClass({
             return <ProjectListPageSync {...props} />;
         });
     }
-});
+}
 
-var ProjectListPageSync = module.exports.Sync = React.createClass({
-    displayName: 'ProjectListPage.Sync',
-    propTypes: {
-        projects: PropTypes.arrayOf(PropTypes.object),
-        repos: PropTypes.arrayOf(PropTypes.object),
-        users: PropTypes.arrayOf(PropTypes.object),
-        statistics: PropTypes.objectOf(PropTypes.object),
+class ProjectListPageSync extends PureComponent {
+    static displayName = 'ProjectListPage.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        let { editing } = props;
+        super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
         });
-        return {
+        this.state = {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
-            restoringProjectIds: [],
-            archivingProjectIds: [],
+            restoringProjectIDs: [],
+            archivingProjectIDs: [],
             hasChanges: false,
-            renderingFullList: this.isEditing(),
+            renderingFullList: editing,
             problems: {},
         };
-    },
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isEditing: function(props) {
-        props = props || this.props;
-        return props.route.parameters.edit;
-    },
+    }
 
     /**
      * Change editability of page
@@ -177,79 +100,86 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    setEditability: function(edit) {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
-        params.edit = edit;
-        return this.props.route.replace(module.exports, params);
-    },
+    setEditability(edit) {
+        let { route } = this.props;
+        let params = _.clone(route.params);
+        params.editing = edit || undefined;
+        return route.replace(route.name, params);
+    }
 
     /**
      * Check if we're switching into edit mode
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+    componentWillReceiveProps(nextProps) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 // initial list of ids to the current list
                 this.setState({
                     renderingFullList: true,
-                    restoringProjectIds: [],
-                    archivingProjectIds: [],
+                    restoringProjectIDs: [],
+                    archivingProjectIDs: [],
                     hasChanges: false,
                 });
             } else {
                 setTimeout(() => {
-                    if (!this.isEditing()) {
+                    let { editing } = this.props;
+                    if (!editing) {
                         this.setState({ renderingFullList: false, problems: {} });
                     }
                 }, 500);
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
+    render() {
+        let { route, env } = this.props;
+        let { hasChanges, problems } = this.state;
+        let { setters } = this.components;
+        let { t } = env.locale;
         return (
             <div className="project-list-page">
                 {this.renderButtons()}
                 <h2>{t('project-list-title')}</h2>
-                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
+                <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderTable()}
-                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
-                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                <ActionConfirmation ref={setters.confirmation} env={env} />
+                <DataLossWarning changes={hasChanges} env={env} route={route} />
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons in top right corner
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        if (this.isEditing()) {
+    renderButtons() {
+        let { env, projects, editing } = this.props;
+        let { hasChanges } = this.state;
+        let { t } = env.locale;
+        if (editing) {
             return (
                 <div className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
                         {t('project-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('project-list-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            var preselected;
-            var empty = _.isEmpty(this.props.projects);
+            let preselected;
+            let empty = _.isEmpty(projects);
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
@@ -264,23 +194,25 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render a table
      *
      * @return {ReactElement}
      */
-    renderTable: function() {
-        var tableProps = {
-            sortColumns: this.state.sortColumns,
-            sortDirections: this.state.sortDirections,
+    renderTable() {
+        let { editing } = this.props;
+        let { renderingFullList, sortColumns, sortDirections } = this.state;
+        let tableProps = {
+            sortColumns,
+            sortDirections,
             onSort: this.handleSort,
         };
-        if (this.state.renderingFullList) {
+        if (renderingFullList) {
             tableProps.expandable = true;
             tableProps.selectable = true;
-            tableProps.expanded = this.isEditing();
+            tableProps.expanded = editing;
             tableProps.onClick = this.handleRowClick;
         }
         return (
@@ -293,14 +225,14 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 </tbody>
             </SortableTable>
         );
-    },
+    }
 
     /**
      * Render table headings
      *
      * @return {ReactElement}
      */
-    renderHeadings: function() {
+    renderHeadings() {
         return (
             <tr>
                 {this.renderTitleColumn()}
@@ -313,28 +245,24 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 {this.renderModifiedTimeColumn()}
             </tr>
         );
-    },
+    }
 
     /**
      * Render table rows
      *
      * @return {Array<ReactElement>}
      */
-    renderRows: function() {
-        var projects = this.props.projects;
-        if (!this.state.renderingFullList) {
+    renderRows() {
+        let { env, projects, users, repos, statistics } = this.props;
+        let { renderingFullList, sortColumns, sortDirections } = this.state;
+        if (!renderingFullList) {
             projects = filterProjects(projects);
         }
-        projects = sortProjects(projects,
-            this.props.users,
-            this.props.repos,
-            this.props.statistics,
-            this.props.locale,
-            this.state.sortColumns,
-            this.state.sortDirections
-        );
-        return _.map(projects, this.renderRow);
-    },
+        projects = sortProjects(projects, users, repos, statistics, env, sortColumns, sortDirections);
+        return _.map(projects, (project) => {
+            return this.renderRow(project);
+        });
+    }
 
     /**
      * Render a table row
@@ -343,10 +271,12 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderRow: function(project) {
-        var t = this.props.locale.translate;
-        var classes = [];
-        var onClick, title;
+    renderRow(project) {
+        let { env } = this.props;
+        let { renderingFullList, restoringProjectIDs, archivingProjectIDs } = this.state;
+        let { t } = env.locale;
+        let classes = [];
+        let onClick, title;
         if (project.deleted) {
             classes.push('deleted');
             title = t('project-list-status-deleted');
@@ -354,20 +284,20 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
             classes.push('disabled');
             title = t('project-list-status-archived');
         }
-        if (this.state.renderingFullList) {
+        if (renderingFullList) {
             if (project.deleted || project.archived) {
-                if (_.includes(this.state.restoringProjectIds, project.id)) {
+                if (_.includes(restoringProjectIDs, project.id)) {
                     classes.push('selected');
                 }
             } else {
                 classes.push('fixed');
-                if (!_.includes(this.state.archivingProjectIds, project.id)) {
+                if (!_.includes(archivingProjectIDs, project.id)) {
                     classes.push('selected');
                 }
             }
             onClick = this.handleRowClick;
         }
-        var props = {
+        let props = {
             className: classes.join(' '),
             'data-project-id': project.id,
             title,
@@ -385,7 +315,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 {this.renderModifiedTimeColumn(project)}
             </tr>
         );
-    },
+    }
 
     /**
      * Render title column, either the heading or a data cell
@@ -394,37 +324,38 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderTitleColumn: function(project) {
-        var t = this.props.locale.translate;
+    renderTitleColumn(project) {
+        let { env, route } = this.props;
+        let { renderingFullList, restoringProjectIDs, archivingProjectIDs } = this.state;
+        let { t, p } = env.locale;
         if (!project) {
             return <TH id="title">{t('table-heading-name')}</TH>;
         } else {
-            var p = this.props.locale.pick;
-            var title = p(project.details.title) || project.name;
-            var url, badge;
-            if (this.state.renderingFullList) {
+            let title = p(project.details.title) || project.name;
+            let url, badge;
+            if (renderingFullList) {
                 // add a badge next to the name if we're archiving or
                 // restoring a project
-                var includedBefore, includedAfter;
+                let includedBefore, includedAfter;
                 if (project.deleted || project.archived) {
                     includedBefore = false;
-                    includedAfter = _.includes(this.state.restoringProjectIds, project.id);
+                    includedAfter = _.includes(restoringProjectIDs, project.id);
                 } else {
                     includedBefore = true;
-                    includedAfter = !_.includes(this.state.archivingProjectIds, project.id);
+                    includedAfter = !_.includes(archivingProjectIDs, project.id);
                 }
                 if (includedBefore !== includedAfter) {
                     if (includedAfter) {
-                        badge = <ActionBadge type="restore" locale={this.props.locale} />;
+                        badge = <ActionBadge type="restore" env={env} />;
                     } else {
-                        badge = <ActionBadge type="archive" locale={this.props.locale} />;
+                        badge = <ActionBadge type="archive" env={env} />;
                     }
                 }
             } else {
                 // link to project summary in non-editing mode
-                var route = this.props.route;
-                var params = { project: project.id };
-                url = route.find(require('pages/project-summary-page'), params);
+                url = route.find('project-summary-page', {
+                    projectID: project.id
+                });
             }
             return (
                 <td>
@@ -432,7 +363,7 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                 </td>
             );
         }
-    },
+    }
 
     /**
      * Render users column, either the heading or a data cell
@@ -441,24 +372,24 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderUsersColumn: function(project) {
-        if (this.props.theme.isBelowMode('narrow')) {
+    renderUsersColumn(project) {
+        let { route, env, users } = this.props;
+        let { t } = env.locale;
+        if (!env.isWiderThan('narrow')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!project) {
             return <TH id="users">{t('table-heading-users')}</TH>;
         } else {
-            var props = {
-                users: findUsers(this.props.users, project),
+            let props = {
+                users: findUsers(users, project),
                 project,
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
+                route,
+                env,
             };
             return <td><UserTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Render repositories column, either the heading or a data cell
@@ -467,24 +398,24 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderRepositoriesColumn: function(project) {
-        if (this.props.theme.isBelowMode('narrow')) {
+    renderRepositoriesColumn(project) {
+        let { route, env, repos } = this.props;
+        let { t } = env.locale;
+        if (!env.isWiderThan('narrow')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!project) {
             return <TH id="repos">{t('table-heading-repositories')}</TH>
         } else {
-            var props = {
-                repos: findRepos(this.props.repos, project),
+            let props = {
+                repos: findRepos(repos, project),
                 project,
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
+                route,
+                env,
             };
             return <td><RepositoryTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Render active period column, either the heading or a data cell
@@ -493,28 +424,28 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderDateRangeColumn: function(project) {
-        if (this.props.theme.isBelowMode('ultra-wide')) {
+    renderDateRangeColumn(project) {
+        let { env, statistics } = this.props;
+        let { t, localeCode } = env.locale;
+        if (!env.isWiderThan('ultra-wide')) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var lc = this.props.locale.localeCode;
         if (!project) {
             return <TH id="range">{t('table-heading-date-range')}</TH>
         } else {
             if (!project.deleted) {
-                var start, end;
-                var range = _.get(this.props.statistics, [ project.id, 'range' ]);
+                let start, end;
+                let range = _.get(statistics, [ project.id, 'range' ]);
                 if (range) {
-                    start = Moment(range.start).locale(lc).format('ll');
-                    end = Moment(range.end).locale(lc).format('ll');
+                    start = Moment(range.start).locale(localeCode).format('ll');
+                    end = Moment(range.end).locale(localeCode).format('ll');
                 }
                 return <td>{t('date-range-$start-$end', start, end)}</td>;
             } else {
                 return <td>{t('project-list-deleted')}</td>;
             }
         }
-    },
+    }
 
     /**
      * Render column showing the number of stories last month
@@ -523,22 +454,23 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderLastMonthColumn: function(project) {
-        if (this.props.theme.isBelowMode('super-wide')) {
+    renderLastMonthColumn(project) {
+        let { env, statistics } = this.props;
+        let { renderingFullList } = this.state;
+        let { t } = env.locale;
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!project) {
             return <TH id="last_month">{t('table-heading-last-month')}</TH>
         } else {
-            var props = {
-                statistics: _.get(this.props.statistics, [ project.id, 'last_month' ]),
-                locale: this.props.locale,
-                theme: this.props.theme,
+            let props = {
+                statistics: _.get(statistics, [ project.id, 'last_month' ]),
+                env,
             };
             return <td><ActivityTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Render column showing the number of stories this month
@@ -547,22 +479,22 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderThisMonthColumn: function(project) {
-        if (this.props.theme.isBelowMode('super-wide')) {
+    renderThisMonthColumn(project) {
+        let { env, statistics } = this.props;
+        let { t } = env.locale;
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!project) {
             return <TH id="this_month">{t('table-heading-this-month')}</TH>
         } else {
-            var props = {
-                statistics: _.get(this.props.statistics, [ project.id, 'this_month' ]),
-                locale: this.props.locale,
-                theme: this.props.theme,
+            let props = {
+                statistics: _.get(statistics, [ project.id, 'this_month' ]),
+                env,
             };
             return <td><ActivityTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Render column showing the number of stories to date
@@ -571,22 +503,22 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderToDateColumn: function(project) {
-        if (this.props.theme.isBelowMode('super-wide')) {
+    renderToDateColumn(project) {
+        let { env, statistics } = this.props;
+        let { t } = env.locale;
+        if (!env.isWiderThan('super-wide')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!project) {
             return <TH id="to_date">{t('table-heading-to-date')}</TH>
         } else {
-            var props = {
-                statistics: _.get(this.props.statistics, [ project.id, 'to_date' ]),
-                locale: this.props.locale,
-                theme: this.props.theme,
+            let props = {
+                statistics: _.get(statistics, [ project.id, 'to_date' ]),
+                env,
             };
             return <td><ActivityTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Render column showing the last modified time
@@ -595,100 +527,99 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderModifiedTimeColumn: function(project) {
-        if (this.props.theme.isBelowMode('standard')) {
+    renderModifiedTimeColumn(project) {
+        let { env } = this.props;
+        let { t } = env.locale;
+        if (!env.isWiderThan('standard')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!project) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            var props = {
+            let props = {
                 time: project.mtime,
-                locale: this.props.locale,
+                env,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Called when user clicks a table heading
      *
      * @param  {Object} evt
      */
-    handleSort: function(evt) {
+    handleSort = (evt) => {
         this.setState({
             sortColumns: evt.columns,
             sortDirections: evt.directions
         });
-    },
+    }
 
     /**
      * Called when user clicks add button
      *
      * @param  {Event} evt
      */
-    handleAddClick: function(evt) {
-        var route = this.props.route;
-        return route.push(require('pages/project-summary-page'), {
-            project: 'new'
-        });
-    },
+    handleAddClick = (evt) => {
+        let { route } = this.props;
+        return route.push('project-summary-page', { projectID: 'new' });
+    }
 
     /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
+    handleEditClick = (evt) => {
         this.setEditability(true);
-    },
+    }
 
     /**
      * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         this.setEditability(false);
-    },
+    }
 
     /**
      * Called when user clicks save button
      *
      * @param  {Event} evt
      */
-    handleSaveClick: function(evt) {
-        var t = this.props.locale.translate;
-        var archiving = this.state.archivingProjectIds;
-        var restoring = this.state.restoringProjectIds;
-        var messages = [
-            t('project-list-confirm-archive-$count', archiving.length),
-            t('project-list-confirm-restore-$count', restoring.length),
+    handleSaveClick = (evt) => {
+        let { database, env, projects } = this.props;
+        let { archivingProjectIDs, restoringProjectIDs } = this.state;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let messages = [
+            t('project-list-confirm-archive-$count', archivingProjectIDs.length),
+            t('project-list-confirm-restore-$count', restoringProjectIDs.length),
         ];
-        var bypass = [
-            _.isEmpty(archiving) || undefined,
-            _.isEmpty(restoring) || undefined,
+        let bypass = [
+            _.isEmpty(archivingProjectIDs) ? true : undefined,
+            _.isEmpty(restoringProjectIDs) ? true : undefined,
         ];
-        var confirmation = this.components.confirmation;
         return confirmation.askSeries(messages, bypass).then((confirmed) => {
             if (!confirmed) {
                 return;
             }
             this.setState({ problems: {} });
-            var db = this.props.database.use({ schema: 'global', by: this });
-            return db.start().then((userId) => {
-                var projectsAfter = [];
-                _.each(this.props.projects, (project) => {
-                    var flags = {};
-                    if (_.includes(archiving, project.id)) {
+            let db = database.use({ schema: 'global', by: this });
+            return db.start().then((userID) => {
+                let projectsAfter = [];
+                _.each(projects, (project) => {
+                    let flags = {};
+                    if (_.includes(archivingProjectIDs, project.id)) {
                         flags.archived = true;
-                    } else if (_.includes(restoring, project.id)) {
+                    } else if (_.includes(restoringProjectIDs, project.id)) {
                         flags.archived = flags.deleted = false;
                     } else {
                         return;
                     }
-                    var projectAfter = _.assign({}, project, flags);
+                    let projectAfter = _.assign({}, project, flags);
                     projectsAfter.push(projectAfter);
                 });
                 return db.save({ table: 'project' }, projectsAfter).then((projects) => {
@@ -697,47 +628,48 @@ var ProjectListPageSync = module.exports.Sync = React.createClass({
                     });
                     return null;
                 }).catch((err) => {
-                    var problems = { unexpected: err.message };
+                    let problems = { unexpected: err.message };
                     this.setState({ problems });
                 });
             });
         });
-    },
+    }
 
     /**
      * Called when user clicks a row in edit mode
      *
      * @param  {Event} evt
      */
-    handleRowClick: function(evt) {
-        var projectId = parseInt(evt.currentTarget.getAttribute('data-project-id'));
-        var project = _.find(this.props.projects, { id: projectId });
-        var restoringProjectIds = _.slice(this.state.restoringProjectIds);
-        var archivingProjectIds = _.slice(this.state.archivingProjectIds);
+    handleRowClick = (evt) => {
+        let { projects } = this.props;
+        let { restoringProjectIDs, archivingProjectIDs } = this.state;
+        let projectID = parseInt(evt.currentTarget.getAttribute('data-project-id'));
+        let project = _.find(projects, { id: projectID });
         if (project.deleted || project.archived) {
-            if (_.includes(restoringProjectIds, project.id)) {
-                _.pull(restoringProjectIds, project.id);
+            if (_.includes(restoringProjectIDs, project.id)) {
+                restoringProjectIDs = _.without(restoringProjectIDs, project.id);
             } else {
-                restoringProjectIds.push(project.id);
+                restoringProjectIDs = _.concat(restoringProjectIDs, project.id);
             }
         } else {
-            if (_.includes(archivingProjectIds, project.id)) {
-                _.pull(archivingProjectIds, project.id);
+            if (_.includes(archivingProjectIDs, project.id)) {
+                archivingProjectIDs = _.without(archivingProjectIDs, project.id);
             } else {
-                archivingProjectIds.push(project.id);
+                archivingProjectIDs = _.concat(archivingProjectIDs, project.id);
             }
         }
-        var hasChanges = !_.isEmpty(restoringProjectIds) || !_.isEmpty(archivingProjectIds);
-        this.setState({ restoringProjectIds, archivingProjectIds, hasChanges });
-    },
-});
+        let hasChanges = !_.isEmpty(restoringProjectIDs) || !_.isEmpty(archivingProjectIDs);
+        this.setState({ restoringProjectIDs, archivingProjectIDs, hasChanges });
+    }
+}
 
-var sortProjects = Memoize(function(projects, users, repos, statistics, locale, columns, directions) {
+let sortProjects = memoizeWeak(null, function(projects, users, repos, statistics, env, columns, directions) {
+    let { p } = env.locale;
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'title':
                 return (project) => {
-                    return locale.pick(project.details.title)
+                    return p(project.details.title)
                 };
             case 'users':
                 return (project) => {
@@ -749,19 +681,19 @@ var sortProjects = Memoize(function(projects, users, repos, statistics, locale, 
                 };
             case 'range':
                 return (project) => {
-                    return _.get(this.props.statistics, [ project.id, 'range', 'start' ], '');
+                    return _.get(statistics, [ project.id, 'range', 'start' ], '');
                 };
             case 'last_month':
                 return (project) => {
-                    return _.get(this.props.statistics, [ project.id, 'last_month', 'total' ], 0);
+                    return _.get(statistics, [ project.id, 'last_month', 'total' ], 0);
                 };
             case 'this_month':
                 return (project) => {
-                    return _.get(this.props.statistics, [ project.id, 'this_month', 'total' ], 0);
+                    return _.get(statistics, [ project.id, 'this_month', 'total' ], 0);
                 };
             case 'to_date':
                 return (project) => {
-                    return _.get(this.props.statistics, [ project.id, 'to_date', 'total' ], 0);
+                    return _.get(statistics, [ project.id, 'to_date', 'total' ], 0);
                 };
             default:
                 return column;
@@ -770,22 +702,63 @@ var sortProjects = Memoize(function(projects, users, repos, statistics, locale, 
     return _.orderBy(projects, columns, directions);
 });
 
-var filterProjects = Memoize(function(projects) {
-    return _.filter(projects, (project) => {
+let filterProjects = memoizeWeak(null, function(projects) {
+    let list = _.filter(projects, (project) => {
         return !project.deleted && !project.archived;
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
-var findRepos = Memoize(function(repos, project) {
-    var hash = _.keyBy(repos, 'id');
-    return _.filter(_.map(project.repo_ids, (id) => {
+let findRepos = memoizeWeak(null, function(repos, project) {
+    let hash = _.keyBy(repos, 'id');
+    let list = _.filter(_.map(project.repo_ids, (id) => {
         return hash[id];
     }));
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
-var findUsers = Memoize(function(users, project) {
-    var hash = _.keyBy(users, 'id');
-    return _.filter(_.map(project.user_ids, (id) => {
+let findUsers = memoizeWeak(null, function(users, project) {
+    let hash = _.keyBy(users, 'id');
+    let list = _.filter(_.map(project.user_ids, (id) => {
         return hash[id];
     }));
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
+
+export {
+    ProjectListPage as default,
+    ProjectListPage,
+    ProjectListPageSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ProjectListPage.propTypes = {
+        editing: PropTypes.bool,
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    ProjectListPageSync.propTypes = {
+        editing: PropTypes.bool,
+        projects: PropTypes.arrayOf(PropTypes.object),
+        repos: PropTypes.arrayOf(PropTypes.object),
+        users: PropTypes.arrayOf(PropTypes.object),
+        statistics: PropTypes.objectOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

@@ -1,3 +1,5 @@
+@import '../colors';
+
 .media-view {
     position: relative;
     margin-top: 1em;
@@ -45,14 +47,14 @@
                 display: block;
 
                 &:link, &:visited {
-                    color: #000000;
+                    color: $media-view-overlay-color;
                 }
             }
         }
 
         .video, .audio {
             .overlay {
-                color: #111111;
+                color: $media-view-overlay-color;
                 opacity: 0.5;
 
                 .no-touch & {
@@ -62,8 +64,8 @@
                         opacity: 0.6;
 
                         .duration {
-                            color: #eeeeee;
-                            background-color: #111111;
+                            color: $media-view-overlay-hover-color;
+                            background-color: $media-view-overlay-hover-background-color;
                         }
                     }
                 }
@@ -72,10 +74,10 @@
             &.posterless {
                 padding-top: 50%;
                 padding-bottom: 50%;
-                background-color: #111111;
+                background-color: $media-view-overlay-hover-background-color;
 
                 .overlay {
-                    color: #eeeeee;
+                    color: $media-view-overlay-hover-color;
                     opacity: 0.5;
 
                     .no-touch & {
@@ -83,7 +85,7 @@
                             opacity: 1;
 
                             .duration {
-                                color: #eeeeee;
+                                color: $media-view-overlay-hover-color;
                                 background-color: transparent;
                             }
                         }
@@ -96,7 +98,8 @@
             position: absolute;
             width: 100%;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: $media-view-navigation-background-color;
+            opacity: 0.5;
 
             .left {
                 float: left;

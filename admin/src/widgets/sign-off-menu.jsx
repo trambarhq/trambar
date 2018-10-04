@@ -1,27 +1,16 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var UserFinder = require('objects/finders/user-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import * as UserFinder from 'objects/finders/user-finder';
 
 // widgets
-var ProfileImage = require('widgets/profile-image');
+import ProfileImage from 'widgets/profile-image';
 
-require('./sign-off-menu.scss');
+import './sign-off-menu.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'SignOffMenu',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class SignOffMenu extends AsyncComponent {
+    static displayName = 'SignOffMenu';
 
     /**
      * Render component asynchronously
@@ -30,18 +19,18 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ schema: 'global', by: this });
+    renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let { t, p } = env.locale;
+        let db = database.use({ schema: 'global', by: this });
         meanwhile.show(<div className="sign-off-menu" />);
-        return db.start().then((currentUserId) => {
-            return UserFinder.findUser(db, currentUserId).then((user) => {
-                var t = this.props.locale.translate;
-                var p = this.props.locale.pick;
-                var url = require('pages/user-summary-page').getURL({ userId: user.id });
+        return db.start().then((currentUserID) => {
+            return UserFinder.findUser(db, currentUserID).then((user) => {
+                let url = route.find('user-summary-page', { user: user.id });
                 return (
                     <div className="sign-off-menu">
                         <a href={url}>
-                            <ProfileImage user={user} theme={this.props.theme} size="large" />
+                            <ProfileImage user={user} env={env} size="large" />
                             <div className="name">
                                 {p(user.details.name)}
                             </div>
@@ -53,17 +42,36 @@ module.exports = Relaks.createClass({
                 );
             })
         });
-    },
+    }
 
     /**
      * Called when user click on sign-off button
      *
      * @return {Event}
      */
-    handleSignOffClick: function() {
-        var db = this.props.database.use({ by: this });
-        db.endSession().then(() => {
-            this.props.route.push(require('pages/start-page'));
+    handleSignOffClick = (evt) => {
+        let { database, route } = this.props;
+        database.endSession().then(() => {
+            route.push('start-page');
         });
-    },
-});
+    }
+}
+
+export {
+    SignOffMenu as default,
+    SignOffMenu,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    SignOffMenu.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

@@ -1,70 +1,32 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var React = require('react'), PropTypes = React.PropTypes;
-var MediaLoader = require('media/media-loader');
-var MediaTagReader = require('media/media-tag-reader');
-var LinkParser = require('utils/link-parser');
-var QuickStart = require('media/quick-start');
-var BlobReader = require('transport/blob-reader');
-var ResourceTypes = require('objects/types/resource-types');
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-var Payloads = require('transport/payloads');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import React, { PureComponent } from 'react';
+import * as MediaLoader from 'media/media-loader';
+import * as MediaTagReader from 'media/media-tag-reader';
+import * as LinkParser from 'utils/link-parser';
+import * as QuickStart from 'media/quick-start';
+import * as BlobReader from 'transport/blob-reader';
+import ResourceTypes from 'objects/types/resource-types';
 
 // widgets
-var PhotoCaptureDialogBox = require('dialogs/photo-capture-dialog-box');
-var AudioCaptureDialogBox = require('dialogs/audio-capture-dialog-box');
-var VideoCaptureDialogBox = require('dialogs/video-capture-dialog-box');
+import PhotoCaptureDialogBox from 'dialogs/photo-capture-dialog-box';
+import AudioCaptureDialogBox from 'dialogs/audio-capture-dialog-box';
+import VideoCaptureDialogBox from 'dialogs/video-capture-dialog-box';
 
-var USE_STREAM = true;
+const USE_STREAM = true;
 
-require('./media-editor.scss');
+import './media-editor.scss';
 
-module.exports = React.createClass({
-    displayName: 'MediaImporter',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        resources: PropTypes.arrayOf(PropTypes.object).isRequired,
-        types: PropTypes.arrayOf(PropTypes.oneOf(ResourceTypes)),
-        cameraDirection: PropTypes.oneOf([ 'front', 'back' ]),
-        limit: PropTypes.number,
+class MediaImporter extends PureComponent {
+    static displayName = 'MediaImporter';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-
-        onCaptureStart: PropTypes.func,
-        onCaptureEnd: PropTypes.func,
-        onChange: PropTypes.func.isRequired,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            types: ResourceTypes,
-            limit: Infinity,
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             capturing: null,
         };
-    },
+    }
 
     /**
      * Return true if a media type is acceptable
@@ -73,9 +35,10 @@ module.exports = React.createClass({
      *
      * @return {Boolean}
      */
-    isAcceptable: function(type) {
-        return _.includes(this.props.types, type);
-    },
+    isAcceptable(type) {
+        let { types } = this.props;
+        return _.includes(types, type);
+    }
 
     /**
      * Return the resource type given a mime type
@@ -84,8 +47,8 @@ module.exports = React.createClass({
      *
      * @return {String|undefined}
      */
-    getResourceType: function(mimeType) {
-        var type = MediaLoader.extractFileCategory(mimeType);
+    getResourceType(mimeType) {
+        let type = MediaLoader.extractFileCategory(mimeType);
         if (type === 'application') {
             switch (MediaLoader.extractFileFormat(mimeType)) {
                 case 'x-mswinurl':
@@ -97,17 +60,17 @@ module.exports = React.createClass({
         if (this.isAcceptable(type)) {
             return type;
         }
-    },
+    }
 
     /**
      * Start capturing image/video/audio
      *
      * @param  {String} type
      */
-    capture: function(type) {
+    capture(type) {
         this.setState({ capturing: type });
         this.triggerCaptureStartEvent();
-    },
+    }
 
     /**
      * Add the contents of a file
@@ -116,17 +79,17 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number|null>}
      */
-    importFiles: function(files) {
+    importFiles(files) {
         // create a copy of the array so it doesn't disappear during
         // asynchronous operation
         files = _.filter(files, (file) => {
             return !!this.getResourceType(file.type);
         });
         // add placeholders first
-        var types = _.map(files, (file) => {
+        let types = _.map(files, (file) => {
             return this.getResourceType(file.type);
         });
-        var placeholders = this.addResourcePlaceholders(types);
+        let placeholders = this.addResourcePlaceholders(types);
         return Promise.each(files, (file, index) => {
             // import the file then replace the placeholder
             return this.importFile(file).then((res) => {
@@ -137,7 +100,7 @@ module.exports = React.createClass({
                 return null;
             });
         });
-    },
+    }
 
     /**
      * Import a media file
@@ -146,7 +109,7 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    importFile: function(file) {
+    importFile(file) {
         switch (this.getResourceType(file.type)) {
             case 'image':
                 return this.importImageFile(file);
@@ -157,7 +120,7 @@ module.exports = React.createClass({
             case 'website':
                 return this.importBookmarkFile(file);
         }
-    },
+    }
 
     /**
      * Import an image file
@@ -166,12 +129,13 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    importImageFile: function(file) {
-        var payload = this.props.payloads.add('image').attachFile(file);
+    importImageFile(file) {
+        let { payloads } = this.props;
+        let payload = payloads.add('image').attachFile(file);
         return MediaLoader.getImageMetadata(file).then((meta) => {
             return {
                 type: 'image',
-                payload_token: payload.token,
+                payload_token: payload.id,
                 width: meta.width,
                 height: meta.height,
                 format: meta.format,
@@ -182,13 +146,13 @@ module.exports = React.createClass({
             // not a format that the browser recognizes
             return {
                 type: 'image',
-                payload_token: payload.token,
+                payload_token: payload.id,
                 format: MediaLoader.extractFileFormat(file.type),
                 filename: file.name,
                 imported: true,
             };
-        });;
-    },
+        });
+    }
 
     /**
      * Import a video file
@@ -197,7 +161,8 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    importVideoFile: function(file) {
+    importVideoFile(file) {
+        let { payloads } = this.props;
         // if file is in a QuickTime container, make sure metadata is
         // at the beginning of the file
         return QuickStart.process(file).then((blob) => {
@@ -205,10 +170,10 @@ module.exports = React.createClass({
                 // if video wasn't processed, use the original file
                 blob = file;
             }
-            var payload = this.props.payloads.add('video');
+            let payload = payloads.add('video');
             if (USE_STREAM) {
                 // upload file in small chunks
-                var stream = this.props.payloads.stream().pipe(blob);
+                let stream = payloads.stream().pipe(blob);
                 payload.attachStream(stream);
             } else {
                 payload.attachFile(blob);
@@ -217,7 +182,7 @@ module.exports = React.createClass({
                 payload.attachFile(meta.poster, 'poster')
                 return {
                     type: 'video',
-                    payload_token: payload.token,
+                    payload_token: payload.id,
                     width: meta.width,
                     height: meta.height,
                     format: meta.format,
@@ -230,14 +195,14 @@ module.exports = React.createClass({
                 payload.attachStep('main', 'poster')
                 return {
                     type: 'video',
-                    payload_token: payload.token,
+                    payload_token: payload.id,
                     format: MediaLoader.extractFileFormat(file.type),
                     filename: file.name,
                     imported: true,
                 };
             });
         });
-    },
+    }
 
     /**
      * Import an audio file
@@ -246,18 +211,19 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object>}
      */
-    importAudioFile: function(file) {
-        var payload = this.props.payloads.add('audio');
+    importAudioFile(file) {
+        let { payloads } = this.props;
+        let payload = payloads.add('audio');
         if (USE_STREAM) {
-            var stream = this.props.payloads.stream().pipe(file);
+            let stream = payloads.stream().pipe(file);
             payload.attachStream(stream);
         } else {
             payload.attachFile(file);
         }
         return MediaLoader.getAudioMetadata(file).then((meta) => {
-            var audio = {
+            let audio = {
                 type: 'audio',
-                payload_token: payload.token,
+                payload_token: payload.id,
                 format: meta.format,
                 duration: meta.duration,
                 filename: file.name,
@@ -277,13 +243,13 @@ module.exports = React.createClass({
         }).catch((err) => {
             return {
                 type: 'audio',
-                payload_token: payload.token,
+                payload_token: payload.id,
                 format: MediaLoader.extractFileFormat(file.type),
                 filename: file.name,
                 imported: true,
             };
         });
-    },
+    }
 
     /**
      * Import a bookmark/shortcut file
@@ -292,20 +258,21 @@ module.exports = React.createClass({
      *
      * @return {Promise<Object|undefined>}
      */
-    importBookmarkFile: function(file) {
+    importBookmarkFile(file) {
+        let { payloads } = this.props;
         return BlobReader.loadText(file).then((text) => {
-            var link = LinkParser.parse(text);
+            let link = LinkParser.parse(text);
             if (link && /https?:/.test(link.url)) {
-                var payload = this.props.payloads.add('website').attachURL(link.url, 'poster');
+                let payload = payloads.add('website').attachURL(link.url, 'poster');
                 return {
                     type: 'website',
-                    payload_token: payload.token,
+                    payload_token: payload.id,
                     url: link.url,
                     title: link.name || _.replace(file.name, /\.\w+$/, ''),
                 };
             }
         });
-    },
+    }
 
     /**
      * Attach non-file drag-and-drop contents
@@ -314,27 +281,28 @@ module.exports = React.createClass({
      *
      * @return {Promise<Number>}
      */
-    importDataItems: function(items) {
+    importDataItems(items) {
+        let { payloads } = this.props;
         return retrieveDataItemTexts(items).then((strings) => {
-            var html = strings['text/html'];
-            var url = strings['text/uri-list'];
+            let html = strings['text/html'];
+            let url = strings['text/uri-list'];
             if (url) {
                 // see if it's an image being dropped
-                var type = /<img\b/i.test(html) ? 'image' : 'website';
+                let type = /<img\b/i.test(html) ? 'image' : 'website';
                 if (this.isAcceptable(type)) {
                     if (type === 'image') {
-                        var filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
-                        var payload = this.props.payloads.add('image').attachURL(url);
+                        let filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
+                        let payload = payloads.add('image').attachURL(url);
                         return {
                             type: 'image',
-                            payload_token: payload.token,
+                            payload_token: payload.id,
                             filename: filename,
                         };
                     } else if (type === 'website') {
-                        var payload = this.props.payloads.add('website').attachURL(url, 'poster');
+                        let payload = payloads.add('website').attachURL(url, 'poster');
                         return {
                             type: 'website',
-                            payload_token: payload.token,
+                            payload_token: payload.id,
                             url: url,
                             title: getInnerText(html),
                         };
@@ -348,14 +316,14 @@ module.exports = React.createClass({
             this.addResources([ res ]);
             return null;
         });
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactELement}
      */
-    render: function() {
+    render() {
         return (
             <div>
                 {this.renderPhotoDialog()}
@@ -363,19 +331,21 @@ module.exports = React.createClass({
                 {this.renderVideoDialog()}
             </div>
         );
-    },
+    }
 
     /**
      * Render dialogbox for capturing picture through MediaStream API
      *
      * @return {ReactElement}
      */
-    renderPhotoDialog: function() {
-        var props = {
-            show: (this.state.capturing === 'image'),
-            cameraDirection: this.props.cameraDirection,
-            payloads: this.props.payloads,
-            locale: this.props.locale,
+    renderPhotoDialog() {
+        let { payloads, env, cameraDirection } = this.props;
+        let { capturing } = this.state;
+        let props = {
+            show: (capturing === 'image'),
+            cameraDirection,
+            payloads,
+            env,
             onLoadStart: this.handleLoadStart,
             onClose: this.handleClose,
             onCapturePending: this.handleCapturePending,
@@ -383,19 +353,21 @@ module.exports = React.createClass({
             onCapture: this.handleCapture,
         };
         return <PhotoCaptureDialogBox {...props} />
-    },
+    }
 
     /**
      * Render dialogbox for capturing video through MediaStream API
      *
      * @return {ReactElement}
      */
-    renderVideoDialog: function() {
-        var props = {
-            show: (this.state.capturing === 'video'),
-            cameraDirection: this.props.cameraDirection,
-            payloads: this.props.payloads,
-            locale: this.props.locale,
+    renderVideoDialog() {
+        let { payloads, env, cameraDirection } = this.props;
+        let { capturing } = this.state;
+        let props = {
+            show: (capturing === 'video'),
+            cameraDirection,
+            payloads,
+            env,
             onLoadStart: this.handleLoadStart,
             onClose: this.handleClose,
             onCapturePending: this.handleCapturePending,
@@ -403,34 +375,37 @@ module.exports = React.createClass({
             onCapture: this.handleCapture,
         };
         return <VideoCaptureDialogBox {...props} />
-    },
+    }
 
     /**
      * Render dialogbox for capturing video through MediaStream API
      *
      * @return {ReactElement}
      */
-    renderAudioDialog: function() {
-        var props = {
-            show: (this.state.capturing === 'audio'),
-            payloads: this.props.payloads,
-            locale: this.props.locale,
+    renderAudioDialog() {
+        let { payloads, env, cameraDirection } = this.props;
+        let { capturing } = this.state;
+        let props = {
+            show: (capturing === 'audio'),
+            payloads,
+            env,
             onClose: this.handleClose,
             onCapturePending: this.handleCapturePending,
             onCaptureError: this.handleCaptureError,
             onCapture: this.handleCapture,
         };
         return <AudioCaptureDialogBox {...props} />
-    },
+    }
 
     /**
      * Send end event if component is unmounted in the middle of capturing
      */
-    componentWillUnmount: function() {
-        if (this.state.capturing) {
+    componentWillUnmount() {
+        let { capturing } = this.state;
+        if (capturing) {
             this.triggerCaptureEndEvent();
         }
-    },
+    }
 
     /**
      * Add new resource placeholders
@@ -439,8 +414,8 @@ module.exports = React.createClass({
      *
      * @return {Array<Object>}
      */
-    addResourcePlaceholders: function(types) {
-        var resources = _.map(types, (type) => {
+    addResourcePlaceholders(types) {
+        let resources = _.map(types, (type) => {
             return {
                 type: type,
                 pending: `import-${++importCount}`,
@@ -449,33 +424,33 @@ module.exports = React.createClass({
         });
         this.addResources(resources);
         return resources;
-    },
+    }
 
     /**
      * Add new resources
      *
      * @param  {Array<Object>} newResources
      */
-    addResources: function(newResources) {
+    addResources(newResources) {
+        let { resources, limit } = this.props;
         if (_.isEmpty(newResources)) {
             return Promise.resolve(0);
         }
-        var path = 'details.resources'
-        var resourcesBefore = this.props.resources || [];
-        var resources;
-        if (this.props.limit === 1) {
-            var newResource = _.first(newResources);
-            var index = _.findIndex(resourcesBefore, { type: newResource.type });
-            resources = _.concat(resourcesBefore, newResource);
+        let path = 'details.resources'
+        let firstIndex = resources.length;
+        if (limit === 1) {
+            let newResource = _.first(newResources);
+            let index = _.findIndex(resources, { type: newResource.type });
+            resources = _.concat(resources, newResource);
             if (index !== -1) {
                 resources.splice(index, 1);
+                firstIndex--;
             }
         } else {
-            resources = _.concat(resourcesBefore, newResources);
+            resources = _.concat(resources, newResources);
         }
-        var firstIndex = resourcesBefore.length;
         this.triggerChangeEvent(resources, firstIndex);
-    },
+    }
 
     /**
      * Update a resource placeholder with actual properties
@@ -485,15 +460,16 @@ module.exports = React.createClass({
      *
      * @return {Promise}
      */
-    updateResource: function(before, after) {
-        var resources = _.slice(this.props.resources);
-        var index = _.findIndex(resources, before);
+    updateResource(before, after) {
+        let { resources } = this.props;
+        let index = _.findIndex(resources, before);
         if (index !== -1) {
+            resources = _.slice(resources);
             resources[index] = after;
             this.triggerChangeEvent(resources);
         }
         return null;
-    },
+    }
 
     /**
      * Remove a resource placeholder when import fails
@@ -502,14 +478,15 @@ module.exports = React.createClass({
      *
      * @return {Promise}
      */
-    removeResource: function(before, after) {
-        var resources = _.slice(this.props.resources);
-        var index = _.findIndex(resources, before);
+    removeResource(before, after) {
+        let { resources } = this.props;
+        let index = _.findIndex(resources, before);
         if (index !== -1) {
+            resources = _.slice(resources);
             resources.splice(index, 1);
             this.triggerChangeEvent(resources);
         }
-    },
+    }
 
     /**
      * Call onChange handler
@@ -517,99 +494,104 @@ module.exports = React.createClass({
      * @param  {Array<Object>} resources
      * @param  {Number|undefined} selection
      */
-    triggerChangeEvent: function(resources, selection) {
-        if (this.props.onChange) {
-            this.props.onChange({
+    triggerChangeEvent(resources, selection) {
+        let { onChange } = this.props;
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 resources,
                 selection,
             });
         }
-    },
+    }
 
     /**
      * Call onCaptureStart handler
      */
-    triggerCaptureStartEvent: function() {
-        if (this.props.onCaptureStart) {
-            this.props.onCaptureStart({
+    triggerCaptureStartEvent() {
+        let { onCaptureStart } = this.props;
+        let { capturing } = this.state;
+        if (onCaptureStart) {
+            onCaptureStart({
                 type: 'capturestart',
                 target: this,
-                mediaType: this.state.capturing,
+                mediaType: capturing,
             });
         }
-    },
+    }
 
     /**
      * Call onCaptureEnd handler
      *
-     * @param  {Object|undefined} res
+     * @param  {Object|undefined} resource
      */
-    triggerCaptureEndEvent: function(res) {
-        if (this.props.onCaptureEnd) {
-            this.props.onCaptureEnd({
+    triggerCaptureEndEvent(resource) {
+        let { onCaptureEnd } = this.props;
+        let { capturing } = this.state;
+        if (onCaptureEnd) {
+            onCaptureEnd({
                 type: 'captureend',
                 target: this,
-                mediaType: this.state.capturing,
-                resource: res,
+                mediaType: capturing,
+                resource,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks x or outside a capture dialog
      *
      * @param  {Event} evt
      */
-    handleClose: function(evt) {
+    handleClose = (evt) => {
         this.setState({ capturing: null });
         this.triggerCaptureEndEvent();
-    },
+    }
 
     /**
      * Called before a media file is being loaded
      *
      * @param  {Object} evt
      */
-    handleCapturePending: function(evt) {
+    handleCapturePending = (evt) => {
         this.resourcePlaceholder = {
             type: evt.resourceType,
             pending: `capture-${++captureCount}`
         };
         this.addResources([ this.resourcePlaceholder ]);
-    },
+    }
 
     /**
      * Called when an error occurs while capturing or loading an image or video
      *
      * @param  {Object} evt
      */
-    handleCaptureError: function(evt) {
+    handleCaptureError = (evt) => {
         if (this.resourcePlaceholder) {
             this.removeResource(this.resourcePlaceholder);
         }
-    },
+    }
 
     /**
      * Called after user has taken a photo, video, or audio
      *
      * @param  {Object} evt
      */
-    handleCapture: function(evt) {
-        var res = _.clone(evt.resource);
-        var ext = (res.format === 'jpeg') ? 'jpg' : res.format;
+    handleCapture = (evt) => {
+        let res = _.clone(evt.resource);
+        let ext = (res.format === 'jpeg') ? 'jpg' : res.format;
         res.filename = getFilenameFromTime('.' + ext);
         if (this.resourcePlaceholder) {
             this.updateResource(this.resourcePlaceholder, res);
         } else {
             this.addResources([ res ]);
         }
-    },
-});
+    }
+}
 
-var importCount = 0;
-var captureCount = 0;
+let importCount = 0;
+let captureCount = 0;
 
 /**
  * Retrieve the text in a DataTransferItem
@@ -619,14 +601,14 @@ var captureCount = 0;
  * @return {Promise<Object<String>>}
  */
 function retrieveDataItemTexts(items) {
-    var stringItems = _.filter(items, (item) => {
+    let stringItems = _.filter(items, (item) => {
         if (item.kind === 'string') {
             return /^text\/(html|uri-list)/.test(item.type);
         }
     });
     // since items are ephemeral, we need to call getAsString() on all of them
     // synchronously and not in a callback (i.e. can't use Promise.map)
-    var stringPromises = {};
+    let stringPromises = {};
     _.each(stringItems, (item) => {
         // keyed by mime type
         stringPromises[item.type] = new Promise((resolve, reject) => {
@@ -645,7 +627,7 @@ function retrieveDataItemTexts(items) {
  */
 function getInnerText(html) {
     if (html) {
-        var node = document.createElement('DIV');
+        let node = document.createElement('DIV');
         node.innerHTML = html.replace(/<.*?>/g, '');
         website.title = node.innerText;
     }
@@ -658,4 +640,35 @@ function getInnerText(html) {
  */
 function getFilenameFromTime(ext) {
     return _.toUpper(Moment().format('YYYY-MMM-DD-hhA')) + ext;
+}
+
+MediaImporter.defaultProps = {
+    types: ResourceTypes,
+    limit: Infinity,
+};
+
+export {
+    MediaImporter as default,
+    MediaImporter,
+};
+
+import Environment from 'env/environment';
+import Payloads from 'transport/payloads';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MediaImporter.propTypes = {
+        resources: PropTypes.arrayOf(PropTypes.object).isRequired,
+        types: PropTypes.arrayOf(PropTypes.oneOf(ResourceTypes)),
+        cameraDirection: PropTypes.oneOf([ 'front', 'back' ]),
+        limit: PropTypes.number,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+
+        onCaptureStart: PropTypes.func,
+        onCaptureEnd: PropTypes.func,
+        onChange: PropTypes.func.isRequired,
+    };
 }

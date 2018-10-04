@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Data = require('accessors/data');
 var HTTPError = require('errors/http-error');
-var ProjectSettings = require('objects/settings/project-settings');
+var ProjectUtils = require('objects/utils/project-utils');
 
 module.exports = _.create(Data, {
     schema: 'global',
@@ -117,7 +117,7 @@ module.exports = _.create(Data, {
     filter: function(db, schema, rows, credentials) {
         if (!credentials.unrestricted) {
             rows = _.filter(rows, (row) => {
-                return ProjectSettings.isVisibleToUser(row, credentials.user);
+                return ProjectUtils.isVisibleToUser(row, credentials.user);
             });
         }
         return Promise.resolve(rows);

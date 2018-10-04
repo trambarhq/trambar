@@ -1,22 +1,18 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var HTTPError = require('errors/http-error');
-
-module.exports = {
-    fetch,
-}
+import _ from 'lodash';
+import Promise from 'bluebird';
+import HTTPError from 'errors/http-error';
 
 function fetch(method, url, payload, options) {
-    var xhr = new XMLHttpRequest();
-    var promise = new Promise((resolve, reject) => {
-        var username = _.get(options, 'username', null);
-        var password = _.get(options, 'password', null);
-        var contentType = _.get(options, 'contentType', null);
+    let xhr = new XMLHttpRequest();
+    let promise = new Promise((resolve, reject) => {
+        let username = _.get(options, 'username', null);
+        let password = _.get(options, 'password', null);
+        let contentType = _.get(options, 'contentType', null);
 
-        // attach GET variables to URL
+        // attach GET letiables to URL
         method = _.toUpper(method);
         if (method === 'GET' && !_.isEmpty(payload)) {
-            var pairs = [];
+            let pairs = [];
             _.forIn(payload, (value, name) => {
                 name = encodeURIComponent(name);
                 value = encodeURIComponent(value);
@@ -55,10 +51,10 @@ function fetch(method, url, payload, options) {
         }
         xhr.onload = function(evt) {
             if (xhr.status >= 400) {
-                var error = new HTTPError(xhr.status, xhr.response);
+                let error = new HTTPError(xhr.status, xhr.response);
                 reject(error);
             } else {
-                var result = xhr.response;
+                let result = xhr.response;
                 resolve(result);
             }
         };
@@ -71,8 +67,8 @@ function fetch(method, url, payload, options) {
         xhr.onabort = function(evt) {
             reject(new Error('Transfer aborted: ' + url));
         }
-        var onDownloadProgress = _.get(options, 'onDownloadProgress');
-        var onUploadProgress = _.get(options, 'onUploadProgress');
+        let onDownloadProgress = _.get(options, 'onDownloadProgress');
+        let onUploadProgress = _.get(options, 'onUploadProgress');
         xhr.onprogress = function(evt) {
             if (onDownloadProgress) {
                 onDownloadProgress(evt);
@@ -97,3 +93,7 @@ function omitBlob(key, value) {
     }
     return value;
 }
+
+export {
+    fetch,
+};

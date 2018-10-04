@@ -1,10 +1,12 @@
+@import '../colors';
+
 .app-component {
     display: flex;
     flex-direction: row;
-    border: 1px solid #211a1a;
+    border: 1px solid $app-component-border-color;
     margin-top: 0.3em;
     margin-right: 0.1em;
-    background-color: #cccccc;
+    background-color: $app-component-background-color;
     cursor: pointer;
 
     &:first-child {
@@ -16,8 +18,8 @@
 
         .icon {
             display: inline-block;
-            color: #000000;
-            background-color: #fca326;
+            color: $app-component-icon-color;
+            background-color: $app-component-icon-background-color;
             height: 4em;
             width: 4em;
             padding-top: 1em;
@@ -37,7 +39,7 @@
 
     .description {
         flex: 1 1 auto;
-        color: #333333;
+        color: $app-component-text-color;
         font-size: 1em;
         margin: 0.25em 0.25em 0 0.40em;
         overflow: hidden;

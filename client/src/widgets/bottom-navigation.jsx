@@ -1,108 +1,67 @@
-/**
- * BottomNavigation - React component
- *
- * Buttons at the bottom of the screen for going from section to section.
- */
- var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var ComponentRefs = require('utils/component-refs');
-var HTTPError = require('errors/http-error');
-var NotificationFinder = require('objects/finders/notification-finder');
-var UserFinder = require('objects/finders/user-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-var NewsPage = require('pages/news-page');
-var PeoplePage = require('pages/people-page');
-var NotificationsPage = require('pages/notifications-page');
-var BookmarksPage = require('pages/bookmarks-page');
-var SettingsPage = require('pages/settings-page');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import ComponentRefs from 'utils/component-refs';
+import HTTPError from 'errors/http-error';
+import * as NotificationFinder from 'objects/finders/notification-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 
 // widgets
-var Link = require('widgets/link');
+import Link from 'widgets/link';
 
-require('./bottom-navigation.scss');
+import './bottom-navigation.scss';
 
-module.exports = React.createClass({
-    displayName: 'BottomNavigation',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        settings: PropTypes.object.isRequired,
-        hasAccess: PropTypes.bool,
+class BottomNavigation extends PureComponent {
+    static displayName = 'BottomNavigation';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             container: HTMLDivElement,
         });
-        return {
+        this.state =  {
             height: this.isHidden() ? 0 : 'auto',
             stacking: false,
         };
-    },
+    }
 
     /**
      * Return true if bottom nav is supposed to be hidden
      *
-     * @param  {Object|undefined} settings
+     * @param  {Object|undefined} props
      *
      * @return {Boolean}
      */
-    isHidden: function(settings) {
-        if (!settings) {
-            settings = this.props.settings;
-        }
+    isHidden(props) {
+        let { settings } = props || this.props;
         return !_.get(settings, 'navigation.bottom', true);
-    },
+    }
 
     /**
      * Return a URL that points to the given page.
      *
-     * @param  {ReactClass} pageClass
-     * @param  {Route|undefined} route
+     * @param  {String} pageName
      *
      * @return {String|null}
      */
-    getPageURL: function(pageClass, route) {
-        if (!route) {
-            route = this.props.route;
-        }
-        var settings = (pageClass.configureUI) ? pageClass.configureUI(route) : null;
-        var params = _.get(settings, 'navigation.route');
-        if (!params) {
-            return null;
-        }
-        return route.find(pageClass, params);
-    },
+    getPageURL(pageName) {
+        let { settings, route } = this.props;
+        let params = _.get(settings, 'navigation.route');
+        let url = route.find(pageName, params);
+        return url;
+    }
 
     /**
      * Change this.state.height when this.props.hidden changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        var hiddenBefore = this.isHidden();
-        var hiddenAfter = this.isHidden(nextProps.settings);
+    componentWillReceiveProps(nextProps) {
+        let { container } = this.components;
+        let hiddenBefore = this.isHidden();
+        let hiddenAfter = this.isHidden(nextProps);
         if (hiddenBefore !== hiddenAfter) {
-            var container = this.components.container;
-            var contentHeight = container.offsetHeight;
+            let contentHeight = container.offsetHeight;
             if (hiddenAfter) {
                 // hiding navigation:
                 //
@@ -127,77 +86,74 @@ module.exports = React.createClass({
                 }, 1000);
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var style = { height: this.state.height };
+    render() {
+        let { height } = this.state;
         return (
-            <footer className="bottom-navigation" style={style}>
+            <footer className="bottom-navigation" style={{ height }}>
                 {this.renderButtons()}
             </footer>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var setters = this.components.setters;
-        var route = this.props.route;
-        var section = _.get(this.props.settings, 'navigation.section');
-        var newsProps = {
+    renderButtons() {
+        let { database, route, env, settings } = this.props;
+        let { stacking } = this.state;
+        let { setters } = this.components;
+        let { t } = env.locale;
+        let section = _.get(settings, 'navigation.section');
+        let newsProps = {
             label: t('bottom-nav-news'),
             icon: 'newspaper-o',
             active: (section === 'news'),
-            stacking: this.state.stacking,
-            url: this.getPageURL(NewsPage),
+            stacking,
+            url: this.getPageURL('news-page'),
             onClick: (section === 'news') ? this.handleActiveButtonClick : null,
         };
-        var notificationsProps = {
+        let notificationsProps = {
             label: t('bottom-nav-notifications'),
             icon: 'comments',
             active: (section === 'notifications'),
-            stacking: this.state.stacking,
-            url: this.getPageURL(NotificationsPage),
+            stacking,
+            url: this.getPageURL('notifications-page'),
             onClick: (section === 'notifications') ? this.handleActiveButtonClick : null,
         };
-        var bookmarksProps = {
+        let bookmarksProps = {
             label: t('bottom-nav-bookmarks'),
             icon: 'bookmark',
             active: (section === 'bookmarks'),
-            stacking: this.state.stacking,
-            url: this.getPageURL(BookmarksPage),
+            stacking,
+            url: this.getPageURL('bookmarks-page'),
             onClick: (section === 'bookmarks') ? this.handleActiveButtonClick : null,
         };
-        var peopleProps = {
+        let peopleProps = {
             label: t('bottom-nav-people'),
             icon: 'users',
             active: (section === 'people'),
-            stacking: this.state.stacking,
-            url: this.getPageURL(PeoplePage),
+            stacking,
+            url: this.getPageURL('people-page'),
             onClick: (section === 'people') ? this.handleActiveButtonClick : null,
         };
-        var settingsProps = {
+        let settingsProps = {
             label: t('bottom-nav-settings'),
             icon: 'gears',
             active: (section === 'settings'),
-            stacking: this.state.stacking,
-            url: this.getPageURL(SettingsPage),
+            stacking,
+            url: this.getPageURL('settings-page'),
             onClick: (section === 'settings') ? this.handleActiveButtonClick : null,
         };
-        var newNotificationProps = {
-            hasAccess: this.props.hasAccess,
-            database: this.props.database,
-            route: this.props.route,
-        };
+        let newNotificationProps = { database, route };
         return (
             <div ref={setters.container} className="container">
                 <Button {...newsProps} />
@@ -209,54 +165,55 @@ module.exports = React.createClass({
                 <Button {...settingsProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Perform stacking check on mount and add resize handler
      */
-    componentDidMount: function() {
+    componentDidMount() {
         this.detectStacking();
         window.addEventListener('resize', this.handleWindowResize);
-    },
+    }
 
     /**
      * Remove resize listener
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         window.removeEventListener('resize', this.handleWindowResize);
-    },
+    }
 
     /**
      * Check if icon and text labels are on top of each other
      */
-    detectStacking: function() {
-        var container = this.components.container;
+    detectStacking() {
+        let { stacking } = this.state;
+        let { container } = this.components;
         if (container) {
-            var icon = container.getElementsByClassName('fa')[1];
-            var label = container.getElementsByClassName('label')[1];
-            var stacking = (label.offsetTop >= icon.offsetTop + icon.offsetHeight);
-            if (this.state.stacking !== stacking) {
-                this.setState({ stacking });
+            let icon = container.getElementsByClassName('fa')[1];
+            let label = container.getElementsByClassName('label')[1];
+            let stackingAfter = (label.offsetTop >= icon.offsetTop + icon.offsetHeight);
+            if (stackingAfter !== stacking) {
+                this.setState({ stacking: stackingAfter });
             }
         }
-    },
+    }
 
     /**
      * Called when user resize the browser window
      *
      * @param  {Event} evt
      */
-    handleWindowResize: function(evt) {
+    handleWindowResize = (evt) => {
         this.detectStacking();
-    },
+    }
 
     /**
      * Called when user clicks a button that's already active
      *
      * @param  {Event} evt
      */
-    handleActiveButtonClick: function(evt) {
-        var page = document.getElementsByClassName('page-container')[0];
+    handleActiveButtonClick = (evt) => {
+        let page = document.getElementsByClassName('page-container')[0];
         if (page && page.scrollTop > 0) {
             if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
                 // stop momentum scrolling
@@ -267,49 +224,50 @@ module.exports = React.createClass({
                 page.scrollTop = 0;
             }
         }
-    },
-});
+    }
+}
 
 function Button(props) {
-    var className = 'button';
-    if (props.className) {
-        className += ` ${props.className}`;
-    }
-    if (props.active) {
+    let {
+        className,
+        url,
+        label,
+        icon,
+        children,
+        active,
+        stacking,
+        onClick
+    } = props;
+    className = 'button' + ((className) ? ` ${className}` : '');
+    if (active) {
         className += ' active';
     }
-    if (props.stacking) {
+    if (stacking) {
         className += ' stacking';
     }
-    if (props.stacking) {
+    if (stacking) {
         return (
-            <Link className={className} url={props.url} onClick={props.onClick}>
-                <i className={`fa fa-${props.icon}`} />
-                    {props.children}
+            <Link className={className} url={url} onClick={onClick}>
+                <i className={`fa fa-${icon}`} />
+                    {children}
                     {' '}
-                <span className="label">{props.label}</span>
+                <span className="label">{label}</span>
             </Link>
         );
     } else {
         return (
-            <Link className={className} url={props.url} onClick={props.onClick}>
-                <i className={`fa fa-${props.icon}`} />
+            <Link className={className} url={url} onClick={onClick}>
+                <i className={`fa fa-${icon}`} />
                 {' '}
-                <span className="label">{props.label}</span>
-                {props.children}
+                <span className="label">{label}</span>
+                {children}
             </Link>
         );
     }
 }
 
-var NewNotificationsBadge = Relaks.createClass({
-    displayName: 'NewNotificationsBadge',
-    propTypes: {
-        stacking: PropTypes.bool,
-        hasAccess: PropTypes.bool,
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-    },
+class NewNotificationsBadge extends AsyncComponent {
+    static displayName = 'NewNotificationsBadge';
 
     /**
      * Render component asynchronously
@@ -318,19 +276,19 @@ var NewNotificationsBadge = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        if (!params.schema) {
+    renderAsync(meanwhile) {
+        let { database } = this.props;
+        if (!database.context.schema) {
             return null;
         }
-        if (!this.props.hasAccess) {
+        if (!database.authorized) {
             return null;
         }
-        var db = this.props.database.use({ schema: params.schema, by: this });
-        return db.start().then((currentUserId) => {
-            return UserFinder.findUser(db, currentUserId).then((user) => {
+        let db = database.use({ by: this });
+        return db.start().then((currentUserID) => {
+            return UserFinder.findUser(db, currentUserID).then((user) => {
                 return NotificationFinder.findNotificationsUnseenByUser(db, user).then((notifications) => {
-                    var count = notifications.length;
+                    let count = notifications.length;
                     if (process.env.PLATFORM === 'browser') {
                         changeFavIcon(count);
                         changeDocumentTitle(count);
@@ -346,56 +304,83 @@ var NewNotificationsBadge = Relaks.createClass({
                 });
             });
         });
-    },
-});
+    }
+}
 
-if (process.env.PLATFORM === 'browser') {
-    var favIcons;
+let favIcons;
 
-    /**
-     * Use favicon with a badge if there are unread notifications
-     *
-     * @param  {Number} count
-     */
-    var changeFavIcon = function(count) {
-        if (!favIcons) {
-            // get the post-WebPack filenames of the favicons
-            var paths = require.context('favicon-notification', true, /\.png$/).keys();
-            favIcons = _.map(paths, (path) => {
-                // make the file extension part of the expression passed to require()
-                // so WebPack will filter out other files
-                var name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
-                var withoutBadge = require(`favicon/${name}.png`);
-                var withBadge = require(`favicon-notification/${name}.png`);
-                return { withoutBadge, withBadge };
-            });
-        }
-        var links = _.filter(document.head.getElementsByTagName('LINK'), (link) => {
-            if (link.rel === 'icon' || link.rel === 'apple-touch-icon-precomposed') {
-                return true;
-            }
-        });
-        _.each(links, (link) => {
-            var currentFilename = link.getAttribute('href');
-            if (count > 0) {
-                var icon = _.find(favIcons, { withoutBadge: currentFilename });
-                if (icon) {
-                    link.href = icon.withBadge;
-                }
-            } else {
-                var icon = _.find(favIcons, { withBadge: currentFilename });
-                if (icon) {
-                    link.href = icon.withoutBadge;
-                }
-            }
+/**
+ * Use favicon with a badge if there are unread notifications
+ *
+ * @param  {Number} count
+ */
+function changeFavIcon(count) {
+    if (!favIcons) {
+        // get the post-WebPack filenames of the favicons
+        let paths = require.context('favicon-notification', true, /\.png$/).keys();
+        favIcons = _.map(paths, (path) => {
+            // make the file extension part of the expression passed to require()
+            // so WebPack will filter out other files
+            let name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
+            let withoutBadge = require(`favicon/${name}.png`);
+            let withBadge = require(`favicon-notification/${name}.png`);
+            return { withoutBadge, withBadge };
         });
     }
-
-    var changeDocumentTitle = function(count) {
-        var title = _.replace(document.title, /^\(\d+\)\s*/, '');
+    let links = _.filter(document.head.getElementsByTagName('LINK'), (link) => {
+        if (link.rel === 'icon' || link.rel === 'apple-touch-icon-precomposed') {
+            return true;
+        }
+    });
+    _.each(links, (link) => {
+        let currentFilename = link.getAttribute('href');
         if (count > 0) {
-            title = `(${count}) ${title}`;
+            let icon = _.find(favIcons, { withoutBadge: currentFilename });
+            if (icon) {
+                link.href = icon.withBadge;
+            }
+        } else {
+            let icon = _.find(favIcons, { withBadge: currentFilename });
+            if (icon) {
+                link.href = icon.withoutBadge;
+            }
         }
-        document.title = title;
+    });
+}
+
+function changeDocumentTitle(count) {
+    let title = _.replace(document.title, /^\(\d+\)\s*/, '');
+    if (count > 0) {
+        title = `(${count}) ${title}`;
     }
+    document.title = title;
+}
+
+export {
+    BottomNavigation as default,
+    BottomNavigation,
+    NewNotificationsBadge,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    NewNotificationsBadge.propTypes = {
+        stacking: PropTypes.bool,
+        hasAccess: PropTypes.bool,
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+    };
+    BottomNavigation.propTypes = {
+        settings: PropTypes.object.isRequired,
+        hasAccess: PropTypes.bool,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
 }

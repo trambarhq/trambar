@@ -1,34 +1,18 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var ProjectFinder = require('objects/finders/project-finder');
-var RoleFinder = require('objects/finders/role-finder');
-var UserFinder = require('objects/finders/user-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import { memoizeWeak } from 'utils/memoize';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as RoleFinder from 'objects/finders/role-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 
 // widgets
-var RoleFilterButton = require('widgets/role-filter-button');
+import RoleFilterButton from 'widgets/role-filter-button';
 
-require('./role-filter-bar.scss');
+import './role-filter-bar.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'RoleFilterBar',
-    propTypes: {
-        settings: PropTypes.object.isRequired,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class RoleFilterBar extends AsyncComponent {
+    static displayName = 'RoleFilterBar';
 
     /**
      * Render component asynchronously
@@ -37,21 +21,20 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env, settings } = this.props;
+        let db = database.use({ by: this });
+        let props = {
             roles: null,
             users: null,
             project: null,
 
-            settings: this.props.settings,
-            locale: this.props.locale,
-            route: this.props.route,
-            theme: this.props.theme,
+            settings,
+            route,
+            env,
         };
         meanwhile.show(<RoleFilterBarSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserID) => {
             return ProjectFinder.findCurrentProject(db).then((project) => {
                 props.project = project;
             });
@@ -66,55 +49,46 @@ module.exports = Relaks.createClass({
         }).then((roles) => {
             return <RoleFilterBarSync {...props} />;
         });
-    },
-});
+    }
+}
 
-var RoleFilterBarSync = module.exports.Sync = React.createClass({
-    displayName: 'RoleFilterBar.Sync',
-    propTypes: {
-        settings: PropTypes.object.isRequired,
-        project: PropTypes.object,
-        roles: PropTypes.arrayOf(PropTypes.object),
-        users: PropTypes.arrayOf(PropTypes.object),
-
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class RoleFilterBarSync extends PureComponent {
+    static displayName = 'RoleFilterBar.Sync';
 
     /**
      * Render component
      *
      * @return {[type]}
      */
-    render: function() {
+    render() {
         return (
             <div className="role-filter-bar">
                 {this.renderButtons()}
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {Array<ReactElement>|ReactElement}
      */
-    renderButtons: function() {
-        var roles = this.props.roles;
+    renderButtons() {
+        let { env, roles } = this.props;
         if (!_.isEmpty(roles)) {
-            return _.map(roles, this.renderButton);
+            return _.map(roles, (role) => {
+                return this.renderButton(role);
+            });
         } else {
             // render a blank button to maintain spacing
             // show "No roles" if database query yielded nothing
-            var props = {
+            let props = {
                 role: (roles !== null) ? null : undefined,
-                locale: this.props.locale,
-                theme: this.props.theme,
+                env,
             };
             return <RoleFilterButton {...props} />;
         }
-    },
+    }
 
     /**
      * Render button for given role
@@ -123,36 +97,63 @@ var RoleFilterBarSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderButton: function(role) {
-        var users = findUsers(this.props.users, role);
-        var route = this.props.route;
-        var roleIds = route.parameters.roles;
-        var params = _.clone(this.props.settings.route);
-        if (_.includes(roleIds, role.id)) {
-            params.roles = _.without(roleIds, role.id);
+    renderButton(role) {
+        let { route, env, users, settings } = this.props;
+        let roleUsers = findUsers(users, role);
+        let params = _.clone(settings.route || {});
+        if (_.includes(route.params.roleIDs, role.id)) {
+            params.roleIDs = _.without(route.params.roleIDs, role.id);
         } else {
-            params.roles = _.concat(roleIds, role.id);
+            params.roleIDs = _.concat(route.params.roleIDs, role.id);
         }
-        var url = route.find(route.component, params);
-        var props = {
+        let url = route.find(route.name, params);
+        let props = {
             role,
-            users,
+            users: roleUsers,
             url,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            selected: _.includes(roleIds, role.id),
+            selected: _.includes(route.params.roleIDs, role.id),
+            env,
             onRoleClick: this.handleRoleClick,
         };
         return <RoleFilterButton key={role.id} {...props} />;
-    },
-});
+    }
+}
 
-var findUsers = Memoize(function(users, role) {
-    var list = _.filter(users, (user) => {
+const findUsers = memoizeWeak(null, function(users, role) {
+    let list = _.filter(users, (user) => {
         return _.includes(user.role_ids, role.id);
     });
     if (!_.isEmpty(list)) {
         return list;
     }
-    return list;
 });
+
+export {
+    RoleFilterBar as default,
+    RoleFilterBarSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    RoleFilterBar.propTypes = {
+        settings: PropTypes.object.isRequired,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    RoleFilterBarSync.propTypes = {
+        settings: PropTypes.object.isRequired,
+        project: PropTypes.object,
+        roles: PropTypes.arrayOf(PropTypes.object),
+        users: PropTypes.arrayOf(PropTypes.object),
+
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

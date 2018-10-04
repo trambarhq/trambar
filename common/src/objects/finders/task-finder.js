@@ -1,11 +1,7 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
+import _ from 'lodash';
+import Promise from 'bluebird';
 
-module.exports = {
-    findActiveTasks,
-    findServerTasks,
-};
+const emptyArray = [];
 
 /**
  * Find system tasks that haven't yet ended
@@ -42,7 +38,7 @@ function findActiveTasks(db, startTime, minimum) {
  */
 function findServerTasks(db, server, minimum) {
     if (!server) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     return db.find({
         schema: 'global',
@@ -57,3 +53,8 @@ function findServerTasks(db, server, minimum) {
         minimum
     });
 }
+
+export {
+    findActiveTasks,
+    findServerTasks,
+};

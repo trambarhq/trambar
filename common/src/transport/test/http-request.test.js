@@ -1,42 +1,50 @@
-var Chai = require('chai'), expect = Chai.expect;
+import { expect } from 'chai';
+import TestServer from './lib/test-server';
 
-var HTTPRequest = require('transport/http-request');
+import * as HTTPRequest from 'transport/http-request';
+
+let port = 7878;
+let baseURL = `http://localhost:${port}`;
 
 describe('HTTPRequest', function() {
+    before(function() {
+        return TestServer.start(port);
+    })
+
     describe('#fetch()', function() {
         it('should retrieve a JSON object using GET', function() {
-            var url = 'http://httpbin.org/get';
-            var payload = {
+            let url = `${baseURL}/echo`;
+            let payload = {
                 msg: 'hello world',
                 life: 42,
             };
-            var options = {
+            let options = {
                 responseType: 'json'
             };
             return HTTPRequest.fetch('GET', url, payload, options).then((result) => {
-                expect(result).to.have.deep.property('args.life', '42');
+                expect(result).to.have.property('life', '42');
             });
         })
         it('should retrieve a JSON object using POST', function() {
-            var url = 'http://httpbin.org/post';
-            var payload = {
+            let url = `${baseURL}/echo`;
+            let payload = {
                 life: 42,
             };
-            var options = {
+            let options = {
                 contentType: 'application/json',
                 responseType: 'json'
             };
             return HTTPRequest.fetch('POST', url, payload, options).then((result) => {
-                expect(result).to.have.property('data').to.contain('42');
+                expect(result).to.have.property('life', 42);
             });
         })
-        it('should retrieve a string object using GET', function() {
-            var url = 'http://httpbin.org/get';
-            var payload = {
+        it('should retrieve a string using GET', function() {
+            let url = `${baseURL}/echo`;
+            let payload = {
                 msg: 'hello world',
                 life: 42,
             };
-            var options = {
+            let options = {
                 responseType: 'text'
             };
             return HTTPRequest.fetch('GET', url, payload, options).then((result) => {
@@ -44,21 +52,21 @@ describe('HTTPRequest', function() {
             });
         })
         it('should retrieve a blob using GET', function() {
-            var url = 'http://httpbin.org/get';
-            var payload = {
+            let url = `${baseURL}/echo`;
+            let payload = {
                 msg: 'hello world',
                 life: 42,
             };
-            var options = {
+            let options = {
                 responseType: 'blob'
             };
             return HTTPRequest.fetch('GET', url, payload, options).then((result) => {
-                expect(result).to.be.a('blob');
+                expect(result).to.be.an.instanceof(Blob);
             });
         })
         it('should reject with an error when the host is unreachable', function() {
             this.timeout(5000);
-            var url = 'http://domain.test/';
+            let url = 'http://domain.test/';
             return HTTPRequest.fetch('GET', url).catch((err) => {
                 expect(err).to.be.an('error');
             }).then((result) => {
@@ -66,15 +74,18 @@ describe('HTTPRequest', function() {
             });
         })
         it('should reject with an error when timeout is short', function() {
-            var url = 'http://httpbin.org/delay/1';
-            var options = {
+            let url = `${baseURL}/delay/1000`;
+            let options = {
                 timeout: 200
             };
-            var promise = HTTPRequest.fetch('GET', url, {}, options).catch((err) => {
+            let promise = HTTPRequest.fetch('GET', url, {}, options).catch((err) => {
                 expect(err).to.be.an('error');
             }).then((result) => {
                 expect(result).to.be.an('undefined');
             });
         })
+    })
+    after(function() {
+        return TestServer.stop();
     })
 })

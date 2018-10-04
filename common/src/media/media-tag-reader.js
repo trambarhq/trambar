@@ -1,22 +1,18 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var JSMediaTags = require('jsmediatags/dist/jsmediatags');
-
-module.exports = {
-    extractAlbumArt,
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
+import JSMediaTags from 'jsmediatags/dist/jsmediatags';
 
 function extractAlbumArt(blob) {
     return new Promise((resolve, reject) => {
-        var reader = new JSMediaTags.Reader(blob);
+        let reader = new JSMediaTags.Reader(blob);
         reader.setTagsToRead([ 'picture' ]);
         reader.read({
             onSuccess: function(meta) {
-                var picture = _.get(meta, 'tags.picture');
+                let picture = _.get(meta, 'tags.picture');
                 if (picture && picture.data) {
-                    var data = picture.data;
-                    var bytes = new Uint8Array(data)
-                    var blob = new Blob([ bytes ], { type: picture.format });
+                    let data = picture.data;
+                    let bytes = new Uint8Array(data)
+                    let blob = new Blob([ bytes ], { type: picture.format });
                     resolve(blob);
                 } else {
                     resolve(null);
@@ -28,3 +24,7 @@ function extractAlbumArt(blob) {
         });
     });
 }
+
+export {
+    extractAlbumArt,
+};

@@ -1,80 +1,32 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var ComponentRefs = require('utils/component-refs');
-var ProjectFinder = require('objects/finders/project-finder');
-var ProjectSettings = require('objects/settings/project-settings');
-var StatisticsFinder = require('objects/finders/statistics-finder');
-var SystemFinder = require('objects/finders/system-finder');
-var SlugGenerator = require('utils/slug-generator');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-var Payloads = require('transport/payloads');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import ComponentRefs from 'utils/component-refs';
+import * as ProjectFinder from 'objects/finders/project-finder';
+import * as ProjectSettings from 'objects/settings/project-settings';
+import * as StatisticsFinder from 'objects/finders/statistics-finder';
+import * as SystemFinder from 'objects/finders/system-finder';
+import SlugGenerator from 'utils/slug-generator';
 
 // widgets
-var PushButton = require('widgets/push-button');
-var ComboButton = require('widgets/combo-button');
-var InstructionBlock = require('widgets/instruction-block');
-var TextField = require('widgets/text-field');
-var MultilingualTextField = require('widgets/multilingual-text-field');
-var OptionList = require('widgets/option-list');
-var ImageSelector = require('widgets/image-selector');
-var ActivityChart = require('widgets/activity-chart');
-var InputError = require('widgets/input-error');
-var ActionConfirmation = require('widgets/action-confirmation');
-var DataLossWarning = require('widgets/data-loss-warning');
-var UnexpectedError = require('widgets/unexpected-error');
+import PushButton from 'widgets/push-button';
+import ComboButton from 'widgets/combo-button';
+import InstructionBlock from 'widgets/instruction-block';
+import TextField from 'widgets/text-field';
+import MultilingualTextField from 'widgets/multilingual-text-field';
+import OptionList from 'widgets/option-list';
+import ImageSelector from 'widgets/image-selector';
+import ActivityChart from 'widgets/activity-chart';
+import InputError from 'widgets/input-error';
+import ActionConfirmation from 'widgets/action-confirmation';
+import DataLossWarning from 'widgets/data-loss-warning';
+import UnexpectedError from 'widgets/unexpected-error';
+import ErrorBoundary from 'widgets/error-boundary';
 
-require('./project-summary-page.scss');
+import './project-summary-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'ProjectSummaryPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-    },
-
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/projects/:project/?'
-            ], (params) => {
-                return {
-                    project: (params.project === 'new') ? 'new' : Route.parseId(params.project),
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/projects/${params.project}/`, query;
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
+class ProjectSummaryPage extends AsyncComponent {
+    static displayName = 'ProjectSummaryPage';
 
     /**
      * Render the component asynchronously
@@ -83,33 +35,35 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env, payloads, projectID, editing } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let creating = (projectID === 'new');
+        let props = {
             system: null,
             project: null,
             statistics: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
+            database,
+            route,
+            env,
+            payloads,
+            editing: editing || creating,
+            creating,
         };
         meanwhile.show(<ProjectSummaryPageSync {...props} />);
-        return db.start().then((currentUserId) => {
+        return db.start().then((currentUserID) => {
             return SystemFinder.findSystem(db).then((system) => {
                 props.system = system;
             });
         }).then(() => {
-            if (params.project !== 'new') {
-                return ProjectFinder.findProject(db, params.project).then((project) => {
+            if (!creating) {
+                return ProjectFinder.findProject(db, projectID).then((project) => {
                     props.project = project;
                 });
             }
         }).then(() => {
-            if (params.project !== 'new') {
+            if (!creating) {
                 meanwhile.show(<ProjectSummaryPageSync {...props} />);
                 return StatisticsFinder.findDailyActivitiesOfProject(db, props.project).then((statistics) => {
                     props.statistics = statistics;
@@ -119,38 +73,23 @@ module.exports = Relaks.createClass({
             return <ProjectSummaryPageSync {...props} />;
         });
     }
-});
+}
 
-var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
-    displayName: 'ProjectSummaryPage.Sync',
-    propTypes: {
-        system: PropTypes.object,
-        project: PropTypes.object,
-        statistics: PropTypes.object,
+class ProjectSummaryPageSync extends PureComponent {
+    static displayName = 'ProjectSummaryPage.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
         });
-        return {
+        this.state = {
             newProject: null,
             saving: false,
             adding: false,
             problems: {},
         };
-    },
+    }
 
     /**
      * Return edited copy of project object or the original object
@@ -159,13 +98,15 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Object}
      */
-    getProject: function(state) {
-        if (this.isEditing() && (!state || state === 'current')) {
-            return this.state.newProject || this.props.project || emptyProject;
+    getProject(state) {
+        let { project, editing } = this.props;
+        let { newProject } = this.state;
+        if (editing && (!state || state === 'current')) {
+            return newProject || project || emptyProject;
         } else {
-            return this.props.project || emptyProject;
+            return project || emptyProject;
         }
-    },
+    }
 
     /**
      * Return a prop of the project object
@@ -175,10 +116,10 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {*}
      */
-    getProjectProperty: function(path, state) {
-        var project = this.getProject(state);
+    getProjectProperty(path, state) {
+        let project = this.getProject(state);
         return _.get(project, path);
-    },
+    }
 
     /**
      * Modify a property of the project object
@@ -186,70 +127,47 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setProjectProperty: function(path, value) {
-        var project = this.getProject('current');
-        var newProject = _.decoupleSet(project, path, value);
+    setProjectProperty(path, value) {
+        let { project } = this.props;
+        let newProject = this.getProject('current');
+        let newProjectAfter = _.decoupleSet(newProject, path, value);
         if (path === 'details.title') {
-            if (!project.id) {
-                var autoNameBefore = SlugGenerator.fromTitle(project.details.title);
-                var autoNameAfter = SlugGenerator.fromTitle(newProject.details.title);
-                if (!project.name || project.name === autoNameBefore) {
-                    newProject.name = autoNameAfter;
+            if (!newProject.id) {
+                let autoNameBefore = SlugGenerator.fromTitle(newProject.details.title);
+                let autoNameAfter = SlugGenerator.fromTitle(newProjectAfter.details.title);
+                if (!newProject.name || newProject.name === autoNameBefore) {
+                    newProjectAfter.name = autoNameAfter;
                 }
             }
         }
-        if(_.size(newProject.name) > 128) {
-            newProject.name = newProject.name.substr(0, 128);
+        if(_.size(newProjectAfter.name) > 128) {
+            newProjectAfter.name = newProjectAfter.name.substr(0, 128);
         }
-        var hasChanges = true;
-        if (_.isEqual(newProject, this.props.project)) {
-            newProject = null;
+        let hasChanges = true;
+        if (_.isEqual(newProjectAfter, project)) {
+            newProjectAfter = null;
             hasChanges = false;
         }
-        this.setState({ newProject, hasChanges });
-    },
+        this.setState({ newProject: newProjectAfter, hasChanges });
+    }
 
     /**
      * Look for problems in project object
      *
      * @return {Object}
      */
-    findProblems: function() {
-        var problems = {};
-        var project = this.getProject();
-        var name = _.toLower(_.trim(project.name));
-        var reservedNames = [ 'global', 'admin', 'public', 'srv' ];
+    findProblems() {
+        let problems = {};
+        let newProject = this.getProject();
+        let name = _.toLower(_.trim(newProject.name));
+        let reservedNames = [ 'global', 'admin', 'public', 'srv' ];
         if (!name) {
             problems.name = 'validation-required';
         } else if (_.includes(reservedNames, name)) {
             problems.name = 'validation-illegal-project-name';
         }
         return problems;
-    },
-
-    /**
-     * Return true when the URL indicate we're creating a new user
-     *
-     * @param  {Object} props
-     *
-     * @return {Boolean}
-     */
-    isCreating: function(props) {
-        props = props || this.props;
-        return (props.route.parameters.project === 'new');
-    },
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object} props
-     *
-     * @return {Boolean}
-     */
-    isEditing: function(props) {
-        props = props || this.props;
-        return this.isCreating(props) || props.route.parameters.edit;
-    },
+    }
 
     /**
      * Change editability of page
@@ -259,65 +177,67 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    setEditability: function(edit, newProject) {
-        if (this.isCreating() && !edit && !newProject) {
+    setEditability(edit, newProject) {
+        let { route, creating } = this.props;
+        if (creating && !edit && !newProject) {
             // return to list when cancelling project creation
             this.returnToList();
         } else {
-            var route = this.props.route;
-            var params = _.clone(route.parameters);
-            params.edit = edit;
+            let params = _.clone(route.params);
+            params.editing = edit || undefined;
             if (newProject) {
                 // use id of newly created project
-                params.project = newProject.id;
+                params.projectID = newProject.id;
             }
-            return route.replace(module.exports, params).then((replaced) => {
+            return route.replace(route.name, params).then((replaced) => {
                 if (replaced) {
                     this.setState({ problems: {} });
                 }
             });
         }
-    },
+    }
 
     /**
      * Return to project list
      *
      * @return {Promise}
      */
-    returnToList: function() {
-        var route = this.props.route;
-        return route.push(require('pages/project-list-page'));
-    },
+    returnToList() {
+        let { route } = this.props;
+        return route.push('project-list-page');
+    }
 
     /**
      * Start creating a new role
      *
      * @return {Promise}
      */
-    startNew: function() {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
+    startNew() {
+        let { route } = this.props;
+        let params = _.clone(route.params);
         params.project = 'new';
-        return route.replace(module.exports, params);
-    },
+        return route.replace(route.name, params);
+    }
 
     /**
      * Return list of language codes
      *
      * @return {Array<String>}
      */
-    getInputLanguages: function() {
-        return _.get(this.props.system, 'settings.input_languages', [])
-    },
+    getInputLanguages() {
+        let { system } = this.props;
+        return _.get(system, 'settings.input_languages', [])
+    }
 
     /**
      * Reset edit state when edit starts
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+    componentWillReceiveProps(nextProps) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 this.setState({
                     newProject: null,
                     hasChanges: false,
@@ -326,40 +246,44 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 this.setState({ problems: {} });
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
-        var p = this.props.locale.pick;
-        var project = this.getProject();
-        var title = p(project.details.title) || project.name;
+    render() {
+        let { route, env } = this.props;
+        let { hasChanges, problems } = this.state;
+        let { setters } = this.components;
+        let { t, p } = env.locale;
+        let newProject = this.getProject();
+        let title = p(newProject.details.title) || newProject.name;
         return (
             <div className="project-summary-page">
                 {this.renderButtons()}
                 <h2>{t('project-summary-$title', title)}</h2>
-                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
+                <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderForm()}
                 {this.renderInstructions()}
                 {this.renderChart()}
-                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
-                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                <ActionConfirmation ref={setters.confirmation} env={env} />
+                <DataLossWarning changes={hasChanges} route={route} env={env} />
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons in top right corner
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        if (this.isEditing()) {
+    renderButtons() {
+        let { env, project, editing } = this.props;
+        let { hasChanges, adding } = this.state;
+        let { t, p } = env.locale;
+        if (editing) {
             // using keys here to force clearing of focus
             return (
                 <div key="edit" className="buttons">
@@ -367,17 +291,16 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                         {t('project-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('project-summary-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            var project = this.props.project;
-            var active = (project) ? !project.deleted && !project.archived : true;
-            var preselected;
+            let active = (project) ? !project.deleted && !project.archived : true;
+            let preselected;
             if (active) {
-                preselected = (this.state.adding) ? 'add' : 'return';
+                preselected = (adding) ? 'add' : 'return';
             } else {
                 preselected = 'restore';
             }
@@ -407,14 +330,14 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render form for entering project details
      *
      * @return {ReactElement}
      */
-    renderForm: function() {
+    renderForm() {
         return (
             <div className="form">
                 {this.renderTitleInput()}
@@ -425,114 +348,118 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 {this.renderAccessControlOptions()}
             </div>
         );
-    },
+    }
 
     /**
      * Render title input
      *
      * @return {ReactElement}
      */
-    renderTitleInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderTitleInput() {
+        let { env, editing } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'title',
             value: this.getProjectProperty('details.title'),
             availableLanguageCodes: this.getInputLanguages(),
-            locale: this.props.locale,
+            readOnly: !editing,
+            env,
             onChange: this.handleTitleChange,
-            readOnly: !this.isEditing(),
         };
         return (
             <MultilingualTextField {...props}>
                 {t('project-summary-title')}
             </MultilingualTextField>
         );
-    },
+    }
 
     /**
      * Render name input
      *
      * @return {ReactElement}
      */
-    renderNameInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderNameInput() {
+        let { env, editing } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
+        let props = {
             id: 'name',
             value: this.getProjectProperty('name'),
-            locale: this.props.locale,
-            onChange: this.handleNameChange,
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
+            env,
+            onChange: this.handleNameChange,
         };
-        var problems = this.state.problems;
         return (
             <TextField {...props}>
                 {t('project-summary-name')}
                 <InputError>{t(problems.name)}</InputError>
             </TextField>
         );
-    },
+    }
 
     /**
      * Render description input
      *
      * @return {ReactElement}
      */
-    renderDescriptionInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderDescriptionInput() {
+        let { env, editing } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'description',
             value: this.getProjectProperty('details.description'),
             availableLanguageCodes: this.getInputLanguages(),
             type: 'textarea',
-            locale: this.props.locale,
+            readOnly: !editing,
+            env,
             onChange: this.handleDescriptionChange,
-            readOnly: !this.isEditing(),
         };
         return (
             <MultilingualTextField {...props}>
                 {t('project-summary-description')}
             </MultilingualTextField>
         );
-    },
+    }
 
     /**
      * Render image selector
      *
      * @return {ReactElement}
      */
-    renderEmblemSelector: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderEmblemSelector() {
+        let { database, env, payloads, editing } = this.props;
+        let { t } = env.locale;
+        let props = {
             purpose: 'project-emblem',
             desiredWidth: 500,
             desiredHeight: 500,
             resources: this.getProjectProperty('details.resources'),
-            database: this.props.database,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
+            readOnly: !editing,
+            database,
+            env,
+            payloads,
             onChange: this.handleEmblemChange,
-            readOnly: !this.isEditing(),
         };
         return (
             <ImageSelector {...props}>
                 {t('project-summary-emblem')}
             </ImageSelector>
         );
-    },
+    }
 
     /**
      * Render project membership option list
      *
      * @return {ReactElement}
      */
-    renderMembershipOptions: function() {
-        var t = this.props.locale.translate;
-        var memOptsCurr = this.getProjectProperty('settings.membership', 'current') || {};
-        var memOptsPrev = this.getProjectProperty('settings.membership', 'original') || {};
-        var newProject = !!this.getProjectProperty('id');
-        var optionProps = [
+    renderMembershipOptions() {
+        let { env, editing } = this.props;
+        let { t } = env.locale;
+        let memOptsCurr = this.getProjectProperty('settings.membership', 'current') || {};
+        let memOptsPrev = this.getProjectProperty('settings.membership', 'original') || {};
+        let newProject = !!this.getProjectProperty('id');
+        let optionProps = [
             {
                 name: 'manual',
                 selected: !_.some(memOptsCurr),
@@ -566,9 +493,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 children: t('project-summary-new-members-auto-accept-guest'),
             },
         ];
-        var listProps = {
+        let listProps = {
+            readOnly: !editing,
             onOptionClick: this.handleMembershipOptionClick,
-            readOnly: !this.isEditing(),
         };
         return (
             <OptionList {...listProps}>
@@ -576,19 +503,20 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
-    },
+    }
 
     /**
      * Render project access control option list
      *
      * @return {ReactElement}
      */
-    renderAccessControlOptions: function() {
-        var t = this.props.locale.translate;
-        var acOptsCurr = this.getProjectProperty('settings.access_control', 'current') || {};
-        var acOptsPrev = this.getProjectProperty('settings.access_control', 'original') || {};
-        var newProject = !!this.getProjectProperty('id');
-        var optionProps = [
+    renderAccessControlOptions() {
+        let { env, editing } = this.props;
+        let { t } = env.locale;
+        let acOptsCurr = this.getProjectProperty('settings.access_control', 'current') || {};
+        let acOptsPrev = this.getProjectProperty('settings.access_control', 'original') || {};
+        let newProject = !!this.getProjectProperty('id');
+        let optionProps = [
             {
                 name: 'members_only',
                 selected: !_.some(acOptsCurr),
@@ -609,9 +537,9 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 children: t('project-summary-access-control-non-member-comment')
             },
         ];
-        var listProps = {
+        let listProps = {
+            readOnly: !editing,
             onOptionClick: this.handleAccessControlOptionClick,
-            readOnly: !this.isEditing(),
         };
         return (
             <OptionList {...listProps}>
@@ -619,50 +547,54 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
-    },
+    }
 
     /**
      * Render instruction box
      *
      * @return {ReactElement}
      */
-    renderInstructions: function() {
-        var instructionProps = {
+    renderInstructions() {
+        let { env, editing } = this.props;
+        let { t } = env.locale;
+        let instructionProps = {
             folder: 'project',
             topic: 'project-summary',
-            hidden: !this.isEditing(),
-            locale: this.props.locale,
+            hidden: !editing,
+            env,
         };
         return (
             <div className="instructions">
                 <InstructionBlock {...instructionProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render activity chart
      *
      * @return {ReactElement|null}
      */
-    renderChart: function() {
-        if (this.isCreating()) {
+    renderChart() {
+        let { env, statistics, creating } = this.props;
+        let { t } = env.locale;
+        if (creating) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var chartProps = {
-            statistics: this.props.statistics,
-            locale: this.props.locale,
-            theme: this.props.theme,
+        let chartProps = {
+            statistics,
+            env,
         };
         return (
             <div className="statistics">
-                <ActivityChart {...chartProps}>
-                    {t('project-summary-statistics')}
-                </ActivityChart>
+                <ErrorBoundary env={env}>
+                    <ActivityChart {...chartProps}>
+                        {t('project-summary-statistics')}
+                    </ActivityChart>
+                </ErrorBoundary>
             </div>
         );
-    },
+    }
 
     /**
      * Save project with new flags
@@ -671,24 +603,27 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise<Project>}
      */
-    changeFlags: function(flags) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var projectAfter = _.assign({}, this.props.project, flags);
+    changeFlags(flags) {
+        let { database, project } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let projectAfter = _.assign({}, project, flags);
         return db.saveOne({ table: 'project' }, projectAfter).catch((err) => {
-            var problems = { unexpected: err.message };
+            let problems = { unexpected: err.message };
             this.setState({ problems });
         });
-    },
+    }
 
     /**
      * Called when user select archive project
      *
      * @param  {Event} evt
      */
-    handleArchiveClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('project-summary-confirm-archive');
-        return this.components.confirmation.ask(message).then((confirmed) => {
+    handleArchiveClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('project-summary-confirm-archive');
+        return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ archived: true }).then((project) => {
                     if (project) {
@@ -697,17 +632,19 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 });
             }
         });
-    },
+    }
 
     /**
      * Called when user select delete project
      *
      * @param  {Event} evt
      */
-    handleDeleteClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('project-summary-confirm-delete');
-        return this.components.confirmation.ask(message).then((confirmed) => {
+    handleDeleteClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('project-summary-confirm-delete');
+        return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ deleted: true }).then((project) => {
                     if (project)  {
@@ -716,87 +653,91 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 });
             }
         });
-    },
+    }
 
     /**
      * Called when user select delete project
      *
      * @param  {Event} evt
      */
-    handleRestoreClick: function(evt) {
-        var t = this.props.locale.translate;
-        var message = t('project-summary-confirm-restore');
-        return this.components.confirmation.ask(message).then((confirmed) => {
+    handleRestoreClick = (evt) => {
+        let { env } = this.props;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let message = t('project-summary-confirm-restore');
+        return confirmation.ask(message).then((confirmed) => {
             if (confirmed) {
                 return this.changeFlags({ archived: false, deleted: false });
             }
         });
-    },
+    }
 
     /**
      * Called when user click return button
      *
      * @param  {Event} evt
      */
-    handleReturnClick: function(evt) {
+    handleReturnClick = (evt) => {
         return this.returnToList();
-    },
+    }
 
     /**
      * Called when user click add button
      *
      * @param  {Event} evt
      */
-    handleAddClick: function(evt) {
+    handleAddClick = (evt) => {
         return this.startNew();
-    },
+    }
 
     /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
+    handleEditClick = (evt) => {
         return this.setEditability(true);
-    },
+    }
 
     /**
      * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         return this.setEditability(false);
-    },
+    }
 
     /**
      * Called when user clicks save button
      *
      * @param  {Event} evt
      */
-    handleSaveClick: function(evt) {
-        if (this.state.saving) {
+    handleSaveClick = (evt) => {
+        let { database, payloads } = this.props;
+        let { saving } = this.state;
+        if (saving) {
             return;
         }
-        var problems = this.findProblems();
+        let problems = this.findProblems();
         if (_.some(problems)) {
             this.setState({ problems });
             return;
         }
-        var project = _.omit(this.getProject(), 'user_ids', 'repo_ids');
-        this.setState({ saving: true, adding: !project.id, problems: {} }, () => {
-            var schema = 'global';
-            var db = this.props.database.use({ schema, by: this });
-            return db.start().then((userId) => {
-                return db.saveOne({ table: 'project' }, project).then((project) => {
-                    this.props.payloads.dispatch(project);
+        let newProject = _.omit(this.getProject(), 'user_ids', 'repo_ids');
+        this.setState({ saving: true, adding: !newProject.id, problems: {} }, () => {
+            let schema = 'global';
+            let db = database.use({ schema, by: this });
+            return db.start().then((currentUserID) => {
+                return db.saveOne({ table: 'project' }, newProject).then((project) => {
+                    payloads.dispatch(project);
                     this.setState({ hasChanges: false, saving: false }, () => {
                         this.setEditability(false, project);
                     });
                     return null;
                 });
             }).catch((err) => {
-                var problems = {};
+                let problems = {};
                 if (err.statusCode === 409) {
                     problems = { name: 'validation-duplicate-project-name' };
                 } else {
@@ -805,52 +746,52 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 this.setState({ problems, saving: false });
             });
         });
-    },
+    }
 
     /**
      * Called when user changes the title
      *
      * @param  {Object} evt
      */
-    handleTitleChange: function(evt) {
+    handleTitleChange = (evt) => {
         this.setProjectProperty(`details.title`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes the name
      *
      * @param  {Event} evt
      */
-    handleNameChange: function(evt) {
-        var name = _.toLower(evt.target.value).replace(/\W+/g, '');
+    handleNameChange = (evt) => {
+        let name = _.toLower(evt.target.value).replace(/\W+/g, '');
         this.setProjectProperty(`name`, name);
-    },
+    }
 
     /**
      * Called when user changes the title
      *
      * @param  {Object} evt
      */
-    handleDescriptionChange: function(evt) {
+    handleDescriptionChange = (evt) => {
         this.setProjectProperty(`details.description`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes the project emblem
      *
      * @param  {Object} evt
      */
-    handleEmblemChange: function(evt) {
+    handleEmblemChange = (evt) => {
         this.setProjectProperty(`details.resources`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user clicks an option under membership or access control
      *
      * @param  {Object} evt
      */
-    handleMembershipOptionClick: function(evt) {
-        var memOpts = _.clone(this.getProjectProperty('settings.membership')) || {};
+    handleMembershipOptionClick = (evt) => {
+        let memOpts = _.clone(this.getProjectProperty('settings.membership')) || {};
         switch (evt.name) {
             case 'manual':
                 memOpts = {};
@@ -887,15 +828,15 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 break;
         }
         this.setProjectProperty(`settings.membership`, memOpts);
-    },
+    }
 
     /**
      * Called when user clicks an option under membership or access control
      *
      * @param  {Object} evt
      */
-    handleAccessControlOptionClick: function(evt) {
-        var acOpts = _.clone(this.getProjectProperty('settings.access_control')) || {};
+    handleAccessControlOptionClick = (evt) => {
+        let acOpts = _.clone(this.getProjectProperty('settings.access_control')) || {};
         switch (evt.name) {
             case 'members_only':
                 acOpts = {};
@@ -916,10 +857,50 @@ var ProjectSummaryPageSync = module.exports.Sync = React.createClass({
                 break;
         }
         this.setProjectProperty(`settings.access_control`, acOpts);
-    },
-});
+    }
+}
 
-var emptyProject = {
+const emptyProject = {
     details: {},
     settings: ProjectSettings.default,
 };
+
+export {
+    ProjectSummaryPage as default,
+    ProjectSummaryPage,
+    ProjectSummaryPageSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+import Payloads from 'transport/payloads';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ProjectSummaryPage.propTypes = {
+        editing: PropTypes.bool,
+        projectID: PropTypes.oneOfType([
+            PropTypes.number,
+            PropTypes.oneOf([ 'new' ]),
+        ]).isRequired,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+    };
+    ProjectSummaryPageSync.propTypes = {
+        editing: PropTypes.bool,
+        creating: PropTypes.bool,
+        system: PropTypes.object,
+        project: PropTypes.object,
+        statistics: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+    }
+}

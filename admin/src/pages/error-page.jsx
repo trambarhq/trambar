@@ -1,53 +1,16 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var HTTPError = require('errors/http-error');
+import React, { PureComponent } from 'react';
+import HTTPError from 'errors/http-error';
 
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import Unicorn from 'unicorn.svg';
 
-require('./error-page.scss');
+import './error-page.scss';
 
-module.exports = React.createClass({
-    displayName: 'ErrorPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class ErrorPage extends PureComponent {
+    static displayName = 'ErrorPage';
 
-    statics: {
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/error/:code',
-            ], (params) => {
-                return {
-                    code: parseInt(params.code)
-                };
-            });
-        },
-
-        getURL: function(params) {
-            var code = params.code;
-            if (params.error) {
-                code = params.error.statusCode;
-            } else {
-                code = params.code || 400;
-            }
-            var path = `/error/${code}`, query;
-            return { path, query };
-        },
-
-        getOptions: function(route) {
-            return {};
-        },
-    },
-
-    render: function() {
-        var params = this.props.route.parameters;
-        var error = new HTTPError(params.code)
-        var Unicorn = require('unicorn.svg');
+    render() {
+        let { route } = this.props;
+        let error = new HTTPError(route.params.code)
         return (
             <div className="error-page">
                 <div>
@@ -62,4 +25,23 @@ module.exports = React.createClass({
             </div>
         );
     }
-});
+}
+
+export {
+    ErrorPage as default,
+    ErrorPage,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ErrorPage.propTypes = {
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

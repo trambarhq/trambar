@@ -1,10 +1,6 @@
-var _ = require('lodash');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
-var TagScanner = require('utils/tag-scanner');
-
-module.exports = {
-    extractIssueDetails,
-};
+import _ from 'lodash';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
+import * as TagScanner from 'utils/tag-scanner';
 
 /**
  * Extract information concerning an issue issue from a story and
@@ -20,9 +16,9 @@ function extractIssueDetails(story, repos) {
         return null;
     }
     // find the repo in whose tracker the issue resides
-    var issueRepo, issueLink;
+    let issueRepo, issueLink;
     _.each(repos, (repo) => {
-        var link = ExternalDataUtils.findLinkByRelative(story, repo, 'project');
+        let link = ExternalDataUtils.findLinkByRelative(story, repo, 'project');
         if (link && link.issue) {
             issueRepo = repo;
             issueLink = link;
@@ -40,3 +36,7 @@ function extractIssueDetails(story, repos) {
         repo_id: issueRepo.id,
     };
 }
+
+export {
+    extractIssueDetails,
+};

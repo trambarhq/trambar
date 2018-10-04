@@ -1,19 +1,14 @@
-var _ = require('lodash');
-var Diff = require('diff');
-
-module.exports = {
-    mergeObjects,
-    mergeStrings,
-};
+let _ = require('lodash');
+let Diff = require('diff');
 
 function mergeObjects(a, b, c, resolveFns) {
-    var d = {};
-    var keys = _.union(_.keys(a), _.keys(b));
+    let d = {};
+    let keys = _.union(_.keys(a), _.keys(b));
     _.each(keys, (key) => {
-        var valueA = a ? a[key] : undefined;
-        var valueB = b ? b[key] : undefined;
-        var valueC = c ? c[key] : undefined;
-        var valueD;
+        let valueA = a ? a[key] : undefined;
+        let valueB = b ? b[key] : undefined;
+        let valueC = c ? c[key] : undefined;
+        let valueD;
         if (_.isEqual(valueA, valueB)) {
             valueD = _.cloneDeep(valueA);
         } else if (_.isEqual(valueA, valueC)) {
@@ -24,7 +19,7 @@ function mergeObjects(a, b, c, resolveFns) {
             valueD = _.cloneDeep(valueA);
         } else {
             // conflict
-            var resolve = resolveFns ? resolveFns[key] : undefined;
+            let resolve = resolveFns ? resolveFns[key] : undefined;
             if (isObject(valueA) && isObject(valueB)) {
                 valueD = mergeObjects(valueA, valueB, valueC, resolve);
             } else if (typeof(valueA) === 'string' || typeof(valueB) === 'string') {
@@ -56,13 +51,13 @@ function mergeStrings(a, b, c) {
     if (typeof(c) !== 'string') {
         c = '';
     }
-    var diff = Diff.diffSentences(a, b);
-    var unchangedB = getUnchangedRanges(c, b);
-    var segments = [];
-    for (var i = 0; i < diff.length; i++) {
-        var snippet = diff[i];
+    let diff = Diff.diffSentences(a, b);
+    let unchangedB = getUnchangedRanges(c, b);
+    let segments = [];
+    for (let i = 0; i < diff.length; i++) {
+        let snippet = diff[i];
         if (snippet.removed) {
-            var a = snippet.value, b = '';
+            let a = snippet.value, b = '';
             if (diff[i + 1] && diff[i + 1].added) {
                 // if the next item is an add, then it's a replace operation
                 b = diff[i + 1].value;
@@ -70,17 +65,17 @@ function mergeStrings(a, b, c) {
             }
             segments.push({ a, b });
         } else if (snippet.added) {
-            var a = '', b = snippet.value;
+            let a = '', b = snippet.value;
             segments.push({ a, b });
         } else {
             segments.push(snippet.value);
         }
     }
-    var indexA = 0;
-    var indexB = 0;
-    var chosen = [];
-    for (var i = 0; i < segments.length; i++) {
-        var segment = segments[i];
+    let indexA = 0;
+    let indexB = 0;
+    let chosen = [];
+    for (let i = 0; i < segments.length; i++) {
+        let segment = segments[i];
         if (typeof(segment) === 'string') {
             // same in both
             chosen.push(segment);
@@ -101,13 +96,13 @@ function mergeStrings(a, b, c) {
 }
 
 function getUnchangedRanges(before, after) {
-    var ranges = [];
-    var diff = Diff.diffSentences(before, after);
-    var indexAfter = 0;
-    var indexBefore = 0;
-    for (var i = 0; i < diff.length; i++) {
-        var snippet = diff[i];
-        var len = snippet.value.length;
+    let ranges = [];
+    let diff = Diff.diffSentences(before, after);
+    let indexAfter = 0;
+    let indexBefore = 0;
+    for (let i = 0; i < diff.length; i++) {
+        let snippet = diff[i];
+        let len = snippet.value.length;
         if (snippet.removed) {
             indexBefore += len;
         } else if (snippet.added) {
@@ -125,8 +120,8 @@ function getUnchangedRanges(before, after) {
 }
 
 function inRanges(index, length, ranges) {
-    for (var i = 0; i < ranges.length; i++) {
-        var range = ranges[i];
+    for (let i = 0; i < ranges.length; i++) {
+        let range = ranges[i];
         if (range.index <= index && index + length <= range.index + range.length) {
             return true;
         }
@@ -137,3 +132,8 @@ function inRanges(index, length, ranges) {
 function isObject(v) {
     return typeof(v) === 'object' && v.constructor === Object;
 }
+
+export {
+    mergeObjects,
+    mergeStrings,
+};

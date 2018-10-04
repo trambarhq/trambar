@@ -1,15 +1,7 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
+import _ from 'lodash';
+import Promise from 'bluebird';
 
-module.exports = {
-    findProject,
-    findAllProjects,
-    findCurrentProject,
-    findActiveProjects,
-    findProjectsWithMembers,
-    findProjectLinks,
-};
+const emptyArray = [];
 
 /**
  * Find project by ID
@@ -29,6 +21,23 @@ function findProject(db, id) {
 }
 
 /**
+ * Find project by ID
+ *
+ * @param  {Database} db
+ * @param  {String} name
+ *
+ * @return {Promise<Project>}
+ */
+function findProjectByName(db, name) {
+    return db.findOne({
+        schema: 'global',
+        table: 'project',
+        criteria: { name },
+        required: true
+    });
+}
+
+/**
  * Find all projects
  *
  * @param  {Database} db
@@ -38,6 +47,7 @@ function findProject(db, id) {
  */
 function findAllProjects(db, minimum) {
     return db.find({
+        schema: 'global',
         table: 'project',
         criteria: {},
         minimum
@@ -90,9 +100,9 @@ function findActiveProjects(db, minimum) {
  * @return {Promise<Array<Project>>}
  */
 function findProjectsWithMembers(db, users, minimum) {
-    var ids = _.map(users, 'id');
+    let ids = _.map(users, 'id');
     if (_.isEmpty(ids)) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -103,30 +113,11 @@ function findProjectsWithMembers(db, users, minimum) {
     });
 }
 
-/**
- * Find links to products
- *
- * @param  {Database} db
- *
- * @return {PRomise<Array<Object>>}
- */
-function findProjectLinks(db) {
-    return db.find({
-        schema: 'local',
-        table: 'project_link',
-        criteria: {},
-    }).filter((link) => {
-        return db.findOne({
-            schema: 'local',
-            table: 'session',
-            criteria: { key: link.address },
-        }).then((record) => {
-            if (record) {
-                var now = (new Date).toISOString();
-                if (now < record.etime) {
-                    return true;
-                }
-            }
-        });
-    });
-}
+export {
+    findProject,
+    findProjectByName,
+    findAllProjects,
+    findCurrentProject,
+    findActiveProjects,
+    findProjectsWithMembers,
+};

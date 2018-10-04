@@ -16,43 +16,18 @@ var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlug
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 var event = 'build';
-var platform = 'browser';
-var os;
 if (process.env.npm_lifecycle_event) {
     event = process.env.npm_lifecycle_event;
-    var argv = JSON.parse(process.env.npm_config_argv).remain;
-    if (argv[0]) {
-        platform = argv[0];
-    }
-    if (argv[1]) {
-        os = argv[1];
-    }
-}
-
-if (platform !== 'cordova' && platform !== 'browser') {
-    console.log(`Invalid platform: ${platform}`);
-    console.log(``);
-    console.log(`Usage: npm run build [cordova|browser]`);
-    process.exit();
-}
-
-var targetFolder = 'www';
-if (platform === 'cordova') {
-    targetFolder += '-cordova';
-    if (os) {
-        targetFolder += `-${os}`;
-    }
 }
 
 var folders = _.mapValues({
     src: 'src',
-    www: targetFolder,
+    www: 'www',
     assets: 'assets',
     includes: [ 'src', '../common/src', '../common/node_modules', 'node_modules', 'assets' ],
     loaders: [ 'node_modules', '../common/node_modules' ],
 }, resolve);
 if (event !== 'start') {
-    console.log(`Platform: ${platform}`);
     console.log(`Output folder: ${folders.www}`);
     if (FS.lstatSync(folders.www).isSymbolicLink()) {
         var actualFolder = FS.readlinkSync(folders.www);
@@ -61,7 +36,7 @@ if (event !== 'start') {
 }
 
 var env = {
-    PLATFORM: platform,
+    PLATFORM: 'browser',
     NODE_ENV: (event === 'build') ? 'production' : 'development',
 };
 var constants = {};
@@ -82,8 +57,8 @@ module.exports = {
     entry: './main',
     output: {
         path: folders.www,
-        filename: (platform === 'browser') ? '[name].js?[hash]' : '[name].js',
-        chunkFilename: (platform === 'browser') ? '[name].js?[chunkhash]' : '[name].js',
+        filename: '[name].js?[hash]',
+        chunkFilename: '[name].js?[chunkhash]',
     },
     resolve: {
         extensions: [ '.js', '.jsx' ],
@@ -95,17 +70,17 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.jsx?$/,
+                test: /.jsx?$/,
                 loader: 'babel-loader',
                 exclude: /node_modules/,
                 query: {
                     presets: [
-                        'babel-preset-es2015',
-                        'babel-preset-react',
-                    ].map(require.resolve),
+                        'env',
+                        'stage-0',
+                        'react',
+                    ],
                     plugins: [
-                        'babel-plugin-syntax-dynamic-import'
-                    ].map(require.resolve),
+                    ],
                 }
             },
             {
@@ -129,9 +104,18 @@ module.exports = {
                                 },
                             }
                         },
-                        'sass-loader',
+                        {
+                            loader: 'sass-loader',
+                            options: {
+                                includePaths: [ resolve('../common/node_modules') ]
+                            }
+                        }
                     ],
                 }),
+            },
+            {
+                test: /\.md$/,
+                loader: 'raw-loader',
             },
             {
                 test: /fonts.*\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
@@ -164,12 +148,19 @@ module.exports = {
                 test: /\.(jpeg|jpg|png|gif)$/,
                 loader: 'file-loader',
             },
+            {
+                test: /\.(zip)$/,
+                loader: 'file-loader',
+                options: {
+                    name: '[name].[ext]'
+                }
+            },
         ]
     },
     plugins: [
         new DefinePlugin(constants),
         new HtmlWebpackPlugin({
-            template: `${folders.assets}/${platform}.html`,
+            template: `${folders.assets}/browser.html`,
             filename: `${folders.www}/index.html`,
         }),
         new ExtractTextPlugin({
@@ -191,19 +182,15 @@ module.exports = {
         new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
         new BundleAnalyzerPlugin({
             analyzerMode: (event === 'build') ? 'static' : 'disabled',
-            reportFilename: `../report_${platform}.html`,
+            reportFilename: `../report.html`,
         }),
     ],
     devServer: {
         inline: true,
         historyApiFallback: {
-            rewrites: [
-                {
-                    from: /.*/,
-                    to: '/index.html'
-                }
-            ]
-        }
+            index: '/'
+        },
+        publicPath: '/'
     }
 };
 
@@ -217,6 +204,33 @@ function resolve(path) {
     if (_.isArray(path)) {
         return _.map(path, resolve);
     } else {
-        return Path.resolve(`${__dirname}/${path}`);
+        return `${__dirname}/${path}`;
     }
 }
+
+function resolveBabel(type, module) {
+    if (module instanceof Array) {
+        module[0] = resolve(type, module[0]);
+        return module;
+    } else {
+        if (!/^[\w\-]+$/.test(module)) {
+            return module;
+        }
+        return Path.resolve(`../common/node_modules/babel-${type}-${module}`);
+    }
+}
+
+module.exports.module.rules.forEach((rule) => {
+    if (rule.loader === 'babel-loader' && rule.query) {
+        if (rule.query.presets) {
+            rule.query.presets = rule.query.presets.map((preset) => {
+                return resolveBabel('preset', preset);
+            })
+        }
+        if (rule.query.plugins) {
+            rule.query.plugins = rule.query.plugins.map((plugin) => {
+                return resolveBabel('plugin', plugin);
+            })
+        }
+    }
+});

@@ -1,103 +1,77 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var MarkGor = require('mark-gor/react');
-
-var Locale = require('locale/locale');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import MarkGor from 'mark-gor/react';
 
 // widgets
-var CollapsibleContainer = require('widgets/collapsible-container');
+import CollapsibleContainer from 'widgets/collapsible-container';
 
-require('./instruction-block.scss');
+import './instruction-block.scss';
 
-module.exports = React.createClass({
-    displayName: 'InstructionBlock',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        folder: PropTypes.string.isRequired,
-        topic: PropTypes.string.isRequired,
-        hidden: PropTypes.bool,
+class InstructionBlock extends PureComponent {
+    static displayName = 'InstructionBlock';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            hidden: false,
-        };
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             contents: null,
         };
-    },
+    }
 
     /**
      * Load instruction text on mount
      */
-    componentWillMount: function() {
-        if (this.props.topic) {
-            var folder = this.props.folder;
-            var topic = this.props.topic;
-            var lang = this.props.locale.languageCode;
-            loadMarkdown(folder, topic, lang).then((contents) => {
+    componentWillMount() {
+        let { env, topic, folder } = this.props;
+        let { languageCode } = env.locale;
+        if (topic) {
+            loadMarkdown(folder, topic, languageCode).then((contents) => {
                 this.setState({ contents });
             });
         }
-    },
+    }
 
     /**
      * Reload text if topic or language changes
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.topic !== nextProps.topic || this.props.locale !== nextProps.locale) {
-            var folder = nextProps.folder;
-            var topic = nextProps.topic;
-            var lang = nextProps.locale.languageCode;
-            loadMarkdown(folder, topic, lang).then((contents) => {
+    componentWillReceiveProps(nextProps) {
+        let { env, topic } = this.props;
+        if (nextProps.topic !== topic || nextProps.env.locale !== env.locale) {
+            let folder = nextProps.folder;
+            let topic = nextProps.topic;
+            let languageCode = nextProps.env.locale.languageCode;
+            loadMarkdown(folder, topic, languageCode).then((contents) => {
                 this.setState({ contents });
             });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement|null}
      */
-    render: function() {
-        if (!this.state.contents) {
+    render() {
+        let { hidden } = this.props;
+        let { contents } = this.state;
+        if (!contents) {
             return null;
         }
-        var classNames = [ 'instruction-block' ];
-        if (this.props.hidden) {
+        let classNames = [ 'instruction-block' ];
+        if (hidden) {
             classNames.push('hidden')
         }
         return (
             <div className={classNames.join(' ')}>
-                <CollapsibleContainer open={!this.props.hidden}>
-                    <div className="contents">{this.state.contents}</div>
+                <CollapsibleContainer open={!hidden}>
+                    <div className="contents">{contents}</div>
                 </CollapsibleContainer>
             </div>
         );
-    },
-});
+    }
+}
 
 /**
  * Load and parse instruction text
@@ -110,7 +84,7 @@ module.exports = React.createClass({
  */
 function loadMarkdown(folder, topic, lang) {
     return loadText(folder, topic, lang).then((text) => {
-        var contents = MarkGor.parse(text);
+        let contents = MarkGor.parse(text);
         return loadImages(contents, folder);
     });
 }
@@ -149,7 +123,7 @@ function loadImages(element, folder) {
             return loadImages(element, folder);
         });
     } else if (element.type === 'img') {
-        var url = element.props.src;
+        let url = element.props.src;
         if (url && !/^\w+:/.test(url)) {
             return import(`instructions/${folder}/${url}`).then((url) => {
                 return React.cloneElement(element, { src: url });
@@ -163,10 +137,10 @@ function loadImages(element, folder) {
             return element;
         }
     } else if (element.type === 'a') {
-        var url = element.props.href;
+        let url = element.props.href;
         if (url && !/^\w+:/.test(url)) {
             return import(`instructions/${folder}/${url}`).then((url) => {
-                var props = { href: url };
+                let props = { href: url };
                 if (/\.html$/.test(url)) {
                     props.target = '_blank';
                 } else {
@@ -191,4 +165,27 @@ function loadImages(element, folder) {
     } else {
         return element;
     }
+}
+
+InstructionBlock.defaultProps = {
+    hidden: false,
+};
+
+export {
+    InstructionBlock as default,
+    InstructionBlock,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    InstructionBlock.propTypes = {
+        folder: PropTypes.string.isRequired,
+        topic: PropTypes.string.isRequired,
+        hidden: PropTypes.bool,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
 }

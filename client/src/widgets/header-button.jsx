@@ -1,41 +1,33 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-module.exports = HeaderButton;
-module.exports.File = FileButton;
-
-require('./header-button.scss');
+import './header-button.scss';
 
 function HeaderButton(props) {
-    if (props.hidden) {
+    let { label, hidden, disabled, onClick } = props;
+    if (hidden) {
         return null;
     }
     return (
-        <label className={buttonClasses(props)} onClick={!props.disabled ? props.onClick : null}>
+        <label className={buttonClasses(props)} onClick={!disabled ? onClick : null}>
             <i className={iconClasses(props)}/>
-            <span className="label">{props.label}</span>
+            <span className="label">{label}</span>
         </label>
     );
 }
 
-HeaderButton.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    highlighted: PropTypes.bool,
-    disabled: PropTypes.bool,
-    onClick: PropTypes.func,
-};
+HeaderButton.File = FileButton;
 
 function FileButton(props) {
-    if (props.hidden) {
+    let { label, hidden, disabled, multiple, onChange } = props;
+    if (hidden) {
         return null;
     }
-    var inputProps = {
+    let inputProps = {
         type: 'file',
         value: '',
-        disabled: props.disabled,
-        multiple: props.multiple,
-        onChange: props.onChange,
+        disabled,
+        multiple,
+        onChange,
     };
     if (edgeBug) {
         // deal with bug in Edge:
@@ -45,7 +37,7 @@ function FileButton(props) {
             <span className={buttonClasses(props)}>
                 <label htmlFor={inputProps.id}>
                     <i className={iconClasses(props)}/>
-                    <span className="label">{props.label}</span>
+                    <span className="label">{label}</span>
                 </label>
                 <input {...inputProps} />
             </span>
@@ -54,27 +46,17 @@ function FileButton(props) {
     return (
         <label className={buttonClasses(props)}>
             <i className={iconClasses(props)}/>
-            <span className="label">{props.label}</span>
+            <span className="label">{label}</span>
             <input {...inputProps} />
         </label>
     );
 }
 
-var edgeBug = /Edge/.test(navigator.userAgent);
-var edgeInputId = 1;
-
-FileButton.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    highlighted: PropTypes.bool,
-    disabled: PropTypes.bool,
-    multiple: PropTypes.bool,
-    onChange: PropTypes.func,
-};
+let edgeBug = /Edge/.test(navigator.userAgent);
+let edgeInputId = 1;
 
 function buttonClasses(props) {
-    var classNames = [ 'header-button' ];
+    let classNames = [ 'header-button' ];
     if (props.className) {
         classNames.push(props.className);
     }
@@ -88,9 +70,36 @@ function buttonClasses(props) {
 }
 
 function iconClasses(props) {
-    var classNames = [];
+    let classNames = [];
     if (props.icon) {
         classNames.push('fa', `fa-${props.icon}`);
     }
     return classNames.join(' ');
+}
+
+export {
+    HeaderButton as default,
+    HeaderButton,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    HeaderButton.propTypes = {
+        label: PropTypes.string,
+        icon: PropTypes.string,
+        hidden: PropTypes.bool,
+        highlighted: PropTypes.bool,
+        disabled: PropTypes.bool,
+        onClick: PropTypes.func,
+    };
+    FileButton.propTypes = {
+        label: PropTypes.string,
+        icon: PropTypes.string,
+        hidden: PropTypes.bool,
+        highlighted: PropTypes.bool,
+        disabled: PropTypes.bool,
+        multiple: PropTypes.bool,
+        onChange: PropTypes.func,
+    };
 }

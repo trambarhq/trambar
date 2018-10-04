@@ -1,28 +1,16 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var NotificationTypes = require('objects/types/notification-types');
-var UserUtils = require('objects/utils/user-utils');
-
-var Locale = require('locale/locale');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import NotificationTypes, { AdminNotificationTypes } from 'objects/types/notification-types';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var SettingsPanel = require('widgets/settings-panel');
-var OptionButton = require('widgets/option-button');
+import SettingsPanel from 'widgets/settings-panel';
+import OptionButton from 'widgets/option-button';
 
 require('./mobile-alert-panel.scss');
 
-module.exports = React.createClass({
-    displayName: 'WebAlertPanel',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        currentUser: PropTypes.object,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onChange: PropTypes.func,
-    },
+class MobileAlertPanel extends PureComponent {
+    static displayName = 'MobileAlertPanel';
 
     /**
      * Change a property of the user object
@@ -30,27 +18,29 @@ module.exports = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setUserProperty: function(path, value) {
-        if (!this.props.currentUser) {
+    setUserProperty(path, value) {
+        let { currentUser, onChange } = this.props;
+        if (!currentUser) {
             return;
         }
-        var userAfter = _.decoupleSet(this.props.currentUser, path, value);
-        if (this.props.onChange) {
-            this.props.onChange({
+        let userAfter = _.decoupleSet(currentUser, path, value);
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 user: userAfter
             });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
+    render() {
+        let { env } = this.props;
+        let { t } = env.locale;
         return (
             <SettingsPanel className="mobile-alert">
                 <header>
@@ -66,22 +56,25 @@ module.exports = React.createClass({
                 </body>
             </SettingsPanel>
         );
-    },
+    }
 
     /**
      * Render notification options
      *
      * @return {Array<ReactElement>}
      */
-    renderOptions: function() {
-        var types = NotificationTypes;
-        var userType = _.get(this.props.currentUser, 'type');
+    renderOptions() {
+        let { currentUser } = this.props;
+        let types = NotificationTypes;
+        let userType = _.get(currentUser, 'type');
         if (userType !== 'admin') {
-            types = _.without(types, NotificationTypes.admin);
+            types = _.without(types, AdminNotificationTypes);
         }
         types = _.concat(types, 'web-session');
-        return _.map(types, this.renderOption);
-    },
+        return _.map(types, (type, i) => {
+            return this.renderOption(type, i);
+        });
+    }
 
     /**
      * Render notification option button
@@ -91,14 +84,15 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderOption: function(type, index) {
-        var t = this.props.locale.translate;
-        var optionName = _.snakeCase(type);
-        var settings = _.get(this.props.currentUser, 'settings', {});
-        var notificationEnabled = !!_.get(settings, `notification.${optionName}`);
-        var alertEnabled = !!_.get(settings, `mobile_alert.${optionName}`);
-        var canReceive = UserUtils.canReceiveNotification(this.props.currentUser, this.props.repos, type);
-        var buttonProps = {
+    renderOption(type, index) {
+        let { env, currentUser, repos } = this.props;
+        let { t } = env.locale;
+        let optionName = _.snakeCase(type);
+        let settings = _.get(currentUser, 'settings', {});
+        let notificationEnabled = !!_.get(settings, `notification.${optionName}`);
+        let alertEnabled = !!_.get(settings, `mobile_alert.${optionName}`);
+        let canReceive = UserUtils.canReceiveNotification(currentUser, repos, type);
+        let buttonProps = {
             label: t(`notification-option-${type}`),
             selected: alertEnabled && (notificationEnabled || type === 'web-session'),
             hidden: !canReceive,
@@ -107,21 +101,39 @@ module.exports = React.createClass({
             id: optionName,
         };
         return <OptionButton key={index} {...buttonProps} />
-    },
+    }
 
     /**
      * Called when an option is clicked
      */
-    handleOptionClick: function(evt) {
-        var optionName = evt.currentTarget.id;
-        var optionPath = `mobile_alert.${optionName}`;
-        var settings = _.clone(_.get(this.props.currentUser, 'settings', {}));
-        var enabled = !!_.get(settings, optionPath);
+    handleOptionClick = (evt) => {
+        let { currentUser } = this.props;
+        let optionName = evt.currentTarget.id;
+        let optionPath = `mobile_alert.${optionName}`;
+        let settings = _.clone(_.get(currentUser, 'settings', {}));
+        let enabled = !!_.get(settings, optionPath);
         if (enabled) {
             _.unset(settings, optionPath);
         } else {
             _.set(settings, optionPath, true);
         }
         this.setUserProperty('settings', settings);
-    },
-});
+    }
+}
+
+export {
+    MobileAlertPanel as default,
+    MobileAlertPanel,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MobileAlertPanel.propTypes = {
+        currentUser: PropTypes.object,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        onChange: PropTypes.func,
+    }
+}

@@ -1,57 +1,38 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var DeviceManager = require('media/device-manager');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import * as DeviceManager from 'media/device-manager';
 
 // widgets
-var HeaderButton = require('widgets/header-button');
-var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
+import HeaderButton from 'widgets/header-button';
+import UserSelectionDialogBox from 'dialogs/user-selection-dialog-box';
 
-require('./coauthoring-button.scss');
+import './coauthoring-button.scss';
 
-module.exports = React.createClass({
-    displayName: 'CoauthoringButton',
-    propTypes: {
-        coauthoring: PropTypes.bool,
-        story: PropTypes.object.isRequired,
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
+class CoauthoringButton extends PureComponent {
+    static displayName = 'CoauthoringButton';
 
-        onSelect: PropTypes.func,
-        onRemove: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             selecting: false,
-        }
-    },
+        };
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
-        var icon, label;
-        if (this.props.coauthoring) {
+    render() {
+        let { env, story, coauthoring } = this.props;
+        let { t } = env.locale;
+        let icon, label;
+        if (coauthoring) {
             icon = 'minus-square';
             label = t('story-remove-yourself');
         } else {
             icon = 'plus-square';
-            if (this.props.story.user_ids.length > 1) {
+            if (story.user_ids.length > 1) {
                 label = t('story-add-remove-coauthor');
             } else {
                 label = t('story-add-coauthor');
@@ -64,38 +45,39 @@ module.exports = React.createClass({
                 {this.renderDialogBox()}
             </span>
         );
-    },
+    }
 
     /**
      * Render dialog box for selecting co-authors
      *
      * @return {ReactElement}
      */
-    renderDialogBox: function() {
-        var props = {
-            show: this.state.selecting,
-            selection: this.props.story.user_ids,
-            disabled: _.slice(this.props.story.user_ids, 0, 1),
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+    renderDialogBox() {
+        let { database, route, env, story } = this.props;
+        let { selecting } = this.state;
+        let props = {
+            show: selecting,
+            selection: story.user_ids,
+            disabled: _.slice(story.user_ids, 0, 1),
+            database,
+            route,
+            env,
             onSelect: this.handleSelect,
             onCancel: this.handleCancel,
         };
         return <UserSelectionDialogBox {...props} />;
-    },
+    }
 
     /**
      * Called when user clicks the button
      *
      * @param  {Event} evt
      */
-    handleClick: function(evt) {
-        if (this.props.coauthoring) {
-            if (this.props.onRemove) {
-                this.props.onRemove({
+    handleClick = (evt) => {
+        let { coauthoring, onRemove } = this.props;
+        if (coauthoring) {
+            if (onRemove) {
+                onRemove({
                     type: 'remove',
                     target: this,
                 });
@@ -103,30 +85,55 @@ module.exports = React.createClass({
         } else {
             this.setState({ selecting: true });
         }
-    },
+    }
 
     /**
      * Called when user clicks the x or outside the modal
      *
      * @param  {Event} evt
      */
-    handleCancel: function(evt) {
+    handleCancel = (evt) => {
         this.setState({ selecting: false });
-    },
+    }
 
     /**
      * Called when user selects a user from the list
      *
      * @param  {Object} evt
      */
-    handleSelect: function(evt) {
-        if (this.props.onSelect) {
-            this.props.onSelect({
+    handleSelect = (evt) => {
+        let { onSelect } = this.props;
+        if (onSelect) {
+            onSelect({
                 type: 'select',
                 target: this,
                 selection: evt.selection
             });
         }
         this.setState({ selecting: false });
-    },
-})
+    }
+}
+
+export {
+    CoauthoringButton as default,
+    CoauthoringButton,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    CoauthoringButton.propTypes = {
+        coauthoring: PropTypes.bool,
+        story: PropTypes.object.isRequired,
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onSelect: PropTypes.func,
+        onRemove: PropTypes.func,
+    };
+}

@@ -1,53 +1,35 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Database = require('data/database');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var ImageCropper = require('widgets/image-cropper');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import ImageCropper from 'widgets/image-cropper';
 
-require('./image-cropping-dialog-box.scss');
+import './image-cropping-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'ImageCroppingDialogBox',
-    propTypes: {
-        image: PropTypes.object,
-        desiredWidth: PropTypes.number,
-        desiredHeight: PropTypes.number,
+class ImageCroppingDialogBox extends PureComponent {
+    static displayName = 'ImageCroppingDialogBox';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onSelect: PropTypes.func,
-        onCancel: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        var image = this.props.image;
-        return {
+    constructor(props) {
+        super(props);
+        let { image } = props;
+        this.state = {
             clippingRect: image.clip,
             hasChanged: false,
         };
-    },
+    }
 
     /**
      * Change zoom level image by fractional amount
      *
      * @param  {Number} amount
      */
-    zoom: function(amount) {
-        var clippingRect = this.resizeClippingRect(amount);
+    zoom(amount) {
+        let clippingRect = this.resizeClippingRect(amount);
         this.setState({ clippingRect })
-    },
+    }
 
     /**
      * Return true if it's possible to zoom out
@@ -56,10 +38,11 @@ module.exports = React.createClass({
      *
      * @return {Boolean}
      */
-    canZoom: function(amount) {
-        var clippingRect = this.resizeClippingRect(amount);
-        return !_.isEqual(clippingRect, this.state.clippingRect);
-    },
+    canZoom(amount) {
+        let { clippingRect } = this.state;
+        let rect = this.resizeClippingRect(amount);
+        return !_.isEqual(rect, clippingRect);
+    }
 
     /**
      * Return a rectangle that's larger ro smaller than the current one
@@ -68,23 +51,22 @@ module.exports = React.createClass({
      *
      * @return {Object}
      */
-    resizeClippingRect: function(amount) {
-        var rect = this.state.clippingRect;
-        var width = Math.round(rect.width * amount);
-        var height = Math.round(rect.height * amount);
-        var imgWidth = this.props.image.width;
-        var imgHeight = this.props.image.height;
-        var ratio = this.props.desiredWidth / this.props.desiredHeight;
-        if (width > imgWidth) {
-            width = imgWidth;
+    resizeClippingRect(amount) {
+        let { image, desiredWidth, desiredHeight } = this.props;
+        let { clippingRect } = this.state;
+        let width = Math.round(clippingRect.width * amount);
+        let height = Math.round(clippingRect.height * amount);
+        let ratio = desiredWidth / desiredHeight;
+        if (width > image.width) {
+            width = image.width;
             height = Math.round(width / ratio);
         }
-        if (height > imgHeight) {
-            height = imgHeight;
+        if (height > image.height) {
+            height = image.height;
             width = Math.round(height * ratio);
         }
-        var left = rect.left - Math.round((width - rect.width) / 2);
-        var top = rect.top - Math.round((height - rect.height) / 2);
+        let left = clippingRect.left - Math.round((width - clippingRect.width) / 2);
+        let top = clippingRect.top - Math.round((height - clippingRect.height) / 2);
         if (left < 0) {
             left = 0;
         }
@@ -92,7 +74,7 @@ module.exports = React.createClass({
             top = 0;
         }
         return { left, top, width, height };
-    },
+    }
 
 
     /**
@@ -100,72 +82,75 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    render: function() {
+    render() {
+        let { show } = this.props;
         return (
-            <Overlay show={this.props.show}>
+            <Overlay show={show}>
                 <div className="image-cropping-dialog-box">
                     {this.renderImage()}
                     {this.renderButtons()}
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render image cropper
      *
      * @return {ReactElement}
      */
-    renderImage: function() {
-        var image = this.props.image;
-        var imageURL = this.props.theme.getImageURL(image, { clip: null });
+    renderImage() {
+        let { env, image, desiredWidth, desiredHeight } = this.props;
+        let { clippingRect } = this.state;
+        let url = ResourceUtils.getImageURL(image, { clip: null }, env);
         if (isJSONEncoded(imageURL)) {
             // a blob that hasn't been uploaded yet
-            var info = parseJSONEncodedURL(imageURL)
-            imageURL = info.url;
+            let info = parseJSONEncodedURL(imageURL)
+            url = info.url;
         }
-        var props = {
-            url: imageURL,
-            clippingRect: this.state.clippingRect,
+        let props = {
+            url,
+            clippingRect,
             vector: image.format === 'svg',
             onChange: this.handleChange,
         };
-        var style = {
-            width: this.props.desiredWidth,
-            height: this.props.desiredHeight,
+        let style = {
+            width: desiredWidth,
+            height: desiredHeight,
         };
         return (
             <div className="image" style={style}>
                 <ImageCropper {...props} />
             </div>
         );
-
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var zoomOutProps = {
+    renderButtons() {
+        let { env } = this.props;
+        let { hasChanged } = this.state;
+        let { t } = env.locale;
+        let zoomOutProps = {
             className: 'zoom',
             disabled: !this.canZoom(1 / 0.9),
             onClick: this.handleZoomOutClick,
         };
-        var zoomInProps = {
+        let zoomInProps = {
             className: 'zoom',
             disabled: !this.canZoom(0.9),
             onClick: this.handleZoomInClick,
         };
-        var cancelProps = {
+        let cancelProps = {
             className: 'cancel',
             onClick: this.handleCancelClick,
         };
-        var selectProps = {
+        let selectProps = {
             className: 'select',
-            disabled: !this.state.hasChanged,
+            disabled: !hasChanged,
             onClick: this.handleSelectClick,
         };
         return (
@@ -181,79 +166,102 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Called when user moves the image or change the zoom
      *
      * @param  {Object} evt
      */
-    handleChange: function(evt) {
-        var image = this.props.image;
-        var clippingRect = _.mapValues(evt.rect, (value) => {
+    handleChange = (evt) => {
+        let { image } = this.props;
+        let clippingRect = _.mapValues(evt.rect, (value) => {
             return Math.round(value);
         });
-
-        var hasChanged = true;
+        let hasChanged = true;
         if (_.isEqual(clippingRect, image.rect)) {
             hasChanged = false;
         }
         this.setState({ clippingRect, hasChanged });
-    },
+    }
 
     /**
      * Called when user clicks on cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
-        if (this.props.onCancel) {
-            this.props.onCancel({
+    handleCancelClick = (evt) => {
+        let { onCancel } = this.props;
+        if (onCancel) {
+            onCancel({
                 type: 'cancel',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks on OK button
      *
      * @param  {Event} evt
      */
-    handleSelectClick: function(evt) {
-        if (this.props.onSelect) {
-            this.props.onSelect({
+    handleSelectClick = (evt) => {
+        let { onSelect } = this.props;
+        let { clippingRect } = this.state;
+        if (onSelect) {
+            onSelect({
                 type: 'select',
                 target: this,
-                clippingRect: this.state.clippingRect,
+                clippingRect,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks zoom in button
      *
      * @param  {Event} evt
      */
-    handleZoomInClick: function(evt) {
+    handleZoomInClick = (evt) => {
         this.zoom(0.9);
-    },
+    }
 
     /**
      * Called when user clicks zoom out button
      *
      * @param  {Event} evt
      */
-    handleZoomOutClick: function(evt) {
+    handleZoomOutClick = (evt) => {
         this.zoom(1 / 0.9);
-    },
-});
+    }
+}
 
 function isJSONEncoded(url) {
     return _.startsWith(url, 'json:');
 }
 
 function parseJSONEncodedURL(url) {
-    var json = url.substr(5);
+    let json = url.substr(5);
     return JSON.parse(json);
+}
+
+export {
+    ImageCroppingDialogBox as default,
+    ImageCroppingDialogBox,
+};
+
+import Database from 'data/database';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ImageCroppingDialogBox.propTypes = {
+        image: PropTypes.object,
+        desiredWidth: PropTypes.number,
+        desiredHeight: PropTypes.number,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        onSelect: PropTypes.func,
+        onCancel: PropTypes.func,
+    };
 }

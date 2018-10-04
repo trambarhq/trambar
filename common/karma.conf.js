@@ -10,28 +10,26 @@ module.exports = function(config) {
         autoWatch: true,
         singleRun: false,
         browsers: [ 'Chrome' ],
-        frameworks: [ 'chai', 'mocha' ],
+        concurrency: 1,
+        frameworks: [ 'chai', 'mocha', 'server-side' ],
         files: [
             'tests.bundle.js',
         ],
         client: {
             args: parseTestPattern(process.argv),
         },
-
         preprocessors: {
             'tests.bundle.js': [ 'webpack', 'sourcemap' ]
         },
-
         plugins: [
             'karma-chai',
             'karma-chrome-launcher',
             'karma-mocha',
             'karma-sourcemap-loader',
             'karma-webpack',
+            'karma-server-side',
         ],
-
         reporters: [ 'progress' ],
-
         webpack: {
             devtool: 'inline-source-map',
             module: {
@@ -41,8 +39,7 @@ module.exports = function(config) {
                         loader: 'babel-loader',
                         exclude: Path.resolve('./node_modules'),
                         query: {
-                            presets: [ 'es2015', 'react' ],
-                            plugins: [ 'syntax-dynamic-import' ],
+                            presets: [ 'env', 'stage-0', 'react' ],
                         },
                     },
                     {
@@ -52,15 +49,9 @@ module.exports = function(config) {
                     {
                         test: /\.scss$/,
                         use: [
-                            {
-                                loader: 'style-loader'
-                            },
-                            {
-                                loader: 'css-loader'
-                            },
-                            {
-                                loader: 'sass-loader',
-                            }
+                            'style-loader',
+                            'css-loader',
+                            'sass-loader',
                         ]
                     },
                 ]
@@ -77,17 +68,7 @@ module.exports = function(config) {
                     'process.env.PLATFORM': '"browser"',
                 }),
             ],
-            externals: {
-                'react/addons': true,
-                'react/lib/ExecutionEnvironment': true,
-                'react/lib/ReactContext': true,
-
-                // these exist only in React 15.5+
-                'react-dom/test-utils': true,
-                'react-test-renderer/shallow': true,
-            }
         },
-
         webpackMiddleware: {
             noInfo: true,
         },

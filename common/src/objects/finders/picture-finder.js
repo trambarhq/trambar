@@ -1,7 +1,3 @@
-module.exports = {
-    findPictures,
-};
-
 /**
  * Find pictures in collection for given purpose
  *
@@ -21,3 +17,7 @@ function findPictures(db, purpose, minimum) {
         minimum
     });
 }
+
+export {
+    findPictures,
+};

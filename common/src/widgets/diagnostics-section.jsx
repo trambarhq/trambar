@@ -1,57 +1,66 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React, { PureComponent } from 'react';
 
-var CollapsibleContainer = require('widgets/collapsible-container');
+import CollapsibleContainer from 'widgets/collapsible-container';
 
-module.exports = React.createClass({
-    displayName: 'DiagnosticsSection',
-    propTypes: {
-        label: PropTypes.string,
-        hidden: PropTypes.bool,
-    },
+class DiagnosticsSection extends PureComponent {
+    static displayName = 'DiagnosticsSection';
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             open: false
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement|null}
      */
-    render: function() {
-        if (this.props.hidden) {
+    render() {
+        let { hidden, label, children } = this.props;
+        let { open } = this.state;
+        if (hidden) {
             return null;
         }
-        var className = 'diagnostics-section';
-        if (this.state.open) {
+        let className = 'diagnostics-section';
+        if (open) {
             className += ' open';
         }
         return (
             <div className={className}>
                 <div className="title" onClick={this.handleLabelClick}>
-                    {this.props.label}
+                    {label}
                 </div>
-                <CollapsibleContainer open={this.state.open}>
-                    {this.props.children}
+                <CollapsibleContainer open={open}>
+                    {children}
                 </CollapsibleContainer>
             </div>
         );
-    },
+    }
 
     /**
      * Called when user clicks label
      *
      * @param  {Event} evt
      */
-    handleLabelClick: function(evt) {
-        var open = !this.state.open;
+    handleLabelClick = (evt) => {
+        let { open } = this.state;
+        open = !open;
         this.setState({ open });
-    },
-})
+    }
+}
+
+export {
+    DiagnosticsSection as default,
+    DiagnosticsSection,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    DiagnosticsSection.propTypes = {
+        label: PropTypes.string,
+        hidden: PropTypes.bool,
+    };
+}

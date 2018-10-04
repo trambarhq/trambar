@@ -1,71 +1,23 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var SystemFinder = require('objects/finders/system-finder');
-var SystemSettings = require('objects/settings/system-settings');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-var Payloads = require('transport/payloads');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import * as SystemFinder from 'objects/finders/system-finder';
+import * as SystemSettings from 'objects/settings/system-settings';
 
 // widgets
-var PushButton = require('widgets/push-button');
-var InstructionBlock = require('widgets/instruction-block');
-var TextField = require('widgets/text-field');
-var MultilingualTextField = require('widgets/multilingual-text-field');
-var OptionList = require('widgets/option-list');
-var ImageSelector = require('widgets/image-selector');
-var DataLossWarning = require('widgets/data-loss-warning');
-var UnexpectedError = require('widgets/unexpected-error');
+import PushButton from 'widgets/push-button';
+import InstructionBlock from 'widgets/instruction-block';
+import TextField from 'widgets/text-field';
+import MultilingualTextField from 'widgets/multilingual-text-field';
+import OptionList from 'widgets/option-list';
+import ImageSelector from 'widgets/image-selector';
+import DataLossWarning from 'widgets/data-loss-warning';
+import UnexpectedError from 'widgets/unexpected-error';
 
-require('./settings-page.scss');
+import './settings-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'SettingsPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-    },
-
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/settings/?'
-            ], (params) => {
-                return {
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {Object}
-         */
-        getURL: function(params) {
-            var path = `/settings/`, query;
-            if (params && params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
+class SettingsPage extends AsyncComponent {
+    static displayName = 'SettingsPage';
 
     /**
      * Render the component asynchronously
@@ -74,20 +26,20 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env, payloads, editing } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let props = {
             system: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
+            database,
+            route,
+            env,
+            payloads,
+            editing,
         };
         meanwhile.show(<SettingsPageSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((currentUserID) => {
             return SystemFinder.findSystem(db).then((system) => {
                 props.system = _.isEmpty(system) ? null : system;
             });
@@ -95,32 +47,24 @@ module.exports = Relaks.createClass({
             return <SettingsPageSync {...props} />;
         });
     }
-});
+}
 
-var SettingsPageSync = module.exports.Sync = React.createClass({
-    displayName: 'SettingsPage.Sync',
-    propTypes: {
-        system: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-    },
+class SettingsPageSync extends PureComponent {
+    static displayName = 'SettingsPage.Sync';
 
     /**
      * Return initial state of component
      *
      * @return {Object}
      */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             newSystem: null,
             saving: false,
             problems: {},
         };
-    },
+    }
 
     /**
      * Return edited copy of system object or the original object
@@ -129,13 +73,15 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Object}
      */
-    getSystem: function(state) {
-        if (this.isEditing() && (!state || state === 'current')) {
-            return this.state.newSystem || this.props.system || defaultSystem;
+    getSystem(state) {
+        let { system, editing } = this.props;
+        let { newSystem } = this.state;
+        if (editing && (!state || state === 'current')) {
+            return newSystem || system || defaultSystem;
         } else {
-            return this.props.system || emptySystem;
+            return system || emptySystem;
         }
-    },
+    }
 
     /**
      * Return a property of the system object
@@ -145,10 +91,10 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      *
      * @return {*}
      */
-    getSystemProperty: function(path, state) {
-        var system = this.getSystem(state);
+    getSystemProperty(path, state) {
+        let system = this.getSystem(state);
         return _.get(system, path);
-    },
+    }
 
     /**
      * Modify a property of the system object
@@ -156,28 +102,17 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      * @param  {String} path
      * @param  {*} value
      */
-    setSystemProperty: function(path, value) {
-        var system = this.getSystem('current');
-        var newSystem = _.decoupleSet(system, path, value);
-        var hasChanges = true;
-        if (_.isEqual(newSystem, this.props.system)) {
-            newSystem = null;
+    setSystemProperty(path, value) {
+        let { system } = this.props;
+        let newSystem = this.getSystem('current');
+        let newSystemAfter = _.decoupleSet(newSystem, path, value);
+        let hasChanges = true;
+        if (_.isEqual(newSystemAfter, system)) {
+            newSystemAfter = null;
             hasChanges = false;
         }
-        this.setState({ newSystem, hasChanges });
-    },
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object} props
-     *
-     * @return {Boolean}
-     */
-    isEditing: function(props) {
-        props = props || this.props;
-        return props.route.parameters.edit;
-    },
+        this.setState({ newSystem: newSystemAfter, hasChanges });
+    }
 
     /**
      * Change editability of page
@@ -186,31 +121,32 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    setEditability: function(edit) {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
-        params.edit = edit;
-        return route.replace(module.exports, params);
-    },
+    setEditability(edit) {
+        let { route } = this.props;
+        let params = _.clone(route.params);
+        params.editing = edit || undefined;
+        return route.replace(route.name, params);
+    }
 
     /**
      * Return list of language codes
      *
      * @return {Array<String>}
      */
-    getInputLanguages: function() {
-        var system = this.getSystem();
+    getInputLanguages() {
+        let system = this.getSystem();
         return _.get(system, 'settings.input_languages', [])
-    },
+    }
 
     /**
      * Reset edit state when edit starts
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+    componentWillReceiveProps(nextProps) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 this.setState({
                     newSystem: null,
                     hasChanges: false,
@@ -219,34 +155,38 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                 this.setState({ problems: {} });
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
+    render() {
+        let { env } = this.props;
+        let { problems } = this.state;
+        let { t } = env.locale;
         return (
             <div className="settings-page">
                 {this.renderButtons()}
                 <h2>{t('settings-title')}</h2>
-                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
+                <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderForm()}
                 {this.renderInstructions()}
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons in top right corner
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        if (this.isEditing()) {
+    renderButtons() {
+        let { route, env, editing } = this.props;
+        let { hasChanges } = this.state;
+        let { t } = env.locale;
+        if (editing) {
             // using keys here to force clearing of focus
             return (
                 <div key="edit" className="buttons">
@@ -254,10 +194,10 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                         {t('settings-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('settings-save')}
                     </PushButton>
-                    <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                    <DataLossWarning changes={hasChanges} env={env} route={route} />
                 </div>
             );
         } else {
@@ -269,14 +209,14 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render form for entering system settings
      *
      * @return {ReactElement}
      */
-    renderForm: function() {
+    renderForm() {
         return (
             <div className="form">
                 {this.renderTitleInput()}
@@ -288,159 +228,164 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                 {this.renderInputLanguageSelector()}
             </div>
         );
-    },
+    }
 
     /**
      * Render title input
      *
      * @return {ReactElement}
      */
-    renderTitleInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderTitleInput() {
+        let { env, editing } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'title',
             value: this.getSystemProperty('details.title'),
             availableLanguageCodes: this.getInputLanguages(),
-            locale: this.props.locale,
+            readOnly: !editing,
+            env,
             onChange: this.handleTitleChange,
-            readOnly: !this.isEditing(),
         };
         return (
             <MultilingualTextField {...props}>
                 {t('settings-site-title')}
             </MultilingualTextField>
         );
-    },
+    }
 
     /**
      * Render company name input
      *
      * @return {ReactElement}
      */
-    renderCompanyNameInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderCompanyNameInput() {
+        let { env, editing } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'company_name',
             value: this.getSystemProperty('details.company_name'),
-            locale: this.props.locale,
+            readOnly: !editing,
+            env,
             onChange: this.handleCompanyNameChange,
-            readOnly: !this.isEditing(),
         };
         return (
             <TextField {...props}>
                 {t('settings-company-name')}
             </TextField>
         );
-    },
+    }
 
     /**
      * Render description input
      *
      * @return {ReactElement}
      */
-    renderDescriptionInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderDescriptionInput() {
+        let { env, editing } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'description',
             value: this.getSystemProperty('details.description'),
             availableLanguageCodes: this.getInputLanguages(),
             type: 'textarea',
-            locale: this.props.locale,
+            readOnly: !editing,
+            env,
             onChange: this.handleDescriptionChange,
-            readOnly: !this.isEditing(),
         };
         return (
             <MultilingualTextField {...props}>
                 {t('settings-site-description')}
             </MultilingualTextField>
         )
-    },
+    }
 
     /**
      * Render site address input
      *
      * @return {ReactElement}
      */
-    renderSiteAddressInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderSiteAddressInput() {
+        let { env, editing } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'address',
             type: 'url',
             value: this.getSystemProperty('settings.address'),
-            locale: this.props.locale,
             placeholder: 'https://',
-            onChange: this.handleAddressChange,
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
+            env,
+            onChange: this.handleAddressChange,
         };
         return (
             <TextField {...props}>
                 {t('settings-site-address')}
             </TextField>
         );
-    },
+    }
 
     /**
      * Render push relay input
      *
      * @return {ReactElement}
      */
-    renderPushRelayInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderPushRelayInput() {
+        let { env, editing } = this.props;
+        let { t } = env.locale;
+        let props = {
             id: 'relay',
             type: 'url',
             value: this.getSystemProperty('settings.push_relay'),
-            locale: this.props.locale,
             placeholder: 'https://',
-            onChange: this.handlePushRelayChange,
-            readOnly: !this.isEditing(),
+            readOnly: !editing,
             spellCheck: false,
+            env,
+            onChange: this.handlePushRelayChange,
         };
         return (
             <TextField {...props}>
                 {t('settings-push-relay')}
             </TextField>
         );
-    },
+    }
 
     /**
      * Render background image selector
      *
      * @return {ReactElement}
      */
-    renderBackgroundSelector: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderBackgroundSelector() {
+        let { database, env, payloads, editing } = this.props;
+        let { t } = env.locale;
+        let props = {
             purpose: 'background',
             resources: this.getSystemProperty('details.resources'),
-            database: this.props.database,
-            locale: this.props.locale,
-            theme: this.props.theme,
-            payloads: this.props.payloads,
+            readOnly: !editing,
+            database,
+            payloads,
+            env,
             onChange: this.handleBackgroundImageChange,
-            readOnly: !this.isEditing(),
         };
         return (
             <ImageSelector {...props}>
                 {t('settings-background-image')}
             </ImageSelector>
         );
-    },
+    }
 
     /**
      * Render input language selector
      *
      * @return {ReactElement}
      */
-    renderInputLanguageSelector: function() {
-        var t = this.props.locale.translate;
-        var languages = this.props.locale.directory;
-        var inputLanguageCurr = this.getSystemProperty('settings.input_languages', 'current') || [];
-        var inputLanguagePrev = this.getSystemProperty('settings.input_languages', 'original') || [];
-        var optionProps = _.map(languages, (language) => {
-            var index = _.indexOf(inputLanguageCurr, language.code);
-            var badge;
+    renderInputLanguageSelector() {
+        let { env, editing } = this.props;
+        let { t, directory } = env.locale;
+        let inputLanguageCurr = this.getSystemProperty('settings.input_languages', 'current') || [];
+        let inputLanguagePrev = this.getSystemProperty('settings.input_languages', 'original') || [];
+        let optionProps = _.map(directory, (language) => {
+            let index = _.indexOf(inputLanguageCurr, language.code);
+            let badge;
             if (index !== -1) {
                 badge = <span className="language-badge">{index + 1}</span>;
             }
@@ -451,9 +396,9 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                 children: <span>{language.name} {badge}</span>,
             };
         });
-        var listProps = {
+        let listProps = {
+            readOnly: !editing,
             onOptionClick: this.handleLanguageOptionClick,
-            readOnly: !this.isEditing(),
         };
         return (
             <OptionList {...listProps}>
@@ -461,155 +406,158 @@ var SettingsPageSync = module.exports.Sync = React.createClass({
                 {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
             </OptionList>
         );
-    },
+    }
 
     /**
      * Render instruction box
      *
      * @return {ReactElement}
      */
-    renderInstructions: function() {
-        var instructionProps = {
+    renderInstructions() {
+        let { env, editing } = this.props;
+        let instructionProps = {
             folder: 'settings',
             topic: 'settings',
-            hidden: !this.isEditing(),
-            locale: this.props.locale,
+            hidden: !editing,
+            env,
         };
         return (
             <div className="instructions">
                 <InstructionBlock {...instructionProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
+    handleEditClick = (evt) => {
         return this.setEditability(true);
-    },
+    }
 
     /**
      * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         return this.setEditability(false);
-    },
+    }
 
     /**
      * Called when user clicks save button
      *
      * @param  {Event} evt
      */
-    handleSaveClick: function(evt) {
-        if (this.state.saving) {
+    handleSaveClick = (evt) => {
+        let { database, payloads } = this.props;
+        let { saving } = this.state;
+        if (saving) {
             return;
         }
         this.setState({ saving: true }, () => {
-            var schema = 'global';
-            var db = this.props.database.use({ schema, by: this });
-            var system = this.getSystem();
-            return db.start().then((userId) => {
+            let schema = 'global';
+            let db = database.use({ schema, by: this });
+            let system = this.getSystem();
+            return db.start().then((currentUserID) => {
                 return db.saveOne({ table: 'system' }, system).then((system) => {
-                    this.props.payloads.dispatch(system);
+                    payloads.dispatch(system);
                     this.setState({ hasChanges: false, saving: false, problems: {} }, () => {
                         this.setEditability(false);
                     });
                     return null;
                 });
             }).catch((err) => {
-                var problems = { unexpected: err.message };
+                let problems = { unexpected: err.message };
                 this.setState({ problems, saving: false });
             });
         });
-    },
+    }
 
     /**
      * Called when user changes the title
      *
      * @param  {Object} evt
      */
-    handleTitleChange: function(evt) {
+    handleTitleChange = (evt) => {
         this.setSystemProperty(`details.title`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes the title
      *
      * @param  {Event} evt
      */
-    handleCompanyNameChange: function(evt) {
+    handleCompanyNameChange = (evt) => {
         this.setSystemProperty(`details.company_name`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes the system address
      *
      * @param  {Event} evt
      */
-    handleAddressChange: function(evt) {
+    handleAddressChange = (evt) => {
         this.setSystemProperty(`settings.address`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes the system address
      *
      * @param  {Event} evt
      */
-    handlePushRelayChange: function(evt) {
+    handlePushRelayChange = (evt) => {
         this.setSystemProperty(`settings.push_relay`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes the title
      *
      * @param  {Object} evt
      */
-    handleDescriptionChange: function(evt) {
+    handleDescriptionChange = (evt) => {
         this.setSystemProperty(`details.description`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user changes the background image
      *
      * @param  {Object} evt
      */
-    handleBackgroundImageChange: function(evt) {
+    handleBackgroundImageChange = (evt) => {
         this.setSystemProperty(`details.resources`, evt.target.value);
-    },
+    }
 
     /**
      * Called when user clicks an option under input languages
      *
      * @param  {Object} evt
      */
-    handleLanguageOptionClick: function(evt) {
-        var system = this.getSystem();
-        var inputLanguages = _.slice(system.settings.input_languages);
-        var lang = evt.name;
+    handleLanguageOptionClick = (evt) => {
+        let system = this.getSystem();
+        let inputLanguages = _.get(system, 'settings.input_languages', []);
+        let lang = evt.name;
         if (_.includes(inputLanguages, lang)) {
-            _.pull(inputLanguages, lang);
+            inputLanguages = _.without(inputLanguages, lang);
         } else {
-            inputLanguages.push(lang);
+            inputLanguages = _.concat(inputLanguages, lang);
         }
         this.setSystemProperty(`settings.input_languages`, inputLanguages);
-    },
-});
+    }
+}
 
 // use timezone to determine default relay
-var defaultRelay;
-var tzOffset = (new Date()).getTimezoneOffset() / 60;
+let defaultRelay;
+let tzOffset = (new Date()).getTimezoneOffset() / 60;
 if (-5 <= tzOffset && tzOffset <= 0) {
     defaultRelay = 'https://eu-west-1.push.trambar.io';
 } else {
     defaultRelay = 'https://us-east-1.push.trambar.io';
 }
 
-var defaultSystem = {
+let defaultSystem = {
     details: {},
     settings: {
         address: window.location.protocol + '//' + window.location.host,
@@ -617,11 +565,44 @@ var defaultSystem = {
     }
 };
 
-var emptySystem = {
+let emptySystem = {
     details: {},
     settings: SystemSettings.default,
 };
 
 function renderOption(props, i) {
     return <option key={i} {...props} />;
+}
+
+export {
+    SettingsPage as default,
+    SettingsPage,
+    SettingsPageSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+import Payloads from 'transport/payloads';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    SettingsPage.propTypes = {
+        editing: PropTypes.bool,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+    };
+    SettingsPageSync.propTypes = {
+        editing: PropTypes.bool,
+        system: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+    };
 }

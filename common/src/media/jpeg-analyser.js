@@ -1,9 +1,3 @@
-module.exports = {
-	getDimensions,
-	getOrientation,
-	extractPaths,
-};
-
 /**
  * Get the orientation of a JPEG image
  *
@@ -12,15 +6,15 @@ module.exports = {
  * @return {Object|undefined}
  */
 function getDimensions(bytes) {
-	var p = findSegment(bytes, (marker, p, length) => {
+	let p = findSegment(bytes, (marker, p, length) => {
 		if (marker === 0xFFC0 || marker === 0xFFC2) {
 			return p;
 		}
 	});
 	if (p > 0) {
-		var precision = bytes[p++];
-		var height = beShort(bytes[p++], bytes[p++]);
-		var width = beShort(bytes[p++], bytes[p++]);
+		let precision = bytes[p++];
+		let height = beShort(bytes[p++], bytes[p++]);
+		let width = beShort(bytes[p++], bytes[p++]);
 		return { width, height };
 	}
 }
@@ -33,43 +27,43 @@ function getDimensions(bytes) {
  * @return {Number|undefined}
  */
 function getOrientation(bytes) {
-	var short = beShort;
-	var long = beLong;
-	var p = findSegment(bytes, (marker, start, length) => {
+	let short = beShort;
+	let long = beLong;
+	let p = findSegment(bytes, (marker, start, length) => {
 		// look for APP1
 		if (marker === 0xFFE1) {
 			// see if the identifier is "Exif\0\0"
-			var p = start;
-			var end = start + length;
+			let p = start;
+			let end = start + length;
 			if(bytes[p++] == 0x45 && bytes[p++] == 0x78
 			&& bytes[p++] == 0x69 && bytes[p++] == 0x66
 			&& bytes[p++] == 0x00 && bytes[p++] == 0x00) {
-				var base = p;
+				let base = p;
 				// see if data is stored in Big Endian (MM) or Little Endian (II)
-				var endian = String.fromCharCode(bytes[p++]) + String.fromCharCode(bytes[p++]);
+				let endian = String.fromCharCode(bytes[p++]) + String.fromCharCode(bytes[p++]);
 				if (endian === 'II') {
 					short = leShort;
 					long = leLong;
 				}
-				var magic = short(bytes[p++], bytes[p++]);
+				let magic = short(bytes[p++], bytes[p++]);
 				if (magic !== 42) {
 					return;
 				}
 				do {
 					// find offset to IFD
-					var offset = long(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
+					let offset = long(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
 					if (offset === 0) {
 						break;
 					}
 					p = base + offset;
 
 					// look through the Exif tags
-					var tagCount = short(bytes[p++], bytes[p++]);
-					for (var i = 0; i < tagCount; i++) {
-						var tagId = short(bytes[p++], bytes[p++]);
-						var tagType = short(bytes[p++], bytes[p++]);
-						var valueCount = long(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
-						if (tagId === 0x0112 && tagType === 3 && valueCount === 1) {
+					let tagCount = short(bytes[p++], bytes[p++]);
+					for (let i = 0; i < tagCount; i++) {
+						let tagID = short(bytes[p++], bytes[p++]);
+						let tagType = short(bytes[p++], bytes[p++]);
+						let valueCount = long(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
+						if (tagID === 0x0112 && tagType === 3 && valueCount === 1) {
 							return p;
 						} else {
 							p += 4;
@@ -80,7 +74,7 @@ function getOrientation(bytes) {
 		}
 	});
 	if (p > 0) {
-		var value = short(bytes[p++], bytes[p++]);
+		let value = short(bytes[p++], bytes[p++]);
 		return value;
 	}
 }
@@ -109,7 +103,7 @@ function leLong(b1, b2, b3, b4) {
  * @return {Object|null}
  */
 function extractPaths(bytes) {
-    var p = findPhotoshopSegment(bytes);
+    let p = findPhotoshopSegment(bytes);
     if(p !== -1) {
         return parse8BIMData(bytes, p);
     }
@@ -125,19 +119,19 @@ function extractPaths(bytes) {
  * @return {Number}
  */
 function findSegment(bytes, callback) {
-	var size = bytes.length;
-	var p = 0;
-	var signature = beShort(bytes[p++], bytes[p++]);
+	let size = bytes.length;
+	let p = 0;
+	let signature = beShort(bytes[p++], bytes[p++]);
 	if(signature == 0xFFD8) {
 		// look for segment with the APP13 marker
 		while(p < size) {
-			var marker = beShort(bytes[p++], bytes[p++]);
-			var length = beShort(bytes[p++], bytes[p++]);
+			let marker = beShort(bytes[p++], bytes[p++]);
+			let length = beShort(bytes[p++], bytes[p++]);
 			if(marker == 0xFFDA) {
 				// image data starts--time to stop
 				break;
 			}
-			var result = callback(marker, p, length);
+			let result = callback(marker, p, length);
 			if (result !== undefined && result !== false) {
 				return result;
 			}
@@ -180,22 +174,22 @@ function findPhotoshopSegment(bytes) {
  * @return {Object|null}
  */
 function parse8BIMData(bytes, offset) {
-	var size = bytes.length;
-	var paths = null;
-	var p = offset;
+	let size = bytes.length;
+	let paths = null;
+	let p = offset;
 	while(p + 4 < size) {
 		// look for '8BIM' marker
 		if(bytes[p+0] == 0x38 && bytes[p+1] == 0x42 && bytes[p+2] == 0x49 && bytes[p+3] == 0x4D) {
 			p += 4;
-			var segmentType = beShort(bytes[p++], bytes[p++]);
-			var nameLength = bytes[p++];
-			var name = '';
-			for(var i = 0; i < nameLength; i++) {
+			let segmentType = beShort(bytes[p++], bytes[p++]);
+			let nameLength = bytes[p++];
+			let name = '';
+			for(let i = 0; i < nameLength; i++) {
 				name += String.fromCharCode(bytes[p++]);
 			}
 			p++;
-			var unknown = beShort(bytes[p++], bytes[p++]);
-			var segmentSize = beShort(bytes[p++], bytes[p++]);
+			let unknown = beShort(bytes[p++], bytes[p++]);
+			let segmentSize = beShort(bytes[p++], bytes[p++]);
 			if(segmentType >= 1999 && segmentType <= 2998) {
 				if(!paths) {
 					paths = {};
@@ -220,13 +214,13 @@ function parse8BIMData(bytes, offset) {
  * @return {Array}
  */
 function parsePathData(bytes, offset, size) {
-	var recordCount = size / 26;
-	var knotCount = 0;
-	var path = [];
-	var subPath = [];
-	var p = offset;
-	for(var i = 0; i < recordCount; i++) {
-		var selector = beShort(bytes[p++], bytes[p++]);
+	let recordCount = size / 26;
+	let knotCount = 0;
+	let path = [];
+	let subPath = [];
+	let p = offset;
+	for(let i = 0; i < recordCount; i++) {
+		let selector = beShort(bytes[p++], bytes[p++]);
 		switch(selector) {
 			case 0:
 			case 3:
@@ -237,9 +231,9 @@ function parsePathData(bytes, offset, size) {
 			case 2:
 			case 4:
 			case 5:
-				for(var j = 0; j < 3; j++) {
-					var y = beLong(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
-					var x = beLong(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
+				for(let j = 0; j < 3; j++) {
+					let y = beLong(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
+					let x = beLong(bytes[p++], bytes[p++], bytes[p++], bytes[p++]);
 					if(y >= 2147483648) {
 						y = (2147483647 - y) / 16777216.0;
 					} else {
@@ -267,3 +261,9 @@ function parsePathData(bytes, offset, size) {
 	}
 	return path;
 }
+
+export {
+	getDimensions,
+	getOrientation,
+	extractPaths,
+};

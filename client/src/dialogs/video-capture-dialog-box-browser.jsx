@@ -1,63 +1,28 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-var FrameGrabber = require('media/frame-grabber');
-var DeviceManager = require('media/device-manager');
-var MediaStreamUtils = require('media/media-stream-utils');
-var BlobManager = require('transport/blob-manager');
-
-var Payloads = require('transport/payloads');
-var Locale = require('locale/locale');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
+import * as FrameGrabber from 'media/frame-grabber';
+import * as DeviceManager from 'media/device-manager';
+import * as MediaStreamUtils from 'media/media-stream-utils';
+import * as BlobManager from 'transport/blob-manager';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var DeviceSelector = require('widgets/device-selector');
-var DevicePlaceholder = require('widgets/device-placeholder');
-var DurationIndicator = require('widgets/duration-indicator');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import DeviceSelector from 'widgets/device-selector';
+import DevicePlaceholder from 'widgets/device-placeholder';
+import DurationIndicator from 'widgets/duration-indicator';
 
-require('./video-capture-dialog-box-browser.scss');
+import './video-capture-dialog-box-browser.scss';
 
-module.exports = React.createClass({
-    displayName: 'VideoCaptureDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
+class VideoCaptureDialogBox extends PureComponent {
+    static displayName = 'VideoCaptureDialogBox';
 
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-
-        onClose: PropTypes.func,
-        onCapturePending: PropTypes.func,
-        onCaptureError: PropTypes.func,
-        onCapture: PropTypes.func,
-    },
-
-    statics: {
-        /**
-         * Return true if the browser has the necessary functionalities
-         *
-         * @return {Boolean}
-         */
-        isAvailable: function() {
-            if (!MediaStreamUtils.hasSupport()) {
-                return false;
-            }
-            if (typeof(MediaRecorder) !== 'function') {
-                return false;
-            }
-            return true;
-        },
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        var devices = DeviceManager.getDevices('videoinput');
-        var preferredDevice = DeviceSelector.choose(devices, this.props.cameraDirection);
-        return {
+    constructor(props) {
+        super(props);
+        let devices = DeviceManager.getDevices('videoinput');
+        let preferredDevice = DeviceSelector.choose(devices, props.cameraDirection);
+        this.state = {
             liveVideoStream: null,
             liveVideoError : null,
             liveVideoWidth: 640,
@@ -67,29 +32,46 @@ module.exports = React.createClass({
             capturedImage: null,
             previewURL: null,
             videoDevices: devices,
-            selectedDeviceId: (preferredDevice) ? preferredDevice.deviceId : null,
+            selectedDeviceID: (preferredDevice) ? preferredDevice.deviceID : null,
             startTime: null,
             duration: 0,
         };
-    },
+    }
+
+    /**
+     * Return true if the browser has the necessary functionalities
+     *
+     * @return {Boolean}
+     */
+    static isAvailable() {
+        if (!MediaStreamUtils.hasSupport()) {
+            return false;
+        }
+        if (typeof(MediaRecorder) !== 'function') {
+            return false;
+        }
+        return true;
+    }
 
     /**
      * Initialize camera if component is mounted as shown (probably not)
      */
-    componentWillMount: function() {
-        if (this.props.show) {
+    componentWillMount() {
+        let { show } = this.props;
+        if (show) {
             this.initializeCamera();
         }
         DeviceManager.addEventListener('change', this.handleDeviceChange);
-    },
+    }
 
     /**
      * Initialize camera when component becomes visible
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.props.show !== nextProps.show) {
+    componentWillReceiveProps(nextProps) {
+        let { show } = this.props;
+        if (nextProps.show !== show) {
             if (nextProps.show) {
                 this.clearCapturedVideo();
                 this.initializeCamera();
@@ -100,28 +82,29 @@ module.exports = React.createClass({
                 }, 500);
             }
         }
-    },
+    }
 
     /**
      * Removed video that was captured earlier
      */
-    clearCapturedVideo: function() {
-        if (this.state.capturedVideo) {
-            URL.revokeObjectURL(this.state.previewURL);
+    clearCapturedVideo() {
+        let { capturedVideo, previewURL } = this.state;
+        if (capturedVideo) {
+            URL.revokeObjectURL(previewURL);
             this.setState({
                 capturedVideo: null,
                 capturedImage: null,
                 previewURL: null,
             });
         }
-    },
+    }
 
     /**
      * Create live video stream, asking user for permission if necessary
      */
-    initializeCamera: function() {
+    initializeCamera() {
         return this.createLiveVideoStream().then((stream) => {
-            var dim = MediaStreamUtils.getVideoDimensions(stream);
+            let dim = MediaStreamUtils.getVideoDimensions(stream);
             this.setState({
                 liveVideoStream: stream,
                 liveVideoError: null,
@@ -134,43 +117,44 @@ module.exports = React.createClass({
                 liveVideoError: err,
             });
         });
-    },
+    }
 
     /**
      * Release live video stream
      */
-    shutdownCamera: function() {
+    shutdownCamera() {
         this.destroyLiveVideoStream().then(() => {
             this.setState({
                 liveVideoStream: null,
                 liveVideoError: null,
             });
         });
-    },
+    }
 
     /**
      * Recreate live video stream after a different camera is selected
      */
-    reinitializeCamera: function() {
+    reinitializeCamera() {
         this.destroyLiveVideoStream().then(() => {
             this.initializeCamera();
         });
-    },
+    }
 
     /**
      * Set the video node and apply live video stream to it
      *
      * @param  {HTMLVideoElement} node
      */
-    setLiveVideoNode: function(node) {
+    setLiveVideoNode = (node) => {
+        let { liveVideoStream, liveVideoWidth, liveVideoHeight } = this.state;
         this.videoNode = node;
         if (this.videoNode) {
-            this.videoNode.srcObject = this.state.liveVideoStream;
+            this.videoNode.srcObject = liveVideoStream;
             this.videoNode.play();
 
             // fix the video dimensions if they're wrong
             MediaStreamUtils.getActualVideoDimensions(node, (dim) => {
-                if (this.state.liveVideoWidth !== dim.width || this.state.liveVideoHeight !== dim.height) {
+                if (liveVideoWidth !== dim.width || liveVideoHeight !== dim.height) {
                     this.setState({
                         liveVideoWidth: dim.width,
                         liveVideoHeight: dim.height,
@@ -178,18 +162,16 @@ module.exports = React.createClass({
                 }
             });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.handleCancelClick,
-        };
+    render() {
+        let { show } = this.props;
+        let overlayProps = { show, onBackgroundClick: this.handleCancelClick };
         return (
             <Overlay {...overlayProps}>
                 <div className="video-capture-dialog-box">
@@ -204,43 +186,45 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render either live or captured video
      *
      * @return {ReactElement}
      */
-    renderView: function() {
-        if (this.state.capturedVideo) {
+    renderView() {
+        let { capturedVideo, liveVideoStream } = this.state;
+        if (capturedVideo) {
             return this.renderCapturedVideo();
-        } else if (this.state.liveVideoStream) {
+        } else if (liveVideoStream) {
             return this.renderLiveVideo();
         } else {
             return this.renderPlaceholder();
         }
-    },
+    }
 
     /**
      * Render placeholder graphic when camera isn't available
      *
      * @return {ReactElement}
      */
-    renderPlaceholder: function() {
-        var props = {
-            blocked: !!this.state.liveVideoError,
+    renderPlaceholder() {
+        let { liveVideoError } = this.state;
+        let props = {
+            blocked: !!liveVideoError,
             icon: 'video-camera',
         };
         return <DevicePlaceholder {...props} />;
-    },
+    }
 
     /**
      * Render view of live video stream
      *
      * @return {ReactElement}
      */
-    renderLiveVideo: function() {
-        var videoProps = {
+    renderLiveVideo() {
+        let videoProps = {
             ref: this.setLiveVideoNode,
             key: 'live',
             className: 'live-video',
@@ -252,32 +236,34 @@ module.exports = React.createClass({
                 <video {...videoProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render a spacer element
      *
      * @return {ReactElement}
      */
-    renderSpacer: function() {
-        var spacerProps = {
+    renderSpacer() {
+        let { liveVideoWidth, liveVideoHeight } = this.state;
+        let spacerProps = {
             className: 'spacer',
-            width: this.state.liveVideoWidth,
-            height: this.state.liveVideoHeight,
+            width: liveVideoWidth,
+            height: liveVideoHeight,
         };
         return <canvas {...spacerProps} />;
-    },
+    }
 
     /**
      * Render video captured previously
      *
      * @return {ReactElement}
      */
-    renderCapturedVideo: function() {
-        var videoProps = {
+    renderCapturedVideo() {
+        let { previewURL } = this.state;
+        let videoProps = {
             key: 'preview',
             className: 'preview',
-            src: this.state.previewURL,
+            src: previewURL,
             controls: true
         };
         return (
@@ -286,67 +272,74 @@ module.exports = React.createClass({
                 <video {...videoProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Render a dropdown if there're multiple devices
      *
      * @return {ReactElement|null}
      */
-    renderDeviceSelector: function() {
-        if (this.state.mediaRecorder) {
+    renderDeviceSelector() {
+        let { env } = this.props;
+        let {
+            mediaRecorder,
+            capturedVideo,
+            videoDevices,
+            selectedDeviceID
+        } = this.state;
+        if (mediaRecorder) {
             return null;
         }
-        if (this.state.capturedVideo) {
+        if (capturedVideo) {
             return null;
         }
-        var props = {
+        let props = {
             type: 'video',
-            devices: this.state.videoDevices,
-            selectedDeviceId: this.state.selectedDeviceId,
-            locale: this.props.locale,
+            devices: videoDevices,
+            selectedDeviceID,
+            env,
             onSelect: this.handleDeviceSelect,
         };
         return <DeviceSelector {...props} />;
-    },
+    }
 
     /**
      * Show duration when we're recording
      *
      * @return {ReactElement|null}
      */
-    renderDuration: function() {
-        if (!this.state.mediaRecorder) {
+    renderDuration() {
+        let { mediaRecorder, startTime, duration } = this.state;
+        if (!mediaRecorder) {
             return null;
         }
-        var durationProps = {
-            duration: this.state.duration,
-            startTime: this.state.startTime,
-        };
+        let durationProps = { duration, startTime };
         return <DurationIndicator {...durationProps} />
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        if (this.state.mediaRecorder) {
-            var paused = this.state.mediaRecorder.state === 'paused';
-            var pauseButtonProps = {
+    renderButtons() {
+        let { env } = this.props;
+        let { mediaRecorder, capturedVideo, liveVideoStream } = this.state;
+        let { t } = env.locale;
+        if (mediaRecorder) {
+            let paused = (mediaRecorder.state === 'paused');
+            let pauseButtonProps = {
                 label: t('video-capture-pause'),
                 onClick: this.handlePauseClick,
                 hidden: paused,
             };
-            var resumeButtonProps = {
+            let resumeButtonProps = {
                 label: t('video-capture-resume'),
                 onClick: this.handleResumeClick,
                 hidden: !paused,
                 emphasized: true
             };
-            var stopButtonProps = {
+            let stopButtonProps = {
                 label: t('video-capture-stop'),
                 onClick: this.handleStopClick,
                 emphasized: !paused,
@@ -358,15 +351,15 @@ module.exports = React.createClass({
                     <PushButton {...stopButtonProps} />
                 </div>
             );
-        } else if (!this.state.capturedVideo) {
-            var cancelButtonProps = {
+        } else if (!capturedVideo) {
+            let cancelButtonProps = {
                 label: t('video-capture-cancel'),
                 onClick: this.handleCancelClick,
             };
-            var startButtonProps = {
+            let startButtonProps = {
                 label: t('video-capture-start'),
                 onClick: this.handleStartClick,
-                disabled: !this.state.liveVideoStream,
+                disabled: !liveVideoStream,
                 emphasized: true,
             };
             return (
@@ -376,11 +369,11 @@ module.exports = React.createClass({
                 </div>
             );
         } else {
-            var retakeButtonProps = {
+            let retakeButtonProps = {
                 label: t('video-capture-retake'),
                 onClick: this.handleRetakeClick,
             };
-            var acceptButtonProps = {
+            let acceptButtonProps = {
                 label: t('video-capture-accept'),
                 onClick: this.handleAcceptClick,
                 emphasized: true,
@@ -392,63 +385,65 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Change the video's source object when user changes camera
      */
-    componentDidUpdate: function(prevProps, prevState) {
+    componentDidUpdate(prevProps, prevState) {
+        let { liveVideoStream } = this.state;
         if (this.videoNode) {
-            if (prevState.liveVideoStream !== this.state.liveVideoStream) {
+            if (prevState.liveVideoStream !== liveVideoStream) {
                 this.setLiveVideoNode(this.videoNode);
             }
         }
-    },
+    }
 
     /**
      * Destroy live video stream when component unmounts
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         this.destroyLiveVideoStream();
         this.clearCapturedVideo();
         DeviceManager.removeEventListener('change', this.handleDeviceChange);
-    },
+    }
 
     /**
      * Create a live video stream
      *
      * @return {Promise<MediaStream>}
      */
-    createLiveVideoStream: function() {
+    createLiveVideoStream() {
+        let { selectedDeviceID } = this.state;
         if (!this.videoStreamPromise) {
-            this.videoStreamPromise = MediaStreamUtils.getVideoStream(this.state.selectedDeviceId);
+            this.videoStreamPromise = MediaStreamUtils.getVideoStream(selectedDeviceID);
         }
         return this.videoStreamPromise;
-    },
+    }
 
     /**
      * Destroy live video stream created previously
      *
      * @return {Promise}
      */
-    destroyLiveVideoStream: function() {
+    destroyLiveVideoStream() {
         if (!this.videoStreamPromise) {
             return Promise.resolve();
         }
-        var promise = this.videoStreamPromise;
+        let promise = this.videoStreamPromise;
         this.videoStreamPromise = null;
         return promise.then((stream) => {
             MediaStreamUtils.stopAllTracks(stream);
         });
-    },
+    }
 
     /**
      * Capture a frame from camera
      *
      * @return {Promise<Object>}
      */
-    captureImage: function() {
-        var video = this.videoNode;
+    captureImage() {
+        let video = this.videoNode;
         return FrameGrabber.capture(video).then((blob) => {
             return {
                 blob: blob,
@@ -456,124 +451,128 @@ module.exports = React.createClass({
                 height: video.videoHeight,
             };
         });
-    },
+    }
 
     /**
      * Start capturing video
      *
      * @return {Promise}
      */
-    beginRecording: function() {
+    beginRecording() {
+        let { payloads } = this.props;
+        let { liveVideoStream } = this.state;
         return Promise.try(() => {
-            var segmentDuration = 3 * 1000;
-            var options = {
+            let segmentDuration = 3 * 1000;
+            let options = {
                 audioBitsPerSecond : 128000,
                 videoBitsPerSecond : 2500000,
                 mimeType : 'video/webm'
             };
-            var recorder = new MediaRecorder(this.state.liveVideoStream, options);
-            var stream = this.props.payloads.stream();
-            recorder.outputStream = stream;
-            recorder.promise = new Promise((resolve, reject) => {
-                recorder.resolve = resolve;
-                recorder.reject = reject;
+            let mediaRecorder = new MediaRecorder(liveVideoStream, options);
+            let stream = payloads.stream();
+            mediaRecorder.outputStream = stream;
+            mediaRecorder.promise = new Promise((resolve, reject) => {
+                mediaRecorder.resolve = resolve;
+                mediaRecorder.reject = reject;
             });
-            recorder.addEventListener('dataavailable', function(evt) {
+            mediaRecorder.addEventListener('dataavailable', (evt) => {
                 this.outputStream.push(evt.data)
             });
-            recorder.addEventListener('stop', function(evt) {
+            mediaRecorder.addEventListener('stop', (evt) => {
                 this.outputStream.close();
-                recorder.resolve();
+                mediaRecorder.resolve();
             });
-            recorder.start(segmentDuration);
+            mediaRecorder.start(segmentDuration);
             // start uploading immediately upon receiving data from MediaRecorder
             stream.start();
-            return recorder;
+            return mediaRecorder;
         });
-    },
+    }
 
     /**
      * Pause capturing
      *
      * @return {Promise}
      */
-    pauseRecording: function() {
+    pauseRecording() {
+        let { mediaRecorder } = this.state;
         return Promise.try(() => {
-            var recorder = this.state.mediaRecorder;
-            if (recorder) {
-                recorder.pause();
+            if (mediaRecorder) {
+                mediaRecorder.pause();
             }
         });
-    },
+    }
 
     /**
      * Resume capturing
      *
      * @return {Promise}
      */
-    resumeRecording: function() {
+    resumeRecording() {
+        let { mediaRecorder } = this.state;
         return Promise.try(() => {
-            var recorder = this.state.mediaRecorder;
-            if (recorder) {
-                recorder.resume();
+            if (mediaRecorder) {
+                mediaRecorder.resume();
             }
         });
-    },
+    }
 
     /**
      * Stop capturing video, returning what was captured
      *
      * @return {Promise}
      */
-    endRecording: function() {
+    endRecording() {
+        let { mediaRecorder } = this.state;
         return Promise.try(() => {
-            var recorder = this.state.mediaRecorder;
-            if (recorder) {
-                recorder.stop();
+            if (mediaRecorder) {
+                mediaRecorder.stop();
 
                 // wait till all data is encoded
-                return recorder.promise;
+                return mediaRecorder.promise;
             }
         });
-    },
+    }
 
     /**
      * Report back to parent component that a video has been captured
      *
      * @param  {Object} resource
      */
-    triggerCaptureEvent: function(resource) {
-        if (this.props.onCapture) {
-            this.props.onCapture({
+    triggerCaptureEvent(resource) {
+        let { onCapture } = this.props;
+        if (onCapture) {
+            onCapture({
                 type: 'capture',
                 target: this,
                 resource,
             })
         }
-    },
+    }
 
     /**
      * Inform parent component that dialog box should be closed
      */
-    triggerCloseEvent: function() {
-        if (this.props.onClose) {
-            this.props.onClose({
+    triggerCloseEvent() {
+        let { onClose } = this.props;
+        if (onClose) {
+            onClose({
                 type: 'close',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks start button
      *
      * @param  {Event} evt
      */
-    handleStartClick: function(evt) {
-        return Promise.join(this.captureImage(), this.beginRecording(), (image, recorder) => {
+    handleStartClick = (evt) => {
+        return Promise.join(this.captureImage(), this.beginRecording(), (capturedImage, mediaRecorder) => {
             this.setState({
-                capturedImage: image,
-                mediaRecorder: recorder,
+                capturedImage,
+                mediaRecorder,
                 startTime: new Date,
                 duration: 0,
             });
@@ -581,55 +580,56 @@ module.exports = React.createClass({
         }).catch((err) => {
             console.error(err);
         });
-    },
+    }
 
     /**
      * Called when user clicks pause button
      *
      * @param  {Event} evt
      */
-    handlePauseClick: function(evt) {
+    handlePauseClick = (evt) => {
+        let { startTime, duration } = this.state;
         return this.pauseRecording().then(() => {
-            var now = new Date;
-            var elapsed = now - this.state.startTime;
-            var duration = this.state.duration + elapsed;
+            let now = new Date;
+            let elapsed = now - startTime;
+            duration += elapsed;
             this.setState({ duration, startTime: null });
         });
-    },
+    }
 
     /**
      * Called when user clicks resume button
      *
      * @param  {Event} evt
      */
-    handleResumeClick: function(evt) {
+    handleResumeClick = (evt) => {
         return this.resumeRecording().then(() => {
-            var now = new Date;
+            let now = new Date;
             this.setState({ startTime: now });
         });
-    },
+    }
 
     /**
      * Called when user clicks stop button
      *
      * @param  {Event} evt
      */
-    handleStopClick: function(evt) {
+    handleStopClick = (evt) => {
+        let { mediaRecorder, startTime } = this.state;
         return this.endRecording().then(() => {
-            var recorder = this.state.mediaRecorder;
-            var blob = recorder.outputStream.toBlob();
-            var url = URL.createObjectURL(blob);
-            var elapsed = 0;
-            if (this.state.startTime) {
-                var now = new Date;
-                elapsed = now - this.state.startTime;
+            let blob = mediaRecorder.outputStream.toBlob();
+            let url = URL.createObjectURL(blob);
+            let elapsed = 0;
+            if (startTime) {
+                let now = new Date;
+                elapsed = now - startTime;
             }
-            var video = {
-                format: _.last(_.split(recorder.mimeType, '/')),
-                audioBitsPerSecond: recorder.audioBitsPerSecond,
-                videoBitsPerSecond: recorder.videoBitsPerSecond,
-                stream: recorder.outputStream,
-                duration: this.state.duration + elapsed,
+            let video = {
+                format: _.last(_.split(mediaRecorder.mimeType, '/')),
+                audioBitsPerSecond: mediaRecorder.audioBitsPerSecond,
+                videoBitsPerSecond: mediaRecorder.videoBitsPerSecond,
+                stream: mediaRecorder.outputStream,
+                duration: duration + elapsed,
             };
             this.setState({
                 capturedVideo: video,
@@ -637,31 +637,31 @@ module.exports = React.createClass({
                 mediaRecorder: null
             });
         });
-    },
+    }
 
     /**
      * Called when user clicks retake button
      *
      * @param  {Event} evt
      */
-    handleRetakeClick: function(evt) {
+    handleRetakeClick = (evt) => {
         this.clearCapturedVideo();
-    },
+    }
 
     /**
      * Called when user clicks accept button
      *
      * @param  {Event} evt
      */
-    handleAcceptClick: function(evt) {
-        var capturedVideo = this.state.capturedVideo;
-        var capturedImage = this.state.capturedImage;
-        var payload = this.props.payloads.add('video');
+    handleAcceptClick = (evt) => {
+        let { payloads } = this.props;
+        let { capturedVideo, capturedImage } = this.state;
+        let payload = payloads.add('video');
         payload.attachStream(capturedVideo.stream);
         payload.attachFile(capturedImage.blob, 'poster');
-        var res = {
+        let res = {
             type: 'video',
-            payload_token: payload.token,
+            payload_token: payload.id,
             width: capturedImage.width,
             height: capturedImage.height,
             duration: capturedVideo.duration,
@@ -673,49 +673,73 @@ module.exports = React.createClass({
         }
         this.triggerCloseEvent();
         this.triggerCaptureEvent(res);
-    },
+    }
 
     /**
      * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         this.triggerCloseEvent();
-    },
+    }
 
     /**
      * Called when user selects a different device
      *
      * @param  {Event} evt
      */
-    handleDeviceSelect: function(evt) {
-        var selectedDeviceId = evt.currentTarget.value;
-        this.setState({ selectedDeviceId }, () => {
+    handleDeviceSelect = (evt) => {
+        let selectedDeviceID = evt.currentTarget.value;
+        this.setState({ selectedDeviceID }, () => {
             this.reinitializeCamera();
         });
-    },
+    }
 
     /**
      * Called when the list of media devices changes
      *
      * @param  {Object} evt
      */
-    handleDeviceChange: function(evt) {
-        var videoDevices = DeviceManager.getDevices('videoinput');
-        var selectedDeviceId = this.state.selectedDeviceId;
-        var reinitialize = false;
-        if (selectedDeviceId) {
-            if (!_.some(videoDevices, { deviceId: selectedDeviceId })) {
+    handleDeviceChange = (evt) => {
+        let { selectedDeviceID } = this.state;
+        let videoDevices = DeviceManager.getDevices('videoinput');
+        let reinitialize = false;
+        if (selectedDeviceID) {
+            if (!_.some(videoDevices, { deviceID: selectedDeviceID })) {
                 // reinitialize the camera when the one we were using disappears
-                selectedDeviceId = null;
+                selectedDeviceID = null;
                 reinitialize = true;
             }
         }
-        this.setState({ videoDevices, selectedDeviceId }, () => {
+        this.setState({ videoDevices, selectedDeviceID }, () => {
             if (reinitialize) {
                 this.reinitializeCamera();
             }
         });
-    },
-});
+    }
+}
+
+export {
+    VideoCaptureDialogBox as default,
+    VideoCaptureDialogBox,
+};
+
+import Payloads from 'transport/payloads';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    VideoCaptureDialogBox.propTypes = {
+        show: PropTypes.bool,
+
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onClose: PropTypes.func,
+        onCapturePending: PropTypes.func,
+        onCaptureError: PropTypes.func,
+        onCapture: PropTypes.func,
+    };
+}

@@ -1,18 +1,14 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import React, { PureComponent, Children } from 'react';
 
-require('./settings-panel.scss');
+import './settings-panel.scss';
 
-module.exports = React.createClass({
-    displayName: 'SettingsPanel',
-    propTypes: {
-    },
+class SettingsPanel extends PureComponent {
+    static displayName = 'SettingsPanel';
 
-    render: function() {
-        var className = 'settings-panel';
-        if (this.props.className) {
-            className += ` ${this.props.className}`;
-        }
+    render() {
+        let { className } = this.props;
+        className = 'settings-panel' + ((className) ? ` ${className}` : '');
         return (
             <div className={className}>
                 {this.renderPart('header')}
@@ -21,11 +17,12 @@ module.exports = React.createClass({
                 {this.renderPart('footer')}
             </div>
         );
-    },
+    }
 
-    renderPart: function(tag) {
-        var children = React.Children.toArray(this.props.children);
-        var element = _.find(children, { type: tag });
+    renderPart(tag) {
+        let { children } = this.props;
+        children = Children.toArray(children);
+        let element = _.find(children, { type: tag });
         if (!element) {
             return null;
         }
@@ -34,5 +31,10 @@ module.exports = React.createClass({
                 {element.props.children}
             </div>
         );
-    },
-});
+    }
+}
+
+export {
+    SettingsPanel as default,
+    SettingsPanel,
+};

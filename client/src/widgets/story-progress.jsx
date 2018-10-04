@@ -1,29 +1,25 @@
-var React = require('react'), PropTypes = React.PropTypes;
-var StoryUtils = require('objects/utils/story-utils');
-
-var Locale = require('locale/locale');
+import React from 'react';
+import * as StoryUtils from 'objects/utils/story-utils';
 
 // widgets
-var Time = require('widgets/time');
+import Time from 'widgets/time';
 
-module.exports = StoryProgress;
-
-require('./story-progress.scss');
+import './story-progress.scss';
 
 function StoryProgress(props) {
-    var t = props.locale.translate;
-    var contents;
+    let { env, story, status, pending } = props;
+    let { t } = env.locale;
+    let contents;
 
-    if (!StoryUtils.isActuallyPublished(props.story)) {
+    if (!StoryUtils.isActuallyPublished(story)) {
         // not saved yet
         contents = t('story-status-storage-pending');
     } else {
-        var status = props.status;
         if (status) {
             contents = t(`story-status-${status.action}-$progress`, status.progress);
         } else {
-            contents = <Time time={props.story.ptime} locale={props.locale} />;
-            if (props.pending) {
+            contents = <Time time={story.ptime} env={env} />;
+            if (pending) {
                 // story has not made it into listings yet
                 contents = (
                     <span>
@@ -36,8 +32,19 @@ function StoryProgress(props) {
     return <span className="story-progress">{contents}</span>;
 }
 
-StoryProgress.propTypes = {
-    status: PropTypes.object,
-    story: PropTypes.object.isRequired,
-    locale: PropTypes.instanceOf(Locale).isRequired,
+export {
+    StoryProgress as default,
+    StoryProgress,
 };
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryProgress.propTypes = {
+        status: PropTypes.object,
+        story: PropTypes.object.isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

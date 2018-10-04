@@ -1,14 +1,8 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
-var DateTracker = require('utils/date-tracker');
-var DateUtils = require('utils/date-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import * as DateUtils from 'utils/date-utils';
 
-module.exports = {
-    findNotificationsForUser,
-    findNotificationsForUserOnDate,
-    findNotificationsUnseenByUser
-};
+const emptyArray = [];
 
 /**
  * Find notifications intended for a user
@@ -21,7 +15,7 @@ module.exports = {
  */
 function findNotificationsForUser(db, user, minimum) {
     if (!user) {
-        return Promise.resolve(Empty.array)
+        return Promise.resolve(emptyArray)
     }
     return db.find({
         table: 'notification',
@@ -46,7 +40,7 @@ function findNotificationsForUser(db, user, minimum) {
  */
 function findNotificationsForUserOnDate(db, user, date, minimum) {
     if (!user) {
-        return Promise.resolve(Empty.array)
+        return Promise.resolve(emptyArray)
     }
     return db.find({
         table: 'notification',
@@ -69,7 +63,7 @@ function findNotificationsForUserOnDate(db, user, date, minimum) {
  */
 function findNotificationsUnseenByUser(db, user, minimum) {
     if (!user) {
-        return Promise.resolve(Empty.array)
+        return Promise.resolve(emptyArray)
     }
     return db.find({
         table: 'notification',
@@ -82,3 +76,9 @@ function findNotificationsUnseenByUser(db, user, minimum) {
         minimum
     });
 }
+
+export {
+    findNotificationsForUser,
+    findNotificationsForUserOnDate,
+    findNotificationsUnseenByUser
+};

@@ -1,59 +1,43 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-module.exports = MediaButton;
-module.exports.Direction = Direction;
-
-require('./media-button.scss');
+import './media-button.scss';
 
 function MediaButton(props) {
-    if (props.hidden) {
+    let { label, hidden, disabled, onClick } = props;
+    if (hidden) {
         return null;
     }
     return (
-        <label className={buttonClasses(props)} onClick={!props.disabled ? props.onClick : null}>
+        <label className={buttonClasses(props)} onClick={!disabled ? onClick : null}>
             <i className={iconClasses(props)}/>
-            <span className="label">{props.label}</span>
+            <span className="label">{label}</span>
         </label>
     );
 }
 
-Direction.propTypes = {
-    index: PropTypes.number,
-    count: PropTypes.number,
-    hidden: PropTypes.bool,
-    onBackwardClick: PropTypes.func,
-    onForwardClick: PropTypes.func,
-};
+MediaButton.Direction = Direction;
 
 function Direction(props) {
-    if (props.hidden) {
+    let { index, count, hidden, onBackwardClick, onForwardClick } = props;
+    if (hidden) {
         return null;
     }
-    var text = `${props.index + 1} / ${props.count}`;
+    let text = `${index + 1} / ${count}`;
     return (
         <div className="media-direction">
-            <label className="backward-button" onClick={props.onBackwardClick}>
+            <label className="backward-button" onClick={onBackwardClick}>
                 <i className="fa fa-caret-left"/>
             </label>
             <span className="position">{text}</span>
-            <label className="forward-button" onClick={props.onForwardClick}>
+            <label className="forward-button" onClick={onForwardClick}>
                 <i className="fa fa-caret-right"/>
             </label>
         </div>
     );
 }
 
-Direction.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    highlighted: PropTypes.bool,
-    disabled: PropTypes.bool,
-    onChange: PropTypes.func,
-};
-
 function buttonClasses(props) {
-    var classNames = [ 'media-button' ];
+    let classNames = [ 'media-button' ];
     if (props.className) {
         classNames.push(props.className);
     }
@@ -64,9 +48,34 @@ function buttonClasses(props) {
 }
 
 function iconClasses(props) {
-    var classNames = [];
+    let classNames = [];
     if (props.icon) {
         classNames.push('fa', `fa-${props.icon}`);
     }
     return classNames.join(' ');
+}
+
+export {
+    MediaButton as default,
+    MediaButton,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    MediaButton.propTypes = {
+        label: PropTypes.string,
+        icon: PropTypes.string,
+        hidden: PropTypes.bool,
+        highlighted: PropTypes.bool,
+        disabled: PropTypes.bool,
+        onChange: PropTypes.func,
+    };
+    Direction.propTypes = {
+        index: PropTypes.number,
+        count: PropTypes.number,
+        hidden: PropTypes.bool,
+        onBackwardClick: PropTypes.func,
+        onForwardClick: PropTypes.func,
+    };
 }

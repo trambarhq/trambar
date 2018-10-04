@@ -1,9 +1,7 @@
-var _ = require('lodash');
-var React = require('react');
+import _ from 'lodash';
+import React from 'react';
 
-module.exports = PushButton;
-
-require('./push-button.scss');
+import './push-button.scss';
 
 function PushButton(props) {
     props = _.clone(props)
@@ -17,4 +15,9 @@ function PushButton(props) {
 
 PushButton.defaultProps = {
     className: 'submit'
+};
+
+export {
+    PushButton as default,
+    PushButton,
 };

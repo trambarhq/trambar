@@ -1,24 +1,12 @@
-var _ = require('lodash');
-var React = require('react');
-var MarkGor = require('mark-gor/react');
-var ListParser = require('utils/list-parser');
-var PlainText = require('utils/plain-text');
-
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React from 'react';
+import MarkGor from 'mark-gor/react';
+import * as ListParser from 'utils/list-parser';
+import * as PlainText from 'utils/plain-text';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 
 // widgets
-var ResourceView = require('widgets/resource-view');
-
-module.exports = {
-    detect,
-    render,
-    renderSurvey,
-    renderSurveyResults,
-    renderTaskList,
-    createParser,
-    createRenderer,
-    findReferencedResource,
-};
+import ResourceView from 'widgets/resource-view';
 
 /**
  * Detect whether text appears to be Markdown
@@ -33,8 +21,8 @@ function detect(text, onReference) {
         return _.some(text, detect);
     }
     // process the text fully at block level, so ref links are captured
-    var parser = createParser(onReference);
-    var bTokens = parser.extractBlocks(text);
+    let parser = createParser(onReference);
+    let bTokens = parser.extractBlocks(text);
     return _.some(bTokens, (bToken) => {
         switch (bToken.type) {
             case 'space':
@@ -42,8 +30,8 @@ function detect(text, onReference) {
             case 'paragraph':
             case 'text_block':
                 // scan for inline markup
-                var iToken;
-                var inlineLexer = parser.inlineLexer;
+                let iToken;
+                let inlineLexer = parser.inlineLexer;
                 inlineLexer.start(bToken.markdown);
                 while (iToken = inlineLexer.captureToken()) {
                     switch (iToken.type) {
@@ -60,7 +48,7 @@ function detect(text, onReference) {
                 break;
             case 'list':
                 return _.every(bToken.children, (item) => {
-                    var child = item.children[0];
+                    let child = item.children[0];
                     if (child.type === 'text_block') {
                         if (/^\s*\[/.test(child.markdown)) {
                             // it might be a task-list or survey item
@@ -84,10 +72,10 @@ function detect(text, onReference) {
  * @return {Array<ReactElement>}
  */
 function render(text, onReference) {
-    var parser = createParser(onReference);
-    var renderer = createRenderer();
-    var bTokens = parser.parse(text);
-    var paragraphs = renderer.render(bTokens);
+    let parser = createParser(onReference);
+    let renderer = createRenderer();
+    let bTokens = parser.parse(text);
+    let paragraphs = renderer.render(bTokens);
     return paragraphs;
 }
 
@@ -102,20 +90,20 @@ function render(text, onReference) {
  * @return {Array<String|ReactElement>}
  */
 function renderSurvey(text, answers, onChange, onReference) {
-    var listTokens = ListParser.extract(text);
-    var markdownTexts = renderListTokens(listTokens, onReference);
+    let listTokens = ListParser.extract(text);
+    let markdownTexts = renderListTokens(listTokens, onReference);
 
     // create text nodes and list items
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
             // it's a list
-            var listItems = _.map(listToken, (item, key) => {
-                var checked = item.checked;
-                var label = markdownTexts[index][key];
+            let listItems = _.map(listToken, (item, key) => {
+                let checked = item.checked;
+                let label = markdownTexts[index][key];
                 if (answers) {
                     // override radio-button state indicated in text
                     // with set-but-not-yet-saved value
-                    var answer = answers[item.list];
+                    let answer = answers[item.list];
                     if (answer !== undefined) {
                         checked = (item.key == answer);
                     }
@@ -148,20 +136,20 @@ function renderSurvey(text, answers, onChange, onReference) {
  * @return {Array<String|ReactElement>}
  */
 function renderSurveyResults(text, voteCounts, onReference) {
-    var listTokens = ListParser.extract(text);
-    var markdownTexts = renderListTokens(listTokens, onReference);
+    let listTokens = ListParser.extract(text);
+    let markdownTexts = renderListTokens(listTokens, onReference);
 
     // create text nodes and list items
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
-            var listItems = _.map(listToken, (item, key) => {
-                var label = markdownTexts[index][key];
-                var tally = voteCounts[item.list];
-                var total = _.get(tally, 'total', 0);
-                var count = _.get(tally, [ 'answers', item.key ], 0);
-                var percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
-                var color = `color-${item.key % 12}`;
-                var className = 'vote-count';
+            let listItems = _.map(listToken, (item, key) => {
+                let label = markdownTexts[index][key];
+                let tally = voteCounts[item.list];
+                let total = _.get(tally, 'total', 0);
+                let count = _.get(tally, [ 'answers', item.key ], 0);
+                let percent = Math.round((total > 0) ? count / total * 100 : 0) + '%';
+                let color = `color-${item.key % 12}`;
+                let className = 'vote-count';
                 if (count === total) {
                     className += ' unanimous';
                 }
@@ -195,21 +183,21 @@ function renderSurveyResults(text, voteCounts, onReference) {
  * @return {Array<String|ReactElement>}
  */
 function renderTaskList(text, answers, onChange, onReference) {
-    var listTokens = ListParser.extract(text);
-    var markdownTexts = renderListTokens(listTokens, onReference);
+    let listTokens = ListParser.extract(text);
+    let markdownTexts = renderListTokens(listTokens, onReference);
 
     // create text nodes and list items
     return _.map(listTokens, (listToken, index) => {
         if (listToken instanceof Array) {
-            var listItems = _.map(listToken, (item, key) => {
-                var checked = item.checked;
-                var label = markdownTexts[index][key];
+            let listItems = _.map(listToken, (item, key) => {
+                let checked = item.checked;
+                let label = markdownTexts[index][key];
                 if (answers) {
                     // override checkbox state indicated in text
                     // with set-but-not-yet-saved value
-                    var answer = answers[item.list];
+                    let answer = answers[item.list];
                     if (answer !== undefined) {
-                        var selected = answer[item.key];
+                        let selected = answer[item.key];
                         if (selected !== undefined) {
                             checked = selected;
                         }
@@ -244,9 +232,9 @@ function renderTaskList(text, answers, onChange, onReference) {
  */
 function renderListTokens(listTokens, onReference) {
     // process the text fully at block level, so ref links are captured
-    var parser = createParser(onReference);
-    var blockTokenLists = _.map(listTokens, (listToken, index) => {
-        var blockTokens;
+    let parser = createParser(onReference);
+    let blockTokenLists = _.map(listTokens, (listToken, index) => {
+        let blockTokens;
         if (listToken instanceof Array) {
             // process the label of each item
             return _.map(listToken, (item) => {
@@ -259,7 +247,7 @@ function renderListTokens(listTokens, onReference) {
 
     // process at the inline level
     _.each(listTokens, (listToken, index) => {
-        var blockTokens = blockTokenLists[index];
+        let blockTokens = blockTokenLists[index];
         if (listToken instanceof Array) {
             _.each(blockTokens, (blockTokens) => {
                 parser.processInline(blockTokens);
@@ -270,12 +258,12 @@ function renderListTokens(listTokens, onReference) {
     });
 
     // render tokens
-    var renderer = createRenderer();
-    var markdownTexts = _.map(listTokens, (listToken, index) => {
-        var blockTokens = blockTokenLists[index];
+    let renderer = createRenderer();
+    let markdownTexts = _.map(listTokens, (listToken, index) => {
+        let blockTokens = blockTokenLists[index];
         if (listToken instanceof Array) {
             return _.map(listToken, (item, index) => {
-                var label = _.first(renderer.render(blockTokens[index]));
+                let label = _.first(renderer.render(blockTokens[index]));
                 if (label && label.props && label.type === 'p') {
                     // take text out from <p>
                     label = label.props.children;
@@ -298,13 +286,13 @@ function renderListTokens(listTokens, onReference) {
  * @return {Parser}
  */
 function createParser(onReference) {
-    var blockLexer = new MarkGor.BlockLexer();
-    var inlineLexer = new MarkGor.InlineLexer({
+    let blockLexer = new MarkGor.BlockLexer();
+    let inlineLexer = new MarkGor.InlineLexer({
         links: blockLexer.links,
         findRefLink: findMarkdownRefLink,
         onReference,
     });
-    var parser = new MarkGor.Parser({ blockLexer, inlineLexer });
+    let parser = new MarkGor.Parser({ blockLexer, inlineLexer });
     return parser;
 }
 
@@ -326,10 +314,15 @@ function createRenderer() {
  * @return {ReactElement}
  */
 function renderImage(token, key) {
-    var href = token.href;
-    var title = token.title;
-    var text = token.text;
-    return <ResourceView key={key} url={href} alt={text} title={title} />;
+    let url = token.href;
+    let title = token.title;
+    let text = token.text;
+    let resource = ResourceUtils.parseJSONEncodedURL(url);
+    if (resource) {
+        return <ResourceView key={key} resource={resource} alt={text} title={title} />;
+    } else {
+        return <img key={key} src={url} alt={text} title={title} />;
+    }
 };
 
 /**
@@ -353,7 +346,7 @@ function renderText(token, key) {
  * @return {Object|undefined}
  */
 function findMarkdownRefLink(name, forImage) {
-    var link = this.links[name];
+    let link = this.links[name];
     if (link) {
         return link;
     }
@@ -369,18 +362,29 @@ function findMarkdownRefLink(name, forImage) {
 }
 
 function findReferencedResource(resources, name) {
-    var match = /^(picture|image|photo|video|audio|website)(-(\d+))?$/.exec(name);
+    let match = /^(picture|image|photo|video|audio|website)(-(\d+))?$/.exec(name);
     if (match) {
-        var type = match[1];
+        let type = match[1];
         if (type === 'picture' || type === 'photo') {
             type = 'image';
         }
-        var matchingResources = _.filter(resources, { type });
-        var number = parseInt(match[3]) || 1;
-        var res = matchingResources[number - 1];
+        let matchingResources = _.filter(resources, { type });
+        let number = parseInt(match[3]) || 1;
+        let res = matchingResources[number - 1];
         if (res) {
             return res;
         }
     }
     return null;
 }
+
+export {
+    detect,
+    render,
+    renderSurvey,
+    renderSurveyResults,
+    renderTaskList,
+    createParser,
+    createRenderer,
+    findReferencedResource,
+};

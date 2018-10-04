@@ -1,53 +1,70 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var UserUtils = require('objects/utils/user-utils');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var Time = require('widgets/time');
-var ProfileImage = require('widgets/profile-image');
+import Time from 'widgets/time';
+import ProfileImage from 'widgets/profile-image';
 
-require('./notification-view.scss');
+import './notification-view.scss';
 
-module.exports = React.createClass({
-    displayName: 'NotificationView',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        notification: PropTypes.object.isRequired,
-        user: PropTypes.object,
+class NotificationView extends PureComponent {
+    static displayName = 'NotificationView';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
+    static getNotificationURL(notification, route) {
+        let params = _.clone(route.params);
+        switch (notification.type) {
+            case 'like':
+            case 'comment':
+            case 'issue':
+            case 'vote':
+            case 'task-completion':
+            case 'coauthor':
+            case 'note':
+            case 'assignment':
+            case 'push':
+            case 'merge':
+            case 'survey':
+            case 'issue':
+            case 'mention':
+                params.highlightStoryID = notification.story_id;
+                params.highlightReactionID = notification.reaction_id || undefined;
+                return route.find('news-page', params);
+            case 'bookmark':
+                params.highlightStoryID = notification.story_id;
+                return route.find('bookmarks-page', params);
+            case 'join-request':
+                let projectId = _.get(notification, 'details.project_id');
+                return `/admin/projects/${projectId}/members/`;
+        }
+    }
 
-        onClick: PropTypes.func,
-    },
+    static getNotificationTarget(notification) {
+        switch (notification.type) {
+            case 'join-request':
+                return 'admin';
+        }
+        return '';
+    }
 
     /**
      * Render the component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var props = {
-            className: `notification-view ${this.props.theme.mode}`,
+    render() {
+        let { notification } = this.props;
+        let linkProps = {
+            className: 'notification-view',
             href: this.getNotificationURL(),
             target: this.getNotificationTarget(),
             onClick: this.handleClick,
         };
-        if (!this.props.notification.seen) {
-            props.className += ' unread';
+        if (!notification.seen) {
+            linkProps.className += ' unread';
         }
         return (
-            <a {...props}>
+            <a {...linkProps}>
                 <div className="event">
                     {this.renderProfileImage()}
                     {this.renderText()}
@@ -58,86 +75,93 @@ module.exports = React.createClass({
                 </div>
             </a>
         );
-    },
+    }
 
     /**
      * Render the user's profile image
      *
      * @return {ReactElement}
      */
-    renderProfileImage: function() {
-        var props = {
-            user: this.props.user,
-            theme: this.props.theme,
+    renderProfileImage() {
+        let { env, user } = this.props;
+        let props = {
+            user,
+            env,
             size: 'small',
         };
         return <ProfileImage {...props} />;
-    },
+    }
 
     /**
      * Render a descript of what happened
      *
      * @return {ReactElement}
      */
-    renderText: function() {
-        var text = this.getNotificationText();
+    renderText() {
+        let text = this.getNotificationText();
         return <span className="text">{text}</span>;
-    },
+    }
 
     /**
      * Render the time of the event
      *
      * @return {ReactElement}
      */
-    renderTime: function() {
-        var props = {
-            time: this.props.notification.ctime,
-            locale: this.props.locale,
+    renderTime() {
+        let { env, notification } = this.props;
+        let props = {
+            time: notification.ctime,
+            env,
         };
         return <Time {...props} />;
-    },
+    }
 
     /**
      * Render a small icon indicating the notification type
      *
      * @return {ReactElement}
      */
-    renderIcon: function() {
-        return <i className={`fa fa-${this.getNotificationIcon()} fa-fw`}/>;
-    },
+    renderIcon() {
+        let icon = this.getNotificationIcon();
+        return <i className={`fa fa-${icon} fa-fw`}/>;
+    }
 
     /**
      * Return URL that notification directs to
      *
      * @return {String}
      */
-    getNotificationURL: function() {
-        return getNotificationURL(this.props.notification, this.props.route);
-    },
+    getNotificationURL() {
+        let { notification, route } = this.props;
+        return NotificationView.getNotificationURL(notification, route);
+    }
 
     /**
      * Return target window that notification directs to
      *
      * @return {String|undefined}
      */
-    getNotificationTarget: function() {
-        return getNotificationTarget(this.props.notification);
-    },
+    getNotificationTarget() {
+        let { notification, route } = this.props;
+        return NotificationView.getNotificationTarget(notification);
+    }
 
     /**
      * Return text of the notification
      *
      * @return {String}
      */
-    getNotificationText: function() {
-        var t = this.props.locale.translate;
-        var notification = this.props.notification;
-        var name = UserUtils.getDisplayNameWithGender(this.props.user, this.props.locale);
+    getNotificationText() {
+        let { env, notification, user } = this.props;
+        let { t, g } = env.locale;
+        let { story_type: storyType,  branch, reaction_type: reactionType } = notification.details;
+        let name = UserUtils.getDisplayName(user, env);
+        g(name, user.details.gender);
         switch (notification.type) {
             case 'like':
-                return t('notification-$name-likes-your-$story', name, notification.details.story_type);
+                return t('notification-$name-likes-your-$story', name, storyType);
             case 'comment':
-                return t('notification-$name-commented-on-your-$story', name, notification.details.story_type);
+                return t('notification-$name-commented-on-your-$story', name, storyType);
             case 'issue':
                 return t('notification-$name-opened-an-issue', name);
             case 'vote':
@@ -147,37 +171,37 @@ module.exports = React.createClass({
             case 'coauthor':
                 return t('notification-$name-added-you-as-coauthor', name);
             case 'note':
-                return t('notification-$name-posted-a-note-about-your-$story', name, notification.details.story_type);
+                return t('notification-$name-posted-a-note-about-your-$story', name, storyType);
             case 'assignment':
                 return t('notification-$name-is-assigned-to-your-issue', name);
             case 'push':
-                return t('notification-$name-pushed-code-to-$branch', name, notification.details.branch);
+                return t('notification-$name-pushed-code-to-$branch', name, branch);
             case 'merge':
-                return t('notification-$name-merged-code-to-$branch', name, notification.details.branch);
+                return t('notification-$name-merged-code-to-$branch', name, branch);
             case 'survey':
                 return t('notification-$name-posted-a-survey', name);
             case 'bookmark':
-                return t('notification-$name-sent-bookmark-to-$story', name, notification.details.story_type);
+                return t('notification-$name-sent-bookmark-to-$story', name, storyType);
             case 'mention':
-                if (notification.details.story_type) {
-                    return t('notification-$name-mentioned-you-in-$story', name, notification.details.story_type);
-                } else if (notification.details.reaction_type) {
-                    return t('notification-$name-mentioned-you-in-$reaction', name, notification.details.reaction_type);
+                if (storyType) {
+                    return t('notification-$name-mentioned-you-in-$story', name, storyType);
+                } else if (reactionType) {
+                    return t('notification-$name-mentioned-you-in-$reaction', name, reactionType);
                 } else {
                     break;
                 }
             case 'join-request':
                 return t('notification-$name-requested-to-join', name);
         }
-    },
+    }
 
     /**
      * Return Font Awesome class name
      *
      * @return {String}
      */
-    getNotificationIcon: function() {
-        var notification = this.props.notification;
+    getNotificationIcon() {
+        let { notification } = this.props;
         switch (notification.type) {
             case 'like': return 'thumbs-up';
             case 'comment': return 'comment';
@@ -194,70 +218,44 @@ module.exports = React.createClass({
             case 'mention': return 'at';
             case 'join-request': return 'user-circle';
         }
-    },
+    }
 
     /**
      * Called when click is clicked
      *
      * @param  {Event} evt
      */
-    handleClick: function(evt) {
-        if (this.props.onClick) {
-            this.props.onClick({
+    handleClick = (evt) => {
+        let { onClick } = this.props;
+        if (onClick) {
+            onClick({
                 type: 'click',
                 target: this,
             });
         }
     }
-});
-
-// these functions are needed for handling web and push alerts
-module.exports.getNotificationURL = getNotificationURL;
-module.exports.getNotificationTarget = getNotificationTarget;
-
-function getNotificationURL(notification, route) {
-    var params = _.clone(route.parameters);
-    switch (notification.type) {
-        case 'like':
-        case 'comment':
-        case 'issue':
-        case 'vote':
-        case 'task-completion':
-        case 'coauthor':
-        case 'note':
-        case 'assignment':
-        case 'push':
-        case 'merge':
-        case 'survey':
-        case 'issue':
-        case 'mention':
-            var components = [
-                require('pages/news-page'),
-                require('lists/story-list'),
-                require('lists/reaction-list'),
-            ];
-            params.story = notification.story_id;
-            params.reaction = notification.reaction_id || undefined;
-            params.highlighting = true;
-            return route.find(components, params);
-        case 'bookmark':
-            var components = [
-                require('pages/bookmarks-page'),
-                require('lists/story-list'),
-            ];
-            params.story = notification.story_id;
-            params.highlighting = true;
-            return route.find(components, params);
-        case 'join-request':
-            var projectId = _.get(notification, 'details.project_id');
-            return `/admin/projects/${projectId}/members/`;
-    }
 }
 
-function getNotificationTarget(notification) {
-    switch (notification.type) {
-        case 'join-request':
-            return 'admin';
-    }
-    return '';
+export {
+    NotificationView as default,
+    NotificationView,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    NotificationView.propTypes = {
+        notification: PropTypes.object.isRequired,
+        user: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onClick: PropTypes.func,
+    };
 }

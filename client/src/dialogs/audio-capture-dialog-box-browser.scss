@@ -1,3 +1,5 @@
+@import '../colors';
+
 .audio-capture-dialog-box {
     display: flex;
     flex-direction: column;
@@ -5,9 +7,9 @@
     max-width: 24em;
     width: 80%;
 
-    background-color: #362a2a;
-    box-shadow: 2px 2px 2px #000000;
-    color: #666666;
+    background-color: $dialog-box-background-color;
+    box-shadow: 2px 2px 2px $dialog-box-shadow-color;
+    color: $dialog-box-text-color;
     margin: auto;
     padding: 0.4em 0.4em 0.4em 0.4em;
 
@@ -59,7 +61,7 @@
     .controls {
         flex: 1 0 auto;
         padding: 0.4em 0 0.2em 0.2em;
-        border-top: 1px solid #666666;
+        border-top: 1px solid $separator-color;
 
         .buttons {
             float: right;

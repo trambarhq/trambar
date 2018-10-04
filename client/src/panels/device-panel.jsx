@@ -1,56 +1,35 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var SettingsPanel = require('widgets/settings-panel');
-var PushButton = require('widgets/push-button');
-var ConfirmationDialogBox = require('dialogs/confirmation-dialog-box');
+import SettingsPanel from 'widgets/settings-panel';
+import PushButton from 'widgets/push-button';
+import ConfirmationDialogBox from 'dialogs/confirmation-dialog-box';
 
 require('./device-panel.scss');
 
-module.exports = React.createClass({
-    displayName: 'DevicePanel',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        devices: PropTypes.arrayOf(PropTypes.object),
+class DevicePanel extends PureComponent {
+    static displayName = 'DevicePanel';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             renderingDialog: null,
             showingDialog: false,
-            selectedDeviceId: null,
+            selectedDeviceID: null,
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement|null}
      */
-    render: function() {
-        var t = this.props.locale.translate;
-        var title;
-        if (_.size(this.props.devices) === 1) {
+    render() {
+        let { env, devices } = this.props;
+        let { t } = env.locale;
+        let title;
+        if (_.size(devices) === 1) {
             title = t('settings-device');
         } else {
             title = t('settings-devices');
@@ -66,16 +45,19 @@ module.exports = React.createClass({
                 </body>
             </SettingsPanel>
         );
-    },
+    }
 
     /**
      * Render list of projects
      *
      * @return {Array<ReactElement>}
      */
-    renderDevices: function() {
-        return _.map(this.props.devices, this.renderDevice);
-    },
+    renderDevices() {
+        let { devices } = this.props;
+        return _.map(devices, (device) => {
+            return this.renderDevice(device);
+        });
+    }
 
     /**
      * Render a project option, with additional links if it's the current project
@@ -84,9 +66,10 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderDevice: function(device) {
-        var t = this.props.locale.translate;
-        var deviceName = formatDeviceName(device);
+    renderDevice(device) {
+        let { env } = this.props;
+        let { t } = env.locale;
+        let deviceName = formatDeviceName(device);
         return (
             <div key={device.id} className="device-option-button selected">
                 <div className="icon">
@@ -102,21 +85,23 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Render sign out dialog box
      *
      * @return {ReactElement|null}
      */
-    renderDialogBox: function() {
-        if (this.state.renderingDialog !== 'revoke') {
+    renderDialogBox() {
+        let { env } = this.props;
+        let { showingDialog, renderingDialog } = this.state;
+        let { t } = env.locale;
+        if (renderingDialog !== 'revoke') {
             return null;
         }
-        var t = this.props.locale.translate;
-        var props = {
-            show: this.state.showingDialog,
-            locale: this.props.locale,
+        let props = {
+            show: showingDialog,
+            env,
             onClose: this.handleDialogClose,
             onConfirm: this.handleRevokeConfirm,
         };
@@ -125,57 +110,60 @@ module.exports = React.createClass({
                 {t('mobile-device-revoke-are-you-sure')}
             </ConfirmationDialogBox>
         );
-    },
+    }
 
     /**
      * Called when user clicks revoke button
      *
      * @param  {Event} evt
      */
-    handleRevokeClick: function(evt) {
-        var deviceId = parseInt(evt.currentTarget.getAttribute('data-device-id'));
+    handleRevokeClick = (evt) => {
+        let deviceID = parseInt(evt.currentTarget.getAttribute('data-device-id'));
         this.setState({
             renderingDialog: 'revoke',
             showingDialog: true,
-            selectedDeviceId: deviceId
+            selectedDeviceID: deviceID
         });
-    },
+    }
 
     /**
      * Called when user confirm his intention to remove authorization
      *
      * @param  {Object} evt
      */
-    handleRevokeConfirm: function(evt) {
-        var device = _.find(this.props.devices, { id: this.state.selectedDeviceId });
-        var db = this.props.database.use({ schema: 'global', by: this });
+    handleRevokeConfirm = (evt) => {
+        let { database, devices } = this.props;
+        let { selectedDeviceID } = this.state;
+        let device = _.find(devices, { id: selectedDeviceID });
+        let db = database.use({ schema: 'global', by: this });
         db.removeOne({ table: 'device' }, device).then(() => {
             return db.endMobileSession(device.session_handle);
         }).finally(() => {
             this.handleDialogClose();
         });
-    },
+    }
 
     /**
      * Called when user closes dialog box
      *
      * @param  {Object} evt
      */
-    handleDialogClose: function(evt) {
+    handleDialogClose = (evt) => {
         this.setState({ showingDialog: false }, () => {
             setTimeout(() => {
                 this.setState({ renderingDialog: false });
             }, 500);
         });
     }
-});
+}
 
 function DeviceIcon(props) {
-    var icon;
-    switch (props.type) {
+    let { type } = props;
+    let icon;
+    switch (type) {
         case 'ios':
         case 'osx': icon = 'apple'; break;
-        default: icon = props.type;
+        default: icon = type;
     }
     return (
         <div className="device-icon">
@@ -186,10 +174,31 @@ function DeviceIcon(props) {
 }
 
 function formatDeviceName(device) {
-    var manufacturer = device.details.manufacturer;
-    var name = device.details.display_name || device.details.name;
+    let manufacturer = device.details.manufacturer;
+    let name = device.details.display_name || device.details.name;
     if (!_.includes(_.toLower(name), _.toLower(manufacturer))) {
         name = `${manufacturer} ${name}`;
     }
     return name;
+}
+
+export {
+    DevicePanel as default,
+    DevicePanel,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    DevicePanel.propTypes = {
+        devices: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
 }

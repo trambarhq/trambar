@@ -1,54 +1,65 @@
-var React = require('react'), PropTypes = React.PropTypes;
+import React from 'react';
 
-require('./push-button.scss');
-
-module.exports = PushButton;
-module.exports.File = FileButton;
+import './push-button.scss';
 
 function PushButton(props) {
-    if (props.hidden) {
+    let { label, emphasized, hidden, disabled, onClick } = props;
+    if (hidden) {
         return null;
     }
-    var classNames = [ 'push-button' ];
-    if (props.emphasized) {
+    let classNames = [ 'push-button' ];
+    if (emphasized) {
         classNames.push('emphasized');
     }
     return (
-        <button className={classNames.join(' ')} disabled={props.disabled} onClick={props.onClick}>
-            {props.label}
+        <button className={classNames.join(' ')} disabled={disabled} onClick={onClick}>
+            {label}
         </button>
     );
 }
 
+PushButton.File = FileButton;
+
 function FileButton(props) {
-    if (props.hidden) {
+    let { label, emphasized, hidden, disabled, multiple, accept, onChange } = props;
+    if (hidden) {
         return null;
     }
-    var inputProps = {
+    let inputProps = {
         type: 'file',
         value: '',
-        disabled: props.disabled,
-        multiple: props.multiple,
-        accept: props.accept,
-        onChange: props.onChange,
+        disabled,
+        multiple,
+        accept,
+        onChange,
     };
-    var classNames = [ 'push-button' ];
-    if (props.emphasized) {
+    let classNames = [ 'push-button' ];
+    if (emphasized) {
         classNames.push('emphasized');
     }
     return (
-        <label className={classNames.join(' ')} disabled={props.disabled} onClick={props.onClick}>
-            {props.label}
+        <label className={classNames.join(' ')} disabled={disabled}>
+            {label}
             <input {...inputProps} />
         </label>
     );
 }
 
-FileButton.propTypes = {
-    label: PropTypes.string,
-    icon: PropTypes.string,
-    hidden: PropTypes.bool,
-    disabled: PropTypes.bool,
-    multiple: PropTypes.bool,
-    onChange: PropTypes.func,
+export {
+    PushButton as default,
+    PushButton,
+    FileButton,
 };
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    FileButton.propTypes = {
+        label: PropTypes.string,
+        icon: PropTypes.string,
+        hidden: PropTypes.bool,
+        disabled: PropTypes.bool,
+        multiple: PropTypes.bool,
+        onChange: PropTypes.func,
+    };
+}

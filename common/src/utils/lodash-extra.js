@@ -1,6 +1,6 @@
-var _ = require('lodash');
+import _ from 'lodash';
 
-var emptyObject = {};
+let emptyObject = {};
 
 _.mixin({
     /**
@@ -21,16 +21,16 @@ _.mixin({
         if (!defaultValue) {
             defaultValue = emptyObject;
         }
-        var dstObj = _.clone(srcObj);
+        let dstObj = _.clone(srcObj);
         if (!(dstObj instanceof Object)) {
             dstObj = {};
         }
-        var dstParent = dstObj;
-        var srcParent = srcObj;
-        for (var i = 0; i < path.length; i++) {
-            var key = path[i];
-            var srcChild = srcParent ? srcParent[key] : undefined;
-            var dstChild = _.clone(srcChild);
+        let dstParent = dstObj;
+        let srcParent = srcObj;
+        for (let i = 0; i < path.length; i++) {
+            let key = path[i];
+            let srcChild = srcParent ? srcParent[key] : undefined;
+            let dstChild = _.clone(srcChild);
             if (i === path.length - 1) {
                 // make sure the node at the end of the path matches the type
                 // of the default value
@@ -67,8 +67,8 @@ _.mixin({
         if (path.length < 0) {
             throw new Error('Empty path');
         }
-        var parentPath = _.slice(path, 0, -1);
-        var dstObj = _.decouple(srcObj, parentPath, {});
+        let parentPath = _.slice(path, 0, -1);
+        let dstObj = _.decouple(srcObj, parentPath, {});
         _.set(dstObj, path, value);
         return dstObj;
     },
@@ -90,8 +90,8 @@ _.mixin({
         if (path.length < 0) {
             throw new Error('Empty path');
         }
-        var parentPath = _.slice(path, 0, -1);
-        var dstObj = _.decouple(srcObj, parentPath, {});
+        let parentPath = _.slice(path, 0, -1);
+        let dstObj = _.decouple(srcObj, parentPath, {});
         _.unset(dstObj, path);
         return dstObj;
     },
@@ -106,8 +106,8 @@ _.mixin({
      * @return {Object}
      */
     decouplePush: function(srcObj, path, ...values) {
-        var dstObj = _.decouple(srcObj, path, []);
-        var array = _.get(dstObj, path);
+        let dstObj = _.decouple(srcObj, path, []);
+        let array = _.get(dstObj, path);
         Array.prototype.push.apply(array, values);
         return dstObj;
     },
@@ -135,9 +135,9 @@ _.mixin({
      * @return {Object}
      */
     obscure: function(object, paths) {
-        var clone = _.cloneDeep(object);
+        let clone = _.cloneDeep(object);
         _.each(paths, (path) => {
-            var value = _.get(clone, path);
+            let value = _.get(clone, path);
             _.set(clone, path, obscureValue(value));
         });
         return clone;
@@ -151,7 +151,7 @@ _.mixin({
      * @return {Number}
      */
     strictParseInt: function(s) {
-        var n = _.parseInt(s);
+        let n = _.parseInt(s);
         if (n.toString() !== s) {
             throw new Error(`Not an integer: ${s}`);
         }
@@ -169,15 +169,15 @@ _.mixin({
         if (bytes < 1024) {
             return bytes + 'B';
         }
-        var kilobytes = bytes / 1024;
+        let kilobytes = bytes / 1024;
         if (kilobytes < 1024) {
             return _.round(kilobytes) + 'KB';
         }
-        var megabytes = kilobytes / 1024;
+        let megabytes = kilobytes / 1024;
         if (megabytes < 1024) {
             return _.round(megabytes, 1) + 'MB';
         }
-        var gigabytes = megabytes / 1024;
+        let gigabytes = megabytes / 1024;
         return _.round(gigabytes, 2) + 'GB';
     },
 });

@@ -1,72 +1,26 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var ComponentRefs = require('utils/component-refs');
-var RoleFinder = require('objects/finders/role-finder');
-var UserFinder = require('objects/finders/user-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import { memoizeWeak } from 'utils/memoize';
+import ComponentRefs from 'utils/component-refs';
+import * as RoleFinder from 'objects/finders/role-finder';
+import * as UserFinder from 'objects/finders/user-finder';
 
 // widgets
-var PushButton = require('widgets/push-button');
-var ComboButton = require('widgets/combo-button');
-var SortableTable = require('widgets/sortable-table'), TH = SortableTable.TH;
-var UserTooltip = require('tooltips/user-tooltip');
-var ModifiedTimeTooltip = require('tooltips/modified-time-tooltip')
-var ActionBadge = require('widgets/action-badge');
-var ActionConfirmation = require('widgets/action-confirmation');
-var DataLossWarning = require('widgets/data-loss-warning');
-var UnexpectedError = require('widgets/unexpected-error');
+import PushButton from 'widgets/push-button';
+import ComboButton from 'widgets/combo-button';
+import SortableTable, { TH } from 'widgets/sortable-table';
+import UserTooltip from 'tooltips/user-tooltip';
+import ModifiedTimeTooltip from 'tooltips/modified-time-tooltip'
+import ActionBadge from 'widgets/action-badge';
+import ActionConfirmation from 'widgets/action-confirmation';
+import DataLossWarning from 'widgets/data-loss-warning';
+import UnexpectedError from 'widgets/unexpected-error';
 
-require('./role-list-page.scss');
+import './role-list-page.scss';
 
-module.exports = Relaks.createClass({
-    displayName: 'RolesPage',
-    propTypes: {
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    statics: {
-        /**
-         * Match current URL against the page's
-         *
-         * @param  {String} path
-         * @param  {Object} query
-         *
-         * @return {Object|null}
-         */
-        parseURL: function(path, query) {
-            return Route.match(path, [
-                '/roles/?',
-            ], (params) => {
-                return {
-                    edit: !!query.edit,
-                };
-            });
-        },
-
-        /**
-         * Generate a URL of this page based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {String}
-         */
-        getURL: function(params) {
-            var path = `/roles/`, query;
-            if (params.edit) {
-                query = { edit: 1 };
-            }
-            return { path, query };
-        },
-    },
+class RoleListPage extends AsyncComponent {
+    static displayName = 'RoleListPage';
 
     /**
      * Render the component asynchronously
@@ -75,19 +29,20 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var db = this.props.database.use({ schema: 'global', by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let { database, route, env, editing } = this.props;
+        let db = database.use({ schema: 'global', by: this });
+        let props = {
             roles: null,
             users: null,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
+            editing,
         };
         meanwhile.show(<RoleListPageSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((userID) => {
             return RoleFinder.findAllRoles(db).then((roles) => {
                 props.roles = roles;
             });
@@ -100,51 +55,27 @@ module.exports = Relaks.createClass({
             return <RoleListPageSync {...props} />;
         });
     }
-});
+}
 
-var RoleListPageSync = module.exports.Sync = React.createClass({
-    displayName: 'RoleListPage.Sync',
-    propTypes: {
-        roles: PropTypes.arrayOf(PropTypes.object),
-        users: PropTypes.arrayOf(PropTypes.object),
+class RoleListPageSync extends PureComponent {
+    static displayName = 'RoleListPage.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
+    constructor(props) {
+        let { editing } = props;
+        super(props);
         this.components = ComponentRefs({
             confirmation: ActionConfirmation
         });
-        return {
+        this.state = {
             sortColumns: [ 'name' ],
             sortDirections: [ 'asc' ],
-            restoringRoleIds: [],
-            disablingRoleIds: [],
+            restoringRoleIDs: [],
+            disablingRoleIDs: [],
             hasChanges: false,
-            renderingFullList: this.isEditing(),
+            renderingFullList: editing,
             problems: {},
         };
-    },
-
-    /**
-     * Return true when the URL indicate edit mode
-     *
-     * @param  {Object|null} props
-     *
-     * @return {Boolean}
-     */
-    isEditing: function(props) {
-        props = props || this.props;
-        return props.route.parameters.edit;
-    },
+    }
 
     /**
      * Change editability of page
@@ -153,79 +84,86 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise}
      */
-    setEditability: function(edit) {
-        var route = this.props.route;
-        var params = _.clone(route.parameters);
-        params.edit = edit;
-        return this.props.route.replace(module.exports, params);
-    },
+    setEditability(edit) {
+        let { route } = this.props;
+        let params = _.clone(route.params);
+        params.editing = edit || undefined;
+        return route.replace(route.name, params);
+    }
 
     /**
      * Check if we're switching into edit mode
      *
      * @param  {Object} nextProps
      */
-    componentWillReceiveProps: function(nextProps) {
-        if (this.isEditing() !== this.isEditing(nextProps)) {
-            if (this.isEditing(nextProps)) {
+    componentWillReceiveProps(nextProps) {
+        let { editing } = this.props;
+        if (nextProps.editing !== editing) {
+            if (nextProps.editing) {
                 // initial list of ids to the current list
                 this.setState({
                     renderingFullList: true,
-                    restoringRoleIds: [],
-                    disablingRoleIds: [],
+                    restoringRoleIDs: [],
+                    disablingRoleIDs: [],
                     hasChanges: false,
                 });
             } else {
                 setTimeout(() => {
-                    if (!this.isEditing()) {
+                    let { editing } = this.props;
+                    if (!editing) {
                         this.setState({ renderingFullList: false, problems: {} });
                     }
                 }, 500);
             }
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var t = this.props.locale.translate;
+    render() {
+        let { route, env } = this.props;
+        let { hasChanges, problems } = this.state;
+        let { setters } = this.components;
+        let { t } = env.locale;
         return (
             <div className="role-list-page">
                 {this.renderButtons()}
                 <h2>{t('role-list-title')}</h2>
-                <UnexpectedError>{this.state.problems.unexpected}</UnexpectedError>
+                <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderTable()}
-                <ActionConfirmation ref={this.components.setters.confirmation} locale={this.props.locale} theme={this.props.theme} />
-                <DataLossWarning changes={this.state.hasChanges} locale={this.props.locale} theme={this.props.theme} route={this.props.route} />
+                <ActionConfirmation ref={setters.confirmation} env={env} />
+                <DataLossWarning changes={hasChanges} env={env} route={route} />
             </div>
         );
-    },
+    }
 
     /**
      * Render buttons in top right corner
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        if (this.isEditing()) {
+    renderButtons() {
+        let { env, roles, editing } = this.props;
+        let { hasChanges } = this.state;
+        let { t } = env.locale;
+        if (editing) {
             return (
                 <div className="buttons">
                     <PushButton onClick={this.handleCancelClick}>
                         {t('role-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!this.state.hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
                         {t('role-list-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            var preselected = 'add';
-            var empty = _.isEmpty(this.props.roles);
+            let preselected = 'add';
+            let empty = _.isEmpty(roles);
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
@@ -240,23 +178,25 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render a table
      *
      * @return {ReactElement}
      */
-    renderTable: function() {
-        var tableProps = {
-            sortColumns: this.state.sortColumns,
-            sortDirections: this.state.sortDirections,
+    renderTable() {
+        let { editing } = this.props;
+        let { renderingFullList, sortColumns, sortDirections } = this.state;
+        let tableProps = {
+            sortColumns,
+            sortDirections,
             onSort: this.handleSort,
         };
-        if (this.state.renderingFullList) {
+        if (renderingFullList) {
             tableProps.expandable = true;
             tableProps.selectable = true;
-            tableProps.expanded = this.isEditing();
+            tableProps.expanded = editing;
             tableProps.onClick = this.handleRowClick;
         }
         return (
@@ -269,14 +209,14 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
                 </tbody>
             </SortableTable>
         );
-    },
+    }
 
     /**
      * Render table headings
      *
      * @return {ReactElement}
      */
-    renderHeadings: function() {
+    renderHeadings() {
         return (
             <tr>
                 {this.renderTitleColumn()}
@@ -284,26 +224,24 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
                 {this.renderModifiedTimeColumn()}
             </tr>
         );
-    },
+    }
 
     /**
      * Render table rows
      *
      * @return {Array<ReactElement>}
      */
-    renderRows: function() {
-        var roles = this.props.roles;
-        if (!this.state.renderingFullList) {
+    renderRows() {
+        let { env, roles, users } = this.props;
+        let { renderingFullList, sortColumns, sortDirections } = this.state;
+        if (!renderingFullList) {
             roles = filterRoles(roles);
         }
-        roles = sortRoles(roles,
-            this.props.users,
-            this.props.locale,
-            this.state.sortColumns,
-            this.state.sortDirections
-        );
-        return _.map(roles, this.renderRow);
-    },
+        roles = sortRoles(roles, users, env, sortColumns, sortDirections);
+        return _.map(roles, (role) => {
+            return this.renderRow(role);
+        });
+    }
 
     /**
      * Render a table row
@@ -312,10 +250,12 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderRow: function(role) {
-        var t = this.props.locale.translate;
-        var classes = [];
-        var onClick, title;
+    renderRow(role) {
+        let { env } = this.props;
+        let { renderingFullList, restoringRoleIDs, disablingRoleIDs } = this.state;
+        let { t } = env.locale;
+        let classes = [];
+        let onClick, title;
         if (role.deleted) {
             classes.push('deleted');
             title = t('role-list-status-deleted');
@@ -323,20 +263,20 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
             classes.push('disabled');
             title = t('role-list-status-disabled');
         }
-        if (this.state.renderingFullList) {
+        if (renderingFullList) {
             if (role.deleted || role.disabled) {
-                if (_.includes(this.state.restoringRoleIds, role.id)) {
+                if (_.includes(restoringRoleIDs, role.id)) {
                     classes.push('selected');
                 }
             } else {
                 classes.push('fixed');
-                if (!_.includes(this.state.disablingRoleIds, role.id)) {
+                if (!_.includes(disablingRoleIDs, role.id)) {
                     classes.push('selected');
                 }
             }
             onClick = this.handleRowClick;
         }
-        var props = {
+        let props = {
             className: classes.join(' '),
             'data-role-id': role.id,
             title,
@@ -349,7 +289,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
                 {this.renderModifiedTimeColumn(role)}
             </tr>
         );
-    },
+    }
 
     /**
      * Render title column, either the heading or a data cell
@@ -358,36 +298,36 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderTitleColumn: function(role) {
-        var t = this.props.locale.translate;
+    renderTitleColumn(role) {
+        let { route, env } = this.props;
+        let { renderingFullList, restoringRoleIDs, disablingRoleIDs } = this.state;
+        let { t, p } = env.locale;
         if (!role) {
             return <TH id="title">{t('table-heading-title')}</TH>;
         } else {
-            var p = this.props.locale.pick;
-            var title = p(role.details.title) || '-';
-            var url, badge;
-            if (this.state.renderingFullList) {
+            let title = p(role.details.title) || '-';
+            let url, badge;
+            if (renderingFullList) {
                 // add a badge next to the name if we're disabling or
                 // restoring a role
-                var includedBefore, includedAfter;
+                let includedBefore, includedAfter;
                 if (role.deleted || role.disabled) {
                     includedBefore = false;
-                    includedAfter = _.includes(this.state.restoringRoleIds, role.id);
+                    includedAfter = _.includes(restoringRoleIDs, role.id);
                 } else {
                     includedBefore = true;
-                    includedAfter = !_.includes(this.state.disablingRoleIds, role.id);
+                    includedAfter = !_.includes(disablingRoleIDs, role.id);
                 }
                 if (includedBefore !== includedAfter) {
                     if (includedAfter) {
-                        badge = <ActionBadge type="reactivate" locale={this.props.locale} />;
+                        badge = <ActionBadge type="reactivate" env={env} />;
                     } else {
-                        badge = <ActionBadge type="disable" locale={this.props.locale} />;
+                        badge = <ActionBadge type="disable" env={env} />;
                     }
                 }
             } else {
-                var route = this.props.route;
-                var params = { role: role.id };
-                url = route.find(require('pages/role-summary-page'), params);
+                let params = { roleID: role.id };
+                url = route.find('role-summary-page', params);
             }
             return (
                 <td>
@@ -395,7 +335,7 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
                 </td>
             );
         }
-    },
+    }
 
     /**
      * Render users column, either the heading or a data cell
@@ -404,23 +344,23 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderUsersColumn: function(role) {
-        if (this.props.theme.isBelowMode('narrow')) {
+    renderUsersColumn(role) {
+        let { route, env, users } = this.props;
+        let { t } = env.locale;
+        if (!env.isWiderThan('narrow')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!role) {
             return <TH id="users">{t('table-heading-users')}</TH>;
         } else {
-            var props = {
-                users: findUsers(this.props.users, role),
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
+            let props = {
+                users: findUsers(users, role),
+                route,
+                env,
             };
             return <td><UserTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Render column showing the last modified time
@@ -429,99 +369,99 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement|null}
      */
-    renderModifiedTimeColumn: function(role) {
-        if (this.props.theme.isBelowMode('standard')) {
+    renderModifiedTimeColumn(role) {
+        let { env } = this.props;
+        let { t } = env.locale;
+        if (!env.isWiderThan('standard')) {
             return null;
         }
-        var t = this.props.locale.translate;
         if (!role) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            var props = {
+            let props = {
                 time: role.mtime,
-                locale: this.props.locale,
+                env,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
-    },
+    }
 
     /**
      * Called when user clicks a table heading
      *
      * @param  {Object} evt
      */
-    handleSort: function(evt) {
+    handleSort = (evt) => {
         this.setState({
             sortColumns: evt.columns,
             sortDirections: evt.directions
         });
-    },
+    }
 
     /**
      * Called when user click add button
      *
      * @param  {Event} evt
      */
-    handleAddClick: function(evt) {
-        var route = this.props.route;
-        var params = { role: 'new' };
-        return route.push(require('pages/role-summary-page'), params);
-    },
+    handleAddClick = (evt) => {
+        let { route } = this.props;
+        return route.push('role-summary-page', { roleID: 'new' });
+    }
 
     /**
      * Called when user clicks edit button
      *
      * @param  {Event} evt
      */
-    handleEditClick: function(evt) {
+    handleEditClick = (evt) => {
         this.setEditability(true);
-    },
+    }
 
     /**
      * Called when user clicks cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
+    handleCancelClick = (evt) => {
         this.setEditability(false);
-    },
+    }
 
     /**
      * Called when user clicks save button
      *
      * @param  {Event} evt
      */
-    handleSaveClick: function(evt) {
-        var t = this.props.locale.translate;
-        var disabling = this.state.disablingRoleIds;
-        var restoring = this.state.restoringRoleIds;
-        var messages = [
-            t('role-list-confirm-disable-$count', disabling.length),
-            t('role-list-confirm-reactivate-$count', restoring.length),
+    handleSaveClick = (evt) => {
+        let { database, env, roles } = this.props;
+        let { disablingRoleIDs, restoringRoleIDs } = this.state;
+        let { confirmation } = this.components;
+        let { t } = env.locale;
+        let messages = [
+            t('role-list-confirm-disable-$count', disablingRoleIDs.length),
+            t('role-list-confirm-reactivate-$count', restoringRoleIDs.length),
         ];
-        var bypass = [
-            _.isEmpty(disabling) || undefined,
-            _.isEmpty(restoring) || undefined,
+        let bypass = [
+            _.isEmpty(disablingRoleIDs) ? true : undefined,
+            _.isEmpty(restoringRoleIDs) ? true : undefined,
         ];
-        var confirmation = this.components.confirmation;
         return confirmation.askSeries(messages, bypass).then((confirmed) => {
             if (!confirmed) {
                 return;
             }
             this.setState({ problems: {} });
-            var db = this.props.database.use({ schema: 'global', by: this });
-            return db.start().then((userId) => {
-                var rolesAfter = [];
-                _.each(this.props.roles, (role) => {
-                    var flags = {};
-                    if (_.includes(disabling, role.id)) {
+            let db = database.use({ schema: 'global', by: this });
+            return db.start().then((userID) => {
+                let rolesAfter = [];
+                _.each(roles, (role) => {
+                    let flags = {};
+                    if (_.includes(disablingRoleIDs, role.id)) {
                         flags.disabled = true;
-                    } else if (_.includes(restoring, role.id)) {
+                    } else if (_.includes(restoringRoleIDs, role.id)) {
                         flags.disabled = flags.deleted = false;
                     } else {
                         return;
                     }
-                    var roleAfter = _.assign({}, role, flags);
+                    let roleAfter = _.assign({}, role, flags);
                     rolesAfter.push(roleAfter);
                 });
                 return db.save({ table: 'role' }, rolesAfter).then((roles) => {
@@ -530,53 +470,57 @@ var RoleListPageSync = module.exports.Sync = React.createClass({
                     });
                     return null;
                 }).catch((err) => {
-                    var problems = { unexpected: err.message };
+                    let problems = { unexpected: err.message };
                     this.setState({ problems });
                 });
             });
         });
-    },
+    }
 
     /**
      * Called when user clicks a row in edit mode
      *
      * @param  {Event} evt
      */
-    handleRowClick: function(evt) {
-        var roleId = parseInt(evt.currentTarget.getAttribute('data-role-id'));
-        var role = _.find(this.props.roles, { id: roleId });
-        var restoringRoleIds = _.slice(this.state.restoringRoleIds);
-        var disablingRoleIds = _.slice(this.state.disablingRoleIds);
+    handleRowClick = (evt) => {
+        let { database, roles } = this.props;
+        let { restoringRoleIDs, disablingRoleIDs } = this.state;
+        let roleID = parseInt(evt.currentTarget.getAttribute('data-role-id'));
+        let role = _.find(roles, { id: roleID });
         if (role.deleted || role.disabled) {
-            if (_.includes(restoringRoleIds, role.id)) {
-                _.pull(restoringRoleIds, role.id);
+            if (_.includes(restoringRoleIDs, role.id)) {
+                restoringRoleIDs = _.without(restoringRoleIDs, role.id);
             } else {
-                restoringRoleIds.push(role.id);
+                restoringRoleIDs = _.concat(restoringRoleIDs, role.id);
             }
         } else {
-            if (_.includes(disablingRoleIds, role.id)) {
-                _.pull(disablingRoleIds, role.id);
+            if (_.includes(disablingRoleIDs, role.id)) {
+                disablingRoleIDs = _.without(disablingRoleIDs, role.id);
             } else {
-                disablingRoleIds.push(role.id);
+                disablingRoleIDs = _.concat(disablingRoleIDs, role.id);
             }
         }
-        var hasChanges = !_.isEmpty(restoringRoleIds) || !_.isEmpty(disablingRoleIds);
-        this.setState({ restoringRoleIds, disablingRoleIds, hasChanges });
-    },
-});
+        let hasChanges = !_.isEmpty(restoringRoleIDs) || !_.isEmpty(disablingRoleIDs);
+        this.setState({ restoringRoleIDs, disablingRoleIDs, hasChanges });
+    }
+}
 
-var filterRoles = Memoize(function(roles) {
-    return _.filter(roles, (role) => {
+let filterRoles = memoizeWeak(null, function(roles) {
+    let list = _.filter(roles, (role) => {
         return !role.deleted && !role.disabled;
     });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
 
-var sortRoles = Memoize(function(roles, users, locale, columns, directions) {
+let sortRoles = memoizeWeak(null, function(roles, users, env, columns, directions) {
+    let { p } = env.locale;
     columns = _.map(columns, (column) => {
         switch (column) {
             case 'title':
                 return (role) => {
-                    return locale.pick(role.details.title)
+                    return p(role.details.title)
                 };
             default:
                 return column;
@@ -585,8 +529,41 @@ var sortRoles = Memoize(function(roles, users, locale, columns, directions) {
     return _.orderBy(roles, columns, directions);
 });
 
-var findUsers = Memoize(function(users, role) {
-    return _.filter(users, (user) => {
+let findUsers = memoizeWeak(null, function(users, role) {
+    let list = _.filter(users, (user) => {
         return _.includes(user.role_ids, role.id);
-    })
+    });
+    if (!_.isEmpty(list)) {
+        return list;
+    }
 });
+
+export {
+    RoleListPage as default,
+    RoleListPage,
+    RoleListPageSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    RoleListPage.propTypes = {
+        editing: PropTypes.bool,
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    RoleListPageSync.propTypes = {
+        editing: PropTypes.bool,
+        roles: PropTypes.arrayOf(PropTypes.object),
+        users: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

@@ -1,30 +1,33 @@
-var React = require('react');
+import React, { PureComponent } from 'react';
 
-require('./page-container.scss');
+import './page-container.scss';
 
-module.exports = React.createClass({
-    displayName: 'PageContainer',
+class PageContainer extends PureComponent {
+    static displayName = 'PageContainer';
 
-    setNode: function(node) {
+    setNode(node) {
         if (node) {
-            var activeElement = document.activeElement;
+            let activeElement = document.activeElement;
             if (!activeElement || activeElement === document.body) {
                 node.focus();
             }
         }
-    },
+    }
 
-    render: function() {
-        var className = 'page-container';
-        if (this.props.className) {
-            className += ' ' + this.props.className;
-        }
+    render() {
+        let { className, children } = this.props;
+        className = 'page-container' + ((className) ? ` ${className}` : '');
         return (
             <div className={className} tabIndex={0} ref={this.setNode}>
                 <div className="contents">
-                    {this.props.children}
+                    {children}
                 </div>
             </div>
         );
-    },
-});
+    }
+}
+
+export {
+    PageContainer as default,
+    PageContainer,
+};

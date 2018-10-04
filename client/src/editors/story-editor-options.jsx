@@ -1,70 +1,36 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var UserUtils = require('objects/utils/user-utils');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
-var HeaderButton = require('widgets/header-button');
-var OptionButton = require('widgets/option-button');
-var UserSelectionDialogBox = require('dialogs/user-selection-dialog-box');
-var IssueDialogBox = require('dialogs/issue-dialog-box');
+import HeaderButton from 'widgets/header-button';
+import OptionButton from 'widgets/option-button';
+import UserSelectionDialogBox from 'dialogs/user-selection-dialog-box';
+import IssueDialogBox from 'dialogs/issue-dialog-box';
 
-require('./story-editor-options.scss');
+import './story-editor-options.scss';
 
-module.exports = React.createClass({
-    displayName: 'StoryEditorOptions',
-    propTypes: {
-        section: PropTypes.oneOf([ 'main', 'preview', 'both' ]),
-        story: PropTypes.object.isRequired,
-        repos: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        options: PropTypes.object.isRequired,
+class StoryEditorOptions extends PureComponent {
+    static displayName = 'StoryEditorOptions';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onChange: PropTypes.func,
-        onComplete: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            section: 'both',
-        }
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             selectingRecipients: false,
             renderingRecipientDialogBox: false,
             enteringIssueDetails: false,
             renderingIssueDialogBox: false,
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        if (this.props.section === 'both') {
+    render() {
+        let { section } = this.props;
+        if (section === 'both') {
             return (
                 <div className="story-editor-options">
                     {this.renderButtons('main')}
@@ -75,11 +41,11 @@ module.exports = React.createClass({
         } else {
             return (
                 <div className="story-editor-options">
-                    {this.renderButtons(this.props.section)}
+                    {this.renderButtons(section)}
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render list of buttons belonging to specified section
@@ -88,39 +54,36 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderButtons: function(section) {
-        var t = this.props.locale.translate;
-        var options = this.props.options;
+    renderButtons(section) {
+        let { env, options, currentUser, story, repos } = this.props;
+        let { t } = env.locale;
         if (section === 'main') {
-            var access = 'read-write';
-            var user = this.props.currentUser;
-            var story = this.props.story;
-            var repos = this.props.repos;
-            var bookmarking = (user) ? _.includes(options.bookmarkRecipients, user.id) : false;
-            var otherRecipients = (user) ? _.without(options.bookmarkRecipients, user.id) : [];
-            var bookmarkProps = {
+            let access = 'read-write';
+            let bookmarking = (currentUser) ? _.includes(options.bookmarkRecipients, currentUser.id) : false;
+            let otherRecipients = (currentUser) ? _.without(options.bookmarkRecipients, currentUser.id) : [];
+            let bookmarkProps = {
                 label: t('option-add-bookmark'),
                 selected: bookmarking,
                 onClick: this.handleBookmarkClick,
             };
-            var sendBookmarkProps = {
+            let sendBookmarkProps = {
                 label: _.isEmpty(otherRecipients)
                     ? t('option-send-bookmarks')
                     : t('option-send-bookmarks-to-$count-users', _.size(otherRecipients)),
-                hidden: !UserUtils.canSendBookmarks(user, story, access),
+                hidden: !UserUtils.canSendBookmarks(currentUser, story, access),
                 selected: !_.isEmpty(otherRecipients),
                 onClick: this.handleSendBookmarkClick,
             };
-            var addIssueProps = {
+            let addIssueProps = {
                 label: t('option-add-issue'),
                 selected: !!options.issueDetails,
-                hidden: !UserUtils.canAddIssue(user, story, repos, access),
+                hidden: !UserUtils.canAddIssue(currentUser, story, repos, access),
                 onClick: this.handleAddIssueClick,
             };
-            var hidePostProps = {
+            let hidePostProps = {
                 label: t('option-hide-story'),
                 selected: options.hidePost,
-                hidden: !UserUtils.canHideStory(user, story, access),
+                hidden: !UserUtils.canHideStory(currentUser, story, access),
                 onClick: this.handleHidePostClick,
             };
             return (
@@ -134,12 +97,12 @@ module.exports = React.createClass({
                 </div>
             );
         } else if (section === 'preview') {
-            var mediaProps = {
+            let mediaProps = {
                 label: t('option-show-media-preview'),
                 selected: options.preview === 'media' || !options.preview,
                 onClick: this.handleShowMediaPreviewClick,
             };
-            var textProps = {
+            let textProps = {
                 label: t('option-show-text-preview'),
                 selected: options.preview === 'text',
                 onClick: this.handleShowTextPreviewClick,
@@ -151,254 +114,300 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render dialog for selecting users
      *
      * @return {ReactElement}
      */
-    renderRecipientDialogBox: function() {
-        if (!this.state.renderingRecipientDialogBox) {
+    renderRecipientDialogBox() {
+        let { database, route, env, options } = this.props;
+        let { renderingRecipientDialogBox, selectingRecipients } = this.state;
+        if (!renderingRecipientDialogBox) {
             return null;
         }
-        var props = {
-            show: this.state.selectingRecipients,
-            selection: this.props.options.bookmarkRecipients,
+        let props = {
+            show: selectingRecipients,
+            selection: options.bookmarkRecipients,
 
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            database,
+            route,
+            env,
 
             onSelect: this.handleRecipientsSelect,
             onCancel: this.handleRecipientsCancel,
         };
         return <UserSelectionDialogBox {...props} />;
-    },
+    }
 
     /**
      * Render dialog for entering issue details
      *
      * @return {ReactElement}
      */
-    renderIssueDialogBox: function() {
-        if (!this.state.renderingIssueDialogBox) {
+    renderIssueDialogBox() {
+        let { env, options, story, repos } = this.props;
+        let { renderingIssueDialogBox, enteringIssueDetails } = this.state;
+        if (!renderingIssueDialogBox) {
             return null;
         }
-        var props = {
-            show: this.state.enteringIssueDetails,
+        let props = {
+            show: enteringIssueDetails,
             allowDeletion: false,
-            story: this.props.story,
-            issue: this.props.options.issueDetails,
-            repos: this.props.repos,
-
-            locale: this.props.locale,
-            theme: this.props.theme,
-
+            story,
+            issue: options.issueDetails,
+            repos,
+            env,
             onConfirm: this.handleIssueConfirm,
             onCancel: this.handleIssueCancel,
         };
         return <IssueDialogBox {...props} />;
-    },
+    }
 
     /**
      * Inform parent component that options have been changed
      *
      * @param  {Object} options
      */
-    triggerChangeEvent: function(options) {
-        if (this.props.onChange) {
-            this.props.onChange({
+    triggerChangeEvent(options) {
+        let { onChange } = this.props;
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
                 options,
             });
         }
-    },
+    }
 
     /**
      * Inform parent component the action requested is either done or canceled
      */
-    triggerCompleteEvent: function() {
-        if (this.props.onComplete) {
-            this.props.onComplete({
+    triggerCompleteEvent() {
+        let { onComplete } = this.props;
+        if (onComplete) {
+            onComplete({
                 type: 'complete',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Open dialog box for selecting user
      *
      * @param  {Event} evt
      */
-    openSelectionDialogBox: function(evt) {
-        if (!this.state.selectingRecipients) {
+    openSelectionDialogBox(evt) {
+        let { selectingRecipients } = this.state;
+        if (!selectingRecipients) {
             this.setState({
                 selectingRecipients: true,
                 renderingRecipientDialogBox: true
             });
         }
-    },
+    }
 
     /**
      * Close dialog box
      */
-    closeSelectionDialogBox: function() {
-        if (this.state.selectingRecipients) {
+    closeSelectionDialogBox() {
+        let { selectingRecipients } = this.state;
+        if (selectingRecipients) {
             this.setState({ selectingRecipients: false });
             setTimeout(() => {
-                if (!this.state.selectingRecipients) {
+                let { selectingRecipients } = this.state;
+                if (!selectingRecipients) {
                     this.setState({ renderingRecipientDialogBox: false });
                 }
             }, 500);
         }
-    },
+    }
 
     /**
      * Open dialog box for entering issue details
      *
      * @param  {Event} evt
      */
-    openIssueDialogBox: function(evt) {
-        if (!this.state.enteringIssueDetails) {
+    openIssueDialogBox(evt) {
+        let { enteringIssueDetails } = this.state;
+        if (!enteringIssueDetails) {
             this.setState({
                 enteringIssueDetails: true,
                 renderingIssueDialogBox: true
             });
         }
-    },
+    }
 
     /**
      * Close dialog box
      */
-    closeIssueDialogBox: function() {
-        if (this.state.enteringIssueDetails) {
+    closeIssueDialogBox() {
+        let { enteringIssueDetails } = this.state;
+        if (enteringIssueDetails) {
             this.setState({ enteringIssueDetails: false });
             setTimeout(() => {
-                if (!this.state.enteringIssueDetails) {
+                let { enteringIssueDetails } = this.state;
+                if (!enteringIssueDetails) {
                     this.setState({ renderingIssueDialogBox: false });
                 }
             }, 500);
         }
-    },
+    }
 
     /**
      * Called when user clicks on bookmark post button
      *
      * @param  {Event} evt
      */
-    handleBookmarkClick: function(evt) {
-        var options = _.clone(this.props.options);
-        var userId = this.props.currentUser.id;
-        if (_.includes(options.bookmarkRecipients, userId)) {
-            options.bookmarkRecipients = _.difference(options.bookmarkRecipients, [ userId ]);
+    handleBookmarkClick = (evt) => {
+        let { options, currentUser } = this.props;
+        options = _.clone(options);
+        let userID = currentUser.id;
+        if (_.includes(options.bookmarkRecipients, userID)) {
+            options.bookmarkRecipients = _.difference(options.bookmarkRecipients, [ userID ]);
         } else {
-            options.bookmarkRecipients = _.union(options.bookmarkRecipients, [ userId ]);
+            options.bookmarkRecipients = _.union(options.bookmarkRecipients, [ userID ]);
         }
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user clicks on send bookmark button
      *
      * @param  {Event} evt
      */
-    handleSendBookmarkClick: function(evt) {
+    handleSendBookmarkClick = (evt) => {
         this.openSelectionDialogBox(evt);
-    },
+    }
 
     /**
      * Called when user clicks on add issue to tracker button
      *
      * @param  {Event} evt
      */
-    handleAddIssueClick: function(evt) {
+    handleAddIssueClick = (evt) => {
         this.openIssueDialogBox(evt);
-    },
+    }
 
     /**
      * Called when user clicks on hide post button
      *
      * @param  {Event} evt
      */
-    handleHidePostClick: function(evt) {
-        var options = _.clone(this.props.options);
+    handleHidePostClick = (evt) => {
+        let { options } = this.props;
+        options = _.clone(options);
         options.hidePost = !options.hidePost;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user finishes selecting user
      *
      * @param  {Object} evt
      */
-    handleRecipientsSelect: function(evt) {
-        var options = _.clone(this.props.options);
+    handleRecipientsSelect = (evt) => {
+        let { options } = this.props;
+        options = _.clone(options);
         options.bookmarkRecipients = evt.selection;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
         this.closeSelectionDialogBox();
-    },
+    }
 
     /**
      * Called when user cancel user selection
      *
      * @param  {Object} evt
      */
-    handleRecipientsCancel: function(evt) {
+    handleRecipientsCancel = (evt) => {
         this.triggerCompleteEvent();
         this.closeSelectionDialogBox();
-    },
+    }
 
     /**
      * Called when user finishes entering issue details
      *
      * @param  {Object} evt
      */
-    handleIssueConfirm: function(evt) {
-        var options = _.clone(this.props.options);
+    handleIssueConfirm = (evt) => {
+        let { options } = this.props;
+        options = _.clone(options);
         options.issueDetails = evt.issue;
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
         this.closeIssueDialogBox();
-    },
+    }
 
     /**
      * Called when user cancel editing of issue details
      *
      * @param  {Object} evt
      */
-    handleIssueCancel: function(evt) {
+    handleIssueCancel = (evt) => {
         this.triggerCompleteEvent();
         this.closeIssueDialogBox();
-    },
+    }
 
     /**
      * Called when user clicks show media button
      *
      * @param  {Event} evt
      */
-    handleShowMediaPreviewClick: function(evt) {
-        var options = _.clone(this.props.options);
+    handleShowMediaPreviewClick = (evt) => {
+        let { options } = this.props;
+        options = _.clone(options);
         options.preview = 'media';
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
-    },
+    }
 
     /**
      * Called when user clicks show preview button
      *
      * @param  {Event} evt
      */
-    handleShowTextPreviewClick: function(evt) {
-        var options = _.clone(this.props.options);
+    handleShowTextPreviewClick = (evt) => {
+        let { options } = this.props;
+        options = _.clone(options);
         options.preview = 'text';
         this.triggerChangeEvent(options);
         this.triggerCompleteEvent();
-    },
-});
+    }
+}
+
+StoryEditorOptions.defaultProps = {
+    section: 'both',
+};
+
+export {
+    StoryEditorOptions as default,
+    StoryEditorOptions,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    StoryEditorOptions.propTypes = {
+        section: PropTypes.oneOf([ 'main', 'preview', 'both' ]),
+        story: PropTypes.object.isRequired,
+        repos: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        options: PropTypes.object.isRequired,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onChange: PropTypes.func,
+        onComplete: PropTypes.func,
+    };
+}

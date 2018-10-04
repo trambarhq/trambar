@@ -1,19 +1,11 @@
-var _ = require('lodash');
-var Moment = require('moment');
-var Merger = require('data/merger');
-var StoryTypes = require('objects/types/story-types');
-var ResourceUtils = require('objects/utils/resource-utils');
-
-module.exports = {
-    isSaved,
-    isEditable,
-    isTrackable,
-    isActuallyPublished,
-    wasPublishedWithin,
-    wasBumpedWithin,
-    hasUncomittedChanges,
-    mergeRemoteChanges,
-};
+import _ from 'lodash';
+import Moment from 'moment';
+import { mergeObjects } from 'data/merger';
+import { mergeLists } from 'objects/utils/resource-utils';
+import {
+    TrackableStoryTypes,
+    EditableStoryTypes
+} from 'objects/types/story-types';
 
 /**
  * Return true if the story has a valid database id
@@ -60,7 +52,7 @@ function isEditable(story) {
     if (!story) {
         return false;
     }
-    if (_.includes(StoryTypes.editable, story.type)) {
+    if (_.includes(EditableStoryTypes, story.type)) {
         return true;
     }
     if (story.type === 'issue') {
@@ -87,7 +79,7 @@ function isTrackable(story) {
             return true;
         }
     }
-    return _.includes(StoryTypes.trackable, story.type || 'post');
+    return _.includes(TrackableStoryTypes, story.type || 'post');
 }
 
 /**
@@ -103,7 +95,7 @@ function wasPublishedWithin(story, time, unit) {
     if (!story || !story.published) {
         return false;
     }
-    var ptime = story.ptime;
+    let ptime = story.ptime;
     if (!ptime) {
         return true;
     }
@@ -126,7 +118,7 @@ function wasBumpedWithin(story, time, unit) {
     if (!story || !story.published) {
         return false;
     }
-    var btime = story.btime || story.ptime;
+    let btime = story.btime || story.ptime;
     if (!btime) {
         return true;
     }
@@ -163,12 +155,23 @@ function mergeRemoteChanges(local, remote, common) {
         // no merging if the object has vanished from remote database
         return false;
     }
-    var resolveFns = {
+    let resolveFns = {
         details: {
-            resources: ResourceUtils.mergeLists
+            resources: mergeLists
         }
     };
-    var merged = Merger.mergeObjects(local, remote, common, resolveFns);
+    let merged = mergeObjects(local, remote, common, resolveFns);
     _.assign(local, merged);
     return true;
 }
+
+export {
+    isSaved,
+    isEditable,
+    isTrackable,
+    isActuallyPublished,
+    wasPublishedWithin,
+    wasBumpedWithin,
+    hasUncomittedChanges,
+    mergeRemoteChanges,
+};

@@ -1,50 +1,32 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-
-var Route = require('routing/route');
-var Locale = require('locale/locale');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var Scrollable = require('widgets/scrollable');
-var OptionButton = require('widgets/option-button');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import Scrollable from 'widgets/scrollable';
+import OptionButton from 'widgets/option-button';
 
-require('./project-management-dialog-box.scss');
+import './project-management-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'ProjectManagementDialogBox',
-    propTypes: {
-        show: PropTypes.bool,
-        projectLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        onDelete: PropTypes.func,
-        onCancel: PropTypes.func,
-    },
+class ProjectManagementDialogBox extends PureComponent {
+    static displayName = 'ProjectManagementDialogBox';
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             selection: [],
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.handleCancelClick,
-        };
+    render() {
+        let { show } = this.props;
+        let overlayProps = { show, onBackgroundClick: this.handleCancelClick };
         return (
             <Overlay {...overlayProps}>
                 <div className="project-management-dialog-box">
@@ -53,57 +35,66 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render list of users
      *
      * @return {Array<ReactElement>}
      */
-    renderList: function() {
+    renderList() {
+        let { projectLinks } = this.props;
         return (
             <Scrollable>
-                {_.map(this.props.projectLinks, this.renderProjectButton)}
+            {
+                _.map(projectLinks, (projectLink, i) => {
+                    return this.renderProjectButton(projectLink, i);
+                })
+            }
             </Scrollable>
         );
-    },
+    }
 
     /**
      * Render button for project
      *
      * @param  {Object} link
-     * @param  {Number} index
+     * @param  {Number} i
      *
      * @return {ReactElement}
      */
-    renderProjectButton: function(link, index) {
-        var p = this.props.locale.pick;
-        var props = {
+    renderProjectButton(link, i) {
+        let { env } = this.props;
+        let { selection } = this.state;
+        let { p } = env.locale;
+        let props = {
             id: link.key,
             label: p(link.name),
             iconOn: 'times-circle',
-            selected: _.includes(this.state.selection, link.key),
+            selected: _.includes(selection, link.key),
             onClick: this.handleProjectClick,
         };
-        return <OptionButton key={index} {...props} />;
-    },
+        return <OptionButton key={i} {...props} />;
+    }
 
     /**
      * Render cancel and OK buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var cancelProps = {
+    renderButtons() {
+        let { env } = this.props;
+        let { selection } = this.state;
+        let { t } = env.locale;
+        let cancelProps = {
             label: t('project-management-cancel'),
             onClick: this.handleCancelClick,
         };
-        var removeProps = {
+        let removeProps = {
             label: t('project-management-remove'),
             onClick: this.handleRemoveClick,
             emphasized: true,
-            disabled: _.isEmpty(this.state.selection),
+            disabled: _.isEmpty(selection),
         };
         return (
             <div className="buttons">
@@ -111,52 +102,75 @@ module.exports = React.createClass({
                 <PushButton {...removeProps} />
             </div>
         );
-    },
+    }
 
     /**
      * Called when user clicks
      *
-     * @param  {[type]} evt
-     *
-     * @return {[type]}
+     * @param  {Event} evt
      */
-    handleProjectClick: function(evt) {
-        var key = evt.currentTarget.id;
-        var selection = _.slice(this.state.selection);
+    handleProjectClick = (evt) => {
+        let { selection } = this.state;
+        let key = evt.currentTarget.id;
         if (_.includes(selection, key)) {
+            selection = _.without(selection, key);
             _.pull(selection, key);
         } else {
-            selection.push(key);
+            selection = _.concat(selection, key);
         }
         this.setState({ selection });
-    },
+    }
 
     /**
      * Called when user click remove button
      *
      * @param  {Event} evt
      */
-    handleRemoveClick: function(evt) {
-        if (this.props.onDelete) {
-            this.props.onDelete({
+    handleRemoveClick = (evt) => {
+        let { onDelete } = this.props;
+        let { selection } = this.state;
+        if (onDelete) {
+            onDelete({
                 type: 'delete',
                 target: this,
-                selection: this.state.selection,
+                selection,
             })
         }
-    },
+    }
 
     /**
      * Called when user click cancel button or outside the dialog box
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
-        if (this.props.onCancel) {
-            this.props.onCancel({
+    handleCancelClick = (evt) => {
+        let { onCancel } = this.props;
+        if (onCancel) {
+            onCancel({
                 type: 'cancel',
                 target: this,
             });
         }
-    },
-});
+    }
+}
+
+export {
+    ProjectManagementDialogBox as default,
+    ProjectManagementDialogBox,
+};
+
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ProjectManagementDialogBox.propTypes = {
+        show: PropTypes.bool,
+        projectLinks: PropTypes.arrayOf(PropTypes.object).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        onDelete: PropTypes.func,
+        onCancel: PropTypes.func,
+    };
+}

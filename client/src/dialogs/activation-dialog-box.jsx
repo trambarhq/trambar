@@ -1,56 +1,34 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import React, { PureComponent } from 'react';
 
 // widgets
-var Overlay = require('widgets/overlay');
-var PushButton = require('widgets/push-button');
-var TextField = require('widgets/text-field');
+import Overlay from 'widgets/overlay';
+import PushButton from 'widgets/push-button';
+import TextField from 'widgets/text-field';
 
-require('./activation-dialog-box.scss');
+import './activation-dialog-box.scss';
 
-module.exports = React.createClass({
-    displayName: 'ActivationDialogBox',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        show: PropTypes.bool,
+class ActivationDialogBox extends PureComponent {
+    static displayName = 'ActivationDialogBox';
 
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-
-        onConfirm: PropTypes.func,
-        onCancel: PropTypes.func,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             address: '',
             code: '',
             schema: '',
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var overlayProps = {
-            show: this.props.show,
-            onBackgroundClick: this.props.onCancel,
-        };
+    render() {
+        let { show, onCancel } = this.props;
+        let overlayProps = { show, onBackgroundClick: onCancel };
         return (
             <Overlay {...overlayProps}>
                 <div className="activation-dialog-box">
@@ -61,14 +39,14 @@ module.exports = React.createClass({
                 </div>
             </Overlay>
         );
-    },
+    }
 
     /**
      * Render form
      *
      * @return {ReactElement}
      */
-    renderForm: function() {
+    renderForm() {
         return (
             <div className="container">
                 {this.renderAddressInput()}
@@ -76,82 +54,90 @@ module.exports = React.createClass({
                 {this.renderSchemaInput()}
             </div>
         );
-    },
+    }
 
     /**
      * Render input for entering address
      *
      * @return {ReactElement}
      */
-    renderAddressInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderAddressInput() {
+        let { env } = this.props;
+        let { address } = this.state;
+        let { t } = env.locale;
+        let props = {
             id: 'address',
             type: 'url',
-            value: this.state.address,
-            locale: this.props.locale,
+            value: address,
+            env,
             onChange: this.handleAddressChange,
         };
         return <TextField {...props}>{t('activation-address')}</TextField>;
-    },
+    }
 
     /**
      * Render input for activation code
      *
      * @return {ReactElement}
      */
-    renderCodeInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderCodeInput() {
+        let { env } = this.props;
+        let { code } = this.state;
+        let { t } = env.locale;
+        let props = {
             id: 'code',
-            value: this.state.code,
+            value: code,
             spellCheck: false,
-            locale: this.props.locale,
+            env,
             onChange: this.handleCodeChange,
         };
         return <TextField {...props}>{t('activation-code')}</TextField>;
-    },
+    }
 
     /**
      * Render input for schema
      *
      * @return {ReactElement}
      */
-    renderSchemaInput: function() {
-        var t = this.props.locale.translate;
-        var props = {
+    renderSchemaInput() {
+        let { env } = this.props;
+        let { schema } = this.state;
+        let { t } = env.locale;
+        let props = {
             id: 'schema',
-            value: this.state.schema,
+            value: schema,
             spellCheck: false,
-            locale: this.props.locale,
+            env,
             onChange: this.handleSchemaChange,
         };
         return <TextField {...props}>{t('activation-schema')}</TextField>;
-    },
+    }
 
     /**
      * Render buttons
      *
      * @return {ReactElement}
      */
-    renderButtons: function() {
-        var t = this.props.locale.translate;
-        var acceptable = true;
-        if (!/^[0-9A-F]{16}$/i.test(_.replace(this.state.code, /\s/g, ''))) {
+    renderButtons() {
+        let { env } = this.props;
+        let { address, code, schema } = this.state;
+        let { t } = env.locale;
+        let acceptable = true;
+        if (!/^[0-9A-F]{16}$/i.test(_.replace(code, /\s/g, ''))) {
             acceptable = false;
         }
-        if (!/https?:\/\/\w+/.test(this.state.address)) {
+        if (!/https?:\/\/\w+/.test(address)) {
             acceptable = false;
         }
-        if (!/\w+/.test(this.state.schema)) {
+        if (!/\w+/.test(schema)) {
             acceptable = false;
         }
-        var cancelProps = {
+        let cancelProps = {
             label: t('activation-cancel'),
             emphasized: false,
             onClick: this.handleCancelClick,
         };
-        var confirmProps = {
+        let confirmProps = {
             label: t('activation-ok'),
             emphasized: true,
             disabled: !acceptable,
@@ -165,72 +151,95 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
     /**
      * Called when user clicks the cancel button
      *
      * @param  {Event} evt
      */
-    handleCancelClick: function(evt) {
-        if (this.props.onCancel) {
-            this.props.onCancel({
+    handleCancelClick = (evt) => {
+        let { onCancel } = this.props;
+        if (onCancel) {
+            onCancel({
                 type: 'cancel',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks the open button
      *
      * @param  {Event} evt
      */
-    handleOKClick: function(evt) {
-        if (this.props.onConfirm) {
-            this.props.onConfirm({
+    handleOKClick = (evt) => {
+        let { onConfirm } = this.props;
+        let { address, code, schema } = this.state;
+        if (onConfirm) {
+            onConfirm({
                 type: 'close',
                 target: this,
-                address: this.state.address,
-                code: _.replace(this.state.code, /\s+/g, ''),
-                schema: this.state.schema,
+                address,
+                code: _.replace(code, /\s+/g, ''),
+                schema,
             });
         }
-    },
+    }
 
     /**
      * Called when user changes the server address
      *
      * @param  {Event} evt
      */
-    handleAddressChange: function(evt) {
-        var address = evt.target.value;
+    handleAddressChange = (evt) => {
+        let address = evt.target.value;
         address = _.replace(address, /\s+/g, '');
         this.setState({ address });
-    },
+    }
 
     /**
      * Called when user changes the activation code
      *
      * @param  {Event} evt
      */
-    handleCodeChange: function(evt) {
-        var code = evt.target.value;
+    handleCodeChange = (evt) => {
+        let code = evt.target.value;
         code = _.replace(_.toUpper(code), /[^0-9A-F ]/g, '');
         if (_.replace(code, /\s+/g, '').length <= 16) {
             this.setState({ code });
         }
-    },
+    }
 
     /**
      * Called when user changes the schema
      *
      * @param  {Event} evt
      */
-    handleSchemaChange: function(evt) {
-        var schema = evt.target.value;
+    handleSchemaChange = (evt) => {
+        let schema = evt.target.value;
         schema = _.replace(schema, /[^\w\-]/g, '');
         schema = _.toLower(schema);
         this.setState({ schema });
-    },
-});
+    }
+}
+
+export {
+    ActivationDialogBox as default,
+    ActivationDialogBox,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ActivationDialogBox.propTypes = {
+        show: PropTypes.bool,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        onConfirm: PropTypes.func,
+        onCancel: PropTypes.func,
+    };
+}

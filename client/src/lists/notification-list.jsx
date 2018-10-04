@@ -1,74 +1,21 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var Relaks = require('relaks');
-var Memoize = require('utils/memoize');
-var Merger = require('data/merger');
-var UserFinder = require('objects/finders/user-finder');
-var StoryFinder = require('objects/finders/story-finder');
-
-var Database = require('data/database');
-var Route = require('routing/route');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
+import { memoizeWeak } from 'utils/memoize';
+import Merger from 'data/merger';
+import * as UserFinder from 'objects/finders/user-finder';
+import * as StoryFinder from 'objects/finders/story-finder';
 
 // widgets
-var SmartList = require('widgets/smart-list');
-var NotificationView = require('views/notification-view');
-var NewItemsAlert = require('widgets/new-items-alert');
+import SmartList from 'widgets/smart-list';
+import NotificationView from 'views/notification-view';
+import NewItemsAlert from 'widgets/new-items-alert';
+import ErrorBoundary from 'widgets/error-boundary';
 
 require('./notification-list.scss');
 
-module.exports = Relaks.createClass({
-    displayName: 'NotificationList',
-    propTypes: {
-        notifications: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    statics: {
-        /**
-         * Extract id from URL hash
-         *
-         * @param  {String} hash
-         *
-         * @return {Object}
-         */
-        parseHash: function(hash) {
-            var notification, highlighting;
-            if (notification = Route.parseId(hash, /N(\d+)/)) {
-                highlighting = true;
-            } else if (notification = Route.parseId(hash, /n(\d+)/)) {
-                highlighting = false;
-            }
-            return { notification, highlighting };
-        },
-
-        /**
-         * Get URL hash based on given parameters
-         *
-         * @param  {Object} params
-         *
-         * @return {String}
-         */
-        getHash: function(params) {
-            if (params.notification != undefined) {
-                if (params.highlighting) {
-                    return `N${params.notification}`;
-                } else {
-                    return `n${params.notification}`;
-                }
-            }
-            return '';
-        },
-    },
+class NotificationList extends AsyncComponent {
+    static displayName = 'NotificationList';
 
     /**
      * Retrieve data needed by synchronous component
@@ -77,22 +24,27 @@ module.exports = Relaks.createClass({
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync: function(meanwhile) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
-        var props = {
+    renderAsync(meanwhile) {
+        let {
+            database,
+            route,
+            env,
+            currentUser,
+            notifications,
+        } = this.props;
+        let db = database.use({ by: this });
+        let props = {
             users: null,
             stories: null,
 
-            currentUser: this.props.currentUser,
-            notifications: this.props.notifications,
-            database: this.props.database,
-            route: this.props.route,
-            locale: this.props.locale,
-            theme: this.props.theme,
+            currentUser,
+            notifications,
+            database,
+            route,
+            env,
         };
         meanwhile.show(<NotificationListSync {...props} />);
-        return db.start().then((userId) => {
+        return db.start().then((userID) => {
             return UserFinder.findNotificationTriggerers(db, props.notifications).then((users) => {
                 props.users = users;
             });
@@ -104,51 +56,32 @@ module.exports = Relaks.createClass({
         }).then(() => {
             return <NotificationListSync {...props} />;
         })
-    },
-});
+    }
+}
 
-var NotificationListSync = module.exports.Sync = React.createClass({
-    displayName: 'NotificationList.Sync',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        notifications: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        users: PropTypes.arrayOf(PropTypes.object),
+class NotificationListSync extends PureComponent {
+    static displayName = 'NotificationList.Sync';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
-
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
-    getInitialState: function() {
-        return {
-            hiddenNotificationIds: [],
+    constructor(props) {
+        super(props);
+        this.state = {
+            hiddenNotificationIDs: [],
         };
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var notifications = sortNotifications(this.props.notifications);
-        var anchor;
-        var hashParams = module.exports.parseHash(this.props.route.hash);
-        if (hashParams.notification) {
-            anchor = `notification-${hashParams.notification}`;
-        }
-        var smartListProps = {
-            items: notifications,
+    render() {
+        let { route, notifications } = this.props;
+        let notificationID = route.params.showingNotification || route.params.highlightingNotification;
+        let smartListProps = {
+            items: sortNotifications(notifications),
             behind: 20,
             ahead: 40,
-            anchor: anchor,
+            anchor: (notificationID) ? `notification-${notificationID}` : undefined,
             offset: 10,
 
             onIdentity: this.handleNotificationIdentity,
@@ -162,37 +95,38 @@ var NotificationListSync = module.exports.Sync = React.createClass({
                 {this.renderNewNotificationAlert()}
             </div>
         );
-    },
+    }
 
     /**
      * Render alert indicating there're new stories hidden up top
      *
      * @return {ReactElement}
      */
-    renderNewNotificationAlert: function() {
-        var t = this.props.locale.translate;
-        var count = _.size(this.state.hiddenNotificationIds);
-        var params = {
-            notification: _.first(this.state.hiddenNotificationIds)
-        };
-        var props = {
-            hash: module.exports.getHash(params),
-            route: this.props.route,
-            onClick: this.handleNewNotificationAlertClick,
-        };
+    renderNewNotificationAlert() {
+        let { route, env } = this.props;
+        let { hiddenNotificationIDs } = this.state;
+        let { t } = env.locale;
+        let count = _.size(hiddenNotificationIDs);
+        let url;
+        if (!_.isEmpty(hiddenNotificationIDs)) {
+            url  = route.find(route.name, {
+                highlightingNotification: _.first(hiddenNotificationIDs)
+            });
+        }
+        let props = { url, onClick: this.handleNewNotificationAlertClick };
         return (
             <NewItemsAlert {...props}>
                 {t('alert-$count-new-notifications', count)}
             </NewItemsAlert>
         );
-    },
+    }
 
     /**
      * Schedule timeout function that marks notifications as read on mount
      */
-    componentDidMount: function() {
+    componentDidMount() {
         this.scheduleNotificationRead();
-    },
+    }
 
     /**
      * Schedule timeout function that marks notifications as read when list changes
@@ -200,28 +134,32 @@ var NotificationListSync = module.exports.Sync = React.createClass({
      * @param  {Object} prevProps
      * @param  {Object} prevState
      */
-    componentDidUpdate: function(prevProps, prevState) {
-        if (prevProps.notifications !== this.props.notifications || prevState.hiddenNotificationIds !== this.state.hiddenNotificationIds) {
+    componentDidUpdate(prevProps, prevState) {
+        let { notifications } = this.props;
+        let { hiddenNotificationIDs } = this.state;
+        if (prevProps.notifications !== notifications || prevState.hiddenNotificationIDs !== hiddenNotificationIDs) {
             this.scheduleNotificationRead();
         }
-    },
+    }
 
     /**
      * Mark unread notification as read after some time
      */
-    scheduleNotificationRead: function() {
-        // need a small delay here, since hiddenNotificationIds isn't updated
+    scheduleNotificationRead() {
+        let { notifications } = this.props;
+        let { hiddenNotificationIDs } = this.state;
+        // need a small delay here, since hiddenNotificationIDs isn't updated
         // until the SmartList's componentDidUpdate() is called
         setTimeout(() => {
-            var unread = _.filter(this.props.notifications, (notification) => {
+            let unread = _.filter(notifications, (notification) => {
                 if (!notification.seen) {
-                    if (!_.includes(this.state.hiddenNotificationIds, notification.id)) {
+                    if (!_.includes(hiddenNotificationIDs, notification.id)) {
                         return true;
                     }
                 }
             });
             if (!_.isEmpty(unread)) {
-                var delay = unread.length;
+                let delay = unread.length;
                 if (delay > 5) {
                     delay = 5;
                 } else if (delay < 2) {
@@ -233,23 +171,23 @@ var NotificationListSync = module.exports.Sync = React.createClass({
                 }, delay * 1000);
             }
         }, 50);
-    },
+    }
 
     /**
      * Clear timeout on unmount
      */
-    componentWillUnmount: function() {
+    componentWillUnmount() {
         clearTimeout(this.markAsSeenTimeout);
-    },
+    }
 
     /**
      * Return id of notification view in response to event triggered by SmartList
      *
      * @type {String}
      */
-    handleNotificationIdentity: function(evt) {
+    handleNotificationIdentity = (evt) => {
         return `notification-${evt.item.id}`;
-    },
+    }
 
     /**
      * Render a notification in response to event triggered by SmartList
@@ -258,25 +196,29 @@ var NotificationListSync = module.exports.Sync = React.createClass({
      *
      * @return {ReactElement}
      */
-    handleNotificationRender: function(evt) {
+    handleNotificationRender = (evt) => {
+        let { database, route, env, users } = this.props;
         if (evt.needed) {
-            var notification = evt.item;
-            var user = findUser(this.props.users, notification);
-            var props = {
+            let notification = evt.item;
+            let user = findUser(users, notification);
+            let props = {
                 notification,
                 user,
-                database: this.props.database,
-                route: this.props.route,
-                locale: this.props.locale,
-                theme: this.props.theme,
+                database,
+                route,
+                env,
                 onClick: this.handleNotificationClick,
             };
-            return <NotificationView key={notification.id} {...props} />;
+            return (
+                <ErrorBoundary env={env}>
+                    <NotificationView key={notification.id} {...props} />
+                </ErrorBoundary>
+            );
         } else {
-            var height = evt.previousHeight || evt.estimatedHeight || 25;
+            let height = evt.previousHeight || evt.estimatedHeight || 25;
             return <div className="notification-view" style={{ height }} />
         }
-    },
+    }
 
     /**
      * Set seen flag of notifications to true
@@ -285,68 +227,101 @@ var NotificationListSync = module.exports.Sync = React.createClass({
      *
      * @return {Promise<Array>}
      */
-    markAsSeen: function(notifications) {
-        var params = this.props.route.parameters;
-        var db = this.props.database.use({ schema: params.schema, by: this });
-        var notificationsAfter = _.map(notifications, (notification) => {
+    markAsSeen(notifications) {
+        let { database } = this.props;
+        let db = database.use({ by: this });
+        let notificationsAfter = _.map(notifications, (notification) => {
             return { id: notification.id, seen: true };
         });
         return db.save({ table: 'notification' }, notificationsAfter);
-    },
+    }
 
     /**
      * Called when user clicks on a notification
      *
      * @param  {Object} evt
      */
-    handleNotificationClick: function(evt) {
-        var notification = evt.target.props.notification;
+    handleNotificationClick = (evt) => {
+        let notification = evt.target.props.notification;
         if (!notification.seen) {
             this.markAsSeen([ notification ]);
         }
-    },
+    }
 
     /**
      * Called when a different notification is shown at the top of the viewport
      *
      * @return {Object}
      */
-    handleNotificationAnchorChange: function(evt) {
-        var params = {
+    handleNotificationAnchorChange = (evt) => {
+        // TODO
+        /*
+        let params = {
             notification: _.get(evt.item, 'id')
         };
-        var hash = module.exports.getHash(params);
+        let hash = NotificationList.getHash(params);
         this.props.route.reanchor(hash);
-    },
+        */
+    }
 
     /**
      * Called when SmartList notice new items were rendered off screen
      *
      * @param  {Object} evt
      */
-    handleNotificationBeforeAnchor: function(evt) {
-        var hiddenNotificationIds = _.map(evt.items, 'id');
-        this.setState({ hiddenNotificationIds });
-    },
+    handleNotificationBeforeAnchor = (evt) => {
+        let hiddenNotificationIDs = _.map(evt.items, 'id');
+        this.setState({ hiddenNotificationIDs });
+    }
 
     /**
      * Called when user clicks on new notification alert
      *
      * @param  {Event} evt
      */
-    handleNewNotificationAlertClick: function(evt) {
-        this.setState({ hiddenNotificationIds: [] });
-    },
-});
+    handleNewNotificationAlertClick = (evt) => {
+        this.setState({ hiddenNotificationIDs: [] });
+    }
+}
 
-var sortNotifications = Memoize(function(notifications) {
+const sortNotifications = memoizeWeak(null, function(notifications) {
     return _.orderBy(notifications, [ 'ctime' ], [ 'desc' ]);
 });
 
-var findUser = Memoize(function(users, notification) {
+const findUser = memoizeWeak(null, function(users, notification) {
     if (notification) {
         return _.find(users, { id: notification.user_id });
-    } else {
-        return null;
     }
 });
+
+export {
+    NotificationList as default,
+    NotificationList,
+    NotificationListSync,
+};
+
+import Database from 'data/database';
+import Route from 'routing/route';
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    Notification.propTypes = {
+        notifications: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    NotificationListSync.propTypes = {
+        notifications: PropTypes.arrayOf(PropTypes.object),
+        currentUser: PropTypes.object,
+        users: PropTypes.arrayOf(PropTypes.object),
+
+        database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

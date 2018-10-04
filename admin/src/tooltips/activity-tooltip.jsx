@@ -1,44 +1,40 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import Environment from 'env/environment';
 
-var StoryTypes = require('objects/types/story-types');
-
-// mixins
-var UpdateCheck = require('mixins/update-check');
+import * as StoryTypes from 'objects/types/story-types';
 
 // widgets
-var Tooltip = require('widgets/tooltip');
+import Tooltip from 'widgets/tooltip';
 
-require('./activity-tooltip.scss');
+import './activity-tooltip.scss';
 
-module.exports = React.createClass({
-    displayName: 'ActivityTooltip',
-    mixins: [ UpdateCheck ],
-    propTypes: {
-        statistics: PropTypes.object,
-        locale: PropTypes.instanceOf(Locale),
-        theme: PropTypes.instanceOf(Theme),
-    },
+class ActivityTooltip extends PureComponent {
+    static displayName = 'ActivityTooltip';
 
-    render: function() {
-        if (this.props.statistics == null) {
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
+    render() {
+        let { env, statistics, disabled } = this.props;
+        let { t } = env.locale;
+        if (!statistics) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var label = t('activity-tooltip-$count', this.props.statistics.total);
-        if (this.props.statistics.total === undefined) {
+        let label = t('activity-tooltip-$count', statistics.total);
+        if (statistics.total === undefined) {
             label = '-';
         }
-        var list = [];
+        let list = [];
         _.each(StoryTypes, (type, i) => {
-            var count = this.props.statistics[type];
+            let count = statistics[type];
             if (!count) {
                 return;
             }
-            var Icon = StoryTypes.icons[type];
+            let Icon = StoryTypes.icons[type];
             list.push(
                 <div className="item" key={i}>
                     <Icon className="icon" />
@@ -48,7 +44,7 @@ module.exports = React.createClass({
             )
         });
         return (
-            <Tooltip className="activity" disabled={this.props.disabled}>
+            <Tooltip className="activity" disabled={disabled}>
                 <inline>{label}</inline>
                 <window>
                     {list}
@@ -56,4 +52,18 @@ module.exports = React.createClass({
             </Tooltip>
         );
     }
-});
+}
+
+export {
+    ActivityTooltip as default,
+    ActivityTooltip,
+};
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ActivityTooltip.propTypes = {
+        statistics: PropTypes.object,
+        env: PropTypes.instanceOf(Environment),
+    };
+}

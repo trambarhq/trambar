@@ -1,41 +1,30 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
 
 // widgets
-var ProfileImage = require('widgets/profile-image');
+import ProfileImage from 'widgets/profile-image';
 
-require('./role-filter-button.scss');
+import './role-filter-button.scss';
 
-module.exports = React.createClass({
-    displayName: 'RoleFilterButton',
-    propTypes: {
-        role: PropTypes.object,
-        users: PropTypes.arrayOf(PropTypes.object),
-        selected: PropTypes.bool,
-        url: PropTypes.string,
-
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-    },
+class RoleFilterButton extends PureComponent {
+    static displayName = 'RoleFilterButton';
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var className = 'role-filter-button';
-        if (this.props.selected) {
+    render() {
+        let { url, role, selected } = this.props;
+        let className = 'role-filter-button';
+        if (selected) {
             className += ' selected';
         }
-        if (!this.props.role) {
+        if (!role) {
             className += ' no-roles';
         }
         return (
-            <a className={className} href={this.props.url}>
+            <a className={className} href={url}>
                 <div className="contents">
                     {this.renderImageRow(0, 4)}
                     {this.renderImageRow(0, 0)}
@@ -44,7 +33,7 @@ module.exports = React.createClass({
                 </div>
             </a>
         );
-    },
+    }
 
     /**
      * Render a row of profile images
@@ -54,18 +43,23 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderImageRow: function(index, count) {
+    renderImageRow(index, count) {
+        let { users } = this.props;
         // only show user if he has a profile image
-        var users = _.filter(this.props.users, (user) => {
+        users = _.filter(users, (user) => {
             return _.some(user.details.resources, { type: 'image' });
         });
         users = _.slice(users, index, count);
         return (
             <div className="row">
-                {_.map(users, this.renderProfileImage)}
+            {
+                _.map(users, (user, i) => {
+                    return this.renderProfileImage(user, i);
+                })
+            }
             </div>
         );
-    },
+    }
 
     /**
      * Render profile image of user
@@ -75,21 +69,22 @@ module.exports = React.createClass({
      *
      * @return {ReactElement}
      */
-    renderProfileImage: function(user, i) {
-        return <ProfileImage key={i} user={user} size="medium" theme={this.props.theme} />
-    },
+    renderProfileImage(user, i) {
+        let { env } = this.props;
+        return <ProfileImage key={i} user={user} env={env} size="medium" />
+    }
 
     /**
      * Render title
      *
      * @return {ReactElement}
      */
-    renderTitle: function() {
-        if (!this.props.role) {
+    renderTitle() {
+        let { env, role } = this.props;
+        let { p } = env.locale;
+        if (!role) {
             return this.renderMessage();
          }
-        var p = this.props.locale.pick;
-        var role = this.props.role;
         return (
             <div className="band">
                 <div className="title">
@@ -98,36 +93,57 @@ module.exports = React.createClass({
                 </div>
             </div>
         );
-    },
+    }
 
-    renderMessage: function() {
+    renderMessage() {
+        let { env, role } = this.props;
+        let { t } = env.locale;
         // undefined means data isn't done loading
-        if (this.props.role === undefined) {
+        if (role === undefined) {
             return null;
         }
-        var t = this.props.locale.translate;
         return (
             <div className="message">
                 {t('role-filter-no-roles')}
             </div>
         );
-    },
+    }
 
     /**
      * Render user count
      *
      * @return {ReactElement|null}
      */
-    renderUserCount: function() {
-        if (!this.props.users) {
+    renderUserCount() {
+        let { users } = this.props;
+        if (!users) {
             return null;
         }
-        var count = this.props.users.length;
         return (
             <div className="user-count">
                 <i className="fa fa-male"></i>
-                <span className="number">{count}</span>
+                <span className="number">{users.length}</span>
             </div>
         );
-    },
-});
+    }
+}
+
+export {
+    RoleFilterButton as default,
+    RoleFilterButton,
+};
+
+import Environment from 'env/environment';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    RoleFilterButton.propTypes = {
+        role: PropTypes.object,
+        users: PropTypes.arrayOf(PropTypes.object),
+        selected: PropTypes.bool,
+        url: PropTypes.string,
+
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+}

@@ -1,10 +1,7 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
+import _ from 'lodash';
+import Promise from 'bluebird';
 
-module.exports = {
-    findUserDevices,
-};
+const emptyArray = [];
 
 /**
  * Find devices belonging to a given user
@@ -17,7 +14,7 @@ module.exports = {
  */
 function findUserDevices(db, user, minimum) {
     if (!user) {
-        return Promise.resolve(Empty.array);
+        return Promise.resolve(emptyArray);
     }
     return db.find({
         schema: 'global',
@@ -29,3 +26,7 @@ function findUserDevices(db, user, minimum) {
         minimum
     });
 }
+
+export {
+    findUserDevices,
+};

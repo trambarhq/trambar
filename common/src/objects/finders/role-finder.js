@@ -1,13 +1,7 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Empty = require('data/empty');
+import _ from 'lodash';
+import Promise from 'bluebird';
 
-module.exports = {
-    findRole,
-    findAllRoles,
-    findActiveRoles,
-    findRolesOfUsers,
-};
+const emptyArray = [];
 
 /**
  * Find a role by ID
@@ -73,16 +67,23 @@ function findActiveRoles(db, minimum) {
  */
 function findRolesOfUsers(db, users) {
     // load roles that members have
-    var roleIds = _.flatten(_.map(users, 'role_ids'));
-    if (_.isEmpty(roleIds)) {
-        return Promise.resolve(Empty.array);
+    let roleIDs = _.flatten(_.map(users, 'role_ids'));
+    if (_.isEmpty(roleIDs)) {
+        return Promise.resolve(emptyArray);
     }
-    roleIds = _.sortBy(_.uniq(roleIds));
+    roleIDs = _.sortBy(_.uniq(roleIDs));
     return db.find({
         schema: 'global',
         table: 'role',
         criteria: {
-            id: roleIds
+            id: roleIDs
         }
     });
 }
+
+export {
+    findRole,
+    findAllRoles,
+    findActiveRoles,
+    findRolesOfUsers,
+};

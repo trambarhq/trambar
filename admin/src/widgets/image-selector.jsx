@@ -1,65 +1,37 @@
-var _ = require('lodash');
-var React = require('react'), PropTypes = React.PropTypes;
-var MediaLoader = require('media/media-loader');
-
-var Database = require('data/database');
-var Locale = require('locale/locale');
-var Theme = require('theme/theme');
-var Payloads = require('transport/payloads');
+import _ from 'lodash';
+import React, { PureComponent } from 'react';
+import * as MediaLoader from 'media/media-loader';
+import * as ResourceUtils from 'objects/utils/resource-utils';
 
 // widgets
-var ImageCroppingDialogBox = require('dialogs/image-cropping-dialog-box');
-var ImageAlbumDialogBox = require('dialogs/image-album-dialog-box');
-var ResourceView = require('widgets/resource-view');
+import ImageCroppingDialogBox from 'dialogs/image-cropping-dialog-box';
+import ImageAlbumDialogBox from 'dialogs/image-album-dialog-box';
+import ResourceView from 'widgets/resource-view';
 
-require('./image-selector.scss');
+import './image-selector.scss';
 
-module.exports = React.createClass({
-    displayName: 'ImageSelector',
-    propTypes: {
-        purpose: PropTypes.string,
-        desiredWidth: PropTypes.number,
-        desiredHeight: PropTypes.number,
-        resources: PropTypes.arrayOf(PropTypes.object),
-        readOnly: PropTypes.bool,
+class ImageSelector extends PureComponent {
+    static displayName = 'ImageSelector';
 
-        database: PropTypes.instanceOf(Database).isRequired,
-        locale: PropTypes.instanceOf(Locale).isRequired,
-        theme: PropTypes.instanceOf(Theme).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-
-        onChange: PropTypes.func,
-    },
-
-    /**
-     * Return default props
-     *
-     * @return {Object}
-     */
-    getDefaultProps: function() {
-        return {
-            resources: [],
-            readOnly: false,
-        };
-    },
-
-    getInitialState: function() {
-        return {
+    constructor(props) {
+        super(props);
+        this.state = {
             showingCroppingDialogBox: false,
             renderingCroppingDialogBox: false,
             showingAlbumDialogBox: false,
             renderingAlbumDialogBox: false,
         };
-    },
+    }
 
     /**
      * Return image object if there's one
      *
      * @return {Object|null}
      */
-    getImage: function() {
-        return _.find(this.props.resources, { type: 'image' });
-    },
+    getImage() {
+        let { resources } = this.props;
+        return _.find(resources, { type: 'image' });
+    }
 
     /**
      * Update resource array and past it to parent component through an
@@ -67,15 +39,16 @@ module.exports = React.createClass({
      *
      * @param  {Object} image
      */
-    setImage: function(image) {
-        if (this.props.desiredWidth && this.props.desiredHeight) {
+    setImage(image) {
+        let { resources, desiredWidth, desiredHeight, onChange } = this.props;
+        if (desiredWidth && desiredHeight) {
             // center a clipping rect over the image if there's none
             if (!image.clip) {
-                var ratio = this.props.desiredWidth / this.props.desiredHeight;
-                var width = image.width;
-                var height = Math.round(width / ratio);
-                var left = 0;
-                var top = Math.round((image.height - height) / 2);
+                let ratio = desiredWidth / desiredHeight;
+                let width = image.width;
+                let height = Math.round(width / ratio);
+                let left = 0;
+                let top = Math.round((image.height - height) / 2);
                 if (top < 0) {
                     height = image.height;
                     width = Math.round(height * ratio);
@@ -86,8 +59,8 @@ module.exports = React.createClass({
                 image.clip = { left, top, width, height };
             }
         }
-        var resources = _.slice(this.props.resources);
-        var index = _.findIndex(resources, { type: 'image' });
+        resources = _.slice(resources);
+        let index = _.findIndex(resources, { type: 'image' });
         if (index !== -1) {
             if (image) {
                 resources[index] = image;
@@ -97,28 +70,29 @@ module.exports = React.createClass({
         } else {
             resources.push(image);
         }
-        if (this.props.onChange) {
-            this.value = resources;
-            this.props.onChange({
+        this.value = resources;
+        if (onChange) {
+            onChange({
                 type: 'change',
                 target: this,
             });
         }
-    },
+    }
 
     /**
      * Render component
      *
      * @return {ReactElement}
      */
-    render: function() {
-        var classNames = [ 'image-selector' ];
-        if (this.props.readOnly) {
+    render() {
+        let { readOnly, children } = this.props;
+        let classNames = [ 'image-selector' ];
+        if (readOnly) {
             classNames.push('readonly')
         }
         return (
             <div className={classNames.join(' ')}>
-                <label>{this.props.children}</label>
+                <label>{children}</label>
                 <div className="contents">
                     {this.renderImage()}
                     {this.renderOptions()}
@@ -126,30 +100,31 @@ module.exports = React.createClass({
                 {this.renderDialogBox()}
             </div>
         );
-    },
+    }
 
     /**
      * Render image or placeholder
      *
      * @return {ReactElement}
      */
-    renderImage: function() {
-        var height = 120, width;
-        var image = this.getImage();
+    renderImage() {
+        let { env, desiredWidth, desiredHeight } = this.props;
+        let height = 120, width;
+        let image = this.getImage();
         if (image) {
-            var fullResURL = this.props.theme.getImageURL(image, { clip: null, remote: true });
-            var linkProps = {
+            let fullResURL = ResourceUtils.getImageURL(image, { clip: null, remote: true }, env);
+            let linkProps = {
                 href: fullResURL,
                 target: '_blank',
                 'data-width': image.width,
                 'data-height': image.height,
                 onClick: this.handleImageClick,
             };
-            var viewProps = {
+            let viewProps = {
                 resource: image,
-                clip: !!(this.props.desiredWidth && this.props.desiredHeight),
+                clip: !!(desiredWidth && desiredHeight),
                 height: height,
-                theme: this.props.theme,
+                env,
             };
             return (
                 <div className="image">
@@ -159,8 +134,8 @@ module.exports = React.createClass({
                 </div>
             );
         } else {
-            if (this.props.desiredWidth && this.props.desiredHeight) {
-                width = Math.round(this.props.desiredWidth * height / this.props.desiredHeight);
+            if (desiredWidth && desiredHeight) {
+                width = Math.round(desiredWidth * height / desiredHeight);
             } else {
                 width = 160;
             }
@@ -172,14 +147,14 @@ module.exports = React.createClass({
                 </div>
             );
         }
-    },
+    }
 
     /**
      * Render list of options
      *
      * @return {ReactElement}
      */
-    renderOptions: function() {
+    renderOptions() {
         return (
             <div className="options">
                 {this.renderChooseOption()}
@@ -187,23 +162,24 @@ module.exports = React.createClass({
                 {this.renderResizeOption()}
             </div>
         )
-    },
+    }
 
     /**
      * Render crop button if dimensions are specified
      *
      * @return {ReactElement|null}
      */
-    renderResizeOption: function() {
-        if (!this.props.desiredWidth || !this.props.desiredHeight) {
+    renderResizeOption() {
+        let { env, desiredWidth, desiredHeight, readOnly } = this.props;
+        let { t } = env.locale;
+        if (!desiredWidth || !desiredHeight) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var props = { className: 'option' };
-        if (!this.props.readOnly) {
+        let props = { className: 'option' };
+        if (!readOnly) {
             props.onClick = this.handleCropClick;
         }
-        var image = this.getImage();
+        let image = this.getImage();
         if (!image) {
             props.className += ' disabled';
         }
@@ -214,20 +190,21 @@ module.exports = React.createClass({
                 {t('image-selector-crop-image')}
             </div>
         );
-    },
+    }
 
     /**
      * Render choose button if purpose is specified
      *
      * @return {ReactElement|null}
      */
-    renderChooseOption: function() {
-        if (!this.props.purpose) {
+    renderChooseOption() {
+        let { env, purpose, readOnly } = this.props;
+        let { t } = env.locale;
+        if (!purpose) {
             return null;
         }
-        var t = this.props.locale.translate;
-        var props = { className: 'option' };
-        if (!this.props.readOnly) {
+        let props = { className: 'option' };
+        if (!readOnly) {
             props.onClick = this.handleChooseClick;
         }
         return (
@@ -237,22 +214,23 @@ module.exports = React.createClass({
                 {t('image-selector-choose-from-album')}
             </div>
         );
-    },
+    }
 
     /**
      * Render upload button
      *
      * @return {ReactElement}
      */
-    renderUploadOption: function() {
-        var inputProps = {
+    renderUploadOption() {
+        let { env, readOnly } = this.props;
+        let { t } = env.locale;
+        let inputProps = {
             type: 'file',
             value: '',
             accept: 'image/*',
-            disabled: this.props.readOnly,
+            disabled: readOnly,
             onChange: this.handleUploadChange,
         };
-        var t = this.props.locale.translate;
         return (
             <label className="option">
                 <i className="fa fa-upload" />
@@ -261,36 +239,41 @@ module.exports = React.createClass({
                 <input {...inputProps} />
             </label>
         );
-    },
+    }
 
     /**
      * Render cropping or album dialog box if one of them is active
      *
      * @return {ReactElement|null}
      */
-    renderDialogBox: function() {
-        var image = this.getImage();
-        if (this.state.renderingAlbumDialogBox) {
-            var dialogBoxProps = {
-                show: this.state.showingAlbumDialogBox,
-                purpose: this.props.purpose,
-                image: image,
-                database: this.props.database,
-                locale: this.props.locale,
-                theme: this.props.theme,
-                payloads: this.props.payloads,
+    renderDialogBox() {
+        let { database, env, payloads, purpose, desiredWidth, desiredHeight } = this.props;
+        let {
+            showingAlbumDialogBox,
+            showingCroppingDialogBox,
+            renderingAlbumDialogBox,
+            renderingCroppingDialogBox,
+        } = this.state;
+        let image = this.getImage();
+        if (renderingAlbumDialogBox) {
+            let dialogBoxProps = {
+                show: showingAlbumDialogBox,
+                purpose,
+                image,
+                database,
+                env,
+                payloads,
                 onSelect: this.handleImageSelect,
                 onCancel: this.handleDialogCancel,
             };
             return <ImageAlbumDialogBox {...dialogBoxProps} />;
-        } else if (this.state.renderingCroppingDialogBox) {
-            var dialogBoxProps = {
-                show: this.state.showingCroppingDialogBox,
-                image: image,
-                desiredWidth: this.props.desiredWidth,
-                desiredHeight: this.props.desiredHeight,
-                locale: this.props.locale,
-                theme: this.props.theme,
+        } else if (renderingCroppingDialogBox) {
+            let dialogBoxProps = {
+                show: showingCroppingDialogBox,
+                image,
+                desiredWidth,
+                desiredHeight,
+                env,
                 onSelect: this.handleImageSectionSelect,
                 onCancel: this.handleDialogCancel,
             };
@@ -298,68 +281,69 @@ module.exports = React.createClass({
         } else {
             return null;
         }
-    },
+    }
 
     /**
      * Called when user clicks choose
      *
      * @param  {Event} evt
      */
-    handleChooseClick: function(evt) {
+    handleChooseClick = (evt) => {
         this.setState({
             showingAlbumDialogBox: true,
             renderingAlbumDialogBox: true,
         });
-    },
+    }
 
     /**
      * Called when user clicks crop button
      *
      * @param  {Event} evt
      */
-    handleCropClick: function(evt) {
+    handleCropClick = (evt) => {
         this.setState({
             showingCroppingDialogBox: true,
             renderingCroppingDialogBox: true,
         });
-    },
+    }
 
     /**
      * Called when user selects an image from album
      *
      * @param  {Object} evt
      */
-    handleImageSelect: function(evt) {
-        var image = _.clone(evt.image);
+    handleImageSelect = (evt) => {
+        let image = _.clone(evt.image);
         image.type = 'image';
         this.setImage(image);
         this.handleDialogCancel();
-    },
+    }
 
     /**
      * Called when user changes the clipping rect
      *
      * @param  {Object} evt
      */
-    handleImageSectionSelect: function(evt) {
-        var image = _.clone(this.getImage());
+    handleImageSectionSelect = (evt) => {
+        let image = _.clone(this.getImage());
         image.clip = evt.clippingRect;
         this.setImage(image);
         this.handleDialogCancel();
-    },
+    }
 
     /**
      * Called when user selects a file on his computer
      *
      * @param  {Event} evt
      */
-    handleUploadChange: function(evt) {
-        var file = evt.target.files[0];
+    handleUploadChange = (evt) => {
+        let { payloads } = this.props;
+        let file = evt.target.files[0];
         if (file) {
-            var payload = this.props.payloads.add('image').attachFile(file);
+            let payload = payloads.add('image').attachFile(file);
             return MediaLoader.getImageMetadata(file).then((meta) => {
-                var image = {
-                    payload_token: payload.token,
+                let image = {
+                    payload_token: payload.id,
                     width: meta.width,
                     height: meta.height,
                     format: meta.format,
@@ -368,47 +352,48 @@ module.exports = React.createClass({
                 return this.setImage(image);
             });
         }
-    },
+    }
 
     /**
      * Called when user clicks cancel or outside a dialog box
      *
      * @param  {Object} evt
      */
-    handleDialogCancel: function(evt) {
-        if (this.state.showingAlbumDialogBox) {
+    handleDialogCancel = (evt) => {
+        let { showingAlbumDialogBox, showingCroppingDialogBox } = this.state;
+        if (showingAlbumDialogBox) {
             this.setState({ showingAlbumDialogBox: false });
             setTimeout(() => {
-                if (!this.state.showingAlbumDialogBox) {
+                if (!showingAlbumDialogBox) {
                     this.setState({ renderingAlbumDialogBox: false });
                 }
             }, 500);
         }
-        if (this.state.showingCroppingDialogBox) {
+        if (showingCroppingDialogBox) {
             this.setState({ showingCroppingDialogBox: false });
             setTimeout(() => {
-                if (!this.state.showingCroppingDialogBox) {
+                if (!showingCroppingDialogBox) {
                     this.setState({ renderingCroppingDialogBox: false });
                 }
             }, 500);
         }
-    },
+    }
 
     /**
      * Called when user clicks on image link
      *
      * @param  {Event} evt
      */
-    handleImageClick: function(evt) {
+    handleImageClick = (evt) => {
         // open URL in pop-up instead of a tab
-        var url = evt.currentTarget.href;
+        let url = evt.currentTarget.href;
         if (url) {
-            var width = parseInt(evt.currentTarget.getAttribute('data-width'));
-            var height = parseInt(evt.currentTarget.getAttribute('data-height'));
-            var windowWidth = width;
-            var windowHeight = height;
-            var availableWidth = screen.width - 100;
-            var availableHeight = screen.height - 100;
+            let width = parseInt(evt.currentTarget.getAttribute('data-width'));
+            let height = parseInt(evt.currentTarget.getAttribute('data-height'));
+            let windowWidth = width;
+            let windowHeight = height;
+            let availableWidth = screen.width - 100;
+            let availableHeight = screen.height - 100;
             if (windowWidth > availableWidth) {
                 windowWidth = availableWidth;
                 windowHeight = Math.round(windowWidth * height / width);
@@ -417,9 +402,9 @@ module.exports = React.createClass({
                 windowHeight = availableHeight;
                 windowWidth = Math.round(windowHeight * width / height);
             }
-            var windowLeft = Math.round((screen.width - windowHeight) / 3);
-            var windowTop = Math.round((screen.height - windowHeight) / 3);
-            var params = [
+            let windowLeft = Math.round((screen.width - windowHeight) / 3);
+            let windowTop = Math.round((screen.height - windowHeight) / 3);
+            let params = [
                 `left=${windowLeft}`,
                 `top=${windowTop}`,
                 `width=${windowWidth}`,
@@ -428,5 +413,35 @@ module.exports = React.createClass({
             window.open(url, '_blank', params.join(','));
             evt.preventDefault();
         }
-    },
-});
+    }
+}
+
+ImageSelector.defaultProps = {
+    resources: [],
+    readOnly: false,
+};
+
+export {
+    ImageSelector as default,
+    ImageSelector,
+};
+
+import Database from 'data/database';
+import Environment from 'env/environment';
+import Payloads from 'transport/payloads';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    ImageSelector.propTypes = {
+        purpose: PropTypes.string,
+        desiredWidth: PropTypes.number,
+        desiredHeight: PropTypes.number,
+        resources: PropTypes.arrayOf(PropTypes.object),
+        readOnly: PropTypes.bool,
+        database: PropTypes.instanceOf(Database).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+        payloads: PropTypes.instanceOf(Payloads).isRequired,
+        onChange: PropTypes.func,
+    };
+}
