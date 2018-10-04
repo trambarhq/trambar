@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var TaskLog = require('task-log');
 var Localization = require('localization');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 var MarkdownExporter = require('utils/markdown-exporter');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 

@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var Moment = require('moment');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 var ExternalData = require('accessors/external-data');
 
 module.exports = _.create(ExternalData, {

@@ -9,7 +9,7 @@ var Request = require('request');
 var Async = require('async-do-while');
 var Crypto = Promise.promisifyAll(require('crypto'));
 var XML2JS = require('xml2js');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 var Shutdown = require('shutdown');
 
 // accessors

@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var Database = require('database');
 var Shutdown = require('shutdown');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 
 var ListenerManager = require('event-notifier/listener-manager');
 var NotificationGenerator = require('event-notifier/notification-generator');

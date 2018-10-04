@@ -5,7 +5,7 @@ var Database = require('database');
 var TaskLog = require('task-log');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 var Server = require('accessors/server');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 
 var Transport = require('gitlab-adapter/transport');
 var RepoAssociation = require('gitlab-adapter/repo-association');

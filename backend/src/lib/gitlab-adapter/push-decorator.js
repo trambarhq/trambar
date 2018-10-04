@@ -4,7 +4,7 @@ var Path = require('path');
 var Request = require('request');
 var Ignore = require('ignore');
 var MarkGor = require('mark-gor');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var Transport = require('gitlab-adapter/transport');

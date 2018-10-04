@@ -4,7 +4,7 @@ var Request = require('request');
 var FS = Promise.promisifyAll(require('fs'));
 var Path = require('path');
 var Async = require('async-do-while');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 var Database = require('database');
 var Server = require('accessors/server');
 

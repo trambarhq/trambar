@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 var TagScanner = require('utils/tag-scanner');
 
 module.exports = {

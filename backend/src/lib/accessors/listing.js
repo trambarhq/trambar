@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Crypto = require('crypto')
 var Database = require('database');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 var LiveData = require('accessors/live-data');
 
 var ByRetrievalTime = require('story-raters/by-retrieval-time');

@@ -8,7 +8,7 @@ var Moment = require('moment');
 var LodashExtra = require('utils/lodash-extra');
 var Database = require('database');
 var Shutdown = require('shutdown');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 var ProjectUtils = require('objects/utils/project-utils');
 
 // global accessors

@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 var Moment = require('moment');
 var Crypto = require('crypto');
 var TaskLog = require('task-log');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 
 var Transport = require('gitlab-adapter/transport');

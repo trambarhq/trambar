@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 var Request = require('request');
 var CSVParse = require('csv-parse');
 var ToUTF8 = require('to-utf-8')
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 var Data = require('accessors/data');
 var StringSimilarity = require('string-similarity');
 

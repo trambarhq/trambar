@@ -21,6 +21,7 @@ function format(system, schema, user, notification, locale) {
         user_id: notification.user_id,
         reaction_id: notification.reaction_id,
         story_id: notification.story_id,
+        locale: locale,
     };
 }
 

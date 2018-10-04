@@ -13,7 +13,7 @@ var FileType = require('file-type');
 var Database = require('database');
 var Shutdown = require('shutdown');
 var Task = require('accessors/task');
-var HTTPError = require('errors/http-error');
+var HTTPError = require('errors/http-error').default;
 
 var CacheFolders = require('media-server/cache-folders');
 var FileManager = require('media-server/file-manager');
