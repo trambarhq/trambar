@@ -84,10 +84,10 @@ class Application extends PureComponent {
         if (this.state.theme.keyboard) {
             className += ` keyboard`;
         }
-        if (!this.state.theme.touch) {
+        */
+        if (env.pointingDevice === 'mouse') {
             className += ' no-touch';
         }
-        */
         return className;
     }
 

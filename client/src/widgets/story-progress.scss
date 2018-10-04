@@ -1,5 +1,7 @@
+@import '../colors';
+
 .story-progress {
-    color: #666666;
+    color: $transfer-progress-text-color;
     font-size: 0.9em;
     margin-left: 3.75em;
 

@@ -1,8 +1,10 @@
+@import '../colors';
+
 .story-emblem {
     float: right;
 
     svg {
-        fill: #211a1a;
+        fill: $story-emblem-color;
         margin-right: 0.25em;
         margin-top: 0.2em;
         height: 3em;

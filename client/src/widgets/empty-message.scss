@@ -1,3 +1,5 @@
+@import '../colors';
+
 .empty-message {
     position: relative;
     height: 25vh;
@@ -10,7 +12,7 @@
     .text {
         font-weight: bold;
         flex: 0 1 auto;
-        color: #ffffff;
+        color: $empty-message-text-color;
         opacity: 0.2;
 
         animation-name: fade-in;

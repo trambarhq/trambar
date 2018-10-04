@@ -40,18 +40,18 @@
         .tag {
             display: inline-block;
             margin: 0.25em 0.25em 0.25em 0.25em;
-            color: #666666;
+            color: $search-tag-text-color;
 
             &:link, &:visited {
                 text-decoration: none;
             }
 
             &:hover {
-                color: #999999;
+                color: $search-tag-hover-text-color;
             }
 
             &.selected {
-                border-bottom: 1px solid #444444;
+                border-bottom: 1px solid $search-tag-selected-border-color;
             }
         }
     }

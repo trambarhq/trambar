@@ -1,3 +1,5 @@
+@import '../colors';
+
 .role-filter-button {
     display: inline-block;
     margin-right: 0.5em;
@@ -7,7 +9,7 @@
 
     .contents {
         position: relative;
-        border: 1px solid #444444;
+        border: 1px solid $role-filter-border-color;
         margin: 1px;
         overflow: hidden;
 
@@ -28,8 +30,8 @@
             left: 0;
             right: 0;
             top: 3em;
-            background-color: #1a1a1a;
-            color: #eeeeee;
+            color: $role-filter-band-text-color;
+            background-color: $role-filter-band-background-color;
             padding: 0.25em 0.25em 0.25em 0.25em;
             min-height: 3em;
 
@@ -55,19 +57,19 @@
 
     &.selected {
         .contents {
-            border: 2px solid #eeeeee;
+            border: 2px solid $role-filter-selected-background-color;
             margin: 0;
         }
 
         .band {
-            background-color: #eeeeee;
-            color: #000000;
+            background-color: $role-filter-selected-background-color;
+            color: $role-filter-selected-text-color;
         }
     }
 
     &.no-roles {
         .message {
-            color: #444444;
+            color: $role-filter-border-color;
             position: absolute;
             display: flex;
             flex-direction: row;

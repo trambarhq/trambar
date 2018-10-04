@@ -1,32 +1,34 @@
+@import '../colors';
+
 .option-button {
     display: table;
     max-width: 100%;
-    color: #666666;
+    color: $option-button-text-color;
     margin-bottom: 0.35em;
     touch-action: manipulation;
     cursor: pointer;
 
     &:link, &:visited {
         text-decoration: none;
-        color: #666666;
+        color: $option-button-text-color;
     }
 
     &.selected {
-        color: #eeeeee;
+        color: $option-button-selected-text-color;
 
         .pop-up-menu & {
-            color: #000000;
+            color: $option-button-menu-text-color;
         }
     }
 
     .no-touch & {
         &:hover {
-            color: #eeeeee;
+            color: $option-button-selected-text-color;
         }
     }
 
     &.disabled {
-        color: #666666;
+        color: $option-button-text-color;
         opacity: 0.25;
 
         A {
@@ -51,7 +53,7 @@
     .pop-up-menu & {
         .no-touch & {
             &:hover {
-                color: #000000;
+                color: $option-button-menu-text-color;
             }
         }
     }

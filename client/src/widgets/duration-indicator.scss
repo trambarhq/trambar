@@ -1,9 +1,11 @@
+@import '../colors';
+
 .duration-indiactor {
     .icon {
-        color: #eeeeee;
+        color: $duration-indiactor-text-color;
 
         &.blinking {
-            color: #cc2222;
+            color: $duration-indicator-blinker-color;
             opacity: 1;
             animation: blinking 0.5s linear infinite;
             @keyframes blinking {
@@ -14,6 +16,6 @@
 
     .duration {
         margin-left: 0.5em;
-        color: #eeeeee;
+        color: $duration-indiactor-text-color;
     }
 }

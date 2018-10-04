@@ -1,3 +1,5 @@
+@import '../colors';
+
 .calendar {
     display: inline-block;
     border-collapse: collapse;
@@ -10,8 +12,8 @@
         TH {
             font-size: 0.8em;
             font-weight: bold;
-            color: #999999;
-            border: 1px solid #444444;
+            color: $calendar-text-color;
+            border: 1px solid $calendar-border-color;
             padding: 0.25em 0.1em 0.2em 0.1em;
 
             A {
@@ -20,11 +22,11 @@
 
                 &:link, &:visited {
                     text-decoration: none;
-                    color: #999999;
+                    color: $calendar-text-color;
                 }
 
                 &:hover {
-                    color: #eeeeee;
+                    color: $calendar-hover-text-color;
                 }
             }
         }
@@ -34,13 +36,13 @@
         TH {
             font-size: 0.6em;
             font-weight: normal;
-            color: #999999;
-            border: 1px solid #444444;
+            color: $calendar-text-color;
+            border: 1px solid $calendar-border-color;
             padding: 0.2em 0 0.2em 0;
         }
 
         TH.weekend {
-            background-color: #333333;
+            background-color: $calendar-weekend-background-color;
         }
     }
 
@@ -49,9 +51,9 @@
             width: 1.6em;
             height: 1.4em;
             font-size: 0.8em;
-            color: #666666;
+            color: $calendar-inactive-text-color;
             text-align: center;
-            border: 1px solid #444444;
+            border: 1px solid $calendar-border-color;
             cursor: default;
 
             A {
@@ -60,33 +62,33 @@
 
                 &:link, &:visited {
                     text-decoration: none;
-                    color: #cccccc;
+                    color: $calendar-active-text-color;
                 }
             }
         }
 
         TD.weekend {
-            background-color: #333333;
+            background-color: $calendar-weekend-background-color;
         }
 
         TD.today {
-            color: #ffffff;
-            background-color: #000000;
+            color: $calendar-today-text-color;
+            background-color: $calendar-today-background-color;
 
             A {
                 &:link, &:visited {
-                    color: #ffffff;
+                    color: $calendar-today-text-color;
                 }
             }
         }
 
         TD.selected {
-            color: #000000;
-            background-color: #eeeeee;
+            color: $calendar-selected-text-color;
+            background-color: $calendar-selected-background-color;
 
             A {
                 &:link, &:visited {
-                    color: #000000;
+                    color: $calendar-selected-text-color;
                 }
             }
         }

@@ -21,6 +21,10 @@ $button-hover-background-color: #806666;
 $button-hover-text-color: #eeeeee;
 $button-active-border-color: #333333;
 
+$option-button-text-color: #666666;
+$option-button-selected-text-color: $off-white;
+$option-button-menu-text-color: $black;
+
 $panel-text-color: $light-gray;
 $panel-title-text-color: $off-white;
 $panel-background-color: $dark-brown;
@@ -44,6 +48,31 @@ $navigation-danger-text-color: #993333;
 $search-box-text-color: #eeeeee;
 $search-box-background-color: #333333;
 $search-box-placeholder-text-color: #666666;
+$search-tag-text-color: #666666;
+$search-tag-hover-text-color: #999999;
+$search-tag-selected-border-color: #444444;
+
+$calendar-text-color: #999999;
+$calendar-border-color: #444444;
+$calendar-active-text-color: #cccccc;
+$calendar-inactive-text-color: #666666;
+$calendar-hover-text-color: $off-white;
+$calendar-weekend-background-color: #333333;
+$calendar-today-text-color: $white;
+$calendar-today-background-color: $black;
+$calendar-selected-text-color: $black;
+$calendar-selected-background-color: $off-white;
+
+$role-filter-border-color: #444444;
+$role-filter-band-text-color: $off-white;
+$role-filter-band-background-color: #1a1a1a;
+$role-filter-selected-background-color: $off-white;
+$role-filter-selected-text-color: $black;
+
+$time-today-text-color: #aaaaaa;
+$time-yesterday-text-color: #999999;
+
+$transfer-progress-text-color: #666666;
 
 $separator-color: #666666;
 
@@ -56,7 +85,11 @@ $app-component-text-color: #333333;
 $media-view-overlay-color: $black;
 $media-view-overlay-hover-color: #eeeeee;
 $media-view-overlay-hover-background-color: $black;
-$media-view-navigation-background-color: $black;
+
+$media-bar-background-color: $black;
+$media-bar-icon-color: #666666;
+$media-bar-text-color: #999999;
+$media-bar-hover-text-color: $off-white;
 
 $notification-badge-text-color: $black;
 $notification-badge-background-color: $orange;
@@ -69,12 +102,25 @@ $pop-up-menu-border-color: $black;
 $pop-up-menu-background-color: $off-white;
 $pop-up-menu-shadow-color: rgba(0,0,0,0.75);
 
-$time-today-text-color: #aaaaaa;
-$time-yesterday-text-color: #999999;
-
 $coauthoring-button-text-color: #666666;
 $coauthoring-button-hover-text-color: $off-white;
+
+$duration-indiactor-text-color: $off-white;
+$duration-indicator-blinker-color: #cc2222;
+
+$story-emblem-color: #211a1a;
+
+$new-item-alert-text-color: #111111;
+$new-item-alert-background-color: $orange;
 
 $loading-animation-color: $white;
 
 $profile-image-placeholder-background-color: #999999;
+
+$media-placeholder-text-color: #666666;
+$media-placeholder-border-color: rgba(127, 127, 127, 0.15);
+
+$device-placeholder-icon-color: #111111;
+$device-placeholder-stop-sign-color: #ee3333;
+
+$empty-message-text-color: $white;

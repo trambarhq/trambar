@@ -1,11 +1,13 @@
+@import '../colors';
+
 .device-placeholder {
     font-size: 8em;
-    color: #111111;
+    color: $device-placeholder-icon-color;
     width: 100%;
     text-align: center;
 
     .fa-ban {
-        color: #ee3333;
+        color: $device-placeholder-stop-sign-color;
         opacity: 0;
         transition: opacity 1s;
     }
