@@ -485,6 +485,9 @@ function getMarkdownIconURL(res, forImage, env) {
  * @return {Promise}
  */
 function attachMosaic(resources, env) {
+    if (!(resources instanceof Array)) {
+        return Promise.resolve();
+    }
     return Promise.each(resources, (res) => {
         let url = getLocalImageURL(res, { original: true }, env);
         if (url) {

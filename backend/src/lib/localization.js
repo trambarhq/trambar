@@ -45,7 +45,12 @@ function translate(locale, phrase, ...args) {
         } catch(err) {
             module = require('locales/en');
         }
-        table = phraseTables[lang] = module(locale);
+        var phrases = module.phrases;
+        if (phrases instanceof Function) {
+            var country = getCountryCode(locale);
+            phrases = phrases(country);
+        }
+        table = phraseTables[locale] = phrases;
     }
     var f = table[phrase];
     if (f === undefined) {
@@ -113,10 +118,18 @@ var serverLanguageCode = (process.env.LANG || 'en').substr(0, 2).toLowerCase();
 function getLanguageCode(locale) {
     var lang;
     if (typeof(locale) === 'string') {
-        lang = locale.substr(0, 2);
+        lang = _.toLower(locale.substr(0, 2));
     }
     if (!lang) {
         lang = getDefaultLanguageCode();
     }
     return lang;
+}
+
+function getCountryCode(locale) {
+    var country = '';
+    if (typeof(locale) === 'string') {
+        country = _.toLower(locale.substr(3, 2));
+    }
+    return country;
 }

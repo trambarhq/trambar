@@ -84,10 +84,10 @@ class Notifier extends EventEmitter {
         let alert = _.clone(payload.alert);
         alert.address = this.address;
         if (alert.profile_image) {
-            alert.profile_image = address + alert.profile_image;
+            alert.profile_image = this.address + alert.profile_image;
         }
         if (alert.attached_image) {
-            alert.attached_image = address + alert.attached_image;
+            alert.attached_image = this.address + alert.attached_image;
         }
         return alert;
     }
