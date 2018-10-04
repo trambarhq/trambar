@@ -315,7 +315,8 @@ const phrases = {
     },
     'option-show-media-preview': 'Pokaź dołączone pliki medialne',
     'option-show-text-preview': 'Pokaź podgląd tekstu',
-    'option-statistics-biweekly': 'Pokaż działania z ostatnich 14 dni',
+    'option-statistics-14-days': 'Pokaż działania z ostatnich 14 dni',
+    'option-statistics-biweekly': 'Pokaż działania dwutygodniowe',
     'option-statistics-monthly': 'Pokaż działania miesięczne',
     'option-statistics-to-date': 'Pokaż działania do tej pory',
 

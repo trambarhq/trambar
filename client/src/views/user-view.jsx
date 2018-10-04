@@ -438,11 +438,12 @@ class UserView extends PureComponent {
      * @return {ReactElement}
      */
     renderOptions(section) {
-        let { env, user, options } = this.props;
+        let { env, user, options, selectedDate } = this.props;
         let props = {
             section,
             user,
             options,
+            selectedDate,
             env,
             onChange: this.handleOptionChange,
             onComplete: this.handleOptionComplete,

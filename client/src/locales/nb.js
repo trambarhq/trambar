@@ -268,7 +268,8 @@ const phrases = {
     },
     'option-show-media-preview': 'Vis vedlagte medier',
     'option-show-text-preview': 'Vis tekstforhåndsvisning',
-    'option-statistics-biweekly': 'Vis aktiviteter de siste 14 dagene',
+    'option-statistics-14-days': 'Vis aktiviteter de siste 14 dagene',
+    'option-statistics-biweekly': 'Vis  bi-ukentlige aktiviteter',
     'option-statistics-monthly': 'Vis månedlige aktiviteter',
     'option-statistics-to-date': 'Vis aktivitet til dags dato',
 

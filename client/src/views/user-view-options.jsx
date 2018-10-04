@@ -50,7 +50,7 @@ class UserViewOptions extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons(section) {
-        let { env, user, options } = this.props;
+        let { env, user, options, selectedDate } = this.props;
         let { t } = env.locale;
         let details = _.get(user, 'details', {});
         if (section === 'main') {
@@ -148,8 +148,9 @@ class UserViewOptions extends PureComponent {
                 </div>
             );
         } else {
+            let biweekly = (selectedDate) ? 'biweekly' : '14-days';
             let twoWeekProps = {
-                label: t('option-statistics-biweekly'),
+                label: t(`option-statistics-${biweekly}`),
                 selected: options.chartRange === 'biweekly' || !options.chartRange,
                 onClick: this.handleBiweeklyActivitiesClick,
             };
@@ -323,6 +324,7 @@ if (process.env.NODE_ENV !== 'production') {
         section: PropTypes.oneOf([ 'main', 'statistics', 'both' ]),
         user: PropTypes.object,
         options: PropTypes.object.isRequired,
+        selectedDate: PropTypes.string,
 
         env: PropTypes.instanceOf(Environment).isRequired,
 

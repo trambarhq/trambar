@@ -275,7 +275,8 @@ const phrases = {
     },
     'option-show-media-preview': "Afficher les médias attachés",
     'option-show-text-preview': "Afficher l'aperçu du texte",
-    'option-statistics-biweekly': "Afficher les activités des 14 derniers jours",
+    'option-statistics-14-days': "Afficher les activités des 14 derniers jours",
+    'option-statistics-biweekly': "Afficher les activités bihebdomadaires",
     'option-statistics-monthly': "Afficher les activités mensuelles",
     'option-statistics-to-date': "Afficher les activités à ce jour",
 

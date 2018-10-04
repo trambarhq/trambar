@@ -297,9 +297,10 @@ let traditionalPhrases = {
     },
     'option-show-media-preview': '顯示附件媒體',
     'option-show-text-preview': '顯示課文預覽',
-    'option-statistics-biweekly': '顯示過去十四天的活動',
-    'option-statistics-monthly': '顯示月度活動',
-    'option-statistics-to-date': '顯示迄今的活動',
+    'option-statistics-14-days': '顯示過去十四天的活動',
+    'option-statistics-biweekly': '顯示雙週的活動',
+    'option-statistics-monthly': '顯示每月的活動',
+    'option-statistics-to-date': '顯示至今的活動',
 
     'people-no-stories-found': '沒有找到匹配的故事',
     'people-no-stories-on-date': '那天沒有活動',
@@ -1012,9 +1013,10 @@ let simplifiedPhrases = {
     },
     'option-show-media-preview': '显示附件媒体',
     'option-show-text-preview': '显示课文预览',
-    'option-statistics-biweekly': '显示过去十四天的活动',
-    'option-statistics-monthly': '显示月度活动',
-    'option-statistics-to-date': '显示迄今的活动',
+    'option-statistics-14': '显示过去十四天的活动',
+    'option-statistics-biweekly': '显示双周的活动',
+    'option-statistics-monthly': '显示每月的活动',
+    'option-statistics-to-date': '显示至今的活动',
 
     'people-no-stories-found': '没有找到匹配的故事',
     'people-no-stories-on-date': '那天没有活动',
@@ -1595,7 +1597,8 @@ let cantonesePhrases = {
         return cardinalT(count, '發送書籤俾一個人');
     },
     'option-statistics-biweekly': '顯示前十四日嘅活動',
-    'option-statistics-monthly': '顯示呢個月嘅活動',
+    'option-statistics-biweekly': '顯示兩個禮拜嘅活動',
+    'option-statistics-monthly': '顯示每個月嘅活動',
     'option-statistics-to-date': '顯示直到今日嘅活動',
 
     'people-no-stories-found': '搵唔到配合嘅故事',

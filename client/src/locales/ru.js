@@ -302,7 +302,8 @@ let phrases = {
     },
     'option-show-media-preview': 'Показать прикрепленные носители',
     'option-show-text-preview': 'Показать предварительный просмотр текста',
-    'option-statistics-biweekly': 'Показать действия за последние 14 дней',
+    'option-statistics-14-days': 'Показать действия за последние 14 дней',
+    'option-statistics-biweekly': 'Показать двухнедельные',
     'option-statistics-monthly': 'Показать ежемесячные мероприятия',
     'option-statistics-to-date': 'Показывать действия на сегодняшний день',
 

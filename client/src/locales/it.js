@@ -272,7 +272,8 @@ const phrases = {
     },
     'option-show-media-preview': "Mostra media allegati",
     'option-show-text-preview': "Mostra anteprima di testo",
-    'option-statistics-biweekly': "Mostra le attività degli ultimi 14 giorni",
+    'option-statistics-14-days': "Mostra le attività degli ultimi 14 giorni",
+    'option-statistics-biweekly': "Mostra attività bisettimanali",
     'option-statistics-monthly': "Mostra attività mensili",
     'option-statistics-to-date': "Mostra le attività fino ad oggi",
 

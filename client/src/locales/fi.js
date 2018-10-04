@@ -276,9 +276,10 @@ const phrases = {
     },
     'option-show-media-preview': 'Näytä liitetiedostot',
     'option-show-text-preview': 'Näytä tekstin esikatselu',
-    'option-statistics-biweekly': 'Show activities of last 14 days',
-    'option-statistics-monthly': 'Show monthly activities',
-    'option-statistics-to-date': 'Show activities to date',
+    'option-statistics-14-days': 'Näytä viimeisten 14 päivän aktiviteetit',
+    'option-statistics-biweekly': 'Näytä kaksivuotiset aktiviteetit',
+    'option-statistics-monthly': 'Näytä kuukausittaiset aktiviteetit',
+    'option-statistics-to-date': 'Näytä aktiviteetit tähän mennessä',
 
     'people-no-stories-found': 'Vastaavia tarinoita ei löytynyt',
     'people-no-stories-on-date': 'Ei toimintaa kyseisenä päivänä',

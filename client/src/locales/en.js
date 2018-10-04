@@ -295,7 +295,8 @@ let americanPhrases = {
     },
     'option-show-media-preview': 'Show attached media',
     'option-show-text-preview': 'Show text preview',
-    'option-statistics-biweekly': 'Show activities of last 14 days',
+    'option-statistics-14-days': 'Show activities of last 14 days',
+    'option-statistics-biweekly': 'Show biweekly activities',
     'option-statistics-monthly': 'Show monthly activities',
     'option-statistics-to-date': 'Show activities to date',
 

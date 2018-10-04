@@ -284,7 +284,8 @@ let phrases = {
     },
     'option-show-media-preview': 'Zobrazit připojené média',
     'option-show-text-preview': 'Zobrazit náhled textu',
-    'option-statistics-biweekly': 'Zobrazit aktivity za posledních 14 dní',
+    'option-statistics-14-days': 'Zobrazit aktivity za posledních 14 dní',
+    'option-statistics-biweekly': 'Zobrazit dvoutýdenní aktivity',
     'option-statistics-monthly': 'Zobrazit měsíční aktivity',
     'option-statistics-to-date': 'Zobrazit aktivity k datu',
 

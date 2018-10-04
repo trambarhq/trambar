@@ -283,7 +283,8 @@ const phrases = {
     },
     'option-show-media-preview': 'Angehängte Medien anzeigen',
     'option-show-text-preview': 'Textvorschau anzeigen',
-    'option-statistics-biweekly': 'Aktivitäten der letzten 14 Tage anzeigen',
+    'option-statistics-14-days': 'Aktivitäten der letzten 14 Tage anzeigen',
+    'option-statistics-biweekly': 'Zweiwöchentliche Aktivitäten anzeigen',
     'option-statistics-monthly': 'Monatliche Aktivitäten anzeigen',
     'option-statistics-to-date': 'Aktivitäten bis heute anzeigen',
 
