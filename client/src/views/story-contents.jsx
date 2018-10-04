@@ -482,7 +482,7 @@ class StoryContents extends PureComponent {
         let {
             comment_ids: commitIDs,
             branch,
-            source_branches: sourceBranches
+            from_branches: sourceBranches
         } = story.details;
         let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
         let gender = UserUtils.getGender(authors ? authors[0] : null);
