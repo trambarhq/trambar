@@ -1,11 +1,11 @@
 @import '../colors';
 
 .bookmark-view {
-    border: 2px solid #111;
-    background-color: #111;
+    border: 2px solid $bookmark-border-color;
+    background-color: $bookmark-border-color;
 
     .title {
-        color: #eeeeee;
+        color: $panel-title-text-color;
         user-select: text;
 
         .name {

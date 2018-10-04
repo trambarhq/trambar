@@ -2,7 +2,7 @@
 
 .reaction-view-options {
     .button {
-        color: #666666;
+        color: $reaction-view-option-button-color;
         opacity: 0.2;
         padding: 0 8px 0 8px;
         margin: 0 -8px 0 -4px;
@@ -17,7 +17,7 @@
 
             .no-touch & {
                 &:hover {
-                    color: #eeeeee;
+                    color: $reaction-view-option-button-hover-color;
                 }
             }
         }

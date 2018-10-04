@@ -26,11 +26,11 @@
         .reaction-link {
             float: right;
             cursor: pointer;
-            color: #666666;
+            color: $story-reaction-link-text-color;
             margin-top: 0.10em;
 
             &:hover {
-                color: #eeeeee;
+                color: $story-reaction-link-hover-text-color;
             }
         }
     }

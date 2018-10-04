@@ -1,5 +1,7 @@
 $off-white: #eeeeee;
+$off-black: #111111;
 $light-gray: #cccccc;
+$gray: #666666;
 $dark-grey: #444444;
 $orange: #fca326;
 $sharp-orange: #fc6d26;
@@ -10,18 +12,23 @@ $white: #ffffff;
 
 $focus-outline-color: $orange;
 
+$scroll-bar-shadow-color: rgba(0,0,0,0.3);
+$scroll-bar-background-color: rgba(0,0,0,.2);
+$scroll-bar-light-shadow-color: rgba(255,255,255,.2);
+$scroll-bar-light-background-color: rgba(255,255,255,.1);
+
 $text-field-border-color: $dark-grey;
 $text-field-background-color: $off-white;
 
 $viewport-background-color: $brown;
 
 $button-background-color: #4d3936;
-$button-text-color: #666666;
+$button-text-color: $gray;
 $button-hover-background-color: #806666;
-$button-hover-text-color: #eeeeee;
+$button-hover-text-color: $off-white;
 $button-active-border-color: #333333;
 
-$option-button-text-color: #666666;
+$option-button-text-color: $gray;
 $option-button-selected-text-color: $off-white;
 $option-button-menu-text-color: $black;
 
@@ -32,6 +39,8 @@ $panel-border-color: #211a1a;
 $panel-highlighted-border-color: $sharp-orange;
 $panel-separator-color: #404040;
 $panel-icon-overlay-color: #bbbbbb;
+
+$bookmark-border-color: $off-black;
 
 $dialog-box-background-color: $dark-brown;
 $dialog-box-text-color: $light-gray;
@@ -45,17 +54,17 @@ $navigation-selected-text-color: $white;
 $navigation-disabled-text-color: #333333;
 $navigation-danger-text-color: #993333;
 
-$search-box-text-color: #eeeeee;
+$search-box-text-color: $off-white;
 $search-box-background-color: #333333;
-$search-box-placeholder-text-color: #666666;
-$search-tag-text-color: #666666;
+$search-box-placeholder-text-color: $gray;
+$search-tag-text-color: $gray;
 $search-tag-hover-text-color: #999999;
 $search-tag-selected-border-color: #444444;
 
 $calendar-text-color: #999999;
 $calendar-border-color: #444444;
 $calendar-active-text-color: #cccccc;
-$calendar-inactive-text-color: #666666;
+$calendar-inactive-text-color: $gray;
 $calendar-hover-text-color: $off-white;
 $calendar-weekend-background-color: #333333;
 $calendar-today-text-color: $white;
@@ -72,9 +81,9 @@ $role-filter-selected-text-color: $black;
 $time-today-text-color: #aaaaaa;
 $time-yesterday-text-color: #999999;
 
-$transfer-progress-text-color: #666666;
+$transfer-progress-text-color: $gray;
 
-$separator-color: #666666;
+$separator-color: $gray;
 
 $app-component-border-color: #211a1a;
 $app-component-background-color: #cccccc;
@@ -83,18 +92,18 @@ $app-component-icon-background-color: $orange;
 $app-component-text-color: #333333;
 
 $media-view-overlay-color: $black;
-$media-view-overlay-hover-color: #eeeeee;
+$media-view-overlay-hover-color: $off-white;
 $media-view-overlay-hover-background-color: $black;
 
 $media-bar-background-color: $black;
-$media-bar-icon-color: #666666;
+$media-bar-icon-color: $gray;
 $media-bar-text-color: #999999;
 $media-bar-hover-text-color: $off-white;
 
 $notification-badge-text-color: $black;
 $notification-badge-background-color: $orange;
 
-$header-button-text-color: #666666;
+$header-button-text-color: $gray;
 $header-button-hover-text-color: $off-white;
 $header-button-selected-text-color: #e24329;
 
@@ -102,25 +111,43 @@ $pop-up-menu-border-color: $black;
 $pop-up-menu-background-color: $off-white;
 $pop-up-menu-shadow-color: rgba(0,0,0,0.75);
 
-$coauthoring-button-text-color: #666666;
+$coauthoring-button-text-color: $gray;
 $coauthoring-button-hover-text-color: $off-white;
 
 $duration-indiactor-text-color: $off-white;
 $duration-indicator-blinker-color: #cc2222;
 
 $story-emblem-color: #211a1a;
+$story-reaction-link-text-color: $gray;
+$story-reaction-link-hover-text-color: $off-white;
 
-$new-item-alert-text-color: #111111;
+$notification-text-color: $gray;
+$notification-unread-text-color: $off-white;
+
+$reaction-view-option-button-color: $gray;
+$reaction-view-option-button-hover-color: $off-white;
+
+$user-view-roles-text-color: $off-white;
+$user-view-name-text-color: $off-white;
+$user-view-tag-text-color: $gray;
+$user-view-tag-hover-text-color: $off-white;
+
+$user-statistics-label-color: #999999;
+$user-statistics-grid-color: #444444;
+$user-statistics-grid-emphasis-color: $gray;
+$user-statistics-arrow-color: $off-white;
+
+$new-item-alert-text-color: $off-black;
 $new-item-alert-background-color: $orange;
 
 $loading-animation-color: $white;
 
 $profile-image-placeholder-background-color: #999999;
 
-$media-placeholder-text-color: #666666;
+$media-placeholder-text-color: $gray;
 $media-placeholder-border-color: rgba(127, 127, 127, 0.15);
 
-$device-placeholder-icon-color: #111111;
+$device-placeholder-icon-color: $off-black;
 $device-placeholder-stop-sign-color: #ee3333;
 
 $empty-message-text-color: $white;

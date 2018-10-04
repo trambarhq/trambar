@@ -24,27 +24,23 @@
         }
 
         .roles {
-            color: #eeeeee;
+            color: $user-view-roles-text-color;
         }
     }
 
     .body {
         .name {
-            color: #eeeeee;
             margin-left: 4.3em;
             margin-top: 0.3em;
             margin-bottom: 0.15em;
             font-size: 1.5em;
             user-select: text;
+            color: $user-view-name-text-color;
 
             A {
                 &:link, &:visited {
-                    color: #eeeeee;
+                    color: $user-view-name-text-color;
                     text-decoration: none;
-
-                    &:hover {
-                        color: #ffffff;
-                    }
                 }
             }
         }
@@ -59,11 +55,11 @@
 
             A {
                 &:link, &:visited {
-                    color: #666666;
+                    color: $user-view-tag-text-color;
                     text-decoration: none;
 
                     &:hover {
-                        color: #cccccc;
+                        color: $user-view-tag-hover-text-color;
                     }
                 }
             }
@@ -80,12 +76,8 @@
 
             A {
                 &:link, &:visited {
-                    color: #eeeeee;
+                    color: $user-view-name-text-color;
                     text-decoration: none;
-                }
-
-                &:hover {
-                    color: #ffffff;
                 }
             }
         }

@@ -1,3 +1,5 @@
+@import '../colors';
+
 .scrollable {
     overflow-y: auto;
     overflow-x: hidden;
@@ -5,7 +7,7 @@
     // use custom color only on desktop
     @media only screen and (min-device-width : 800px) {
         &::-webkit-scrollbar-track {
-            -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+            -webkit-box-shadow: inset 0 0 6px $scroll-bar-shadow-color;
             background-color: transparent;
         }
 
@@ -16,8 +18,8 @@
 
         &::-webkit-scrollbar-thumb {
             border-radius: 2px;
-            -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
-            background-color: rgba(0,0,0,.1);
+            -webkit-box-shadow: $scroll-bar-shadow-color;
+            background-color: $scroll-bar-background-color;
         }
     }
 }
