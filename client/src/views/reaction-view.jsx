@@ -326,7 +326,7 @@ class ReactionView extends PureComponent {
         }
         let props = {
             resources,
-            width: env.isWiderThan('double-col') ? 220 : 300,
+            width: env.isWiderThan('double-col') ? 300 : 220,
             env,
         };
         return <div className="media"><MediaView {...props} /></div>;

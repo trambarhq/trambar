@@ -156,7 +156,6 @@ class BitmapView extends PureComponent {
             this.redrawNeeded = true;
             return;
         }
-    	let matrix = ImageOrientation.getOrientationMatrix(this.orientation, image.naturalWidth, image.naturalHeight);
         if (!rect) {
             rect = {
                 left: 0,
@@ -165,14 +164,13 @@ class BitmapView extends PureComponent {
                 height: this.naturalHeight
             };
         }
-        this.width = rect.width;
-        this.height = rect.height;
 
+        canvas.width = this.width = rect.width;
+    	canvas.height = this.height = rect.height;
+        let matrix = ImageOrientation.getOrientationMatrix(this.orientation, image.naturalWidth, image.naturalHeight);
         let inverse = ImageOrientation.invertMatrix(matrix);
     	let src = ImageOrientation.transformRect(inverse, rect);
-    	let dst = ImageOrientation.transformRect(inverse, { left: 0, top: 0, width: rect.width, height: rect.height });
-    	canvas.width = dst.width;
-    	canvas.height = dst.height;
+    	let dst = ImageOrientation.transformRect(inverse, { left: 0, top: 0, width: canvas.width, height: canvas.height });
     	let context = canvas.getContext('2d');
     	context.transform.apply(context, matrix);
         context.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);

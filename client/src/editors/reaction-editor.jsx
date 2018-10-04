@@ -445,12 +445,17 @@ class ReactionEditor extends PureComponent {
      * @return {Promise<Reaction>}
      */
     handlePublishClick = (evt) => {
+        let { env } = this.props;
         let { draft } = this.state;
         this.triggerFinishEvent();
 
         draft = _.clone(draft);
         draft.published = true;
-        return this.saveDraft(draft, true);
+
+        let resources = draft.details.resources;
+        return ResourceUtils.attachMosaic(resources, env).then(() => {
+            return this.saveDraft(draft, true);
+        });
     }
 
     /**

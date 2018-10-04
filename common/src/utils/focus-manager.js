@@ -9,7 +9,6 @@ function register(component, props) {
     // see if a request for focus has been made
     requests = _.filter(requests, (request) => {
         if (_.isMatch(props, request)) {
-            debugger;
             component.focus();
             return false;
         } else {

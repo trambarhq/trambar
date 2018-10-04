@@ -1030,6 +1030,7 @@ class StoryEditor extends PureComponent {
      * @return {[type]}
      */
     publishStory() {
+        let { env } = this.props;
         let { draft, options, authors, repos } = this.state;
         draft = _.clone(draft);
         if (!draft.type) {
@@ -1039,17 +1040,20 @@ class StoryEditor extends PureComponent {
         draft.role_ids = _.uniq(_.flatten(roleIDs));
         draft.published = true;
 
-        return this.saveDraft(draft, true).then((story) => {
-            return this.sendBookmarks(story, options.bookmarkRecipients).then(() => {
-                let issueDetailsBefore = IssueUtils.extractIssueDetails(draft, repos);
-                let issueDetailsAfter = options.issueDetails;
-                if (!_.isEqual(issueDetailsAfter, issueDetailsBefore)) {
-                    if (issueDetailsAfter) {
-                        let params = _.clone(issueDetailsAfter);
-                        params.story_id = story.id;
-                        return this.sendTask('export-issue', params);
+        let resources = draft.details.resources;
+        return ResourceUtils.attachMosaic(resources, env).then(() => {
+            return this.saveDraft(draft, true).then((story) => {
+                return this.sendBookmarks(story, options.bookmarkRecipients).then(() => {
+                    let issueDetailsBefore = IssueUtils.extractIssueDetails(draft, repos);
+                    let issueDetailsAfter = options.issueDetails;
+                    if (!_.isEqual(issueDetailsAfter, issueDetailsBefore)) {
+                        if (issueDetailsAfter) {
+                            let params = _.clone(issueDetailsAfter);
+                            params.story_id = story.id;
+                            return this.sendTask('export-issue', params);
+                        }
                     }
-                }
+                });
             });
         });
     }

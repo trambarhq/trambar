@@ -336,22 +336,36 @@ function extractMosaic(blob, rect) {
         });
     }
     // load the image and its bytes
-    let imageP = MediaLoader.loadImage(blob);
+    let imageP = loadImage(blob);
     let bytesP = BlobReader.loadUint8Array(blob);
     return Promise.join(imageP, bytesP, (image, bytes) => {
         let orientation = JPEGAnalyser.getOrientation(bytes) || 1;
+
+        // correct for orientation and apply clipping
+        let fullCanvas = document.createElement('CANVAS');
+        fullCanvas.width = rect.width;
+        fullCanvas.height = rect.height;
         let matrix = ImageOrientation.getOrientationMatrix(orientation, image.naturalWidth, image.naturalHeight);
         let inverse = ImageOrientation.invertMatrix(matrix);
         let src = ImageOrientation.transformRect(inverse, rect);
-        let dst = ImageOrientation.transformRect(inverse, { left: 0, top: 0, width: 4, height: 4 });
+        let dst = ImageOrientation.transformRect(inverse, { left: 0, top: 0, width: fullCanvas.width, height: fullCanvas.height });
+        let fullContext = fullCanvas.getContext('2d');
+        fullContext.transform.apply(fullContext, matrix);
+        fullContext.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);
 
-        let canvas = document.createElement('CANVAS');
-        canvas.width = 4;
-        canvas.height = 4;
-        let context = canvas.getContext('2d');
-        context.transform.apply(context, matrix);
-        context.drawImage(image, src.left, src.top, src.width, src.height, dst.left, dst.top, dst.width, dst.height);
-        let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        // shrink to 48x48 first
+        let miniCanvas = document.createElement('CANVAS');
+        miniCanvas.width = miniCanvas.height = 48;
+        let miniContext = miniCanvas.getContext('2d');
+        miniContext.drawImage(fullCanvas, 0, 0, fullCanvas.width, fullCanvas.height, 0, 0, miniCanvas.width, miniCanvas.height);
+
+        // then shrink further to 4x4
+        let microCanvas = document.createElement('CANVAS');
+        microCanvas.width = microCanvas.height = 4;
+        let microContext = miniCanvas.getContext('2d');
+        miniContext.drawImage(miniCanvas, 0, 0, miniCanvas.width, miniCanvas.height, 0, 0, microCanvas.width, microCanvas.height);
+
+        let imageData = microContext.getImageData(0, 0, microCanvas.width, microCanvas.height);
         let pixels = imageData.data;
         if (_.size(pixels) >= 64) {
             let colors = [];
