@@ -1,25 +1,27 @@
+@import '../colors';
+
 .header-button {
     display: inline-block;
-    color: #666666;
+    color: $header-button-text-color;
     margin-right: 0.5em;
     touch-action: manipulation;
     cursor: pointer;
 
     .no-touch & {
         &:hover {
-            color: #eeeeee;
+            color: $header-button-hover-text-color;
         }
     }
 
     &.disabled {
         cursor: default;
         &:hover {
-            color: #666666;
+            color: $header-button-text-color;
         }
     }
 
     &.highlighted {
-        color: #e24329;
+        color: $header-button-selected-text-color;
     }
 
     .label {

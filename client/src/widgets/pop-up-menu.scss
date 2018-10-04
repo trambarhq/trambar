@@ -1,3 +1,5 @@
+@import '../colors';
+
 .pop-up-menu {
     position: relative;
 
@@ -17,10 +19,10 @@
 
         .menu {
             display: inline-block;
-            border: 1px solid black;
+            border: 1px solid $pop-up-menu-border-color;
             padding: 0.5em 0.5em 0.5em 0.5em;
-            background-color: #eeeeee;
-            box-shadow: 3px 3px 3px 0px rgba(0,0,0,0.75);
+            background-color: $pop-up-menu-background-color;
+            box-shadow: 3px 3px 3px 0px $pop-up-menu-shadow-color;
             text-align: left;
             max-width: 20em;
         }

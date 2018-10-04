@@ -1,5 +1,7 @@
+@import '../colors';
+
 .author-names {
-    color: #eeeeee;
+    color: $panel-title-text-color;
 
     .author {
         display: inline-block;

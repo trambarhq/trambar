@@ -1,10 +1,12 @@
+@import '../colors';
+
 .loading-animation {
     position: relative;
     height: 25vh;
 
     .dot {
         position: absolute;
-        background-color: #ffffff;
+        background-color: $loading-animation-color;
         top: 50%;
         width: 5px;
         height: 5px;

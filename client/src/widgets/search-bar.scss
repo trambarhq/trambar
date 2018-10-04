@@ -1,3 +1,5 @@
+@import '../colors';
+
 .search-bar {
 
     .text-input {
@@ -6,13 +8,13 @@
         input[type=text] {
             font-size: 1em;
             width: 100%;
-            color: #eeeeee;
-            background-color: #333333;
+            color: $search-box-text-color;
+            background-color: $search-box-background-color;
             border: 0;
             padding: 3px 3px 3px 3px;
 
             &::placeholder {
-                color: #666666;
+                color: $search-box-placeholder-text-color;
                 text-align: center;
             }
 

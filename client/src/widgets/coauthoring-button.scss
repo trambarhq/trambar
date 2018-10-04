@@ -1,6 +1,8 @@
+@import '../colors';
+
 .coauthoring-button {
     font-size: 0.9em;
-    color: #666666;
+    color: $coauthoring-button-text-color;
     cursor: pointer;
     margin-left: 4em;
 
@@ -9,6 +11,6 @@
     }
 
     &:hover {
-        color: #eeeeee;
+        color: $coauthoring-button-hover-text-color;
     }
 }

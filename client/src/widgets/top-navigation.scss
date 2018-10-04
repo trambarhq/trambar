@@ -27,24 +27,28 @@
         text-align: center;
         padding: 0.25em 0.25em 0.25em 0.25em;
         cursor: pointer;
-        color: #888888;
+        color: $navigation-text-color;
         touch-action: manipulation;
 
         .no-touch & {
             &:hover {
-                color: #cccccc;
+                color: $navigation-text-color;
             }
         }
 
+        &:hover {
+            color: $navigation-hover-text-color;
+        }
+
         &.active {
-            color: #eeeeee;
+            color: $navigation-selected-text-color;
         }
 
         &.disabled {
-            color: #333333;
+            color: $navigation-disabled-text-color;
             cursor: not-allowed;
             &:hover {
-                color: #333333;
+                color: $navigation-disabled-text-color;
             }
         }
 
@@ -64,7 +68,7 @@
         width: 1.8em;
         text-align: center;
         padding: 0.25em 0.25em 0.25em 0.25em;
-        color: #888888;
+        color: $navigation-text-color;
 
         .fa-ban {
             font-size: 0.55em;
@@ -72,7 +76,7 @@
             right: 0.5em;
             bottom: 0.65em;
             height: 1em;
-            color: #993333;
+            color: $navigation-danger-text-color;
         }
 
         .fa-arrow-up, .fa-caret-up {
@@ -87,12 +91,12 @@
         }
 
         .fa-refresh {
-            color: #333333;
+            color: $navigation-disabled-text-color;
             transform: translate(0, 0.1em);
         }
 
         .fa-warning {
-            color: #333333;
+            color: $navigation-disabled-text-color;
             transform: translate(0, 0.2em);
         }
     }

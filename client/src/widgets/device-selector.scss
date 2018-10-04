@@ -1,17 +1,19 @@
+@import '../colors';
+
 .device-selector {
     float: left;
 
     SELECT {
-        color: #666666;
-        background-color: #4d3936;
+        color: $button-text-color;
+        background-color: $button-background-color;
         font-size: 0.9em;
         padding: 0.4em 1em 0.4em 1em;
-        border: 2px solid #4d3936;
+        border: 2px solid $button-background-color;
 
         &:hover, &:focus {
-            color: #eeeeee;
-            background-color: #806666;
-            border-color: #806666;
+            color: $button-hover-text-color;
+            background-color: $button-hover-background-color;
+            border-color: $button-hover-background-color;
         }
     }
 }
