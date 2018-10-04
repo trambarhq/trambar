@@ -584,6 +584,7 @@ class StartPageSync extends PureComponent {
             className: 'oauth-button',
             href: url,
             onClick: this.handleOAuthButtonClick,
+            target: '_blank',
             'data-type': type,
         };
         let error = oauthErrors[type];
@@ -863,9 +864,10 @@ class StartPageSync extends PureComponent {
     handleOAuthButtonClick = (evt) => {
         let { database } = this.props;
         let { oauthErrors } = this.state;
+        evt.preventDefault();
+        evt.stopPropagation();
         let url = evt.currentTarget.getAttribute('href');
         let provider = evt.currentTarget.getAttribute('data-type');
-        evt.preventDefault();
         return this.openPopUpWindow(url).then(() => {
             let db = database.use({ by: this });
             return db.checkAuthorization().catch((err) => {
