@@ -62,6 +62,7 @@ class PeoplePage extends AsyncComponent {
             date,
             roleIDs,
             search,
+            selectedUserID,
             scrollToUserID,
             highlightStoryID,
             scrollToStoryID,
@@ -329,6 +330,7 @@ class PeoplePageSync extends PureComponent {
             currentUser,
             date,
             selectedUserID,
+            scrollToUserID,
         } = this.props;
         let listProps = {
             users: visibleUsers,
@@ -338,6 +340,7 @@ class PeoplePageSync extends PureComponent {
             currentUser,
             selectedDate: date,
             link: (selectedUserID) ? 'team' : 'user',
+            scrollToUserID,
             database,
             route,
             env,

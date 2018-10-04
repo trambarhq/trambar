@@ -12,11 +12,12 @@ import './user-list.scss';
 
 class UserList extends PureComponent {
     static displayName = 'UserList';
+    static viewOptions = {};
 
     constructor(props) {
         super(props);
         this.state = {
-            viewOptions: {},
+            viewOptions: UserList.viewOptions,
         };
     }
 
@@ -92,13 +93,12 @@ class UserList extends PureComponent {
             if (stories && stories.length > 5) {
                 stories = _.slice(stories, -5);
             }
-            let userOptions = viewOptions[user.id] || {};
             let userProps = {
                 user,
                 roles: userRoles,
                 dailyActivities: userDailyActivities,
                 stories: userStories,
-                options: userOptions,
+                options: viewOptions,
                 currentUser,
                 database,
                 route,
@@ -140,11 +140,8 @@ class UserList extends PureComponent {
      * @param  {Object} evt
      */
     handleOptionChange = (evt) => {
-        // storing chart selection at this level to avoid loss of state
-        // due to on-demand rendering
-        let viewOptions = _.clone(this.state.viewOptions);
-        viewOptions[evt.user.id] = evt.options;
-        this.setState({ viewOptions });
+        this.setState({ viewOptions: evt.options });
+        UserList.viewOptions = evt.options;
     }
 }
 

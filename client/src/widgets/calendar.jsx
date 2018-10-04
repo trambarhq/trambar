@@ -59,6 +59,7 @@ class Calendar extends PureComponent {
             );
         });
         let firstURL;
+        let monthClassName;
         let rows = _.map(grid, (days) => {
             return _.map(days, (day, index) => {
                 let classNames = [
@@ -77,6 +78,7 @@ class Calendar extends PureComponent {
                 }
                 if (selection && selection === date) {
                     classNames.push('selected');
+                    monthClassName = 'selected';
                 }
                 if (date === env.date) {
                     classNames.push('today');
@@ -92,7 +94,7 @@ class Calendar extends PureComponent {
             <table className="calendar">
                 <thead>
                     <tr className="title">
-                        <th colSpan={7}>
+                        <th colSpan={7} className={monthClassName}>
                             <a href={firstURL}>{title}</a>
                         </th>
                     </tr>

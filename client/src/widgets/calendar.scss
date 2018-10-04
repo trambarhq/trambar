@@ -29,6 +29,14 @@
                     color: $calendar-hover-text-color;
                 }
             }
+
+            &.selected {
+                A {
+                    &:link, &:visited {
+                        color: $calendar-hover-text-color;
+                    }
+                }
+            }
         }
     }
 
@@ -39,10 +47,10 @@
             color: $calendar-text-color;
             border: 1px solid $calendar-border-color;
             padding: 0.2em 0 0.2em 0;
-        }
 
-        TH.weekend {
-            background-color: $calendar-weekend-background-color;
+            &.weekend {
+                background-color: $calendar-weekend-background-color;
+            }
         }
     }
 
@@ -65,30 +73,30 @@
                     color: $calendar-active-text-color;
                 }
             }
-        }
 
-        TD.weekend {
-            background-color: $calendar-weekend-background-color;
-        }
+            &.weekend {
+                background-color: $calendar-weekend-background-color;
+            }
 
-        TD.today {
-            color: $calendar-today-text-color;
-            background-color: $calendar-today-background-color;
+            &.today {
+                color: $calendar-today-text-color;
+                background-color: $calendar-today-background-color;
 
-            A {
-                &:link, &:visited {
-                    color: $calendar-today-text-color;
+                A {
+                    &:link, &:visited {
+                        color: $calendar-today-text-color;
+                    }
                 }
             }
-        }
 
-        TD.selected {
-            color: $calendar-selected-text-color;
-            background-color: $calendar-selected-background-color;
+            &.selected {
+                color: $calendar-selected-text-color;
+                background-color: $calendar-selected-background-color;
 
-            A {
-                &:link, &:visited {
-                    color: $calendar-selected-text-color;
+                A {
+                    &:link, &:visited {
+                        color: $calendar-selected-text-color;
+                    }
                 }
             }
         }
