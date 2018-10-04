@@ -58,6 +58,7 @@ class Calendar extends PureComponent {
                 </th>
             );
         });
+        let firstURL;
         let rows = _.map(grid, (days) => {
             return _.map(days, (day, index) => {
                 let classNames = [
@@ -68,6 +69,9 @@ class Calendar extends PureComponent {
                     date = `${year}-${pad(month)}-${pad(day)}`;
                     label = day;
                     url = this.getDateURL(date);
+                    if (url && !firstURL) {
+                        firstURL = url;
+                    }
                 } else {
                     label = '\u00a0';
                 }
@@ -89,7 +93,7 @@ class Calendar extends PureComponent {
                 <thead>
                     <tr className="title">
                         <th colSpan={7}>
-                            {title}
+                            <a href={firstURL}>{title}</a>
                         </th>
                     </tr>
                     <tr className="headings">

@@ -13,6 +13,20 @@
             color: #999999;
             border: 1px solid #444444;
             padding: 0.25em 0.1em 0.2em 0.1em;
+
+            A {
+                display: block;
+                touch-action: manipulation;
+
+                &:link, &:visited {
+                    text-decoration: none;
+                    color: #999999;
+                }
+
+                &:hover {
+                    color: #eeeeee;
+                }
+            }
         }
     }
 
@@ -43,7 +57,7 @@
             A {
                 display: block;
                 touch-action: manipulation;
-                
+
                 &:link, &:visited {
                     text-decoration: none;
                     color: #cccccc;
