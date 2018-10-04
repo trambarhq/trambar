@@ -250,7 +250,9 @@ class SearchBarSync extends PureComponent {
         if (this.timeout) {
             clearTimeout(this.timeout);
         }
-        this.timeout = setTimeout(this.performSearch, 800);
+        this.timeout = setTimeout(() => {
+            this.performSearch();
+        }, 800);
     }
 
     /**
