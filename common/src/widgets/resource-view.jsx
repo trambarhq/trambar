@@ -9,6 +9,13 @@ import VectorView from 'widgets/vector-view';
 
 require('./resource-view.scss');
 
+/**
+ * A component for displaying a media resource (image, video, audio, web-link).
+ * It's capable of displaying local files that have just need selected for
+ * uploading to remote server.
+ *
+ * @extends {PureComponent}
+ */
 class ResourceView extends PureComponent {
     static displayName = 'ResourceView';
 

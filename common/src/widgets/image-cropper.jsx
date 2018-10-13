@@ -10,6 +10,11 @@ import VectorView from 'widgets/vector-view';
 
 import './image-cropper.scss';
 
+/**
+ * A component for cropping images. It handles both mouse and touch input.
+ *
+ * @extends {PureComponent}
+ */
 class ImageCropper extends PureComponent {
     static displayName = 'ImageCropper';
 

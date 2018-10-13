@@ -4,6 +4,12 @@ import ComponentRefs from 'utils/component-refs';
 
 import './autosize-text-area.scss';
 
+/**
+ * A text area that automatically expands its height to accommodate the text
+ * within it.
+ *
+ * @extends {PureComponent}
+ */
 class AutosizeTextArea extends PureComponent {
     static displayName = 'AutosizeTextArea';
 

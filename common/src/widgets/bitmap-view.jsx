@@ -8,6 +8,12 @@ import * as JPEGAnalyser from 'media/jpeg-analyser';
 import * as ImageOrientation from 'media/image-orientation';
 import ComponentRefs from 'utils/component-refs';
 
+/**
+ * A component that displays a bitmap image file (JPEG, PNG, etc.), with
+ * correction for orientation flag.
+ *
+ * @extends {PureComponent}
+ */
 class BitmapView extends PureComponent {
     static displayName = 'BitmapView';
 

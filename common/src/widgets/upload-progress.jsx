@@ -3,6 +3,12 @@ import React, { PureComponent } from 'react';
 
 import './upload-progress.scss';
 
+/**
+ * A warning message that appears when file upload is in progress. Designed
+ * to be shown when a beforeunload event occurs and we need to warn the user.
+ *
+ * @extends {PureComponent}
+ */
 class UploadProgress extends PureComponent {
     static displayName = 'UploadProgress';
 
@@ -32,7 +38,7 @@ import Payloads from 'transport/payloads';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
-    
+
     UploadProgress.propTypes = {
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,

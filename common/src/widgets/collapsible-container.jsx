@@ -3,6 +3,11 @@ import ComponentRefs from 'utils/component-refs';
 
 import './collapsible-container.scss';
 
+/**
+ * A HTML container that can collapse to nothing.
+ *
+ * @extends {PureComponent}
+ */
 class CollapsibleContainer extends PureComponent {
     static displayName = 'CollapsibleContainer';
 

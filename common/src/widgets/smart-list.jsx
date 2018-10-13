@@ -2,16 +2,18 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 import ComponentRefs from 'utils/component-refs';
 
-require('./smart-list.scss');
+import './smart-list.scss';
 
+/**
+ * A component for rendering a list that can be very long. Items are rendered
+ * only when the current scroll position make them visible (or likely to be
+ * visible in the near future).
+ *
+ * @extends {Component}
+ */
 class SmartList extends Component {
     static displayName = 'SmartList';
 
-    /**
-     * Return initial state of component
-     *
-     * @return {Object}
-     */
     constructor(props) {
         super(props);
         this.components = ComponentRefs({

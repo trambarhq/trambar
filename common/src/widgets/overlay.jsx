@@ -3,6 +3,12 @@ import ReactDOM from 'react-dom';
 
 import './overlay.scss';
 
+/**
+ * A component for displaying pop-up contents whose HTML nodes aren't contained
+ * in the HTML node of the parent.
+ *
+ * @extends {PureComponent}
+ */
 class OverlayProxy extends PureComponent {
     static displayName = 'OverlayProxy';
 

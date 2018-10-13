@@ -2,6 +2,12 @@ import React, { Component } from 'react';
 
 require('./error-boundary.scss');
 
+/**
+ * Component for trapping JavaScript exeception encountered during rendering
+ * cycles.
+ *
+ * @extends {Component}
+ */
 class ErrorBoundary extends Component {
     static displayName = 'ErrorBoundary';
 

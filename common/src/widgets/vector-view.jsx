@@ -4,6 +4,12 @@ import React, { PureComponent } from 'react';
 import * as MediaLoader from 'media/media-loader';
 import ComponentRefs from 'utils/component-refs';
 
+/**
+ * A component for displaying a SVG file, with proper support for zooming
+ * and clipping.
+ *
+ * @extends {PureComponent}
+ */
 class VectorView extends PureComponent {
     static displayName = 'VectorView';
 
