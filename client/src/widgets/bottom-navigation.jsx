@@ -11,6 +11,11 @@ import Link from 'widgets/link';
 
 import './bottom-navigation.scss';
 
+/**
+ * Row of buttons at the bottom of the user interface.
+ *
+ * @extends PureComponent
+ */
 class BottomNavigation extends PureComponent {
     static displayName = 'BottomNavigation';
 
@@ -227,6 +232,9 @@ class BottomNavigation extends PureComponent {
     }
 }
 
+/**
+ * Stateless component that renders a clickable button.
+ */
 function Button(props) {
     let {
         className,
@@ -266,6 +274,12 @@ function Button(props) {
     }
 }
 
+/**
+ * Asynchronous component that retrieves of un-read notifications from the
+ * remote server. If there are any, it renders a small badge with a number.
+ *
+ * @extends AsyncComponent
+ */
 class NewNotificationsBadge extends AsyncComponent {
     static displayName = 'NewNotificationsBadge';
 
@@ -348,6 +362,12 @@ function changeFavIcon(count) {
     });
 }
 
+/**
+ * Add the number of un-read notifications to the document's title, so the
+ * user would see it if he's browsing in another tab.
+ *
+ * @param  {Number} count
+ */
 function changeDocumentTitle(count) {
     let title = _.replace(document.title, /^\(\d+\)\s*/, '');
     if (count > 0) {

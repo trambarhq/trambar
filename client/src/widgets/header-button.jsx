@@ -2,6 +2,10 @@ import React from 'react';
 
 import './header-button.scss';
 
+/**
+ * Stateless component that renders the type of buttons that appears in the
+ * header of a panel.
+ */
 function HeaderButton(props) {
     let { label, hidden, disabled, onClick } = props;
     if (hidden) {
@@ -17,6 +21,9 @@ function HeaderButton(props) {
 
 HeaderButton.File = FileButton;
 
+/**
+ * Stateless component that renders a header button for selecting a file.
+ */
 function FileButton(props) {
     let { label, hidden, disabled, multiple, onChange } = props;
     if (hidden) {

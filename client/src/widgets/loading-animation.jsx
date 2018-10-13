@@ -2,6 +2,9 @@ import React from 'react';
 
 import './loading-animation.scss';
 
+/**
+ * Stateless component that renders four dots in motion.
+ */
 function LoadingAnimation(props) {
     return (
         <div className="loading-animation">

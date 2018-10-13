@@ -2,6 +2,13 @@ import React, { PureComponent } from 'react';
 
 import './drop-zone.scss';
 
+/**
+ * A component that renders an outline when the user has dragged files from
+ * the OS's file manager over it. Children passed to it are rendered within
+ * its HTML node. When files are dropped, it'll fire an onDrop event.
+ *
+ * @extends PureComponent
+ */
 class DropZone extends PureComponent {
     static displayName = 'DropZone';
 

@@ -4,6 +4,12 @@ import React, { PureComponent } from 'react';
 
 import './calendar.scss';
 
+/**
+ * A component that draws a monthly calendar. Statistics passed as prop
+ * determines whether a day is highlighted and clickable.
+ *
+ * @extends PureComponent
+ */
 class Calendar extends PureComponent {
     static displayName = 'Calendar';
 

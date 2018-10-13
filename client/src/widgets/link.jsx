@@ -1,6 +1,15 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
+/**
+ * A hyperlink component that may store the URL in the "data-url" attribute
+ * instead of "href" so that the browser does not display a status bar when
+ * the mouse cursor is over it. This capability is utilized by the bottom
+ * navigation, so that buttons would remain unobstructed. When the component
+ * has keyboard focus, a true hyperlink is always rendered.
+ *
+ * @extends PureComponent
+ */
 class Link extends PureComponent {
     static displayName = 'Link';
 
@@ -63,7 +72,7 @@ class Link extends PureComponent {
 }
 
 Link.defaultProps = {
-    alwaysAsLink: true, // TODO
+    alwaysAsLink: true, // TODO: set this back to false
 };
 
 export {

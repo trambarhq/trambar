@@ -3,6 +3,11 @@ import React from 'react';
 
 import './device-selector.scss';
 
+/**
+ * Stateless component that draws a drop-down menu for selecting a media
+ * capture device when there're more than one (e.g. typical mobile phone
+ * with front and back camera).
+ */
 function DeviceSelector(props) {
     let { env, devices } = props;
     let { t } = env.locale;
@@ -44,6 +49,14 @@ function DeviceSelector(props) {
     );
 }
 
+/**
+ * Given a list of devices, select one that matches the indicated direction.
+ *
+ * @param  {Array<Object>} devices
+ * @param  {String} direction
+ *
+ * @return {Object|undefined}
+ */
 DeviceSelector.choose = function(devices, direction) {
     return _.find(devices, (device) => {
         if (direction === 'front') {

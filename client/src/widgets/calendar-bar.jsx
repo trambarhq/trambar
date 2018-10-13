@@ -8,8 +8,14 @@ import * as UserFinder from 'objects/finders/user-finder';
 // widgets
 import Calendar from 'widgets/calendar';
 
-require('./calendar-bar.scss');
+import './calendar-bar.scss';
 
+/**
+ * Asynchroous component that retrieces daily stats needed for rendering the
+ * calendar bar.
+ *
+ * @extends AsyncComponent
+ */
 class CalendarBar extends AsyncComponent {
     static displayName = 'CalendarBar';
 
@@ -49,6 +55,11 @@ class CalendarBar extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually draws the calendar bar. 
+ *
+ * @extends PureComponent
+ */
 class CalendarBarSync extends PureComponent {
     static displayName = 'CalendarBar.Sync';
 

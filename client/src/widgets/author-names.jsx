@@ -7,6 +7,11 @@ import MultipleUserNames from 'widgets/multiple-user-names';
 
 import './author-names.scss';
 
+/**
+ * Stateless component that displays the names of a story's author and
+ * co-authors. When more there are more than two names, only the first
+ * will appear while the rests are given in a pop-up (MultipleUserNames).
+ */
 function AuthorNames(props) {
     let { env, authors } = props;
     let { t } = env.locale;

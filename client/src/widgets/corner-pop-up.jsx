@@ -6,6 +6,12 @@ import PopUpMenu from 'widgets/pop-up-menu';
 
 import './corner-pop-up.scss';
 
+/**
+ * A button that brings up a pop-up menu when clicked. Children given to the
+ * component will be the menu's contents.
+ *
+ * @extends PureComponent
+ */
 class CornerPopUp extends PureComponent {
     static displayName = 'CornerPopUp';
 

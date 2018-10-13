@@ -2,6 +2,10 @@ import React from 'react';
 
 import './device-placeholder.scss';
 
+/**
+ * A stateless component that display a placeholder graphic for when a device
+ * isn't ready or available.
+ */
 function DevicePlaceholder(props) {
     let { icon, blocked } = props;
     let className = 'device-placeholder';

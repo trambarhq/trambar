@@ -2,6 +2,9 @@ import React from 'react';
 
 import './media-button.scss';
 
+/**
+ * Stateless component that renders a button for adding/removing attached media.
+ */
 function MediaButton(props) {
     let { label, hidden, disabled, onClick } = props;
     if (hidden) {
@@ -17,6 +20,11 @@ function MediaButton(props) {
 
 MediaButton.Direction = Direction;
 
+/**
+ * Stateless component that renders a forward button, a backward button, along
+ * with text indicating the total number of attached media and the currently
+ * selected one.
+ */
 function Direction(props) {
     let { index, count, hidden, onBackwardClick, onForwardClick } = props;
     if (hidden) {

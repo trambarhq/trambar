@@ -10,6 +10,12 @@ import AudioCaptureDialogBox from 'dialogs/audio-capture-dialog-box';
 
 import './media-toolbar.scss';
 
+/**
+ * Toolbar for attaching media to a story. It's responsbile for rendering
+ * the appropripate dialog box when a button is clicked.
+ *
+ * @extends PureComponent
+ */
 class MediaToolbar extends PureComponent {
     static displayName = 'MediaToolbar';
 

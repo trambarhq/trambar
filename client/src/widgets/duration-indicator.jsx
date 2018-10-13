@@ -2,6 +2,13 @@ import React, { PureComponent } from 'react';
 
 import './duration-indicator.scss';
 
+/**
+ * A component that displays recording's duration. It shows a blinker when
+ * given a start time, indicating that a device is actively capturing video
+ * or audio.
+ *
+ * @extends PureComponent
+ */
 class DurationIndicator extends PureComponent {
     static displayName = 'DurationIndicator';
 

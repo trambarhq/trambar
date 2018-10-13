@@ -3,6 +3,10 @@ import React from 'react';
 
 import './media-placeholder.scss';
 
+/**
+ * Stateless component that fades advisory messages in and out for when
+ * there aren't any attach media.
+ */
 function MediaPlaceholder(props) {
     let { env, showHints } = props;
     let { t } = env.locale;

@@ -6,6 +6,11 @@ import HeaderButton from 'widgets/header-button';
 
 import './chart-toolbar.scss';
 
+/**
+ * Toolbar with buttons for changing the chart type.
+ *
+ * @extends PureComponent
+ */
 class ChartToolbar extends PureComponent {
     static displayName = 'ChartToolbar';
 

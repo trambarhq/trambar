@@ -8,6 +8,12 @@ import UserSelectionDialogBox from 'dialogs/user-selection-dialog-box';
 
 import './coauthoring-button.scss';
 
+/**
+ * Button for adding/removing co-authors from a story. The component is also
+ * responsible for rendering the dialog box.
+ *
+ * @extends PureComponent
+ */
 class CoauthoringButton extends PureComponent {
     static displayName = 'CoauthoringButton';
 
