@@ -20,6 +20,12 @@ import EmptyMessage from 'widgets/empty-message';
 
 import './people-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the People or
+ * Person page, depending on whether selectedUserID is given. 
+ *
+ * @extends AsyncComponent
+ */
 class PeoplePage extends AsyncComponent {
     static displayName = 'PeoplePage';
 
@@ -268,6 +274,11 @@ class PeoplePage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the People/Person page.
+ *
+ * @extends PureComponent
+ */
 class PeoplePageSync extends PureComponent {
     static displayName = 'PeoplePageSync';
 

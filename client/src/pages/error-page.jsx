@@ -5,8 +5,13 @@ import HTTPError from 'errors/http-error';
 import Unicorn from 'unicorn.svg';
 import PageContainer from 'widgets/page-container';
 
-require('./error-page.scss');
+import './error-page.scss';
 
+/**
+ * Component for the Error page.
+ *
+ * @extends PureComponent
+ */
 class ErrorPage extends PureComponent {
     static displayName = 'ErrorPage';
 

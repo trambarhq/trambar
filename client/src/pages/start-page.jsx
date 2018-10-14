@@ -26,6 +26,11 @@ import EmptyMessage from 'widgets/empty-message';
 
 import './start-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Start page.
+ *
+ * @extends AsyncComponent
+ */
 class StartPage extends AsyncComponent {
     static displayName = 'StartPage';
     static useTransition = (process.env.PLATFORM === 'browser');
@@ -150,6 +155,11 @@ class StartPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Start page.
+ *
+ * @extends PureComponent
+ */
 class StartPageSync extends PureComponent {
     static displayName = 'StartPage.Sync';
 

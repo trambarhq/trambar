@@ -16,6 +16,11 @@ import EmptyMessage from 'widgets/empty-message';
 
 import './news-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the News page.
+ *
+ * @extends AsyncComponent
+ */
 class NewsPage extends AsyncComponent {
     static displayName = 'NewsPage';
 
@@ -164,6 +169,11 @@ class NewsPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the News page.
+ *
+ * @extends PureComponent
+ */
 class NewsPageSync extends PureComponent {
     static displayName = 'NewsPage.Sync';
 

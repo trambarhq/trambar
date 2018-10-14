@@ -14,6 +14,11 @@ import EmptyMessage from 'widgets/empty-message';
 
 import './bookmarks-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Bookmarks page.
+ *
+ * @extends AsyncComponent
+ */
 class BookmarksPage extends AsyncComponent {
     static displayName = 'BookmarksPage';
 
@@ -65,6 +70,11 @@ class BookmarksPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Bookmarks page.
+ *
+ * @extends PureComponent
+ */
 class BookmarksPageSync extends PureComponent {
     static displayName = 'BookmarksPage.Sync';
 

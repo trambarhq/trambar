@@ -11,8 +11,13 @@ import NotificationList from 'lists/notification-list';
 import LoadingAnimation from 'widgets/loading-animation';
 import EmptyMessage from 'widgets/empty-message';
 
-require('./notifications-page.scss');
+import './notifications-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Notifications page.
+ *
+ * @extends AsyncComponent
+ */
 class NotificationsPage extends AsyncComponent {
     static displayName = 'NotificationsPage';
 
@@ -65,6 +70,11 @@ class NotificationsPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Notifications page.
+ *
+ * @extends PureComponent
+ */
 class NotificationsPageSync extends PureComponent {
     static displayName = 'NotificationsPage.Sync';
 
