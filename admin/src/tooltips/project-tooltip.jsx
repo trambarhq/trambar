@@ -9,6 +9,11 @@ import Tooltip from 'widgets/tooltip';
 
 import './project-tooltip.scss';
 
+/**
+ * Tooltip showing a list of projects.
+ *
+ * @extends PureComponent
+ */
 class ProjectTooltip extends PureComponent {
     static displayName = 'ProjectTooltip';
 

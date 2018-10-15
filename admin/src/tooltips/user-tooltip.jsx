@@ -7,6 +7,11 @@ import ProfileImage from 'widgets/profile-image';
 
 import './user-tooltip.scss';
 
+/**
+ * Tooltip showing a list of users.
+ *
+ * @extends PureComponent
+ */
 class UserTooltip extends PureComponent {
     static displayName = 'UserTooltip';
 

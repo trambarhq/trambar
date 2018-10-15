@@ -6,6 +6,11 @@ import Tooltip from 'widgets/tooltip';
 
 import './role-tooltip.scss';
 
+/**
+ * Tooltip showing a list of roles.
+ *
+ * @extends PureComponent
+ */
 class RoleTooltip extends PureComponent {
     static displayName = 'RoleTooltip';
 

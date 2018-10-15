@@ -6,6 +6,11 @@ import Tooltip from 'widgets/tooltip';
 
 import './repository-tooltip.scss';
 
+/**
+ * Tooltip showing a list of repos.
+ *
+ * @extends PureComponent
+ */
 class RepositoryTooltip extends PureComponent {
     static displayName = 'RepositoryTooltip';
 

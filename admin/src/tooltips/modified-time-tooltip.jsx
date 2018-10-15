@@ -7,6 +7,11 @@ import Environment from 'env/environment';
 // widgets
 import Tooltip from 'widgets/tooltip';
 
+/**
+ * Tooltip showing the full timestamp.
+ *
+ * @extends PureComponent
+ */
 class ModifiedTimeTooltip extends PureComponent {
     static displayName = 'ModifiedTimeTooltip';
 

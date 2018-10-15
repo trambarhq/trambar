@@ -10,6 +10,11 @@ import Tooltip from 'widgets/tooltip';
 
 import './activity-tooltip.scss';
 
+/**
+ * Tooltip listing the number of activities by type.
+ *
+ * @extends PureComponent
+ */
 class ActivityTooltip extends PureComponent {
     static displayName = 'ActivityTooltip';
 
