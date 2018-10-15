@@ -13,6 +13,11 @@ import ResourceView from 'widgets/resource-view';
 
 import './image-album-dialog-box.scss';
 
+/**
+ * Asynchronous component that loads data needed by the image album dialog box.
+ *
+ * @extends AsyncComponent
+ */
 class ImageAlbumDialogBox extends AsyncComponent {
     static displayName = 'ImageAlbumDialogBox';
 
@@ -73,6 +78,11 @@ class ImageAlbumDialogBox extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the image album dialog box.
+ *
+ * @extends PureComponent
+ */
 class ImageAlbumDialogBoxSync extends PureComponent {
     static displayName = 'ImageAlbumDialogBox.Sync';
 

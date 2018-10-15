@@ -9,6 +9,11 @@ import ImageCropper from 'widgets/image-cropper';
 
 import './image-cropping-dialog-box.scss';
 
+/**
+ * Dialog box for cropping/resizing an image.
+ *
+ * @extends PureComponent
+ */
 class ImageCroppingDialogBox extends PureComponent {
     static displayName = 'ImageCroppingDialogBox';
 

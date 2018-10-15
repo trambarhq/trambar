@@ -7,6 +7,11 @@ import PushButton from 'widgets/push-button';
 
 import './confirmation-dialog-box.scss';
 
+/**
+ * Confirmation dialog box
+ *
+ * @extends PureComponent
+ */
 class ConfirmationDialogBox extends PureComponent {
     static displayName = 'ConfirmationDialogBox';
 
