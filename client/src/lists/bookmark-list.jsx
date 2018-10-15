@@ -20,6 +20,12 @@ import ErrorBoundary from 'widgets/error-boundary';
 
 import './bookmark-list.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by a bookmark list
+ * (in addition to the bookmarks given to it)
+ *
+ * @extends AsyncComponent
+ */
 class BookmarkList extends AsyncComponent {
     static displayName = 'BookmarkList';
 
@@ -117,6 +123,12 @@ class BookmarkList extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the list, with the help of
+ * SmartList.
+ *
+ * @extends PureComponent
+ */
 class BookmarkListSync extends PureComponent {
     static displayName = 'BookmarkList.Sync';
 

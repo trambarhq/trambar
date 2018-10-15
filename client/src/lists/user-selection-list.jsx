@@ -52,6 +52,11 @@ class UserSelectionList extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the list.
+ *
+ * @extends PureComponent
+ */
 class UserSelectionListSync extends PureComponent {
     static displayName = 'UserSelectionList.Sync';
 

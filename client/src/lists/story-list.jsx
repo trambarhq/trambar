@@ -18,6 +18,12 @@ import ErrorBoundary from 'widgets/error-boundary';
 
 import './story-list.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by a story list
+ * (in addition to the notifications given to it)
+ *
+ * @extends AsyncComponent
+ */
 class StoryList extends AsyncComponent {
     static displayName = 'StoryList';
 
@@ -114,6 +120,12 @@ class StoryList extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the list, with the help of
+ * SmartList.
+ *
+ * @extends PureComponent
+ */
 class StoryListSync extends PureComponent {
     static displayName = 'StoryList.Sync';
 

@@ -11,6 +11,11 @@ import ErrorBoundary from 'widgets/error-boundary';
 
 import './reaction-list.scss';
 
+/**
+ * A list of reactions to a story. Parent component must supply all needed data.
+ *
+ * @extends PureComponent
+ */
 class ReactionList extends PureComponent {
     static displayName = 'ReactionList';
 

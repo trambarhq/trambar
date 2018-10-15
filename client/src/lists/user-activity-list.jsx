@@ -9,6 +9,11 @@ import Time from 'widgets/time';
 
 import './user-activity-list.scss';
 
+/**
+ * A short list showing a user's recent history. Used by UserView.
+ *
+ * @extends PureComponent
+ */
 class UserActivityList extends PureComponent {
     static displayName = 'UserActivityList';
 

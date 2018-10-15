@@ -10,6 +10,11 @@ import ErrorBoundary from 'widgets/error-boundary';
 
 import './user-list.scss';
 
+/**
+ * A list of users. Parent component must supply all needed data.
+ *
+ * @extends PureComponent
+ */
 class UserList extends PureComponent {
     static displayName = 'UserList';
     static viewOptions = {};

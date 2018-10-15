@@ -14,6 +14,12 @@ import ErrorBoundary from 'widgets/error-boundary';
 
 require('./notification-list.scss');
 
+/**
+ * Asynchronous component that retrieves data needed by a notification list
+ * (in addition to the notifications given to it)
+ *
+ * @extends AsyncComponent
+ */
 class NotificationList extends AsyncComponent {
     static displayName = 'NotificationList';
 
@@ -59,6 +65,12 @@ class NotificationList extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the list, with the help of
+ * SmartList.
+ *
+ * @extends PureComponent
+ */
 class NotificationListSync extends PureComponent {
     static displayName = 'NotificationList.Sync';
 
