@@ -8,6 +8,12 @@ import SignOffMenu from 'widgets/sign-off-menu';
 
 import './side-navigation.scss';
 
+/**
+ * The left-side of the user interface, containg the navigation tree, language
+ * selection menus, and the sign-off button.
+ *
+ * @extends PureComponent
+ */
 class SideNavigation extends PureComponent {
     static displayName = 'SideNavigation';
 

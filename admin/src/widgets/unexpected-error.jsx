@@ -2,6 +2,9 @@ import React from 'react';
 
 import './unexpected-error.scss';
 
+/**
+ * Stateless component that renders an error message returned by the server.
+ */
 function UnexpectedError(props) {
     let { children, type } = props;
     if (!children) {

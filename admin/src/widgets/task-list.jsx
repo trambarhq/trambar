@@ -11,6 +11,12 @@ import SmartList from 'widgets/smart-list';
 
 import './task-list.scss';
 
+/**
+ * A list of server tasks that were performed previously or are currently in
+ * progress. This is the asynchronous part that retrieves the necessary data.
+ *
+ * @extends AsyncComponent
+ */
 class TaskList extends AsyncComponent {
     static displayName = 'TaskList';
 
@@ -43,6 +49,11 @@ class TaskList extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the task list.
+ *
+ * @extends PureComponent
+ */
 class TaskListSync extends PureComponent {
     static displayName = 'TaskList.Sync';
 

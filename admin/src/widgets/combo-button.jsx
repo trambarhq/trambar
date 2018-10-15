@@ -4,6 +4,11 @@ import ReactDOM from 'react-dom';
 
 import './combo-button.scss';
 
+/**
+ * A push button with a drop-down menu.
+ *
+ * @extends PureComponent
+ */
 class ComboButton extends PureComponent {
     static displayName = 'ComboButton';
 

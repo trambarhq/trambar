@@ -6,6 +6,13 @@ import * as TaskFinder from 'objects/finders/task-finder';
 
 import './task-alert-bar.scss';
 
+/**
+ * Bar at the bottom of the screen indicating active task running on the
+ * remote server. This is the asynchronous part that retrieves the
+ * necessary data.
+ *
+ * @extends AsyncComponent
+ */
 class TaskAlertBar extends AsyncComponent {
     static displayName = 'TaskAlertBar';
 
@@ -80,6 +87,11 @@ class TaskAlertBar extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the alert bar.
+ *
+ * @extends PureComponent
+ */
 class TaskAlertBarSync extends PureComponent {
     static displayName = 'TaskAlertBar.Sync';
 

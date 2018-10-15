@@ -6,6 +6,11 @@ import AutosizeTextArea from 'widgets/autosize-text-area';
 
 import './multilingual-text-field.scss';
 
+/**
+ * A text field that accepts text in multiple languages.
+ *
+ * @extends PureComponent
+ */
 class MultilingualTextField extends PureComponent {
     static displayName = 'MultilingualTextField';
 

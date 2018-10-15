@@ -5,6 +5,11 @@ import React, { PureComponent } from 'react';
 // widgets
 import ConfirmationDialogBox from 'dialogs/confirmation-dialog-box';
 
+/**
+ * Component that renders a confirmation dialog box.
+ *
+ * @extends PureComponent
+ */
 class ActionConfirmation extends PureComponent {
     static displayName = 'ActionConfirmation';
 

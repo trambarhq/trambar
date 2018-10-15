@@ -2,6 +2,9 @@ import React from 'react';
 
 import './action-badge.scss'
 
+/**
+ * Stateless component that indicates what action will be performed on an item.
+ */
 function ActionBadge(props) {
     let { env, type } = props;
     let { t } = env.locale;

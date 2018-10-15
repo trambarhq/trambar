@@ -9,6 +9,11 @@ import * as StoryTypes from 'objects/types/story-types';
 
 import './activity-chart.scss';
 
+/**
+ * Bar chart showing daily activities.
+ *
+ * @extends PureComponent
+ */
 class ActivityChart extends PureComponent {
     static displayName = 'ActivityChart';
 

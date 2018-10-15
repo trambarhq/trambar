@@ -14,6 +14,11 @@ import CollapsibleContainer from 'widgets/collapsible-container';
 
 import './navigation-tree.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the navigation tree.
+ *
+ * @extends AsyncComponent
+ */
 class NavigationTree extends AsyncComponent {
     static displayName = 'NavigationTree';
 
@@ -69,6 +74,11 @@ class NavigationTree extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the navigation tree.
+ *
+ * @extends PureComponent
+ */
 class NavigationTreeSync extends PureComponent {
     static displayName = 'NavigationTree.Sync';
 

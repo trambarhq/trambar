@@ -5,6 +5,12 @@ import CollapsibleContainer from 'widgets/collapsible-container';
 
 import './sortable-table.scss';
 
+/**
+ * A table with clickable headers that changes how sorting is performed. The
+ * table can expand to show additional rows.
+ *
+ * @extends PureComponent
+ */
 class SortableTable extends PureComponent {
     static displayName = 'SortableTable';
 

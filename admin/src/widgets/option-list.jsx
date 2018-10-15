@@ -5,6 +5,13 @@ import SortableTable from 'widgets/sortable-table';
 
 import './option-list.scss';
 
+/**
+ * A input control containing a list of selectable options. In read-only mode,
+ * only the selected options will be shown. The box will expand to list all
+ * options when switching into read-write mode.
+ *
+ * @extends PureComponent
+ */
 class OptionList extends PureComponent {
     static displayName = 'OptionList';
 

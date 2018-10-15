@@ -6,6 +6,10 @@ module.exports = InputError;
 
 import './input-error.scss';
 
+/**
+ * Stateless component that renders an icon next to an error message, which is
+ * provided as its children.
+ */
 function InputError(props) {
     let { children, type } = props;
     if (!props.children) {

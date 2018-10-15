@@ -4,6 +4,14 @@ import ComponentRefs from 'utils/component-refs';
 
 import './tooltip.scss';
 
+/**
+ * A small pop-up window that shows additional information when the mouse
+ * cursor is over a label. It expects two children: inline and window. The
+ * inline element holds the contents that's rendered inline, while the
+ * window element holds the contents that appear in the pop-up window.
+ *
+ * @extends PureComponent
+ */
 class Tooltip extends PureComponent {
     static displayName = 'Tooltip';
 

@@ -10,6 +10,13 @@ import ResourceView from 'widgets/resource-view';
 
 import './image-selector.scss';
 
+/**
+ * Widget for selecting an image, either from the image album or from the
+ * user's computer. When desiredWidth and desiredHeight are specified,
+ * it provides the option to crop the selected image.
+ *
+ * @extends PureComponent
+ */
 class ImageSelector extends PureComponent {
     static displayName = 'ImageSelector';
 

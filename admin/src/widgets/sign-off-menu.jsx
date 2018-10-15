@@ -9,6 +9,12 @@ import ProfileImage from 'widgets/profile-image';
 
 import './sign-off-menu.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the sign-off button,
+ * namely the current user. It handles the rendering itself currently.
+ *
+ * @extends AsyncComponent
+ */
 class SignOffMenu extends AsyncComponent {
     static displayName = 'SignOffMenu';
 

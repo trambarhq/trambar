@@ -6,6 +6,10 @@ import AutosizeTextArea from 'widgets/autosize-text-area';
 
 import './text-field.scss';
 
+/**
+ * Stateless component that renders either a textarea or a single-line
+ * text input.
+ */
 function TextField(props) {
     let { env, children, readOnly } = props;
     let { t } = env.locale;

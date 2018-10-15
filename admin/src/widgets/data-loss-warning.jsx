@@ -4,6 +4,11 @@ import ComponentRefs from 'utils/component-refs';
 // widgets
 import ActionConfirmation from 'widgets/action-confirmation';
 
+/**
+ * Component that bring up a confirmation dialog when there're unsaved changes.
+ *
+ * @extends PureComponent
+ */
 class DataLossWarning extends PureComponent {
     static displayName = 'DataLossWarning';
 

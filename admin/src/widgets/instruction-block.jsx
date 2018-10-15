@@ -8,6 +8,12 @@ import CollapsibleContainer from 'widgets/collapsible-container';
 
 import './instruction-block.scss';
 
+/**
+ * A box with instructions in it. Instructions are Markdown files stored in
+ * src/instructions.
+ *
+ * @extends PureComponent
+ */
 class InstructionBlock extends PureComponent {
     static displayName = 'InstructionBlock';
 

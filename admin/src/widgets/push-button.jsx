@@ -3,6 +3,9 @@ import React from 'react';
 
 import './push-button.scss';
 
+/**
+ * Stateless component that renders a standard push button.
+ */
 function PushButton(props) {
     props = _.clone(props)
     if (props.className) {
