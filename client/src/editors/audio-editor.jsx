@@ -6,6 +6,10 @@ import DurationIndicator from 'widgets/duration-indicator';
 
 import './audio-editor.scss';
 
+/**
+ * Stateless component that renders an image editor for adjusting the album
+ * art if there's one. Otherwise a static placeholder graphic is rendered.
+ */
 function AudioEditor(props) {
     let { resource, duration } = props;
     if (resource.width && resource.height) {

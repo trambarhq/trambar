@@ -13,6 +13,14 @@ import ImageCropper from 'widgets/image-cropper';
 
 import './image-editor.scss';
 
+/**
+ * Component for adjusting an image's clipping rect (which controls the zoom
+ * level as well). Contains logics for loading the full image, either an
+ * local image that was selected by the user or an image that was uploaded
+ * previously.
+ *
+ * @extends PureComponent
+ */
 class ImageEditor extends PureComponent {
     static displayName = 'ImageEditor';
 

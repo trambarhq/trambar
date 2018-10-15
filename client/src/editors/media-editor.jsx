@@ -10,6 +10,11 @@ import AudioEditor from 'editors/audio-editor';
 
 import './media-editor.scss';
 
+/**
+ * Component for adjusting a media resource attached to a story or reaction.
+ *
+ * @extends PureComponent
+ */
 class MediaEditor extends PureComponent {
     static displayName = 'MediaEditor';
 

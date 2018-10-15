@@ -24,6 +24,12 @@ import './reaction-editor.scss';
 
 const AUTOSAVE_DURATION = 2000;
 
+/**
+ * Component for creating or editing a comment--the only reaction where the
+ * user enters the text.
+ *
+ * @extends PureComponent
+ */
 class ReactionEditor extends PureComponent {
     static displayName = 'ReactionEditor';
 

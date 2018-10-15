@@ -18,6 +18,14 @@ const USE_STREAM = true;
 
 import './media-editor.scss';
 
+/**
+ * Component for media capturing and file importing. It'll start render a
+ * specific dialog box when capture() is invoked by the parent component.
+ * It also contains the code for importing files from a file input or
+ * drag and drop event.
+ *
+ * @extends PureComponent
+ */
 class MediaImporter extends PureComponent {
     static displayName = 'MediaImporter';
 

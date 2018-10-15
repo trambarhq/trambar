@@ -34,6 +34,11 @@ import './story-editor.scss';
 
 const AUTOSAVE_DURATION = 2000;
 
+/**
+ * Component for creating or editing a story.
+ *
+ * @extends PureComponent
+ */
 class StoryEditor extends PureComponent {
     static displayName = 'StoryEditor';
 

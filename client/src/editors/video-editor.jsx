@@ -6,6 +6,10 @@ import DurationIndicator from 'widgets/duration-indicator';
 
 import './video-editor.scss';
 
+/**
+ * Stateless component that renders an image editor for adjusting the video
+ * preview image. The duration of the video is overlayed over the image.
+ */
 function VideoEditor(props) {
     let { duration } = props;
     return (

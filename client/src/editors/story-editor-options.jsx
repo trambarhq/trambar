@@ -10,6 +10,11 @@ import IssueDialogBox from 'dialogs/issue-dialog-box';
 
 import './story-editor-options.scss';
 
+/**
+ * Component responsible for the handling of story options. Used by StoryEditor.
+ *
+ * @extends PureComponent
+ */
 class StoryEditorOptions extends PureComponent {
     static displayName = 'StoryEditorOptions';
 
