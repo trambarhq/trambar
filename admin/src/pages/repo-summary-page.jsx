@@ -22,6 +22,11 @@ import ErrorBoundary from 'widgets/error-boundary';
 
 import './repo-summary-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Repo Summary page.
+ *
+ * @extends AsyncComponent
+ */
 class RepoSummaryPage extends AsyncComponent {
     static displayName = 'RepoSummaryPage';
 
@@ -71,6 +76,11 @@ class RepoSummaryPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Repo Summary page.
+ *
+ * @extends PureComponent
+ */
 class RepoSummaryPageSync extends PureComponent {
     static displayName = 'RepoSummaryPage.Sync';
 

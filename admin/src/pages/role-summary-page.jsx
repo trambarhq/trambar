@@ -6,8 +6,7 @@ import ComponentRefs from 'utils/component-refs';
 import * as RoleFinder from 'objects/finders/role-finder';
 import * as SystemFinder from 'objects/finders/system-finder';
 import * as UserFinder from 'objects/finders/user-finder';
-
-import SlugGenerator from 'utils/slug-generator';
+import * as SlugGenerator from 'utils/slug-generator';
 
 // widgets
 import PushButton from 'widgets/push-button';
@@ -23,6 +22,11 @@ import UnexpectedError from 'widgets/unexpected-error';
 
 import './role-summary-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Role Summary page.
+ *
+ * @extends AsyncComponent
+ */
 class RoleSummaryPage extends AsyncComponent {
     static displayName = 'RoleSummaryPage';
 
@@ -70,6 +74,11 @@ class RoleSummaryPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Role Summary page.
+ *
+ * @extends PureComponent
+ */
 class RoleSummaryPageSync extends PureComponent {
     static displayName = 'RoleSummaryPage.Sync';
 

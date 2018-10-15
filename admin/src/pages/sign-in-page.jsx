@@ -10,6 +10,11 @@ import TextField from 'widgets/text-field';
 
 import './sign-in-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Sign In page.
+ *
+ * @extends AsyncComponent
+ */
 class SignInPage extends AsyncComponent {
     static displayName = 'SignInPage';
 
@@ -42,6 +47,11 @@ class SignInPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Sign In page.
+ *
+ * @extends PureComponent
+ */
 class SignInPageSync extends PureComponent {
     static displayName = 'SignInPage.Sync';
 

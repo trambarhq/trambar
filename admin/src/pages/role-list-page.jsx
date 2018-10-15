@@ -19,6 +19,11 @@ import UnexpectedError from 'widgets/unexpected-error';
 
 import './role-list-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Role List page.
+ *
+ * @extends AsyncComponent
+ */
 class RoleListPage extends AsyncComponent {
     static displayName = 'RoleListPage';
 
@@ -57,6 +62,11 @@ class RoleListPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Role List page.
+ *
+ * @extends PureComponent
+ */
 class RoleListPageSync extends PureComponent {
     static displayName = 'RoleListPage.Sync';
 

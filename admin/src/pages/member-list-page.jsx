@@ -22,6 +22,11 @@ import UnexpectedError from 'widgets/unexpected-error';
 
 import './member-list-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Member List page.
+ *
+ * @extends AsyncComponent
+ */
 class MemberListPage extends AsyncComponent {
     static displayName = 'MemberListPage';
 
@@ -71,6 +76,11 @@ class MemberListPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Member List page.
+ *
+ * @extends PureComponent
+ */
 class MemberListPageSync extends PureComponent {
     static displayName = 'MemberListPage.Sync';
 

@@ -20,6 +20,11 @@ import UnexpectedError from 'widgets/unexpected-error';
 
 import './server-list-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Server List page.
+ *
+ * @extends AsyncComponent
+ */
 class ServerListPage extends AsyncComponent {
     static displayName = 'ServerListPage';
 
@@ -58,6 +63,11 @@ class ServerListPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Server List page.
+ *
+ * @extends PureComponent
+ */
 class ServerListPageSync extends PureComponent {
     static displayName = 'ServerListPage.Sync';
 

@@ -9,8 +9,7 @@ import * as ServerFinder from 'objects/finders/server-finder';
 import ServerTypes from 'objects/types/server-types';
 import * as ServerSettings from 'objects/settings/server-settings';
 import * as SystemFinder from 'objects/finders/system-finder';
-
-import SlugGenerator from 'utils/slug-generator';
+import * as SlugGenerator from 'utils/slug-generator';
 
 // widgets
 import PushButton from 'widgets/push-button';
@@ -29,6 +28,11 @@ import ErrorBoundary from 'widgets/error-boundary';
 
 import './server-summary-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Server Summary page.
+ *
+ * @extends AsyncComponent
+ */
 class ServerSummaryPage extends AsyncComponent {
     static displayName = 'ServerSummaryPage';
 
@@ -76,6 +80,11 @@ class ServerSummaryPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Server Summary page.
+ *
+ * @extends PureComponent
+ */
 class ServerSummaryPageSync extends PureComponent {
     static displayName = 'ServerSummaryPage.Sync';
 

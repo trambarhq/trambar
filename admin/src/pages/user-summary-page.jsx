@@ -30,6 +30,11 @@ import ErrorBoundary from 'widgets/error-boundary';
 
 import './user-summary-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the User/Member Summary page.
+ *
+ * @extends AsyncComponent
+ */
 class UserSummaryPage extends AsyncComponent {
     static displayName = 'UserSummaryPage';
 
@@ -97,6 +102,11 @@ class UserSummaryPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the User/Member Summary page.
+ *
+ * @extends PureComponent
+ */
 class UserSummaryPageSync extends PureComponent {
     static displayName = 'UserSummaryPage.Sync';
 

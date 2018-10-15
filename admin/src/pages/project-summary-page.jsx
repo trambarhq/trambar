@@ -6,7 +6,7 @@ import * as ProjectFinder from 'objects/finders/project-finder';
 import * as ProjectSettings from 'objects/settings/project-settings';
 import * as StatisticsFinder from 'objects/finders/statistics-finder';
 import * as SystemFinder from 'objects/finders/system-finder';
-import SlugGenerator from 'utils/slug-generator';
+import * as SlugGenerator from 'utils/slug-generator';
 
 // widgets
 import PushButton from 'widgets/push-button';
@@ -25,6 +25,11 @@ import ErrorBoundary from 'widgets/error-boundary';
 
 import './project-summary-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Project Summary page.
+ *
+ * @extends AsyncComponent
+ */
 class ProjectSummaryPage extends AsyncComponent {
     static displayName = 'ProjectSummaryPage';
 
@@ -75,6 +80,11 @@ class ProjectSummaryPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Project Summary page.
+ *
+ * @extends PureComponent
+ */
 class ProjectSummaryPageSync extends PureComponent {
     static displayName = 'ProjectSummaryPage.Sync';
 

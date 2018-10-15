@@ -16,6 +16,11 @@ import UnexpectedError from 'widgets/unexpected-error';
 
 import './settings-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Settings page.
+ *
+ * @extends AsyncComponent
+ */
 class SettingsPage extends AsyncComponent {
     static displayName = 'SettingsPage';
 
@@ -49,6 +54,11 @@ class SettingsPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Settings page.
+ *
+ * @extends PureComponent
+ */
 class SettingsPageSync extends PureComponent {
     static displayName = 'SettingsPage.Sync';
 

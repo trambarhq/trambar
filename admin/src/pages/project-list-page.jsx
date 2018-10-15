@@ -25,6 +25,11 @@ import UnexpectedError from 'widgets/unexpected-error';
 
 import './project-list-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Project List page.
+ *
+ * @extends AsyncComponent
+ */
 class ProjectListPage extends AsyncComponent {
     static displayName = 'ProjectListPage';
 
@@ -73,6 +78,11 @@ class ProjectListPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Project List page.
+ *
+ * @extends PureComponent
+ */
 class ProjectListPageSync extends PureComponent {
     static displayName = 'ProjectListPage.Sync';
 

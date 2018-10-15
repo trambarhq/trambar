@@ -22,6 +22,11 @@ import UnexpectedError from 'widgets/unexpected-error';
 
 import './repo-list-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Repo List page.
+ *
+ * @extends AsyncComponent
+ */
 class RepoListPage extends AsyncComponent {
     static displayName = 'RepoListPage';
 
@@ -72,6 +77,11 @@ class RepoListPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Repo List page.
+ *
+ * @extends PureComponent
+ */
 class RepoListPageSync extends PureComponent {
     static displayName = 'RepoListPage.Sync';
 

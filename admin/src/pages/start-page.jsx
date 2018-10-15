@@ -6,6 +6,11 @@ import * as SystemFinder from 'objects/finders/system-finder';
 
 import './start-page.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the Start page.
+ *
+ * @extends AsyncComponent
+ */
 class StartPage extends AsyncComponent {
     static displayName = 'StartPage';
 
@@ -42,6 +47,11 @@ class StartPage extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the Start page.
+ *
+ * @extends PureComponent
+ */
 class StartPageSync extends PureComponent {
     static displayName = 'StartPage.Sync';
 

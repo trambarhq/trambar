@@ -5,6 +5,11 @@ import Unicorn from 'unicorn.svg';
 
 import './error-page.scss';
 
+/**
+ * Component that renders the Error page.
+ *
+ * @extends PureComponent
+ */
 class ErrorPage extends PureComponent {
     static displayName = 'ErrorPage';
 
