@@ -9,6 +9,11 @@ import OptionButton from 'widgets/option-button';
 
 import './web-alert-panel.scss';
 
+/**
+ * Panel for controlling the sending of alerts to the web browser.
+ *
+ * @extends PureComponent
+ */
 class WebAlertPanel extends PureComponent {
     static displayName = 'WebAlertPanel';
 

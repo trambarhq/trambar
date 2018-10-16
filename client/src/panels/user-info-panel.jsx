@@ -8,6 +8,11 @@ import TextField from 'widgets/text-field';
 
 import './user-info-panel.scss';
 
+/**
+ * Panel for entering the user's basic personal information.
+ *
+ * @extends PureComponent
+ */
 class UserInfoPanel extends PureComponent {
     static displayName = 'UserInfoPanel';
 

@@ -16,6 +16,11 @@ import Icon from 'octicons/build/svg/person.svg';
 
 import './user-image-panel.scss';
 
+/**
+ * Panel for adding and changing the user's profile image.
+ *
+ * @extends PureComponent
+ */
 class UserImagePanel extends PureComponent {
     static displayName = 'UserImagePanel';
 

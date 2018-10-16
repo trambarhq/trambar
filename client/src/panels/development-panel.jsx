@@ -9,6 +9,11 @@ import OptionButton from 'widgets/option-button';
 
 import './development-panel.scss';
 
+/**
+ * Panel for toggling developer settings.
+ *
+ * @extends PureComponent
+ */
 class DevelopmentPanel extends PureComponent {
     static displayName = 'DevelopmentPanel';
 

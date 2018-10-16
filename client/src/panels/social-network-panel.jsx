@@ -6,8 +6,13 @@ import SettingsPanel from 'widgets/settings-panel';
 import PushButton from 'widgets/push-button';
 import TextField from 'widgets/text-field';
 
-require('./social-network-panel.scss');
+import './social-network-panel.scss';
 
+/**
+ * Panel for entering links to social network accounts.
+ *
+ * @extends PureComponent
+ */
 class SocialNetworkPanel extends PureComponent {
     static displayName = 'SocialNetworkPanel';
 

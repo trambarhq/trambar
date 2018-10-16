@@ -7,8 +7,13 @@ import * as UserUtils from 'objects/utils/user-utils';
 import SettingsPanel from 'widgets/settings-panel';
 import OptionButton from 'widgets/option-button';
 
-require('./mobile-alert-panel.scss');
+import './mobile-alert-panel.scss';
 
+/**
+ * Panel for controling the sending of alerts to the user's mobile phone.
+ *
+ * @extends PureComponent
+ */
 class MobileAlertPanel extends PureComponent {
     static displayName = 'MobileAlertPanel';
 

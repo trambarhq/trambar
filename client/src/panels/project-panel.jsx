@@ -13,6 +13,11 @@ import ProjectManagementDialogBox from 'dialogs/project-management-dialog-box';
 
 import './project-panel.scss';
 
+/**
+ * Panel for switching between different projects.
+ *
+ * @extends PureComponent
+ */
 class ProjectPanel extends PureComponent {
     static displayName = 'ProjectPanel';
 

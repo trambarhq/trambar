@@ -6,8 +6,13 @@ import SettingsPanel from 'widgets/settings-panel';
 import PushButton from 'widgets/push-button';
 import ConfirmationDialogBox from 'dialogs/confirmation-dialog-box';
 
-require('./device-panel.scss');
+import './device-panel.scss';
 
+/**
+ * Panel listing mobile devices currently attached to the user's account.
+ *
+ * @extends PureComponent
+ */
 class DevicePanel extends PureComponent {
     static displayName = 'DevicePanel';
 

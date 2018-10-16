@@ -9,6 +9,11 @@ import OptionButton from 'widgets/option-button';
 
 import './notification-panel.scss';
 
+/**
+ * Panel for controlling which events generate notifications.
+ *
+ * @extends PureComponent
+ */
 class NotificationPanel extends PureComponent {
     static displayName = 'NotificationPanel';
 

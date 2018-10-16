@@ -7,6 +7,11 @@ import OptionButton from 'widgets/option-button';
 
 import './language-panel.scss';
 
+/**
+ * Panel for changing the UI language.
+ *
+ * @extends PureComponent
+ */
 class LanguagePanel extends PureComponent {
     static displayName = 'LanguagePanel';
 
