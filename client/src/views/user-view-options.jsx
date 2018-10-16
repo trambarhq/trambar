@@ -7,6 +7,12 @@ import TelephoneNumberDialogBox from 'dialogs/telephone-number-dialog-box';
 
 import './user-view-options.scss';
 
+/**
+ * Component that lists a user's social links. It also handles options for
+ * different statistics views.
+ *
+ * @extends PureComponent
+ */
 class UserViewOptions extends PureComponent {
     static displayName = 'UserViewOptions';
 

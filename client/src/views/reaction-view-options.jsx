@@ -9,6 +9,12 @@ import OptionButton from 'widgets/option-button';
 
 import './reaction-view-options.scss';
 
+/**
+ * Component that renders a pop-up menu used to alter options of reactions to
+ * stories.
+ *
+ * @extends PureComponent
+ */
 class ReactionViewOptions extends PureComponent {
     static displayName = 'ReactionViewOptions';
 

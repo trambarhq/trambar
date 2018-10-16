@@ -19,6 +19,11 @@ import ReactionViewOptions from 'views/reaction-view-options';
 
 import './reaction-view.scss';
 
+/**
+ * Component for displaying a reaction to a story.
+ *
+ * @extends PureComponent
+ */
 class ReactionView extends PureComponent {
     static displayName = 'ReactionView';
 

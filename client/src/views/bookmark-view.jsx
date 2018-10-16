@@ -7,6 +7,11 @@ import MultipleUserNames from 'widgets/multiple-user-names';
 
 import './bookmark-view.scss';
 
+/**
+ * Component for rendering a frame around a bookmarked story.
+ *
+ * @extends PureComponent
+ */
 class BookmarkView extends PureComponent {
     static displayName = 'BookmarkView';
 

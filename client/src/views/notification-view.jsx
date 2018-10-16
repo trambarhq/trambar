@@ -8,6 +8,11 @@ import ProfileImage from 'widgets/profile-image';
 
 import './notification-view.scss';
 
+/**
+ * Component for displaying a notification.
+ *
+ * @extends PureComponent
+ */
 class NotificationView extends PureComponent {
     static displayName = 'NotificationView';
 

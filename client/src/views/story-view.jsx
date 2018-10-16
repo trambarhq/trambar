@@ -26,6 +26,12 @@ import './story-view.scss';
 
 const AUTOSAVE_DURATION = 2000;
 
+/**
+ * Component for rendering a story. It provides the basic frame, leaving the
+ * task of rendering the actual story contents to StoryContents.
+ *
+ * @extends PureComponent
+ */
 class StoryView extends PureComponent {
     static displayName = 'StoryView';
 

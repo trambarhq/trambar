@@ -22,6 +22,11 @@ import PushButton from 'widgets/push-button';
 
 import './story-contents.scss';
 
+/**
+ * Component that renders a story's contents. Used by StoryView.
+ *
+ * @extends PureComponent
+ */
 class StoryContents extends PureComponent {
     static displayName = 'StoryContents';
 

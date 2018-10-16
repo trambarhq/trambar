@@ -9,6 +9,13 @@ import IssueDialogBox from 'dialogs/issue-dialog-box';
 
 import './story-view-options.scss';
 
+/**
+ * Component that handles the changing of a story's options. It's used for
+ * both rendering the options when they appear in a pop-up menu and when they
+ * appear within the story view when there's room for the third column.
+ *
+ * @extends PureComponent
+ */
 class StoryViewOptions extends PureComponent {
     static displayName = 'StoryViewOptions';
 

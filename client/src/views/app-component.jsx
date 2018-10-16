@@ -7,6 +7,11 @@ import ResourceView from 'widgets/resource-view';
 
 import './app-component.scss';
 
+/**
+ * Widget for displaying component description.
+ *
+ * @extends PureComponent
+ */
 class AppComponent extends PureComponent {
     static displayName = 'AppComponent';
 

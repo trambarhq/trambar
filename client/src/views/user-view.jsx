@@ -16,6 +16,11 @@ import CornerPopUp from 'widgets/corner-pop-up';
 
 import './user-view.scss';
 
+/**
+ * Component for showing information about a user.
+ *
+ * @extends PureComponent
+ */
 class UserView extends PureComponent {
     static displayName = 'UserView';
 

@@ -7,6 +7,11 @@ import * as StoryTypes from 'objects/types/story-types';
 
 import './user-statistics.scss';
 
+/**
+ * Component for rendering a user's statistics. Used by UserView.
+ *
+ * @extends PureComponent
+ */
 class UserStatistics extends PureComponent {
     static displayName = 'UserStatistics';
 

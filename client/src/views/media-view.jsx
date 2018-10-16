@@ -16,6 +16,11 @@ import DurationIndicator from 'widgets/duration-indicator';
 
 import './media-view.scss';
 
+/**
+ * Component for displaying media resources attached to a story or reaction.
+ *
+ * @extends PureComponent
+ */
 class MediaView extends PureComponent {
     static displayName = 'MediaView';
 
