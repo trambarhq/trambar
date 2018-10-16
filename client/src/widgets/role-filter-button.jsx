@@ -6,6 +6,11 @@ import ProfileImage from 'widgets/profile-image';
 
 import './role-filter-button.scss';
 
+/**
+ * A button decorated with profile images of members with a given role.
+ *
+ * @extends PureComponent
+ */
 class RoleFilterButton extends PureComponent {
     static displayName = 'RoleFilterButton';
 

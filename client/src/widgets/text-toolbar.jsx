@@ -6,6 +6,11 @@ import HeaderButton from 'widgets/header-button';
 
 import './text-toolbar.scss';
 
+/**
+ * Row of buttons for changing text type.
+ *
+ * @extends PureComponent
+ */
 class TextToolbar extends PureComponent {
     static displayName = 'TextToolbar';
 

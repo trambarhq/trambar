@@ -6,6 +6,11 @@ import HeaderButton from 'widgets/header-button';
 
 import './reaction-toolbar.scss';
 
+/**
+ * Buttons for liking or commenting on a story.
+ *
+ * @extends PureComponent
+ */
 class ReactionToolbar extends PureComponent {
     static displayName = 'ReactionToolbar';
 

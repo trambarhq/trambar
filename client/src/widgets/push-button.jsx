@@ -2,6 +2,9 @@ import React from 'react';
 
 import './push-button.scss';
 
+/**
+ * Stateless component that renders a basic push button.
+ */
 function PushButton(props) {
     let { label, emphasized, hidden, disabled, onClick } = props;
     if (hidden) {
@@ -20,6 +23,9 @@ function PushButton(props) {
 
 PushButton.File = FileButton;
 
+/**
+ * Stateless component that renders a push button that triggers file selection.
+ */
 function FileButton(props) {
     let { label, emphasized, hidden, disabled, multiple, accept, onChange } = props;
     if (hidden) {

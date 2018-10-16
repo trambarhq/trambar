@@ -3,6 +3,9 @@ import React from 'react';
 
 import './scrollable.scss';
 
+/**
+ * Stateless component that renders a container with a scroll-bar
+ */
 function Scrollable(props) {
     let { className, children } = props;
     className = 'scrollable' + ((className) ? ` ${className}` : '');

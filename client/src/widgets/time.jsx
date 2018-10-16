@@ -4,6 +4,13 @@ import Moment from 'moment';
 
 import './time.scss';
 
+/**
+ * Component for rendering the publication time of a story or reaction.
+ * Depending on how long ago it was, it'll display either the amount of time
+ * elapsed since or an actual date.
+ *
+ * @extends PureComponent
+ */
 class Time extends PureComponent {
     static displayName = 'Time';
 

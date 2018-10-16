@@ -7,6 +7,12 @@ import AutosizeTextArea from 'widgets/autosize-text-area';
 
 import './text-field.scss';
 
+/**
+ * Component that renders a text field and a label, which is provided as
+ * a child element. Used mainly by panels in the Settings page.
+ *
+ * @extends PureComponent
+ */
 class TextField extends PureComponent {
     static displayName = 'TextField';
 

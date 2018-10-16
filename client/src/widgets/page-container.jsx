@@ -2,6 +2,11 @@ import React, { PureComponent } from 'react';
 
 import './page-container.scss';
 
+/**
+ * Container holding a page's contents.
+ *
+ * @extends PureComponent
+ */
 class PageContainer extends PureComponent {
     static displayName = 'PageContainer';
 
@@ -9,6 +14,7 @@ class PageContainer extends PureComponent {
         if (node) {
             let activeElement = document.activeElement;
             if (!activeElement || activeElement === document.body) {
+                // set focus so that arrow keys can be used to scroll the page
                 node.focus();
             }
         }

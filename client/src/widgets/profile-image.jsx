@@ -7,6 +7,10 @@ import Icon from 'octicons/build/svg/person.svg';
 
 import './profile-image.scss';
 
+/**
+ * Stateless component that renders a user's profile image. If there's none,
+ * it renders a placeholder graphic.
+ */
 function ProfileImage(props) {
     let { env, href, user, size } = props;
     let className = `profile-image ${size}`;

@@ -11,6 +11,12 @@ import RoleFilterButton from 'widgets/role-filter-button';
 
 import './role-filter-bar.scss';
 
+/**
+ * Asynchronous component that retrieve data needed by the role filter bar,
+ * namely the list of roles and list of project members.
+ *
+ * @extends AsyncComponent
+ */
 class RoleFilterBar extends AsyncComponent {
     static displayName = 'RoleFilterBar';
 

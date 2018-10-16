@@ -10,6 +10,12 @@ import AudioCaptureDialogBox from 'dialogs/audio-capture-dialog-box';
 
 import './reaction-media-toolbar.scss';
 
+/**
+ * Buttons for attaching media to a comment. It also handling the toggling of
+ * Markdown formatting.
+ *
+ * @extends PureComponent
+ */
 class ReactionMediaToolbar extends PureComponent {
     static displayName = 'ReactionMediaToolbar';
 

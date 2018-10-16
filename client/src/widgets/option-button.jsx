@@ -2,6 +2,10 @@ import React from 'react';
 
 import './option-button.scss';
 
+/**
+ * Stateless component that renders a text button with either a checkbox or
+ * an icon next to it.
+ */
 function OptionButton(props) {
     let { id, label, url, target, hidden, disabled, onClick } = props;
     if (hidden) {

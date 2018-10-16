@@ -6,6 +6,11 @@ import Time from 'widgets/time';
 
 import './story-progress.scss';
 
+/**
+ * Stateless component that render either the publication time or progress in
+ * publishing a story, when doing so requires significant amount of time due
+ * to attached media.
+ */
 function StoryProgress(props) {
     let { env, story, status, pending } = props;
     let { t } = env.locale;

@@ -4,6 +4,18 @@ import ReactDOM from 'react-dom';
 
 import './new-items-alert.scss';
 
+/**
+ * Component that displays a pop-up message when necessary, alerting the user
+ * to the fact that new contents has appeared at the top of the page that they
+ * otherwise wouldn't notice due to scrolling. It doesn't render anything
+ * itself, since the pop-up needs to be outside the parent component's HTML
+ * node. Instead, it uses ReactDOM to render into a node that it'd create in
+ * the viewport node.
+ *
+ * TODO: Take advantage of React 16's support for portals
+ *
+ * @extends PureComponent
+ */
 class NewItemsAlertProxy extends PureComponent {
     static displayName = 'NewItemsAlertProxy';
 

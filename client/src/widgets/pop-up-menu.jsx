@@ -7,6 +7,11 @@ import ComponentRefs from 'utils/component-refs';
 
 import './pop-up-menu.scss';
 
+/**
+ * A button that opens a pop-up menu when clicked.
+ *
+ * @extends PureComponent
+ */
 class PopUpMenu extends PureComponent {
     static displayName = 'PopUpMenu';
 

@@ -3,6 +3,11 @@ import React, { PureComponent, Children } from 'react';
 
 import './settings-panel.scss';
 
+/**
+ * Component that renders a settings panel's outer frame.
+ *
+ * @extends PureComponent
+ */
 class SettingsPanel extends PureComponent {
     static displayName = 'SettingsPanel';
 

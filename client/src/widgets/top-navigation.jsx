@@ -11,6 +11,11 @@ import SearchBar from 'widgets/search-bar';
 
 import './top-navigation.scss';
 
+/**
+ * Expandable navigation bar at the top of the user interface.
+ *
+ * @extends PureComponent
+ */
 class TopNavigation extends PureComponent {
     static displayName = 'TopNavigation';
 

@@ -6,6 +6,11 @@ import Time from 'widgets/time';
 
 import './reaction-progress.scss';
 
+/**
+ * Stateless component that render either the publication time or progress in
+ * publishing a reaction, when doing so requires significant amount of time due
+ * to attached media.
+ */
 function ReactionProgress(props) {
     let { env, reaction, status } = props;
     let { t } = env.locale;

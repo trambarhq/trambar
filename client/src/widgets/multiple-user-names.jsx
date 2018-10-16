@@ -10,6 +10,13 @@ import ProfileImage from 'widgets/profile-image';
 
 import './multiple-user-names.scss';
 
+/**
+ * Component that renders a small pop-up window showing a list of users when
+ * the mouse pointer goes over a label. The list is truncated when it's long.
+ * Clicking on the label brings up the full list in a dialog box.
+ *
+ * @extends PureComponent
+ */
 class MultipleUserNames extends PureComponent {
     static displayName = 'MultipleUserNames';
 
@@ -191,6 +198,9 @@ class MultipleUserNames extends PureComponent {
     }
 }
 
+/**
+ * Stateless component that renders a user's profile image and name.
+ */
 function User(props) {
     let { env, user } = props;
     let classNames = [ 'user' ];

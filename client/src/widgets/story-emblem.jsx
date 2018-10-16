@@ -4,6 +4,11 @@ import { GitStoryTypes, StoryIcons } from 'objects/types/story-types';
 
 import './story-emblem.scss';
 
+/**
+ * Stateless component that renders a background graphic for stories that
+ * describe git activities. It's also responsible for rendering the special
+ * "#yippeekiyay" explosion.
+ */
 function StoryEmblem(props) {
     let { story } = props;
     let { type, tags } = story;

@@ -8,6 +8,12 @@ import * as UserFinder from 'objects/finders/user-finder';
 
 import './search-bar.scss';
 
+/**
+ * Asynchronous component that retrieves data needed by the search bar, namely
+ * project statistics, which include information concerning tag usage.
+ *
+ * @extends AsyncComponent
+ */
 class SearchBar extends AsyncComponent {
     static displayName = 'SearchBar';
 
@@ -47,6 +53,11 @@ class SearchBar extends AsyncComponent {
     }
 }
 
+/**
+ * Synchronous component that actually renders the search bar.
+ *
+ * @extends PureComponent
+ */
 class SearchBarSync extends PureComponent {
     static displayName = 'SearchBar.Sync';
 

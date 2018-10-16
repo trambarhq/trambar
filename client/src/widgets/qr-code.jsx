@@ -2,6 +2,11 @@ import React, { PureComponent } from 'react';
 import ComponentRefs from 'utils/component-refs';
 import QRCodeGenerator from 'qrcode';
 
+/**
+ * Component for generating and displaying a QR code.
+ *
+ * @extends PureComponent
+ */
 class QRCode extends PureComponent {
     static displayName = 'QRCode';
 
