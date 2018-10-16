@@ -5,7 +5,6 @@ import ComponentRefs from 'utils/component-refs';
 import * as TagScanner from 'utils/tag-scanner';
 import * as RepoUtils from 'objects/utils/repo-utils';
 
-
 // widgets
 import Overlay from 'widgets/overlay';
 import PushButton from 'widgets/push-button';
@@ -13,6 +12,12 @@ import TextField from 'widgets/text-field';
 
 import './issue-dialog-box.scss';
 
+/**
+ * Dialog box for adding a title and tags to a story being exported to an
+ * issue tracker.
+ *
+ * @extends PureComponent
+ */
 class IssueDialogBox extends PureComponent {
     static displayName = 'IssueDialogBox';
 

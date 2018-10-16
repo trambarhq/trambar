@@ -9,6 +9,11 @@ import Scrollable from 'widgets/scrollable';
 
 import './project-description-dialog-box.scss';
 
+/**
+ * Dialog box for displaying a project's description in full.
+ *
+ * @extends PureComponent
+ */
 class ProjectDescriptionDialogBox extends PureComponent {
     static displayName = 'ProjectDescriptionDialogBox';
 

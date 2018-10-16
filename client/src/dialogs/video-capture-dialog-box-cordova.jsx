@@ -4,6 +4,12 @@ import React, { PureComponent } from 'react';
 import * as MediaLoader from 'media/media-loader';
 import CordovaFile from 'transport/cordova-file';
 
+/**
+ * Non-visual component that uses the Media Capture Cordiva plug-in to capture
+ * a video clip on an mobile phone.
+ *
+ * @extends PureComponent
+ */
 class VideoCaptureDialogBox extends PureComponent {
     static displayName = 'VideoCaptureDialogBox';
 

@@ -15,6 +15,11 @@ import DurationIndicator from 'widgets/duration-indicator';
 
 import './video-capture-dialog-box-browser.scss';
 
+/**
+ * Dialog box for capturing a video in the web browser.
+ *
+ * @extends PureComponent
+ */
 class VideoCaptureDialogBox extends PureComponent {
     static displayName = 'VideoCaptureDialogBox';
 

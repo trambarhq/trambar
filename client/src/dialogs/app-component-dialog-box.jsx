@@ -8,6 +8,11 @@ import ResourceView from 'widgets/resource-view';
 
 import './app-component-dialog-box.scss';
 
+/**
+ * Dialog box for displaying the description of an app component in full.
+ *
+ * @extends PureComponent
+ */
 class AppComponentDialogBox extends PureComponent {
     static displayName = 'AppComponentDialogBox';
 

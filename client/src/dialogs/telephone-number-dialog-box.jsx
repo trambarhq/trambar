@@ -9,6 +9,11 @@ import QRCode from 'widgets/qr-code';
 
 import './telephone-number-dialog-box.scss';
 
+/**
+ * Dialog box that displays a phone number and a QR code for dialing that number.
+ *
+ * @extends PureComponent
+ */
 class TelephoneNumberDialogBox extends PureComponent {
     static displayName = 'TelephoneNumberDialogBox';
 

@@ -9,6 +9,11 @@ import TextField from 'widgets/text-field';
 
 import './activation-dialog-box.scss';
 
+/**
+ * Dialog box for manually entering the activation code.
+ *
+ * @extends PureComponent
+ */
 class ActivationDialogBox extends PureComponent {
     static displayName = 'ActivationDialogBox';
 

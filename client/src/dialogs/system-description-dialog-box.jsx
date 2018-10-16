@@ -8,6 +8,11 @@ import Scrollable from 'widgets/scrollable';
 
 import './system-description-dialog-box.scss';
 
+/**
+ * Dialog box for displaying the system description.
+ *
+ * @extends PureComponent
+ */
 class SystemDescriptionDialogBox extends PureComponent {
     static displayName = 'SystemDescriptionDialogBox';
 

@@ -11,6 +11,11 @@ import CollapsibleContainer from 'widgets/collapsible-container';
 
 import './membership-request-dialog-box.scss';
 
+/**
+ * Dialog box for requesting membership to a project. 
+ *
+ * @extends PureComponent
+ */
 class MembershipRequestDialogBox extends PureComponent {
     static displayName = 'MembershipRequestDialogBox';
 

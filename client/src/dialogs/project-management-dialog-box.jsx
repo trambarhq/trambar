@@ -9,6 +9,11 @@ import OptionButton from 'widgets/option-button';
 
 import './project-management-dialog-box.scss';
 
+/**
+ * Dialog box for removing a project from the list.
+ *
+ * @extends PureComponent
+ */
 class ProjectManagementDialogBox extends PureComponent {
     static displayName = 'ProjectManagementDialogBox';
 

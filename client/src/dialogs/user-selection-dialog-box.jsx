@@ -9,6 +9,11 @@ import UserSelectionList from 'lists/user-selection-list';
 
 import './user-selection-dialog-box.scss';
 
+/**
+ * Dialog box for selecting users from a list.
+ *
+ * @extends PureComponent
+ */
 class UserSelectionDialogBox extends PureComponent {
     static displayName = 'UserSelectionDialogBox';
 

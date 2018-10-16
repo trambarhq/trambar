@@ -11,6 +11,11 @@ import ResourceView from 'widgets/resource-view';
 
 import './media-dialog-box.scss';
 
+/**
+ * Dialog box for showing attached photos and videos.
+ *
+ * @extends PureComponent
+ */
 class MediaDialogBox extends PureComponent {
     static displayName = 'MediaDialogBox';
 

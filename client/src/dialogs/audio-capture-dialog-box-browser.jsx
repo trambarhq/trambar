@@ -11,6 +11,11 @@ import DurationIndicator from 'widgets/duration-indicator';
 
 import './audio-capture-dialog-box-browser.scss';
 
+/**
+ * Dialog box for capturing an audio in the web browser.
+ *
+ * @extends PureComponent
+ */
 class AudioCaptureDialogBox extends PureComponent {
     static displayName = 'AudioCaptureDialogBox';
 

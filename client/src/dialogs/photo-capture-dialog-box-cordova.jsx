@@ -4,6 +4,11 @@ import React, { PureComponent } from 'react';
 import * as MediaLoader from 'media/media-loader';
 import CordovaFile from 'transport/cordova-file';
 
+/**
+ * Non-visual component that uses the Camera Cordova plugin to take a photo.
+ *
+ * @extends PureComponent
+ */
 class PhotoCaptureDialogBox extends PureComponent {
     static displayName = 'PhotoCaptureDialogBox';
 

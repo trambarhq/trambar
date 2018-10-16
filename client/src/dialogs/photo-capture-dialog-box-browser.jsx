@@ -14,6 +14,11 @@ import DevicePlaceholder from 'widgets/device-placeholder';
 
 import './photo-capture-dialog-box-browser.scss';
 
+/**
+ * Dialog box for taking a picture in the web browser.
+ *
+ * @extends PureComponent
+ */
 class PhotoCaptureDialogBox extends PureComponent {
     static displayName = 'PhotoCaptureDialogBox';
 

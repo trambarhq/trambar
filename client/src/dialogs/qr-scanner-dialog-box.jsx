@@ -9,6 +9,12 @@ import PushButton from 'widgets/push-button';
 
 import './qr-scanner-dialog-box.scss';
 
+/**
+ * Non-visual component that uses the QR Scanner Cordova plug-in to capture
+ * a QR code.
+ *
+ * @extends PureComponent
+ */
 class QRScannerDialogBox extends PureComponent {
     static displayName = 'QRScannerDialogBox';
 

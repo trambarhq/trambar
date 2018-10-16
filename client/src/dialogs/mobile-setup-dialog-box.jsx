@@ -13,6 +13,11 @@ import StartPage from 'pages/start-page';
 
 import './mobile-setup-dialog-box.scss';
 
+/**
+ * Dialog box that displays a QR-code for mobile activation.
+ *
+ * @extends AsyncComponent
+ */
 class MobileSetupDialogBox extends AsyncComponent {
     static displayName = 'MobileSetupDialogBox';
 
