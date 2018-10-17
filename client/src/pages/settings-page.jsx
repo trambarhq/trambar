@@ -142,23 +142,25 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     render() {
-        let { currentUser } = this.props;
+        let { env, currentUser } = this.props;
         if (!currentUser) {
             return null;
         }
         return (
             <PageContainer className="settings-page">
                 <div className="panels">
-                    {this.renderDevelopmentPanel()}
-                    {this.renderProjectPanel()}
-                    {this.renderDevicePanel()}
-                    {this.renderNotificationPanel()}
-                    {this.renderWebAlertPanel()}
-                    {this.renderMobileAlertPanel()}
-                    {this.renderUserInfoPanel()}
-                    {this.renderUserImagePanel()}
-                    {this.renderSocialNetworkPanel()}
-                    {this.renderLanguagePanel()}
+                    <ErrorBoundary env={env}>
+                        {this.renderDevelopmentPanel()}
+                        {this.renderProjectPanel()}
+                        {this.renderDevicePanel()}
+                        {this.renderNotificationPanel()}
+                        {this.renderWebAlertPanel()}
+                        {this.renderMobileAlertPanel()}
+                        {this.renderUserInfoPanel()}
+                        {this.renderUserImagePanel()}
+                        {this.renderSocialNetworkPanel()}
+                        {this.renderLanguagePanel()}
+                    </ErrorBoundary>
                 </div>
             </PageContainer>
         );
@@ -182,11 +184,7 @@ class SettingsPageSync extends PureComponent {
             env,
             onChange: this.handleChange,
         };
-        return (
-            <ErrorBoundary env={env}>
-                <DevelopmentPanel {...panelProps} />
-            </ErrorBoundary>
-        );
+        return <DevelopmentPanel {...panelProps} />;
     }
 
     /**
@@ -213,11 +211,7 @@ class SettingsPageSync extends PureComponent {
             env,
             onChange: this.handleChange,
         };
-        return (
-            <ErrorBoundary env={env}>
-                <ProjectPanel {...panelProps} />
-            </ErrorBoundary>
-        );
+        return <ProjectPanel {...panelProps} />;
     }
 
     /**
@@ -239,11 +233,7 @@ class SettingsPageSync extends PureComponent {
             route,
             env,
         };
-        return (
-            <ErrorBoundary env={env}>
-                <DevicePanel {...panelProps} />
-            </ErrorBoundary>
-        );
+        return <DevicePanel {...panelProps} />;
     }
 
     /**
@@ -258,11 +248,7 @@ class SettingsPageSync extends PureComponent {
             env,
             onChange: this.handleChange,
         };
-        return (
-            <ErrorBoundary env={env}>
-                <UserInfoPanel {...panelProps} />
-            </ErrorBoundary>
-        );
+        return <UserInfoPanel {...panelProps} />;
     }
 
     /**
@@ -278,11 +264,7 @@ class SettingsPageSync extends PureComponent {
             env,
             onChange: this.handleChange,
         };
-        return (
-            <ErrorBoundary env={env}>
-                <UserImagePanel {...panelProps} />
-            </ErrorBoundary>
-        );
+        return <UserImagePanel {...panelProps} />;
     }
 
     /**
@@ -297,11 +279,7 @@ class SettingsPageSync extends PureComponent {
             env,
             onChange: this.handleChange,
         };
-        return (
-            <ErrorBoundary env={env}>
-                <SocialNetworkPanel {...panelProps} />
-            </ErrorBoundary>
-        );
+        return <SocialNetworkPanel {...panelProps} />;
     }
 
     /**
@@ -317,11 +295,7 @@ class SettingsPageSync extends PureComponent {
             env,
             onChange: this.handleChange,
         };
-        return (
-            <ErrorBoundary env={env}>
-                <NotificationPanel {...panelProps} />
-            </ErrorBoundary>
-        );
+        return <NotificationPanel {...panelProps} />;
     }
 
     /**
@@ -340,11 +314,7 @@ class SettingsPageSync extends PureComponent {
             env,
             onChange: this.handleChange,
         };
-        return (
-            <ErrorBoundary env={env}>
-                <WebAlertPanel {...panelProps} />
-            </ErrorBoundary>
-        );
+        return <WebAlertPanel {...panelProps} />;
     }
 
     /**
@@ -363,11 +333,7 @@ class SettingsPageSync extends PureComponent {
             env,
             onChange: this.handleChange,
         };
-        return (
-            <ErrorBoundary env={env}>
-                <MobileAlertPanel {...panelProps} />
-            </ErrorBoundary>
-        );
+        return <MobileAlertPanel {...panelProps} />;
     }
 
     /**
@@ -380,11 +346,7 @@ class SettingsPageSync extends PureComponent {
         let panelProps = {
             env,
         };
-        return (
-            <ErrorBoundary env={env}>
-                <LanguagePanel {...panelProps} />
-            </ErrorBoundary>
-        );
+        return <LanguagePanel {...panelProps} />;
     }
 
     /**

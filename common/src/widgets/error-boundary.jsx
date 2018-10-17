@@ -22,7 +22,7 @@ class ErrorBoundary extends Component {
         if (error) {
             return <div className="error-boundary">{error.message}</div>;
         }
-        return children;
+        return children || null;
     }
 
     componentDidCatch(error, info) {

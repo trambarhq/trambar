@@ -55,6 +55,9 @@ class Application extends PureComponent {
                 include_mtime: true,
             },
         },
+        cache: {
+            name: 'trambar-admin'
+        },
         notifier: {
             global: true,
         },

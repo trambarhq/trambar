@@ -136,7 +136,6 @@ const routes = {
             'r${scrollToReactionID}',
         ],
         params: {
-            schema: String,
             search: String,
             date: String,
             selectedUserID: Number,
@@ -162,14 +161,22 @@ const routes = {
     },
     'settings-page': {
         path: '/settings/',
-        params: {
-            schema: String,
-        },
         load: (params, context) => {
             params.ui = {
                 navigation: { section: 'settings '},
             };
             return import('pages/settings-page' /* webpackChunkName: "page-settings" */).then((module) => {
+                params.module = module;
+            });
+        }
+    },
+    'diagnostics-page': {
+        path: '/diagnostics/',
+        load: (params, context) => {
+            params.ui = {
+                navigation: { section: 'settings '},
+            };
+            return import('pages/diagnostics-page' /* webpackChunkName: "page-diagnostics" */).then((module) => {
                 params.module = module;
             });
         }
@@ -215,7 +222,7 @@ const routes = {
                 params.module = module;
             });
         },
-    }
+    },
 };
 
 export {

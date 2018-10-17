@@ -14,14 +14,5 @@
             column-gap: 1em;
             max-width: 110em;
         }
-
-        &.diagnostics {
-            height: 100%;
-
-            .double-col &,
-            .triple-col & {
-                column-fill: auto;
-            }
-        }
     }
 }

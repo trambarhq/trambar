@@ -34,7 +34,7 @@ function start(cfg) {
     });
     let cache;
     if (IndexedDBCache.isAvailable()) {
-        cache = new IndexedDBCache()
+        cache = new IndexedDBCache({ databaseName: cfg.cache.name })
     } else {
         cache = new LocalStorageCache();
     }

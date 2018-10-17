@@ -45,6 +45,9 @@ class Application extends PureComponent {
                 include_uncommitted: true,
             },
         },
+        cache: {
+            name: 'trambar'
+        },
     };
 
     constructor(props) {
@@ -139,6 +142,9 @@ class Application extends PureComponent {
             payloads,
             env,
         }, route.params);
+        if (CurrentPage.diagnostics) {
+            _.assign(pageProps, this.props);
+        }
         let key = getRouteKey(route);
         return (
             <ErrorBoundary key={key} env={env}>

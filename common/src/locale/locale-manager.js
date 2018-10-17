@@ -14,6 +14,7 @@ class LocaleManager extends EventEmitter {
         this.directory = this.options.directory;
         this.browserLocaleCode = getBrowserLocale();
         this.localeCode = '';
+        this.languageCode = '';
         this.countryCode = '';
         this.module = null;
         this.entry = null;

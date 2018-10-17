@@ -1,0 +1,101 @@
+.settings-panel.remote-data-source {
+    .recent-search-table {
+        border-collapse: collapse;
+        border-style: hidden;
+        table-layout: fixed;
+        width: 50em;
+        margin: -0.25em -0.25em -0.25em -0.25em;
+
+        TR {
+            .updating {
+                background-color: #119911;
+            }
+
+            .dirty {
+                background-color: #991111;
+            }
+        }
+
+        TH, TD {
+            border: 1px solid #666666;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-size: 0.8em;
+            padding: 0.2em 0.2em 0.2em 0.2em;
+
+            &.time {
+                width: 8%;
+            }
+
+            &.schema {
+                width: 10%;
+            }
+
+            &.table {
+                width: 15%;
+            }
+
+            &.criteria {
+                width: 30%;
+            }
+
+            &.objects {
+                width: 15%;
+            }
+
+            &.by {
+                width: 22%;
+            }
+        }
+
+        TD {
+            &.time, &.objects {
+                text-align: right;
+            }
+        }
+    }
+
+    .recent-storage-table {
+        border-collapse: collapse;
+        border-style: hidden;
+        table-layout: fixed;
+        width: 50em;
+        margin: -0.25em -0.25em -0.25em -0.25em;
+
+        TH, TD {
+            border: 1px solid #666666;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-size: 0.8em;
+            padding: 0.2em 0.2em 0.2em 0.2em;
+
+            &.time {
+                width: 8%;
+            }
+
+            &.schema {
+                width: 10%;
+            }
+
+            &.table {
+                width: 15%;
+            }
+
+            &.objects {
+                width: 45%;
+            }
+
+            &.by {
+                width: 22%;
+            }
+        }
+
+        TD {
+            &.time {
+                text-align: right;
+            }
+        }
+    }
+}
