@@ -58,15 +58,15 @@
     .message {
         font-size: 0.9em;
         padding: 0.35em 0.35em 0.35em 0.35em;
-        color: #000000;
+        color: $alert-text-color;
         user-select: text;
 
         &.accepted {
-            background-color: #66cc66;
+            background-color: $alert-positive-background-color;
         }
 
         &.requested, &.read-only {
-            background-color: #dddd66;
+            background-color: $alert-neutral-background-color;
         }
     }
 

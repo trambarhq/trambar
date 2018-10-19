@@ -1,3 +1,5 @@
+@import '../colors';
+
 .settings-panel.remote-data-source {
     .recent-search-table {
         border-collapse: collapse;
@@ -8,16 +10,16 @@
 
         TR {
             .updating {
-                background-color: #119911;
+                background-color: $diagnostics-progress-text-color;
             }
 
             .dirty {
-                background-color: #991111;
+                background-color: $diagnostics-error-text-color;
             }
         }
 
         TH, TD {
-            border: 1px solid #666666;
+            border: 1px solid $diagnostics-table-border-color;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
@@ -64,7 +66,7 @@
         margin: -0.25em -0.25em -0.25em -0.25em;
 
         TH, TD {
-            border: 1px solid #666666;
+            border: 1px solid $diagnostics-table-border-color;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;

@@ -9,7 +9,13 @@ $brown: #4d3936;
 $dark-brown: #362a2a;
 $black: #000000;
 $white: #ffffff;
+$green: #119911;
+$red: #991111;
+$bright-red: #ee3333;
+$bright-green: #33ee33;
+$bright-yellow: #eeee33;
 
+$selection-color: $sharp-orange;
 $focus-outline-color: $orange;
 
 $scroll-bar-shadow-color: rgba(0,0,0,0.3);
@@ -44,6 +50,7 @@ $bookmark-border-color: $off-black;
 
 $dialog-box-background-color: $dark-brown;
 $dialog-box-text-color: $light-gray;
+$dialog-box-critical-text-color: $off-white;
 $dialog-box-shadow-color: $black;
 
 $navigation-background-color: #262626;
@@ -105,7 +112,7 @@ $notification-badge-background-color: $orange;
 
 $header-button-text-color: $gray;
 $header-button-hover-text-color: $off-white;
-$header-button-selected-text-color: #e24329;
+$header-button-selected-text-color: $selection-color;
 
 $pop-up-menu-border-color: $black;
 $pop-up-menu-background-color: $off-white;
@@ -115,7 +122,7 @@ $coauthoring-button-text-color: $gray;
 $coauthoring-button-hover-text-color: $off-white;
 
 $duration-indiactor-text-color: $off-white;
-$duration-indicator-blinker-color: #cc2222;
+$duration-indicator-blinker-color: $bright-red;
 
 $story-emblem-color: #211a1a;
 $story-reaction-link-text-color: $gray;
@@ -140,6 +147,9 @@ $user-statistics-arrow-color: $off-white;
 $new-item-alert-text-color: $off-black;
 $new-item-alert-background-color: $orange;
 
+$option-button-danger-text-color: $bright-red;
+$option-button-disabled-text-color: #
+
 $loading-animation-color: $white;
 
 $profile-image-placeholder-background-color: #999999;
@@ -147,7 +157,30 @@ $profile-image-placeholder-background-color: #999999;
 $media-placeholder-text-color: $gray;
 $media-placeholder-border-color: rgba(127, 127, 127, 0.15);
 
+$media-thumbnail-border-color: #333333;
+
 $device-placeholder-icon-color: $off-black;
-$device-placeholder-stop-sign-color: #ee3333;
+$device-placeholder-stop-sign-color: $bright-red;
+
+$qr-scanner-overlay-background-color: #211a1a;
+$qr-scanner-overlay-text-color: $light-gray;
+$qr-scanner-overlay-success-text-color: $bright-green;
+$qr-scanner-overlay-error-text-color: $bright-red;
+$qr-scanner-overlay-ui-text-color: $off-white;
+$qr-scanner-overlay-target-color: rgba(0, 0, 0, 0.25);
+
+$alert-positive-background-color: $bright-green;
+$alert-negative-background-color: $bright-red;
+$alert-neutral-background-color: $bright-yellow;
+$alert-text-color: $black;
+
+$audio-capture-volume-bar-color: $gray;
+
+$issue-label-default-text-color: #ffffff;
+$issue-label-default-background-color: #444444;
 
 $empty-message-text-color: $white;
+
+$diagnostics-progress-text-color: $green;
+$diagnostics-error-text-color: $red;
+$diagnostics-table-border-color: $gray;

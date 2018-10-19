@@ -38,11 +38,11 @@
 
                 .bar {
                     padding: 2px 2px 2px 2px;
-                    border: 1px solid #666666;
+                    border: 1px solid $audio-capture-volume-bar-color;
 
                     .fill {
                         height: 1em;
-                        background-color: #666666;
+                        background-color: $audio-capture-volume-bar-color;
                     }
                 }
             }

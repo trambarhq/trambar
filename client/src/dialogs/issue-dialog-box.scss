@@ -52,8 +52,8 @@
 
             .tag {
                 font-size: 0.9em;
-                color: #ffffff;
-                background-color: #444444;
+                color: $issue-label-default-text-color;
+                background-color: $issue-label-default-background-color;
                 padding: 0.2em 0.4em 0.2em 0.4em;
                 margin-top: 0.25em;
                 margin-bottom: 0.25em;

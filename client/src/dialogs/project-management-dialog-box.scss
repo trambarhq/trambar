@@ -20,12 +20,11 @@
 
     .option-button {
         &.selected, &:hover {
-            color: #ee3333;
+            color: $option-button-danger-text-color;
         }
 
         &.disabled {
-            color: #eeeeee;
-            opacity: 0.1;
+            opacity: 0.25;
         }
     }
 
