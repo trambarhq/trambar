@@ -16,6 +16,7 @@ $bright-green: #33ee33;
 $bright-yellow: #eeee33;
 
 $selection-color: $sharp-orange;
+$selection-background-color: #211a1a;
 $focus-outline-color: $orange;
 
 $scroll-bar-shadow-color: rgba(0,0,0,0.3);
@@ -33,6 +34,7 @@ $button-text-color: $gray;
 $button-hover-background-color: #806666;
 $button-hover-text-color: $off-white;
 $button-active-border-color: #333333;
+$button-supplemental-text-color: #999999;
 
 $option-button-text-color: $gray;
 $option-button-selected-text-color: $off-white;
@@ -85,10 +87,11 @@ $role-filter-band-background-color: #1a1a1a;
 $role-filter-selected-background-color: $off-white;
 $role-filter-selected-text-color: $black;
 
+$time-text-color: #666666;
 $time-today-text-color: #aaaaaa;
 $time-yesterday-text-color: #999999;
 
-$transfer-progress-text-color: $gray;
+$transfer-progress-text-color: #aaaaaa;
 
 $separator-color: $gray;
 
@@ -144,11 +147,14 @@ $user-statistics-grid-color: #444444;
 $user-statistics-grid-emphasis-color: $gray;
 $user-statistics-arrow-color: $off-white;
 
+$user-activity-text-color: #999999;
+$user-activity-hover-text-color: #eeeeee;
+$user-activity-recent-text-color: #cccccc;
+
 $new-item-alert-text-color: $off-black;
 $new-item-alert-background-color: $orange;
 
 $option-button-danger-text-color: $bright-red;
-$option-button-disabled-text-color: #
 
 $loading-animation-color: $white;
 
@@ -162,6 +168,11 @@ $media-thumbnail-border-color: #333333;
 $device-placeholder-icon-color: $off-black;
 $device-placeholder-stop-sign-color: $bright-red;
 
+$mobile-device-android-icon-color: #97c03d;
+$mobile-device-windows-icon-color: #0caee9;
+$mobile-device-ios-icon-color: #ffffff;
+$mobile-device-icon-color: #eeeeee;
+
 $qr-scanner-overlay-background-color: #211a1a;
 $qr-scanner-overlay-text-color: $light-gray;
 $qr-scanner-overlay-success-text-color: $bright-green;
@@ -173,6 +184,8 @@ $alert-positive-background-color: $bright-green;
 $alert-negative-background-color: $bright-red;
 $alert-neutral-background-color: $bright-yellow;
 $alert-text-color: $black;
+
+$profile-image-placeholder-background-color: #999999;
 
 $audio-capture-volume-bar-color: $gray;
 

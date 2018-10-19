@@ -2,6 +2,7 @@
 
 .time {
     user-select: text;
+    color: $time-text-color;
 
     &.today {
         color: $time-today-text-color;

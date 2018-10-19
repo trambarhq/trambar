@@ -1,3 +1,5 @@
+@import '../colors';
+
 .settings-panel.language {
     .option-button {
         margin-top: 0.35em;
@@ -5,8 +7,8 @@
 
         SELECT {
             font-size: 1em;
-            color: #666666;
-            background-color: #4d3936;
+            color: $button-text-color;
+            background-color: $button-background-color;
             border: 0;
             padding: 2px 10px 2px 6px;
             margin-left: 0.5em;
@@ -19,8 +21,8 @@
             }
 
             &:hover, &:focus {
-                color: #eeeeee;
-                background-color: #806666;
+                color: $button-hover-text-color;
+                background-color: $button-hover-background-color;
             }
         }
     }

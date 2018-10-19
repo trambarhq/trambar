@@ -28,10 +28,10 @@
     }
 
     &.disabled {
-        color: $option-button-text-color;
         opacity: 0.25;
 
-        A {
+        &:hover {
+            color: $option-button-text-color;
             cursor: default;
         }
     }

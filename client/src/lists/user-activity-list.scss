@@ -1,3 +1,5 @@
+@import '../colors';
+
 .user-activity-list {
     margin-top: 0.5em;
 
@@ -12,30 +14,25 @@
 
             A {
                 &:link, &:visited {
-                    color: #999999;
+                    color: $user-activity-text-color;
                     text-decoration: none;
                     &:hover {
-                        color: #eeeeee;
+                        color: $user-activity-hover-text-color;
                     }
                 }
             }
 
             &.recent {
                 A {
-                    color: #cccccc;
+                    color: $user-activity-recent-text-color;
                 }
             }
         }
 
         .time {
             float: right;
-            color: #666666;
             font-size: 0.9em;
             user-select: text;
-
-            &.today, &.yesterday {
-                color: #cccccc;
-            }
         }
     }
 }

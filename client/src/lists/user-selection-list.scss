@@ -1,3 +1,5 @@
+@import '../colors';
+
 .user-selection-list {
     min-width: 14em;
     padding-bottom: 0.1em;
@@ -22,15 +24,15 @@
             margin: auto;
             height: 1em;
             font-size: 1.2em;
-            color: #e24329;
+            color: $selection-color;
             opacity: 0;
             transition: opacity 0.5s;
             vertical-align: middle;
         }
 
         &.selected {
-            background-color: #211a1a;
-            color: #eeeeee;
+            background-color: $selection-background-color;
+            color: $button-hover-text-color;
             filter: none;
 
             .fa {
@@ -44,7 +46,7 @@
 
         .no-touch & {
             &:hover {
-                color: #cccccc;
+                color: $button-hover-text-color;
                 filter: none;
             }
         }

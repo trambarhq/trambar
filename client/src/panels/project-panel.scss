@@ -1,3 +1,5 @@
+@import '../colors';
+
 .settings-panel.project {
     .body {
         padding-left: 0.5em;
@@ -6,13 +8,13 @@
 
     .project-option-button {
         display: table;
-        color: #666666;
+        color: $button-text-color;
         margin-top: 0.35em;
         margin-bottom: 0.35em;
         cursor: pointer;
 
         &.selected, &:hover {
-            color: #eeeeee;
+            color: $button-hover-text-color;
         }
 
         &.selected {
@@ -41,9 +43,9 @@
                     margin-bottom: 0.35em;
 
                     .button {
-                        color: #999999;
+                        color: $button-supplemental-text-color;
                         &:hover {
-                            color: #eeeeee;
+                            color: $button-hover-text-color;
                         }
                         cursor: pointer;
 

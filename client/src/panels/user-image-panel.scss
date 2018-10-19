@@ -1,7 +1,9 @@
+@import '../colors';
+
 .settings-panel.user-image {
     .no-image {
         position: relative;
-        background-color: #999999;
+        background-color: $profile-image-placeholder-background-color;
         width: 100%;
         padding-top: 50%;
         padding-bottom: 50%;

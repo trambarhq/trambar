@@ -1,3 +1,5 @@
+@import '../colors';
+
 .settings-panel.device {
     .body {
         padding-left: 0.5em;
@@ -6,7 +8,7 @@
     .device-option-button {
         display: table;
         width: 100%;
-        color: #eeeeee;
+        color: $button-hover-text-color;
         margin-top: 0.35em;
         margin-bottom: 0.35em;
 
@@ -29,11 +31,11 @@
                 padding-top: 0.1em;
                 display: block;
                 float: right;
-                color: #666666;
+                color: $button-text-color;
                 cursor: pointer;
 
                 &:hover {
-                    color: #eeeeee;
+                    color: $button-hover-text-color;
                 }
             }
         }
@@ -47,7 +49,7 @@
         .fa {
             &.background {
                 display: block;
-                color: #eeeeee;
+                color: $mobile-device-icon-color;
             }
 
             &.icon-overlay {
@@ -63,16 +65,16 @@
                 margin: auto;
 
                 &.fa-android {
-                    color: #97c03d;
+                    color: $mobile-device-android-icon-color;
                 }
 
                 &.fa-windows {
-                    color: #0caee9;
+                    color: $mobile-device-windows-icon-color;
                     font-size: 0.35em;
                 }
 
                 &.fa-apple {
-                    color: #ffffff;
+                    color: $mobile-device-ios-icon-color;
                     bottom: 0.4em;
                 }
             }
