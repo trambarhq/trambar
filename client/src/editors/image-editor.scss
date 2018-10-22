@@ -1,3 +1,5 @@
+@import '../colors';
+
 .image-editor {
     position: relative;
     width: 100%;
@@ -39,7 +41,7 @@
         width: 1.5em;
         height: 1.2em;
         text-align: center;
-        color: #000000;
+        color: $media-editor-spinner-color;
         opacity: 0.25;
     }
 
@@ -49,7 +51,7 @@
         bottom: 0;
         align-items: center;
         justify-content: center;
-        color: #666666;
+        color: $media-editor-hint-text-color;
 
         .icon {
             font-size: 3em;

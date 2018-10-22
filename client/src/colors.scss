@@ -30,7 +30,7 @@ $text-field-background-color: $off-white;
 
 $viewport-background-color: $brown;
 
-$button-background-color: #4d3936;
+$button-background-color: $brown;
 $button-text-color: $gray;
 $button-hover-background-color: #806666;
 $button-hover-text-color: $off-white;
@@ -40,6 +40,18 @@ $button-supplemental-text-color: #999999;
 $option-button-text-color: $gray;
 $option-button-selected-text-color: $off-white;
 $option-button-menu-text-color: $black;
+
+$start-page-background-color: $brown;
+$start-page-cordova-background-color: #211a1a;
+$start-page-text-color: $light-gray;
+$start-page-highlighted-text-color: $off-white;
+$start-page-button-border-color: $light-gray;
+$start-page-button-hover-background-color: $orange;
+$start-page-button-hover-text-color: $black;
+$start-page-button-badge-color: #606060;
+$start-page-button-error-color: $bright-red;
+
+$error-page-text-color: $off-white;
 
 $panel-text-color: $light-gray;
 $panel-title-text-color: $off-white;
@@ -112,6 +124,10 @@ $app-component-text-color: #333333;
 $media-view-overlay-color: $black;
 $media-view-overlay-hover-color: $off-white;
 $media-view-overlay-hover-background-color: $black;
+
+$media-editor-spinner-color: $black;
+$media-editor-hint-text-color: $gray;
+$media-editor-duration-text-color: $off-white;
 
 $media-bar-background-color: $black;
 $media-bar-icon-color: $gray;
@@ -215,6 +231,9 @@ $issue-label-default-background-color: #444444;
 
 $empty-message-text-color: $white;
 
+$diagnostics-open-text-color: $off-white;
+$diagnostics-open-border-color: $off-white;
+$diagnostics-separator-color: $light-gray;
 $diagnostics-progress-text-color: $green;
 $diagnostics-error-text-color: $red;
 $diagnostics-table-border-color: $gray;

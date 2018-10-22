@@ -1,3 +1,5 @@
+@import '../colors';
+
 .start-page {
     position: absolute;
 
@@ -8,7 +10,7 @@
 
     .oauth-button {
         display: table;
-        border: 1px solid #cccccc;
+        border: 1px solid $start-page-button-border-color;
         width: 100%;
         max-width: 20em;
         margin-top: 0.5em;
@@ -39,24 +41,24 @@
 
         &:link, &:visited {
             text-decoration: none;
-            color: #cccccc;
+            color: $start-page-text-color;
         }
 
         &.error {
-            border-color: #ee3333;
-            color: #ee3333;
+            border-color: $start-page-button-error-color;
+            color: $start-page-button-error-color;
         }
 
         .no-touch & {
             &:hover {
-                background-color: #fca326;
-                color: #000000;
+                background-color: $start-page-button-hover-background-color;
+                color: $start-page-button-hover-text-color;
             }
         }
 
         &:active {
-            background-color: #fca326;
-            color: #000000;
+            background-color: $start-page-button-hover-background-color;
+            color: $start-page-button-hover-text-color;
         }
 
         .single-col & {
@@ -66,7 +68,7 @@
 
     .project-button {
         display: block;
-        border: 1px solid #cccccc;
+        border: 1px solid $start-page-button-border-color;
         max-width: 34em;
         cursor: pointer;
         margin-bottom: 0.5em;
@@ -87,23 +89,23 @@
                 height: 3.5em;
 
                 &.v1 {
-                    background-color: #ff9900;
+                    background-color: adjust-hue($start-page-button-hover-background-color, 0);
                 }
 
                 &.v2 {
-                    background-color: #00cc33;
+                    background-color: adjust-hue($start-page-button-hover-background-color, 45);
                 }
 
                 &.v3 {
-                    background-color: #3399ff;
+                    background-color: adjust-hue($start-page-button-hover-background-color, 90);
                 }
 
                 &.v4 {
-                    background-color: #ff6666;
+                    background-color: adjust-hue($start-page-button-hover-background-color, 135);
                 }
 
                 &.v5 {
-                    background-color: #cc66ff;
+                    background-color: adjust-hue($start-page-button-hover-background-color, 180);
                 }
 
                 svg {
@@ -147,7 +149,7 @@
             }
 
             .badge {
-                color: #606060;
+                color: $start-page-button-badge-color;
                 margin-top: 0.2em;
                 margin-right: 0.2em;
                 float: right;
@@ -156,13 +158,13 @@
 
         &:link, &:visited {
             text-decoration: none;
-            color: #cccccc;
+            color: $start-page-text-color;
         }
 
         .no-touch & {
             &:hover {
-                background-color: #fca326;
-                color: #000000;
+                background-color: $start-page-button-hover-background-color;
+                color: $start-page-button-hover-text-color;
             }
         }
 
@@ -174,7 +176,7 @@
     &.browser {
         display: flex;
 
-        background-color: #4d3936;
+        background-color: $start-page-background-color;
         background-repeat: no-repeat;
         background-position: center center;
         background-attachment: fixed;
@@ -186,11 +188,11 @@
             align-self: center;
             flex-direction: column;
             flex: 1 0 auto;
-            background-color: rgba(77, 57, 54, 0.97);
+            background-color: rgba($start-page-background-color, .97);
             width: 100%;
             min-height: 25vh;
             position: relative;
-            color: #cccccc;
+            color: $start-page-text-color;
             overflow: hidden;
 
             .content-area {
@@ -276,7 +278,7 @@
             .bar {
                 transition: min-height 0.7s, background-color 0.5s;
                 min-height: 100vh;
-                background-color: #4d3936;
+                background-color: $start-page-background-color;
 
                 .content-area {
                     opacity: 0;
@@ -301,8 +303,8 @@
 
     &.cordova {
         padding: 0em 0.5em 0em 0.5em;
-        background-color: #211a1a;
-        color: #cccccc;
+        background-color: $start-page-cordova-background-color;
+        color: $start-page-text-color;
 
         .title {
         }
@@ -337,7 +339,7 @@
 
             .ui {
                 display: inline-block;
-                color: #eeeeee;
+                color: $start-page-highlighted-text-color;
                 font-weight: bold;
                 padding-left: 0.1em;
                 padding-right: 0.1em;
@@ -359,27 +361,20 @@
             margin-bottom: 2em;
 
             .project-button {
-                background-color: #362a2a;
-
-                .no-touch & {
-                    &:hover {
-                        background-color: #fca326;
-                        color: #000000;
-                    }
-                }
+                background-color: $button-background-color;
             }
         }
 
         &.transition-out-fast {
             transition: opacity 0.7s linear 0.55s, background-color 0.7s ease-in;
             opacity: 0;
-            background-color: #4d3936;
+            background-color: $viewport-background-color;
         }
 
         &.transition-out-slow {
             transition: opacity 0.7s linear 3s, background-color 1s ease-in;
             opacity: 0;
-            background-color: #4d3936;
+            background-color: $viewport-background-color;
 
             .welcome {
                 animation-name: fade-in-out;
@@ -418,13 +413,7 @@
             A {
                 &:link, &:visited {
                     text-decoration: none;
-                    color: #cccccc;
-
-                    .no-touch & {
-                        &:hover {
-                            color: #eeeeee;
-                        }
-                    }
+                    color: $start-page-text-color;
                 }
             }
         }

@@ -1,3 +1,5 @@
+@import '../colors';
+
 .audio-editor {
     position: relative;
     width: 100%;
@@ -32,6 +34,6 @@
         right: 0.5em;
         opacity: 0.5;
         pointer-events: none;
-        color: #ffffff;
+        color: $media-editor-duration-text-color;
     }
 }
