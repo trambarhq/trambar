@@ -27,6 +27,7 @@ const routes = {
             match.params.ui = {
                 navigation: { section: 'bookmarks' }
             };
+            match.params.key = `${match.path}${match.search}`;
             return import('pages/bookmarks-page' /* webpackChunkName: "page-bookmarks" */).then((module) => {
                 match.params.module = module;
             });
@@ -62,6 +63,7 @@ const routes = {
                 search: { statistics },
                 navigation: { section: 'news' }
             };
+            match.params.key = `${match.path}${match.search}`;
             return import('pages/news-page' /* webpackChunkName: "page-news" */).then((module) => {
                 match.params.module = module;
             });
@@ -88,6 +90,7 @@ const routes = {
                 calendar: { statistics },
                 navigation: { section: 'notifications' }
             };
+            match.params.key = `${match.path}${match.search}`;
             return import('pages/notifications-page' /* webpackChunkName: "page-notifications" */).then((module) => {
                 match.params.module = module;
             });
@@ -118,6 +121,7 @@ const routes = {
                 search: { statistics },
                 navigation: { section: 'people' }
             }
+            match.params.key = `${match.path}${match.search}`;
             return import('pages/people-page' /* webpackChunkName: "page-people" */).then((module) => {
                 match.params.module = module;
             });
@@ -154,6 +158,7 @@ const routes = {
                 search: { route, statistics },
                 navigation: { section: 'people' }
             };
+            match.params.key = `${match.path}${match.search}`;
             return import('pages/people-page' /* webpackChunkName: "page-people" */).then((module) => {
                 match.params.module = module;
             });
@@ -165,6 +170,7 @@ const routes = {
             match.params.ui = {
                 navigation: { section: 'settings '},
             };
+            match.params.key = match.path;
             return import('pages/settings-page' /* webpackChunkName: "page-settings" */).then((module) => {
                 match.params.module = module;
             });
@@ -176,6 +182,7 @@ const routes = {
             match.params.ui = {
                 navigation: { section: 'settings '},
             };
+            match.params.key = match.path;
             return import('pages/diagnostics-page' /* webpackChunkName: "page-diagnostics" */).then((module) => {
                 match.params.module = module;
             });
@@ -197,17 +204,7 @@ const routes = {
             match.params.ui = {
                 navigation: { top: false, bottom: false }
             };
-            return import('pages/start-page' /* webpackChunkName: "page-start" */).then((module) => {
-                match.params.module = module;
-            });
-        },
-    },
-    'sign-in-page': {
-        path: '/',
-        load: (match) => {
-            match.params.ui = {
-                navigation: { top: false, bottom: false }
-            };
+            match.params.key = match.path;
             return import('pages/start-page' /* webpackChunkName: "page-start" */).then((module) => {
                 match.params.module = module;
             });
@@ -218,6 +215,7 @@ const routes = {
     'error-page': {
         path: '*',
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/error-page' /* webpackChunkName: "page-error" */).then((module) => {
                 match.params.module = module;
             });

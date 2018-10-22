@@ -34,7 +34,8 @@ class SearchBar extends AsyncComponent {
             route,
             env,
         };
-        meanwhile.show(<SearchBarSync {...props} />);
+        // don't let the component be empty initially
+        meanwhile.show(<SearchBarSync {...props} />, 'initial');
         return db.start().then((currentUserID) => {
             return UserFinder.findUser(db, currentUserID);
         }).then((user) => {

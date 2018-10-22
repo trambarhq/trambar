@@ -121,8 +121,10 @@ class Application extends PureComponent {
             <div className={className} id="application">
                 <TopNavigation {...topNavProps} />
                 <section className="page-view-port">
-                    {this.renderCurrentPage()}
-                    {this.renderPreviousPage()}
+                    <ErrorBoundary env={env}>
+                        {this.renderCurrentPage()}
+                        {this.renderPreviousPage()}
+                    </ErrorBoundary>
                 </section>
                 <BottomNavigation {...bottomNavProps} />
                 {this.renderUploadProgress()}
@@ -141,16 +143,11 @@ class Application extends PureComponent {
             route,
             payloads,
             env,
-        }, route.params);
+        }, _.omit(route.params, 'module'));
         if (CurrentPage.diagnostics) {
             _.assign(pageProps, this.props);
         }
-        let key = getRouteKey(route);
-        return (
-            <ErrorBoundary key={key} env={env}>
-                <CurrentPage {...pageProps} />
-            </ErrorBoundary>
-        );
+        return <CurrentPage {...pageProps} />;
     }
 
     renderPreviousPage() {
@@ -166,13 +163,8 @@ class Application extends PureComponent {
             env,
             transitionOut: true,
             onTransitionOut: this.handlePageTransitionOut,
-        }, prevRoute.params);
-        let key = getRouteKey(prevRoute);
-        return (
-            <ErrorBoundary key={key} env={env}>
-                <PreviousPage {...pageProps} />
-            </ErrorBoundary>
-        );
+        }, _.omit(prevRoute.params, 'module'));
+        return <PreviousPage {...pageProps} />;
     }
 
     /**
@@ -365,7 +357,7 @@ class Application extends PureComponent {
         if (prevRoute) {
             let PreviousPage = getRouteClass(prevRoute);
             if (PreviousPage && PreviousPage.useTransition) {
-                if (getRouteKey(prevRoute) !== getRouteKey(route)) {
+                if (prevRoute.params.key !== route.params.key) {
                     transitionOut = true;
                 }
             }
@@ -469,10 +461,6 @@ function getRouteClass(route) {
         }
     }
     return module.default;
-}
-
-function getRouteKey(route) {
-    return (route) ? route.path + route.search : '';
 }
 
 export {

@@ -36,7 +36,8 @@ class CalendarBar extends AsyncComponent {
             route,
             env,
         };
-        meanwhile.show(<CalendarBarSync {...props} />);
+        // don't let the component be empty initially
+        meanwhile.show(<CalendarBarSync {...props} />, 'initial');
         return db.start().then((currentUserID) => {
             return UserFinder.findUser(db, currentUserID);
         }).then((currentUser) => {
@@ -56,7 +57,7 @@ class CalendarBar extends AsyncComponent {
 }
 
 /**
- * Synchronous component that actually draws the calendar bar. 
+ * Synchronous component that actually draws the calendar bar.
  *
  * @extends PureComponent
  */

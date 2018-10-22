@@ -39,7 +39,8 @@ class RoleFilterBar extends AsyncComponent {
             route,
             env,
         };
-        meanwhile.show(<RoleFilterBarSync {...props} />);
+        // don't let the component be empty initially
+        meanwhile.show(<RoleFilterBarSync {...props} />, 'initial');
         return db.start().then((currentUserID) => {
             return ProjectFinder.findCurrentProject(db).then((project) => {
                 props.project = project;
