@@ -1,6 +1,10 @@
 @import '../colors';
 
 .tooltip.user {
+    .resource-view {
+        display: inline-block;
+    }
+
     .item {
         margin-bottom: 2px;
         vertical-align: middle;

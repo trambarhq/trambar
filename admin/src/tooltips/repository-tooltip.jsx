@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
+import * as RepoUtils from 'objects/utils/repo-utils';
 
 // widgets
 import Tooltip from 'widgets/tooltip';
@@ -16,18 +17,18 @@ class RepositoryTooltip extends PureComponent {
 
     render() {
         let { route, env, repos, project, disabled } = this.props;
-        let { t, p } = env.locale;
+        let { t } = env.locale;
         if (!repos) {
             return null;
         }
         let label = t('repository-tooltip-$count', repos.length);
         let list = _.map(repos, (repo, i) => {
             let url = route.find('repo-summary-page', {
-                project: project.id,
-                repo: repo.id,
+                projectID: project.id,
+                repoID: repo.id,
             });
             let iconName = repo.type;
-            let name = p(repo.details.title) || t(`server-type-${repo.type}`);
+            let name = RepoUtils.getDisplayName(repo, env);
             return (
                 <div className="item" key={i}>
                     <a href={url}>
@@ -38,7 +39,7 @@ class RepositoryTooltip extends PureComponent {
                 </div>
             );
         });
-        let listURL = route.find('repo-list-page', { project: project.id });
+        let listURL = route.find('repo-list-page', { projectID: project.id });
         return (
             <Tooltip className="repository" disabled={disabled || list.length === 0}>
                 <inline>{label}</inline>

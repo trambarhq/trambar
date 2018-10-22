@@ -670,24 +670,18 @@ let sortRepos = memoizeWeak(null, function(repos, servers, statistics, env, colu
 });
 
 let findServer = memoizeWeak(null, function(servers, repo) {
-    let list = _.find(servers, (server) => {
+    return _.find(servers, (server) => {
         let link = ExternalDataUtils.findLink(repo, server);
         return !!link;
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 let findRepos = memoizeWeak(null, function(repos, project) {
     if (project) {
         let hash = _.keyBy(repos, 'id');
-        let list = _.filter(_.map(project.repo_ids, (id) => {
+        return _.filter(_.map(project.repo_ids, (id) => {
             return hash[id];
         }));
-        if (!_.isEmpty(list)) {
-            return list;
-        }
     }
 });
 

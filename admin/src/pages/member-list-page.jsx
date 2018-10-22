@@ -788,21 +788,15 @@ let findUsers = memoizeWeak(null, function(users, project) {
         //
         // this will happen right after the project is saved and the the updated
         // users (changed by backend) haven't been retrieved yet
-        let list = _.union(existingUsers, pendingUsers);
-        if (!_.isEmpty(list)) {
-            return list;
-        }
+        return _.union(existingUsers, pendingUsers);
     }
 });
 
 let findRoles = memoizeWeak(null, function(roles, user) {
     let hash = _.keyBy(roles, 'id');
-    let list = _.filter(_.map(user.role_ids, (id) => {
+    return _.filter(_.map(user.role_ids, (id) => {
         return hash[id];
     }));
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 export {

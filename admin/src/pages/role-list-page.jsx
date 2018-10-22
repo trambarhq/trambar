@@ -516,12 +516,9 @@ class RoleListPageSync extends PureComponent {
 }
 
 let filterRoles = memoizeWeak(null, function(roles) {
-    let list = _.filter(roles, (role) => {
+    return _.filter(roles, (role) => {
         return !role.deleted && !role.disabled;
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 let sortRoles = memoizeWeak(null, function(roles, users, env, columns, directions) {
@@ -540,12 +537,9 @@ let sortRoles = memoizeWeak(null, function(roles, users, env, columns, direction
 });
 
 let findUsers = memoizeWeak(null, function(users, role) {
-    let list = _.filter(users, (user) => {
+    return _.filter(users, (user) => {
         return _.includes(user.role_ids, role.id);
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 export {

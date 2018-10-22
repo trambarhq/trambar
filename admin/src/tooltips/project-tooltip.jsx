@@ -30,7 +30,7 @@ class ProjectTooltip extends PureComponent {
             let url0;
             if (!disabled) {
                 url0 = route.find('project-summary-page', {
-                    project: project0.id,
+                    projectID: project0.id,
                 });
             }
             let title0 = p(project0.details.title) || project0.name;

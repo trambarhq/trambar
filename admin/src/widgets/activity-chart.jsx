@@ -184,7 +184,7 @@ let getActivitySeries = memoizeWeak(null, function(activities, dates) {
     });
 });
 
-let getUpperRange = memoizeWeak(0, (function(series, additive) {
+let getUpperRange = memoizeWeak(0, function(series, additive) {
     let highest = 0;
     if (additive) {
         let sums = [];

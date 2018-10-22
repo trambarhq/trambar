@@ -15,6 +15,7 @@ var routes = {
         },
         params: { projectID: Number, editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/member-list-page' /* webpackChunkName: "page-member-list" */).then((module) => {
                 match.params.module = module;
             });
@@ -27,6 +28,7 @@ var routes = {
         },
         params: { projectID: Number, userID: NumberOrNew, editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/user-summary-page' /* webpackChunkName: "page-user-summary" */).then((module) => {
                 match.params.module = module;
             });
@@ -39,6 +41,7 @@ var routes = {
         },
         params: { editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/project-list-page' /* webpackChunkName: "page-project-list" */).then((module) => {
                 match.params.module = module;
             });
@@ -51,6 +54,7 @@ var routes = {
         },
         params: { projectID: NumberOrNew, editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/project-summary-page' /* webpackChunkName: "page-project-summary" */).then((module) => {
                 match.params.module = module;
             });
@@ -63,6 +67,7 @@ var routes = {
         },
         params: { projectID: Number, editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/repo-list-page' /* webpackChunkName: "page-repo-list" */).then((module) => {
                 match.params.module = module;
             });
@@ -75,6 +80,7 @@ var routes = {
         },
         params: { projectID: Number, repoID: Number, editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/repo-summary-page' /* webpackChunkName: "page-repo-summary" */).then((module) => {
                 match.params.module = module;
             });
@@ -87,6 +93,7 @@ var routes = {
         },
         params: { editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/role-list-page' /* webpackChunkName: "page-role-list" */).then((module) => {
                 match.params.module = module;
             });
@@ -99,6 +106,7 @@ var routes = {
         },
         params: { roleID: NumberOrNew, editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/role-summary-page' /* webpackChunkName: "page-role-summary" */).then((module) => {
                 match.params.module = module;
             });
@@ -111,6 +119,7 @@ var routes = {
         },
         params: { editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/server-list-page' /* webpackChunkName: "page-server-list" */).then((module) => {
                 match.params.module = module;
             });
@@ -124,6 +133,7 @@ var routes = {
         hash: [ 'T${taskID}' ],
         params: { serverID: NumberOrNew, editing: Boolean, taskID: Number },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/server-summary-page' /* webpackChunkName: "page-server-summary" */).then((module) => {
                 match.params.module = module;
             });
@@ -136,6 +146,7 @@ var routes = {
         },
         params: { editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/settings-page' /* webpackChunkName: "page-settings" */).then((module) => {
                 match.params.module = module;
             });
@@ -144,6 +155,7 @@ var routes = {
     'start': {
         path: '/',
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/start-page' /* webpackChunkName: "page-start" */).then((module) => {
                 match.params.module = module;
             });
@@ -151,6 +163,7 @@ var routes = {
     },
     'sign-in-page': {
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/sign-in-page' /* webpackChunkName: "page-sign-in" */).then((module) => {
                 match.params.module = module;
             });
@@ -165,6 +178,7 @@ var routes = {
         },
         params: { editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/user-list-page' /* webpackChunkName: "page-user-list" */).then((module) => {
                 match.params.module = module;
             });
@@ -177,6 +191,7 @@ var routes = {
         },
         params: { userID: NumberOrNew, editing: Boolean },
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/user-summary-page' /* webpackChunkName: "page-user-summary" */).then((module) => {
                 match.params.module = module;
             });
@@ -184,6 +199,7 @@ var routes = {
     },
     'error-page': {
         load: (match) => {
+            match.params.key = match.path;
             return import('pages/error-page' /* webpackChunkName: "page-error" */).then((module) => {
                 match.params.module = module;
             });

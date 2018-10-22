@@ -118,14 +118,13 @@ class Application extends PureComponent {
             env,
             payloads,
         }, route.params);
-        let key = route.path;
         return (
             <div className="application" id="application">
                 <SideNavigation {...navProps} />
                 <section className="page-view-port">
                     <div className="scroll-box">
                         <ErrorBoundary env={env}>
-                            <CurrentPage key={key} {...pageProps} />
+                            <CurrentPage {...pageProps} />
                         </ErrorBoundary>
                     </div>
                     {this.renderTaskAlert()}

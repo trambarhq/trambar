@@ -641,16 +641,13 @@ function hasAPICredentials(server) {
 }
 
 let findUsers = memoizeWeak(null, function(users, server) {
-    let list = _.filter(users, (user) => {
+    return _.filter(users, (user) => {
         return _.some(user.external, (link) => {
             if (link.server_id === server.id) {
                 return true;
             }
         });
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 export {

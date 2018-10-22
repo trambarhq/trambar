@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 
 import Environment from 'env/environment';
 
-import * as StoryTypes from 'objects/types/story-types';
+import { StoryTypes, StoryIcons } from 'objects/types/story-types';
 
 // widgets
 import Tooltip from 'widgets/tooltip';
@@ -39,7 +39,7 @@ class ActivityTooltip extends PureComponent {
             if (!count) {
                 return;
             }
-            let Icon = StoryTypes.icons[type];
+            let Icon = StoryIcons[type];
             list.push(
                 <div className="item" key={i}>
                     <Icon className="icon" />

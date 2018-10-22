@@ -713,32 +713,23 @@ let sortProjects = memoizeWeak(null, function(projects, users, repos, statistics
 });
 
 let filterProjects = memoizeWeak(null, function(projects) {
-    let list = _.filter(projects, (project) => {
+    return _.filter(projects, (project) => {
         return !project.deleted && !project.archived;
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 let findRepos = memoizeWeak(null, function(repos, project) {
     let hash = _.keyBy(repos, 'id');
-    let list = _.filter(_.map(project.repo_ids, (id) => {
+    return _.filter(_.map(project.repo_ids, (id) => {
         return hash[id];
     }));
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 let findUsers = memoizeWeak(null, function(users, project) {
     let hash = _.keyBy(users, 'id');
-    let list = _.filter(_.map(project.user_ids, (id) => {
+    return _.filter(_.map(project.user_ids, (id) => {
         return hash[id];
     }));
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 export {

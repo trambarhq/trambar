@@ -27,7 +27,7 @@ class RoleTooltip extends PureComponent {
             let url0;
             if (!disabled) {
                 url0 = route.find('role-summary-page', {
-                   role: role0.id,
+                   roleID: role0.id,
                 });
             }
             let title0 = p(role0.details.title) || role0.name;
@@ -44,7 +44,7 @@ class RoleTooltip extends PureComponent {
             }
             let list = _.map(roles, (role, i) => {
                 let url = route.find('role-summary-page', {
-                    role: role.id,
+                    roleID: role.id,
                 });
                 let title = p(role.details.title) || role.name;
                 return (

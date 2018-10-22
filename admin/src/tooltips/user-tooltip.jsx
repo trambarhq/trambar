@@ -31,12 +31,12 @@ class UserTooltip extends PureComponent {
             let url;
             if (project) {
                 url = route.find('user-summary-page', {
-                    project: project.id,
-                    user: user.id,
+                    projectID: project.id,
+                    userID: user.id,
                 });
             } else {
                 url = route.find('user-summary-page', {
-                    user: user.id,
+                    userID: user.id,
                 });
             }
             return (

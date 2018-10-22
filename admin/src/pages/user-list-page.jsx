@@ -674,31 +674,22 @@ let sortUsers = memoizeWeak(null, function(users, roles, projects, env, columns,
 });
 
 let filterUsers = memoizeWeak(null, function(users) {
-    let list = _.filter(users, (user) => {
+    return _.filter(users, (user) => {
         return (user.disabled !== true) && (user.deleted !== true);
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 let findProjects = memoizeWeak(null, function(projects, user) {
-    let list = _.filter(projects, (project) => {
+    return _.filter(projects, (project) => {
         return _.includes(project.user_ids, user.id);
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 let findRoles = memoizeWeak(null, function(roles, user) {
     let hash = _.keyBy(roles, 'id');
-    let list = _.filter(_.map(user.role_ids, (id) => {
+    return _.filter(_.map(user.role_ids, (id) => {
         return hash[id];
     }));
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 export {
