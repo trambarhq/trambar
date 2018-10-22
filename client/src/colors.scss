@@ -12,6 +12,7 @@ $white: #ffffff;
 $green: #119911;
 $red: #991111;
 $bright-red: #ee3333;
+$bright-blue: #3366ee;
 $bright-green: #33ee33;
 $bright-yellow: #eeee33;
 
@@ -91,6 +92,13 @@ $time-text-color: #666666;
 $time-today-text-color: #aaaaaa;
 $time-yesterday-text-color: #999999;
 
+$story-text-color: $light-gray;
+$story-link-hover-color: $off-white;
+
+$reaction-text-color: $light-gray;
+$reaction-link-hover-color: $off-white;
+$reaction-status-text-color: $gray;
+
 $transfer-progress-text-color: #aaaaaa;
 
 $separator-color: $gray;
@@ -130,6 +138,19 @@ $duration-indicator-blinker-color: $bright-red;
 $story-emblem-color: #211a1a;
 $story-reaction-link-text-color: $gray;
 $story-reaction-link-hover-text-color: $off-white;
+$story-text-color: $light-gray;
+$story-link-hover-text-color: $off-white;
+$story-survey-bar-border-color: #aaaaaa;
+$story-survey-bar-text-color: #333333;
+$story-survey-count-text-color: $light-gray;
+$story-push-added-text-color: $bright-green;
+$story-push-deleted-text-color: $bright-red;
+$story-push-modified-text-color: $bright-blue;
+$story-push-renamed-text-color: $bright-yellow;
+$story-milestone-start-date-text-color: $bright-green;
+$story-milestone-due-date-text-color: $bright-red;
+$story-issue-open-color: $bright-green;
+$story-issue-closed-color: $bright-red;
 
 $notification-text-color: $gray;
 $notification-unread-text-color: $off-white;

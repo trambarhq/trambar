@@ -1,15 +1,17 @@
+@import '../colors';
+
 .reaction-view {
     display: flex;
     flex-direction: row;
-    color: #cccccc;
+    color: $reaction-text-color;
     padding: 1px 0 1px 0;
     border: 1px solid rgba(0, 0, 0, 0);
 
     A:link, A:visited {
-        color: #cccccc;
+        color: $reaction-text-color;
 
         A:hover {
-            color: #eeeeee;
+            color: $reaction-link-hover-color;
         }
     }
 
@@ -43,18 +45,18 @@
 
             .note, .issue-assignment, .issue-tracking {
                 &:link, &:visited {
-                    color: #cccccc;
+                    color: $reaction-text-color;
                     text-decoration: none;
                     cursor: pointer;
 
                     &:hover {
-                        color: #ffffff;
+                        color: $reaction-link-hover-color;
                     }
                 }
             }
 
             .in-progress {
-                color: #666666;
+                color: $reaction-status-text-color;
             }
         }
 
@@ -83,7 +85,7 @@
 
         @keyframes flash {
             25% {
-                border-color: #fc6d26;
+                border-color: $selection-color;
             }
         }
     }

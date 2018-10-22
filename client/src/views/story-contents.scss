@@ -1,18 +1,20 @@
+@import '../colors';
+
 .story-contents {
     margin-top: 1em;
     margin-bottom: 0.25em;
 
     .text {
-        color: #cccccc;
+        color: $story-text-color;
         user-select: text;
 
         A {
             &:link, &:visited {
                 text-decoration: none;
-                color: #cccccc;
+                color: $story-text-color;
 
                 &:hover {
-                    color: #ffffff;
+                    color: $story-link-hover-text-color;
                 }
             }
         }
@@ -28,11 +30,11 @@
         }
 
         .status-opened, .status-reopened {
-            color: #99ff66;
+            color: $story-issue-open-color;
         }
 
         .status-closed {
-            color: #ff3333;
+            color: $story-issue-closed-color;
         }
 
         .tags {
@@ -41,8 +43,8 @@
 
         .tag {
             font-size: 0.9em;
-            color: #ffffff;
-            background-color: #444444;
+            color: $issue-label-default-text-color;
+            background-color: $issue-label-default-background-color;
             padding: 0.2em 0.4em 0.2em 0.4em;
             border-radius: 0.25em;
         }
@@ -106,7 +108,7 @@
                 .bar {
                     display: block;
                     position: relative;
-                    border: 1px solid #aaaaaa;
+                    border: 1px solid $story-survey-bar-border-color;
                     font-size: 0.8em;
                     height: 1.5em;
                     margin-bottom: 0.4em;
@@ -116,7 +118,7 @@
                         display: block;
                         left: 0.2em;
                         top: 0.1em;
-                        color: #333333;
+                        color: $story-survey-bar-text-color;
                     }
 
                     .count {
@@ -124,7 +126,7 @@
                         display: block;
                         right: 0.2em;
                         top: 0.1em;
-                        color: #cccccc;
+                        color: $story-survey-count-text-color;
                     }
 
                     .filled {
@@ -159,7 +161,7 @@
                 &.unanimous {
                     .count {
                         // use darker color when bar extends all the way to the end
-                        color: #333333;
+                        color: $story-survey-bar-text-color;
                     }
                 }
             }
@@ -167,10 +169,10 @@
 
         &.milestone {
             .start-date {
-                color: #99ff66;
+                color: $story-milestone-start-date-text-color;
             }
             .due-date {
-                color: #ff3333;
+                color: $story-milestone-due-date-text-color;
             }
         }
 
@@ -183,19 +185,19 @@
                 padding: 0;
 
                 .added {
-                    color: #99ee66;
+                    color: $story-push-added-text-color;
                 }
 
                 .deleted {
-                    color: #ee3333;
+                    color: $story-push-deleted-text-color;
                 }
 
                 .modified {
-                    color: #66aaff;
+                    color: $story-push-modified-text-color;
                 }
 
                 .renamed {
-                    color: #eeee66;
+                    color: $story-push-renamed-text-color;
                 }
             }
 
@@ -207,7 +209,7 @@
 
     .impact {
         .message {
-            color: #cccccc;
+            color: $story-text-color;
             user-select: text;
         }
 
