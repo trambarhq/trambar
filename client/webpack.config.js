@@ -16,13 +16,37 @@ var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlug
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 var event = 'build';
+var platform = 'browser';
+var os;
 if (process.env.npm_lifecycle_event) {
     event = process.env.npm_lifecycle_event;
+    var argv = JSON.parse(process.env.npm_config_argv).remain;
+    if (argv[0]) {
+        platform = argv[0];
+    }
+    if (argv[1]) {
+        os = argv[1];
+    }
+}
+
+if (platform !== 'cordova' && platform !== 'browser') {
+    console.log(`Invalid platform: ${platform}`);
+    console.log(``);
+    console.log(`Usage: npm run build [cordova|browser]`);
+    process.exit();
+}
+
+var targetFolder = 'www';
+if (platform === 'cordova') {
+    targetFolder += '-cordova';
+    if (os) {
+        targetFolder += `-${os}`;
+    }
 }
 
 var folders = _.mapValues({
     src: 'src',
-    www: 'www',
+    www: targetFolder,
     assets: 'assets',
     includes: [ 'src', '../common/src', '../common/node_modules', 'node_modules', 'assets' ],
     loaders: [ 'node_modules', '../common/node_modules' ],
@@ -36,7 +60,7 @@ if (event !== 'start') {
 }
 
 var env = {
-    PLATFORM: 'browser',
+    PLATFORM: platform,
     NODE_ENV: (event === 'build') ? 'production' : 'development',
 };
 var constants = {};
