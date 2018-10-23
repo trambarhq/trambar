@@ -19,6 +19,11 @@ class EnvironmentMonitor extends EventEmitter {
         this.browser = detectBrowser();
         this.os = detectOS();
         this.date = getDate(new Date);
+        if (typeof(cordova) === 'object') {
+            this.platform = 'cordova';
+        } else {
+            this.platform = 'browser';
+        }
         if (this.os === 'android' || this.os === 'ios' || this.os === 'wp') {
             this.pointingDevice = 'touch';
         } else {
@@ -60,7 +65,7 @@ class EnvironmentMonitor extends EventEmitter {
 
         this.scheduleDateCheck(enabled);
 
-        if (process.env.PLATFORM === 'cordova') {
+        if (this.platform === 'cordova') {
             toggleEventListener(document, 'pause', this.handlePause, enabled);
             toggleEventListener(document, 'resume', this.handleResume, enabled);
         }
@@ -106,7 +111,6 @@ class EnvironmentMonitor extends EventEmitter {
      * @param  {Event} evt
      */
     handlePause = (evt) => {
-        if (process.env.PLATFORM !== 'cordova') return;
         this.visible = false;
         this.paused = true;
         this.triggerEvent(new EnvironmentMonitorEvent('change', this));
@@ -118,7 +122,6 @@ class EnvironmentMonitor extends EventEmitter {
      * @param  {Event} evt
      */
     handleResume = (evt) => {
-        if (process.env.PLATFORM !== 'cordova') return;
         this.visible = true;
         this.paused = false;
         this.triggerEvent(new EnvironmentMonitorEvent('change', this));
@@ -195,21 +198,23 @@ class EnvironmentMonitor extends EventEmitter {
  * @return {Boolean}
  */
 function isOnline() {
-    if (process.env.PLATFORM === 'cordova') {
-        let connection = getNetworkAPI();
+    let connection = getNetworkAPI();
+    if (connection) {
         return (connection.type !== 'none');
-    } else {
-        return navigator.onLine;
     }
+    return navigator.onLine;
 }
 
 function getConnectionType() {
     let connection = getNetworkAPI();
-    if (process.env.PLATFORM === 'cordova') {
-        return connection.type;
-    } else {
-        return (connection) ? connection.effectiveType : 'unknown';
+    if (connection) {
+        if (connection.type) {
+            return connection.type;
+        } else if (connection.effectiveType) {
+            return connection.effectiveType;
+        }
     }
+    return 'unknown';
 }
 
 function getNetworkAPI() {

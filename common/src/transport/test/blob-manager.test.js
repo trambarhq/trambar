@@ -23,13 +23,11 @@ describe('BlobManager', function() {
             let url2 = BlobManager.manage(blob);
             expect(url2).to.equal(url1);
         })
-        if (process.env.PLATFORM === 'cordova') {
-            it('should accept a Cordova file object', function() {
-                let file = new CordovaFile('/home/bob/nice.jpg', 'image/jpeg');
-                let url = BlobManager.manage(file);
-                return expect(url).to.equal(file.fullPath);
-            })
-        }
+        it('should accept a Cordova file object', function() {
+            let file = new CordovaFile('/home/bob/nice.jpg', 'image/jpeg');
+            let url = BlobManager.manage(file);
+            return expect(url).to.equal(file.fullPath);
+        })
     })
     describe('#find()', function() {
         it('should find a blob by its URL', function() {

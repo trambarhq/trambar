@@ -28,11 +28,8 @@ function loadArrayBuffer(blob) {
         return BlobManager.fetch(url).then((blob) => {
             return loadArrayBuffer(blob);
         });
-    }
-    if (process.env.PLATFORM === 'cordova') {
-        if (blob instanceof CordovaFile) {
-            return blob.getArrayBuffer();
-        }
+    } else if (blob instanceof CordovaFile) {
+        return blob.getArrayBuffer();
     }
     return new Promise((resolve, reject) => {
         var reader = new FileReader();
@@ -59,13 +56,10 @@ function loadText(blob) {
         return BlobManager.fetch(url).then((blob) => {
             return loadText(blob);
         });
-    }
-    if (process.env.PLATFORM === 'cordova') {
-        if (blob instanceof CordovaFile) {
-            return blob.getFileEntry((fileEntry) => {
-                return loadText(fileEntry);
-            });
-        }
+    } else if (blob instanceof CordovaFile) {
+        return blob.getFileEntry((fileEntry) => {
+            return loadText(fileEntry);
+        });
     }
     return new Promise((resolve, reject) => {
         var reader = new FileReader();

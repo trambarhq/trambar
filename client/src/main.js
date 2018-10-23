@@ -60,3 +60,9 @@ function showProgress(loaded, total) {
         progressBarFilled.style.width = Math.round(loaded / total * 100) + '%';
     }
 }
+
+if (process.env.PLATFORM === 'cordova') {
+    if (typeof(cordova) !== 'object') {
+        window.cordova = {};
+    }
+}

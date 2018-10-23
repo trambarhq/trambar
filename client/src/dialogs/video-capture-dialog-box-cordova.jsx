@@ -10,8 +10,8 @@ import CordovaFile from 'transport/cordova-file';
  *
  * @extends PureComponent
  */
-class VideoCaptureDialogBox extends PureComponent {
-    static displayName = 'VideoCaptureDialogBox';
+class VideoCaptureDialogBoxCordova extends PureComponent {
+    static displayName = 'VideoCaptureDialogBoxCordova';
 
     /**
      * Return true if the browser has the necessary functionalities
@@ -230,8 +230,8 @@ function requestPermissions() {
 }
 
 export {
-    VideoCaptureDialogBox as default,
-    VideoCaptureDialogBox,
+    VideoCaptureDialogBoxCordova as default,
+    VideoCaptureDialogBoxCordova,
 };
 
 import Payloads from 'transport/payloads';
@@ -240,7 +240,7 @@ import Environment from 'env/environment';
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
-    VideoCaptureDialogBox.propTypes = {
+    VideoCaptureDialogBoxCordova.propTypes = {
         show: PropTypes.bool,
 
         payloads: PropTypes.instanceOf(Payloads).isRequired,

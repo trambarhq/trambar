@@ -9,8 +9,8 @@ import CordovaFile from 'transport/cordova-file';
  *
  * @extends PureComponent
  */
-class PhotoCaptureDialogBox extends PureComponent {
-    static displayName = 'PhotoCaptureDialogBox';
+class PhotoCaptureDialogBoxCordova extends PureComponent {
+    static displayName = 'PhotoCaptureDialogBoxCordova';
 
     /**
      * Return true if the browser has the necessary functionalities
@@ -158,8 +158,8 @@ class PhotoCaptureDialogBox extends PureComponent {
 }
 
 export {
-    PhotoCaptureDialogBox as default,
-    PhotoCaptureDialogBox,
+    PhotoCaptureDialogBoxCordova as default,
+    PhotoCaptureDialogBoxCordova,
 };
 
 import Payloads from 'transport/payloads';
@@ -168,7 +168,7 @@ import Environment from 'env/environment';
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
-    PhotoCaptureDialogBox.propTypes = {
+    PhotoCaptureDialogBoxCordova.propTypes = {
         show: PropTypes.bool,
         cameraDirection: PropTypes.oneOf([ 'front', 'back' ]),
 

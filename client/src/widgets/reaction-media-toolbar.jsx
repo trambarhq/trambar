@@ -4,9 +4,12 @@ import * as DeviceManager from 'media/device-manager';
 
 // widgets
 import HeaderButton from 'widgets/header-button';
-import PhotoCaptureDialogBox from 'dialogs/photo-capture-dialog-box';
-import VideoCaptureDialogBox from 'dialogs/video-capture-dialog-box';
-import AudioCaptureDialogBox from 'dialogs/audio-capture-dialog-box';
+import PhotoCaptureDialogBoxBrowser from 'dialogs/photo-capture-dialog-box-browser';
+import PhotoCaptureDialogBoxCordova from 'dialogs/photo-capture-dialog-box-cordova';
+import VideoCaptureDialogBoxBrowser from 'dialogs/video-capture-dialog-box-browser';
+import VideoCaptureDialogBoxCordova from 'dialogs/video-capture-dialog-box-cordova';
+import AudioCaptureDialogBoxBrowser from 'dialogs/audio-capture-dialog-box-browser';
+import AudioCaptureDialogBoxCordova from 'dialogs/audio-capture-dialog-box-cordova';
 
 import './reaction-media-toolbar.scss';
 
@@ -65,17 +68,18 @@ class ReactionMediaToolbar extends PureComponent {
         let { hasCamera, hasMicrophone, capturing } = this.state;
         let { t } = env.locale;
         let counts = this.getResourceCounts();
-        let canCaptureStaticImage = hasCamera && PhotoCaptureDialogBox.isAvailable();
-        let canCaptureVideo = hasCamera && VideoCaptureDialogBox.isAvailable();
-        let canCaptureAudio = hasMicrophone && AudioCaptureDialogBox.isAvailable();
-        let photoButtonProps = {
-            tooltip: t('story-photo'),
-            icon: 'camera',
-            hidden: !counts.photo && !canCaptureStaticImage,
-            disabled: !canCaptureStaticImage,
-            highlighted: (counts.photo > 0 || capturing === 'image'),
-            onClick: this.handlePhotoClick,
-        };
+        let canCaptureStaticImage = false;
+        let canCaptureVideo = false;
+        let canCaptureAudio = false;
+        if (env.platform === 'browser') {
+            canCaptureStaticImage = hasCamera && PhotoCaptureDialogBoxBrowser.isAvailable();
+            canCaptureVideo = hasCamera && VideoCaptureDialogBoxBrowser.isAvailable();
+            canCaptureAudio = hasMicrophone && AudioCaptureDialogBoxBrowser.isAvailable();
+        } else if (env.platform === 'cordova') {
+            canCaptureStaticImage = hasCamera && PhotoCaptureDialogBoxCordova.isAvailable();
+            canCaptureVideo = hasCamera && VideoCaptureDialogBoxCordova.isAvailable();
+            canCaptureAudio = hasMicrophone && AudioCaptureDialogBoxCordova.isAvailable();
+        }
         let videoButtonProps = {
             tooltip: t('story-video'),
             icon: 'video-camera',

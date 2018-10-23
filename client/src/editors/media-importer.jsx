@@ -10,9 +10,12 @@ import * as BlobReader from 'transport/blob-reader';
 import ResourceTypes from 'objects/types/resource-types';
 
 // widgets
-import PhotoCaptureDialogBox from 'dialogs/photo-capture-dialog-box';
-import AudioCaptureDialogBox from 'dialogs/audio-capture-dialog-box';
-import VideoCaptureDialogBox from 'dialogs/video-capture-dialog-box';
+import PhotoCaptureDialogBoxBrowser from 'dialogs/photo-capture-dialog-box-browser';
+import PhotoCaptureDialogBoxCordova from 'dialogs/photo-capture-dialog-box-cordova';
+import AudioCaptureDialogBoxBrowser from 'dialogs/audio-capture-dialog-box-browser';
+import AudioCaptureDialogBoxCordova from 'dialogs/audio-capture-dialog-box-cordova';
+import VideoCaptureDialogBoxBrowser from 'dialogs/video-capture-dialog-box-browser';
+import VideoCaptureDialogBoxCordova from 'dialogs/video-capture-dialog-box-cordova';
 
 const USE_STREAM = true;
 
@@ -360,7 +363,11 @@ class MediaImporter extends PureComponent {
             onCaptureError: this.handleCaptureError,
             onCapture: this.handleCapture,
         };
-        return <PhotoCaptureDialogBox {...props} />
+        if (env.platform === 'browser') {
+            return <PhotoCaptureDialogBoxBrowser {...props} />;
+        } else if (env.platform === 'cordova') {
+            return <PhotoCaptureDialogBoxCordova {...props} />;
+        }
     }
 
     /**
@@ -382,7 +389,11 @@ class MediaImporter extends PureComponent {
             onCaptureError: this.handleCaptureError,
             onCapture: this.handleCapture,
         };
-        return <VideoCaptureDialogBox {...props} />
+        if (env.platform === 'browser') {
+            return <VideoCaptureDialogBoxBrowser {...props} />;
+        } else if (env.platform === 'cordova') {
+            return <VideoCaptureDialogBoxCordova {...props} />;
+        }
     }
 
     /**
@@ -402,7 +413,11 @@ class MediaImporter extends PureComponent {
             onCaptureError: this.handleCaptureError,
             onCapture: this.handleCapture,
         };
-        return <AudioCaptureDialogBox {...props} />
+        if (env.platform === 'browser') {
+            return <AudioCaptureDialogBoxBrowser {...props} />;
+        } else if (env.platform === 'cordova') {
+            return <AudioCaptureDialogBoxCordova {...props} />;
+        }
     }
 
     /**

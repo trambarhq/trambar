@@ -16,8 +16,8 @@ import './audio-capture-dialog-box-browser.scss';
  *
  * @extends PureComponent
  */
-class AudioCaptureDialogBox extends PureComponent {
-    static displayName = 'AudioCaptureDialogBox';
+class AudioCaptureDialogBoxBrowser extends PureComponent {
+    static displayName = 'AudioCaptureDialogBoxBrowser';
 
     constructor(props) {
         super(props);
@@ -636,8 +636,8 @@ class AudioCaptureDialogBox extends PureComponent {
 }
 
 export {
-    AudioCaptureDialogBox as default,
-    AudioCaptureDialogBox,
+    AudioCaptureDialogBoxBrowser as default,
+    AudioCaptureDialogBoxBrowser,
 };
 
 import Payloads from 'transport/payloads';
@@ -646,7 +646,7 @@ import Environment from 'env/environment';
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
-    AudioCaptureDialogBox.propTypes = {
+    AudioCaptureDialogBoxBrowser.propTypes = {
         show: PropTypes.bool,
 
         payloads: PropTypes.instanceOf(Payloads).isRequired,

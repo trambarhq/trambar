@@ -49,7 +49,8 @@ class DevelopmentPanel extends PureComponent {
      * Load deployment selection if platform is Cordova
      */
     componentWillMount() {
-        if (process.env.PLATFORM === 'cordova') {
+        let { env } = this.props;
+        if (env.platform === 'cordova') {
             let codePush = CodePush.instance;
             if (codePush) {
                 codePush.loadDeploymentName().then((selectedDeploymentName) => {
@@ -94,7 +95,10 @@ class DevelopmentPanel extends PureComponent {
      * @return {Array<ReactElement>|null}
      */
     renderDeploymentOptions() {
-        if (process.env.PLATFORM !== 'cordova') return null;
+        let { env } = this.props;
+        if (env.platform !== 'cordova') {
+            return null;
+        }
         let codePush = CodePush.instance;
         let names;
         if (codePush) {
@@ -147,10 +151,12 @@ class DevelopmentPanel extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDeploymentOption(name, index) {
-        if (process.env.PLATFORM !== 'cordova') return null;
         let { env } = this.props;
         let { selectedDeploymentName } = this.state;
         let { t } = env.locale;
+        if (env.platform !== 'cordova') {
+            return null;
+        }
         let buttonProps = {
             label: t(`development-code-push-$deployment`, name),
             selected: (name === selectedDeploymentName),
@@ -204,7 +210,10 @@ class DevelopmentPanel extends PureComponent {
      * @param  {Event} evt
      */
     handleDeploymentOptionClick = (evt) => {
-        if (process.env.PLATFORM !== 'cordova') return null;
+        let { env } = this.props;
+        if (env.platform !== 'cordova') {
+            return;
+        }
         let selectedDeploymentName = evt.currentTarget.id;
         this.setState({ selectedDeploymentName }, () => {
             let codePush = CodePush.instance;

@@ -126,7 +126,7 @@ class ProjectPanel extends PureComponent {
             let mobileProps = {
                 icon: 'qrcode',
                 label: t('project-management-mobile-set-up'),
-                hidden: (process.env.PLATFORM === 'cordova'),
+                hidden: (env.platform === 'cordova'),
                 onClick: this.handleMobileSetupClick,
             };
             let membershipProps = {

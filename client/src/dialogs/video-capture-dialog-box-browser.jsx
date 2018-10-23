@@ -20,8 +20,8 @@ import './video-capture-dialog-box-browser.scss';
  *
  * @extends PureComponent
  */
-class VideoCaptureDialogBox extends PureComponent {
-    static displayName = 'VideoCaptureDialogBox';
+class VideoCaptureDialogBoxBrowser extends PureComponent {
+    static displayName = 'VideoCaptureDialogBoxBrowser';
 
     constructor(props) {
         super(props);
@@ -726,8 +726,8 @@ class VideoCaptureDialogBox extends PureComponent {
 }
 
 export {
-    VideoCaptureDialogBox as default,
-    VideoCaptureDialogBox,
+    VideoCaptureDialogBoxBrowser as default,
+    VideoCaptureDialogBoxBrowser,
 };
 
 import Payloads from 'transport/payloads';
@@ -736,7 +736,7 @@ import Environment from 'env/environment';
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
-    VideoCaptureDialogBox.propTypes = {
+    VideoCaptureDialogBoxBrowser.propTypes = {
         show: PropTypes.bool,
 
         payloads: PropTypes.instanceOf(Payloads).isRequired,

@@ -19,8 +19,8 @@ import './photo-capture-dialog-box-browser.scss';
  *
  * @extends PureComponent
  */
-class PhotoCaptureDialogBox extends PureComponent {
-    static displayName = 'PhotoCaptureDialogBox';
+class PhotoCaptureDialogBoxBrowser extends PureComponent {
+    static displayName = 'PhotoCaptureDialogBoxBrowser';
 
     constructor(props) {
         let { cameraDirection } = props;
@@ -512,8 +512,8 @@ class PhotoCaptureDialogBox extends PureComponent {
 }
 
 export {
-    PhotoCaptureDialogBox as default,
-    PhotoCaptureDialogBox,
+    PhotoCaptureDialogBoxBrowser as default,
+    PhotoCaptureDialogBoxBrowser,
 };
 
 import Payloads from 'transport/payloads';
@@ -522,7 +522,7 @@ import Environment from 'env/environment';
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
-    PhotoCaptureDialogBox.propTypes = {
+    PhotoCaptureDialogBoxBrowser.propTypes = {
         show: PropTypes.bool,
         cameraDirection: PropTypes.oneOf([ 'front', 'back' ]),
 

@@ -1,4 +1,4 @@
-if (process.env.PLATFORM === 'cordova') {
+if (typeof(cordova) === 'object') {
     if (/iPad|iPhone|iPod/.test(navigator.platform)) {
         document.addEventListener('resume', () => {
             let images = document.getElementsByTagName('IMG');

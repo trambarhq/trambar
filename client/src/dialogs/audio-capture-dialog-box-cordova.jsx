@@ -10,8 +10,8 @@ import CordovaFile from 'transport/cordova-file';
  *
  * @extends PureComponent
  */
-class AudioCaptureDialogBox extends PureComponent {
-    static displayName = 'AudioCaptureDialogBox';
+class AudioCaptureDialogBoxCordova extends PureComponent {
+    static displayName = 'AudioCaptureDialogBoxCordova';
 
     /**
      * Return true if the browser has the necessary functionalities
@@ -177,8 +177,8 @@ function requestPermissions() {
 }
 
 export {
-    AudioCaptureDialogBox as default,
-    AudioCaptureDialogBox,
+    AudioCaptureDialogBoxCordova as default,
+    AudioCaptureDialogBoxCordova,
 };
 
 import Payloads from 'transport/payloads';
@@ -187,7 +187,7 @@ import Environment from 'env/environment';
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
-    AudioCaptureDialogBox.propTypes = {
+    AudioCaptureDialogBoxCordova.propTypes = {
         show: PropTypes.bool,
 
         payloads: PropTypes.instanceOf(Payloads).isRequired,

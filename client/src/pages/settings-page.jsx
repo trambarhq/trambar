@@ -221,7 +221,7 @@ class SettingsPageSync extends PureComponent {
      */
     renderDevicePanel() {
         let { database, route, env, devices } = this.props;
-        if (process.env.PLATFORM === 'cordova') {
+        if (env.platform === 'cordova') {
             return null;
         }
         if (_.isEmpty(devices)) {
@@ -305,7 +305,7 @@ class SettingsPageSync extends PureComponent {
      */
     renderWebAlertPanel() {
         let { env, repos } = this.props;
-        if (process.env.PLATFORM === 'cordova') {
+        if (env.platform === 'cordova') {
             return null;
         }
         let panelProps = {

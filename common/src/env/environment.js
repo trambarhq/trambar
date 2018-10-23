@@ -14,6 +14,7 @@ class Environment {
         this.viewportHeight = envMonitor.viewportHeight;
         this.devicePixelRatio = envMonitor.devicePixelRatio;
         this.webpSupport = envMonitor.webpSupport,
+        this.platform = envMonitor.platform;
         this.browser = envMonitor.browser;
         this.os = envMonitor.os;
         this.pointingDevice = envMonitor.pointingDevice;

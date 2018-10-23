@@ -30,9 +30,7 @@ class PayloadManager extends EventEmitter {
     activate() {
         if (!this.active) {
             if (!this.initialized) {
-                if (process.env.PLATFORM === 'cordova') {
-                    BackgroundFileTransfer.initialize();
-                }
+                BackgroundFileTransfer.initialize();
                 this.initialized = true;
             }
             this.active = true;
@@ -512,7 +510,6 @@ class PayloadManager extends EventEmitter {
      * @return {Promise<Object>}
      */
     sendPayloadCordovaFile(payload, part) {
-        if (process.env.PLATFORM !== 'cordova') return;
         var url = this.getUploadURL(payload, part);
         var file = part.cordovaFile;
         return new Promise((resolve, reject) => {

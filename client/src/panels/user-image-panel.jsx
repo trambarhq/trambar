@@ -11,7 +11,8 @@ import SettingsPanel from 'widgets/settings-panel';
 import PushButton from 'widgets/push-button';
 import ImageEditor from 'editors/image-editor';
 import MediaImporter from 'editors/media-importer';
-import PhotoCaptureDialogBox from 'dialogs/photo-capture-dialog-box';
+import PhotoCaptureDialogBoxBrowser from 'dialogs/photo-capture-dialog-box-browser';
+import PhotoCaptureDialogBoxCordova from 'dialogs/photo-capture-dialog-box-cordova';
 import Icon from 'octicons/build/svg/person.svg';
 
 import './user-image-panel.scss';
@@ -181,6 +182,12 @@ class UserImagePanel extends PureComponent {
         let { action, hasCamera, image } = this.state;
         let { t } = env.locale;
         let hasPicture = !!this.getImage();
+        let canTakePicture = false;
+        if (env.platform === 'browser') {
+            canTakePicture = hasCamera && PhotoCaptureDialogBoxBrowser.isAvailable();
+        } else if (env.platform === 'cordova') {
+            canTakePicture = hasCamera && PhotoCaptureDialogBoxCordova.isAvailable();
+        }
         if (action === 'adjust' && hasPicture) {
             let cancelProps = {
                 label: t('user-image-cancel'),
@@ -205,7 +212,7 @@ class UserImagePanel extends PureComponent {
             };
             let takeProps = {
                 label: t('user-image-snap'),
-                hidden: !PhotoCaptureDialogBox.isAvailable() || !hasCamera,
+                hidden: !canTakePicture,
                 onClick: this.handleTakeClick,
             };
             let selectProps = {
@@ -238,7 +245,7 @@ class UserImagePanel extends PureComponent {
         } else {
             let takeProps = {
                 label: t('user-image-snap'),
-                hidden: !PhotoCaptureDialogBox.isAvailable() || !hasCamera,
+                hidden: !canTakePicture,
                 onClick: this.handleTakeClick,
             };
             let selectProps = {

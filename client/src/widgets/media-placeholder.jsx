@@ -11,7 +11,7 @@ function MediaPlaceholder(props) {
     let { env, showHints } = props;
     let { t } = env.locale;
     let phraseIDs;
-    if (process.env.PLATFORM !== 'mobile') {
+    if (env.pointingDevice === 'mouse') {
         if (showHints) {
             phraseIDs = [
                 'story-drop-files-here',

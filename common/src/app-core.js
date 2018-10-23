@@ -46,7 +46,7 @@ function start(cfg) {
         cache,
     });
     let notifier;
-    if (process.env.PLATFORM === 'cordova') {
+    if (envMonitor.platform === 'cordova') {
         notifier = new PushNotifier({
         });
     } else {

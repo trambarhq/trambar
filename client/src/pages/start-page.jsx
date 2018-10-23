@@ -33,7 +33,7 @@ import './start-page.scss';
  */
 class StartPage extends AsyncComponent {
     static displayName = 'StartPage';
-    static useTransition = (process.env.PLATFORM === 'browser');
+    static useTransition = true;
 
     /**
      * Render the component asynchronously
@@ -66,7 +66,7 @@ class StartPage extends AsyncComponent {
             env,
         };
         if (!db.authorized) {
-            if (process.env.PLATFORM === 'browser') {
+            if (env.platform === 'browser') {
                 // start authorization process--will receive system description
                 // and list of OAuth providers along with links
                 meanwhile.show(<StartPageSync {...props} />);
@@ -83,8 +83,7 @@ class StartPage extends AsyncComponent {
                     props.servers = info.servers;
                     return <StartPageSync {...props} />;
                 });
-            }
-            if (process.env.PLATFORM === 'cordova') {
+            } else if (env.platform === 'cordova') {
                 if (activationCode) {
                     meanwhile.show(<StartPageSync {...props} />);
                     return db.acquireMobileSession(activationCode).then((userID) => {
@@ -98,9 +97,8 @@ class StartPage extends AsyncComponent {
                         };
                         return db.saveOne({ table: 'device' }, device);
                     }).then((device) => {
-                        // if no error was encounted, an onAuthorization event
-                        // should have caused rerendering at this point
-                        return <StartPageSync {...props} />;
+                        route.replace(route.name, {});
+                        return null;
                     }).catch((err) => {
                         props.serverError = err;
                         // start over after a few seconds
@@ -159,8 +157,9 @@ class StartPageSync extends PureComponent {
     static displayName = 'StartPage.Sync';
 
     constructor(props) {
+        let { env } = props;
         super(props);
-        if (process.env.PLATFORM === 'browser') {
+        if (env.platform === 'browser') {
             this.state = {
                 transitionMethod: 'fast',
                 selectedProjectID: 0,
@@ -168,8 +167,7 @@ class StartPageSync extends PureComponent {
                 renderingProjectDialog: false,
                 showingProjectDialog: false,
             };
-        }
-        if (process.env.PLATFORM === 'cordova') {
+        } else if (env.platform === 'cordova') {
             this.state = {
                 receivedCorrectQRCode: false,
                 receivedInvalidQRCode: false,
@@ -222,10 +220,10 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        if (process.env.PLATFORM === 'browser') {
+        let { env } = this.props;
+        if (env.platform === 'browser') {
             return this.renderForBrowser();
-        }
-        if (process.env.PLATFORM === 'cordova') {
+        } else if (env.platform === 'cordova') {
             return this.renderForCordova();
         }
     }
@@ -627,7 +625,7 @@ class StartPageSync extends PureComponent {
         let { env, projects } = this.props;
         let { t } = env.locale;
         projects = sortProjects(projects, env);
-        if (process.env.PLATFORM == 'browser') {
+        if (env.platform == 'browser') {
             return (
                 <div className="section buttons">
                     <h2>{projects ? t('start-projects') : ''}</h2>
@@ -641,8 +639,7 @@ class StartPageSync extends PureComponent {
                     </Scrollable>
                 </div>
             );
-        }
-        if (process.env.PLATFORM === 'cordova') {
+        } else if (env.platform === 'cordova') {
             return (
                 <div className="projects">
                     {this.renderEmptyMessage()}
@@ -830,7 +827,6 @@ class StartPageSync extends PureComponent {
      * @return {Promise}
      */
     openPopUpWindow(url) {
-        if (process.env.PLATFORM !== 'browser') return;
         return new Promise((resolve, reject) => {
             let width = 800;
             let height = 600;

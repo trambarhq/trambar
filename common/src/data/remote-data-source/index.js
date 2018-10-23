@@ -1340,7 +1340,7 @@ class RemoteDataSource extends EventEmitter {
      */
     queueChange(change) {
         // get rid of entries that's no longer needed
-        let delay = (process.env.PLATFORM === 'CORDOVA') ? 10 : 1;
+        let delay = 1;
         let someTimeAgo = Moment().subtract(delay, 'minute').toISOString();
         _.remove(this.changeQueue, (oldChange) => {
             if (oldChange.committed) {

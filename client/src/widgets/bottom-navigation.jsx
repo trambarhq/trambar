@@ -158,7 +158,7 @@ class BottomNavigation extends PureComponent {
             url: this.getPageURL('settings-page'),
             onClick: (section === 'settings') ? this.handleActiveButtonClick : null,
         };
-        let newNotificationProps = { database, route };
+        let newNotificationProps = { database, route, env };
         return (
             <div ref={setters.container} className="container">
                 <Button {...newsProps} />
@@ -291,7 +291,7 @@ class NewNotificationsBadge extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database } = this.props;
+        let { database, env } = this.props;
         if (!database.context.schema) {
             return null;
         }
@@ -303,7 +303,7 @@ class NewNotificationsBadge extends AsyncComponent {
             return UserFinder.findUser(db, currentUserID).then((user) => {
                 return NotificationFinder.findNotificationsUnseenByUser(db, user).then((notifications) => {
                     let count = notifications.length;
-                    if (process.env.PLATFORM === 'browser') {
+                    if (env.platform === 'browser') {
                         changeFavIcon(count);
                         changeDocumentTitle(count);
                     }
@@ -394,6 +394,7 @@ if (process.env.NODE_ENV !== 'production') {
         hasAccess: PropTypes.bool,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
     };
     BottomNavigation.propTypes = {
         settings: PropTypes.object.isRequired,

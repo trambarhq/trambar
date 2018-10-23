@@ -21,12 +21,8 @@ function manage(blob) {
     let localURL;
     if (blob instanceof Blob) {
         localURL = URL.createObjectURL(blob);
-    } else {
-        if (process.env.PLATFORM === 'cordova') {
-            if (blob instanceof CordovaFile) {
-                localURL = blob.fullPath;
-            }
-        }
+    } else if (blob instanceof CordovaFile) {
+        localURL = blob.fullPath;
     }
     let urls = [ localURL ];
     list.push({ blob, localURL, urls, atime });
@@ -113,11 +109,8 @@ function release(blob) {
 function releaseEntry(entry) {
     if (entry.blob instanceof Blob) {
         URL.revokeObjectURL(entry.localURL);
-    }
-    if (process.env.PLATFORM === 'cordova') {
-        if (entry.blob instanceof CordovaFile) {
-            entry.blob.remove();
-        }
+    } else if (entry.blob instanceof CordovaFile) {
+        entry.blob.remove();
     }
 };
 
