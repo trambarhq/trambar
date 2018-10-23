@@ -29,6 +29,10 @@ class Route {
         return this.routeManager.replace(name, params, context);
     }
 
+    match(url) {
+        return this.routeManager.match(url);
+    }
+
     reanchor(url) {
     }
 

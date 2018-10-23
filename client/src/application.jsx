@@ -339,7 +339,7 @@ class Application extends PureComponent {
      * @param  {RelaksRouteManagerEvent} evt
      */
     handleRouteChange = (evt) => {
-        let { routeManager, dataSource, payloadManager } = this.props;
+        let { routeManager, dataSource, envMonitor, payloadManager } = this.props;
         let { route: prevRoute } = this.state;
         let { address: prevAddress, schema: prevSchema } = (prevRoute) ? prevRoute.context : {};
         let route = new Route(routeManager);

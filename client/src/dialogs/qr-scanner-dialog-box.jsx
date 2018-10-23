@@ -57,7 +57,8 @@ class QRScannerDialogBox extends PureComponent {
      * @param  {Object]} prevState
      */
     componentDidUpdate(prevProps, prevState) {
-        let { available, show } = this.state;
+        let { show } = this.props;
+        let { available } = this.state;
         if (available && show) {
             this.show();
         } else if (prevProps.show && !show) {

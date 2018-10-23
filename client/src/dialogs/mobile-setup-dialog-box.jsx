@@ -128,8 +128,8 @@ class MobileSetupDialogBoxSync extends PureComponent {
             address = systemAddress;
         }
         if (activationCode) {
-            let relativeURL = route.find('start-page', { activationCode, schema });
-            universalLink = UniversalLink.form(address, relativeURL);
+            let url = route.find('start-page', { activationCode, schema }, { cors: true });
+            universalLink = UniversalLink.form(url);
             console.log(universalLink);
         }
         return (

@@ -282,6 +282,7 @@ class RemoteDataSource extends EventEmitter {
                 handle: parentSession.handle,
                 area,
             };
+            debugger;
             return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
                 mobileSession.handle = res.session.handle;
                 return mobileSession.handle;
@@ -306,7 +307,7 @@ class RemoteDataSource extends EventEmitter {
         let session = this.obtainSession(location);
         // discard any other sessions
         while (session.handle && session.handle !== handle) {
-            this.discardSession(session);
+            _.pull(this.sessions, session);
             session = this.obtainSession(location);
         }
         if (session.authenticationPromise) {
@@ -316,16 +317,17 @@ class RemoteDataSource extends EventEmitter {
         session.handle = handle;
         session.establishmentPromise = Promise.resolve({});
 
-        let url = `${address}/srv/session/`;
+        let url = `${session.address}/srv/session/`;
         let options = { responseType: 'json', contentType: 'json' };
-        let payload = {
-            handle
-        };
+        let payload = { handle };
         let promise = HTTPRequest.fetch('GET', url, payload, options).then((res) => {
+            if (!res) {
+                throw new HTTPError(400);
+            }
             this.grantAuthorization(session, res.session);
             return session.user_id;
         }).catch((err) => {
-            this.discardSession(session);
+            _.pull(this.sessions, session);
             throw err;
         });
         session.authenticationPromise = promise;
@@ -474,18 +476,24 @@ class RemoteDataSource extends EventEmitter {
     grantAuthorization(session, sessionInfo) {
         let now = Moment().toISOString();
         if (!sessionInfo) {
-            throw HTTPError(500);
+            throw new HTTPError(500);
         }
         if (sessionInfo.error) {
-            throw HTTPError(sessionInfo.error);
+            throw new HTTPError(sessionInfo.error);
         }
         if (!sessionInfo.token || !sessionInfo.user_id || !(sessionInfo.etime > now)) {
-            throw HTTPError(401);
+            throw new HTTPError(401);
         }
         if (sessionInfo.area !== session.area) {
             if (sessionInfo.hasOwnProperty('area')) {
-                throw HTTPError(500);
+                throw new HTTPError(500);
             }
+        }
+        if (!session.handle) {
+            if (!sessionInfo.handle) {
+                throw new HTTPError(500);
+            }
+            session.handle = sessionInfo.handle;
         }
         session.token = sessionInfo.token;
         session.user_id = sessionInfo.user_id;

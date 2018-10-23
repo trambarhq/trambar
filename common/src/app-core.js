@@ -97,11 +97,13 @@ function start(cfg) {
                 // first, see if there's a saved session
                 let promise = loadSession(address).then((session) => {
                     if (!dataSource.restoreAuthorization(location, session)) {
-                        // there was none or it's expired--show the sign-in page
-                        return evt.substitute(signInPageName).then(() => {
-                            // ask the data-source to request authentication
-                            return dataSource.requestAuthentication(location);
-                        });
+                        if (!route.signIn) {
+                            // there was none or it's expired--show the sign-in page
+                            return evt.substitute(signInPageName).then(() => {
+                                // ask the data-source to request authentication
+                                return dataSource.requestAuthentication(location);
+                            });
+                        }
                     }
                     return true;
                 });

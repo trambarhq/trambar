@@ -209,7 +209,6 @@ const routes = {
                 match.params.module = module;
             });
         },
-        public: true,
         signIn: true,
     },
     'error-page': {

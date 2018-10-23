@@ -4,7 +4,7 @@ import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import HTTPRequest from 'transport/http-request';
 import { memoizeWeak } from 'utils/memoize';
-import UniversalLink from 'routing/universal-link';
+import * as UniversalLink from 'routing/universal-link';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as ProjectLinkFinder from 'objects/finders/project-link-finder';
 import * as ResourceUtils from 'objects/utils/resource-utils';
@@ -48,7 +48,6 @@ class StartPage extends AsyncComponent {
             route,
             env,
             transitionOut,
-            address,
             addingServer,
             activationCode,
         } = this.props;
@@ -86,7 +85,7 @@ class StartPage extends AsyncComponent {
                 });
             }
             if (process.env.PLATFORM === 'cordova') {
-                if (address && activationCode) {
+                if (activationCode) {
                     meanwhile.show(<StartPageSync {...props} />);
                     return db.acquireMobileSession(activationCode).then((userID) => {
                         // create entry in device table
@@ -106,11 +105,7 @@ class StartPage extends AsyncComponent {
                         props.serverError = err;
                         // start over after a few seconds
                         setTimeout(() => {
-                            let params = {
-                                address: null,
-                                activationCode: null
-                            };
-                            route.replace(route.name, params);
+                            route.replace(route.name, {});
                         }, 10000);
                         return <StartPageSync {...props} />;
                     });
@@ -298,7 +293,7 @@ class StartPageSync extends PureComponent {
         if (!database.authorized || addingServer) {
             // render only instructions for gaining access
             return (
-                <div className={className}>
+                <div {...pageProps}>
                     {this.renderTitle()}
                     {this.renderActivationControls()}
                     {this.renderAvailableServers()}
@@ -307,7 +302,7 @@ class StartPageSync extends PureComponent {
         } else {
             // render project list, followed by activation instructions
             return (
-                <div className={className}>
+                <div {...pageProps}>
                     {this.renderTitle()}
                     {this.renderProjectButtons()}
                     {this.renderEmptyMessage()}
@@ -747,7 +742,7 @@ class StartPageSync extends PureComponent {
         }
         let returnProps = {
             label: t('start-activation-return'),
-            hidden: !databae.authorized,
+            hidden: !database.authorized,
             onClick: this.handleReturnClick,
         };
         return (
@@ -1087,7 +1082,7 @@ class StartPageSync extends PureComponent {
         }
         // see if the URL is a valid activation link
         let url = UniversalLink.parse(evt.result);
-        let match = (link) ? route.match(url) : null;
+        let match = (url) ? route.match(url) : null;
         if (match && match.params.activationCode) {
             this.setState({ qrCodeStatus: 'correct' })
             route.change(url);

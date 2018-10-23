@@ -3,14 +3,12 @@ const baseURL = 'https://trambar.io';
 /**
  * Form a universal link
  *
- * @param  {String} address
  * @param  {String} url
  *
  * @return {String}
  */
-function form(address, url) {
-    let hostPath = address.replace('://', '/');
-    return baseURL + '/' + hostPath + url;
+function form(url) {
+    return baseURL + url;
 }
 
 /**
@@ -18,17 +16,14 @@ function form(address, url) {
  *
  * @param  {String} link
  *
- * @return {Object|null}
+ * @return {String|undefined}
  */
 function parse(link) {
-    let regExp = new RegExp('^' + baseURL + '/(https?)/(.*?)/(.*)');
+    let regExp = new RegExp('^' + baseURL + '(/https?/.*?/.*)');
     let m = regExp.exec(link);
-    if (!m) {
-        return;
+    if (m) {
+        return m[1];
     }
-    let address = m[1] + '://' + m[2];
-    let url = '/' + m[3];
-    return { address, url };
 }
 
 export {

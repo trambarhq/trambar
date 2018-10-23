@@ -1,13 +1,16 @@
 const CORSRewriter = {
     from: (urlParts, context) => {
-        var regExp = new RegExp('^/(https?)/([^/]*)');
-        var m = regExp.exec(urlParts.path);
-        var host, protocol, cors;
+        let regExp = new RegExp('^/(https?)/([^/]*)');
+        let m = regExp.exec(urlParts.path);
+        let cors = false;
+        let host, protocol;
         if (m) {
             protocol = m[1] + ':';
             host = m[2];
             urlParts.path = urlParts.path.substr(m[0].length);
-            cors = true;
+            if (window.location.host !== host || window.location.protocol !== protocol) {
+                cors = true;
+            }
         } else {
             host = window.location.host;
             protocol = window.location.protocol;
@@ -19,18 +22,17 @@ const CORSRewriter = {
                     protocol = 'http:';
                 }
             }
-            cors = false;
         }
         context.cors = cors;
         context.address = `${protocol}//${host}`;
     },
     to: (urlParts, context) => {
         if (context.cors) {
-            var address = context.address;
+            let address = context.address;
             if (address) {
-                var colonIndex = address.indexOf('://');
-                var prefix = address.substr(0, colonIndex);
-                var host = address.substr(colonIndex + 3);
+                let colonIndex = address.indexOf('://');
+                let prefix = address.substr(0, colonIndex);
+                let host = address.substr(colonIndex + 3);
                 urlParts.path = `/${prefix}/${host}` + urlParts.path;
             }
         }

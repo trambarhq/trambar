@@ -4,7 +4,7 @@ import Async from 'async-do-while';
 import Notifier, { NotifierEvent } from 'transport/notifier';
 import * as HTTPRequest from 'transport/http-request';
 
-var defaultOptions = {
+let defaultOptions = {
     initialReconnectionDelay: 500,
     maximumReconnectionDelay: 30000,
     platforms: {
@@ -21,6 +21,7 @@ var defaultOptions = {
 class PushNotifier extends Notifier {
     constructor(options) {
         super();
+        this.options = _.defaults({}, options, defaultOptions);
         this.currentNotificationID = null;
         this.searchEndTimeout = null;
         this.backgroundTaskTimeout = null;
@@ -32,12 +33,7 @@ class PushNotifier extends Notifier {
     activate() {
         if ((typeof(PushNotification) !== 'undefined')) {
             if (!pushNotification) {
-                var params = {
-                    android: this.props.android,
-                    ios: this.props.ios,
-                    windows: this.props.windows,
-                };
-                pushNotification = PushNotification.init(params);
+                pushNotification = PushNotification.init(this.options.platforms);
             }
             pushNotification.on('registration', this.handleRegistration);
             pushNotification.on('notification', this.handleNotification);
@@ -73,7 +69,7 @@ class PushNotifier extends Notifier {
      */
     register(relayAddress, serverAddress, registrationID, registrationType) {
         // track registration attempt with an object
-        var attempt = { relayAddress, serverAddress, registrationID, registrationType };
+        let attempt = { relayAddress, serverAddress, registrationID, registrationType };
         if (_.isEqual(this.registrationAttempt, attempt)) {
             // already connecting to server
             return this.registrationAttempt.promise;
@@ -81,17 +77,17 @@ class PushNotifier extends Notifier {
         this.registrationAttempt = attempt;
         this.pushRelayResponse = null;
 
-        var registered = false;
-        var delay = this.props.initialReconnectionDelay;
-        var maximumDelay = this.props.maximumReconnectionDelay;
+        let registered = false;
+        let delay = this.props.initialReconnectionDelay;
+        let maximumDelay = this.props.maximumReconnectionDelay;
 
         relayAddress = _.trimEnd(relayAddress, '/');
         // keep trying to connect until the effort is abandoned (i.e. user
         // goes to a different server)
         Async.do(() => {
-            var url = `${relayAddress}/register`;
-            var details = getDeviceDetails();
-            var payload = {
+            let url = `${relayAddress}/register`;
+            let details = getDeviceDetails();
+            let payload = {
                 network: registrationType,
                 registration_id: registrationID,
                 details: details,
@@ -100,8 +96,8 @@ class PushNotifier extends Notifier {
             return this.sendRegistration(url, payload).then((result) => {
                 if (attempt === this.registrationAttempt) {
                     this.registrationAttempt = null;
-                    this.setState({ pushRelayResponse: result });
-                    var connection = {
+                    this.pushRelayResponse = result;
+                    let connection = {
                         method: registrationType,
                         relay: relayAddress,
                         token: result.token,
@@ -145,13 +141,11 @@ class PushNotifier extends Notifier {
      * @return {Object}
      */
     sendRegistration(url, payload) {
-        var options = {
+        let options = {
             responseType: 'json',
             contentType: 'json',
         };
-        return this.waitForConnectivity().then(() => {
-            return HTTPRequest.fetch('POST', url, payload, options);
-        });
+        return HTTPRequest.fetch('POST', url, payload, options);
     }
 
     /**
@@ -160,8 +154,8 @@ class PushNotifier extends Notifier {
      * @param  {Object} data
      */
     handleRegistration = (data) => {
-        var id = data.registrationID;
-        var type = _.toLower(data.registrationType);
+        let id = data.registrationID;
+        let type = _.toLower(data.registrationType);
         if (!type) {
             // the type is missing for WNS
             if (/windows/.test(id)) {
@@ -179,59 +173,73 @@ class PushNotifier extends Notifier {
     /**
      * Called when a notification is received
      *
-     * @param  {Object} data
+     * @param  {Object} notification
      */
-    handleNotificationRecord = (data) => {
+    handleNotification = (data) => {
         // store data received in a list for diagnostic purpose
         this.recentMessages.unshift(data);
         if (this.recentMessages.length > 10) {
            this.recentMessages.splice(10);
         }
-    }
-
-    getNotificationHandler() {
-        if (cordova.platformID === 'android' || cordova.platformID === 'ios') {
-            var payload = data.additionalData;
-            var notification = NotificationUnpacker.unpack(payload) || {};
-            if (notification.type === 'change') {
-                this.triggerNotifyEvent(notification.changes);
-            } else if (notification.type === 'revalidation') {
-                this.triggerRevalidateEvent(notification.revalidation);
-            } else if (notification.type === 'alert') {
-                // if notification was received in the background, the event is
-                // triggered when the user clicks on the notification
-                if (!notification.alert.foreground) {
-                    this.triggerAlertClickEvent(notification.alert);
-                }
+        if (cordova.platformID === 'android') {
+            let payload = data.additionalData;
+            let notification = NotificationUnpacker.unpack(payload) || {};
+            if (notification) {
+                this.dispatchNotification(notification);
+            }
+            if (data.count !== undefined) {
+                setApplicationIconBadgeNumber(data.count);
+            }
+        } else if (cordova.platformID === 'ios') {
+            let payload = data.additionalData;
+            let notification = NotificationUnpacker.unpack(payload) || {};
+            if (notification) {
+                this.dispatchNotification(notification);
             }
             if (data.count !== undefined) {
                 setApplicationIconBadgeNumber(data.count);
             }
             signalBackgroundTaskCompletion(notID);
         } else if (cordova.platformID === 'windows') {
-            var notification;
+            let notification;
             if (data.launchArgs) {
                 // notification is clicked while app isn't running
-                var payload = parseJSON(data.launchArgs);
+                let payload = parseJSON(data.launchArgs);
                 notification = NotificationUnpacker.unpack(payload);
             } else {
                 // payload is stored as raw data
-                var eventArgs = data.additionalData.pushNotificationReceivedEventArgs;
+                let eventArgs = data.additionalData.pushNotificationReceivedEventArgs;
                 if (eventArgs.notificationType === 3) { // raw
-                    var raw = eventArgs.rawNotification;
-                    var payload = parseJSON(raw.content);
+                    let raw = eventArgs.rawNotification;
+                    let payload = parseJSON(raw.content);
                     notification = NotificationUnpacker.unpack(payload);
                 }
             }
             if (notification) {
-                if (notification.type === 'change') {
-                    this.triggerNotifyEvent(notification.changes);
-                } else if (notification.type === 'alert') {
-                    this.triggerAlertClickEvent(notification.alert);
-                } else if (notification.type === 'revalidation') {
-                    this.triggerRevalidateEvent(notification.revalidation);
-                }
+                this.dispatchNotification(notification);
             }
+        }
+    }
+
+    dispatchNotification(notification) {
+        let event;
+        if (notification.type === 'change') {
+            event = new NotifierEvent('notify', this, {
+                changes: notification.changes
+            });
+        } else if (notification.type === 'revalidation') {
+            event = new NotifierEvent('revalidation', this);
+        } else if (notification.type === 'alert') {
+            // if notification was received in the background, the event is
+            // triggered when the user clicks on the notification
+            if (!notification.alert.foreground) {
+                event = new NotifierEvent(this, 'alert', {
+                    alert: notification.alert
+                });
+            }
+        }
+        if (event) {
+            this.triggerEvent(evt);
         }
     }
 
@@ -241,16 +249,12 @@ class PushNotifier extends Notifier {
      * @param  {Object} context
      */
     handleActivation = (context) => {
-        var launchArgs = context.args;
+        let launchArgs = context.args;
         if (launchArgs) {
-            var payload = JSON.parse(launchArgs);
-            var notification = NotificationUnpacker.unpack(payload);
+            let payload = JSON.parse(launchArgs);
+            let notification = NotificationUnpacker.unpack(payload);
             if (notification) {
-                if (notification.type === 'alert') {
-                    var alert = notification.alert;
-                    var evt = new PushNotifierEvent(this, 'alert', { alert });
-                    this.triggerEvent(evt);
-                }
+                this.dispatchNotification(notification);
             }
         }
     }
@@ -263,39 +267,17 @@ class PushNotifier extends Notifier {
     handleError = (err) => {
         console.log(err);
     }
-
-    /**
-     * Wait for to become true
-     *
-     * @return {Promise}
-     */
-    waitForConnectivity() {
-        if (this.offlineMode) {
-            return Promise.resolve();
-        }
-        if (!this.connectivityPromise) {
-            this.connectivityPromise = new Promise((resolve, reject) => {
-                // call function in componentWillReceiveProps
-                this.onConnectivity = () => {
-                    this.connectivityPromise = null;
-                    this.onConnectivity = null;
-                    resolve();
-                };
-            });
-        }
-        return this.connectivityPromise;
-    }
 }
 
-var pushNotification;
+let pushNotification;
 
 /**
  * Return device details
  *
  * @return {Object}
  */
-var getDeviceDetails = function() {
-    var device = window.device;
+let getDeviceDetails = function() {
+    let device = window.device;
     if (device) {
         return {
             manufacturer: device.manufacturer,
@@ -315,21 +297,17 @@ function parseJSON(text) {
 
 function signalBackgroundTaskCompletion(notID) {
     if (pushNotification) {
-        if (cordova.platformID === 'ios') {
-            var success = () => {};
-            var failure = () => {};
-            pushNotification.finish(success, failure, notID);
-        }
+        let success = () => {};
+        let failure = () => {};
+        pushNotification.finish(success, failure, notID);
     }
 }
 
 function setApplicationIconBadgeNumber(count) {
     if (pushNotification) {
-        if (cordova.platformID === 'android' || cordova.platformID === 'ios') {
-            var success = () => {};
-            var failure = () => {};
-            pushNotification.setApplicationIconBadgeNumber(success, failure, count);
-        }
+        let success = () => {};
+        let failure = () => {};
+        pushNotification.setApplicationIconBadgeNumber(success, failure, count);
     }
 }
 
@@ -346,3 +324,8 @@ function isDebugMode() {
         }
     });
 }
+
+export {
+    PushNotifier as default,
+    PushNotifier,
+};
