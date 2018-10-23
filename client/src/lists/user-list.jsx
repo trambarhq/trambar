@@ -95,8 +95,8 @@ class UserList extends PureComponent {
             } else {
                 userStories = findUserStories(stories, user);
             }
-            if (stories && stories.length > 5) {
-                stories = _.slice(stories, -5);
+            if (userStories && userStories.length > 5) {
+                userStories = _.slice(userStories, -5);
             }
             let userProps = {
                 user,
