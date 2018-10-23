@@ -38,24 +38,6 @@ class AudioCaptureDialogBoxBrowser extends PureComponent {
     }
 
     /**
-     * Return true if the browser has the necessary functionalities
-     *
-     * @return {Boolean}
-     */
-    static isAvailable() {
-        if (!MediaStreamUtils.hasSupport()) {
-            return false;
-        }
-        if (typeof(MediaRecorder) !== 'function') {
-            return false;
-        }
-        if (typeof(AudioContext) !== 'function') {
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * Initialize microphone on mount
      */
     componentWillMount() {

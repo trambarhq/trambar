@@ -2,7 +2,6 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import * as FrameGrabber from 'media/frame-grabber';
-import * as DeviceManager from 'media/device-manager';
 import * as MediaStreamUtils from 'media/media-stream-utils';
 import * as BlobManager from 'transport/blob-manager';
 
@@ -24,9 +23,9 @@ class VideoCaptureDialogBoxBrowser extends PureComponent {
     static displayName = 'VideoCaptureDialogBoxBrowser';
 
     constructor(props) {
+        let { env, cameraDirection } = props;
         super(props);
-        let devices = DeviceManager.getDevices('videoinput');
-        let preferredDevice = DeviceSelector.choose(devices, props.cameraDirection);
+        let preferredDevice = DeviceSelector.choose(env.devices, 'video', cameraDirection);
         this.state = {
             liveVideoStream: null,
             liveVideoError : null,
@@ -36,26 +35,10 @@ class VideoCaptureDialogBoxBrowser extends PureComponent {
             capturedVideo: null,
             capturedImage: null,
             previewURL: null,
-            videoDevices: devices,
             selectedDeviceID: (preferredDevice) ? preferredDevice.deviceID : null,
             startTime: null,
             duration: 0,
         };
-    }
-
-    /**
-     * Return true if the browser has the necessary functionalities
-     *
-     * @return {Boolean}
-     */
-    static isAvailable() {
-        if (!MediaStreamUtils.hasSupport()) {
-            return false;
-        }
-        if (typeof(MediaRecorder) !== 'function') {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -66,7 +49,6 @@ class VideoCaptureDialogBoxBrowser extends PureComponent {
         if (show) {
             this.initializeCamera();
         }
-        DeviceManager.addEventListener('change', this.handleDeviceChange);
     }
 
     /**
@@ -289,7 +271,6 @@ class VideoCaptureDialogBoxBrowser extends PureComponent {
         let {
             mediaRecorder,
             capturedVideo,
-            videoDevices,
             selectedDeviceID
         } = this.state;
         if (mediaRecorder) {
@@ -300,7 +281,6 @@ class VideoCaptureDialogBoxBrowser extends PureComponent {
         }
         let props = {
             type: 'video',
-            devices: videoDevices,
             selectedDeviceID,
             env,
             onSelect: this.handleDeviceSelect,
@@ -396,10 +376,21 @@ class VideoCaptureDialogBoxBrowser extends PureComponent {
      * Change the video's source object when user changes camera
      */
     componentDidUpdate(prevProps, prevState) {
-        let { liveVideoStream } = this.state;
+        let { env } = this.props;
+        let { liveVideoStream, selectedDeviceID } = this.state;
         if (this.videoNode) {
             if (prevState.liveVideoStream !== liveVideoStream) {
                 this.setLiveVideoNode(this.videoNode);
+            }
+        }
+        if (env.devices !== prevProps.env.devices) {
+            if (selectedDeviceID) {
+                if (!_.some(env.devices, { deviceID: selectedDeviceID })) {
+                    // reinitialize the camera when the one we were using disappears
+                    this.setState({ selectedDeviceID: null }, () => {
+                        this.reinitializeCamera();
+                    });
+                }
             }
         }
     }
@@ -410,7 +401,6 @@ class VideoCaptureDialogBoxBrowser extends PureComponent {
     componentWillUnmount() {
         this.destroyLiveVideoStream();
         this.clearCapturedVideo();
-        DeviceManager.removeEventListener('change', this.handleDeviceChange);
     }
 
     /**
@@ -698,29 +688,6 @@ class VideoCaptureDialogBoxBrowser extends PureComponent {
         let selectedDeviceID = evt.currentTarget.value;
         this.setState({ selectedDeviceID }, () => {
             this.reinitializeCamera();
-        });
-    }
-
-    /**
-     * Called when the list of media devices changes
-     *
-     * @param  {Object} evt
-     */
-    handleDeviceChange = (evt) => {
-        let { selectedDeviceID } = this.state;
-        let videoDevices = DeviceManager.getDevices('videoinput');
-        let reinitialize = false;
-        if (selectedDeviceID) {
-            if (!_.some(videoDevices, { deviceID: selectedDeviceID })) {
-                // reinitialize the camera when the one we were using disappears
-                selectedDeviceID = null;
-                reinitialize = true;
-            }
-        }
-        this.setState({ videoDevices, selectedDeviceID }, () => {
-            if (reinitialize) {
-                this.reinitializeCamera();
-            }
         });
     }
 }

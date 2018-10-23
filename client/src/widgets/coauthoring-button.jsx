@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as DeviceManager from 'media/device-manager';
 
 // widgets
 import HeaderButton from 'widgets/header-button';

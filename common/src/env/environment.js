@@ -20,6 +20,8 @@ class Environment {
         this.pointingDevice = envMonitor.pointingDevice;
         this.date = envMonitor.date;
         this.startTime = Moment().toISOString();
+        this.devices = envMonitor.devices;
+        this.recorders = envMonitor.recorders;
 
         this.locale = extra.locale;
         this.address = extra.address;

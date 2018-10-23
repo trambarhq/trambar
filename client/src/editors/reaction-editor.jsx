@@ -2,7 +2,6 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { memoizeWeak } from 'utils/memoize';
-import * as DeviceManager from 'media/device-manager';
 import ComponentRefs from 'utils/component-refs';
 import * as TagScanner from 'utils/tag-scanner';
 import * as Markdown from 'utils/markdown';
@@ -44,8 +43,6 @@ class ReactionEditor extends PureComponent {
             draft: null,
             original: null,
             selectedResourceIndex: 0,
-            hasCamera: DeviceManager.hasDevice('videoinput'),
-            hasMicrophone: DeviceManager.hasDevice('audioinput'),
         };
         this.updateDraft(this.state, props);
         this.updateResourceIndex(this.state, props);

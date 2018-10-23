@@ -15,7 +15,7 @@ class EnvironmentMonitor extends EventEmitter {
         this.viewportWidth = viewport.offsetWidth;
         this.viewportHeight = viewport.offsetHeight;
         this.devicePixelRatio = window.devicePixelRatio;
-        this.webpSupport = isWebpSupported(),
+        this.webpSupport = isWebpSupported();
         this.browser = detectBrowser();
         this.os = detectOS();
         this.date = getDate(new Date);
@@ -29,11 +29,14 @@ class EnvironmentMonitor extends EventEmitter {
         } else {
             this.pointingDevice = 'mouse';
         }
+        this.devices = [];
+        this.recorders = [];
         this.dateCheckInterval = 0;
     }
 
     activate() {
         this.monitor(true);
+        this.handleDeviceChange();
     }
 
     shutdown() {
@@ -52,6 +55,8 @@ class EnvironmentMonitor extends EventEmitter {
 
         let network = getNetworkAPI();
         toggleEventListener(network, 'typechange', this.handleConnectionTypeChange, enabled);
+
+        toggleEventListener(navigator.mediaDevices, 'devicechange', this.handleDeviceChange, enabled);
 
         getBattery().then((battery) => {
             if (battery) {
@@ -190,6 +195,14 @@ class EnvironmentMonitor extends EventEmitter {
             this.scheduleDateCheck();
         }
     }
+
+    handleDeviceChange = (evt) => {
+        navigator.mediaDevices.enumerateDevices().then((devices) => {
+            this.devices = devices;
+            this.recorders = getRecordingSupport(this.platform, devices);
+            this.triggerEvent(new EnvironmentMonitorEvent('change', this));
+        });
+    }
 }
 
 /**
@@ -280,6 +293,74 @@ function isWebpSupported() {
     return false;
 }
 
+function getRecordingSupport(platform, devices) {
+    let recorders = [];
+    if (_.some(devices, { kind: 'videoinput' })) {
+        if (canSavePhoto(platform)) {
+            recorders.push('image');
+        }
+        if (canSaveVideo(platform)) {
+            recorders.push('video');
+        }
+    }
+    if (_.some(devices, { kind: 'audioinput' })) {
+        recorders.push('audio');
+    }
+    return recorders;
+}
+
+function canSavePhoto(platform) {
+    if (platform === 'browser') {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            if (typeof(HTMLCanvasElement.prototype.toBlob) === 'function') {
+                return true;
+            } else if (typeof(HTMLCanvasElement.prototype.toDataURL) === 'function') {
+                return true;
+            }
+        }
+    } else if (platform === 'cordova') {
+        if (navigator.camera) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function canSaveAudio(platform) {
+    if (platform === 'browser') {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            if (typeof(MediaRecorder) === 'function') {
+                if (typeof(AudioContext) === 'function') {
+                    return true;
+                }
+            }
+        }
+    } else if (platform === 'cordova') {
+        if (navigator.device) {
+            // the plugin doesn't provide a UI on windows
+            if (cordova.platformId !== 'windows') {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function canSaveVideo(platform) {
+    if (platform === 'browser') {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            if (typeof(MediaRecorder) === 'function') {
+                return true;
+            }
+        }
+    } else if (platform === 'cordova') {
+        if (navigator.device) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function getDate(date) {
     let year = date.getFullYear() + '';
     let month = (date.getMonth() + 1) + '';
@@ -295,10 +376,14 @@ function getDate(date) {
 
 function toggleEventListener(emitter, type, func, enabled) {
     if (emitter) {
+        let f;
         if (enabled) {
-            emitter.addEventListener(type, func);
+            f = emitter.addEventListener;
         } else {
-            emitter.removeEventListener(type, func);
+            f = emitter.removeEventListener;
+        }
+        if (f) {
+            f.call(emitter, type, func);
         }
     }
 }

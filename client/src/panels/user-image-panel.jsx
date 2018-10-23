@@ -4,15 +4,12 @@ import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import ComponentRefs from 'utils/component-refs';
 import * as FocusManager from 'utils/focus-manager';
-import * as DeviceManager from 'media/device-manager';
 
 // widgets
 import SettingsPanel from 'widgets/settings-panel';
 import PushButton from 'widgets/push-button';
 import ImageEditor from 'editors/image-editor';
 import MediaImporter from 'editors/media-importer';
-import PhotoCaptureDialogBoxBrowser from 'dialogs/photo-capture-dialog-box-browser';
-import PhotoCaptureDialogBoxCordova from 'dialogs/photo-capture-dialog-box-cordova';
 import Icon from 'octicons/build/svg/person.svg';
 
 import './user-image-panel.scss';
@@ -34,7 +31,6 @@ class UserImagePanel extends PureComponent {
         this.state = {
             action: null,
             image: null,
-            hasCamera: DeviceManager.hasDevice('videoinput'),
         };
     }
 
@@ -179,15 +175,9 @@ class UserImagePanel extends PureComponent {
      */
     renderButtons() {
         let { env } = this.props;
-        let { action, hasCamera, image } = this.state;
+        let { action, image } = this.state;
         let { t } = env.locale;
         let hasPicture = !!this.getImage();
-        let canTakePicture = false;
-        if (env.platform === 'browser') {
-            canTakePicture = hasCamera && PhotoCaptureDialogBoxBrowser.isAvailable();
-        } else if (env.platform === 'cordova') {
-            canTakePicture = hasCamera && PhotoCaptureDialogBoxCordova.isAvailable();
-        }
         if (action === 'adjust' && hasPicture) {
             let cancelProps = {
                 label: t('user-image-cancel'),
@@ -212,7 +202,7 @@ class UserImagePanel extends PureComponent {
             };
             let takeProps = {
                 label: t('user-image-snap'),
-                hidden: !canTakePicture,
+                hidden: !_.includes(env.recorders, 'image'),
                 onClick: this.handleTakeClick,
             };
             let selectProps = {
@@ -260,20 +250,6 @@ class UserImagePanel extends PureComponent {
                 </div>
             );
         }
-    }
-
-    /**
-     * Add event listener on mount
-     */
-    componentDidMount() {
-        DeviceManager.addEventListener('change', this.handleDeviceChange);
-    }
-
-    /**
-     * Remove handlers on unmount
-     */
-    componentWillUnmount() {
-        DeviceManager.removeEventListener('change', this.handleDeviceChange);
     }
 
     /**
@@ -364,17 +340,6 @@ class UserImagePanel extends PureComponent {
      * @param  {Object} evt
      */
     handleCaptureEnd = (evt) => {
-    }
-
-    /**
-     * Called when the list of media devices changes
-     *
-     * @param  {Object} evt
-     */
-    handleDeviceChange = (evt) => {
-        this.setState({
-            hasCamera: DeviceManager.hasDevice('videoinput'),
-        });
     }
 }
 

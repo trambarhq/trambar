@@ -13,15 +13,6 @@ class PhotoCaptureDialogBoxCordova extends PureComponent {
     static displayName = 'PhotoCaptureDialogBoxCordova';
 
     /**
-     * Return true if the browser has the necessary functionalities
-     *
-     * @return {Boolean}
-     */
-    static isAvailable() {
-        return !!window.cordova && !!navigator.camera;
-    }
-
-    /**
      * Activate plugin when props.show goes from false to true
      *
      * @param  {Object} nextProps

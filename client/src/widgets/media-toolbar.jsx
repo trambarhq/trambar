@@ -1,15 +1,8 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as DeviceManager from 'media/device-manager';
 
 // widgets
 import HeaderButton from 'widgets/header-button';
-import PhotoCaptureDialogBoxBrowser from 'dialogs/photo-capture-dialog-box-browser';
-import PhotoCaptureDialogBoxCordova from 'dialogs/photo-capture-dialog-box-cordova';
-import VideoCaptureDialogBoxBrowser from 'dialogs/video-capture-dialog-box-browser';
-import VideoCaptureDialogBoxCordova from 'dialogs/video-capture-dialog-box-cordova';
-import AudioCaptureDialogBoxBrowser from 'dialogs/audio-capture-dialog-box-browser';
-import AudioCaptureDialogBoxCordova from 'dialogs/audio-capture-dialog-box-cordova';
 
 import './media-toolbar.scss';
 
@@ -24,10 +17,7 @@ class MediaToolbar extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.state = {
-            hasCamera: DeviceManager.hasDevice('videoinput'),
-            hasMicrophone: DeviceManager.hasDevice('audioinput'),
-        };
+        this.state = { capturing: false };
     }
 
     /**
@@ -65,26 +55,17 @@ class MediaToolbar extends PureComponent {
      */
     render() {
         let { env } = this.props;
-        let { hasCamera, hasMicrophone, capturing } = this.state;
+        let { capturing } = this.state;
         let { t } = env.locale;
         let counts = this.getResourceCounts();
-        let canCaptureStaticImage = false;
-        let canCaptureVideo = false;
-        let canCaptureAudio = false;
-        if (env.platform === 'browser') {
-            canCaptureStaticImage = hasCamera && PhotoCaptureDialogBoxBrowser.isAvailable();
-            canCaptureVideo = hasCamera && VideoCaptureDialogBoxBrowser.isAvailable();
-            canCaptureAudio = hasMicrophone && AudioCaptureDialogBoxBrowser.isAvailable();
-        } else if (env.platform === 'cordova') {
-            canCaptureStaticImage = hasCamera && PhotoCaptureDialogBoxCordova.isAvailable();
-            canCaptureVideo = hasCamera && VideoCaptureDialogBoxCordova.isAvailable();
-            canCaptureAudio = hasMicrophone && AudioCaptureDialogBoxCordova.isAvailable();
-        }
+        let canCaptureImage = _.includes(env.recorders, 'image');
+        let canCaptureVideo = _.includes(env.recorders, 'video');
+        let canCaptureAudio = _.includes(env.recorders, 'audio');
         let photoButtonProps = {
             label: t('story-photo'),
             icon: 'camera',
-            hidden: !counts.photo && !canCaptureStaticImage,
-            disabled: !canCaptureStaticImage,
+            hidden: !counts.photo && !canCaptureImage,
+            disabled: !canCaptureImage,
             highlighted: (counts.photo > 0 || capturing === 'image'),
             onClick: this.handlePhotoClick,
         };
@@ -119,20 +100,6 @@ class MediaToolbar extends PureComponent {
                 <HeaderButton.File {...selectButtonProps} />
             </div>
         );
-    }
-
-    /**
-     * Add event listener on mount
-     */
-    componentDidMount() {
-        DeviceManager.addEventListener('change', this.handleDeviceChange);
-    }
-
-    /**
-     * Remove handlers on unmount
-     */
-    componentWillUnmount() {
-        DeviceManager.removeEventListener('change', this.handleDeviceChange);
     }
 
     /**
@@ -189,18 +156,6 @@ class MediaToolbar extends PureComponent {
         if (!_.isEmpty(files)) {
             this.triggerActionEvent('file-import', { files });
         }
-    }
-
-    /**
-     * Called when the list of media devices changes
-     *
-     * @param  {Object} evt
-     */
-    handleDeviceChange = (evt) => {
-        this.setState({
-            hasCamera: DeviceManager.hasDevice('videoinput'),
-            hasMicrophone: DeviceManager.hasDevice('audioinput'),
-        });
     }
 }
 

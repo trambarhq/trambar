@@ -14,16 +14,6 @@ class AudioCaptureDialogBoxCordova extends PureComponent {
     static displayName = 'AudioCaptureDialogBoxCordova';
 
     /**
-     * Return true if the browser has the necessary functionalities
-     *
-     * @return {Boolean}
-     */
-    static isAvailable() {
-        // the plugin doesn't provide a UI on windows
-        return !!window.cordova && !!navigator.device && cordova.platformId !== 'windows';
-    }
-
-    /**
      * Activate plugin when props.show goes from false to true
      *
      * @param  {Object} nextProps

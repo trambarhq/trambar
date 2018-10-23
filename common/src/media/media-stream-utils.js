@@ -1,18 +1,6 @@
 import Promise from 'bluebird';
 
 /**
- * Return true if Media Stream API is available
- *
- * @return {Boolean}
- */
-function hasSupport() {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        return true;
-    }
-    return false;
-}
-
-/**
  * Obtain an audio stream
  *
  * @return {Promise<MediaStream>}
@@ -113,7 +101,6 @@ function stopAllTracks(stream) {
 }
 
 export {
-    hasSupport,
     getAudioStream,
     getVideoStream,
     getSilentVideoStream,

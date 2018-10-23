@@ -9,8 +9,9 @@ import './device-selector.scss';
  * with front and back camera).
  */
 function DeviceSelector(props) {
-    let { env, devices } = props;
+    let { env } = props;
     let { t } = env.locale;
+    let devices = _.filter(env.devices, { kind: `${props.type}input` });
     if (devices.length < 2) {
         return null;
     }
@@ -53,16 +54,19 @@ function DeviceSelector(props) {
  * Given a list of devices, select one that matches the indicated direction.
  *
  * @param  {Array<Object>} devices
- * @param  {String} direction
+ * @param  {String} type
+ * @param  {String} descriptor
  *
  * @return {Object|undefined}
  */
-DeviceSelector.choose = function(devices, direction) {
+DeviceSelector.choose = function(devices, type, descriptor) {
     return _.find(devices, (device) => {
-        if (direction === 'front') {
-            return /front/i.test(device.label);
-        } else if (direction === 'back') {
-            return /back/i.test(device.label);
+        if (type === 'video' && device.kind === 'videoinput') {            
+            if (descriptor === 'front') {
+                return /front/i.test(device.label);
+            } else if (descriptor === 'back') {
+                return /back/i.test(device.label);
+            }
         }
     })
 };
