@@ -27,7 +27,7 @@
     "prop-types": "^15.6.2",
     "qrcode": "^0.9.0",
     "sass-loader": "^6.0.5",
-    "scroll-into-view-if-needed": "^2.2.16",
+    "scroll-into-view-if-needed": "^2.2.20",
     "style-loader": "^0.17.0",
     "svg-react-loader": "^0.4.4",
     "uglifyjs-webpack-plugin": "^0.4.6",
