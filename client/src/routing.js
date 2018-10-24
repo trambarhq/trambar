@@ -193,10 +193,8 @@ const routes = {
         query: {
             add: '${addingServer}',
             ac: '${activationCode}',
-            p: '${schema}',
         },
         params: {
-            schema: String,
             activationCode: String,
             addingServer: Boolean,
         },

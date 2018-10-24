@@ -50,6 +50,7 @@ class StartPage extends AsyncComponent {
             transitionOut,
             addingServer,
             activationCode,
+            onTransitionOut,
         } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
@@ -64,6 +65,7 @@ class StartPage extends AsyncComponent {
             database,
             route,
             env,
+            onTransitionOut,
         };
         if (!db.authorized) {
             if (env.platform === 'browser') {
@@ -97,13 +99,15 @@ class StartPage extends AsyncComponent {
                         };
                         return db.saveOne({ table: 'device' }, device);
                     }).then((device) => {
-                        route.replace(route.name, {});
-                        return null;
+                        // at this point a change event should have forced
+                        // rendering already--doesn't matter what we return
+                        return <StartPageSync {...props} />;
                     }).catch((err) => {
                         props.serverError = err;
                         // start over after a few seconds
                         setTimeout(() => {
-                            route.replace(route.name, {});
+                            db.releaseMobileSession();
+                            route.replace(route.name, {}, { cors: false, schema: null });
                         }, 10000);
                         return <StartPageSync {...props} />;
                     });
@@ -169,6 +173,7 @@ class StartPageSync extends PureComponent {
             };
         } else if (env.platform === 'cordova') {
             this.state = {
+                transitionMethod: 'fast',
                 receivedCorrectQRCode: false,
                 receivedInvalidQRCode: false,
                 scanningQRCode: false,
@@ -276,7 +281,7 @@ class StartPageSync extends PureComponent {
         let pageProps = { className: 'start-page cordova' };
         if (transitionOut) {
             pageProps.className += ` transition-out-${transitionMethod}`;
-            pageProps.onTransitionOut = this.handleTransitionEnd;
+            pageProps.onTransitionEnd = this.handleTransitionEnd;
             if (transitionMethod === 'slow') {
                 // render a greeting during long transition
                 return (
@@ -771,11 +776,9 @@ class StartPageSync extends PureComponent {
      */
     renderServerLink(server, key) {
         let { route, addingServer } = this.props;
-        let params = {
-            address: server,
-            addingServer,
-        };
-        let url = route.find('start-page', params);
+        let params = { addingServer };
+        let context = { cors: true, address: server };
+        let url = route.find('start-page', params, context);
         return (
             <li key={key}>
                 <a href={url}>
@@ -1124,11 +1127,11 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleTransitionEnd = (evt) => {
-        let { onExit } = this.props;
+        let { onTransitionOut } = this.props;
         if (evt.propertyName === 'opacity') {
-            if (onExit) {
-                onExit({
-                    type: 'exit',
+            if (onTransitionOut) {
+                onTransitionOut({
+                    type: 'transitionout',
                     target: this,
                 });
             }
@@ -1233,7 +1236,7 @@ if (process.env.NODE_ENV !== 'production') {
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
 
-        onExit: PropTypes.func,
+        onTransitionOut: PropTypes.func,
     };
     StartPageSync.propTypes = {
         transitionOut: PropTypes.bool,
@@ -1248,6 +1251,6 @@ if (process.env.NODE_ENV !== 'production') {
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
 
-        onExit: PropTypes.func,
+        onTransitionOut: PropTypes.func,
     };
 }

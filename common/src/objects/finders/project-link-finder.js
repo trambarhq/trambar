@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import ProjectFinder from 'objects/finders/project-finder';
+import * as ProjectFinder from 'objects/finders/project-finder';
 
 /**
  * Find all project links

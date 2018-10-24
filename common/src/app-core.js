@@ -91,23 +91,25 @@ function start(cfg) {
         if (route && route.public !== true) {
             // page requires authorization--see if it's been acquired already
             let { address } = context;
-            let location = { address };
-            if (!dataSource.hasAuthorization(location)) {
-                // nope, we need to postpone the page switch
-                // first, see if there's a saved session
-                let promise = loadSession(address).then((session) => {
-                    if (!dataSource.restoreAuthorization(location, session)) {
-                        if (!route.signIn) {
-                            // there was none or it's expired--show the sign-in page
-                            return evt.substitute(signInPageName).then(() => {
-                                // ask the data-source to request authentication
-                                return dataSource.requestAuthentication(location);
-                            });
+            if (address) {
+                let location = { address };
+                if (!dataSource.hasAuthorization(location)) {
+                    // nope, we need to postpone the page switch
+                    // first, see if there's a saved session
+                    let promise = loadSession(address).then((session) => {
+                        if (!dataSource.restoreAuthorization(location, session)) {
+                            if (!route.signIn) {
+                                // there was none or it's expired--show the sign-in page
+                                return evt.substitute(signInPageName).then(() => {
+                                    // ask the data-source to request authentication
+                                    return dataSource.requestAuthentication(location);
+                                });
+                            }
                         }
-                    }
-                    return true;
-                });
-                evt.postponeDefault(promise);
+                        return true;
+                    });
+                    evt.postponeDefault(promise);
+                }
             }
         }
     });

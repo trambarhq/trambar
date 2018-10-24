@@ -200,7 +200,6 @@ class Database {
         return this.remoteDataSource.hasAuthorization(this.context);
     }
 
-
     /**
      * Authenticate user through username and password
      *

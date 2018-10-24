@@ -207,6 +207,27 @@ class Application extends PureComponent {
         window.addEventListener('beforeunload', this.handleBeforeUnload);
     }
 
+    componentDidUpdate(prevProps, prevState) {
+        let { database } = this.state;
+        let { database: databaseBefore } = prevState;
+        if (database !== databaseBefore) {
+            let { authorized: authorized } = database;
+            let { address, schema } = database.context;
+            let { authorized: authorizedBefore } = databaseBefore;
+            let { address: addressBefore, schema: schemaBefore } = databaseBefore.context;
+            if (authorizedBefore !== authorized || addressBefore !== address || schemaBefore !== schema) {
+                if (authorized && address && schema) {
+                    this.saveLocation(address, schema);
+                }
+            }
+            if (addressBefore !== address) {
+                if (authorized && address) {
+                    this.removeDefunctLocations();
+                }
+            }
+        }
+    }
+
     /**
      * Save a location to cache
      *
@@ -254,7 +275,7 @@ class Application extends PureComponent {
         let { database } = this.state;
         let db = database.use({ by: this });
         return ProjectLinkFinder.findDefunctLinks(db).then((links) => {
-            return db.remove({ schema: 'local', table: 'project_link' }, defunct);
+            return db.remove({ schema: 'local', table: 'project_link' }, links);
         });
     }
 
@@ -340,26 +361,23 @@ class Application extends PureComponent {
      */
     handleRouteChange = (evt) => {
         let { routeManager, dataSource, envMonitor, payloadManager } = this.props;
-        let { route: prevRoute } = this.state;
-        let { address: prevAddress, schema: prevSchema } = (prevRoute) ? prevRoute.context : {};
+        let { database, payloads, env, route: prevRoute } = this.state;
         let route = new Route(routeManager);
         let { address, schema } = route.context;
-        let { database, payloads, env } = this.state;
         if (address !== database.context.address || schema !== database.context.schema) {
             // change database and payloads the server address changes
             database = new Database(dataSource, { address, schema });
             payloads = new Payloads(payloadManager, { address, schema });
         }
         if (address !== env.address) {
+            let locale = env.locale;
             env = new Environment(envMonitor, { locale, address, widthDefinitions });
         }
         let transitionOut = false;
-        if (prevRoute) {
-            let PreviousPage = getRouteClass(prevRoute);
-            if (PreviousPage && PreviousPage.useTransition) {
-                if (prevRoute.params.key !== route.params.key) {
-                    transitionOut = true;
-                }
+        let PreviousPage = getRouteClass(prevRoute);
+        if (PreviousPage && PreviousPage.useTransition) {
+            if (prevRoute.params.key !== route.params.key) {
+                transitionOut = true;
             }
         }
         if (!transitionOut) {
@@ -367,13 +385,6 @@ class Application extends PureComponent {
             prevRoute = null;
         }
         this.setState({ route, prevRoute, database, env });
-
-        if (prevAddress !== address || prevSchema !== schema) {
-            this.saveLocation(address, schema);
-        }
-        if (prevAddress !== address) {
-            this.removeDefunctLocations();
-        }
     }
 
     /**
@@ -423,7 +434,6 @@ class Application extends PureComponent {
      * @param  {Objet} evt
      */
     handlePageTransitionOut = (evt) => {
-        console.log('handlePageTransitionOut');
         this.setState({ prevRoute: null });
     }
 

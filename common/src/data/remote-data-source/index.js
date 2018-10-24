@@ -98,7 +98,9 @@ class RemoteDataSource extends EventEmitter {
     discardSession(session) {
         if (_.includes(this.sessions, session)) {
             _.pull(this.sessions, session);
-            this.triggerEvent(new RemoteDataSourceEvent('change', this));
+            if (session.token) {
+                this.triggerEvent(new RemoteDataSourceEvent('change', this));
+            }
         }
     }
 
@@ -307,7 +309,7 @@ class RemoteDataSource extends EventEmitter {
         let session = this.obtainSession(location);
         // discard any other sessions
         while (session.handle && session.handle !== handle) {
-            _.pull(this.sessions, session);
+            this.discardSession(this.sessions, session);
             session = this.obtainSession(location);
         }
         if (session.authenticationPromise) {
@@ -326,9 +328,6 @@ class RemoteDataSource extends EventEmitter {
             }
             this.grantAuthorization(session, res.session);
             return session.user_id;
-        }).catch((err) => {
-            _.pull(this.sessions, session);
-            throw err;
         });
         session.authenticationPromise = promise;
         return promise;
@@ -506,6 +505,7 @@ class RemoteDataSource extends EventEmitter {
         this.triggerEvent(new RemoteDataSourceEvent('authorization', this, {
             session
         }));
+        this.triggerEvent(new RemoteDataSourceEvent('change', this));
         return null;
     }
 
