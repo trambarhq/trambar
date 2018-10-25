@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Promise from 'bluebird';
 import EnvironmentMonitor from 'env/environment-monitor';
 import LocaleManager from 'locale/locale-manager';
 import RouteManager from 'relaks-route-manager';
@@ -391,21 +392,27 @@ function start(cfg) {
     function addPayloadTasks(destination, payloads) {
         let { address, schema } = destination;
         return dataSource.start(destination).then((currentUserID) => {
-            let tasks = _.map(payloads, (payload) => {
-                // place the status of each part in the options column
+            let location = { address, schema, table: 'task' };
+            return Promise.each(payloads, (payload) => {
                 let status = {}
                 _.each(payload.parts, (part) => {
                     status[part.name] = false;
                 });
-                return {
+                let task = {
                     token: payload.id,
                     action: `add-${payload.type}`,
                     options: status,
                     user_id: currentUserID,
                 };
+                return dataSource.save(location, [ task ]).catch((err) => {
+                    if (process.env.NODE_ENV !== 'production') {
+                        console.error(err);
+                    }
+                    if (err.statusCode !== 409) {
+                        throw err;
+                    }
+                });
             });
-            let location = { address, schema, table: 'task' };
-            return dataSource.save(location, tasks);
         });
     }
 

@@ -124,39 +124,6 @@ module.exports = _.create(Data, {
     },
 
     /**
-     * Insert rows into table
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Array<Object>} rows
-     *
-     * @return {Promise<Array<Object>>}
-     */
-    insert: function(db, schema, rows) {
-        return Data.insert.call(this, db, schema, rows).catch((err) => {
-            if (err.code === '23505' && rows.length === 1) {
-                // duplicate token--same token is being sent again for some
-                // reason; look for the row and return it
-                console.warn(`Duplicate task token: ${rows[0].token}`);
-                var criteria = {
-                    action:  rows[0].action,
-                    token: rows[0].token,
-                    user_id: rows[0].user_id,
-                    deleted: false,
-                };
-                return this.find(db, schema, criteria, '*').then((rows) => {
-                    if (rows.length === 1) {
-                        return rows;
-                    } else {
-                        throw err;
-                    }
-                });
-            }
-            throw err;
-        });
-    },
-
-    /**
      * Export database row to client-side code, omitting sensitive or
      * unnecessary information
      *
