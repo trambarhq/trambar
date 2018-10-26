@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
+import ManualPromise from 'utils/manual-promise';
 import Async from 'async-do-while';
 import Notifier, { NotifierEvent } from 'transport/notifier';
 import * as HTTPRequest from 'transport/http-request';
@@ -22,11 +23,12 @@ class PushNotifier extends Notifier {
     constructor(options) {
         super();
         this.options = _.defaults({}, options, defaultOptions);
-        this.currentNotificationID = null;
-        this.searchEndTimeout = null;
-        this.backgroundTaskTimeout = null;
         this.registrationID = null;
         this.registrationType = null;
+        this.serverAddress = '';
+        this.relayAddress = '';
+        this.relayRegistrationPromise = null;
+        this.networkRegistrationPromise = new ManualPromise;
         this.pushRelayResponse = null;
     }
 
@@ -41,6 +43,15 @@ class PushNotifier extends Notifier {
 
             if (cordova.platformID === 'windows') {
                 document.addEventListener('activated', this.handleActivation);
+            }
+        } else {
+            if (process.env.NODE_ENV !== 'production') {
+                this.registrationID = _.repeat('0', 64);
+                this.registrationType = 'apns-sb';
+                this.networkRegistrationPromise.resolve();
+            } else {
+                let err = new Error('Push notification plugin is missing');
+                this.networkRegistrationPromise.reject(err);
             }
         }
     }
@@ -58,28 +69,52 @@ class PushNotifier extends Notifier {
     }
 
     /**
+     * Connect to push network and relay
+     *
+     * @param  {String} serverAddress
+     * @param  {String} relayAddress
+     *
+     * @return {Promise<Boolean>}
+     */
+    connect(serverAddress, relayAddress) {
+        return this.registerAtPushNetwork().then(() => {
+            return this.registerAtPushRelay(serverAddress, relayAddress);
+        });
+    }
+
+    /**
+     * Register device at push network
+     *
+     * @return {Promise<Boolean>}
+     */
+    registerAtPushNetwork() {
+        // events triggered by activate() will resolve this promise
+        return this.networkRegistrationPromise;
+    }
+
+    /**
      * Register device at push relay
      *
      * @param  {String} relayAddress
      * @param  {String} serverAddress
-     * @param  {String} registrationID
-     * @param  {String} registrationType
      *
-     * @return {Boolean}
+     * @return {Promise<Boolean>}
      */
-    register(relayAddress, serverAddress, registrationID, registrationType) {
-        // track registration attempt with an object
-        let attempt = { relayAddress, serverAddress, registrationID, registrationType };
-        if (_.isEqual(this.registrationAttempt, attempt)) {
-            // already connecting to server
-            return this.registrationAttempt.promise;
+    registerAtPushRelay(serverAddress, relayAddress) {
+        if (this.serverAddress !== serverAddress && this.relayAddress !== relayAddress) {
+            if (this.relayRegistrationPromise) {
+                this.relayRegistrationPromise = null;
+            }
         }
-        this.registrationAttempt = attempt;
-        this.pushRelayResponse = null;
+        if (this.relayRegistrationPromise) {
+            return this.relayRegistrationPromise;
+        }
+        this.serverAddress = serverAddress;
+        this.relayAddress = relayAddress;
 
         let registered = false;
-        let delay = this.props.initialReconnectionDelay;
-        let maximumDelay = this.props.maximumReconnectionDelay;
+        let delay = this.options.initialReconnectionDelay;
+        let maximumDelay = this.options.maximumReconnectionDelay;
 
         relayAddress = _.trimEnd(relayAddress, '/');
         // keep trying to connect until the effort is abandoned (i.e. user
@@ -88,27 +123,29 @@ class PushNotifier extends Notifier {
             let url = `${relayAddress}/register`;
             let details = getDeviceDetails();
             let payload = {
-                network: registrationType,
-                registration_id: registrationID,
+                network: this.registrationType,
+                registration_id: this.registrationID,
                 details: details,
                 address: serverAddress,
             };
             return this.sendRegistration(url, payload).then((result) => {
-                if (attempt === this.registrationAttempt) {
-                    this.registrationAttempt = null;
+                if (this.serverAddress === serverAddress && this.relayAddress === relayAddress) {
                     this.pushRelayResponse = result;
-                    let connection = {
-                        method: registrationType,
-                        relay: relayAddress,
-                        token: result.token,
-                        address: serverAddress,
-                        details: getDeviceDetails(),
-                    };
-                    this.triggerConnectEvent(connection);
+                    let event = new NotifierEvent('connection', this, {
+                        connection: {
+                            method: this.registrationType,
+                            relay: relayAddress,
+                            token: result.token,
+                            address: serverAddress,
+                            details: details,
+                        }
+                    });
+                    this.triggerEvent(event);
                 }
                 registered = true;
                 return null;
             }).catch((err) => {
+                console.error(err);
                 delay *= 2;
                 if (delay > maximumDelay) {
                     delay = maximumDelay;
@@ -118,18 +155,17 @@ class PushNotifier extends Notifier {
             });
         });
         Async.while(() => {
-            if (attempt === this.registrationAttempt) {
+            if (this.serverAddress === serverAddress && this.relayAddress === relayAddress) {
                 return !registered;
             } else {
                 return false;
             }
         });
         Async.return(() => {
-            this.registrationAttempt = null;
             return registered;
         });
-        attempt.promise = Async.end();
-        return attempt.promise;
+        this.relayRegistrationPromise = Async.end();
+        return this.relayRegistrationPromise;
     }
 
     /**
@@ -166,7 +202,9 @@ class PushNotifier extends Notifier {
             if (type === 'apns' && debug) {
                 type += '-sb';  // use sandbox
             }
-            this.setState({ registrationID: id, registrationType: type });
+            this.registrationID = id;
+            this.registrationType = type;
+            this.networkRegistrationPromise.resolve();
         });
     }
 
@@ -265,6 +303,9 @@ class PushNotifier extends Notifier {
      * @param  {Error} err
      */
     handleError = (err) => {
+        if (!this.networkRegistrationPromise.isFulfilled()) {
+            this.networkRegistrationPromise.reject(err);
+        }
         console.log(err);
     }
 }

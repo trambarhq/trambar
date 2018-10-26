@@ -277,9 +277,21 @@ function start(cfg) {
         }
         currentConnection = {};
         if (notifier instanceof WebsocketNotifier) {
-            notifier.connect(currentLocation.address);
+            notifier.connect(address);
         } else if (notifier instanceof PushNotifier) {
-
+            if (dataSource.hasAuthorization(currentLocation)) {
+                // find the push relay first
+                let query = {
+                    address,
+                    schema: 'global',
+                    table: 'system',
+                    criteria: {}
+                };
+                dataSource.find(query).get(0).then((system) => {
+                    let relayURL = _.get(system, 'settings.push_relay', '');
+                    notifier.connect(address, relayURL);
+                });
+            }
         }
     }
 
