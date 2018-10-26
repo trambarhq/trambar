@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
+import ComponentRefs from 'utils/component-refs';
 import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
@@ -20,9 +21,21 @@ class ReactionViewOptions extends PureComponent {
 
     constructor(props) {
         super(props);
+        this.components = ComponentRefs({
+            popUpMenu: PopUpMenu
+        });
         this.state = {
             open: false
         };
+    }
+
+    /**
+     * Close the pop-up menu
+     */
+    close() {
+        let { popUpMenu } = this.components;
+        this.setState({ open: false });
+        popUpMenu.close();
     }
 
     /**
@@ -32,6 +45,7 @@ class ReactionViewOptions extends PureComponent {
      */
     render() {
         let { reaction, story, currentUser, access } = this.props;
+        let { setters } = this.components;
         let active = false;
         if (UserUtils.canHideReaction(currentUser, story, reaction, access)) {
             active = true;
@@ -43,6 +57,7 @@ class ReactionViewOptions extends PureComponent {
             active = true;
         }
         let props = {
+            ref: setters.popUpMenu,
             className: 'reaction-view-options',
             disabled: !active,
             popOut: true,

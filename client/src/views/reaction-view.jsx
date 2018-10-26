@@ -30,6 +30,7 @@ class ReactionView extends PureComponent {
     constructor(props) {
         super(props);
         this.components = ComponentRefs({
+            optionsButton: ReactionViewOptions,
             audioPlayer: HTMLAudioElement,
         });
         this.state = {
@@ -265,10 +266,12 @@ class ReactionView extends PureComponent {
     renderOptionButton() {
         let { env, reaction, story, currentUser, access } = this.props;
         let { options } = this.state;
+        let { setters } = this.components;
         if (!reaction.published) {
             return null;
         }
         let props = {
+            ref: setters.optionsButton,
             access,
             currentUser,
             reaction,
@@ -497,7 +500,9 @@ class ReactionView extends PureComponent {
      * @param  {Object} evt
      */
     handleOptionsChange = (evt) => {
+        let { optionsButton } = this.components;
         this.setOptions(evt.options);
+        optionsButton.close();
     }
 
     /**
