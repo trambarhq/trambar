@@ -36,7 +36,7 @@ function initialize(evt) {
 function hideSplashScreen() {
     let screen = document.getElementById('splash-screen');
     let style = document.getElementById('splash-screen-style');
-    let { splashScreen } = navigator;
+    let splashScreen = navigator.splashscreen;
     if (screen) {
         screen.className = 'transition-out';
         setTimeout(() => {

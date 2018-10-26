@@ -17,7 +17,7 @@ class PushNotifierPanel extends Component {
     render() {
         let { notifier } = this.props;
         let {
-            registrationId,
+            registrationID,
             registrationType,
             relayAddress,
             relayToken,
@@ -27,11 +27,11 @@ class PushNotifierPanel extends Component {
         return (
             <SettingsPanel className="push-notifier">
                 <header>
-                    <i className="fa fa-gear" /> Web Socket
+                    <i className="fa fa-gear" /> Push Notification
                 </header>
                 <body>
                     <DiagnosticsSection label="Registration">
-                        <div>ID: {registrationId}</div>
+                        <div>ID: {registrationID}</div>
                         <div>Network: {registrationType}</div>
                     </DiagnosticsSection>
                     <DiagnosticsSection label="Push relay">

@@ -284,7 +284,6 @@ class RemoteDataSource extends EventEmitter {
                 handle: parentSession.handle,
                 area,
             };
-            debugger;
             return HTTPRequest.fetch('POST', url, payload, options).then((res) => {
                 mobileSession.handle = res.session.handle;
                 return mobileSession.handle;

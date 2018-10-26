@@ -25,11 +25,10 @@ class PushNotifier extends Notifier {
         this.options = _.defaults({}, options, defaultOptions);
         this.registrationID = null;
         this.registrationType = null;
-        this.serverAddress = '';
         this.relayAddress = '';
+        this.relayToken = '';
         this.relayRegistrationPromise = null;
         this.networkRegistrationPromise = new ManualPromise;
-        this.pushRelayResponse = null;
     }
 
     activate() {
@@ -41,7 +40,7 @@ class PushNotifier extends Notifier {
             pushNotification.on('notification', this.handleNotification);
             pushNotification.on('error', this.handleError);
 
-            if (cordova.platformID === 'windows') {
+            if (cordova.platformId === 'windows') {
                 document.addEventListener('activated', this.handleActivation);
             }
         } else {
@@ -62,7 +61,7 @@ class PushNotifier extends Notifier {
             pushNotification.off('notification', this.handleNotification);
             pushNotification.off('error', this.handleError);
 
-            if (cordova.platformID === 'windows') {
+            if (cordova.platformId === 'windows') {
                 document.removeEventListener('activated', this.handleActivation);
             }
         }
@@ -71,14 +70,14 @@ class PushNotifier extends Notifier {
     /**
      * Connect to push network and relay
      *
-     * @param  {String} serverAddress
+     * @param  {String} address
      * @param  {String} relayAddress
      *
      * @return {Promise<Boolean>}
      */
-    connect(serverAddress, relayAddress) {
+    connect(address, relayAddress) {
         return this.registerAtPushNetwork().then(() => {
-            return this.registerAtPushRelay(serverAddress, relayAddress);
+            return this.registerAtPushRelay(address, relayAddress);
         });
     }
 
@@ -95,13 +94,13 @@ class PushNotifier extends Notifier {
     /**
      * Register device at push relay
      *
+     * @param  {String} address
      * @param  {String} relayAddress
-     * @param  {String} serverAddress
      *
      * @return {Promise<Boolean>}
      */
-    registerAtPushRelay(serverAddress, relayAddress) {
-        if (this.serverAddress !== serverAddress && this.relayAddress !== relayAddress) {
+    registerAtPushRelay(address, relayAddress) {
+        if (this.address !== address && this.relayAddress !== relayAddress) {
             if (this.relayRegistrationPromise) {
                 this.relayRegistrationPromise = null;
             }
@@ -109,7 +108,7 @@ class PushNotifier extends Notifier {
         if (this.relayRegistrationPromise) {
             return this.relayRegistrationPromise;
         }
-        this.serverAddress = serverAddress;
+        this.address = address;
         this.relayAddress = relayAddress;
 
         let registered = false;
@@ -125,19 +124,19 @@ class PushNotifier extends Notifier {
             let payload = {
                 network: this.registrationType,
                 registration_id: this.registrationID,
-                details: details,
-                address: serverAddress,
+                address,
+                details,
             };
             return this.sendRegistration(url, payload).then((result) => {
-                if (this.serverAddress === serverAddress && this.relayAddress === relayAddress) {
-                    this.pushRelayResponse = result;
+                if (this.address === address && this.relayAddress === relayAddress) {
+                    this.relayToken = result.token;
                     let event = new NotifierEvent('connection', this, {
                         connection: {
                             method: this.registrationType,
-                            relay: relayAddress,
-                            token: result.token,
-                            address: serverAddress,
-                            details: details,
+                            relay: this.relayAddress,
+                            token: this.relayToken,
+                            address,
+                            details,
                         }
                     });
                     this.triggerEvent(event);
@@ -155,7 +154,7 @@ class PushNotifier extends Notifier {
             });
         });
         Async.while(() => {
-            if (this.serverAddress === serverAddress && this.relayAddress === relayAddress) {
+            if (this.address === address && this.relayAddress === relayAddress) {
                 return !registered;
             } else {
                 return false;
@@ -190,7 +189,7 @@ class PushNotifier extends Notifier {
      * @param  {Object} data
      */
     handleRegistration = (data) => {
-        let id = data.registrationID;
+        let id = data.registrationId;
         let type = _.toLower(data.registrationType);
         if (!type) {
             // the type is missing for WNS
@@ -219,18 +218,18 @@ class PushNotifier extends Notifier {
         if (this.recentMessages.length > 10) {
            this.recentMessages.splice(10);
         }
-        if (cordova.platformID === 'android') {
+        if (cordova.platformId === 'android') {
             let payload = data.additionalData;
-            let notification = NotificationUnpacker.unpack(payload) || {};
+            let notification = this.unpack(payload) || {};
             if (notification) {
                 this.dispatchNotification(notification);
             }
             if (data.count !== undefined) {
                 setApplicationIconBadgeNumber(data.count);
             }
-        } else if (cordova.platformID === 'ios') {
+        } else if (cordova.platformId === 'ios') {
             let payload = data.additionalData;
-            let notification = NotificationUnpacker.unpack(payload) || {};
+            let notification = this.unpack(payload) || {};
             if (notification) {
                 this.dispatchNotification(notification);
             }
@@ -238,19 +237,19 @@ class PushNotifier extends Notifier {
                 setApplicationIconBadgeNumber(data.count);
             }
             signalBackgroundTaskCompletion(notID);
-        } else if (cordova.platformID === 'windows') {
+        } else if (cordova.platformId === 'windows') {
             let notification;
             if (data.launchArgs) {
                 // notification is clicked while app isn't running
                 let payload = parseJSON(data.launchArgs);
-                notification = NotificationUnpacker.unpack(payload);
+                notification = this.unpack(payload);
             } else {
                 // payload is stored as raw data
                 let eventArgs = data.additionalData.pushNotificationReceivedEventArgs;
                 if (eventArgs.notificationType === 3) { // raw
                     let raw = eventArgs.rawNotification;
                     let payload = parseJSON(raw.content);
-                    notification = NotificationUnpacker.unpack(payload);
+                    notification = this.unpack(payload);
                 }
             }
             if (notification) {
@@ -277,7 +276,7 @@ class PushNotifier extends Notifier {
             }
         }
         if (event) {
-            this.triggerEvent(evt);
+            this.triggerEvent(event);
         }
     }
 
@@ -290,7 +289,7 @@ class PushNotifier extends Notifier {
         let launchArgs = context.args;
         if (launchArgs) {
             let payload = JSON.parse(launchArgs);
-            let notification = NotificationUnpacker.unpack(payload);
+            let notification = this.unpack(payload);
             if (notification) {
                 this.dispatchNotification(notification);
             }

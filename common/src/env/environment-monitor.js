@@ -197,11 +197,14 @@ class EnvironmentMonitor extends EventEmitter {
     }
 
     handleDeviceChange = (evt) => {
-        navigator.mediaDevices.enumerateDevices().then((devices) => {
-            this.devices = devices;
-            this.recorders = getRecordingSupport(this.platform, devices);
-            this.triggerEvent(new EnvironmentMonitorEvent('change', this));
-        });
+        let { mediaDevices } = navigator;
+        if (mediaDevices) {
+            mediaDevices.enumerateDevices().then((devices) => {
+                this.devices = devices;
+                this.recorders = getRecordingSupport(this.platform, devices);
+                this.triggerEvent(new EnvironmentMonitorEvent('change', this));
+            });
+        }
     }
 }
 
@@ -311,10 +314,12 @@ function getRecordingSupport(platform, devices) {
 
 function canSavePhoto(platform) {
     if (platform === 'browser') {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            if (typeof(HTMLCanvasElement.prototype.toBlob) === 'function') {
+        let { mediaDevices } = navigator;
+        if (mediaDevices && mediaDevices.getUserMedia) {
+            let { toBlob, toDateURL } = HTMLCanvasElement.prototype;
+            if (typeof(toBlob) === 'function') {
                 return true;
-            } else if (typeof(HTMLCanvasElement.prototype.toDataURL) === 'function') {
+            } else if (typeof(toDataURL) === 'function') {
                 return true;
             }
         }
@@ -328,7 +333,8 @@ function canSavePhoto(platform) {
 
 function canSaveAudio(platform) {
     if (platform === 'browser') {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        let { mediaDevices } = navigator;
+        if (mediaDevices && mediaDevices.getUserMedia) {
             if (typeof(MediaRecorder) === 'function') {
                 if (typeof(AudioContext) === 'function') {
                     return true;
@@ -348,7 +354,8 @@ function canSaveAudio(platform) {
 
 function canSaveVideo(platform) {
     if (platform === 'browser') {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        let { mediaDevices } = navigator;
+        if (mediaDevices && mediaDevices.getUserMedia) {
             if (typeof(MediaRecorder) === 'function') {
                 return true;
             }

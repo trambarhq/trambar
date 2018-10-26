@@ -1169,7 +1169,7 @@ const sortServers = memoizeWeak(null, function(servers, env) {
  */
 function getDeviceType() {
     if (window.cordova) {
-        return cordova.platformID;
+        return cordova.platformId;
     }
     if (process.env.NODE_ENV !== 'production') {
         return 'android';
