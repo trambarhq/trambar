@@ -317,8 +317,9 @@ let phrases = {
     'project-management-withdraw-request': 'odebrat žádost o členství',
 
     'qr-scanner-cancel': 'Zrušit',
-    'qr-scanner-invalid-qr-code': 'Neplatný kód QR',
-    'qr-scanner-qr-code-found': 'QR kód nalezený',
+    'qr-scanner-code-found': 'QR kód nalezený',
+    'qr-scanner-code-invalid': 'Neplatný kód QR',
+    'qr-scanner-code-used': 'Zastaralý QR kód',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         let e = pastTenseEnding(name);
@@ -637,6 +638,10 @@ let phrases = {
 
     'telephone-dialog-close': 'Zavřít',
 
+    'time-$days-ago': (days) => {
+        let time = cardinal(days, 'den', '2 dny');
+        return `Před ${time}`;
+    },
     'time-$hours-ago': (hours) => {
         let time = cardinal(hours, 'hodinou', '2 hodinami');
         return `Před ${time}`;

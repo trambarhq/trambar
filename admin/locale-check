@@ -2,6 +2,14 @@
 
 var _ = require('lodash');
 var FS = require('fs');
+var Path = require('path');
+
+process.env.NODE_PATH += `:${Path.resolve(__dirname + '/../common/node_modules')}`;
+process.env.NODE_PATH += `:${Path.resolve(__dirname + '/../common/src')}`;
+require('module').Module._initPaths();
+
+require = require('esm')(module);
+
 
 var locale = process.argv[2];
 
@@ -22,13 +30,21 @@ if (/^all$/i.test(locale)) {
     locales.push(locale);
 }
 
+function load(locale) {
+    var lang = _.first(_.split(locale, '-'));
+    var langModule = require(`./src/locales/${lang}`)
+    var phrases = langModule.phrases;
+    if (phrases instanceof Function) {
+        var country =  _.last(_.split(locale, '-'));
+        phrases = phrases(country);
+    }
+    return phrases;
+}
+
 try {
+    var english = load('en-us');
     _.each(locales, (locale) => {
-        var lang = _.first(_.split(locale, '-'));
-        var targetModule = require(`./src/locales/${lang}`)
-        var target = targetModule(locale);
-        var englishModule = require(`./src/locales/en`);
-        var english = englishModule('en-us');
+        var target = load(locale);
 
         var missing = [];
         var englishNames = _.keys(english);

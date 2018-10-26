@@ -305,8 +305,9 @@ const phrases = {
     'project-management-withdraw-request': "ritira la richiesta di adesione",
 
     'qr-scanner-cancel': "Annulla",
-    'qr-scanner-invalid-qr-code': "Codice QR non valido",
-    'qr-scanner-qr-code-found': "Codice QR trovato",
+    'qr-scanner-code-found': "Codice QR trovato",
+    'qr-scanner-code-invalid': "Codice QR non valido",
+    'qr-scanner-code-used': 'Codice QR obsoleto',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name} ha aggiunto questo post al bug tracker`;
@@ -594,6 +595,10 @@ const phrases = {
 
     'telephone-dialog-close': "Chiudi",
 
+    'time-$days-ago': (days) => {
+        let time = cardinal(days, "Un giorno", "2 giorni");
+        return `${time} fa`;
+    },
     'time-$hours-ago': (hours) => {
         let time = cardinal(hours, "Un'ora", "2 ore");
         return `${time} fa`;

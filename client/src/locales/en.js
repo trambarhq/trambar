@@ -328,8 +328,9 @@ let americanPhrases = {
     'project-management-withdraw-request': 'withdraw membership request',
 
     'qr-scanner-cancel': 'Cancel',
-    'qr-scanner-invalid-qr-code': 'Invalid QR code',
-    'qr-scanner-qr-code-found': 'QR code found',
+    'qr-scanner-code-found': 'QR code found',
+    'qr-scanner-code-invalid': 'Invalid QR code',
+    'qr-scanner-code-used': 'Outdated QR code',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name} added this post to issue tracker`;
@@ -618,8 +619,8 @@ let americanPhrases = {
 
     'telephone-dialog-close': 'Close',
 
-    'time-$day-ago': (day) => {
-        let time = cardinal(day, 'A day', '2 days');
+    'time-$days-ago': (days) => {
+        let time = cardinal(days, 'A day', '2 days');
         return `${time} ago`;
     },
     'time-$hours-ago': (hours) => {

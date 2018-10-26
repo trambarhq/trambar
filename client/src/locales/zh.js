@@ -330,8 +330,9 @@ let traditionalPhrases = {
     'project-management-withdraw-request': '取消會員資格申請',
 
     'qr-scanner-cancel': '取消',
-    'qr-scanner-invalid-qr-code': '不正確的ＱＲ碼',
-    'qr-scanner-qr-code-found': '找到ＱＲ碼',
+    'qr-scanner-code-found': '找到ＱＲ碼',
+    'qr-scanner-code-invalid': '不正確的ＱＲ碼',
+    'qr-scanner-code-used': '過時的ＱＲ碼',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name}把這個貼文放到問題跟踪器上`;
@@ -614,6 +615,9 @@ let traditionalPhrases = {
 
     'telephone-dialog-close': '關閉',
 
+    'time-$days-ago': (days) => {
+        return cardinal(days, '一天前');
+    },
     'time-$hours-ago': (hours) => {
         return cardinal(hours, '一小時前');
     },
@@ -642,7 +646,7 @@ let traditionalPhrases = {
     'user-activity-$name-created-tag': '建立了一個標籤',
     'user-activity-$name-deleted-repo': '刪除了數據庫',
     'user-activity-$name-edited-wiki-page': '編輯了一個wiki頁面',
-    'user-activity-$name-deleted-repo': '導入了數據庫',
+    'user-activity-$name-imported-repo': '導入了數據庫',
     'user-activity-$name-joined-repo': '加入了數據庫',
     'user-activity-$name-left-repo': '離開了數據庫',
     'user-activity-$name-merged-code': '合併了代碼',
@@ -1013,7 +1017,7 @@ let simplifiedPhrases = {
     },
     'option-show-media-preview': '显示附件媒体',
     'option-show-text-preview': '显示课文预览',
-    'option-statistics-14': '显示过去十四天的活动',
+    'option-statistics-14-days': '显示过去十四天的活动',
     'option-statistics-biweekly': '显示双周的活动',
     'option-statistics-monthly': '显示每月的活动',
     'option-statistics-to-date': '显示至今的活动',
@@ -1046,8 +1050,9 @@ let simplifiedPhrases = {
     'project-management-withdraw-request': '取消会员资格申请',
 
     'qr-scanner-cancel': '取消',
-    'qr-scanner-invalid-qr-code': '不正确的ＱＲ码',
-    'qr-scanner-qr-code-found': '找到QR码',
+    'qr-scanner-code-found': '找到QR码',
+    'qr-scanner-code-invalid': '不正确的ＱＲ码',
+    'qr-scanner-code-used': '过时的的ＱＲ码',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name}把这个贴文放到问题跟踪器上`;
@@ -1330,6 +1335,9 @@ let simplifiedPhrases = {
 
     'telephone-dialog-close': '关闭',
 
+    'time-$days-ago': (days) => {
+        return cardinal(days, '一天前');
+    },
     'time-$hours-ago': (hours) => {
         return cardinal(hours, '一小时前');
     },
@@ -1596,7 +1604,7 @@ let cantonesePhrases = {
     'option-send-bookmarks-to-$count-users': (count) => {
         return cardinalT(count, '發送書籤俾一個人');
     },
-    'option-statistics-biweekly': '顯示前十四日嘅活動',
+    'option-statistics-14-days': '顯示前十四日嘅活動',
     'option-statistics-biweekly': '顯示兩個禮拜嘅活動',
     'option-statistics-monthly': '顯示每個月嘅活動',
     'option-statistics-to-date': '顯示直到今日嘅活動',
@@ -1613,8 +1621,9 @@ let cantonesePhrases = {
     'project-management-mobile-set-up': '手機設置',
     'project-management-sign-out-are-you-sure': '你確定你想從該服務器註銷？',
 
-    'qr-scanner-invalid-qr-code': '唔正確嘅ＱＲ碼',
-    'qr-scanner-qr-code-found': '搵找到ＱＲ碼',
+    'qr-scanner-code-invalid': '唔正確嘅ＱＲ碼',
+    'qr-scanner-code-found': '搵找到ＱＲ碼',
+    'qr-scanner-code-invalid': '過咗時嘅ＱＲ碼',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name}將呢個帖子放到問題跟踪器上`;
@@ -1795,6 +1804,9 @@ let cantonesePhrases = {
         return `上載（${progress}%）`;
     },
 
+    'time-$days-ago': (days) => {
+        return cardinal(days, '一日前');
+    },
     'time-$hours-ago': (hours) => {
         return cardinal(hours, '一個鐘頭前');
     },

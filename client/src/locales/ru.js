@@ -335,8 +335,9 @@ let phrases = {
     'project-management-withdraw-request': 'аннулировать запрос о членстве',
 
     'qr-scanner-cancel': 'Отмена',
-    'qr-scanner-invalid-qr-code': 'Неверный QR-код',
-    'qr-scanner-qr-code-found': 'QR-код найден',
+    'qr-scanner-code-found': 'QR-код найден',
+    'qr-scanner-code-invalid': 'Неверный QR-код',
+    'qr-scanner-code-used': 'Устаревший QR-код',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         let e = pastTenseEnding(name);
@@ -656,8 +657,12 @@ let phrases = {
 
     'telephone-dialog-close': 'Закрыть',
 
+    'time-$days-ago': (days) => {
+        let time = cardinal(days, 'День', '2 дня', '5 дней');
+        return `${time} назад`;
+    },
     'time-$hours-ago': (hours) => {
-        let time = cardinal(hours, 'Час', '2 часа', '5 часов', true);
+        let time = cardinal(hours, 'Час', '2 часа', '5 часов');
         return `${time} назад`;
     },
     'time-$hr-ago': (hr) => {
@@ -667,7 +672,7 @@ let phrases = {
         return `${min} м. назад`;
     },
     'time-$minutes-ago': (minutes) => {
-        let time = cardinal(hours, 'Минута', '2 минуты', '5 минут', true);
+        let time = cardinal(hours, 'Минута', '2 минуты', '5 минут');
         return `${time} назад`;
     },
     'time-just-now': 'Прямо сейчас',

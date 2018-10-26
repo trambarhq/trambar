@@ -143,13 +143,21 @@ class QRScannerDialogBox extends PureComponent {
         };
         let message;
         if (serverError) {
-            let text = `${serverError.statusCode} - ${serverError.message}`;
+            let text;
+            switch (serverError.statusCode) {
+                case 404:
+                case 410:
+                    text = t('qr-scanner-code-used');
+                    break;
+                default:
+                    text = `${serverError.statusCode} - ${serverError.message}`;
+            }
             message = <span className="error">{text}</span>;
         } else {
             if (found) {
-                message = <span className="success">{t('qr-scanner-qr-code-found')}</span>;
+                message = <span className="success">{t('qr-scanner-code-found')}</span>;
             } else if (invalid) {
-                message = <span className="error">{t('qr-scanner-invalid-qr-code')}</span>;
+                message = <span className="error">{t('qr-scanner-code-invalid')}</span>;
             }
         }
         let element = (

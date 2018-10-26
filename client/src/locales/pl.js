@@ -348,8 +348,9 @@ const phrases = {
     'project-management-withdraw-request': 'anulowaj prośbę o członkostwo',
 
     'qr-scanner-cancel': 'Anuluj',
-    'qr-scanner-invalid-qr-code': 'Nieprawidłowy kod QR',
-    'qr-scanner-qr-code-found': 'Znaleziono kod QR',
+    'qr-scanner-code-found': 'Znaleziono kod QR',
+    'qr-scanner-code-invalid': 'Nieprawidłowy kod QR',
+    'qr-scanner-code-used': 'Nieaktualny kod QR',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         let e = pastTenseEnding(name, 3);
@@ -669,9 +670,13 @@ const phrases = {
 
     'telephone-dialog-close': 'Zamknij',
 
+    'time-$days-ago': (days) => {
+        let time = cardinal(days, 'Dzień', '2 dni', '5 dni');
+        return `${time} temu`;
+    },
     'time-$hours-ago': (hours) => {
-        let time = cardinal(hours, 'Godzina', '2 godziny', '5 godzin', true);
-        return `${time} temnu`;
+        let time = cardinal(hours, 'Godzina', '2 godziny', '5 godzin');
+        return `${time} temu`;
     },
     'time-$hr-ago': (hr) => {
         return `${hr} godz temu`;
@@ -680,7 +685,7 @@ const phrases = {
         return `${min} min temu`;
     },
     'time-$minutes-ago': (minutes) => {
-        let time = cardinal(minutes, 'Minuta', '2 minuty', '5 minut', true);
+        let time = cardinal(minutes, 'Minuta', '2 minuty', '5 minut');
         return `${time} temnu`;
     },
     'time-just-now': 'Właśnie teraz',
@@ -739,7 +744,7 @@ const phrases = {
         return `Wykona${e} scalenie zmian`;
     },
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        let audios = cardinal(count, 'klip audio', 'klipy audio', 'klipów audio', true);
+        let audios = cardinal(count, 'klip audio', 'klipy audio', 'klipów audio');
         let e = pastTenseEnding(name, 3);
         return `Wysła${e} ${audios}`;
     },
@@ -750,12 +755,12 @@ const phrases = {
         return `Wysła${e} ${links} do ${website}`
     },
     'user-activity-$name-posted-$count-pictures': (name, count) => {
-        let pictures = cardinal(count, 'zdjęcie', 'zdjęcia', 'zdjęć', true);
+        let pictures = cardinal(count, 'zdjęcie', 'zdjęcia', 'zdjęć');
         let e = pastTenseEnding(name, 3);
         return `Wysła${e} ${pictures}`;
     },
     'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        let videos = cardinal(count, 'klip wideo', 'klipy wideo', 'klipów wideo', true);
+        let videos = cardinal(count, 'klip wideo', 'klipy wideo', 'klipów wideo');
         let e = pastTenseEnding(name, 3);
         return `Wysła${e} ${videos}`;
     },

@@ -309,8 +309,9 @@ const phrases = {
     'project-management-withdraw-request': 'kumoaa jäsenpyyntö',
 
     'qr-scanner-cancel': 'Peruutta',
-    'qr-scanner-invalid-qr-code': 'Virheellinen QR-koodi',
-    'qr-scanner-qr-code-found': 'QR-koodi löytyi',
+    'qr-scanner-code-found': 'QR-koodi löytyi',
+    'qr-scanner-code-invalid': 'Virheellinen QR-koodi',
+    'qr-scanner-code-used': 'Vanhentunut QR-koodi',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name} lisäsi tämän viestin raportointityökaluun`;
@@ -603,6 +604,10 @@ const phrases = {
 
     'telephone-dialog-close': 'Sulje',
 
+    'time-$days-ago': (days) => {
+        let time = cardinal(days, 'Päivä', '2 päivää');
+        return `${time} sitten`;
+    },
     'time-$hours-ago': (hours) => {
         let time = cardinal(hours, 'Tunti', '2 tuntia');
         return `${time} sitten`;

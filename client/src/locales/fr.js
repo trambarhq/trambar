@@ -308,8 +308,9 @@ const phrases = {
     'project-management-withdraw-request': "retirer la demande d'adhésion",
 
     'qr-scanner-cancel': "Annuler",
-    'qr-scanner-invalid-qr-code': "Code QR invalide",
-    'qr-scanner-qr-code-found': "QR code trouvé",
+    'qr-scanner-code-found': "QR code trouvé",
+    'qr-scanner-code-invalid': "Code QR invalide",
+    'qr-scanner-code-used': 'Code QR périmé',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name} a ajouté ce post au tracker d'émission.`;
@@ -591,6 +592,10 @@ const phrases = {
 
     'telephone-dialog-close': "Fermer",
 
+    'time-$days-ago': (days) => {
+        let time = cardinal(days, "un jour", "2 jours");
+        return `Il ya a ${time}`;
+    },
     'time-$hours-ago': (hours) => {
         let time = cardinal(hours, "une heure", "2 heures");
         return `Il ya a ${time}`;

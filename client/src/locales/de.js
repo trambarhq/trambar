@@ -316,8 +316,9 @@ const phrases = {
     'project-management-withdraw-request': 'Mitgliedschaft-Anfrage widerrufen',
 
     'qr-scanner-cancel': 'Abbrechen',
-    'qr-scanner-invalid-qr-code': 'Ungültiger QR-Code',
-    'qr-scanner-qr-code-found': 'QR-Code gefunden',
+    'qr-scanner-code-found': 'QR-Code gefunden',
+    'qr-scanner-code-invalid': 'Ungültiger QR-Code',
+    'qr-scanner-code-used': 'Veralteter QR-Code',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name} hat diesen Beitrag in den Bugtracker hinzugefügt`;
@@ -611,6 +612,10 @@ const phrases = {
 
     'telephone-dialog-close': 'Schließen',
 
+    'time-$days-ago': (days) => {
+        let time = cardinal(days, 'einem Tag', '2 Tagen');
+        return `Vor ${time}`;
+    },
     'time-$hours-ago': (hours) => {
         let time = cardinal(hours, 'einer Stunde', '2 Stunden');
         return `Vor ${time}`;

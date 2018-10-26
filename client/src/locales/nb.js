@@ -301,8 +301,9 @@ const phrases = {
     'project-management-withdraw-request': 'opphev medlemskapsforespørselen',
 
     'qr-scanner-cancel': 'Avbryt',
-    'qr-scanner-invalid-qr-code': 'Ugyldig QR-kode',
-    'qr-scanner-qr-code-found': 'QR-kode funnet',
+    'qr-scanner-code-found': 'QR-kode funnet',
+    'qr-scanner-code-invalid': 'Ugyldig QR-kode',
+    'qr-scanner-code-used': 'Utdatert QR-kode',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
         return `${name} la til dette innlegget til feilrapporteringssystemet`;
@@ -587,6 +588,10 @@ const phrases = {
 
     'telephone-dialog-close': 'Lukk',
 
+    'time-$days-ago': (days) => {
+        let time = cardinal(days, 'En dag', '2 dager');
+        return `${time} siden`;
+    },
     'time-$hours-ago': (hours) => {
         let time = cardinal(hours, 'En time', '2 timer');
         return `${time} siden`;

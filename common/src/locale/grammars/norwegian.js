@@ -25,4 +25,5 @@ function list(items) {
 
 module.exports = {
     cardinal,
+    list,
 };
