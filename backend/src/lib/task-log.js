@@ -2,7 +2,7 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var Database = require('database');
 var Shutdown = require('shutdown');
-var TaskQueue = require('utils/task-queue');
+var TaskQueue = require('utils/task-queue').default;
 
 var Task = require('accessors/task');
 

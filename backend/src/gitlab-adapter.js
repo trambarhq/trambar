@@ -6,7 +6,7 @@ var BodyParser = require('body-parser');
 var DNSCache = require('dnscache');
 var Database = require('database');
 var Shutdown = require('shutdown');
-var TaskQueue = require('utils/task-queue');
+var TaskQueue = require('utils/task-queue').default;
 var StoryTypes = require('objects/types/story-types');
 var ExternalDataUtils = require('objects/utils/external-data-utils');
 
