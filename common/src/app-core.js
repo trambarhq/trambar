@@ -68,9 +68,7 @@ function start(cfg) {
     }
 
     // look for sign in page
-    let signInPageName = _.findKey(routeManager.routes, (route) => {
-        return route.public && route.signIn;
-    });
+    let signInPageName = _.findKey(routeManager.routes, { signIn: true });
     let currentLocation = {};
     let currentConnection = {};
     let currentSubscription = {};
@@ -119,12 +117,6 @@ function start(cfg) {
         currentLocation = { address, schema };
         changeNotification();
         changeSubscription();
-    });
-    dataSource.addEventListener('authentication', (evt) => {
-        // go to the sign-in page if we aren't there already
-        if (routeManager.name !== signInPageName) {
-            routeManager.substitute(signInPageName);
-        }
     });
     dataSource.addEventListener('authorization', (evt) => {
         // save the session
