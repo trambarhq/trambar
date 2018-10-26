@@ -26,6 +26,7 @@ const sessionLocation = {
 function start(cfg) {
     let envMonitor = new EnvironmentMonitor({});
     let routeManager = new RouteManager({
+        useHashFallback: (envMonitor.platform === 'cordova'),
         basePath: cfg.routeManager.basePath,
         routes: cfg.routeManager.routes,
         rewrites: cfg.routeManager.rewrites,

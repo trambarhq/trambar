@@ -1,7 +1,11 @@
 import * as BootstrapLoader from 'utils/bootstrap-loader';
 import libraries from 'libraries';
 
-window.addEventListener('load', initialize);
+if (typeof(cordova) === 'object') {
+    document.addEventListener('deviceready', initialize);
+} else {
+    window.addEventListener('load', initialize);
+}
 
 function initialize(evt) {
     let appContainer = document.getElementById('app-container');
@@ -32,6 +36,7 @@ function initialize(evt) {
 function hideSplashScreen() {
     let screen = document.getElementById('splash-screen');
     let style = document.getElementById('splash-screen-style');
+    let { splashScreen } = navigator;
     if (screen) {
         screen.className = 'transition-out';
         setTimeout(() => {
@@ -42,6 +47,9 @@ function hideSplashScreen() {
                 style.parentNode.removeChild(style);
             }
         }, 1000);
+    }
+    if (splashScreen) {
+        splashScreen.hide();
     }
 }
 
