@@ -585,11 +585,11 @@ class RepoListPageSync extends PureComponent {
             return db.start().then((userID) => {
                 // remove ids of repo that no longer exist
                 let existingRepoIDs = _.map(repos, 'id');
-                let project = {
+                let projectAfter = {
                     id: project.id,
                     repo_ids: _.intersection(selectedRepoIDs, existingRepoIDs)
                 };
-                return db.saveOne({ table: 'project' }, project).then((project) => {
+                return db.saveOne({ table: 'project' }, projectAfter).then((project) => {
                     this.setState({ hasChanges: false }, () => {
                         this.setEditability(false);
                     });
