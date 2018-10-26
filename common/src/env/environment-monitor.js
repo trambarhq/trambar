@@ -170,8 +170,11 @@ class EnvironmentMonitor extends EventEmitter {
 
     handleMouseEvent = (evt) => {
         if (this.pointingDevice !== 'mouse') {
-            this.pointingDevice = 'mouse';
-            this.triggerEvent(new EnvironmentMonitorEvent('change', this));
+            // only Chrome supports sourceCapabilities
+            if (evt.sourceCapabilities && !evt.sourceCapabilities.firesTouchEvents) {
+                this.pointingDevice = 'mouse';
+                this.triggerEvent(new EnvironmentMonitorEvent('change', this));
+            }
         }
     }
 

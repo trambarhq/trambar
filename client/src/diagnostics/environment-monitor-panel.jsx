@@ -24,6 +24,7 @@ class EnvironmentMonitorPanel extends Component {
         let { envMonitor } = this.props;
         let {
             online,
+            os,
             connectionType,
             battery,
             screenWidth,
@@ -56,6 +57,7 @@ class EnvironmentMonitorPanel extends Component {
                     </DiagnosticsSection>
                     <DiagnosticsSection label="Browser">
                         <div>Type: {browser}</div>
+                        <div>OS: {os}</div>
                         <div>WebP support: {webpSupport ? 'yes' : 'no'}</div>
                     </DiagnosticsSection>
                     <DiagnosticsSection label="Battery">
