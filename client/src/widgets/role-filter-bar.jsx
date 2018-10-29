@@ -31,9 +31,9 @@ class RoleFilterBar extends AsyncComponent {
         let { database, route, env, settings } = this.props;
         let db = database.use({ by: this });
         let props = {
-            roles: null,
-            users: null,
-            project: null,
+            roles: undefined,
+            users: undefined,
+            project: undefined,
 
             settings,
             route,

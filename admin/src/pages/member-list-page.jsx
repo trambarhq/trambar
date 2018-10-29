@@ -41,9 +41,9 @@ class MemberListPage extends AsyncComponent {
         let { database, route, env, projectID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            project: null,
-            users: null,
-            roles: null,
+            project: undefined,
+            users: undefined,
+            roles: undefined,
 
             database,
             route,

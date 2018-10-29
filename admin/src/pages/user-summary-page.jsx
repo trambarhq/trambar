@@ -50,11 +50,11 @@ class UserSummaryPage extends AsyncComponent {
         let db = database.use({ schema: 'global', by: this });
         let creating = (userID === 'new');
         let props = {
-            system: null,
-            user: null,
-            roles: null,
-            project: null,
-            statistics: null,
+            system: undefined,
+            user: undefined,
+            roles: undefined,
+            project: undefined,
+            statistics: undefined,
 
             database,
             route,

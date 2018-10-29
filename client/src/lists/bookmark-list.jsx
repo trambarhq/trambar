@@ -51,15 +51,15 @@ class BookmarkList extends AsyncComponent {
         } = this.props;
         let db = database.use({ by: this });
         let props = {
-            stories: null,
-            draftStories: null,
-            authors: null,
-            senders: null,
-            reactions: null,
-            respondents: null,
-            recommendations: null,
-            recipients: null,
-            repos: null,
+            stories: undefined,
+            draftStories: undefined,
+            authors: undefined,
+            senders: undefined,
+            reactions: undefined,
+            respondents: undefined,
+            recommendations: undefined,
+            recipients: undefined,
+            repos: undefined,
 
             access,
             bookmarks,

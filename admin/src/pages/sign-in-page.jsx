@@ -29,8 +29,8 @@ class SignInPage extends AsyncComponent {
         let { database, route, env } = this.props;
         let db = database.use({ by: this });
         let props = {
-            system: null,
-            servers: null,
+            system: undefined,
+            servers: undefined,
 
             database,
             route,

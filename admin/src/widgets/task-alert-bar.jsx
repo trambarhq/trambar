@@ -44,7 +44,7 @@ class TaskAlertBar extends AsyncComponent {
         let { searchStartTime } = this.state;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            tasks: null,
+            tasks: undefined,
 
             route,
             env,

@@ -48,9 +48,9 @@ class ServerSummaryPage extends AsyncComponent {
         let db = database.use({ schema: 'global', by: this });
         let creating = (serverID === 'new');
         let props = {
-            system: null,
-            server: null,
-            roles: null,
+            system: undefined,
+            server: undefined,
+            roles: undefined,
 
             database,
             route,

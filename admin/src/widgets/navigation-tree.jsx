@@ -26,11 +26,11 @@ class NavigationTree extends AsyncComponent {
         let { database, route, env, disabled } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            project: null,
-            user: null,
-            role: null,
-            repo: null,
-            server: null,
+            project: undefined,
+            user: undefined,
+            role: undefined,
+            repo: undefined,
+            server: undefined,
 
             disabled,
             database,

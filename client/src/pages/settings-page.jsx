@@ -47,12 +47,12 @@ class SettingsPage extends AsyncComponent {
         let { database, route, payloads, env } = this.props;
         let db = database.use({ by: this });
         let props = {
-            currentUser: null,
-            currentProject: null,
-            projectLinks: null,
-            repos: null,
-            devices: null,
-            system: null,
+            currentUser: undefined,
+            currentProject: undefined,
+            projectLinks: undefined,
+            repos: undefined,
+            devices: undefined,
+            system: undefined,
 
             database,
             payloads,

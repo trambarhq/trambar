@@ -35,7 +35,7 @@ class SettingsPage extends AsyncComponent {
         let { database, route, env, payloads, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            system: null,
+            system: undefined,
 
             database,
             route,

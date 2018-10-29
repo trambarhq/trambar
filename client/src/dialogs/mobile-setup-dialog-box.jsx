@@ -50,9 +50,9 @@ class MobileSetupForm extends AsyncComponent {
         let { database, route, env, system, onClose } = this.props;
         let db = database.use({ by: this });
         let props = {
-            activationCode: null,
-            currentUser: null,
-            devices: null,
+            activationCode: undefined,
+            currentUser: undefined,
+            devices: undefined,
 
             system,
             route,

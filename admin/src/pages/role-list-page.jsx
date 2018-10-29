@@ -38,8 +38,8 @@ class RoleListPage extends AsyncComponent {
         let { database, route, env, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            roles: null,
-            users: null,
+            roles: undefined,
+            users: undefined,
 
             database,
             route,

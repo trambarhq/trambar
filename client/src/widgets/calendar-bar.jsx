@@ -30,7 +30,7 @@ class CalendarBar extends AsyncComponent {
         let { database, route, env, settings } = this.props;
         let db = database.use({ by: this });
         let props = {
-            dailyActivities: null,
+            dailyActivities: undefined,
 
             settings,
             route,

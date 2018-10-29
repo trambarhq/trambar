@@ -39,8 +39,8 @@ class NotificationsPage extends AsyncComponent {
         } = this.props;
         let db = database.use({ by: this });
         let props = {
-            currentUser: null,
-            notifications: null,
+            currentUser: undefined,
+            notifications: undefined,
 
             date,
             highlightNotificationID,

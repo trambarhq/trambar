@@ -53,11 +53,11 @@ class StartPage extends AsyncComponent {
         } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            currentUser: null,
-            system: this.sessionStartSystem || null,
-            servers: null,
-            projects: null,
-            projectLinks: null,
+            currentUser: undefined,
+            system: this.sessionStartSystem,
+            servers: undefined,
+            projects: undefined,
+            projectLinks: undefined,
 
             transitionOut,
             database,

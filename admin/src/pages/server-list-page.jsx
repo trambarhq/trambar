@@ -39,8 +39,8 @@ class ServerListPage extends AsyncComponent {
         let { database, route, env, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            servers: null,
-            users: null,
+            servers: undefined,
+            users: undefined,
 
             database,
             route,

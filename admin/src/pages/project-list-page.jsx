@@ -44,10 +44,10 @@ class ProjectListPage extends AsyncComponent {
         let { database, route, env, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            projects: null,
-            repos: null,
-            users: null,
-            statistics: null,
+            projects: undefined,
+            repos: undefined,
+            users: undefined,
+            statistics: undefined,
 
             database,
             route,

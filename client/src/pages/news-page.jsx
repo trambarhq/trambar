@@ -58,11 +58,11 @@ class NewsPage extends AsyncComponent {
             filtering = true;
         }
         let props = {
-            stories: null,
-            draftStories: null,
-            pendingStories: null,
-            project: null,
-            currentUser: null,
+            stories: undefined,
+            draftStories: undefined,
+            pendingStories: undefined,
+            project: undefined,
+            currentUser: undefined,
 
             acceptNewStory: !filtering,
             search,

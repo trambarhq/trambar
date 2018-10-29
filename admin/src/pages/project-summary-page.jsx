@@ -45,9 +45,9 @@ class ProjectSummaryPage extends AsyncComponent {
         let db = database.use({ schema: 'global', by: this });
         let creating = (projectID === 'new');
         let props = {
-            system: null,
-            project: null,
-            statistics: null,
+            system: undefined,
+            project: undefined,
+            statistics: undefined,
 
             database,
             route,

@@ -40,8 +40,8 @@ class NotificationList extends AsyncComponent {
         } = this.props;
         let db = database.use({ by: this });
         let props = {
-            users: null,
-            stories: null,
+            users: undefined,
+            stories: undefined,
 
             currentUser,
             notifications,

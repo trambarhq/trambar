@@ -40,9 +40,9 @@ class BookmarksPage extends AsyncComponent {
         } = this.props;
         let db = database.use({ by: this });
         let props = {
-            bookmarks: null,
-            currentUser: null,
-            project: null,
+            bookmarks: undefined,
+            currentUser: undefined,
+            project: undefined,
 
             highlightStoryID,
             scrollToStoryID,

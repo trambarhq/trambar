@@ -32,7 +32,7 @@ class UserSelectionList extends AsyncComponent {
         } = this.props;
         let db = database.use({ by: this });
         let props = {
-            users: null,
+            users: undefined,
 
             selection,
             disabled,

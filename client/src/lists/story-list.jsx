@@ -31,11 +31,10 @@ class StoryList extends AsyncComponent {
      * Render the component asynchronously
      *
      * @param  {Meanwhile} meanwhile
-     * @param  {Object} prevProps
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile, prevProps) {
+    renderAsync(meanwhile) {
         let {
             database,
             route,
@@ -56,12 +55,12 @@ class StoryList extends AsyncComponent {
         } = this.props;
         let db = database.use({ by: this });
         let props = {
-            authors: null,
-            reactions: null,
-            respondents: null,
-            recommendations: null,
-            recipients: null,
-            repos: null,
+            authors: undefined,
+            reactions: undefined,
+            respondents: undefined,
+            recommendations: undefined,
+            recipients: undefined,
+            repos: undefined,
 
             access,
             acceptNewStory,

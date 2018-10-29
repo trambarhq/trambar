@@ -22,7 +22,7 @@ import './people-page.scss';
 
 /**
  * Asynchronous component that retrieves data needed by the People or
- * Person page, depending on whether selectedUserID is given. 
+ * Person page, depending on whether selectedUserID is given.
  *
  * @extends AsyncComponent
  */
@@ -58,12 +58,12 @@ class PeoplePage extends AsyncComponent {
             }
         }
         let props = {
-            project: null,
-            members: null,
-            stories: null,
-            currentUser: null,
-            selectedUser: null,
-            visibleUsers: null,
+            project: undefined,
+            members: undefined,
+            stories: undefined,
+            currentUser: undefined,
+            selectedUser: undefined,
+            visibleUsers: undefined,
 
             date,
             roleIDs,

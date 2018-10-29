@@ -43,8 +43,8 @@ class UserListPage extends AsyncComponent {
         let { database, route, env, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            users: null,
-            projects: null,
+            users: undefined,
+            projects: undefined,
 
             database,
             route,

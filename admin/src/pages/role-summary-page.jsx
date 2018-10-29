@@ -42,9 +42,9 @@ class RoleSummaryPage extends AsyncComponent {
         let db = database.use({ schema: 'global', by: this });
         let creating = (roleID === 'new');
         let props = {
-            system: null,
-            role: null,
-            users: null,
+            system: undefined,
+            role: undefined,
+            users: undefined,
 
             database,
             route,

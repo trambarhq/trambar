@@ -71,7 +71,7 @@ class ImageAlbum extends AsyncComponent {
         let { database, env, payloads, image, show, purpose, onSelect, onCancel } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            pictures: null,
+            pictures: undefined,
 
             show,
             purpose,

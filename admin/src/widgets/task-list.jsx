@@ -31,7 +31,7 @@ class TaskList extends AsyncComponent {
         let { database, route, env, server } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            tasks: null,
+            tasks: undefined,
             server,
             route,
             env,

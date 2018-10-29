@@ -41,10 +41,10 @@ class RepoSummaryPage extends AsyncComponent {
         let { database, route, env, projectID, repoID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            system: null,
-            project: null,
-            repo: null,
-            statistics: null,
+            system: undefined,
+            project: undefined,
+            repo: undefined,
+            statistics: undefined,
 
             database,
             route,
