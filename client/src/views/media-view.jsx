@@ -31,7 +31,6 @@ class MediaView extends PureComponent {
         });
         this.state = {
             selectedIndex: 0,
-            renderingDialogBox: false,
             showingDialogBox: false,
             audioURL: null,
         };
@@ -133,10 +132,7 @@ class MediaView extends PureComponent {
      */
     renderDialogBox() {
         let { env, resources } = this.props;
-        let { showingDialogBox, renderingDialogBox, selectedIndex } = this.state;
-        if (!renderingDialogBox) {
-            return null;
-        }
+        let { showingDialogBox, selectedIndex } = this.state;
         if (selectedIndex > resources.length - 1) {
             selectedIndex = resources.length - 1;
         }
@@ -336,10 +332,7 @@ class MediaView extends PureComponent {
      * @param  {Event} evt
      */
     handleImageClick = (evt) => {
-        this.setState({
-            showingDialogBox: true,
-            renderingDialogBox: true,
-        });
+        this.setState({ showingDialogBox: true });
     }
 
     /**
@@ -349,10 +342,7 @@ class MediaView extends PureComponent {
      */
     handleVideoClick = (evt) => {
         this.pauseAudio();
-        this.setState({
-            showingDialogBox: true,
-            renderingDialogBox: true,
-        });
+        this.setState({ showingDialogBox: true });
     }
 
     /**
@@ -391,11 +381,7 @@ class MediaView extends PureComponent {
      * @param  {Event} evt
      */
     handleDialogClose = (evt) => {
-        this.setState({ showingDialogBox: false }, () => {
-            setTimeout(() => {
-                this.setState({ renderingDialogBox: false });
-            }, 1000);
-        });
+        this.setState({ showingDialogBox: false });
     }
 }
 

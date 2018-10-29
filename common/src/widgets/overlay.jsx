@@ -11,8 +11,22 @@ import './overlay.scss';
  */
 class OverlayProxy extends PureComponent {
     static displayName = 'OverlayProxy';
-
     static active = false;
+
+    constructor(props) {
+        super(props);
+        this.state = {};
+    }
+
+    static getDerivedStateFromProps(props, state) {
+        // save contents in state if show = true, so that we don't need them
+        // when show become false
+        let { show, children } = props;
+        if (show) {
+            return { contents: children };
+        }
+        return null;
+    }
 
     /**
      * Don't render anything
@@ -35,16 +49,18 @@ class OverlayProxy extends PureComponent {
      * Redraw the overlay element when props change
      *
      * @param  {Object} prevProps
+     * @param  {Object} prevState
      */
-    componentDidUpdate(prevProps) {
-        let { show, children } = this.props;
+    componentDidUpdate(prevProps, prevState) {
+        let { show } = this.props;
+        let { contents } = this.state;
         if (prevProps.show !== show) {
             if (show) {
                 this.show();
             } else {
                 this.hide();
             }
-        } else if (prevProps.children !== children) {
+        } else if (prevState.contents !== contents) {
             if (show) {
                 this.redraw(this.shown);
             }
@@ -62,25 +78,9 @@ class OverlayProxy extends PureComponent {
      * Insert overlay element into document body
      */
     show() {
-        if (!this.containerNode) {
-            let app = document.getElementById('application');
-            this.containerNode = document.createElement('DIV');
-            app.appendChild(this.containerNode);
-            app.addEventListener('keydown', this.handleKeyDown);
-
-            let el = document.activeElement;
-            if (el && el !== document.body) {
-                this.originalFocusElement = el;
-                el.blur();
-            } else {
-                this.originalFocusElement = null;
-            }
-        } else {
-            if (this.containerRemovalTimeout) {
-                clearTimeout(this.containerRemovalTimeout);
-                this.containerRemovalTimeout = 0;
-            }
-        }
+        // draw overlay as hidden initially, then change class to show to
+        // trigger CSS transition
+        this.createContainer();
         this.redraw(false);
         this.shown = false;
         setTimeout(() => {
@@ -88,6 +88,15 @@ class OverlayProxy extends PureComponent {
             this.redraw(this.shown);
         }, 10);
         OverlayProxy.active = true;
+
+        // remember element that current has keyboard focus
+        let el = document.activeElement;
+        if (el && el !== document.body) {
+            this.originalFocusElement = el;
+            el.blur();
+        } else {
+            this.originalFocusElement = null;
+        }
     }
 
     /**
@@ -96,12 +105,16 @@ class OverlayProxy extends PureComponent {
      * @param  {Boolean} shown
      */
     redraw(shown) {
-        let { children } = this.props;
+        if (!this.containerNode) {
+            return;
+        }
+        let { contents } = this.state;
         let props = {
             show: shown,
             onClick: this.handleClick,
             onTouchMove: this.handleTouchMove,
-            children
+            onTransitionEnd: this.handleTransitionEnd,
+            children: contents,
         };
         ReactDOM.render(<Overlay {...props} />, this.containerNode);
     }
@@ -110,27 +123,38 @@ class OverlayProxy extends PureComponent {
      * Transition out, then remove overlay element
      */
     hide() {
-        if (!this.containerNode) {
-            return;
-        }
-        if (!this.containerRemovalTimeout) {
-            this.containerRemovalTimeout = setTimeout(() => {
-                let app = document.getElementById('application');
-                ReactDOM.unmountComponentAtNode(this.containerNode);
-                app.removeChild(this.containerNode);
-                app.removeEventListener('keydown', this.handleKeyDown);
-                this.containerNode = null;
-                this.containerRemovalTimeout = 0;
-            }, 500);
-
-            if (this.originalFocusElement) {
-                this.originalFocusElement.focus();
-                this.originalFocusElement = null;
-            }
+        if (this.originalFocusElement) {
+            this.originalFocusElement.focus();
+            this.originalFocusElement = null;
         }
         this.shown = false;
         this.redraw(this.shown);
         OverlayProxy.active = false;
+    }
+
+    /**
+     * Create container node and attach keyboard handler.
+     */
+    createContainer() {
+        if (!this.containerNode) {
+            let app = document.getElementById('application');
+            this.containerNode = document.createElement('DIV');
+            app.appendChild(this.containerNode);
+            app.addEventListener('keydown', this.handleKeyDown);
+        }
+    }
+
+    /**
+     * Unmount contents and remove container node.
+     */
+    removeContainer() {
+        if (this.containerNode) {
+            let app = document.getElementById('application');
+            ReactDOM.unmountComponentAtNode(this.containerNode);
+            app.removeChild(this.containerNode);
+            app.removeEventListener('keydown', this.handleKeyDown);
+            this.containerNode = null;
+        }
     }
 
     /**
@@ -184,6 +208,21 @@ class OverlayProxy extends PureComponent {
         if (evt.keyCode === 27) {
             if (onBackgroundClick) {
                 onBackgroundClick(evt);
+            }
+        }
+    }
+
+    /**
+     * Remove the container once the dialog box has faded out
+     *
+     * @param  {TransitionEvent} evt
+     */
+    handleTransitionEnd = (evt) => {
+        let { show } = this.props;
+        if (evt.propertyName === 'opacity') {
+            if (!show) {
+                this.removeContainer();
+                this.setState({ contents: null });
             }
         }
     }

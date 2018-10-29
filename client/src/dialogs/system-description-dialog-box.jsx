@@ -99,7 +99,7 @@ if (process.env.NODE_ENV !== 'production') {
 
     SystemDescriptionDialogBox.propTypes = {
         show: PropTypes.bool,
-        system: PropTypes.object.isRequired,
+        system: PropTypes.object,
 
         env: PropTypes.instanceOf(Environment).isRequired,
 

@@ -108,11 +108,6 @@ class ImageCroppingDialogBox extends PureComponent {
         let { env, image, desiredWidth, desiredHeight } = this.props;
         let { clippingRect } = this.state;
         let url = ResourceUtils.getImageURL(image, { clip: null }, env);
-        if (isJSONEncoded(imageURL)) {
-            // a blob that hasn't been uploaded yet
-            let info = parseJSONEncodedURL(imageURL)
-            url = info.url;
-        }
         let props = {
             url,
             clippingRect,
@@ -239,15 +234,6 @@ class ImageCroppingDialogBox extends PureComponent {
     handleZoomOutClick = (evt) => {
         this.zoom(1 / 0.9);
     }
-}
-
-function isJSONEncoded(url) {
-    return _.startsWith(url, 'json:');
-}
-
-function parseJSONEncodedURL(url) {
-    let json = url.substr(5);
-    return JSON.parse(json);
 }
 
 export {

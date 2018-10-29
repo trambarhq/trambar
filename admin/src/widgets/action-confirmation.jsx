@@ -17,7 +17,6 @@ class ActionConfirmation extends PureComponent {
         super(props);
         this.state = {
             showing: false,
-            rendering: false,
             message: null,
             resolve: null,
             promise: null,
@@ -31,11 +30,8 @@ class ActionConfirmation extends PureComponent {
      */
     render() {
         let { env } = this.props;
-        let { showing, rendering, message } = this.state;
+        let { showing, message } = this.state;
         let { t } = env.locale;
-        if (!rendering) {
-            return null;
-        }
         let dialogProps = {
             show: showing,
             dangerous: true,
@@ -80,7 +76,6 @@ class ActionConfirmation extends PureComponent {
             promise = new Promise((f) => { resolve = f });
             this.setState({
                 showing: true,
-                rendering: true,
                 message,
                 resolve,
                 promise,
@@ -115,7 +110,6 @@ class ActionConfirmation extends PureComponent {
         let { resolve } = this.state;
         this.setState({
             showing: false,
-            rendering: false,
             resolve: null,
             promise: null,
         }, () => {
@@ -140,12 +134,6 @@ class ActionConfirmation extends PureComponent {
             if (resolve) {
                 resolve(false);
             }
-            setTimeout(() => {
-                let { showing } = this.state;
-                if (!showing) {
-                    this.setState({ rendering: false });
-                }
-            })
         });
     }
 }

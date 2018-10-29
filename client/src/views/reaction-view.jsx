@@ -36,8 +36,7 @@ class ReactionView extends PureComponent {
         this.state = {
             options: defaultOptions,
             selectedResourceURL: null,
-            showingReferencedMediaDialog: false,
-            renderingReferencedMediaDialog: false,
+            showingReferencedMedia: false,
         };
         this.updateOptions(this.state, this.props);
     }
@@ -347,14 +346,7 @@ class ReactionView extends PureComponent {
      */
     renderReferencedMediaDialog() {
         let { env } = this.props;
-        let {
-            showingReferencedMediaDialog,
-            renderingReferencedMediaDialog,
-            selectedResourceURL,
-        } = this.state;
-        if (!renderingReferencedMediaDialog) {
-            return null;
-        }
+        let { showingReferencedMedia, selectedResourceURL } = this.state;
         let selectedResource = this.resourcesReferenced[selectedResourceURL];
         let zoomableResources = getZoomableResources(this.resourcesReferenced);
         let zoomableIndex = _.indexOf(zoomableResources, selectedResource);
@@ -362,7 +354,7 @@ class ReactionView extends PureComponent {
             return null;
         }
         let dialogProps = {
-            show: showingReferencedMediaDialog,
+            show: showingReferencedMedia,
             resources: zoomableResources,
             selectedIndex: zoomableIndex,
             env,
@@ -452,11 +444,7 @@ class ReactionView extends PureComponent {
             let res = this.resourcesReferenced[src];
             if (res) {
                 if (res.type === 'image' || res.type === 'video') {
-                    this.setState({
-                        selectedResourceURL: src,
-                        renderingReferencedMediaDialog: true,
-                        showingReferencedMediaDialog: true,
-                    });
+                    this.setState({ selectedResourceURL: src, showingReferencedMedia: true });
                 } else if (res.type === 'website') {
                     window.open(res.url);
                 } else if (res.type === 'audio') {
@@ -481,17 +469,7 @@ class ReactionView extends PureComponent {
      * @param  {Object} evt
      */
     handleReferencedMediaDialogClose = (evt) => {
-        this.setState({ showingReferencedMediaDialog: false }, () => {
-            setTimeout(() => {
-                let { showingReferencedMediaDialog } = this.state;
-                if (!showingReferencedMediaDialog) {
-                    this.setState({
-                        renderingReferencedMediaDialog: false,
-                        selectedResourceURL: null
-                    });
-                }
-            }, 500);
-        })
+        this.setState({ showingReferencedMedia: false });
     }
 
     /**

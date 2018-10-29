@@ -19,8 +19,7 @@ class UserViewOptions extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            showingPhoneDialog: false,
-            renderingPhoneDialog: false,
+            showingPhoneNumber: false,
         };
     }
 
@@ -187,13 +186,10 @@ class UserViewOptions extends PureComponent {
      */
     renderPhoneDialog() {
         let { env, user } = this.props;
-        let { showingPhoneDialog, renderingPhoneDialog } = this.state;
-        if (!renderingPhoneDialog) {
-            return null;
-        }
+        let { showingPhoneNumber } = this.state;
         let { phone } = user.details;
         let dialogProps = {
-            show: showingPhoneDialog,
+            show: showingPhoneNumber,
             number: phone,
             env,
             onClose: this.handlePhoneDialogClose,
@@ -240,10 +236,7 @@ class UserViewOptions extends PureComponent {
      */
     handlePhoneClick = (evt) => {
         evt.preventDefault();
-        this.setState({
-            renderingPhoneDialog: true,
-            showingPhoneDialog: true,
-        });
+        this.setState({ showingPhoneNumber: true });
     }
 
     /**
@@ -252,15 +245,8 @@ class UserViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handlePhoneDialogClose = (evt) => {
-        this.setState({ showingPhoneDialog: false }, () => {
-            this.triggerCompleteEvent();
-            setTimeout(() => {
-                let { showingPhoneDialog } = this.state;
-                if (!showingPhoneDialog) {
-                    this.setState({ renderingPhoneDialog: false });
-                }
-            }, 500);
-        });
+        this.setState({ showingPhoneNumber: false });
+        this.triggerCompleteEvent();
     }
 
     /**

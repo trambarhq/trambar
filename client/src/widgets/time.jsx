@@ -54,7 +54,7 @@ class Time extends PureComponent {
             } else {
                 for (let day = 2; day <= 10; day++) {
                     if (time >= env.getRelativeDate(-day, 'day')) {
-                        text = t('time-$day-ago', day);
+                        text = t('time-$days-ago', day);
                         break;
                     }
                 }

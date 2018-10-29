@@ -9,17 +9,35 @@ import Overlay from 'widgets/overlay';
 import PushButton from 'widgets/push-button';
 import QRCode from 'widgets/qr-code';
 
-import StartPage from 'pages/start-page';
-
 import './mobile-setup-dialog-box.scss';
+
+class MobileSetupDialogBox extends PureComponent {
+    static displayName = 'MobileSetupDialogBox';
+
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
+    render() {
+        let { show, onClose } = this.props;
+        let overlayProps = { show, onBackgroundClick: onClose };
+        let formProps = _.omit(this.props, 'show');
+        return (
+            <Overlay {...overlayProps}>
+                <MobileSetupForm {...formProps} />
+            </Overlay>
+        );
+    }
+}
 
 /**
  * Dialog box that displays a QR-code for mobile activation.
  *
  * @extends AsyncComponent
  */
-class MobileSetupDialogBox extends AsyncComponent {
-    static displayName = 'MobileSetupDialogBox';
+class MobileSetupForm extends AsyncComponent {
+    static displayName = 'MobileSetupForm';
 
     /**
      * Render the component asynchronously
@@ -29,20 +47,19 @@ class MobileSetupDialogBox extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env, system, show, onClose } = this.props;
+        let { database, route, env, system, onClose } = this.props;
         let db = database.use({ by: this });
         let props = {
             activationCode: null,
             currentUser: null,
             devices: null,
 
-            show,
             system,
             route,
             env,
             onClose,
         };
-        meanwhile.show(<MobileSetupDialogBoxSync {...props} />);
+        meanwhile.show(<MobileSetupFormSync {...props} />);
         return db.start().then((currentUserID) => {
             return UserFinder.findUser(db, currentUserID).then((user) => {
                 props.currentUser = user;
@@ -51,12 +68,13 @@ class MobileSetupDialogBox extends AsyncComponent {
             return db.beginMobileSession('client').then((code) => {
                 props.activationCode = code;
             });
+            meanwhile.show(<MobileSetupFormSync {...props} />);
         }).then(() => {
             return DeviceFinder.findUserDevices(db, props.currentUser).then((devices) => {
                 props.devices = devices;
             });
         }).then(() => {
-            return <MobileSetupDialogBoxSync {...props} />;
+            return <MobileSetupFormSync {...props} />;
         });
     }
 
@@ -70,8 +88,8 @@ class MobileSetupDialogBox extends AsyncComponent {
     }
 }
 
-class MobileSetupDialogBoxSync extends PureComponent {
-    static displayName = 'MobileSetupDialogBox.Sync';
+class MobileSetupFormSync extends PureComponent {
+    static displayName = 'MobileSetupFormSync.Sync';
 
     /**
      * Check for change in props.devices
@@ -100,25 +118,7 @@ class MobileSetupDialogBoxSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { show, onClose } = this.props;
-        let overlayProps = { show, onBackgroundClick: onClose };
-        return (
-            <Overlay {...overlayProps}>
-                <div className="mobile-setup-dialog-box">
-                    {this.renderContents()}
-                    {this.renderButtons()}
-                </div>
-            </Overlay>
-        );
-    }
-
-    /**
-     * Render QR-code and activation code
-     *
-     * @return {ReactElement}
-     */
-    renderContents() {
-        let { route, env, system, activationCode } = this.props;
+        let { route, env, system, activationCode, onClose } = this.props;
         let { t } = env.locale;
         let { address, schema } = route.context;
         let systemAddress = _.get(system, 'settings.address');
@@ -132,37 +132,27 @@ class MobileSetupDialogBoxSync extends PureComponent {
             universalLink = UniversalLink.form(url);
             console.log(universalLink);
         }
-        return (
-            <div className="contents">
-                <QRCode text={universalLink} scale={6} />
-                <div className="info">
-                    <div className="label">{t('mobile-setup-address')}</div>
-                    <div className="value">{address}</div>
-                    <div className="label">{t('mobile-setup-code')}</div>
-                    <div className="value">{insertSpacers(activationCode)}</div>
-                    <div className="label">{t('mobile-setup-project')}</div>
-                    <div className="value">{schema}</div>
-                </div>
-            </div>
-        );
-    }
-
-    /**
-     * Render buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, onClose } = this.props;
-        let { t } = env.locale;
         let closeButtonProps = {
             label: t('mobile-setup-close'),
             emphasized: true,
             onClick: onClose,
         };
         return (
-            <div className="buttons">
-                <PushButton {...closeButtonProps} />
+            <div className="mobile-setup-dialog-box">
+                <div className="contents">
+                    <QRCode text={universalLink} scale={6} />
+                    <div className="info">
+                        <div className="label">{t('mobile-setup-address')}</div>
+                        <div className="value">{address}</div>
+                        <div className="label">{t('mobile-setup-code')}</div>
+                        <div className="value">{insertSpacers(activationCode)}</div>
+                        <div className="label">{t('mobile-setup-project')}</div>
+                        <div className="value">{schema}</div>
+                    </div>
+                </div>
+                <div className="buttons">
+                    <PushButton {...closeButtonProps} />
+                </div>
             </div>
         );
     }
@@ -179,7 +169,6 @@ function insertSpacers(s) {
 export {
     MobileSetupDialogBox as default,
     MobileSetupDialogBox,
-    MobileSetupDialogBoxSync,
 };
 
 import Database from 'data/database';
@@ -197,15 +186,6 @@ if (process.env.NODE_ENV !== 'production') {
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
 
-        onClose: PropTypes.func,
-    };
-    MobileSetupDialogBoxSync.propTypes = {
-        show: PropTypes.bool,
-        activationCode: PropTypes.string,
-        devices: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
         onClose: PropTypes.func,
     };
 }

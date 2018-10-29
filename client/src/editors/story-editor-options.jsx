@@ -22,9 +22,7 @@ class StoryEditorOptions extends PureComponent {
         super(props);
         this.state = {
             selectingRecipients: false,
-            renderingRecipientDialogBox: false,
             enteringIssueDetails: false,
-            renderingIssueDialogBox: false,
         };
     }
 
@@ -128,10 +126,7 @@ class StoryEditorOptions extends PureComponent {
      */
     renderRecipientDialogBox() {
         let { database, route, env, options } = this.props;
-        let { renderingRecipientDialogBox, selectingRecipients } = this.state;
-        if (!renderingRecipientDialogBox) {
-            return null;
-        }
+        let { selectingRecipients } = this.state;
         let props = {
             show: selectingRecipients,
             selection: options.bookmarkRecipients,
@@ -153,10 +148,7 @@ class StoryEditorOptions extends PureComponent {
      */
     renderIssueDialogBox() {
         let { env, options, story, repos } = this.props;
-        let { renderingIssueDialogBox, enteringIssueDetails } = this.state;
-        if (!renderingIssueDialogBox) {
-            return null;
-        }
+        let { enteringIssueDetails } = this.state;
         let props = {
             show: enteringIssueDetails,
             allowDeletion: false,
@@ -207,10 +199,7 @@ class StoryEditorOptions extends PureComponent {
     openSelectionDialogBox(evt) {
         let { selectingRecipients } = this.state;
         if (!selectingRecipients) {
-            this.setState({
-                selectingRecipients: true,
-                renderingRecipientDialogBox: true
-            });
+            this.setState({ selectingRecipients: true });
         }
     }
 
@@ -221,12 +210,6 @@ class StoryEditorOptions extends PureComponent {
         let { selectingRecipients } = this.state;
         if (selectingRecipients) {
             this.setState({ selectingRecipients: false });
-            setTimeout(() => {
-                let { selectingRecipients } = this.state;
-                if (!selectingRecipients) {
-                    this.setState({ renderingRecipientDialogBox: false });
-                }
-            }, 500);
         }
     }
 
@@ -238,10 +221,7 @@ class StoryEditorOptions extends PureComponent {
     openIssueDialogBox(evt) {
         let { enteringIssueDetails } = this.state;
         if (!enteringIssueDetails) {
-            this.setState({
-                enteringIssueDetails: true,
-                renderingIssueDialogBox: true
-            });
+            this.setState({ enteringIssueDetails: true });
         }
     }
 
@@ -252,12 +232,6 @@ class StoryEditorOptions extends PureComponent {
         let { enteringIssueDetails } = this.state;
         if (enteringIssueDetails) {
             this.setState({ enteringIssueDetails: false });
-            setTimeout(() => {
-                let { enteringIssueDetails } = this.state;
-                if (!enteringIssueDetails) {
-                    this.setState({ renderingIssueDialogBox: false });
-                }
-            }, 500);
         }
     }
 

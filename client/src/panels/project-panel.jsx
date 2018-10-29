@@ -24,8 +24,12 @@ class ProjectPanel extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            renderingDialog: null,
-            showingDialog: false,
+            showingSystemDescription: false,
+            showingProjectDescription: false,
+            activatingMobileDevice: false,
+            notifyingNewMembership: false,
+            confirmingSignOut: false,
+            managingProjects: false,
         };
     }
 
@@ -37,17 +41,14 @@ class ProjectPanel extends PureComponent {
      */
     componentWillReceiveProps(nextProps) {
         let { currentProject, currentUser } = this.props;
-        let { renderingDialog } = this.state;
+        let { notifyingNewMembership } = this.state;
         if (nextProps.currentProject !== currentProject && currentProject) {
             if (nextProps.currentProject && nextProps.currentProject.id === currentProject.id) {
                 let isMemberBefore = UserUtils.isMember(currentUser, currentProject);
                 let isMemberAfter = UserUtils.isMember(currentUser, nextProps.currentProject);
                 if (!isMemberBefore && isMemberAfter) {
-                    if (!renderingDialog) {
-                        this.setState({
-                            renderingDialog: 'membership',
-                            showingDialog: true,
-                        });
+                    if (!notifyingNewMembership) {
+                        this.setState({ notifyingNewMembership: true });
                     }
                 }
             }
@@ -220,15 +221,12 @@ class ProjectPanel extends PureComponent {
      */
     renderSystemDescriptionDialogBox() {
         let { env, system } = this.props;
-        let { showingDialog, renderingDialog } = this.state;
-        if (renderingDialog !== 'system-description') {
-            return null;
-        }
+        let { showingSystemDescription } = this.state;
         let props = {
-            show: showingDialog,
+            show: showingSystemDescription,
             system,
             env,
-            onClose: this.handleDialogClose,
+            onClose: this.handleSystemDescriptionDialogClose,
         };
         return <SystemDescriptionDialogBox {...props} />;
     }
@@ -240,15 +238,12 @@ class ProjectPanel extends PureComponent {
      */
     renderProjectDescriptionDialogBox() {
         let { env, currentProject } = this.props;
-        let { showingDialog, renderingDialog } = this.state;
-        if (renderingDialog !== 'project-description') {
-            return null;
-        }
+        let { showingProjectDescription } = this.state;
         let props = {
-            show: showingDialog,
+            show: showingProjectDescription,
             project: currentProject,
             env,
-            onClose: this.handleDialogClose,
+            onClose: this.handleProjectDescriptionDialogClose,
         };
         return <ProjectDescriptionDialogBox {...props} />;
     }
@@ -260,17 +255,14 @@ class ProjectPanel extends PureComponent {
      */
     renderMobileSetupDialogBox() {
         let { database, route, env, system } = this.props;
-        let { showingDialog, renderingDialog } = this.state;
-        if (renderingDialog !== 'mobile-setup') {
-            return null;
-        }
+        let { activatingMobileDevice } = this.state;
         let props = {
-            show: showingDialog,
+            show: activatingMobileDevice,
             system,
             database,
             route,
             env,
-            onClose: this.handleDialogClose,
+            onClose: this.handleMobileSetupDialogClose,
         };
         return <MobileSetupDialogBox {...props} />;
     }
@@ -282,13 +274,10 @@ class ProjectPanel extends PureComponent {
      */
     renderSignOutDialogBox() {
         let { env } = this.props;
-        let { showingDialog, renderingDialog } = this.state;
+        let { confirmingSignOut } = this.state;
         let { t } = env.locale;
-        if (renderingDialog !== 'sign-out') {
-            return null;
-        }
         let props = {
-            show: showingDialog,
+            show: confirmingSignOut,
             env,
             onClose: this.handleDialogClose,
             onConfirm: this.handleSignOutConfirm,
@@ -307,18 +296,15 @@ class ProjectPanel extends PureComponent {
      */
     renderMembershipDialogBox() {
         let { env, currentUser } = this.props;
-        let { showingDialog, renderingDialog } = this.state;
+        let { notifyingNewMembership } = this.state;
         let { t, g } = env.locale;
-        if (renderingDialog !== 'membership') {
-            return null;
-        }
         let name = UserUtils.getDisplayName(currentUser, env);
         let gender = UserUtils.getGender(currentUser);
         g(name, gender);
         let props = {
-            show: showingDialog,
+            show: notifyingNewMembership,
             env,
-            onConfirm: this.handleDialogClose,
+            onConfirm: this.handleMembershipDialogClose,
         };
         return (
             <ConfirmationDialogBox {...props}>
@@ -334,17 +320,14 @@ class ProjectPanel extends PureComponent {
      */
     renderProjectManagementDialogBox() {
         let { route, env, projectLinks } = this.props;
-        let { showingDialog, renderingDialog } = this.state;
-        if (renderingDialog !== 'management') {
-            return null;
-        }
+        let { managingProjects } = this.state;
         let props = {
-            show: showingDialog,
+            show: managingProjects,
             projectLinks,
             route,
             env,
             onDelete: this.handleProjectDelete,
-            onCancel: this.handleDialogClose,
+            onCancel: this.handleProjectManagementDialogClose,
         };
         return <ProjectManagementDialogBox {...props} />
     }
@@ -381,10 +364,7 @@ class ProjectPanel extends PureComponent {
      * @param  {Event} evt
      */
     handleManageClick = (evt) => {
-        this.setState({
-            renderingDialog: 'management',
-            showingDialog: true,
-        });
+        this.setState({ managingProjects: true });
     }
 
     /**
@@ -393,10 +373,7 @@ class ProjectPanel extends PureComponent {
      * @param  {Event} evt
      */
     handleSystemDescriptionClick = (evt) => {
-        this.setState({
-            renderingDialog: 'system-description',
-            showingDialog: true,
-        });
+        this.setState({ showingSystemDescription: true });
     }
 
     /**
@@ -405,10 +382,7 @@ class ProjectPanel extends PureComponent {
      * @param  {Event} evt
      */
     handleProjectDescriptionClick = (evt) => {
-        this.setState({
-            renderingDialog: 'project-description',
-            showingDialog: true,
-        });
+        this.setState({ showingProjectDescription: true });
     }
 
     /**
@@ -417,10 +391,7 @@ class ProjectPanel extends PureComponent {
      * @param  {Event} evt
      */
     handleMobileSetupClick = (evt) => {
-        this.setState({
-            renderingDialog: 'mobile-setup',
-            showingDialog: true,
-        });
+        this.setState({ activatingMobileDevice: true });
     }
 
     /**
@@ -465,23 +436,61 @@ class ProjectPanel extends PureComponent {
      * @param  {Event} evt
      */
     handleSignOutClick = (evt) => {
-        this.setState({
-            renderingDialog: 'sign-out',
-            showingDialog: true,
-        });
+        this.setState({ confirmingSignOut: true });
     }
 
     /**
-     * Called when user closes a dialog box
+     * Called when user closes the system description dialog box
      *
      * @param  {Object} evt
      */
-    handleDialogClose = (evt) => {
-        this.setState({ showingDialog: false }, () => {
-            setTimeout(() => {
-                this.setState({ renderingDialog: null });
-            }, 500);
-        });
+    handleSystemDescriptionDialogClose = (evt) => {
+        this.setState({ showingSystemDescription: false });
+    }
+
+    /**
+     * Called when user closes the project description dialog box
+     *
+     * @param  {Object} evt
+     */
+    handleProjectDescriptionDialogClose = (evt) => {
+        this.setState({ showingProjectDescription: false });
+    }
+
+    /**
+     * Called when user closes the mobile set-up dialog box
+     *
+     * @param  {Object} evt
+     */
+    handleMobileSetupDialogClose = (evt) => {
+        this.setState({ activatingMobileDevice: false });
+    }
+
+    /**
+     * Called when user closes the membership notification dialog box
+     *
+     * @param  {Object} evt
+     */
+    handleMembershipDialogClose = (evt) => {
+        this.setState({ notifyingNewMembership: false });
+    }
+
+    /**
+     * Called when user closes the membership notification dialog box
+     *
+     * @param  {Object} evt
+     */
+    handleConfirmationDialogClose = (evt) => {
+        this.setState({ confirmingSignOut: false });
+    }
+
+    /**
+     * Called when user closes the project management dialog box
+     *
+     * @param  {Object} evt
+     */
+    handleProjectManagementDialogClose = (evt) => {
+        this.setState({ managingProjects: false });
     }
 
     /**
@@ -490,7 +499,7 @@ class ProjectPanel extends PureComponent {
      * @param  {Object} evt
      */
     handleProjectDelete = (evt) => {
-        this.handleDialogClose();
+        this.handleProjectManagementDialogClose();
 
         // redirect to start page if the current project was removed
         let { database, route } = this.props;

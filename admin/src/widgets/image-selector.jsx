@@ -23,10 +23,8 @@ class ImageSelector extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            showingCroppingDialogBox: false,
-            renderingCroppingDialogBox: false,
-            showingAlbumDialogBox: false,
-            renderingAlbumDialogBox: false,
+            cropping: false,
+            showingAlbum: false,
         };
     }
 
@@ -104,7 +102,8 @@ class ImageSelector extends PureComponent {
                     {this.renderImage()}
                     {this.renderOptions()}
                 </div>
-                {this.renderDialogBox()}
+                {this.renderCroppingDialogBox()}
+                {this.renderAlbumDialogBox()}
             </div>
         );
     }
@@ -248,46 +247,45 @@ class ImageSelector extends PureComponent {
         );
     }
 
+    renderCroppingDialogBox() {
+        let { env, desiredWidth, desiredHeight } = this.props;
+        let { cropping } = this.state;
+        let image = this.getImage();
+        if (!(image && desiredWidth && desiredHeight)) {
+            return null;
+        }
+        let dialogBoxProps = {
+            show: cropping,
+            image,
+            desiredWidth,
+            desiredHeight,
+            env,
+            onSelect: this.handleImageSectionSelect,
+            onCancel: this.handleCroppingDialogCancel,
+        };
+        return <ImageCroppingDialogBox {...dialogBoxProps} />;
+    }
+
     /**
      * Render cropping or album dialog box if one of them is active
      *
      * @return {ReactElement|null}
      */
-    renderDialogBox() {
-        let { database, env, payloads, purpose, desiredWidth, desiredHeight } = this.props;
-        let {
-            showingAlbumDialogBox,
-            showingCroppingDialogBox,
-            renderingAlbumDialogBox,
-            renderingCroppingDialogBox,
-        } = this.state;
+    renderAlbumDialogBox() {
+        let { database, env, payloads, purpose } = this.props;
+        let { showingAlbum } = this.state;
         let image = this.getImage();
-        if (renderingAlbumDialogBox) {
-            let dialogBoxProps = {
-                show: showingAlbumDialogBox,
-                purpose,
-                image,
-                database,
-                env,
-                payloads,
-                onSelect: this.handleImageSelect,
-                onCancel: this.handleDialogCancel,
-            };
-            return <ImageAlbumDialogBox {...dialogBoxProps} />;
-        } else if (renderingCroppingDialogBox) {
-            let dialogBoxProps = {
-                show: showingCroppingDialogBox,
-                image,
-                desiredWidth,
-                desiredHeight,
-                env,
-                onSelect: this.handleImageSectionSelect,
-                onCancel: this.handleDialogCancel,
-            };
-            return <ImageCroppingDialogBox {...dialogBoxProps} />;
-        } else {
-            return null;
-        }
+        let dialogBoxProps = {
+            show: showingAlbum,
+            purpose,
+            image,
+            database,
+            env,
+            payloads,
+            onSelect: this.handleImageSelect,
+            onCancel: this.handleAlbumDialogCancel,
+        };
+        return <ImageAlbumDialogBox {...dialogBoxProps} />;
     }
 
     /**
@@ -296,10 +294,7 @@ class ImageSelector extends PureComponent {
      * @param  {Event} evt
      */
     handleChooseClick = (evt) => {
-        this.setState({
-            showingAlbumDialogBox: true,
-            renderingAlbumDialogBox: true,
-        });
+        this.setState({ showingAlbum: true });
     }
 
     /**
@@ -308,10 +303,7 @@ class ImageSelector extends PureComponent {
      * @param  {Event} evt
      */
     handleCropClick = (evt) => {
-        this.setState({
-            showingCroppingDialogBox: true,
-            renderingCroppingDialogBox: true,
-        });
+        this.setState({ cropping: true });
     }
 
     /**
@@ -323,7 +315,7 @@ class ImageSelector extends PureComponent {
         let image = _.clone(evt.image);
         image.type = 'image';
         this.setImage(image);
-        this.handleDialogCancel();
+        this.handleAlbumDialogCancel();
     }
 
     /**
@@ -335,7 +327,7 @@ class ImageSelector extends PureComponent {
         let image = _.clone(this.getImage());
         image.clip = evt.clippingRect;
         this.setImage(image);
-        this.handleDialogCancel();
+        this.handleCroppingDialogCancel();
     }
 
     /**
@@ -366,24 +358,17 @@ class ImageSelector extends PureComponent {
      *
      * @param  {Object} evt
      */
-    handleDialogCancel = (evt) => {
-        let { showingAlbumDialogBox, showingCroppingDialogBox } = this.state;
-        if (showingAlbumDialogBox) {
-            this.setState({ showingAlbumDialogBox: false });
-            setTimeout(() => {
-                if (!showingAlbumDialogBox) {
-                    this.setState({ renderingAlbumDialogBox: false });
-                }
-            }, 500);
-        }
-        if (showingCroppingDialogBox) {
-            this.setState({ showingCroppingDialogBox: false });
-            setTimeout(() => {
-                if (!showingCroppingDialogBox) {
-                    this.setState({ renderingCroppingDialogBox: false });
-                }
-            }, 500);
-        }
+    handleAlbumDialogCancel = (evt) => {
+        this.setState({ showingAlbum: false });
+    }
+
+    /**
+     * Called when user clicks cancel or outside a dialog box
+     *
+     * @param  {Object} evt
+     */
+    handleCroppingDialogCancel = (evt) => {
+        this.setState({ cropping: false });
     }
 
     /**

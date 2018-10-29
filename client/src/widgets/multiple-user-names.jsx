@@ -25,7 +25,6 @@ class MultipleUserNames extends PureComponent {
         this.state = {
             showingPopUp: false,
             showingDialogBox: false,
-            renderingDialogBox: false,
         };
     }
 
@@ -80,10 +79,7 @@ class MultipleUserNames extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDialogBox() {
-        let { showingDialogBox, renderingDialogBox } = this.state;
-        if (!renderingDialogBox) {
-            return null;
-        }
+        let { showingDialogBox } = this.state;
         let overlayProps = {
             show: showingDialogBox,
             onBackgroundClick: this.handleDialogBoxClose,
@@ -177,11 +173,7 @@ class MultipleUserNames extends PureComponent {
      * @param  {Event} evt
      */
     handleClick = (evt) => {
-        this.setState({
-            showingPopUp: false,
-            showingDialogBox: true,
-            renderingDialogBox: true
-        });
+        this.setState({ showingPopUp: false, showingDialogBox: true });
     }
 
     /**
@@ -190,11 +182,7 @@ class MultipleUserNames extends PureComponent {
      * @param  {Event} evt
      */
     handleDialogBoxClose = (evt) => {
-        this.setState({ showingDialogBox: false }, () => {
-            setTimeout(() => {
-                this.setState({ renderingDialogBox: false });
-            }, 1000)
-        });
+        this.setState({ showingDialogBox: false });
     }
 }
 

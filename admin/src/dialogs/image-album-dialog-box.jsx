@@ -13,20 +13,52 @@ import ResourceView from 'widgets/resource-view';
 
 import './image-album-dialog-box.scss';
 
+
+class ImageAlbumDialogBox extends PureComponent {
+    static displayName = 'ImageAlbumDialogBox';
+
+    /**
+     * Render the component
+     *
+     * @return {ReactElement}
+     */
+    render() {
+        let { show } = this.props;
+        let overlayProps = {
+            show,
+            onBackgroundClick: this.handleBackgroundClick,
+        };
+        let albumProps = _.omit(this.props, 'show');
+        return (
+            <Overlay {...overlayProps}>
+                <ImageAlbum {...albumProps} />
+            </Overlay>
+        );
+    }
+
+    /**
+     * Called when user clicks outside the dialog box
+     *
+     * @param  {Event} evt
+     */
+    handleBackgroundClick = (evt) => {
+        let { onCancel } = this.props;
+        if (onCancel) {
+            onCancel({
+                type: 'cancel',
+                target: this,
+            });
+        }
+    }
+}
+
 /**
- * Asynchronous component that loads data needed by the image album dialog box.
+ * Asynchronous component that loads data needed by the image album
  *
  * @extends AsyncComponent
  */
-class ImageAlbumDialogBox extends AsyncComponent {
-    static displayName = 'ImageAlbumDialogBox';
-
-    constructor(props) {
-        super(props);
-        this.state = {
-            shown: false
-        };
-    }
+class ImageAlbum extends AsyncComponent {
+    static displayName = 'ImageAlbum';
 
     /**
      * Render the component asynchronously
@@ -37,7 +69,6 @@ class ImageAlbumDialogBox extends AsyncComponent {
      */
     renderAsync(meanwhile) {
         let { database, env, payloads, image, show, purpose, onSelect, onCancel } = this.props;
-        let { shown } = this.state;
         let db = database.use({ schema: 'global', by: this });
         let props = {
             pictures: null,
@@ -51,30 +82,14 @@ class ImageAlbumDialogBox extends AsyncComponent {
             onSelect,
             onCancel,
         };
-        // TODO: give dialog box minimal dimension
-        //meanwhile.show(<ImageAlbumDialogBoxSync {...props} />);
+        meanwhile.show(<ImageAlbumSync {...props} />);
         return db.start().then((userID) => {
-            // load pictures for given purpose if we're showing the dialog box
-            if (show || shown) {
-                return PictureFinder.findPictures(db, purpose).then((pictures) => {
-                    props.pictures = pictures;
-                });
-            }
+            return PictureFinder.findPictures(db, purpose).then((pictures) => {
+                props.pictures = pictures;
+            });
         }).then(() => {
-            return <ImageAlbumDialogBoxSync {...props} />
+            return <ImageAlbumSync {...props} />
         });
-    }
-
-    /**
-     * Remember whether dialog box was shown
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    componentDidUpdate(prevProps, prevState) {
-        if (prevProps.show) {
-            this.setState({ shown: true });
-        }
     }
 }
 
@@ -83,8 +98,8 @@ class ImageAlbumDialogBox extends AsyncComponent {
  *
  * @extends PureComponent
  */
-class ImageAlbumDialogBoxSync extends PureComponent {
-    static displayName = 'ImageAlbumDialogBox.Sync';
+class ImageAlbumSync extends PureComponent {
+    static displayName = 'ImageAlbum.Sync';
 
     constructor(props) {
         super(props);
@@ -102,23 +117,16 @@ class ImageAlbumDialogBoxSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { show } = this.props;
-        let overlayProps = {
-            show,
-            onBackgroundClick: this.handleBackgroundClick,
-        };
         let dialogProps = {
             className: 'image-album-dialog-box',
             onDragEnter: this.handleDragEnter,
         };
         return (
-            <Overlay {...overlayProps}>
-                <div  {...dialogProps}>
-                    {this.renderPictures()}
-                    {this.renderButtons()}
-                    {this.renderDropIndicator()}
-                </div>
-            </Overlay>
+            <div  {...dialogProps}>
+                {this.renderPictures()}
+                {this.renderButtons()}
+                {this.renderDropIndicator()}
+            </div>
         );
     }
 
@@ -419,21 +427,6 @@ class ImageAlbumDialogBoxSync extends PureComponent {
     }
 
     /**
-     * Called when user clicks outside the dialog box
-     *
-     * @param  {Event} evt
-     */
-    handleBackgroundClick = (evt) => {
-        let { onCancel } = this.props;
-        if (onCancel) {
-            onCancel({
-                type: 'cancel',
-                target: this,
-            });
-        }
-    }
-
-    /**
      * Called after user has selected some files
      *
      * @param  {Event} evt
@@ -507,7 +500,6 @@ let sortPictures = memoizeWeak(null, function(pictures) {
 export {
     ImageAlbumDialogBox as default,
     ImageAlbumDialogBox,
-    ImageAlbumDialogBoxSync,
 };
 
 import Database from 'data/database';
@@ -518,18 +510,6 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     ImageAlbumDialogBox.propTypes = {
-        show: PropTypes.bool,
-        purpose: PropTypes.string.isRequired,
-        image: PropTypes.object,
-        database: PropTypes.instanceOf(Database).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        onSelect: PropTypes.func,
-        onCancel: PropTypes.func,
-    };
-    ImageAlbumDialogBoxSync.propTypes = {
-        pictures: PropTypes.arrayOf(PropTypes.object),
-
         show: PropTypes.bool,
         purpose: PropTypes.string.isRequired,
         image: PropTypes.object,

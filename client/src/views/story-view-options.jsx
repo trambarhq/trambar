@@ -23,9 +23,7 @@ class StoryViewOptions extends PureComponent {
         super(props);
         this.state = {
             selectingRecipients: false,
-            renderingRecipientDialogBox: false,
             enteringIssueDetails: false,
-            renderingIssueDialogBox: false,
         };
     }
 
@@ -134,10 +132,7 @@ class StoryViewOptions extends PureComponent {
      */
     renderRecipientDialogBox() {
         let { database, route, env, options } = this.props;
-        let { selectingRecipients, renderingRecipientDialogBox } = this.state;
-        if (!renderingRecipientDialogBox) {
-            return null;
-        }
+        let { selectingRecipients } = this.state;
         let props = {
             show: selectingRecipients,
             selection: options.bookmarkRecipients,
@@ -157,10 +152,7 @@ class StoryViewOptions extends PureComponent {
      */
     renderIssueDialogBox() {
         let { env, story, reactions, repos, options } = this.props;
-        let { enteringIssueDetails, renderingIssueDialogBox } = this.state;
-        if (!renderingIssueDialogBox) {
-            return null;
-        }
+        let { enteringIssueDetails } = this.state;
         // don't allow issue to be deleted once someone has been assigned to it
         let props = {
             show: enteringIssueDetails,
@@ -210,29 +202,14 @@ class StoryViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     openSelectionDialogBox(evt) {
-        let { selectingRecipients } = this.state;
-        if (!selectingRecipients) {
-            this.setState({
-                selectingRecipients: true,
-                renderingRecipientDialogBox: true
-            });
-        }
+        this.setState({ selectingRecipients: true });
     }
 
     /**
      * Close dialog box
      */
     closeSelectionDialogBox() {
-        let { selectingRecipients } = this.state;
-        if (selectingRecipients) {
-            this.setState({ selectingRecipients: false });
-            setTimeout(() => {
-                let { selectingRecipients } = this.state;
-                if (!selectingRecipients) {
-                    this.setState({ renderingRecipientDialogBox: false });
-                }
-            }, 500);
-        }
+        this.setState({ selectingRecipients: false });
     }
 
     /**
@@ -241,29 +218,14 @@ class StoryViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     openIssueDialogBox(evt) {
-        let { enteringIssueDetails } = this.state;
-        if (!enteringIssueDetails) {
-            this.setState({
-                enteringIssueDetails: true,
-                renderingIssueDialogBox: true
-            });
-        }
+        this.setState({ enteringIssueDetails: true });
     }
 
     /**
      * Close dialog box
      */
     closeIssueDialogBox() {
-        let { enteringIssueDetails } = this.state;
-        if (enteringIssueDetails) {
-            this.setState({ enteringIssueDetails: false });
-            setTimeout(() => {
-                let { enteringIssueDetails } = this.state;
-                if (!enteringIssueDetails) {
-                    this.setState({ renderingIssueDialogBox: false });
-                }
-            }, 500);
-        }
+        this.setState({ enteringIssueDetails: false });
     }
 
     /**

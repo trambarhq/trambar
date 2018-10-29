@@ -19,8 +19,7 @@ class DevicePanel extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            renderingDialog: null,
-            showingDialog: false,
+            confirmingRevocation: false,
             selectedDeviceID: null,
         };
     }
@@ -99,13 +98,10 @@ class DevicePanel extends PureComponent {
      */
     renderDialogBox() {
         let { env } = this.props;
-        let { showingDialog, renderingDialog } = this.state;
+        let { confirmingRevocation } = this.state;
         let { t } = env.locale;
-        if (renderingDialog !== 'revoke') {
-            return null;
-        }
         let props = {
-            show: showingDialog,
+            show: confirmingRevocation,
             env,
             onClose: this.handleDialogClose,
             onConfirm: this.handleRevokeConfirm,
@@ -123,12 +119,8 @@ class DevicePanel extends PureComponent {
      * @param  {Event} evt
      */
     handleRevokeClick = (evt) => {
-        let deviceID = parseInt(evt.currentTarget.getAttribute('data-device-id'));
-        this.setState({
-            renderingDialog: 'revoke',
-            showingDialog: true,
-            selectedDeviceID: deviceID
-        });
+        let selectedDeviceID = parseInt(evt.currentTarget.getAttribute('data-device-id'));
+        this.setState({ confirmingRevocation: true, selectedDeviceID });
     }
 
     /**
@@ -154,11 +146,7 @@ class DevicePanel extends PureComponent {
      * @param  {Object} evt
      */
     handleDialogClose = (evt) => {
-        this.setState({ showingDialog: false }, () => {
-            setTimeout(() => {
-                this.setState({ renderingDialog: false });
-            }, 500);
-        });
+        this.setState({ confirmingRevocation: false });
     }
 }
 

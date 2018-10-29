@@ -38,11 +38,9 @@ class StoryContents extends PureComponent {
         this.state = {
             voteSubmitted: false,
             selectedComponent: null,
-            showingComponentDialog: false,
-            renderingComponentDialog: false,
+            showingComponent: false,
             selectedResourceName: null,
-            showingReferencedMediaDialog: false,
-            renderingReferencedMediaDialog: false,
+            showingReferencedMedia: false,
             audioURL: null,
         };
         this.updateUserAnswers(this.state, props);
@@ -715,14 +713,7 @@ class StoryContents extends PureComponent {
      */
     renderReferencedMediaDialog() {
         let { env, story } = this.props;
-        let {
-            renderingReferencedMediaDialog,
-            showingReferencedMediaDialog,
-            selectedResourceName
-        } = this.state;
-        if (!renderingReferencedMediaDialog) {
-            return null;
-        }
+        let { showingReferencedMedia, selectedResourceName } = this.state;
         let resources = _.get(story, 'details.resources');
         let res = Markdown.findReferencedResource(resources, selectedResourceName);
         if (!res) {
@@ -734,7 +725,7 @@ class StoryContents extends PureComponent {
             return null;
         }
         let dialogProps = {
-            show: showingReferencedMediaDialog,
+            show: showingReferencedMedia,
             resources: zoomableResources,
             selectedIndex: zoomableIndex,
             env,
@@ -793,16 +784,9 @@ class StoryContents extends PureComponent {
      */
     renderAppComponentDialog() {
         let { env } = this.props;
-        let {
-            showingComponentDialog,
-            renderingComponentDialog,
-            selectedComponent,
-        } = this.state;
-        if (!renderingComponentDialog) {
-            return null;
-        }
+        let { showingComponent, selectedComponent } = this.state;
         let dialogProps = {
-            show: showingComponentDialog,
+            show: showingComponent,
             component: selectedComponent,
             env,
             onClose: this.handleComponentDialogClose,
@@ -884,11 +868,7 @@ class StoryContents extends PureComponent {
              let res = Markdown.findReferencedResource(resources, name);
              if (res) {
                  if (res.type === 'image' || res.type === 'video') {
-                     this.setState({
-                         selectedResourceName: name,
-                         renderingReferencedMediaDialog: true,
-                         showingReferencedMediaDialog: true,
-                     });
+                     this.setState({ selectedResourceName: name, showingReferencedMedia: true });
                  } else if (res.type === 'website') {
                      window.open(res.url, '_blank');
                  } else if (res.type === 'audio') {
@@ -1011,11 +991,7 @@ class StoryContents extends PureComponent {
      * @param  {Object} evt
      */
     handleComponentSelect = (evt) => {
-        this.setState({
-            renderingComponentDialog: true,
-            showingComponentDialog: true,
-            selectedComponent: evt.component,
-        });
+        this.setState({ showingComponent: true, selectedComponent: evt.component });
     }
 
     /**
@@ -1024,18 +1000,7 @@ class StoryContents extends PureComponent {
      * @param  {Object} evt
      */
     handleComponentDialogClose = (evt) => {
-        let { showingComponentDialog } = this.state;
-        this.setState({ showingComponentDialog: false }, () => {
-            setTimeout(() => {
-                let { showingComponentDialog } = this.state;
-                if (!showingComponentDialog) {
-                    this.setState({
-                        renderingComponentDialog: false,
-                        selectedComponent: null
-                    });
-                }
-            }, 500);
-        });
+        this.setState({ showingComponent: false });
     }
 
     /**
@@ -1044,17 +1009,7 @@ class StoryContents extends PureComponent {
      * @param  {Object} evt
      */
     handleReferencedMediaDialogClose = (evt) => {
-        this.setState({ showingReferencedMediaDialog: false }, () => {
-            setTimeout(() => {
-                let { showingReferencedMediaDialog } = this.state;
-                if (!showingReferencedMediaDialog) {
-                    this.setState({
-                        renderingReferencedMediaDialog: false,
-                        selectedResourceURL: null
-                    });
-                }
-            }, 500);
-        })
+        this.setState({ showingReferencedMedia: false });
     }
 
     /**

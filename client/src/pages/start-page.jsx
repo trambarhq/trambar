@@ -168,7 +168,6 @@ class StartPageSync extends PureComponent {
                 transitionMethod: 'fast',
                 selectedProjectID: 0,
                 oauthErrors: {},
-                renderingProjectDialog: false,
                 showingProjectDialog: false,
             };
         } else if (env.platform === 'cordova') {
@@ -201,19 +200,7 @@ class StartPageSync extends PureComponent {
      */
     componentWillReceiveProps(nextProps) {
         let { database, projects } = this.props;
-        let { renderingProjectDialog, selectedProjectID, qrCodeStatus } = this.state;
-        if (nextProps.projects !== projects) {
-            if (renderingProjectDialog) {
-                // close the dialog box if the project has disappeared
-                if (!_.some(nextProps.projects, { id: selectedProjectID })) {
-                    this.setState({
-                        renderingProjectDialog: false,
-                        showingProjectDialog: false,
-                        selectedProjectID: 0
-                    });
-                }
-            }
-        }
+        let { qrCodeStatus } = this.state;
         if (qrCodeStatus === 'correct') {
             this.setState({ qrCodeStatus: 'pending' });
         }
@@ -795,14 +782,7 @@ class StartPageSync extends PureComponent {
      */
     renderProjectDialog() {
         let { database, route, env, projects, currentUser } = this.props;
-        let {
-            showingProjectDialog,
-            renderingProjectDialog,
-            selectedProjectID,
-        } = this.state;
-        if (!renderingProjectDialog) {
-            return null;
-        }
+        let { showingProjectDialog, selectedProjectID } = this.state;
         let selectedProject = _.find(projects, { id: selectedProjectID });
         if (!selectedProject) {
             return null;
@@ -889,11 +869,7 @@ class StartPageSync extends PureComponent {
      */
     handleProjectButtonClick = (evt) => {
         let projectID = parseInt(evt.currentTarget.getAttribute('data-project-id'));
-        this.setState({
-            selectedProjectID: projectID,
-            showingProjectDialog: true,
-            renderingProjectDialog: true,
-        });
+        this.setState({ selectedProjectID: projectID, showingProjectDialog: true });
     }
 
     /**
@@ -935,9 +911,6 @@ class StartPageSync extends PureComponent {
      */
     handleMembershipRequestClose = (evt) => {
         this.setState({ showingProjectDialog: false });
-        setTimeout(() => {
-            this.setState({ renderingProjectDialog: false });
-        }, 500);
     }
 
     /**
@@ -948,7 +921,7 @@ class StartPageSync extends PureComponent {
     handleMembershipRequestProceed = (evt) => {
         let { database, route, projects } = this.props;
         let { selectedProjectID } = this.state;
-        this.setState({ showingProjectDialog: false, renderingProjectDialog: false });
+        this.setState({ showingProjectDialog: false });
 
         // see if user has visited project before
         let db = database.use({ by: this });
@@ -1124,7 +1097,7 @@ class StartPageSync extends PureComponent {
     /**
      * Called when transition out is complete
      *
-     * @param  {Event} evt
+     * @param  {TransitionEvent} evt
      */
     handleTransitionEnd = (evt) => {
         let { onTransitionOut } = this.props;
