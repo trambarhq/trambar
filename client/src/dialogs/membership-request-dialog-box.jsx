@@ -12,7 +12,7 @@ import CollapsibleContainer from 'widgets/collapsible-container';
 import './membership-request-dialog-box.scss';
 
 /**
- * Dialog box for requesting membership to a project. 
+ * Dialog box for requesting membership to a project.
  *
  * @extends PureComponent
  */
@@ -49,10 +49,13 @@ class MembershipRequestDialogBox extends PureComponent {
     /**
      * Render description of project
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderText() {
         let { env, project } = this.props;
+        if (!project) {
+            return null;
+        }
         let { p } = env.locale;
         let { name } = project;
         let { title, description, resources } = project.details;
@@ -77,6 +80,9 @@ class MembershipRequestDialogBox extends PureComponent {
      */
     renderMessage() {
         let { env, project, currentUser } = this.props;
+        if (!project || !currentUser) {
+            return null;
+        }
         let { userJustJoined } = this.state;
         let { t, g } = env.locale;
         let you = UserUtils.getDisplayName(currentUser, env);
@@ -242,8 +248,8 @@ if (process.env.NODE_ENV !== 'production') {
 
     MembershipRequestDialogBox.propTypes = {
         show: PropTypes.bool,
-        currentUser: PropTypes.object.isRequired,
-        project: PropTypes.object.isRequired,
+        currentUser: PropTypes.object,
+        project: PropTypes.object,
 
         env: PropTypes.instanceOf(Environment).isRequired,
 

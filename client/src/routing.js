@@ -191,12 +191,10 @@ const routes = {
     'start-page': {
         path: '/',
         query: {
-            add: '${addingServer}',
             ac: '${activationCode}',
         },
         params: {
             activationCode: String,
-            addingServer: Boolean,
         },
         load: (match) => {
             match.params.ui = {

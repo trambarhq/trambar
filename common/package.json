@@ -55,7 +55,7 @@
     "react-easy-emoji": "^1.2.0",
     "relaks": "^1.1.4",
     "relaks-event-emitter": "^0.0.1",
-    "relaks-route-manager": "^0.0.9",
+    "relaks-route-manager": "^0.0.11",
     "sass-loader": "^6.0.6",
     "setimmediate": "^1.0.5",
     "sockjs": "^0.3.19",

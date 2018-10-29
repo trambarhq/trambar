@@ -355,7 +355,7 @@ class ProjectPanel extends PureComponent {
      */
     handleAddClick = (evt) => {
         let { route } = this.props;
-        route.push('start-page', { add: true });
+        route.push('start-page', {}, { schema: null });
     }
 
     /**
@@ -509,7 +509,7 @@ class ProjectPanel extends PureComponent {
         let db = database.use({ by: this });
         db.remove({ schema: 'local', table: 'project_link' }, links).then(() => {
             if (removingCurrent) {
-                return route.replace('start-page');
+                return route.replace('start-page', {}, { schema: null });
             }
         });
     }
@@ -527,7 +527,7 @@ class ProjectPanel extends PureComponent {
             // delete links of all projects on server
             let serverLinks = _.filter(projectLinks, { address: context.address });
             return db.remove({ schema: 'local', table: 'project_link' }, serverLinks).then(() => {
-                return route.replace('start-page');
+                return route.replace('start-page', {}, { schema: null });
             });
         });
     }

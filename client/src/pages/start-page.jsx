@@ -48,7 +48,6 @@ class StartPage extends AsyncComponent {
             route,
             env,
             transitionOut,
-            addingServer,
             activationCode,
             onTransitionOut,
         } = this.props;
@@ -61,13 +60,13 @@ class StartPage extends AsyncComponent {
             projectLinks: null,
 
             transitionOut,
-            addingServer,
             database,
             route,
             env,
             onTransitionOut,
         };
         if (!db.authorized) {
+            this.wasUnauthorized = true;
             if (env.platform === 'browser') {
                 // start authorization process--will receive system description
                 // and list of OAuth providers along with links
@@ -107,7 +106,7 @@ class StartPage extends AsyncComponent {
                         // start over after a few seconds
                         setTimeout(() => {
                             db.releaseMobileSession();
-                            route.replace(route.name, {}, { cors: false, schema: null });
+                            route.replace('start-page', {}, { cors: false, schema: null });
                         }, 10000);
                         return <StartPageSync {...props} />;
                     });
@@ -120,7 +119,7 @@ class StartPage extends AsyncComponent {
             }
         } else {
             // handle things normally after we've gained authorization
-            if (!addingServer) {
+            if (this.wasUnauthorized) {
                 // need to adjust the progressive rendering delay since Relaks
                 // by default disables it once a page has fully rendered
                 meanwhile.delay(undefined, 300);
@@ -166,9 +165,7 @@ class StartPageSync extends PureComponent {
         if (env.platform === 'browser') {
             this.state = {
                 transitionMethod: 'fast',
-                selectedProjectID: 0,
                 oauthErrors: {},
-                showingProjectDialog: false,
             };
         } else if (env.platform === 'cordova') {
             this.state = {
@@ -181,16 +178,6 @@ class StartPageSync extends PureComponent {
                 lastError: null,
             };
         }
-    }
-
-    /**
-     * Return the class of the page that we're targeting--typically the news page
-     *
-     * @return {ReactClass}
-     */
-    getTargetPage() {
-        let { addingProject } = this.props;
-        return (addingProject) ? 'settings-page' : 'news-page';
     }
 
     /**
@@ -512,7 +499,7 @@ class StartPageSync extends PureComponent {
      */
     renderEmptyMessage() {
         let { database, env, servers, projects } = this.props;
-        if (!database.unauthorized) {
+        if (!database.authorized) {
             if (!_.isEmpty(servers)) {
                 return null;
             }
@@ -651,7 +638,7 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderProjectButton(project, i) {
-        let { env, route, projectLinks, currentUser, adding } = this.props;
+        let { env, route, projectLinks, currentUser } = this.props;
         let { t, p } = env.locale;
         let { name } = project;
         let { description, title, resources } = project.details;
@@ -675,27 +662,18 @@ class StartPageSync extends PureComponent {
             badge = <i className="fa fa-clock-o badge" />;
         }
 
+        // don't show dialog box if user has previously visited the project
+        let skipDialog = _.some(projectLinks, {
+            address: route.context.address,
+            schema: project.name,
+        });
+        let pageName = (skipDialog) ? 'news-page': 'start-page';
         let linkProps = {
             'data-project-id': project.id,
-            className: 'project-button'
+            className: 'project-button',
+            href: route.find(pageName, {}, { schema: project.name }),
+            onClick: (skipDialog) ? null : this.handleUnknownProjectClick,
         };
-        let skipDialog = false;
-        // always show dialog box when adding
-        if (!adding) {
-            skipDialog = _.some(projectLinks, {
-                address: route.context.address,
-                schema: project.name,
-            });
-        }
-        if (skipDialog) {
-            // link to the project's news or settings page
-            linkProps.href = route.find(this.getTargetPage(), {}, {
-                schema: project.name
-            });
-        } else {
-            // add handler for bringing up dialog box
-            linkProps.onClick = this.handleProjectButtonClick;
-        }
         return (
             <a key={project.id} {...linkProps}>
                 <div className="icon">{icon}</div>
@@ -763,9 +741,8 @@ class StartPageSync extends PureComponent {
      */
     renderServerLink(server, key) {
         let { route, addingServer } = this.props;
-        let params = { addingServer };
         let context = { cors: true, address: server };
-        let url = route.find('start-page', params, context);
+        let url = route.find('start-page', {}, context);
         return (
             <li key={key}>
                 <a href={url}>
@@ -781,14 +758,11 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderProjectDialog() {
-        let { database, route, env, projects, currentUser } = this.props;
-        let { showingProjectDialog, selectedProjectID } = this.state;
-        let selectedProject = _.find(projects, { id: selectedProjectID });
-        if (!selectedProject) {
-            return null;
-        }
+        let { database, route, env, projects, currentUser, transitionOut } = this.props;
+        let { schema } = route.context;
+        let selectedProject = _.find(projects, { name: schema });
         let dialogProps = {
-            show: showingProjectDialog,
+            show: !!selectedProject && !transitionOut,
             currentUser,
             project: selectedProject,
             database,
@@ -863,13 +837,15 @@ class StartPageSync extends PureComponent {
     }
 
     /**
-     * Called when user clicks on a project of which he's not a member
+     * Called when user clicks on a project that hasn't visited earlier
      *
      * @param  {Event} evt
      */
-    handleProjectButtonClick = (evt) => {
-        let projectID = parseInt(evt.currentTarget.getAttribute('data-project-id'));
-        this.setState({ selectedProjectID: projectID, showingProjectDialog: true });
+    handleUnknownProjectClick = (evt) => {
+        // replace instead of push
+        let { route } = this.props;
+        route.change(evt.currentTarget, { replace: true });
+        evt.preventDefault();
     }
 
     /**
@@ -879,11 +855,11 @@ class StartPageSync extends PureComponent {
      */
     handleMembershipRequestConfirm = (evt) => {
         let { database, currentUser } = this.props;
-        let { selectedProjectID } = this.state;
-        if (!_.include(currentUser.requested_project_ids, selectedProjectID)) {
+        let { project } = evt.target.props;
+        if (!_.include(currentUser.requested_project_ids, project.id)) {
             let db = database.use({ schema: 'global', by: this });
             let userAfter = _.clone(currentUser);
-            userAfter.requested_project_ids = _.concat(userAfter.requested_project_ids, selectedProjectID);
+            userAfter.requested_project_ids = _.concat(userAfter.requested_project_ids, project.id);
             db.saveOne({ table: 'user' }, userAfter);
         }
     }
@@ -895,10 +871,10 @@ class StartPageSync extends PureComponent {
      */
     handleMembershipRequestRevoke = (evt) => {
         let { database, currentUser } = this.props;
-        let { selectedProjectID } = this.state;
-        if (_.includes(currentUser.requested_project_ids, selectedProjectID)) {
+        let { project } = evt.target.props;
+        if (_.includes(currentUser.requested_project_ids, project.id)) {
             let userAfter = _.clone(currentUser);
-            userAfter.requested_project_ids = _.without(userAfter.requested_project_ids, selectedProjectID);
+            userAfter.requested_project_ids = _.without(userAfter.requested_project_ids, project.id);
             let db = database.use({ schema: 'global', by: this });
             db.saveOne({ table: 'user' }, userAfter);
         }
@@ -910,7 +886,9 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestClose = (evt) => {
-        this.setState({ showingProjectDialog: false });
+        let { route } = this.props;
+        let context = { schema: null };
+        route.replace('start-page', {}, context);
     }
 
     /**
@@ -919,21 +897,8 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestProceed = (evt) => {
-        let { database, route, projects } = this.props;
-        let { selectedProjectID } = this.state;
-        this.setState({ showingProjectDialog: false });
-
-        // see if user has visited project before
-        let db = database.use({ by: this });
-        let project = _.find(projects, { id: selectedProjectID });
-        return ProjectLinkFinder.findProjectLink(db, project).then((link) => {
-            if (!link) {
-                // if not, use a longer transition
-                this.setState({ transitionMethod: 'slow' });
-            }
-            let page = this.getTargetPage();
-            route.push(page, {}, { schema: project.name });
-        });
+        let { route } = this.props;
+        route.replace('news-page', {});
     }
 
     /**
@@ -1085,13 +1050,13 @@ class StartPageSync extends PureComponent {
         this.handleActivationCancel();
         // redirect to start page, now with server address, schema, as well as
         // the activation code
-        let params = {
+        let params = { activationCode: evt.code };
+        let context = {
             cors: true,
             address: evt.address,
             schema: evt.schema,
-            activationCode: evt.code,
         };
-        route.push('start-page', params);
+        route.push('start-page', params, context);
     }
 
     /**
@@ -1205,6 +1170,7 @@ if (process.env.NODE_ENV !== 'production') {
 
     StartPage.propTypes = {
         transitionOut: PropTypes.bool,
+        activationCode: PropTypes.string,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
@@ -1213,6 +1179,7 @@ if (process.env.NODE_ENV !== 'production') {
     };
     StartPageSync.propTypes = {
         transitionOut: PropTypes.bool,
+        activationCode: PropTypes.string,
         currentUser: PropTypes.object,
         system: PropTypes.object,
         servers: PropTypes.arrayOf(PropTypes.object),
