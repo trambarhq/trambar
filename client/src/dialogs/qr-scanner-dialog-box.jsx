@@ -22,23 +22,15 @@ class QRScannerDialogBox extends PureComponent {
         super(props);
         this.state = {
             available: false,
+            found: false,
         };
     }
 
-    /**
-     * Initialize QR scanner on mount
-     */
-    componentWillMount() {
-        initializeQRScanner();
-        if (QRScanner) {
-            QRScanner.prepareAsync().then((status) => {
-                this.setState({ available: true });
-            });
-        } else {
-            if (process.env.NODE_ENV !== 'production') {
-                this.setState({ available: true });
-            }
+    static getDerivedStateFromProps(props, state) {
+        if (!props.show || props.error) {
+            return { found: false };
         }
+        return null;
     }
 
     /**
@@ -67,6 +59,22 @@ class QRScannerDialogBox extends PureComponent {
     }
 
     /**
+     * Initialize QR scanner on mount
+     */
+    componentDidMount() {
+        initializeQRScanner();
+        if (QRScanner) {
+            QRScanner.prepareAsync().then((status) => {
+                this.setState({ available: true });
+            });
+        } else {
+            if (process.env.NODE_ENV !== 'production') {
+                this.setState({ available: true });
+            }
+        }
+    }
+
+    /**
      * Turn off QR scanner on unmount
      */
     componentWillUnmount() {
@@ -77,7 +85,8 @@ class QRScannerDialogBox extends PureComponent {
      * Create (or update) the camera overlay
      */
     show() {
-        let { env, serverError, found, invalid, children, onResult } = this.props;
+        let { env, error, children, onResult } = this.props;
+        let { found } = this.state;
         let { t } = env.locale;
         if (!this.overlayNode) {
             // show the camera preview, which appears behind the webview
@@ -86,6 +95,7 @@ class QRScannerDialogBox extends PureComponent {
                     Async.do(() => {
                         return QRScanner.scanAsync().then((result) => {
                             if (onResult) {
+                                this.setState({ found: true });
                                 onResult({
                                     type: 'result',
                                     target: this,
@@ -122,6 +132,7 @@ class QRScannerDialogBox extends PureComponent {
                         if (evt.keyCode === 0x0d) {
                             let url = evt.target.value;
                             if (onResult) {
+                                this.setState({ found: true });
                                 onResult({
                                     type: 'result',
                                     target: this,
@@ -142,22 +153,23 @@ class QRScannerDialogBox extends PureComponent {
             onClick: this.handleCancelClick
         };
         let message;
-        if (serverError) {
+        if (error) {
             let text;
-            switch (serverError.statusCode) {
+            switch (error.statusCode) {
+                case 400:
+                    text = t('qr-scanner-code-invalid');
+                    break;
                 case 404:
                 case 410:
                     text = t('qr-scanner-code-used');
                     break;
                 default:
-                    text = `${serverError.statusCode} - ${serverError.message}`;
+                    text = `${error.statusCode} - ${error.message}`;
             }
             message = <span className="error">{text}</span>;
         } else {
             if (found) {
                 message = <span className="success">{t('qr-scanner-code-found')}</span>;
-            } else if (invalid) {
-                message = <span className="error">{t('qr-scanner-code-invalid')}</span>;
             }
         }
         let element = (
@@ -332,9 +344,7 @@ if (process.env.NODE_ENV !== 'production') {
 
     QRScannerDialogBox.propTypes = {
         show: PropTypes.bool,
-        invalid: PropTypes.bool,
-        found: PropTypes.bool,
-        serverError: PropTypes.instanceOf(Error),
+        error: PropTypes.instanceOf(Error),
         env: PropTypes.instanceOf(Environment).isRequired,
         onCancel: PropTypes.func,
         onResult: PropTypes.func,

@@ -67,10 +67,18 @@ class RemoteDataSource extends EventEmitter {
         }
     }
 
+    /**
+     * Find existing session object for location or create a new one
+     *
+     * @param  {Object} location
+     * @param  {String} type
+     *
+     * @return {Object|null}
+     */
     obtainSession(location, type) {
         let { address } = location;
         if (!address) {
-            throw new HTTPError(400);
+            return null;
         }
         let { area } = this.options;
         if (!type) {
@@ -115,6 +123,9 @@ class RemoteDataSource extends EventEmitter {
     beginSession(location) {
         let { sessionRetryInterval } = this.options;
         let session = this.obtainSession(location);
+        if (!session) {
+            return Promise.reject(new HTTPError(400));
+        }
         if (session.establishmentPromise) {
             return session.establishmentPromise;
         }
@@ -161,6 +172,9 @@ class RemoteDataSource extends EventEmitter {
      */
     checkAuthorization(location) {
         let session = this.obtainSession(location);
+        if (!session) {
+            return Promise.reject(new HTTPError(400));
+        }
         if (session.authenticationPromise) {
             return session.authenticationPromise;
         }
@@ -196,6 +210,9 @@ class RemoteDataSource extends EventEmitter {
      */
     authenticate(location, credentials) {
         let session = this.obtainSession(location);
+        if (!session) {
+            return Promise.reject(new HTTPError(400));
+        }
         if (session.authenticationPromise) {
             // already authenticating
             return session.authenticationPromise;
@@ -238,6 +255,9 @@ class RemoteDataSource extends EventEmitter {
      */
     endSession(location) {
         let session = this.obtainSession(location);
+        if (!session) {
+            return Promise.reject(new HTTPError(400));
+        }
         if (!session.establishmentPromise) {
             this.discardSession(session);
             return Promise.resolve();
@@ -272,10 +292,16 @@ class RemoteDataSource extends EventEmitter {
      */
     beginMobileSession(location) {
         let mobileSession = this.obtainSession(location, 'mobile');
+        if (!mobileSession) {
+            return Promise.reject(new HTTPError(400));
+        }
         if (mobileSession.establishmentPromise) {
             return mobileSession.establishmentPromise;
         }
         let parentSession = this.obtainSession(location);
+        if (!parentSession) {
+            return Promise.reject(new HTTPError(400));
+        }
         let promise = parentSession.establishmentPromise.then(() => {
             let { area } = this.options;
             let url = `${parentSession.address}/srv/session/`;
@@ -306,9 +332,12 @@ class RemoteDataSource extends EventEmitter {
      */
     acquireMobileSession(location, handle) {
         let session = this.obtainSession(location);
+        if (!session || !handle) {
+            return Promise.reject(new HTTPError(400));
+        }
         // discard any other sessions
         while (session.handle && session.handle !== handle) {
-            this.discardSession(this.sessions, session);
+            this.discardSession(session);
             session = this.obtainSession(location);
         }
         if (session.authenticationPromise) {
@@ -394,7 +423,7 @@ class RemoteDataSource extends EventEmitter {
      */
     getOAuthURL(location, oauthServer, type) {
         let session = this.obtainSession(location);
-        if (!session.handle) {
+        if (!session || !session.handle) {
             return '';
         }
         let query = `sid=${oauthServer.id}&handle=${session.handle}`;
@@ -418,6 +447,9 @@ class RemoteDataSource extends EventEmitter {
      */
     requestAuthentication(location) {
         let session = this.obtainSession(location);
+        if (!session) {
+            return Promise.reject(new HTTPError(400));
+        }
         if (session.token) {
             // user is already authenticated
             return Promise.resolve(true);
@@ -444,17 +476,21 @@ class RemoteDataSource extends EventEmitter {
      */
     cancelAuthentication(location) {
         let session = this.obtainSession(location);
-        if (session.authorizationPromise && session.authorizationPromise.resolve) {
-            session.authorizationPromise.resolve(false);
+        if (session) {
+            if (session.authorizationPromise) {
+                if (session.authorizationPromise.resolve) {
+                    session.authorizationPromise.resolve(false);
+                }
+            }
         }
     }
 
     /**
      * Return a promise that fulfills when authorization has been granted
      *
-     * @param  {[type]} session
+     * @param  {Object} session
      *
-     * @return {[type]}
+     * @return {Promise}
      */
     waitForAuthorization(session) {
         if (!session.authorizationPromise) {
@@ -510,6 +546,9 @@ class RemoteDataSource extends EventEmitter {
 
     restoreAuthorization(location, sessionInfo) {
         let session = this.obtainSession(location);
+        if (!session) {
+            return false;
+        }
         try {
             if (!session.establishmentPromise) {
                 session.establishmentPromise = Promise.resolve(true);
@@ -530,12 +569,8 @@ class RemoteDataSource extends EventEmitter {
      * @return {Boolean}
      */
     hasAuthorization(location) {
-        try {
-            let session = this.obtainSession(location);
-            return (session.token) ? true : false;
-        } catch (err) {
-            return false;
-        }
+        let session = this.obtainSession(location);
+        return (session && session.token) ? true : false;
     }
 
     /**
@@ -551,6 +586,9 @@ class RemoteDataSource extends EventEmitter {
                 return 0;
             }
             let session = this.obtainSession(location);
+            if (!session) {
+                throw new HTTPError(400);
+            }
             if (session.token) {
                 return session.user_id;
             } else {
@@ -1465,13 +1503,16 @@ class RemoteDataSource extends EventEmitter {
      */
     performRemoteAction(location, action, payload) {
         let session = this.obtainSession(location);
+        if (!session) {
+            return Promise.reject(new HTTPError(400));
+        }
         let { schema, table } = location;
         let { basePath } = this.options;
         if (!schema) {
-            return Promise.reject(new Error('No schema specified'));
+            return Promise.reject(new HTTPError(400, 'No schema specified'));
         }
         if (!table) {
-            return Promise.reject(new Error('No table specified'));
+            return Promise.reject(new HTTPError(400, 'No table specified'));
         }
         let flags;
         if (action === 'retrieval' || action === 'storage') {
@@ -1658,9 +1699,12 @@ class RemoteDataSource extends EventEmitter {
         if (!this.active) {
             return Promise.resolve('');
         }
+        let session = this.obtainSession(location)
+        if (!session) {
+            return Promise.reject(new HTTPError(400));
+        }
         let { schema } = location;
         let { basePath } = this.options;
-        let session = this.obtainSession(location)
         let url = `${session.address}${basePath}/signature/${schema}`;
         let options = { responseType: 'json', contentType: 'json' };
         let payload = { auth_token: session.token };

@@ -68,7 +68,6 @@ class StartPage extends AsyncComponent {
             onTransitionOut,
         };
         if (!db.authorized) {
-            this.wasUnauthorized = true;
             if (env.platform === 'browser') {
                 // start authorization process--will receive system description
                 // and list of OAuth providers along with links
@@ -87,48 +86,19 @@ class StartPage extends AsyncComponent {
                     return <StartPageSync {...props} />;
                 });
             } else if (env.platform === 'cordova') {
-                if (activationCode) {
-                    meanwhile.show(<StartPageSync {...props} />);
-                    return db.acquireMobileSession(activationCode).then((userID) => {
-                        // create entry in device table
-                        let device = {
-                            type: getDeviceType(),
-                            uuid: getDeviceUUID(),
-                            details: getDeviceDetails(),
-                            user_id: userID,
-                            session_handle: _.toLower(activationCode),
-                        };
-                        return db.saveOne({ table: 'device' }, device);
-                    }).then((device) => {
-                        // at this point a change event should have forced
-                        // rendering already--doesn't matter what we return
-                        route.replace('news-page', {}, { schema: activationSchema });
-                        return <StartPageSync {...props} />;
-                    }).catch((err) => {
-                        props.serverError = err;
-                        // start over after a few seconds
-                        setTimeout(() => {
-                            db.releaseMobileSession();
-                            route.replace('start-page', {}, { cors: false, schema: null });
-                        }, 10000);
-                        return <StartPageSync {...props} />;
-                    });
-                } else {
-                    return ProjectLinkFinder.findActiveLinks(db).then((links) => {
-                        props.projectLinks = links;
-                        return <StartPageSync {...props} />;
-                    });
-                }
+                return ProjectLinkFinder.findActiveLinks(db).then((links) => {
+                    props.projectLinks = links;
+                    return <StartPageSync {...props} />;
+                });
             }
         } else {
             // handle things normally after we've gained authorization
-            if (this.wasUnauthorized) {
+            if (this.sessionStartSystem) {
+                props.system = this.sessionStartSystem;
+
                 // need to adjust the progressive rendering delay since Relaks
                 // by default disables it once a page has fully rendered
                 meanwhile.delay(undefined, 300);
-
-                // saved earlier
-                props.system = this.sessionStartSystem;
             }
             meanwhile.show(<StartPageSync {...props} />);
             return db.start().then((currentUserID) => {
@@ -178,10 +148,9 @@ class StartPageSync extends PureComponent {
             });
         } else if (env.platform === 'cordova') {
             _.assign(this.state, {
-                receivedCorrectQRCode: false,
-                receivedInvalidQRCode: false,
                 scanningQRCode: false,
                 enteringManually: false,
+                activationError: null,
                 addingServer: false,
                 lastError: null,
             });
@@ -348,10 +317,11 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderMobileGreeting() {
-        let { env, currentUser, activationSchema } = this.props;
+        let { env, currentUser } = this.props;
+        let { scanningQRCode } = this.state;
         let { t } = env.locale;
         let className = 'welcome';
-        if (activationSchema) {
+        if (scanningQRCode) {
             let name;
             if (currentUser) {
                 name = UserUtils.getDisplayName(currentUser, env);
@@ -537,11 +507,7 @@ class StartPageSync extends PureComponent {
                 <Scrollable>
                     {this.renderEmptyMessage()}
                     <p>
-                    {
-                        _.map(servers, (server, i) => {
-                            return this.renderOAuthButton(server, i);
-                        })
-                    }
+                        {_.map(servers, this.renderOAuthButton.bind(this))}
                     </p>
                 </Scrollable>
             </div>
@@ -612,11 +578,7 @@ class StartPageSync extends PureComponent {
                     <h2>{projects ? t('start-projects') : ''}</h2>
                     <Scrollable>
                         {this.renderEmptyMessage()}
-                        {
-                            _.map(projects, (project, index) => {
-                                return this.renderProjectButton(project, index);
-                            })
-                        }
+                        {_.map(projects, this.renderProjectButton.bind(this))}
                     </Scrollable>
                 </div>
             );
@@ -624,11 +586,7 @@ class StartPageSync extends PureComponent {
             return (
                 <div className="projects">
                     {this.renderEmptyMessage()}
-                    {
-                        _.map(projects, (project, index) => {
-                            return this.renderProjectButton(project, index);
-                        })
-                    }
+                    {_.map(projects, this.renderProjectButton.bind(this))}
                 </div>
             );
         }
@@ -723,13 +681,7 @@ class StartPageSync extends PureComponent {
         return (
             <div className="other-servers">
                 <h2 className="title">{t('start-activation-others-servers')}</h2>
-                <ul>
-                {
-                    _.map(servers, (address, i) => {
-                        return this.renderServerLink(address, i);
-                    })
-                }
-                </ul>
+                <ul>{_.map(servers, this.renderServerLink.bind(this))}</ul>
                 <div className="activation-buttons">
                     <div className="right">
                         <PushButton {...returnProps} />
@@ -782,6 +734,117 @@ class StartPageSync extends PureComponent {
             onProceed: this.handleMembershipRequestProceed,
         };
         return <MembershipRequestDialogBox {...dialogProps} />;
+    }
+
+    /**
+     * Render QR scanner dialog box if we're scanning a QR code
+     *
+     * @return {ReactElement|null}
+     */
+    renderQRScannerDialogBox() {
+        let { env } = this.props;
+        let { scanningQRCode, activationError } = this.state;
+        let { t } = env.locale;
+        let props = {
+            show: scanningQRCode,
+            error: activationError,
+            env,
+            onCancel: this.handleCancelScan,
+            onResult: this.handleScanResult,
+        };
+        let ui = {
+            settings: (
+                <span key="0" className="ui">
+                    {t('bottom-nav-settings')}
+                </span>
+            ),
+            mobileSetup: (
+                <span key="2" className="ui">
+                    <i className="fa fa-qrcode" />
+                    {' '}
+                    {t('project-management-mobile-set-up')}
+                </span>
+            )
+        };
+        return (
+            <QRScannerDialogBox {...props}>
+                {t('start-activation-instructions-short', ui)}
+            </QRScannerDialogBox>
+        );
+    }
+
+    /**
+     * Render QR scanner dialog box if we're scanning a QR code
+     *
+     * @return {ReactElement|null}
+     */
+    renderActivationDialogBox() {
+        let { env } = this.props;
+        let { enteringManually, activationError } = this.state;
+        let { t } = env.locale;
+        let props = {
+            show: enteringManually,
+            error: activationError,
+            env,
+            onCancel: this.handleActivationCancel,
+            onConfirm: this.handleActivationConfirm,
+        };
+        return (
+            <ActivationDialogBox {...props} />
+        );
+    }
+
+    /**
+     * Gain access to server using an activation code
+     *
+     * @param  {Object} params
+     *
+     * @return {Promise}
+     */
+    activateMobileSession(params) {
+        let { database } = this.props;
+        let { address, schema, activationCode } = params || {};
+        let db = database.use({ address, schema });
+        return db.acquireMobileSession(activationCode).then((userID) => {
+            if (schema) {
+                this.navigateToProject(address, schema);
+            }
+
+            // create entry in device table
+            let device = {
+                type: getDeviceType(),
+                uuid: getDeviceUUID(),
+                details: getDeviceDetails(),
+                user_id: userID,
+                session_handle: _.toLower(activationCode),
+            };
+            return db.saveOne({ schema: 'global', table: 'device' }, device);
+        }).catch((err) => {
+            db.releaseMobileSession();
+            throw err;
+        });
+    }
+
+    /**
+     * Navigate to the news page of a project
+     *
+     * @param  {String} address
+     * @param  {String} schema
+     *
+     * @return {Promise<Boolean>}
+     */
+    navigateToProject(address, schema) {
+        let { database, route, projectLinks } = this.props;
+        let context = { schema };
+        if (address) {
+            context.address = address;
+            context.cors = true;
+        }
+        let bookmarked = _.some(projectLinks, { address, schema });
+        if (!bookmarked) {
+            this.setState({ transitionMethod: 'slow' });
+        }
+        return route.push('news-page', {}, context);
     }
 
     /**
@@ -901,69 +964,8 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestProceed = (evt) => {
-        let { route } = this.props;
         let { project } = evt.target.props;
-        let context = { schema: project.name };
-        this.setState({ transitionMethod: 'slow' });
-        route.replace('news-page', {}, context);
-    }
-
-    /**
-     * Render QR scanner dialog box if we're scanning a QR code
-     *
-     * @return {ReactElement|null}
-     */
-    renderQRScannerDialogBox() {
-        let { env, serverError } = this.props;
-        let { scanningQRCode, qrCodeStatus } = this.state;
-        let { t } = env.locale;
-        let props = {
-            show: scanningQRCode,
-            status: qrCodeStatus,
-            serverError,
-            env,
-            onCancel: this.handleCancelScan,
-            onResult: this.handleScanResult,
-        };
-        let ui = {
-            settings: (
-                <span key="0" className="ui">
-                    {t('bottom-nav-settings')}
-                </span>
-            ),
-            mobileSetup: (
-                <span key="2" className="ui">
-                    <i className="fa fa-qrcode" />
-                    {' '}
-                    {t('project-management-mobile-set-up')}
-                </span>
-            )
-        };
-        return (
-            <QRScannerDialogBox {...props}>
-                {t('start-activation-instructions-short', ui)}
-            </QRScannerDialogBox>
-        );
-    }
-
-    /**
-     * Render QR scanner dialog box if we're scanning a QR code
-     *
-     * @return {ReactElement|null}
-     */
-    renderActivationDialogBox() {
-        let { env } = this.props;
-        let { enteringManually } = this.state;
-        let { t } = env.locale;
-        let props = {
-            show: enteringManually,
-            env,
-            onCancel: this.handleActivationCancel,
-            onConfirm: this.handleActivationConfirm,
-        };
-        return (
-            <ActivationDialogBox {...props} />
-        );
+        this.navigateToProject('', project.name);
     }
 
     /**
@@ -1025,17 +1027,13 @@ class StartPageSync extends PureComponent {
             clearTimeout(this.invalidCodeTimeout);
         }
         // see if the URL is a valid activation link
-        let url = UniversalLink.parse(evt.result);
-        let match = (url) ? route.match(url) : null;
-        if (match && match.params.activationCode) {
-            this.setState({ qrCodeStatus: 'correct' })
-            route.change(url);
-        } else {
-            this.setState({ qrCodeStatus: 'invalid' });
+        let params = UniversalLink.parseActivationURL(evt.result);
+        this.activateMobileSession(params).catch((err) => {
+            this.setState({ activationError: err });
             this.invalidCodeTimeout = setTimeout(() => {
-                this.setState({ qrCodeStatus: 'pending' })
+                this.setState({ activationError: null });
             }, 5000);
-        }
+        })
     }
 
     /**
@@ -1177,8 +1175,6 @@ if (process.env.NODE_ENV !== 'production') {
 
     StartPage.propTypes = {
         transitionOut: PropTypes.bool,
-        activationCode: PropTypes.string,
-        activationSchema: PropTypes.string,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
@@ -1187,13 +1183,11 @@ if (process.env.NODE_ENV !== 'production') {
     };
     StartPageSync.propTypes = {
         transitionOut: PropTypes.bool,
-        activationSchema: PropTypes.string,
         currentUser: PropTypes.object,
         system: PropTypes.object,
         servers: PropTypes.arrayOf(PropTypes.object),
         projects: PropTypes.arrayOf(PropTypes.object),
         projectLinks: PropTypes.arrayOf(PropTypes.object),
-        serverError: PropTypes.instanceOf(Error),
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,

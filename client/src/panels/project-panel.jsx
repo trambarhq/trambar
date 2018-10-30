@@ -254,13 +254,12 @@ class ProjectPanel extends PureComponent {
      * @return {ReactElement|null}
      */
     renderMobileSetupDialogBox() {
-        let { database, route, env, system } = this.props;
+        let { database, env, system } = this.props;
         let { activatingMobileDevice } = this.state;
         let props = {
             show: activatingMobileDevice,
             system,
             database,
-            route,
             env,
             onClose: this.handleMobileSetupDialogClose,
         };

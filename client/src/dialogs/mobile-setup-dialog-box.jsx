@@ -47,7 +47,7 @@ class MobileSetupForm extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env, system, onClose } = this.props;
+        let { database, env, system, onClose } = this.props;
         let db = database.use({ by: this });
         let props = {
             activationCode: undefined,
@@ -55,7 +55,7 @@ class MobileSetupForm extends AsyncComponent {
             devices: undefined,
 
             system,
-            route,
+            database,
             env,
             onClose,
         };
@@ -118,21 +118,18 @@ class MobileSetupFormSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { route, env, system, activationCode, onClose } = this.props;
+        let { database, env, system, activationCode, onClose } = this.props;
         let { t } = env.locale;
-        let { address, schema } = route.context;
+        let { address, schema } = database.context;
         let systemAddress = _.get(system, 'settings.address');
-        let universalLink;
         if (!systemAddress) {
             // use the address in the system object if there's one
             address = systemAddress;
         }
+        let url;
         if (activationCode) {
-            let params = { activationCode, activationSchema: schema };
-            let context = { cors: true, schema: undefined };
-            let url = route.find('start-page', params, context);
-            universalLink = UniversalLink.form(url);
-            console.log(universalLink);
+            url = UniversalLink.createActivationURL(address, schema, activationCode);
+            console.log(url);
         }
         let closeButtonProps = {
             label: t('mobile-setup-close'),
@@ -142,7 +139,7 @@ class MobileSetupFormSync extends PureComponent {
         return (
             <div className="mobile-setup-dialog-box">
                 <div className="contents">
-                    <QRCode text={universalLink} scale={6} />
+                    <QRCode text={url} scale={6} />
                     <div className="info">
                         <div className="label">{t('mobile-setup-address')}</div>
                         <div className="value">{address}</div>
@@ -174,7 +171,6 @@ export {
 };
 
 import Database from 'data/database';
-import Route from 'routing/route';
 import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
@@ -185,7 +181,6 @@ if (process.env.NODE_ENV !== 'production') {
         system: PropTypes.object,
 
         database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
 
         onClose: PropTypes.func,
