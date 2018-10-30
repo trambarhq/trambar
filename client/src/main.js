@@ -71,6 +71,6 @@ function showProgress(loaded, total) {
 
 if (process.env.PLATFORM === 'cordova') {
     if (typeof(cordova) !== 'object') {
-        window.cordova = { platformID: 'android' };
+        window.cordova = { platformId: 'android' };
     }
 }

@@ -102,6 +102,7 @@ class StartPage extends AsyncComponent {
                     }).then((device) => {
                         // at this point a change event should have forced
                         // rendering already--doesn't matter what we return
+                        route.replace('news-page', {}, { schema: activationSchema });
                         return <StartPageSync {...props} />;
                     }).catch((err) => {
                         props.serverError = err;
@@ -185,6 +186,14 @@ class StartPageSync extends PureComponent {
                 lastError: null,
             });
         }
+    }
+
+    static getDerivedStateFromProps(props, state) {
+        let { activationSchema, transitionOut } = props;
+        if (activationSchema && transitionOut) {
+            return { transitionMethod: 'slow' };
+        }
+        return null;
     }
 
     /**
@@ -339,20 +348,19 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderMobileGreeting() {
-        let { env, currentUser } = this.props;
-        let { qrCodeStatus } = this.state;
-        let { t, p } = env.locale;
+        let { env, currentUser, activationSchema } = this.props;
+        let { t } = env.locale;
         let className = 'welcome';
-        if (qrCodeStatus === 'correct') {
+        if (activationSchema) {
             let name;
-            if (user) {
-                name = UserUtils.getDisplayName(currentUser);
+            if (currentUser) {
+                name = UserUtils.getDisplayName(currentUser, env);
                 className += ' user';
             } else {
                 name = '\u00a0';
             }
             let imageProps = {
-                user: user,
+                user: currentUser,
                 size: 'large',
                 env,
             };
