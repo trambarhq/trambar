@@ -530,8 +530,12 @@ class RemoteDataSource extends EventEmitter {
      * @return {Boolean}
      */
     hasAuthorization(location) {
-        let session = this.obtainSession(location);
-        return (session.token) ? true : false;
+        try {
+            let session = this.obtainSession(location);
+            return (session.token) ? true : false;
+        } catch (err) {
+            return false;
+        }
     }
 
     /**

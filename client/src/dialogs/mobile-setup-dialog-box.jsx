@@ -128,7 +128,9 @@ class MobileSetupFormSync extends PureComponent {
             address = systemAddress;
         }
         if (activationCode) {
-            let url = route.find('start-page', { activationCode, schema }, { cors: true });
+            let params = { activationCode, activationSchema: schema };
+            let context = { cors: true, schema: undefined };
+            let url = route.find('start-page', params, context);
             universalLink = UniversalLink.form(url);
             console.log(universalLink);
         }

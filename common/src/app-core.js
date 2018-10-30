@@ -196,7 +196,11 @@ function start(cfg) {
     return loadLocale().then((savedLocale) => {
         return localeManager.start(savedLocale);
     }).then(() => {
-        return routeManager.start();
+        let initialURL;
+        if (envMonitor.platform === 'cordova') {
+            initialURL = '/@cordova/';
+        }
+        return routeManager.start(initialURL);
     }).then(() => {
         return {
             envMonitor,

@@ -49,17 +49,19 @@ class StartPage extends AsyncComponent {
             env,
             transitionOut,
             activationCode,
+            activationSchema,
             onTransitionOut,
         } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
             currentUser: undefined,
-            system: this.sessionStartSystem,
+            system: undefined,
             servers: undefined,
             projects: undefined,
             projectLinks: undefined,
 
             transitionOut,
+            activationSchema,
             database,
             route,
             env,
@@ -123,6 +125,9 @@ class StartPage extends AsyncComponent {
                 // need to adjust the progressive rendering delay since Relaks
                 // by default disables it once a page has fully rendered
                 meanwhile.delay(undefined, 300);
+
+                // saved earlier
+                props.system = this.sessionStartSystem;
             }
             meanwhile.show(<StartPageSync {...props} />);
             return db.start().then((currentUserID) => {
@@ -162,34 +167,23 @@ class StartPageSync extends PureComponent {
     constructor(props) {
         let { env } = props;
         super(props);
+        this.state = {
+            selectedProjectName: '',
+            transitionMethod: 'fast',
+        };
         if (env.platform === 'browser') {
-            this.state = {
-                transitionMethod: 'fast',
+            _.assign(this.state, {
                 oauthErrors: {},
-            };
+            });
         } else if (env.platform === 'cordova') {
-            this.state = {
-                transitionMethod: 'fast',
+            _.assign(this.state, {
                 receivedCorrectQRCode: false,
                 receivedInvalidQRCode: false,
                 scanningQRCode: false,
                 enteringManually: false,
                 addingServer: false,
                 lastError: null,
-            };
-        }
-    }
-
-    /**
-     * Initiate transition out from this page
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { database, projects } = this.props;
-        let { qrCodeStatus } = this.state;
-        if (qrCodeStatus === 'correct') {
-            this.setState({ qrCodeStatus: 'pending' });
+            });
         }
     }
 
@@ -667,13 +661,19 @@ class StartPageSync extends PureComponent {
             address: route.context.address,
             schema: project.name,
         });
-        let pageName = (skipDialog) ? 'news-page': 'start-page';
-        let linkProps = {
-            'data-project-id': project.id,
-            className: 'project-button',
-            href: route.find(pageName, {}, { schema: project.name }),
-            onClick: (skipDialog) ? null : this.handleUnknownProjectClick,
-        };
+        let linkProps;
+        if (!skipDialog) {
+            linkProps = {
+                'data-project-name': project.name,
+                className: 'project-button',
+                onClick: this.handleUnknownProjectClick,
+            };
+        } else {
+            linkProps = {
+                className: 'project-button',
+                href: route.find('news-page', {}, { schema: project.name }),
+            };
+        }
         return (
             <a key={project.id} {...linkProps}>
                 <div className="icon">{icon}</div>
@@ -759,8 +759,8 @@ class StartPageSync extends PureComponent {
      */
     renderProjectDialog() {
         let { database, route, env, projects, currentUser, transitionOut } = this.props;
-        let { schema } = route.context;
-        let selectedProject = _.find(projects, { name: schema });
+        let { selectedProjectName } = this.state;
+        let selectedProject = _.find(projects, { name: selectedProjectName });
         let dialogProps = {
             show: !!selectedProject && !transitionOut,
             currentUser,
@@ -842,10 +842,8 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleUnknownProjectClick = (evt) => {
-        // replace instead of push
-        let { route } = this.props;
-        route.change(evt.currentTarget, { replace: true });
-        evt.preventDefault();
+        let selectedProjectName = evt.currentTarget.getAttribute('data-project-name');
+        this.setState({ selectedProjectName });
     }
 
     /**
@@ -886,9 +884,7 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestClose = (evt) => {
-        let { route } = this.props;
-        let context = { schema: null };
-        route.replace('start-page', {}, context);
+        this.setState({ selectedProjectName: null });
     }
 
     /**
@@ -898,7 +894,10 @@ class StartPageSync extends PureComponent {
      */
     handleMembershipRequestProceed = (evt) => {
         let { route } = this.props;
-        route.replace('news-page', {});
+        let { project } = evt.target.props;
+        let context = { schema: project.name };
+        this.setState({ transitionMethod: 'slow' });
+        route.replace('news-page', {}, context);
     }
 
     /**
@@ -1171,6 +1170,7 @@ if (process.env.NODE_ENV !== 'production') {
     StartPage.propTypes = {
         transitionOut: PropTypes.bool,
         activationCode: PropTypes.string,
+        activationSchema: PropTypes.string,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
@@ -1179,7 +1179,7 @@ if (process.env.NODE_ENV !== 'production') {
     };
     StartPageSync.propTypes = {
         transitionOut: PropTypes.bool,
-        activationCode: PropTypes.string,
+        activationSchema: PropTypes.string,
         currentUser: PropTypes.object,
         system: PropTypes.object,
         servers: PropTypes.arrayOf(PropTypes.object),

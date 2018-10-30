@@ -80,8 +80,8 @@ class PeoplePage extends AsyncComponent {
         // wait for retrieval of fresh story listing on initial render
         let freshListing = meanwhile.revising() ? false : true;
         meanwhile.show(<PeoplePageSync {...props} />);
-        return db.start().then((currentUserId) => {
-            return UserFinder.findUser(db, currentUserId).then((user) => {
+        return db.start().then((currentUserID) => {
+            return UserFinder.findUser(db, currentUserID).then((user) => {
                 props.currentUser = user;
             });
         }).then(() => {
@@ -215,12 +215,12 @@ class PeoplePage extends AsyncComponent {
             } else {
                 // deal with situation where we're showing stories by someone
                 // who're not on the team
-                let authorIds = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
-                let memberIds = _.map(props.members, 'id');
-                let nonMemberUserIds = _.difference(authorIds, memberIds);
+                let authorIDs = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
+                let memberIDs = _.map(props.members, 'id');
+                let nonMemberUserIDs = _.difference(authorIDs, memberIDs);
                 let publicOnly = (props.currentUser.type === 'guest');
-                if (!_.isEmpty(nonMemberUserIds)) {
-                    return UserFinder.findUsers(db, nonMemberUserIds).then((users) => {
+                if (!_.isEmpty(nonMemberUserIDs)) {
+                    return UserFinder.findUsers(db, nonMemberUserIDs).then((users) => {
                         // add non-members
                         props.visibleUsers = _.concat(props.visibleUsers, users);
                         meanwhile.show(<PeoplePageSync {...props} />);
@@ -435,10 +435,10 @@ class PeoplePageSync extends PureComponent {
     }
 }
 
-const findUsersWithRoles = memoizeWeak(null, function(users, roleIds) {
+const findUsersWithRoles = memoizeWeak(null, function(users, roleIDs) {
     let list = _.filter(users, (user) => {
-        return _.some(user.role_ids, (roleId) => {
-            return _.includes(roleIds, roleId);
+        return _.some(user.role_ids, (roleID) => {
+            return _.includes(roleIDs, roleID);
         });
     });
     if (!_.isEmpty(list)) {

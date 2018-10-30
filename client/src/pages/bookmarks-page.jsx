@@ -52,8 +52,8 @@ class BookmarksPage extends AsyncComponent {
             env,
         };
         meanwhile.show(<BookmarksPageSync {...props} />);
-        return db.start().then((currentUserId) => {
-            return UserFinder.findUser(db, currentUserId).then((user) => {
+        return db.start().then((currentUserID) => {
+            return UserFinder.findUser(db, currentUserID).then((user) => {
                 props.currentUser = user;
             });
         }).then(() => {

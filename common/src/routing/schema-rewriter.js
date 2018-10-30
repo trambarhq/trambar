@@ -1,6 +1,6 @@
 const SchemaRewriter = {
     from: (urlParts, context) => {
-        let regExp = new RegExp('^/([^/]+)');
+        let regExp = new RegExp('^/([\w\-]+)');
         let m = regExp.exec(urlParts.path);
         if (m) {
             context.schema = m[1];
