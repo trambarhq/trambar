@@ -71,7 +71,9 @@ class OverlayProxy extends PureComponent {
      * Remove overlay element on unmount
      */
     componentWillUnmount() {
-        this.hide();
+        this.restorePreviousFocus();
+        this.removeContainer();
+        OverlayProxy.active = false;
     }
 
     /**
@@ -123,13 +125,17 @@ class OverlayProxy extends PureComponent {
      * Transition out, then remove overlay element
      */
     hide() {
+        this.restorePreviousFocus();
+        this.shown = false;
+        this.redraw(this.shown);
+        OverlayProxy.active = false;
+    }
+
+    restorePreviousFocus() {
         if (this.originalFocusElement) {
             this.originalFocusElement.focus();
             this.originalFocusElement = null;
         }
-        this.shown = false;
-        this.redraw(this.shown);
-        OverlayProxy.active = false;
     }
 
     /**

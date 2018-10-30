@@ -925,10 +925,10 @@ class StartPageSync extends PureComponent {
     handleMembershipRequestConfirm = (evt) => {
         let { database, currentUser } = this.props;
         let { project } = evt.target.props;
-        if (!_.include(currentUser.requested_project_ids, project.id)) {
+        if (!_.includes(currentUser.requested_project_ids, project.id)) {
             let db = database.use({ schema: 'global', by: this });
             let userAfter = _.clone(currentUser);
-            userAfter.requested_project_ids = _.concat(userAfter.requested_project_ids, project.id);
+            userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ project.id ]);
             db.saveOne({ table: 'user' }, userAfter);
         }
     }
