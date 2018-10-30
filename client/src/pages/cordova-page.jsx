@@ -35,9 +35,9 @@ class CordovaPage extends AsyncComponent {
                     address: lastLink.address,
                     schema: lastLink.schema,
                 };
-                route.replace('news-page', {}, context);
+                return route.replace('news-page', {}, context);
             } else {
-                route.replace('start-page', {});
+                return route.replace('start-page', {});
             }
         }).then(() => {
             return null;

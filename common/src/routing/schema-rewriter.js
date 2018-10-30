@@ -1,10 +1,10 @@
 const SchemaRewriter = {
     from: (urlParts, context) => {
-        let regExp = new RegExp('^/([\w\-]+)');
+        let regExp = /^(\/([\w\-]+))(\/|$)/;
         let m = regExp.exec(urlParts.path);
         if (m) {
-            context.schema = m[1];
-            urlParts.path = urlParts.path.substr(m[0].length);
+            context.schema = m[2];
+            urlParts.path = urlParts.path.substr(m[1].length);
         }
     },
     to: (urlParts, context) => {
