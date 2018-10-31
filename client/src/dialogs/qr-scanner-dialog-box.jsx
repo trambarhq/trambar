@@ -104,11 +104,10 @@ class QRScannerDialogBox extends PureComponent {
                             }
                             return null;
                         }).catch((err) => {
-                            console.log(err)
                             if (err.name !== 'SCAN_CANCELED') {
                                 console.error(err);
                             }
-                        });
+                        }).delay(1000);
                     });
                     Async.while(() => {
                         let { show } = this.props;
@@ -173,7 +172,7 @@ class QRScannerDialogBox extends PureComponent {
             }
         }
         let element = (
-            <CameraOverlay>
+            <CameraOverlay showSight={!found}>
                 <top>
                     {children}
                 </top>
@@ -247,9 +246,13 @@ class CameraOverlay extends PureComponent {
     /**
      * Render targetting square
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderSquare() {
+        let { showSight } = this.props;
+        if (!showSight) {
+            return null;
+        }
         return (
             <div className="square">
                 <div className="corner top-left"></div>

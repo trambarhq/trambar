@@ -7,6 +7,7 @@ class EnvironmentMonitor extends EventEmitter {
         super();
         let viewport = document.body.parentNode;
         this.visible = true;
+        this.paused = false;
         this.online = isOnline();
         this.connectionType = getConnectionType();
         this.battery = {};

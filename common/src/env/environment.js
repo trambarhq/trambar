@@ -23,9 +23,9 @@ class Environment {
         this.devices = envMonitor.devices;
         this.recorders = envMonitor.recorders;
 
-        this.locale = extra.locale;
-        this.address = extra.address;
-        this.widthDefinitions = extra.widthDefinitions;
+        for (let name in extra) {
+            this[name] = extra[name];
+        }
     }
 
     isWiderThan(dim) {
@@ -33,7 +33,9 @@ class Environment {
         if (typeof(dim) === 'number') {
             width = dim;
         } else if (typeof(dim) === 'string') {
-            width = this.widthDefinitions[dim];
+            if (this.widthDefinitions) {
+                width = this.widthDefinitions[dim];
+            }
         }
         return (this.viewportWidth >= width);
     }

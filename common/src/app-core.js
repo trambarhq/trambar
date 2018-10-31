@@ -6,6 +6,7 @@ import RouteManager from 'relaks-route-manager';
 import PayloadManager from 'transport/payload-manager';
 import PushNotifier from 'transport/push-notifier';
 import WebsocketNotifier from 'transport/websocket-notifier';
+import CodePush from 'transport/code-push';
 import RemoteDataSource from 'data/remote-data-source';
 import IndexedDBCache from 'data/indexed-db-cache';
 import LocalStorageCache from 'data/local-storage-cache';
@@ -60,6 +61,13 @@ function start(cfg) {
         uploadURL: getUploadURL,
         streamURL: getStreamURL,
     });
+    let codePush;
+    if (cfg.codePush) {
+        codePush = new CodePush({
+            keys: cfg.codePush.keys,
+        });
+        codePush.check();
+    }
     envMonitor.activate();
     routeManager.activate();
     if (envMonitor.online) {
@@ -75,10 +83,14 @@ function start(cfg) {
     let currentSubscription = {};
 
     envMonitor.addEventListener('change', (evt) => {
-        if (envMonitor.online) {
+        if (envMonitor.online && !envMonitor.paused) {
             dataSource.activate();
             payloadManager.activate();
             notifier.activate();
+
+            if (codePush) {
+                codePush.check(1 * 60 * 60);
+            }
         } else {
             dataSource.deactivate();
             payloadManager.deactivate();
@@ -187,7 +199,6 @@ function start(cfg) {
             if (file) {
                 let { address } = destination;
                 let url = address + response.url;
-                console.log(url + ' => (blob)');
                 BlobManager.associate(file, url);
             }
         }
@@ -209,6 +220,7 @@ function start(cfg) {
             payloadManager,
             dataSource,
             notifier,
+            codePush,
         };
     });
 

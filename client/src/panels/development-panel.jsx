@@ -17,13 +17,6 @@ import './development-panel.scss';
 class DevelopmentPanel extends PureComponent {
     static displayName = 'DevelopmentPanel';
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            selectedDeploymentName: null
-        };
-    }
-
     /**
      * Change a property of the user object
      *
@@ -42,21 +35,6 @@ class DevelopmentPanel extends PureComponent {
                 target: this,
                 user: userAfter
             });
-        }
-    }
-
-    /**
-     * Load deployment selection if platform is Cordova
-     */
-    componentWillMount() {
-        let { env } = this.props;
-        if (env.platform === 'cordova') {
-            let codePush = CodePush.instance;
-            if (codePush) {
-                codePush.loadDeploymentName().then((selectedDeploymentName) => {
-                    this.setState({ selectedDeploymentName });
-                });
-            }
         }
     }
 
@@ -96,15 +74,11 @@ class DevelopmentPanel extends PureComponent {
      */
     renderDeploymentOptions() {
         let { env } = this.props;
-        if (env.platform !== 'cordova') {
+        if (!env.codePush) {
             return null;
         }
-        let codePush = CodePush.instance;
-        let names;
-        if (codePush) {
-            names = codePush.getDeploymentNames();
-        }
-        return _.map(names, this.renderDeploymentOption);
+        let names = env.codePush.getDeploymentNames();
+        return _.map(names, this.renderDeploymentOption.bind(this));
     }
 
     /**
@@ -114,9 +88,7 @@ class DevelopmentPanel extends PureComponent {
      */
     renderDevelopmentOptions() {
         let names = [ 'show-panel' ];
-        return _.map(names, (name, index) => {
-            return this.renderDevelopmentOption(name, index);
-        });
+        return _.map(names, this.renderDevelopmentOption.bind(this));
     }
 
     /**
@@ -152,14 +124,10 @@ class DevelopmentPanel extends PureComponent {
      */
     renderDeploymentOption(name, index) {
         let { env } = this.props;
-        let { selectedDeploymentName } = this.state;
         let { t } = env.locale;
-        if (env.platform !== 'cordova') {
-            return null;
-        }
         let buttonProps = {
             label: t(`development-code-push-$deployment`, name),
-            selected: (name === selectedDeploymentName),
+            selected: (name === env.codePush.selectedDeployment),
             onClick: this.handleDeploymentOptionClick,
             id: name,
         };
@@ -211,14 +179,8 @@ class DevelopmentPanel extends PureComponent {
      */
     handleDeploymentOptionClick = (evt) => {
         let { env } = this.props;
-        if (env.platform !== 'cordova') {
-            return;
-        }
-        let selectedDeploymentName = evt.currentTarget.id;
-        this.setState({ selectedDeploymentName }, () => {
-            let codePush = CodePush.instance;
-            codePush.saveDeploymentName(selectedDeploymentName);
-        });
+        let deploymentName = evt.currentTarget.id;
+        env.codePush.saveDeploymentName(deploymentName);
     }
 
     /**

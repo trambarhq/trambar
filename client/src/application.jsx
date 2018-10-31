@@ -7,6 +7,7 @@ import CORSRewriter from 'routing/cors-rewriter';
 import SchemaRewriter from 'routing/schema-rewriter';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as ProjectLinkFinder from 'objects/finders/project-link-finder';
+import { codePushDeploymentKeys } from 'keys';
 
 // non-visual components
 import Database from 'data/database';
@@ -45,6 +46,9 @@ class Application extends PureComponent {
                 include_uncommitted: true,
             },
         },
+        codePush: {
+            keys: codePushDeploymentKeys
+        },
         cache: {
             name: 'trambar'
         },
@@ -58,14 +62,16 @@ class Application extends PureComponent {
             payloadManager,
             envMonitor,
             localeManager,
-        } = this.props;
+            codePush,
+        } = props;
         let { address, schema } = routeManager.context;
         let locale = new Locale(localeManager);
+        let extra = { locale, address, widthDefinitions, codePush };
         this.state = {
             database: new Database(dataSource, { address, schema }),
             payloads: new Payloads(payloadManager, { address, schema }),
             route: new Route(routeManager),
-            env: new Environment(envMonitor, { locale, address, widthDefinitions }),
+            env: new Environment(envMonitor, extra),
 
             showingUploadProgress: false,
         };
@@ -195,6 +201,7 @@ class Application extends PureComponent {
             envMonitor,
             localeManager,
             notifier,
+            codePush,
         } = this.props;
         dataSource.addEventListener('change', this.handleDatabaseChange);
         routeManager.addEventListener('beforechange', this.handleRouteBeforeChange, true);
@@ -203,6 +210,9 @@ class Application extends PureComponent {
         envMonitor.addEventListener('change', this.handleEnvironmentChange);
         localeManager.addEventListener('change', this.handleLocaleChange);
         notifier.addEventListener('alert', this.handleAlertClick);
+        if (codePush) {
+            codePush.addEventListener('change', this.handleCodePushChange);
+        }
 
         window.addEventListener('beforeunload', this.handleBeforeUnload);
     }
@@ -313,10 +323,11 @@ class Application extends PureComponent {
      * @param  {LocaleManagerEvent} evt
      */
     handleLocaleChange = (evt) => {
-        let { envMonitor, localeManager, routeManager } = this.props;
+        let { envMonitor, localeManager, routeManager, codePush } = this.props;
         let { address } = routeManager.context;
         let locale = new Locale(localeManager);
-        let env = new Environment(envMonitor, { locale, address, widthDefinitions });
+        let extra = { locale, address, widthDefinitions, codePush };
+        let env = new Environment(envMonitor, extra);
         this.setState({ env });
         document.title = locale.t('app-name');
     }
@@ -330,8 +341,18 @@ class Application extends PureComponent {
         let { envMonitor, routeManager } = this.props;
         let { address } = routeManager.context;
         let { locale } = this.state.env;
-        let env = new Environment(envMonitor, { locale, address, widthDefinitions });
+        let extra = { locale, address, widthDefinitions, codePush };
+        let env = new Environment(envMonitor, extra);
         this.setState({ env });
+    }
+
+    /**
+     * Called when CodePush has changed
+     *
+     * @param  {CodePushEvent} evt
+     */
+    handleCodePushChange = (evt) => {
+        this.handleEnvironmentChange();
     }
 
     /**
@@ -360,7 +381,7 @@ class Application extends PureComponent {
      * @param  {RelaksRouteManagerEvent} evt
      */
     handleRouteChange = (evt) => {
-        let { routeManager, dataSource, envMonitor, payloadManager } = this.props;
+        let { routeManager, dataSource, envMonitor, payloadManager, codePush } = this.props;
         let { database, payloads, env, route: prevRoute } = this.state;
         let route = new Route(routeManager);
         let { address, schema } = route.context;
@@ -371,7 +392,8 @@ class Application extends PureComponent {
         }
         if (address !== env.address) {
             let locale = env.locale;
-            env = new Environment(envMonitor, { locale, address, widthDefinitions });
+            let extra = { locale, address, widthDefinitions, codePush };
+            env = new Environment(envMonitor, extra);
         }
         let transitionOut = false;
         let PreviousPage = getRouteClass(prevRoute);

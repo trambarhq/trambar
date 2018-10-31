@@ -1,6 +1,6 @@
 let codePushDeploymentKeys = {};
 
-if (process.env.PLATFORM === 'cordova') {
+if (process.env.PLATFORM === 'cordova' && process.env.NODE_ENV === 'production') {
     codePushDeploymentKeys = {
         android: {
             Production: 'mwgABsCDDa9F2RhCP_cQ7QUF21c316dff513-0bda-4eff-8585-a112bd2d2a35',

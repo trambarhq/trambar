@@ -1010,7 +1010,7 @@ class StartPageSync extends PureComponent {
      * @param  {Object} evt
      */
     handleCancelScan = (evt) => {
-        this.setState({ scanningQRCode: false });
+        this.setState({ scanningQRCode: false, activationError: null });
         if (this.invalidCodeTimeout) {
             clearTimeout(this.invalidCodeTimeout);
         }

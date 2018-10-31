@@ -7,13 +7,31 @@ import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 const defaultOptions = {
 };
 
-class CodePush {
+class CodePush extends EventEmitter {
     constructor(options) {
+        super();
         this.options = _.defaults({}, options, defaultOptions);
-        this.lastSyncStatus = null;
-        this.lastSyncTime = null;
+        this.lastSyncStatus = '';
+        this.lastSyncTime = '';
         this.currentPackage = null;
         this.pendingPackage = null;
+        this.selectedDeployment = _.first(this.getDeploymentNames()) || '';
+    }
+
+    /**
+     * Check for update if the given amount of time, specified in seconds,
+     * has passed since the last check.
+     *
+     * @param  {Number} interval
+     */
+    check(interval) {
+        if (interval) {
+            let limit = Moment().subtract(interval, 'second').toISOString();
+            if (this.lastSyncTime > limit) {
+                return;
+            }
+        }
+        this.checkForUpdate();
     }
 
     /**
@@ -32,11 +50,12 @@ class CodePush {
      * @return {Promise<String>}
      */
     loadDeploymentName() {
-        var names = this.getDeploymentNames();
+        let names = this.getDeploymentNames();
         return readTextFile('codepush').then((name) => {
             if (!_.includes(names, name)) {
                 throw new Error(`Unrecognized deployment name: ${name}`);
             }
+            this.selectedDeployment = name;
             return name;
         }).catch((err) => {
             return _.first(names);
@@ -50,6 +69,7 @@ class CodePush {
      */
     saveDeploymentName(type) {
         return writeTextFile('codepush', type).then(() => {
+            this.selectedDeployment = type;
             this.checkForUpdate();
             return null;
         });
@@ -94,46 +114,58 @@ class CodePush {
     }
 
     /**
-     * Run code synchronization
+     * Check for update
+     *
+     * @return {Promise}
      */
     checkForUpdate() {
-        this.loadDeploymentName().then((deployment) => {
-            if (process.env.NODE_ENV !== 'production') {
-                return 'NOT_PRODUCTION';
+        return this.loadDeploymentName().then((deployment) => {
+            let platform = cordova.platformId;
+            let deploymentKey = _.get(this.options.keys, [ platform, deployment ]);
+
+            return this.synchronize(deploymentKey).then((result) => {
+                this.lastSyncStatus = result;
+                this.lastSyncTime = Moment().toISOString();
+                if (result === 'UPDATE_INSTALLED') {
+                    return this.getPendingPackage().then((pkg) => {
+                        this.pendingPackage = pkg;
+                    });
+                }
+            });
+        });
+    }
+
+    /**
+     * Run code synchronization
+     *
+     * @param  {String} deploymentKey
+     *
+     * @return {Promise<String>}
+     */
+    synchronize(deploymentKey) {
+        return Promise.try(() => {
+            if (typeof(codePush) !== 'object') {
+                return 'NO_PLUGIN';
             }
-            if (typeof(cordova) !== 'object') {
-                return 'NOT_CORDOVA';
-            }
-            var platform = cordova.platformId;
-            var deploymentKey = _.get(this.options.keys, [ platform, deployment ]);
-            if (deploymentKey) {
-                return new Promise((resolve, reject) => {
-                    var callback = (status) => {
-                        switch (status) {
-                            case SyncStatus.UPDATE_INSTALLED:
-                                resolve('UPDATE_INSTALLED');
-                                break;
-                            case SyncStatus.UP_TO_DATE:
-                                resolve('UP_TO_DATE');
-                                break;
-                            case SyncStatus.ERROR:
-                                resolve('ERROR');
-                                break;
-                        }
-                    };
-                    codePush.sync(callback, { deploymentKey });
-                });
-            } else {
+            if (!deploymentKey) {
                 return 'NO_DEPLOYMENT_KEY';
             }
-        }).then((result) => {
-            this.lastSyncStatus = result;
-            this.lastSyncTime = Moment().toISOString();
-            if (result === 'UPDATE_INSTALLED') {
-                this.getPendingPackage().then((pkg) => {
-                    this.pendingPackage = pkg;
-                });
-            }
+            return new Promise((resolve, reject) => {
+                let callback = (status) => {
+                    switch (status) {
+                        case SyncStatus.UPDATE_INSTALLED:
+                            resolve('UPDATE_INSTALLED');
+                            break;
+                        case SyncStatus.UP_TO_DATE:
+                            resolve('UP_TO_DATE');
+                            break;
+                        case SyncStatus.ERROR:
+                            resolve('ERROR');
+                            break;
+                    }
+                };
+                codePush.sync(callback, { deploymentKey });
+            });
         });
     }
 }
@@ -143,7 +175,7 @@ function readTextFile(filename) {
         requestFileSystem(LocalFileSystem.PERSISTENT, 0, (fs) => {
             fs.root.getFile(filename, { create: false, exclusive: false }, (fileEntry) => {
                 fileEntry.file((file) => {
-                    var reader = new FileReader;
+                    let reader = new FileReader;
                     reader.onload = (evt) => {
                         resolve(reader.result);
                     };
@@ -165,7 +197,7 @@ function readTextFile(filename) {
 
 function writeTextFile(filename, text) {
     return new Promise((resolve, reject) => {
-        var blob = new Blob([ text ], { type: 'text/plain' })
+        let blob = new Blob([ text ], { type: 'text/plain' })
         requestFileSystem(LocalFileSystem.PERSISTENT, 0, (fs) => {
             fs.root.getFile('codepush', { create: true, exclusive: false }, (fileEntry) => {
                 fileEntry.createWriter((fileWriter) => {
