@@ -516,6 +516,9 @@ import 'relaks';
 // pull in all widgets for the same reason
 require.context('widgets', true);
 
+// pull in shims
+require.context('shims', true);
+
 import EnvironmentMonitor from 'env/environment-monitor';
 import RouteManager from 'relaks-route-manager';
 import RemoteDataSource from 'data/remote-data-source';
