@@ -203,8 +203,9 @@ class Application extends PureComponent {
      * @param  {PayloadManagerEvent} evt
      */
     handlePayloadsChange = (evt) => {
-        let { showingUploadProgress } = this.state;
-        let payloads = new Payloads(evt.target);
+        let { route, showingUploadProgress } = this.state;
+        let { address } = route.context;
+        let payloads = new Payloads(evt.target, { address, schema: 'global' });
         if (!payloads.uploading) {
             // stop showing it once it's done
             showingUploadProgress = false;
