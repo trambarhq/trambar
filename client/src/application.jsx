@@ -74,6 +74,7 @@ class Application extends PureComponent {
             env: new Environment(envMonitor, extra),
 
             showingUploadProgress: false,
+            makingRequests: false,
         };
     }
 
@@ -106,7 +107,7 @@ class Application extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { database, route, env, payloads } = this.state;
+        let { database, route, env, payloads, makingRequests } = this.state;
         let settings = route.params.ui;
         let topNavProps = {
             searching: false, // TODO
@@ -114,6 +115,7 @@ class Application extends PureComponent {
             database,
             route,
             payloads,
+            makingRequests,
             env,
         };
         let bottomNavProps = {
@@ -204,6 +206,8 @@ class Application extends PureComponent {
             codePush,
         } = this.props;
         dataSource.addEventListener('change', this.handleDatabaseChange);
+        dataSource.addEventListener('requeststart', this.handleRequestStart);
+        dataSource.addEventListener('requestend', this.handleRequestEnd);
         routeManager.addEventListener('beforechange', this.handleRouteBeforeChange, true);
         routeManager.addEventListener('change', this.handleRouteChange);
         payloadManager.addEventListener('change', this.handlePayloadsChange);
@@ -299,6 +303,36 @@ class Application extends PureComponent {
         let { address, schema } = route.context;
         let database = new Database(evt.target, { address, schema });
         this.setState({ database });
+    }
+
+    /**
+     * Called when a request to remote server starts
+     *
+     * @param  {RemoteDataSourceEvent} evt
+     */
+    handleRequestStart = (evt) => {
+        let { makingRequests } = this.state;
+        if (!makingRequests) {
+            this.setState({ makingRequests: true });
+        }
+    }
+
+    /**
+     * Called when a request to remote server finishes
+     *
+     * @param  {RemoteDataSourceEvent} evt
+     */
+    handleRequestEnd = (evt) => {
+        // use a timeout function to reduce the number of toggles
+        setTimeout(() => {
+            let { makingRequests } = this.state;
+            if (makingRequests) {
+                let { requestCount } = evt.target;
+                if (requestCount === 0) {
+                    this.setState({ makingRequests: false });
+                }
+            }
+        }, 300);
     }
 
     /**

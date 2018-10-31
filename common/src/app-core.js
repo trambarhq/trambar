@@ -62,7 +62,7 @@ function start(cfg) {
         streamURL: getStreamURL,
     });
     let codePush;
-    if (cfg.codePush) {
+    if (cfg.codePush && envMonitor.platform === 'cordova') {
         codePush = new CodePush({
             keys: cfg.codePush.keys,
         });

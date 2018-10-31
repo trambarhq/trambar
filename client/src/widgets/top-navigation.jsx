@@ -154,7 +154,7 @@ class TopNavigation extends PureComponent {
      * @return {ReactElement}
      */
     renderButtonBar() {
-        let { database, payloads, env } = this.props;
+        let { database, payloads, env, makingRequests } = this.props;
         let selected = this.getSelectedControl();
         let calendarProps = {
             icon: 'calendar',
@@ -176,7 +176,7 @@ class TopNavigation extends PureComponent {
         };
         let connectionProps = {
             uploading: payloads.uploading,
-            searching: database.searching,
+            searching: makingRequests,
             env,
         };
         return (
@@ -283,7 +283,7 @@ function Button(props) {
 }
 
 function ConnectionIndicator(props) {
-    let { env, uploading, searching, connected } = props;
+    let { env, uploading, searching } = props;
     let { t } = env.locale;
     if (uploading) {
         let size = _.fileSize(uploading.bytes);
@@ -305,13 +305,6 @@ function ConnectionIndicator(props) {
             <span className="connection">
                 <i className="fa fa-wifi" />
                 <i className="fa fa-ban" />
-            </span>
-        );
-    } else if (!connected) {
-        let title = t('warning-no-connection');
-        return (
-            <span className="connection" title={title}>
-                <i className="fa fa-warning" />
             </span>
         );
     } else {

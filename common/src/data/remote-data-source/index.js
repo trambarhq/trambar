@@ -47,6 +47,7 @@ class RemoteDataSource extends EventEmitter {
         this.changeQueue = [];
         this.sessionCheckInterval = 0;
         this.startTime = null;
+        this.requestCount = 0;
     }
 
     activate() {
@@ -1529,6 +1530,8 @@ class RemoteDataSource extends EventEmitter {
             contentType: 'json',
             responseType: 'json',
         };
+        this.requestCount++;
+        this.triggerEvent(new RemoteDataSourceEvent('requeststart', this));
         return HTTPRequest.fetch('POST', url, req, options).then((result) => {
             return result;
         }).catch((err) => {
@@ -1548,6 +1551,9 @@ class RemoteDataSource extends EventEmitter {
                 this.triggerEvent(new RemoteDataSourceEvent('change', this));
             }
             throw err;
+        }).finally(() => {
+            this.requestCount--;
+            this.triggerEvent(new RemoteDataSourceEvent('requestend', this));
         });
     }
 

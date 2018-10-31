@@ -130,10 +130,13 @@ class DiagnosticsPage extends PureComponent {
     /**
      * Render diagnostics of CodePush
      *
-     * @return {ReactElement}
+     * @return {ReactElement|null}
      */
     renderCodePushPanel() {
         let { codePush } = this.props;
+        if (!codePush) {
+            return null;
+        }
         let panelProps = { codePush };
         return <CodePushPanel {...panelProps} />;
     }
