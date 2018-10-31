@@ -59,8 +59,11 @@ if (event !== 'start') {
     }
 }
 
+var pkg = readJSON('./package.json');
+
 var env = {
     PLATFORM: platform,
+    VERSION: pkg.version,
     NODE_ENV: (event === 'build') ? 'production' : 'development',
 };
 var constants = {};
@@ -186,6 +189,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: `${folders.assets}/${platform}.html`,
             filename: `${folders.www}/index.html`,
+            version: env.VERSION,
         }),
         new ExtractTextPlugin({
             filename: 'styles.css',
@@ -222,6 +226,15 @@ if (event === 'build') {
     // use Uglify to remove dead-code
     console.log('Optimizing JS code');
     module.exports.plugins.unshift(new UglifyJSPlugin());
+}
+
+function readJSON(path) {
+    var text = FS.readFileSync(path);
+    try {
+        return JSON.parse(text);
+    } catch(err) {
+        return {};
+    }
 }
 
 function resolve(path) {

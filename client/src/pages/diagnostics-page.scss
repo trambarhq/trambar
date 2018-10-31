@@ -65,4 +65,16 @@
             }
         }
     }
+
+    .version {
+        text-align: right;
+        color: $diagnostics-version-text-color;
+
+        .double-col &,
+        .triple-col & {
+            position: absolute;
+            bottom: 0.25em;
+            right: 0.25em;
+        }
+    }
 }

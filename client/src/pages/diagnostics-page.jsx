@@ -49,6 +49,7 @@ class DiagnosticsPage extends PureComponent {
                         {this.renderCodePushPanel()}
                     </ErrorBoundary>
                 </div>
+                <div className="version">Version {process.env.VERSION}</div>
             </PageContainer>
         );
     }

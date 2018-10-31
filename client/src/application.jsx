@@ -372,7 +372,7 @@ class Application extends PureComponent {
      * @param  {EnvironmentMonitorEvent} evt
      */
     handleEnvironmentChange = (evt) => {
-        let { envMonitor, routeManager } = this.props;
+        let { envMonitor, routeManager, codePush } = this.props;
         let { address } = routeManager.context;
         let { locale } = this.state.env;
         let extra = { locale, address, widthDefinitions, codePush };
