@@ -47,7 +47,7 @@ class PayloadManager extends EventEmitter {
         if (this.active) {
             this.active = false;
 
-            this.pausePayloaders(this.payloads);
+            this.pausePayloads(this.payloads);
         }
     }
 
