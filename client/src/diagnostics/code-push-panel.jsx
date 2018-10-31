@@ -21,12 +21,13 @@ class CodePushPanel extends Component {
      * @return {ReactElement}
      */
     render() {
+        let { codePush } = this.props;
         let {
             lastSyncTime,
             lastSyncStatus,
             currentPackage,
             pendingPackage,
-        } = {};
+        } = codePush;
         return (
             <SettingsPanel className="code-push">
                 <header>
@@ -66,3 +67,13 @@ export {
     CodePushPanel as default,
     CodePushPanel,
 };
+
+import CodePush from 'transport/code-push';
+
+if (process.env.NODE_ENV !== 'production') {
+    const PropTypes = require('prop-types');
+
+    CodePushPanel.propTypes = {
+        codePush: PropTypes.instanceOf(CodePush),
+    };
+}

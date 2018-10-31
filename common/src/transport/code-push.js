@@ -2,9 +2,14 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import Moment from 'moment';
 import FileError from 'errors/file-error';
+import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
+
+const defaultOptions = {
+};
 
 class CodePush {
-    constructor(props) {
+    constructor(options) {
+        this.options = _.defaults({}, options, defaultOptions);
         this.lastSyncStatus = null;
         this.lastSyncTime = null;
         this.currentPackage = null;
@@ -17,7 +22,7 @@ class CodePush {
      * @return {Array<String>}
      */
     getDeploymentNames() {
-        var keys = _.flatten(_.map(this.props.keys, _.keys));
+        let keys = _.flatten(_.map(this.options.keys, _.keys));
         return _.uniq(keys);
     }
 
@@ -57,7 +62,7 @@ class CodePush {
      */
     getCurrentPackage() {
         return new Promise((resolve, reject) => {
-            if (window.codePush) {
+            if (typeof(codePush) === 'object') {
                 codePush.getCurrentPackage((pkg) => {
                     resolve(pkg);
                 }, (err) => {
@@ -76,7 +81,7 @@ class CodePush {
      */
     getPendingPackage() {
         return new Promise((resolve, reject) => {
-            if (window.codePush) {
+            if (typeof(codePush) === 'object') {
                 codePush.getPendingPackage((pkg) => {
                     resolve(pkg)
                 }, (err) => {
@@ -96,11 +101,11 @@ class CodePush {
             if (process.env.NODE_ENV !== 'production') {
                 return 'NOT_PRODUCTION';
             }
-            if (!window.cordova) {
+            if (typeof(cordova) !== 'object') {
                 return 'NOT_CORDOVA';
             }
             var platform = cordova.platformId;
-            var deploymentKey = _.get(this.props.keys, [ platform, deployment ]);
+            var deploymentKey = _.get(this.options.keys, [ platform, deployment ]);
             if (deploymentKey) {
                 return new Promise((resolve, reject) => {
                     var callback = (status) => {
@@ -122,16 +127,13 @@ class CodePush {
                 return 'NO_DEPLOYMENT_KEY';
             }
         }).then((result) => {
-            this.setState({
-                lastSyncStatus: result,
-                lastSyncTime: Moment().toISOString(),
-            });
+            this.lastSyncStatus = result;
+            this.lastSyncTime = Moment().toISOString();
             if (result === 'UPDATE_INSTALLED') {
                 this.getPendingPackage().then((pkg) => {
-                    this.setState({ pendingPackage: pkg });
+                    this.pendingPackage = pkg;
                 });
             }
-            return null;
         });
     }
 }
@@ -183,3 +185,12 @@ function writeTextFile(filename, text) {
         });
     });
 }
+
+class CodePushEvent extends GenericEvent {
+}
+
+export {
+    CodePush as default,
+    CodePush,
+    CodePushEvent,
+};

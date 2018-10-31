@@ -1,5 +1,7 @@
 import * as BootstrapLoader from 'utils/bootstrap-loader';
 import libraries from 'libraries';
+import CodePush from 'transport/code-push';
+import { codePushDeploymentKeys } from 'keys';
 
 if (typeof(cordova) === 'object') {
     document.addEventListener('deviceready', initialize);
@@ -26,6 +28,8 @@ function initialize(evt) {
         let ReactDOM = modules['react-dom'];
 
         AppCore(Application.coreConfiguration).then((appProps) => {
+            appProps.codePush = new CodePush({ keys: codePushDeploymentKeys });
+
             let appElement = React.createElement(Application, appProps);
             ReactDOM.render(appElement, appContainer);
             hideSplashScreen();

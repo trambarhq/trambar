@@ -500,6 +500,7 @@ import RemoteDataSource from 'data/remote-data-source';
 import PayloadManager from 'transport/payload-manager';
 import LocaleManager from 'locale/locale-manager';
 import Notifier from 'transport/notifier';
+import CodePush from 'transport/code-push';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
@@ -510,5 +511,6 @@ if (process.env.NODE_ENV !== 'production') {
         localeManager: PropTypes.instanceOf(LocaleManager).isRequired,
         payloadManager: PropTypes.instanceOf(PayloadManager).isRequired,
         notifier: PropTypes.instanceOf(Notifier),
+        codePush: PropTypes.instanceOf(CodePush),
     };
 }

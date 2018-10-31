@@ -15,6 +15,7 @@ import LocaleManagerPanel from 'diagnostics/locale-manager-panel';
 import WebsocketNotifierPanel from 'diagnostics/websocket-notifier-panel';
 import PushNotifierPanel from 'diagnostics/push-notifier-panel';
 import PayloadManagerPanel from 'diagnostics/payload-manager-panel';
+import CodePushPanel from 'diagnostics/code-push-panel';
 import ErrorBoundary from 'widgets/error-boundary';
 
 import './diagnostics-page.scss';
@@ -45,6 +46,7 @@ class DiagnosticsPage extends PureComponent {
                         {this.renderLocaleManagerPanel()}
                         {this.renderNotifierPanel()}
                         {this.renderPayloadManagerPanel()}
+                        {this.renderCodePushPanel()}
                     </ErrorBoundary>
                 </div>
             </PageContainer>
@@ -124,6 +126,17 @@ class DiagnosticsPage extends PureComponent {
         let panelProps = { payloadManager };
         return <PayloadManagerPanel {...panelProps} />;
     }
+
+    /**
+     * Render diagnostics of CodePush
+     *
+     * @return {ReactElement}
+     */
+    renderCodePushPanel() {
+        let { codePush } = this.props;
+        let panelProps = { codePush };
+        return <CodePushPanel {...panelProps} />;
+    }
 }
 
 export {
@@ -142,6 +155,7 @@ import RemoteDataSource from 'data/remote-data-source';
 import PayloadManager from 'transport/payload-manager';
 import LocaleManager from 'locale/locale-manager';
 import Notifier from 'transport/notifier';
+import CodePush from 'transport/code-push';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
@@ -157,5 +171,6 @@ if (process.env.NODE_ENV !== 'production') {
         localeManager: PropTypes.instanceOf(LocaleManager).isRequired,
         payloadManager: PropTypes.instanceOf(PayloadManager).isRequired,
         notifier: PropTypes.instanceOf(Notifier),
+        codePush: PropTypes.instanceOf(CodePush),
     };
 }
