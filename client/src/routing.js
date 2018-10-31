@@ -168,7 +168,7 @@ const routes = {
         path: '/settings/',
         load: (match) => {
             match.params.ui = {
-                navigation: { section: 'settings '},
+                navigation: { section: 'settings' },
             };
             match.params.key = match.path;
             return import('pages/settings-page' /* webpackChunkName: "page-settings" */).then((module) => {
@@ -180,7 +180,7 @@ const routes = {
         path: '/diagnostics/',
         load: (match) => {
             match.params.ui = {
-                navigation: { section: 'settings '},
+                navigation: { section: 'settings' },
             };
             match.params.key = match.path;
             return import('pages/diagnostics-page' /* webpackChunkName: "page-diagnostics" */).then((module) => {
