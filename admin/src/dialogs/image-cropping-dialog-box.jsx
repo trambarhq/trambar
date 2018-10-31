@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
+import * as ImageCropping from 'media/image-cropping';
 import * as ResourceUtils from 'objects/utils/resource-utils';
 
 // widgets
@@ -19,11 +20,32 @@ class ImageCroppingDialogBox extends PureComponent {
 
     constructor(props) {
         super(props);
-        let { image } = props;
         this.state = {
-            clippingRect: image.clip,
+            clippingRect: {},
+            currentImage: null,
             hasChanged: false,
         };
+    }
+
+    static getDerivedStateFromProps(props, state) {
+        let { image, show } = props;
+        let { currentImage } = state;
+        if (show) {
+            if (image !== currentImage) {
+                return {
+                    clippingRect: image.clip,
+                    currentImage: image,
+                    hasChanged: false,
+                };
+            }
+        } else {
+            return {
+                clippingRect: {},
+                currentImage: null,
+                hasChanged: false,
+            };
+        }
+        return null;
     }
 
     /**
@@ -32,8 +54,8 @@ class ImageCroppingDialogBox extends PureComponent {
      * @param  {Number} amount
      */
     zoom(amount) {
-        let clippingRect = this.resizeClippingRect(amount);
-        this.setState({ clippingRect })
+        let rect = this.resizeClippingRect(amount);
+        this.setClippingRect(rect)
     }
 
     /**
@@ -47,6 +69,21 @@ class ImageCroppingDialogBox extends PureComponent {
         let { clippingRect } = this.state;
         let rect = this.resizeClippingRect(amount);
         return !_.isEqual(rect, clippingRect);
+    }
+
+    /**
+     * Change the clipping rect
+     */
+    setClippingRect(rect) {
+        let { image } = this.props;
+        let clippingRect = _.mapValues(rect, (value) => {
+            return Math.round(value);
+        });
+        let hasChanged = true;
+        if (_.isEqual(clippingRect, image.rect)) {
+            hasChanged = false;
+        }
+        this.setState({ clippingRect, hasChanged });
     }
 
     /**
@@ -107,7 +144,7 @@ class ImageCroppingDialogBox extends PureComponent {
     renderImage() {
         let { env, image, desiredWidth, desiredHeight } = this.props;
         let { clippingRect } = this.state;
-        let url = ResourceUtils.getImageURL(image, { clip: null }, env);
+        let url = ResourceUtils.getImageURL(image, { original: true }, env);
         let props = {
             url,
             clippingRect,
@@ -174,15 +211,7 @@ class ImageCroppingDialogBox extends PureComponent {
      * @param  {Object} evt
      */
     handleChange = (evt) => {
-        let { image } = this.props;
-        let clippingRect = _.mapValues(evt.rect, (value) => {
-            return Math.round(value);
-        });
-        let hasChanged = true;
-        if (_.isEqual(clippingRect, image.rect)) {
-            hasChanged = false;
-        }
-        this.setState({ clippingRect, hasChanged });
+        this.setClippingRect(evt.rect);
     }
 
     /**

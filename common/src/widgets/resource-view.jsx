@@ -39,7 +39,7 @@ class ResourceView extends PureComponent {
         let remoteURL = this.getRemoteImageURL();
         // if we have a blob of the image, then it's just been uploaded
         // use it until we've loaded the remote copy
-        if (localURL && !remoteImageLoaded) {
+        if (localURL && (remoteImageLoaded !== remoteURL)) {
             return this.renderLocalImage();
         } else if (remoteURL) {
             return this.renderRemoteImage();

@@ -25,31 +25,6 @@ class BitmapView extends PureComponent {
     }
 
     /**
-     * Load image on mount
-     */
-    componentWillMount() {
-        let { url } = this.props;
-        this.load(url);
-    }
-
-    /**
-     * Update image when URL or clipping rect changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { url, clippingRect } = this.props;
-        if (nextProps.url !== url) {
-            this.load(nextProps.url);
-        }
-        if (nextProps.clippingRect !== clippingRect) {
-            if (this.image) {
-                this.drawImage(nextProps.clippingRect);
-            }
-        }
-    }
-
-    /**
      * Render component
      *
      * @return {ReactElement}
@@ -66,13 +41,26 @@ class BitmapView extends PureComponent {
     }
 
     /**
-     * Draw image on mount (if it manages to load that fast)
+     * Load image on mount
      */
     componentDidMount() {
-        let { clippingRect } = this.props;
-        if (this.image && this.redrawNeeded) {
-            // image was loaded before first render
-            this.drawImage(clippingRect);
+        this.load();
+    }
+
+    /**
+     * Update image when URL or clipping rect changes
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate(prevProps, prevState) {
+        let { url, clippingRect } = this.props;
+        if (prevProps.url !== url) {
+            this.load();
+        } else if (prevProps.clippingRect !== clippingRect) {
+            if (this.image) {
+                this.drawImage();
+            }
         }
     }
 
@@ -108,12 +96,10 @@ class BitmapView extends PureComponent {
     /**
      * Load file at given URL or clear the canvas if it's empty
      *
-     * @param  {String} url
-     *
      * @return {Promise}
      */
-    load(url) {
-        let { clippingRect } = this.props;
+    load() {
+        let { url } = this.props;
         if (url) {
             return BlobManager.fetch(url).then((blob) => {
                 // load the image and its bytes
@@ -132,7 +118,7 @@ class BitmapView extends PureComponent {
                         this.naturalHeight = image.naturalWidth;
                     }
 
-                    this.drawImage(clippingRect);
+                    this.drawImage();
                     this.triggerLoadEvent();
                     return null;
                 });
@@ -149,10 +135,9 @@ class BitmapView extends PureComponent {
 
     /**
      * Set the canvas's dimensions and draw an image into it
-     *
-     * @param  {Object} rect
      */
-    drawImage(rect) {
+    drawImage() {
+        let { clippingRect } = this.props;
         let { canvas } = this.components;
         let image = this.image;
         if (!image) {
@@ -162,8 +147,8 @@ class BitmapView extends PureComponent {
             this.redrawNeeded = true;
             return;
         }
-        if (!rect) {
-            rect = {
+        if (!clippingRect) {
+            clippingRect = {
                 left: 0,
                 top: 0,
                 width: this.naturalWidth,
@@ -171,11 +156,11 @@ class BitmapView extends PureComponent {
             };
         }
 
-        canvas.width = this.width = rect.width;
-    	canvas.height = this.height = rect.height;
+        canvas.width = this.width = clippingRect.width;
+    	canvas.height = this.height = clippingRect.height;
         let matrix = ImageOrientation.getOrientationMatrix(this.orientation, image.naturalWidth, image.naturalHeight);
         let inverse = ImageOrientation.invertMatrix(matrix);
-    	let src = ImageOrientation.transformRect(inverse, rect);
+    	let src = ImageOrientation.transformRect(inverse, clippingRect);
     	let dst = ImageOrientation.transformRect(inverse, { left: 0, top: 0, width: canvas.width, height: canvas.height });
     	let context = canvas.getContext('2d');
     	context.transform.apply(context, matrix);
