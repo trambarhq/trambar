@@ -900,7 +900,7 @@ class StartPageSync extends PureComponent {
         return this.openPopUpWindow(url).then(() => {
             let db = database.use({ by: this });
             return db.checkAuthorization().catch((err) => {
-                let oauthErrors = _.clone(oauthErrors);
+                oauthErrors = _.clone(oauthErrors);
                 oauthErrors[provider] = err;
                 this.setState({ oauthErrors });
             });

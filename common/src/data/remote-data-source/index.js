@@ -106,9 +106,7 @@ class RemoteDataSource extends EventEmitter {
     discardSession(session) {
         if (_.includes(this.sessions, session)) {
             _.pull(this.sessions, session);
-            if (session.token) {
-                this.triggerEvent(new RemoteDataSourceEvent('change', this));
-            }
+            this.triggerEvent(new RemoteDataSourceEvent('change', this));
         }
     }
 
@@ -185,15 +183,20 @@ class RemoteDataSource extends EventEmitter {
                 handle: session.handle
             };
             return HTTPRequest.fetch('GET', url, payload, options).then((res) => {
-                this.grantAuthorization(session, res.session);
-                return true;
+                if (res) {
+                    this.grantAuthorization(session, res.session);
+                    return true;
+                } else {
+                    session.authenticationPromise = null;
+                    return false;
+                }
             }).catch((err) => {
                 if (err.statusCode === 401) {
                     session.authenticationPromise = null;
                 } else {
                     this.discardSession(session);
                 }
-                return false;
+                throw err;
             });
         });
         session.authenticationPromise = promise;
