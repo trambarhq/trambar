@@ -18,9 +18,7 @@ Trambar User Guide - Administrative Console
 
 ### Signing in using password
 
-The first time you sign into the Administrative Console, you must use the root
-password provided during installation. Once Trambar is linked to a GitLab
-server, you can sign in using OAuth instead.
+The first time you sign into the Administrative Console, you must use the root password provided during installation. Once Trambar is linked to a GitLab server, you can sign in using OAuth instead.
 
 1. Enter user name and password.
 
@@ -32,21 +30,17 @@ To reset the root password, run `sudo trambar password`.
 
 ### Signing in using OAuth
 
-The option to sign in thru OAuth will become available once a GitLab server is
-added.
+The option to sign in thru OAuth will become available once a GitLab server is added.
 
 1. Click the **GitLab** button.
 
    ![Sign in - OAuth](img/admin-sign-in-oauth.png)
 
-2. A GitLab pop-up window will appear. If you're not currently signed into
-   GitLab, you'll be asked to provide your user credentials. Afterward, you'll be
-   asked you to grant authorization to Trambar. Click the **Authorize** button.
+2. A GitLab pop-up window will appear. If you're not currently signed into GitLab, you'll be asked to provide your user credentials. Afterward, you'll be asked you to grant authorization to Trambar. Click the **Authorize** button.
 
    ![GitLab OAuth window](img/gitlab-oauth.png)
 
-   The window may close itself immediately if Trambar is set as a trusted
-   application and you're already signed in.
+   The window may close itself immediately if Trambar is set as a trusted application and you're already signed in.
 
 ### Signing off
 
@@ -86,16 +80,11 @@ added.
 
    ![Project form](img/admin-project-new-users.png)
 
-   Generally it's easier to let users ask for membership. You can always reject
-   those you wish to keep out.
+   Generally it's easier to let users ask for membership. You can always reject those you wish to keep out.
 
-   Automatically granting membership to regular users is sensible when your
-   organization is small and you can trust everyone. It spares the administrator
-   the task of approving each new member.
+   Automatically granting membership to regular users is sensible when your organization is small and you can trust everyone. It spares the administrator the task of approving each new member.
 
-   Automatically granting membership to guests is sensible only when guest
-   access is tightly controlled--for instance, when only GitLab external users
-   can become guests.
+   Automatically granting membership to guests is sensible only when guest access is tightly controlled--for instance, when only GitLab external users can become guests.
 
 6. Indicate whether non-members may view the project's news feed.
 
@@ -107,9 +96,7 @@ added.
 
 ### Archiving old projects
 
-Archiving a project makes it read-only. People will no longer be able to publish
-posts to its news feed. It will also disappear from the [Start](user-guide.md#start---web-browser)
-page. An archived project can be reactivated later on.
+Archiving a project makes it read-only. People will no longer be able to publish posts to its news feed. It will also disappear from the [Start](user-guide.md#start---web-browser) page. An archived project can be reactivated later on.
 
 1. Click **Projects** in the left navigation pane.
 
@@ -119,8 +106,7 @@ page. An archived project can be reactivated later on.
 
    ![Project list - edit](img/admin-projects-edit.png)
 
-3. The list will expand to show all projects, including those archived or
-   deleted earlier. Click the name of each project that you wish to archive.
+3. The list will expand to show all projects, including those archived or deleted earlier. Click the name of each project that you wish to archive.
 
    ![Project list - select](img/admin-projects-archive-select.png)
 
@@ -130,8 +116,7 @@ page. An archived project can be reactivated later on.
 
 ### Deleting a project
 
-Deleting a project destroys its records permanently. Typically, you would only
-do this after making a mistake shortly after the project's creation.
+Deleting a project destroys its records permanently. Typically, you would only do this after making a mistake shortly after the project's creation.
 
 1. Click **Projects** in the left navigation pane.
 
@@ -145,13 +130,11 @@ do this after making a mistake shortly after the project's creation.
 
    ![Project summary - delete](img/admin-project-delete.png)
 
-If you've deleted a project by mistake, use the browser's back button to return
-to the page and click the **Restore project** button.  
+If you've deleted a project by mistake, use the browser's back button to return to the page and click the **Restore project** button.
 
 ### Restoring archived or deleted projects
 
-You can easily put a project back into an active state. Deleted projects can
-also be restored, provided its records have not yet been garbage-collected.
+You can easily put a project back into an active state. Deleted projects can also be restored, provided its records have not yet been garbage-collected.
 
 1. Click **Projects** in the left navigation pane.
 
@@ -161,8 +144,7 @@ also be restored, provided its records have not yet been garbage-collected.
 
    ![Project list - edit](img/admin-projects-edit.png)
 
-3. The list will expand to show all projects, including those archived or
-   deleted earlier. Click the name of each project that you wish to restore.
+3. The list will expand to show all projects, including those archived or deleted earlier. Click the name of each project that you wish to restore.
 
    ![Project list - select](img/admin-projects-restore-select.png)
 
@@ -192,14 +174,11 @@ also be restored, provided its records have not yet been garbage-collected.
 
    ![Navigation - Members](img/admin-project-nav-members.png)
 
-4. If there are unapproved requests, certain users will appear grayed out in
-   the list. Click the **Approve all requests** button to bring these pending
-   members into the project.
+4. If there are unapproved requests, certain users will appear grayed out in the list. Click the **Approve all requests** button to bring these pending members into the project.
 
    ![Member list - approve](img/admin-members-approve.png)
 
-If you wish to add only some of the users, follow the [instructions for
-adding users](#adding-existing-users-as-members) instead.
+If you wish to add only some of the users, follow the [instructions for adding users](#adding-existing-users-as-members) instead.
 
 ### Rejecting membership requests
 
@@ -215,9 +194,7 @@ adding users](#adding-existing-users-as-members) instead.
 
    ![Navigation - Members](img/admin-project-nav-members.png)
 
-4. If there are unapproved requests, certain users will appear grayed out in
-   the list. Click the arrow beside the **Approve all requests** button, then
-   click **Reject all requests**.
+4. If there are unapproved requests, certain users will appear grayed out in the list. Click the arrow beside the **Approve all requests** button, then click **Reject all requests**.
 
    ![Member list - reject](img/admin-members-reject.png)
 
@@ -239,8 +216,7 @@ adding users](#adding-existing-users-as-members) instead.
 
    ![Member list - edit](img/admin-members-edit.png)
 
-5. The list will expand to show all users. Click the name of each user that you
-   wish to add.
+5. The list will expand to show all users. Click the name of each user that you wish to add.
 
    ![Member list -select](img/admin-members-add-select.png)
 
@@ -250,8 +226,7 @@ adding users](#adding-existing-users-as-members) instead.
 
 ### Adding a new member manually
 
-In order to add a user, you must know the e-mail address he had used to register
-at an OAuth provider.
+In order to add a user, you must know the e-mail address he had used to register at an OAuth provider.
 
 1. Click **Projects** in the left navigation pane.
 
@@ -269,8 +244,7 @@ at an OAuth provider.
 
    ![Member list - new](img/admin-members-new.png)
 
-5. Enter the new member's personal information. Select a profile image. Choose
-   the user type and role.
+5. Enter the new member's personal information. Select a profile image. Choose the user type and role.
 
    ![Member form](img/admin-member-form.png)
 
@@ -296,8 +270,7 @@ at an OAuth provider.
 
    ![Member list - edit](img/admin-members-edit.png)
 
-5. The list will expand to show all users. Current members will be highlighted.
-   Click the name of each member that you wish to remove.
+5. The list will expand to show all users. Current members will be highlighted. Click the name of each member that you wish to remove.
 
    ![Member list -select](img/admin-members-remove-select.png)
 
@@ -328,8 +301,7 @@ at an OAuth provider.
 
    ![Repo list - edit](img/admin-repos-edit.png)
 
-5. The list will expand to show all repositories. Click the name of each repo
-   you wish to associate with the project.
+5. The list will expand to show all repositories. Click the name of each repo you wish to associate with the project.
 
    ![Repo list - select](img/admin-repos-add-select.png)
 
@@ -339,9 +311,7 @@ at an OAuth provider.
 
 ### Removing repositories
 
-Removing a repo from a project does not remove stories from that repo. If you've
-accidentally added the wrong repo, your project is fubar. A mean to rectify such
-a situation will be implemented in the future.
+Removing a repo from a project does not remove stories from that repo. If you've accidentally added the wrong repo, your project is fubar. A mean to rectify such a situation will be implemented in the future.
 
 1. Click **Projects** in the left navigation pane.
 
@@ -359,8 +329,7 @@ a situation will be implemented in the future.
 
    ![Repo list - add](img/admin-repos-edit-2.png)
 
-5. The list will expand to show all repositories. Click the name of each repo
-   you wish to remove.   
+5. The list will expand to show all repositories. Click the name of each repo you wish to remove.
 
    ![Repo list - select](img/admin-repos-remove-select.png)
 
@@ -377,8 +346,7 @@ a situation will be implemented in the future.
 
 ### Adding a new user manually
 
-In order to add a user, you must know the e-mail address he had used to register
-at an OAuth provider.
+In order to add a user, you must know the e-mail address he had used to register at an OAuth provider.
 
 1. Click **Users** in the left navigation pane.
 
@@ -388,8 +356,7 @@ at an OAuth provider.
 
    ![User list - add](img/admin-users-add.png)
 
-3. Enter the new user's personal information. Select a profile image. Choose
-   the user type and role.
+3. Enter the new user's personal information. Select a profile image. Choose the user type and role.
 
    ![User form](img/admin-user-form.png)
 
@@ -399,8 +366,7 @@ at an OAuth provider.
 
 ### Deactivating users
 
-Deactivating a user keeps him from signing into Trambar again. Posts and
-comments he has written will remain.
+Deactivating a user keeps him from signing into Trambar again. Posts and comments he has written will remain.
 
 1. Click **Users** in the left navigation pane.
 
@@ -410,8 +376,7 @@ comments he has written will remain.
 
    ![User list - edit](img/admin-users-edit.png)
 
-3. The list will expand to show all users, including those deactivated or
-   deleted earlier. Click the name of each user you wish to deactivate.
+3. The list will expand to show all users, including those deactivated or deleted earlier. Click the name of each user you wish to deactivate.
 
    ![User list - select](img/admin-users-disable-select.png)
 
@@ -421,8 +386,7 @@ comments he has written will remain.
 
 ### Deleting a user
 
-Deleting a user removes him from the system completely. Posts and comments
-written by him will be deleted as well.
+Deleting a user removes him from the system completely. Posts and comments written by him will be deleted as well.
 
 1. Click **Users** in the left navigation pane.
 
@@ -436,13 +400,11 @@ written by him will be deleted as well.
 
    ![User summary - delete](img/admin-user-delete.png)
 
-If you've deleted a user by mistake, use the browser's back button to return
-to the page and click the **Restore user** button.  
+If you've deleted a user by mistake, use the browser's back button to return to the page and click the **Restore user** button.
 
 ### Restoring deactivated or deleted users
 
-Deactivated user accounts can be made active again. Deleted users can also be
-restored, provided his records have not been garbage-collected yet.
+Deactivated user accounts can be made active again. Deleted users can also be restored, provided his records have not been garbage-collected yet.
 
 1. Click **Users** in the left navigation pane.
 
@@ -452,8 +414,7 @@ restored, provided his records have not been garbage-collected yet.
 
    ![User list - edit](img/admin-users-edit-2.png)
 
-3. The list will expand to show all users, including those who were deactivated
-   or deleted earlier. Click the name of each user you wish to restore.
+3. The list will expand to show all users, including those who were deactivated or deleted earlier. Click the name of each user you wish to restore.
 
    ![User list - select](img/admin-users-restore-select.png)
 
@@ -489,10 +450,7 @@ restored, provided his records have not been garbage-collected yet.
 
    ![Role form - name](img/admin-role-priority.png)
 
-   Story priority comes into play when a user has many (100+) unread stories
-   and Trambar must decide which to present and which to omit. Typically, you
-   would want to suppress posts by those whose role in the project is somewhat
-   tangential.
+   Story priority comes into play when a user has many (100+) unread stories and Trambar must decide which to present and which to omit. Typically, you would want to suppress posts by those whose role in the project is somewhat tangential.
 
 5. Choose the users to whom you wish to assign the new role.
 
@@ -516,8 +474,7 @@ restored, provided his records have not been garbage-collected yet.
 
    ![Role summary - edit](img/admin-role-edit.png)
 
-4. Under **Users**, click the name of each user to whom you wish to assign the
-   role.   
+4. Under **Users**, click the name of each user to whom you wish to assign the role.
 
    ![Role form - users](img/admin-role-users.png)
 
@@ -539,8 +496,7 @@ restored, provided his records have not been garbage-collected yet.
 
    ![Server summary - edit](img/admin-server-edit.png)
 
-4. Under **Role assignments**, click the role that will be assigned to new users
-   from the server.
+4. Under **Role assignments**, click the role that will be assigned to new users from the server.
 
    ![Server form - roles](img/admin-server-role.png)
 
@@ -562,8 +518,7 @@ restored, provided his records have not been garbage-collected yet.
 
    ![Role summary - edit](img/admin-role-edit.png)
 
-4. Under **Users**, click the name of each user you wish to remove from the
-   role.   
+4. Under **Users**, click the name of each user you wish to remove from the role.
 
    ![Role form - users](img/admin-role-users-2.png)
 
@@ -581,8 +536,7 @@ restored, provided his records have not been garbage-collected yet.
 
    ![Role list - edit](img/admin-roles-edit.png)
 
-3. The list will expand to show all roles, including those disabled or deleted
-   earlier. Click the name of each role you wish to disable.
+3. The list will expand to show all roles, including those disabled or deleted earlier. Click the name of each role you wish to disable.
 
    ![Role list - select](img/admin-roles-disable-select.png)
 
@@ -604,8 +558,7 @@ restored, provided his records have not been garbage-collected yet.
 
    ![Role summary - delete](img/admin-role-delete.png)
 
-If you've deleted a role by mistake, use the browser's back button to return to
-the page and click the **Restore role** button.
+If you've deleted a role by mistake, use the browser's back button to return to the page and click the **Restore role** button.
 
 ### Restoring deactivated or deleted roles
 
@@ -617,8 +570,7 @@ the page and click the **Restore role** button.
 
    ![Role list - edit](img/admin-roles-edit.png)
 
-3. The list will expand to show all roles, including those who were deactivate
-   or deleted earlier. Click the name of each role you wish to restore.
+3. The list will expand to show all roles, including those who were deactivate or deleted earlier. Click the name of each role you wish to restore.
 
    ![Role list - select](img/admin-roles-restore-select.png)
 
@@ -652,8 +604,7 @@ the page and click the **Restore role** button.
 
    ![Server type](img/admin-server-gitlab-type.png)
 
-4. In a different browser window, sign into GitLab using an account with
-   administrative privilege.
+4. In a different browser window, sign into GitLab using an account with administrative privilege.
 
 5. Navigate to the **Admin area**.
 
@@ -667,24 +618,19 @@ the page and click the **Restore role** button.
 
    ![GitLab - applications](img/gitlab-applications.png)
 
-8. Enter *Trambar* as the application's name, then copy the **Redirect URI**
-   from Trambar Administrative Console into the corresponding box here.
-   Select **api** and **read_user** as the application's scope, the click the
-   **Submit** button.
+8. Enter *Trambar* as the application's name, then copy the **Redirect URI** from Trambar Administrative Console into the corresponding box here. Select **api** and **read_user** as the application's scope, the click the **Submit** button.
 
    ![Server form - Gitlab URL](img/admin-server-gitlab-callback.png)
 
    ![GitLab - new application](img/gitlab-application.png)
 
-9. Copy the **Application id** and **Application secret** from GitLab into the
-   corresponding box in Trambar Administrative Console.
+9. Copy the **Application id** and **Application secret** from GitLab into the corresponding box in Trambar Administrative Console.
 
    ![GitLab - new application](img/gitlab-application-summary.png)
 
    ![Server form - id & secret](img/admin-server-gitlab-secrets.png)
 
-10. Copy the URL of the GitLab server into the corresponding box in Trambar
-    Adminstrative Console.
+10. Copy the URL of the GitLab server into the corresponding box in Trambar Adminstrative Console.
 
     ![Server form - Gitlab URL](img/admin-server-gitlab-url.png)
 
@@ -694,10 +640,7 @@ the page and click the **Restore role** button.
 
     ![Server form - user mapping](img/admin-server-gitlab-new-users.png)
 
-    A typical setup is to map GitLab administrator to Trambar administrator,
-    GitLab regular user to Trambar regular user, and GitLab external user to
-    Trambar guest. Users can be promoted to more privileged user type on a
-    case by case basis.
+    A typical setup is to map GitLab administrator to Trambar administrator, GitLab regular user to Trambar regular user, and GitLab external user to Trambar guest. Users can be promoted to more privileged user type on a case by case basis.
 
 12. Click the **Save server** button.
 
@@ -707,15 +650,11 @@ the page and click the **Restore role** button.
 
     ![Acquire API access](img/admin-server-acquire.png)
 
-14. A GitLab pop-up window will appear. Click the **Authorize** button, then
-    close the window when it says *OK*.
+14. A GitLab pop-up window will appear. Click the **Authorize** button, then close the window when it says *OK*.
 
     ![GitLab OAuth window](img/gitlab-oauth.png)
 
-If you're using a local instance of GitLab 11, be sure the server permits
-outbound requests to the local network. Otherwise Trambar will not be able to
-install project hooks (for monitoring events). You'll find the checkbox in
-**Admin Area** > **Settings** > **Outbound requests**.
+If you're using a local instance of GitLab 11, be sure the server permits outbound requests to the local network. Otherwise Trambar will not be able to install project hooks (for monitoring events). You'll find the checkbox in **Admin Area** > **Settings** > **Outbound requests**.
 
 ### Adding Dropbox
 
@@ -745,11 +684,9 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
    ![Dropbox App - folder access](img/dropbox-app-folder-access.png)
 
-   Trambar won't actually write anything to the folder. OAuth is used for
-   authentication only.
+   Trambar won't actually write anything to the folder. OAuth is used for authentication only.
 
-8. Enter an application name. The name should contain the name of your company
-   so that users will be able to correctly identify your app in Dropbox.
+8. Enter an application name. The name should contain the name of your company so that users will be able to correctly identify your app in Dropbox.
 
    ![Dropbox App - name](img/dropbox-app-name.png)
 
@@ -782,14 +719,11 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
     ![Server form - save](img/admin-server-dropbox-save.png)
 
-15. Click the **Test OAuth integration** button. A Dropbox pop-up window will
-    appear. Grant authorization when prompted. Afterward, the page should simply
-    read "OK".
+15. Click the **Test OAuth integration** button. A Dropbox pop-up window will appear. Grant authorization when prompted. Afterward, the page should simply read "OK".
 
    ![Server form - test](img/admin-server-dropbox-test.png)
 
-16. Return to the Dropbox App Console. Click the **Apply for production**
-    button to make the app publicly available.
+16. Return to the Dropbox App Console. Click the **Apply for production** button to make the app publicly available.
 
    ![Dropbox App - apply](img/dropbox-app-apply.png)
 
@@ -813,9 +747,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
    ![Facebook App Dashboard - add](img/facebook-apps-add.png)
 
-6. Enter a display name and a contact e-mail address. The display name should
-   contain the name of your company so that users will be able to correctly
-   identify your app.
+6. Enter a display name and a contact e-mail address. The display name should contain the name of your company so that users will be able to correctly identify your app.
 
    ![Facebook App - create](img/facebook-app-dialog.png)
 
@@ -865,8 +797,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
     ![Facebook Login](img/facebook-app-login-nav-basic.png)
 
-17. Copy and paste the URLs for **Privacy policy** and **Terms** (or supply
-    your own).
+17. Copy and paste the URLs for **Privacy policy** and **Terms** (or supply your own).
 
     ![Server form - terms](img/admin-server-facebook-terms.png)
 
@@ -894,8 +825,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
     ![Server form - app id](img/admin-server-facebook-app-id.png)
 
-22. Click the **Show** button in the **App Secret** text box. Copy and paste the
-    secret token into Trambar Administrative Console.    
+22. Click the **Show** button in the **App Secret** text box. Copy and paste the secret token into Trambar Administrative Console.
 
     ![Facebook App - secret](img/facebook-app-secret.png)
 
@@ -913,14 +843,11 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
     ![Server form - save](img/admin-server-facebook-save.png)
 
-26. Click the **Test OAuth integration** button. A Facebook pop-up window will
-    appear. Grant authorization when prompted. Afterward, the page should simply
-    read "OK".
+26. Click the **Test OAuth integration** button. A Facebook pop-up window will appear. Grant authorization when prompted. Afterward, the page should simply read "OK".
 
     ![Server form - test](img/admin-server-facebook-test.png)
 
-27. Return to the Facebook App Dashboard. Click the **OFF** switch and confirm
-    that you wish to make the app public.
+27. Return to the Facebook App Dashboard. Click the **OFF** switch and confirm that you wish to make the app public.
 
     ![Facebook App - off](img/facebook-app-off.png)
 
@@ -938,20 +865,17 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
    ![Server type](img/admin-server-github-type.png)
 
-4. In a different browser window, navigate to the [GitHub Developer Settings](https://github.com/settings/developers)
-   page.
+4. In a different browser window, navigate to the [GitHub Developer Settings](https://github.com/settings/developers) page.
 
 5. Click the **New OAuth App** button.
 
    ![GitHub App list - add](img/github-apps-add.png)
 
-6. Enter an application name. The name should contain the name of your company
-   so that users will be able to correctly identify your app in GitHub.
+6. Enter an application name. The name should contain the name of your company so that users will be able to correctly identify your app in GitHub.
 
    ![GitHub App - name](img/github-app-name.png)
 
-7. Copy the **Site URL** from Trambar Administrative Console and use it as the
-   app's **Homepage URL**.
+7. Copy the **Site URL** from Trambar Administrative Console and use it as the app's **Homepage URL**.
 
    ![Server form - site URL](img/admin-server-site-url.png)
 
@@ -971,8 +895,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
    ![Server form - icon](img/admin-server-github-icons.png)
 
-   Click the **Upload new logo** under **Application logo** and upload the image
-   file.
+   Click the **Upload new logo** under **Application logo** and upload the image file.
 
    ![GitHub App - icon](img/github-app-icon.png)
 
@@ -984,8 +907,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
    ![GitHub App - update](img/github-app-update.png)
 
-13. Copy and paste the **Client ID** and **Client secret** into Trambar
-    Administrative Console.
+13. Copy and paste the **Client ID** and **Client secret** into Trambar Administrative Console.
 
     ![GitHub App - secrets](img/github-app-client-secrets.png)
 
@@ -1003,9 +925,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
     ![Server form - save](img/admin-server-github-save.png)
 
-17. Click the **Test OAuth integration** button. A GitHub pop-up window will
-    appear. Grant authorization when prompted. Afterward, the page should simply
-    read "OK".
+17. Click the **Test OAuth integration** button. A GitHub pop-up window will appear. Grant authorization when prompted. Afterward, the page should simply read "OK".
 
     ![Server form - test](img/admin-server-github-test.png)
 
@@ -1037,8 +957,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
    ![Google app - create](img/google-app-create.png)      
 
-8. Switch to the newly created project if it's not currently selected using
-   the drop-down list at the top of the page.
+8. Switch to the newly created project if it's not currently selected using the drop-down list at the top of the page.
 
    ![Google app - switch](img/google-app-switch.png)
 
@@ -1070,8 +989,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
     ![Google app - app type](img/google-app-client-app-type-consent.png)
 
-16. Enter an product name. The name should contain the name of your company
-    so that users will be able to correctly identify your app in Google.
+16. Enter an product name. The name should contain the name of your company so that users will be able to correctly identify your app in Google.
 
 17. Copy the **Site URL** from Trambar Administrative Console and use it as the
     **Homepage URL**.
@@ -1080,8 +998,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
     ![Google app - homepage](img/google-app-homepage.png)
 
-18. Copy the address of one of the default app icons and paste it into the box
-    labeled **Product logo URL**.
+18. Copy the address of one of the default app icons and paste it into the box labeled **Product logo URL**.
 
     ![Server form - icons](img/admin-server-google-icons.png)
 
@@ -1111,8 +1028,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
     ![Google app - create](img/google-app-client-create.png)
 
-24. Copy and paste the **client ID** and **Client secret** into Trambar
-    Administrative Console.
+24. Copy and paste the **client ID** and **Client secret** into Trambar Administrative Console.
 
     ![Google app - secrets](img/google-app-client-secrets.png)
 
@@ -1130,9 +1046,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
     ![Server form - save](img/admin-server-google-save.png)
 
-28. Click the **Test OAuth integration** button. A Google pop-up window will
-    appear. Grant authorization when prompted. Afterward, the page should simply
-    read "OK".
+28. Click the **Test OAuth integration** button. A Google pop-up window will appear. Grant authorization when prompted. Afterward, the page should simply read "OK".
 
     ![Server form - test](img/admin-server-google-test.png)
 
@@ -1150,15 +1064,13 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
    ![Server form - type](img/admin-server-windows-type.png)
 
-4. In a different browser window, sign into to [Windows Live Application
-   Management](https://apps.dev.microsoft.com/).
+4. In a different browser window, sign into to [Windows Live Application Management](https://apps.dev.microsoft.com/).
 
 5. In the **Live SDK Application** section, click **Add an app**.
 
    ![Windows apps - add](img/windows-apps-add.png)
 
-6. Enter an application name. The name should contain the name of your company
-   so that users will be able to correctly identify your app in Windows.
+6. Enter an application name. The name should contain the name of your company so that users will be able to correctly identify your app in Windows.
 
    ![Windows app - name](img/windows-app-name.png)
 
@@ -1166,8 +1078,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
    ![Windows app - create](img/windows-app-create.png)
 
-8. In the **Platforms** > **Web** section, click the **Add URL** button. Copy
-   and paste the **Redirect URL** from Trambar Administrative Console.
+8. In the **Platforms** > **Web** section, click the **Add URL** button. Copy and paste the **Redirect URL** from Trambar Administrative Console.
 
    ![Server form - redirect URL](img/admin-server-windows-callback.png)
 
@@ -1177,8 +1088,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
    ![Server form - icon](img/admin-server-windows-icons.png)
 
-   Click the **Add** button under **Profile** > **Logo** and upload the image
-   file.
+   Click the **Add** button under **Profile** > **Logo** and upload the image file.
 
    ![Windows app - icon](img/windows-app-icon.png)
 
@@ -1190,8 +1100,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
 11. Click the **Save** button at the bottom of the page.
 
-12. Copy and paste the **Application ID** and **Application secret** into
-    Trambar Administrative Console.
+12. Copy and paste the **Application ID** and **Application secret** into Trambar Administrative Console.
 
     ![Windows app - secrets](img/windows-app-secrets.png)
 
@@ -1209,9 +1118,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
     ![Server form - save](img/admin-server-windows-save.png)
 
-16. Click the **Test OAuth integration** button. A Windows pop-up window will
-    appear. Grant authorization when prompted. Afterward, the page should simply
-    read "OK".
+16. Click the **Test OAuth integration** button. A Windows pop-up window will appear. Grant authorization when prompted. Afterward, the page should simply read "OK".
 
     ![Server form - test](img/admin-server-windows-test.png)
 
@@ -1225,8 +1132,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
    ![Server list - edit](img/admin-servers-edit.png)
 
-3. The list will expand to show all servers, including those disabled or deleted
-   earlier. Click the name of each server you wish to disable.
+3. The list will expand to show all servers, including those disabled or deleted earlier. Click the name of each server you wish to disable.
 
    ![Server list - select](img/admin-servers-disable-select.png)
 
@@ -1248,8 +1154,7 @@ install project hooks (for monitoring events). You'll find the checkbox in
 
    ![Server summary - delete](img/admin-server-delete.png)
 
-If you've deleted a server by mistake, use the browser's back button to return to
-the page and click the **Restore server** button.
+If you've deleted a server by mistake, use the browser's back button to return to the page and click the **Restore server** button.
 
 ### Restoring deactivated or deleted servers
 
@@ -1261,8 +1166,7 @@ the page and click the **Restore server** button.
 
    ![Server list - edit](img/admin-servers-edit.png)
 
-3. The list will expand to show all servers, including those who were deactivated
-   or deleted earlier. Click the name of each server you wish to restore.
+3. The list will expand to show all servers, including those who were deactivated or deleted earlier. Click the name of each server you wish to restore.
 
    ![Server list - select](img/admin-servers-restore-select.png)
 
@@ -1278,8 +1182,7 @@ the page and click the **Restore server** button.
 
 ### Changing background image
 
-1. Open a new browser window and sign into the web client. This will allow you
-   see to changes as soon as you save them.
+1. Open a new browser window and sign into the web client. This will allow you see to changes as soon as you save them.
 
 2. Click **Settings** in the left navigation pane.
 
@@ -1289,8 +1192,7 @@ the page and click the **Restore server** button.
 
    ![Settings - edit](img/admin-settings-edit.png)
 
-4. Under **Background image**, click either **Upload image** or **Choose from
-   album** and select an image.
+4. Under **Background image**, click either **Upload image** or **Choose from album** and select an image.
 
    ![Settings - background image](img/admin-settings-background.png)
 
@@ -1298,13 +1200,11 @@ the page and click the **Restore server** button.
 
    ![Settings - save](img/admin-settings-save.png)
 
-6. Check the appearance of the web client in the other browser window. If you're
-   not satisfied, click the **Edit settings** button again.
+6. Check the appearance of the web client in the other browser window. If you're not satisfied, click the **Edit settings** button again.
 
 ### Changing site description
 
-1. Open a new browser window and sign into the web client. This will allow you
-   see to changes as soon as you save them.
+1. Open a new browser window and sign into the web client. This will allow you see to changes as soon as you save them.
 
 2. Click **Settings** in the left navigation pane.
 
@@ -1314,8 +1214,7 @@ the page and click the **Restore server** button.
 
    ![Settings - edit](img/admin-settings-edit.png)
 
-4. Edit the text in the text box under **Description**. If you're text text from
-   elsewhere, be sure there aren't any stray newlines.
+4. Edit the text in the text box under **Description**. If you're text text from elsewhere, be sure there aren't any stray newlines.
 
    ![Settings - background image](img/admin-settings-description.png)
 
@@ -1323,8 +1222,7 @@ the page and click the **Restore server** button.
 
    ![Settings - save](img/admin-settings-save.png)
 
-6. Check the appearance of the web client in the other browser window. If you're
-   not satisfied, click the **Edit settings** button again.
+6. Check the appearance of the web client in the other browser window. If you're not satisfied, click the **Edit settings** button again.
 
 ### Providing site description in anther language
 
@@ -1340,8 +1238,7 @@ the page and click the **Restore server** button.
 
    ![Settings - languages](img/admin-settings-languages.png)
 
-4. Language tabs will appear beneath text boxes that accept text in multiple
-   languages. Under **Description**, click the language that you added.
+4. Language tabs will appear beneath text boxes that accept text in multiple languages. Under **Description**, click the language that you added.
 
    ![Settings - select language](img/admin-settings-description-polish-select.png)
 
@@ -1349,8 +1246,7 @@ the page and click the **Restore server** button.
 
    ![Settings - description](img/admin-settings-description-polish.png)
 
-   Place the mouse cursor over the primary language to see the description in
-   that language:
+   Place the mouse cursor over the primary language to see the description in that language:
 
    ![Settings - mouse over](img/admin-settings-description-polish-mouseover.png)
 

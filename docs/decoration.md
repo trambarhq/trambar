@@ -82,9 +82,7 @@ Trambar also accepts special Font-Awesome (v.4.7) URLs:
 
 ## Multilingual descriptions
 
-You can provide descriptions in multiple languages. Each description should
-be preceded by a line beginning with `# ` followed by a two-letter
-[ISO language code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes):
+You can provide descriptions in multiple languages. Each description should be preceded by a line beginning with `# ` followed by a two-letter [ISO language code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes):
 
 ```markdown
 # en
