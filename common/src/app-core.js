@@ -14,7 +14,7 @@ import * as BlobManager from 'transport/blob-manager';
 
 import languages from 'languages';
 
-const SettingsLocation = {
+const settingsLocation = {
     schema: 'local',
     table: 'settings'
 };
@@ -24,31 +24,47 @@ const sessionLocation = {
     table: 'session',
 }
 
+let applicationArea;
+
+let dataSource;
+let routeManager;
+let payloadManager;
+let envMonitor;
+let localeManager;
+let cache;
+let notifier;
+let codePush;
+
+let currentLocation = {};
+let currentConnection = {};
+let currentSubscription = {};
+
 function start(cfg) {
-    let envMonitor = new EnvironmentMonitor({});
-    let routeManager = new RouteManager({
+    applicationArea = cfg.area;
+
+    // create data sources
+    envMonitor = new EnvironmentMonitor({});
+    routeManager = new RouteManager({
         useHashFallback: (envMonitor.platform === 'cordova'),
         basePath: cfg.routeManager.basePath,
         routes: cfg.routeManager.routes,
         rewrites: cfg.routeManager.rewrites,
     });
-    let localeManager = new LocaleManager({
+    localeManager = new LocaleManager({
         directory: languages
     });
-    let cache;
     if (IndexedDBCache.isAvailable()) {
         cache = new IndexedDBCache({ databaseName: cfg.cache.name })
     } else {
         cache = new LocalStorageCache();
     }
-    let dataSource = new RemoteDataSource({
+    dataSource = new RemoteDataSource({
         basePath: cfg.dataSource.basePath,
-        area: cfg.dataSource.area,
+        area: applicationArea,
         discoveryFlags: cfg.dataSource.discoveryFlags,
         retrievalFlags: cfg.dataSource.retrievalFlags,
         cache,
     });
-    let notifier;
     if (envMonitor.platform === 'cordova') {
         notifier = new PushNotifier({
         });
@@ -57,17 +73,17 @@ function start(cfg) {
             basePath: '/srv/socket',
         });
     }
-    let payloadManager = new PayloadManager({
+    payloadManager = new PayloadManager({
         uploadURL: getUploadURL,
         streamURL: getStreamURL,
     });
-    let codePush;
     if (cfg.codePush && envMonitor.platform === 'cordova') {
         codePush = new CodePush({
             keys: cfg.codePush.keys,
         });
         codePush.check();
     }
+
     envMonitor.activate();
     routeManager.activate();
     if (envMonitor.online) {
@@ -76,12 +92,7 @@ function start(cfg) {
         notifier.activate();
     }
 
-    // look for sign in page
-    let signInPageName = _.findKey(routeManager.routes, { signIn: true });
-    let currentLocation = {};
-    let currentConnection = {};
-    let currentSubscription = {};
-
+    // set up basic plumbing
     envMonitor.addEventListener('change', (evt) => {
         if (envMonitor.online && !envMonitor.paused) {
             dataSource.activate();
@@ -112,6 +123,7 @@ function start(cfg) {
                         if (!dataSource.restoreAuthorization(location, session)) {
                             if (!route.signIn) {
                                 // there was none or it's expired--show the sign-in page
+                                let signInPageName = _.findKey(routeManager.routes, { signIn: true });
                                 return evt.substitute(signInPageName).then(() => {
                                     // ask the data-source to request authentication
                                     return dataSource.requestAuthentication(location);
@@ -144,7 +156,7 @@ function start(cfg) {
         changeSubscription();
     });
     notifier.addEventListener('disconnect', (evt) => {
-        currentConnection = null;
+        currentConnection = {};
     });
     notifier.addEventListener('notify', (evt) => {
         if (process.env.NODE_ENV !== 'production') {
@@ -158,6 +170,7 @@ function start(cfg) {
     });
     notifier.addEventListener('revalidation', (evt) => {
         // force cache revalidation
+        // TODO
     });
     localeManager.addEventListener('change', (evt) => {
         // save the selected locale after it's been changed
@@ -168,7 +181,7 @@ function start(cfg) {
             saveLocale(localeCode);
         }
         // alert messages are language-specific, so we need to update the data
-        // subscription as well when the language changes
+        // subscription when the language changes
         changeSubscription();
     });
     payloadManager.addEventListener('attachment', (evt) => {
@@ -204,9 +217,11 @@ function start(cfg) {
         }
     });
 
+    // get saved local then load the initial page
     return loadLocale().then((savedLocale) => {
         return localeManager.start(savedLocale);
     }).then(() => {
+        // on the browser the URL will be obtained from window.location
         let initialURL;
         if (envMonitor.platform === 'cordova') {
             initialURL = '/@cordova/';
@@ -223,260 +238,345 @@ function start(cfg) {
             codePush,
         };
     });
+}
 
-    function loadLocale() {
-        let criteria = { key: 'language' };
-        let query = Object.assign({ criteria }, SettingsLocation);
-        return dataSource.find(query).then((records) => {
-            let record = records[0];
-            if (record) {
-                return record.selectedLocale;
-            }
-        });
-    }
-
-    function saveLocale(localeCode) {
-        var record = {
-            key: 'language',
-            selectedLocale: localeCode
-        };
-        return dataSource.save(SettingsLocation, [ record ]);
-    }
-
-    function removeLocale(localeCode) {
-        var record = {
-            key: 'language',
-        };
-        return dataSource.remove(SettingsLocation, [ record ]);
-    }
-
-    function loadSession(address) {
-        let criteria = { key: address };
-        let query = Object.assign({ criteria }, sessionLocation);
-        return dataSource.find(query).then((records) => {
-            var record = records[0];
-            if (record) {
-                return {
-                    address: record.key,
-                    area: record.area,
-                    handle: record.handle,
-                    token: record.token,
-                    user_id: record.user_id,
-                    etime: record.etime,
-                };
-            }
-        });
-    }
-
-    function saveSession(session) {
-        let record = {
-            key: session.address,
-            area: session.area,
-            handle: session.handle,
-            token: session.token,
-            user_id: session.user_id,
-            etime: session.etime,
-        };
-        return dataSource.save(sessionLocation, [ record ]).return();
-    }
-
-    function removeSession(session) {
-        let record = {
-            key: session.address,
-        };
-        return dataSource.remove(sessionLocation, [ record ]).return();
-    }
-
-    function changeNotification() {
-        let { address } = currentLocation;
-        if (currentConnection.address === address) {
-            return;
+/**
+ * Load user-selected locale from local database
+ *
+ * @return {Promise<String>}
+ */
+function loadLocale() {
+    let criteria = { key: 'language' };
+    let query = Object.assign({ criteria }, settingsLocation);
+    return dataSource.find(query).then((records) => {
+        let record = records[0];
+        if (record) {
+            return record.selectedLocale;
         }
-        currentConnection = {};
-        if (notifier instanceof WebsocketNotifier) {
-            notifier.connect(address);
-        } else if (notifier instanceof PushNotifier) {
-            if (dataSource.hasAuthorization(currentLocation)) {
-                // find the push relay first
-                let query = {
-                    address,
-                    schema: 'global',
-                    table: 'system',
-                    criteria: {}
-                };
-                dataSource.find(query).get(0).then((system) => {
-                    let relayURL = _.get(system, 'settings.push_relay', '');
-                    notifier.connect(address, relayURL);
-                });
-            }
-        }
-    }
+    });
+}
 
-    function changeSubscription() {
-        let { address, schema } = currentLocation;
-        let watch = (cfg.notifier && cfg.notifier.global) ? '*' : schema;
-        let { localeCode } = localeManager;
-        let oldSubscriptionRecord;
-        // see if the subscription is to the right server
-        if (currentSubscription.address === address) {
-            oldSubscriptionRecord = currentSubscription.record;
-            // see if we're watching the right schema(s)
-            if (currentSubscription.watch === watch) {
-                if (currentSubscription.record) {
-                    // locale has to match
-                    if (currentSubscription.record.locale === localeCode) {
-                        return;
-                    }
-                }
-            }
-        }
-        currentSubscription = {};
-        if (!currentConnection.token) {
-            // notifier hasn't establshed a connection yet
-            return;
-        }
-        if (!dataSource.hasAuthorization(currentLocation)) {
-            // we don't have access yet
-            return;
-        }
-        if (!watch) {
-            // not watching anything
-            return;
-        }
-        dataSource.start(currentLocation).then((currentUserID) => {
-            console.log('Updating data subscription');
-            let { method, token, relay, details } = currentConnection;
-            let record = {
-                user_id: currentUserID,
-                area: cfg.dataSource.area,
-                locale: localeCode,
-                schema: watch,
-                method,
-                token,
-                relay,
-                details,
+/**
+ * Save user-selected locale to local database
+ *
+ * @param  {String} localeCode
+ *
+ * @return {Promise}
+ */
+function saveLocale(localeCode) {
+    var record = {
+        key: 'language',
+        selectedLocale: localeCode
+    };
+    return dataSource.save(settingsLocation, [ record ]).return();
+}
+
+/**
+ * Remove saved locale
+ *
+ * @param  {String} localeCode
+ *
+ * @return {Promise}
+ */
+function removeLocale(localeCode) {
+    var record = {
+        key: 'language',
+    };
+    return dataSource.remove(settingsLocation, [ record ]).return();
+}
+
+/**
+ * Load saved session from local database for a particular host
+ *
+ * @param  {String} address
+ *
+ * @return {Promise<Object>}
+ */
+function loadSession(address) {
+    let criteria = { key: address };
+    let query = Object.assign({ criteria }, sessionLocation);
+    return dataSource.find(query).then((records) => {
+        var record = records[0];
+        if (record) {
+            return {
+                address: record.key,
+                area: record.area,
+                handle: record.handle,
+                token: record.token,
+                user_id: record.user_id,
+                etime: record.etime,
             };
-            if (oldSubscriptionRecord) {
-                // update the existing record instead of creating a new one
-                record.id = oldSubscriptionRecord.id;
-            }
-            let subscriptionLocation = {
+        }
+    });
+}
+
+/**
+ * Save session to local database
+ *
+ * @param  {Object} session
+ *
+ * @return {Promise}
+ */
+function saveSession(session) {
+    let record = {
+        key: session.address,
+        area: session.area,
+        handle: session.handle,
+        token: session.token,
+        user_id: session.user_id,
+        etime: session.etime,
+    };
+    return dataSource.save(sessionLocation, [ record ]).return();
+}
+
+/**
+ * Remove a saved session
+ *
+ * @param  {Object} session
+ *
+ * @return {Promise}
+ */
+function removeSession(session) {
+    let record = {
+        key: session.address,
+    };
+    return dataSource.remove(sessionLocation, [ record ]).return();
+}
+
+/**
+ * Ask notifier to listen to the current location after that has changed
+ */
+function changeNotification() {
+    let { address } = currentLocation;
+    if (currentConnection.address === address) {
+        return;
+    }
+    currentConnection = {};
+    if (notifier instanceof WebsocketNotifier) {
+        notifier.connect(address);
+    } else if (notifier instanceof PushNotifier) {
+        if (dataSource.hasAuthorization(currentLocation)) {
+            // get the push relay address from the server first
+            let query = {
                 address,
                 schema: 'global',
-                table: 'subscription'
+                table: 'system',
+                criteria: {}
             };
-            return dataSource.save(subscriptionLocation, [ record ]).get(0).then((record) => {
-                if (record) {
-                    currentSubscription = { address, watch, record };
-                }
+            dataSource.find(query).get(0).then((system) => {
+                let relayURL = _.get(system, 'settings.push_relay', '');
+                notifier.connect(address, relayURL);
             });
-        });
-    }
-
-    function getUploadURL(destination, id, type, part) {
-        let { address, schema } = destination;
-        let uri;
-        switch (type) {
-            case 'image':
-                if (part === 'main') {
-                    uri = `/srv/media/images/upload/${schema}/`;
-                }
-                break;
-            case 'video':
-                if (part === 'main') {
-                    uri = `/srv/media/videos/upload/${schema}/`;
-                } else if (part === 'poster') {
-                    uri = `/srv/media/videos/poster/${schema}/`;
-                }
-                break;
-            case 'audio':
-                if (part === 'main') {
-                    uri = `/srv/media/audios/upload/${schema}/`;
-                } else if (part === 'poster') {
-                    uri = `/srv/media/audios/poster/${schema}/`;
-                }
-                break;
-            case 'website':
-                if (part === 'poster') {
-                    uri = `/srv/media/html/poster/${schema}/`;
-                }
-                break;
         }
-        return (uri) ? `${address}${uri}?token=${id}` : null;
     }
+}
 
-    function getStreamURL(destination, id) {
-        let { address, schema } = destination;
-        return `${address}/srv/media/stream/?id=${id}`;
-    }
-
-    function addPayloadTasks(destination, payloads) {
-        let { address, schema } = destination;
-        return dataSource.start(destination).then((currentUserID) => {
-            let location = { address, schema, table: 'task' };
-            return Promise.each(payloads, (payload) => {
-                let status = {}
-                _.each(payload.parts, (part) => {
-                    status[part.name] = false;
-                });
-                let task = {
-                    token: payload.id,
-                    action: `add-${payload.type}`,
-                    options: status,
-                    user_id: currentUserID,
-                };
-                return dataSource.save(location, [ task ]).catch((err) => {
-                    if (process.env.NODE_ENV !== 'production') {
-                        console.error(err);
-                    }
-                    if (err.statusCode !== 409) {
-                        throw err;
-                    }
-                });
-            });
-        });
-    }
-
-    function updateBackendProgress(destination, payloads) {
-        let location = {
-            address,
-            schema,
-            table: 'task',
-            criteria: {
-                token: _.map(payloads, 'id'),
+/**
+ * Change the change-notification subscription match the current location after
+ * that has changed
+ */
+function changeSubscription() {
+    let { address, schema } = currentLocation;
+    let watch = (applicationArea === 'admin') ? '*' : schema;
+    let { localeCode } = localeManager;
+    let oldSubscriptionRecord;
+    // see if the subscription is to the right server
+    if (currentSubscription.address === address) {
+        oldSubscriptionRecord = currentSubscription.record;
+        // see if we're watching the right schema(s)
+        if (currentSubscription.watch === watch) {
+            if (currentSubscription.record) {
+                // locale has to match
+                if (currentSubscription.record.locale === localeCode) {
+                    return;
+                }
             }
+        }
+    }
+    currentSubscription = {};
+    if (!currentConnection.token) {
+        // notifier hasn't establshed a connection yet
+        return;
+    }
+    if (!dataSource.hasAuthorization(currentLocation)) {
+        // we don't have access yet
+        return;
+    }
+    if (!watch) {
+        // not watching anything
+        return;
+    }
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`Updating data-change subscription -> ${address}/${watch}`);
+    }
+    dataSource.start(currentLocation).then((currentUserID) => {
+        let { method, token, relay, details } = currentConnection;
+        let record = {
+            user_id: currentUserID,
+            area: applicationArea,
+            locale: localeCode,
+            schema: watch,
+            method,
+            token,
+            relay,
+            details,
         };
-        return dataSource.find(query).then((tasks) => {
-            let changed = false;
-            _.each(tasks, (task) => {
-                let payload = _.find(payloads, { id: task.token });
-                if (payload) {
-                    if (payload.type === 'unknown') {
-                        // restore type
-                        payload.type = _.replace(this.action, /^add\-/, '');
-                        payload.sent = (task.completion > 0);
-                        changed = true;
-                    }
-                    if (payload.processed !== payload.completion) {
-                        payload.processed = task.completion;
-                        changed = true;
-                    }
-                    if (payload.processEndTime !== task.etime) {
-                        payload.processEndTime = task.etime;
-                        if (task.etime && !task.failed) {
-                            payload.completed = true;
-                        }
-                        changed = true;
-                    }
-                    if (task.failed && !payload.failed) {
-                        payload.failed = true;
-                        changed = true;
-                    }
+        if (oldSubscriptionRecord) {
+            // update the existing record instead of creating a new one
+            record.id = oldSubscriptionRecord.id;
+        }
+        let subscriptionLocation = {
+            address,
+            schema: 'global',
+            table: 'subscription'
+        };
+        return dataSource.save(subscriptionLocation, [ record ]).get(0).then((record) => {
+            if (record) {
+                currentSubscription = { address, watch, record };
+            }
+        });
+    });
+}
+
+/**
+ * Return the destination URL for file upload
+ *
+ * @param  {Object} destination
+ * @param  {String} id
+ * @param  {String} type
+ * @param  {String} part
+ *
+ * @return {String}
+ */
+function getUploadURL(destination, id, type, part) {
+    let { address, schema } = destination;
+    let uri;
+    switch (type) {
+        case 'image':
+            if (part === 'main') {
+                uri = `/srv/media/images/upload/${schema}/`;
+            }
+            break;
+        case 'video':
+            if (part === 'main') {
+                uri = `/srv/media/videos/upload/${schema}/`;
+            } else if (part === 'poster') {
+                uri = `/srv/media/videos/poster/${schema}/`;
+            }
+            break;
+        case 'audio':
+            if (part === 'main') {
+                uri = `/srv/media/audios/upload/${schema}/`;
+            } else if (part === 'poster') {
+                uri = `/srv/media/audios/poster/${schema}/`;
+            }
+            break;
+        case 'website':
+            if (part === 'poster') {
+                uri = `/srv/media/html/poster/${schema}/`;
+            }
+            break;
+    }
+    return (uri) ? `${address}${uri}?token=${id}` : null;
+}
+
+/**
+ * Return the URL for uploading a stream
+ *
+ * @param  {Object} destination
+ * @param  {String} id
+ *
+ * @return {String}
+ */
+function getStreamURL(destination, id) {
+    let { address, schema } = destination;
+    return `${address}/srv/media/stream/?id=${id}`;
+}
+
+/**
+ * Add a upload tasks to remote database
+ *
+ * @param {Object} destination
+ * @param {Array<Object>} payloads
+ *
+ * @return {Promise}
+ */
+function addPayloadTasks(destination, payloads) {
+    let { address, schema } = destination;
+    return dataSource.start(destination).then((currentUserID) => {
+        let location = { address, schema, table: 'task' };
+        return Promise.each(payloads, (payload) => {
+            let status = {}
+            _.each(payload.parts, (part) => {
+                status[part.name] = false;
+            });
+            let task = {
+                token: payload.id,
+                action: `add-${payload.type}`,
+                options: status,
+                user_id: currentUserID,
+            };
+            return dataSource.save(location, [ task ]).catch((err) => {
+                if (process.env.NODE_ENV !== 'production') {
+                    console.error(err);
+                }
+                if (err.statusCode !== 409) {
+                    throw err;
                 }
             });
-            return changed;
         });
-    }
+    });
+}
+
+/**
+ * Retrieve status of backend processing of uploaded media files (e.g.
+ * video transcoding progress)
+ *
+ * @param  {Object} destination
+ * @param  {Array<Object>} payloads
+ *
+ * @return {Promise<Boolean>}
+ */
+function updateBackendProgress(destination, payloads) {
+    let location = {
+        address,
+        schema,
+        table: 'task',
+        criteria: {
+            token: _.map(payloads, 'id'),
+        }
+    };
+    return dataSource.find(query).then((tasks) => {
+        let changed = false;
+        _.each(tasks, (task) => {
+            let payload = _.find(payloads, { id: task.token });
+            if (payload) {
+                if (payload.type === 'unknown') {
+                    // this is a payload from another session
+                    // restore its type
+                    payload.type = _.replace(this.action, /^add\-/, '');
+                    payload.sent = (task.completion > 0);
+                    changed = true;
+                }
+                if (payload.processed !== payload.completion) {
+                    payload.processed = task.completion;
+                    changed = true;
+                }
+                if (payload.processEndTime !== task.etime) {
+                    payload.processEndTime = task.etime;
+                    if (task.etime && !task.failed) {
+                        payload.completed = true;
+                    }
+                    changed = true;
+                }
+                if (task.failed && !payload.failed) {
+                    payload.failed = true;
+                    changed = true;
+                }
+            }
+        });
+        return changed;
+    });
 }
 
 export {

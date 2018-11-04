@@ -36,12 +36,12 @@ const widthDefinitions = {
 class Application extends PureComponent {
     static displayName = 'Application';
     static coreConfiguration = {
+        area: 'client',
         routeManager: {
             routes,
             rewrites: [ CORSRewriter, SchemaRewriter ],
         },
         dataSource: {
-            area: 'client',
             discoveryFlags: {
                 include_uncommitted: true,
             },

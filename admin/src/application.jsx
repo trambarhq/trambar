@@ -39,6 +39,7 @@ const widthDefinitions = {
 class Application extends PureComponent {
     static displayName = 'Application';
     static coreConfiguration = {
+        area: 'admin',
         routeManager: {
             basePath: '/admin',
             routes,
@@ -46,7 +47,6 @@ class Application extends PureComponent {
         },
         dataSource: {
             basePath: '/srv/admin-data',
-            area: 'admin',
             discoveryFlags: {
                 include_deleted: true,
             },
@@ -57,9 +57,6 @@ class Application extends PureComponent {
         },
         cache: {
             name: 'trambar-admin'
-        },
-        notifier: {
-            global: true,
         },
     };
 
