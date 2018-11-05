@@ -110,7 +110,6 @@ class Application extends PureComponent {
         let { database, route, env, payloads, makingRequests } = this.state;
         let settings = route.params.ui;
         let topNavProps = {
-            searching: false, // TODO
             settings,
             database,
             route,
@@ -151,7 +150,7 @@ class Application extends PureComponent {
             route,
             payloads,
             env,
-        }, _.omit(route.params, 'module'));
+        }, _.omit(route.params, 'module', 'ui'));
         if (CurrentPage.diagnostics) {
             _.assign(pageProps, this.props);
         }
@@ -171,7 +170,7 @@ class Application extends PureComponent {
             env,
             transitionOut: true,
             onTransitionOut: this.handlePageTransitionOut,
-        }, _.omit(prevRoute.params, 'module'));
+        }, _.omit(prevRoute.params, 'module', 'ui'));
         return <PreviousPage {...pageProps} />;
     }
 

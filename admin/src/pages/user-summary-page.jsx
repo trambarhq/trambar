@@ -108,7 +108,7 @@ class UserSummaryPage extends AsyncComponent {
  * @extends PureComponent
  */
 class UserSummaryPageSync extends PureComponent {
-    static displayName = 'UserSummaryPage.Sync';
+    static displayName = 'UserSummaryPageSync';
 
     constructor(props) {
         super(props);

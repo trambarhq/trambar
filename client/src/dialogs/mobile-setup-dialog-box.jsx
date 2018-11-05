@@ -89,7 +89,7 @@ class MobileSetupForm extends AsyncComponent {
 }
 
 class MobileSetupFormSync extends PureComponent {
-    static displayName = 'MobileSetupFormSync.Sync';
+    static displayName = 'MobileSetupFormSyncSync';
 
     /**
      * Check for change in props.devices

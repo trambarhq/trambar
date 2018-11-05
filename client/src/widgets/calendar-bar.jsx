@@ -62,7 +62,7 @@ class CalendarBar extends AsyncComponent {
  * @extends PureComponent
  */
 class CalendarBarSync extends PureComponent {
-    static displayName = 'CalendarBar.Sync';
+    static displayName = 'CalendarBarSync';
 
     render() {
         let { route, env, dailyActivities } = this.props;

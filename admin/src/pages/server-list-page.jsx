@@ -69,7 +69,7 @@ class ServerListPage extends AsyncComponent {
  * @extends PureComponent
  */
 class ServerListPageSync extends PureComponent {
-    static displayName = 'ServerListPage.Sync';
+    static displayName = 'ServerListPageSync';
 
     constructor(props) {
         let { editing } = props;

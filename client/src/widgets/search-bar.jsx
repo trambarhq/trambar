@@ -60,7 +60,7 @@ class SearchBar extends AsyncComponent {
  * @extends PureComponent
  */
 class SearchBarSync extends PureComponent {
-    static displayName = 'SearchBar.Sync';
+    static displayName = 'SearchBarSync';
 
     /**
      * Return initial state of component

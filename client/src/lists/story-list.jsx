@@ -126,7 +126,7 @@ class StoryList extends AsyncComponent {
  * @extends PureComponent
  */
 class StoryListSync extends PureComponent {
-    static displayName = 'StoryList.Sync';
+    static displayName = 'StoryListSync';
 
     constructor(props) {
         super(props);

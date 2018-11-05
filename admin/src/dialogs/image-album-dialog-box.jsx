@@ -99,7 +99,7 @@ class ImageAlbum extends AsyncComponent {
  * @extends PureComponent
  */
 class ImageAlbumSync extends PureComponent {
-    static displayName = 'ImageAlbum.Sync';
+    static displayName = 'ImageAlbumSync';
 
     constructor(props) {
         super(props);

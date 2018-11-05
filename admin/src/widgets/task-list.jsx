@@ -55,7 +55,7 @@ class TaskList extends AsyncComponent {
  * @extends PureComponent
  */
 class TaskListSync extends PureComponent {
-    static displayName = 'TaskList.Sync';
+    static displayName = 'TaskListSync';
 
     constructor(props) {
         super(props);

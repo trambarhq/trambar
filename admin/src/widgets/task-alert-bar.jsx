@@ -93,7 +93,7 @@ class TaskAlertBar extends AsyncComponent {
  * @extends PureComponent
  */
 class TaskAlertBarSync extends PureComponent {
-    static displayName = 'TaskAlertBar.Sync';
+    static displayName = 'TaskAlertBarSync';
 
     constructor(props) {
         super(props);

@@ -80,7 +80,7 @@ class NavigationTree extends AsyncComponent {
  * @extends PureComponent
  */
 class NavigationTreeSync extends PureComponent {
-    static displayName = 'NavigationTree.Sync';
+    static displayName = 'NavigationTreeSync';
 
     constructor(props) {
         super(props);

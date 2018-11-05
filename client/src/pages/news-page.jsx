@@ -175,7 +175,7 @@ class NewsPage extends AsyncComponent {
  * @extends PureComponent
  */
 class NewsPageSync extends PureComponent {
-    static displayName = 'NewsPage.Sync';
+    static displayName = 'NewsPageSync';
 
     /**
      * Return the access level

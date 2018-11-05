@@ -76,7 +76,7 @@ class BookmarksPage extends AsyncComponent {
  * @extends PureComponent
  */
 class BookmarksPageSync extends PureComponent {
-    static displayName = 'BookmarksPage.Sync';
+    static displayName = 'BookmarksPageSync';
 
     /**
      * Return the access level

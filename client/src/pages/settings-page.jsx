@@ -99,7 +99,7 @@ class SettingsPage extends AsyncComponent {
  * @extends PureComponent
  */
 class SettingsPageSync extends PureComponent {
-    static displayName = 'SettingsPage.Sync';
+    static displayName = 'SettingsPageSync';
 
     constructor(props) {
         super(props);

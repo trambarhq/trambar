@@ -80,7 +80,7 @@ class RoleSummaryPage extends AsyncComponent {
  * @extends PureComponent
  */
 class RoleSummaryPageSync extends PureComponent {
-    static displayName = 'RoleSummaryPage.Sync';
+    static displayName = 'RoleSummaryPageSync';
 
     constructor(props) {
         super(props);

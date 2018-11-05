@@ -83,7 +83,7 @@ class RepoListPage extends AsyncComponent {
  * @extends PureComponent
  */
 class RepoListPageSync extends PureComponent {
-    static displayName = 'RepoListPage.Sync';
+    static displayName = 'RepoListPageSync';
 
     constructor(props) {
         let { editing } = props;

@@ -82,7 +82,7 @@ class RepoSummaryPage extends AsyncComponent {
  * @extends PureComponent
  */
 class RepoSummaryPageSync extends PureComponent {
-    static displayName = 'RepoSummaryPage.Sync';
+    static displayName = 'RepoSummaryPageSync';
 
     constructor(props) {
         super(props);

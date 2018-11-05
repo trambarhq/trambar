@@ -76,7 +76,7 @@ class NotificationsPage extends AsyncComponent {
  * @extends PureComponent
  */
 class NotificationsPageSync extends PureComponent {
-    static displayName = 'NotificationsPage.Sync';
+    static displayName = 'NotificationsPageSync';
 
     /**
      * Render component

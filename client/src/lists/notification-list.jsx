@@ -72,7 +72,7 @@ class NotificationList extends AsyncComponent {
  * @extends PureComponent
  */
 class NotificationListSync extends PureComponent {
-    static displayName = 'NotificationList.Sync';
+    static displayName = 'NotificationListSync';
 
     constructor(props) {
         super(props);

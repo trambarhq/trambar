@@ -60,7 +60,7 @@ class RoleFilterBar extends AsyncComponent {
 }
 
 class RoleFilterBarSync extends PureComponent {
-    static displayName = 'RoleFilterBar.Sync';
+    static displayName = 'RoleFilterBarSync';
 
     /**
      * Render component

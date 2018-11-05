@@ -53,7 +53,7 @@ class SignInPage extends AsyncComponent {
  * @extends PureComponent
  */
 class SignInPageSync extends PureComponent {
-    static displayName = 'SignInPage.Sync';
+    static displayName = 'SignInPageSync';
 
     constructor(props) {
         super(props);

@@ -53,7 +53,7 @@ class StartPage extends AsyncComponent {
  * @extends PureComponent
  */
 class StartPageSync extends PureComponent {
-    static displayName = 'StartPage.Sync';
+    static displayName = 'StartPageSync';
 
     /**
      * Render component

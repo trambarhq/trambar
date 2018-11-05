@@ -68,7 +68,7 @@ class RoleListPage extends AsyncComponent {
  * @extends PureComponent
  */
 class RoleListPageSync extends PureComponent {
-    static displayName = 'RoleListPage.Sync';
+    static displayName = 'RoleListPageSync';
 
     constructor(props) {
         let { editing } = props;

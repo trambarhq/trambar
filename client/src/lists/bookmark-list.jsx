@@ -130,7 +130,7 @@ class BookmarkList extends AsyncComponent {
  * @extends PureComponent
  */
 class BookmarkListSync extends PureComponent {
-    static displayName = 'BookmarkList.Sync';
+    static displayName = 'BookmarkListSync';
 
     constructor(props) {
         super(props);

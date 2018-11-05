@@ -82,7 +82,7 @@ class MemberListPage extends AsyncComponent {
  * @extends PureComponent
  */
 class MemberListPageSync extends PureComponent {
-    static displayName = 'MemberListPage.Sync';
+    static displayName = 'MemberListPageSync';
 
     constructor(props) {
         let { editing } = props;
