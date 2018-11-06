@@ -84,14 +84,6 @@ function start(cfg) {
         codePush.check();
     }
 
-    envMonitor.activate();
-    routeManager.activate();
-    if (envMonitor.online) {
-        dataSource.activate();
-        payloadManager.activate();
-        notifier.activate();
-    }
-
     // set up basic plumbing
     envMonitor.addEventListener('change', (evt) => {
         if (envMonitor.online && !envMonitor.paused) {
@@ -142,6 +134,15 @@ function start(cfg) {
         currentLocation = { address, schema };
         changeNotification();
         changeSubscription();
+
+        if (envMonitor.platform === 'cordova') {
+            let url = routeManager.url;
+            if (url === '/') {
+                removeSetting('location');
+            } else {
+                saveSetting('location', url);
+            }
+        }
     });
     dataSource.addEventListener('authorization', (evt) => {
         // save the session
@@ -176,9 +177,9 @@ function start(cfg) {
         // save the selected locale after it's been changed
         let { localeCode, browserLocaleCode } = localeManager;
         if (localeCode == browserLocaleCode) {
-            removeLocale();
+            removeSetting('language');
         } else {
-            saveLocale(localeCode);
+            saveSetting('language', localeCode);
         }
         // alert messages are language-specific, so we need to update the data
         // subscription when the language changes
@@ -217,16 +218,27 @@ function start(cfg) {
         }
     });
 
+    envMonitor.activate();
+    routeManager.activate();
+    if (envMonitor.online) {
+        dataSource.activate();
+        payloadManager.activate();
+        notifier.activate();
+    }
+
     // get saved local then load the initial page
-    return loadLocale().then((savedLocale) => {
+    return loadSetting('language').then((savedLocale) => {
         return localeManager.start(savedLocale);
     }).then(() => {
-        // on the browser the URL will be obtained from window.location
-        let initialURL;
         if (envMonitor.platform === 'cordova') {
-            initialURL = '/@cordova/';
+            // get the last visited page
+            return loadSetting('location').then((url) => {
+                return routeManager.start(url);
+            });
+        } else {
+            // on the browser the URL will be obtained from window.location
+            return routeManager.start();
         }
-        return routeManager.start(initialURL);
     }).then(() => {
         return {
             envMonitor,
@@ -243,15 +255,17 @@ function start(cfg) {
 /**
  * Load user-selected locale from local database
  *
- * @return {Promise<String>}
+ * @param  {String} key
+ *
+ * @return {Promise<*>}
  */
-function loadLocale() {
-    let criteria = { key: 'language' };
+function loadSetting(key) {
+    let criteria = { key };
     let query = Object.assign({ criteria }, settingsLocation);
     return dataSource.find(query).then((records) => {
         let record = records[0];
         if (record) {
-            return record.selectedLocale;
+            return record.value;
         }
     });
 }
@@ -259,29 +273,25 @@ function loadLocale() {
 /**
  * Save user-selected locale to local database
  *
- * @param  {String} localeCode
+ * @param  {String} key
+ * @param  {*} value
  *
  * @return {Promise}
  */
-function saveLocale(localeCode) {
-    var record = {
-        key: 'language',
-        selectedLocale: localeCode
-    };
+function saveSetting(key, value) {
+    var record = { key, value };
     return dataSource.save(settingsLocation, [ record ]).return();
 }
 
 /**
- * Remove saved locale
+ * Remove saved setting
  *
- * @param  {String} localeCode
+ * @param  {String} key
  *
  * @return {Promise}
  */
-function removeLocale(localeCode) {
-    var record = {
-        key: 'language',
-    };
+function removeSetting(key) {
+    var record = { key };
     return dataSource.remove(settingsLocation, [ record ]).return();
 }
 
@@ -290,7 +300,7 @@ function removeLocale(localeCode) {
  *
  * @param  {String} address
  *
- * @return {Promise<Object>}
+ * @return {Promise<Object|undefined>}
  */
 function loadSession(address) {
     let criteria = { key: address };
@@ -305,6 +315,7 @@ function loadSession(address) {
                 token: record.token,
                 user_id: record.user_id,
                 etime: record.etime,
+                atime: record.atime,
             };
         }
     });
@@ -318,6 +329,7 @@ function loadSession(address) {
  * @return {Promise}
  */
 function saveSession(session) {
+    let now = (new Date).toISOString();
     let record = {
         key: session.address,
         area: session.area,
@@ -325,6 +337,7 @@ function saveSession(session) {
         token: session.token,
         user_id: session.user_id,
         etime: session.etime,
+        atime: now,
     };
     return dataSource.save(sessionLocation, [ record ]).return();
 }

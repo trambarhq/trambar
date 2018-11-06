@@ -209,19 +209,6 @@ const routes = {
         },
         signIn: true,
     },
-    'cordova-page': {
-        path: '/@cordova/',
-        load: (match) => {
-            match.params.ui = {
-                navigation: { top: false, bottom: false }
-            };
-            match.params.key = match.path;
-            return import('pages/cordova-page' /* webpackChunkName: "page-cordova" */).then((module) => {
-                match.params.module = module;
-            });
-        },
-        public: true,
-    },
     'error-page': {
         path: '*',
         load: (match) => {
