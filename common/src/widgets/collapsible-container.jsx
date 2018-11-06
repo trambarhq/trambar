@@ -18,26 +18,22 @@ class CollapsibleContainer extends PureComponent {
             contents: HTMLDivElement,
         });
         this.state = {
+            contents: null,
             contentHeight: undefined,
-            collapsing: false,
-            expanding: false,
+            renderedAsClosed: false,
         };
     }
 
-    /**
-     * Change state.hidden when props.open changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { open } = this.props;
-        if (nextProps.open !== open) {
-            if (nextProps.open) {
-                this.setState({ collapsing: false, expanding: true });
-            } else {
-                this.setState({ collapsing: true, expanding: false });
-            }
+    static getDerivedStateFromProps(props, state) {
+        // save contents in state if open = true, so that we don't need them
+        // when show become false
+        let { open, children } = props;
+        if (open) {
+            return { contents: children };
+        } else {
+            return { renderedAsClosed: true };
         }
+        return null;
     }
 
     /**
@@ -47,25 +43,27 @@ class CollapsibleContainer extends PureComponent {
      */
     render() {
         let { open, children } = this.props;
-        let { contentHeight, expanding, collapsing } = this.state;
+        let { contentHeight, contents, renderedAsClosed } = this.state;
         let { setters } = this.components;
 
         let style = {};
         if (open) {
-            style.height = contentHeight;
+            if (contentHeight !== undefined) {
+                style.height = contentHeight;
+            } else if (renderedAsClosed) {
+                // set the height to 0 initially, until we determine the
+                // height in componentDidUpdate(), doing so only if the
+                // component was rendered as closed previously
+                style.height = 0;
+            }
         } else {
             style.height = 0;
         }
         let className = 'collapsible-container';
-        if (expanding) {
-            className += ' expanding';
-        } else if (collapsing) {
-            className += ' collapsing';
-        }
         return (
             <div ref={setters.container} className={className} style={style}>
                 <div ref={setters.contents} className="collapsible-contents">
-                    {children}
+                    {contents}
                 </div>
             </div>
         );
