@@ -30,11 +30,9 @@ class StartPage extends AsyncComponent {
         return db.start().then((currentUserID) => {
             return SystemFinder.findSystem(db).then((system) => {
                 if (_.isEmpty(system)) {
-                    if (!this.redirectTimeout) {
-                        this.redirectTimeout = setTimeout(() => {
-                            route.replace('settings-page', { edit: true });
-                        }, 2500);
-                    }
+                    props.onAnimationEnd = (evt) => {
+                        route.replace('settings-page', { edit: true });
+                    };
                 } else {
                     return route.replace('project-list-page');
                 }
@@ -61,10 +59,10 @@ class StartPageSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { env, stage } = this.props;
+        let { env, stage, onAnimationEnd } = this.props;
         let { t } = env.locale;
         return (
-            <div className={`start-page ${stage}`}>
+            <div className={`start-page ${stage}`} onAnimationEnd={onAnimationEnd}>
                 <h2>{t('welcome')}</h2>
             </div>
         );

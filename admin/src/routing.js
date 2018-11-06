@@ -152,7 +152,7 @@ var routes = {
             });
         }
     },
-    'start': {
+    'start-page': {
         path: '/',
         load: (match) => {
             match.params.key = match.path;

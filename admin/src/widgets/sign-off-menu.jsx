@@ -58,7 +58,7 @@ class SignOffMenu extends AsyncComponent {
     handleSignOffClick = (evt) => {
         let { database, route } = this.props;
         database.endSession().then(() => {
-            route.push('start-page');
+            route.push('sign-in-page');
         });
     }
 }
