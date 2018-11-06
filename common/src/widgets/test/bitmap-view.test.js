@@ -9,7 +9,7 @@ Enzyme.configure({ adapter: new Adapter() });
 
 import BitmapView from 'widgets/bitmap-view';
 
-import imageWithOrientation from './images/jpeg-orientation-sample.jpg';
+import imageWithOrientation from '../../media/test/images/jpeg-orientation-sample.jpg';
 
 describe('BitmapView', function() {
     it ('should extract orientation and dimension from blob', function() {

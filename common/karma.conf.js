@@ -58,7 +58,7 @@ module.exports = function(config) {
             },
             resolve: {
                 extensions: [ '.js', '.jsx' ],
-                modules: [ 'src', 'node_modules' ].map((folder) => {
+                modules: [ 'src', 'assets', 'node_modules' ].map((folder) => {
                     return Path.resolve(`./${folder}`);
                 })
             },

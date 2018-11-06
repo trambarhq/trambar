@@ -24,7 +24,7 @@ var folders = _.mapValues({
     src: 'src',
     www: 'www',
     assets: 'assets',
-    includes: [ 'src', '../common/src', '../common/node_modules', 'node_modules', 'assets' ],
+    includes: [ 'src', 'assets', '../common/src', '../common/assets', '../common/node_modules', 'node_modules' ],
     loaders: [ 'node_modules', '../common/node_modules' ],
 }, resolve);
 if (event !== 'start') {
