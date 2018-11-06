@@ -31,13 +31,19 @@ class EnvironmentMonitor extends EventEmitter {
             this.pointingDevice = 'mouse';
         }
         this.devices = [];
-        this.recorders = [];
+        if (this.platform === 'cordova') {
+            this.recorders = getCordovaRecordingSupport();
+        } else {
+            this.recorders = [];
+        }
         this.dateCheckInterval = 0;
     }
 
     activate() {
         this.monitor(true);
-        this.handleDeviceChange();
+        if (this.platform !== 'cordova') {
+            this.handleDeviceChange();
+        }
     }
 
     shutdown() {
@@ -57,8 +63,6 @@ class EnvironmentMonitor extends EventEmitter {
         let network = getNetworkAPI();
         toggleEventListener(network, 'typechange', this.handleConnectionTypeChange, enabled);
 
-        toggleEventListener(navigator.mediaDevices, 'devicechange', this.handleDeviceChange, enabled);
-
         getBattery().then((battery) => {
             if (battery) {
                 toggleEventListener(battery, 'levelchange', this.handleBatteryChange, enabled);
@@ -74,6 +78,8 @@ class EnvironmentMonitor extends EventEmitter {
         if (this.platform === 'cordova') {
             toggleEventListener(document, 'pause', this.handlePause, enabled);
             toggleEventListener(document, 'resume', this.handleResume, enabled);
+        } else {
+            toggleEventListener(navigator.mediaDevices, 'devicechange', this.handleDeviceChange, enabled);
         }
     }
 
@@ -300,55 +306,57 @@ function isWebpSupported() {
     return false;
 }
 
-function getRecordingSupport(platform, devices) {
+function getRecordingSupport(devices) {
     let recorders = [];
     if (_.some(devices, { kind: 'videoinput' })) {
-        if (canSavePhoto(platform)) {
+        if (canSavePhoto()) {
             recorders.push('image');
         }
-        if (canSaveVideo(platform)) {
+        if (canSaveVideo()) {
             recorders.push('video');
         }
     }
     if (_.some(devices, { kind: 'audioinput' })) {
-        recorders.push('audio');
+        if (canSaveAudio()) {
+            recorders.push('audio');
+        }
     }
     return recorders;
 }
 
-function canSavePhoto(platform) {
-    if (platform === 'browser') {
-        let { mediaDevices } = navigator;
-        if (mediaDevices && mediaDevices.getUserMedia) {
-            let { toBlob, toDateURL } = HTMLCanvasElement.prototype;
-            if (typeof(toBlob) === 'function') {
-                return true;
-            } else if (typeof(toDataURL) === 'function') {
-                return true;
-            }
+function getCordovaRecordingSupport() {
+    let recorders = [];
+    if (navigator.camera) {
+        recorders.push('image');
+    }
+    if (navigator.device && navigator.device.capture) {
+        // the plugin doesn't provide a UI for audio recording on windows
+        if (cordova.platformId !== 'windows') {
+            recorders.push('audio');
         }
-    } else if (platform === 'cordova') {
-        if (navigator.camera) {
+        recorders.push('video');
+    }
+    return recorders;
+}
+
+function canSavePhoto() {
+    let { mediaDevices } = navigator;
+    if (mediaDevices && mediaDevices.getUserMedia) {
+        let { toBlob, toDateURL } = HTMLCanvasElement.prototype;
+        if (typeof(toBlob) === 'function') {
+            return true;
+        } else if (typeof(toDataURL) === 'function') {
             return true;
         }
     }
     return false;
 }
 
-function canSaveAudio(platform) {
-    if (platform === 'browser') {
-        let { mediaDevices } = navigator;
-        if (mediaDevices && mediaDevices.getUserMedia) {
-            if (typeof(MediaRecorder) === 'function') {
-                if (typeof(AudioContext) === 'function') {
-                    return true;
-                }
-            }
-        }
-    } else if (platform === 'cordova') {
-        if (navigator.device) {
-            // the plugin doesn't provide a UI on windows
-            if (cordova.platformId !== 'windows') {
+function canSaveAudio() {
+    let { mediaDevices } = navigator;
+    if (mediaDevices && mediaDevices.getUserMedia) {
+        if (typeof(MediaRecorder) === 'function') {
+            if (typeof(AudioContext) === 'function') {
                 return true;
             }
         }
@@ -356,16 +364,10 @@ function canSaveAudio(platform) {
     return false;
 }
 
-function canSaveVideo(platform) {
-    if (platform === 'browser') {
-        let { mediaDevices } = navigator;
-        if (mediaDevices && mediaDevices.getUserMedia) {
-            if (typeof(MediaRecorder) === 'function') {
-                return true;
-            }
-        }
-    } else if (platform === 'cordova') {
-        if (navigator.device) {
+function canSaveVideo() {
+    let { mediaDevices } = navigator;
+    if (mediaDevices && mediaDevices.getUserMedia) {
+        if (typeof(MediaRecorder) === 'function') {
             return true;
         }
     }
