@@ -229,6 +229,7 @@ class PushNotifier extends Notifier {
             }
         } else if (cordova.platformId === 'ios') {
             let payload = data.additionalData;
+            let notID = payload.notId;
             let notification = this.unpack(payload) || {};
             if (notification) {
                 this.dispatchNotification(notification);
