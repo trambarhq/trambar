@@ -34,7 +34,6 @@ class RemoteDataSource extends EventEmitter {
         super();
         this.active = false;
         this.options = _.defaults({}, options, defaultOptions);
-        this.disconnected = false;
         this.idMappings = {};
         this.cache = this.options.cache;
         this.cacheValidations = {};
@@ -57,6 +56,15 @@ class RemoteDataSource extends EventEmitter {
             }, 60 * 1000);
             this.active = true;
             this.startTime = Moment();
+            // force validation of schema signatures
+            this.revalidate();
+            // reconcile changes and invalidate all searches
+            this.invalidate().then(() => {
+                // send pending changes
+                _.each(this.changeQueue, (change) => {
+                    change.dispatch();
+                });
+            });
         }
     }
 

@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Moment from 'moment';
 import Promise from 'bluebird';
 import EnvironmentMonitor from 'env/environment-monitor';
 import LocaleManager from 'locale/locale-manager';
@@ -170,8 +171,8 @@ function start(cfg) {
         dataSource.invalidate(evt.changes);
     });
     notifier.addEventListener('revalidation', (evt) => {
-        // force cache revalidation
-        // TODO
+        dataSource.revalidate(evt.revalidation);
+        dataSource.invalidate();
     });
     localeManager.addEventListener('change', (evt) => {
         // save the selected locale after it's been changed
@@ -233,6 +234,10 @@ function start(cfg) {
         if (envMonitor.platform === 'cordova') {
             // get the last visited page
             return loadSetting('location').then((url) => {
+                // make sure the URL is still valid
+                if (!url || !routeManager.match(url)) {
+                    url = '/';
+                }
                 return routeManager.start(url);
             });
         } else {
@@ -329,7 +334,7 @@ function loadSession(address) {
  * @return {Promise}
  */
 function saveSession(session) {
-    let now = (new Date).toISOString();
+    let now = Moment().toISOString();
     let record = {
         key: session.address,
         area: session.area,
