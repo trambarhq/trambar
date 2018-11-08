@@ -147,6 +147,7 @@ class BookmarkListSync extends PureComponent {
     render() {
         let { bookmarks, highlightStoryID, scrollToStoryID } = this.props;
         let anchorStoryID = highlightStoryID || scrollToStoryID;
+        bookmarks = sortBookmarks(bookmarks);
         let smartListProps = {
             items: bookmarks,
             behind: 4,
@@ -376,7 +377,7 @@ const array = memoizeWeak([], function(object) {
     return [ object ];
 });
 
-const sortBookmark = memoizeWeak(null, function(bookmarks) {
+const sortBookmarks = memoizeWeak(null, function(bookmarks) {
     return _.orderBy(bookmarks, [ 'id' ], [ 'desc' ]);
 });
 
