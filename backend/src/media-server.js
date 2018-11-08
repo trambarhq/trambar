@@ -651,13 +651,15 @@ function saveTaskOutcome(schema, taskId, part, details) {
         // set the part to true
         var optionsAfter = `options || '{ "${part}": true }'`;
         // set etime to NOW() when there're no more false value
-        var etimeAfter = `CASE WHEN (${optionsAfter})::text NOT LIKE '%: false%' THEN NOW() ELSE null END`;
+        var etimeAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN null ELSE NOW() END`;
+        // set completion to 100 when there're no more false value in options
+        var completionAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN completion ELSE 100 END`;
         var sql = `
             UPDATE ${table} SET
             details = ${detailsAfter},
             options = ${optionsAfter},
             etime = ${etimeAfter},
-            completion = 100
+            completion = ${completionAfter}
             WHERE id = $2
         `;
         return db.execute(sql, params);

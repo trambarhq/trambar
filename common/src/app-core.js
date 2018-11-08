@@ -169,6 +169,12 @@ function start(cfg) {
 
         // invalidate database queries
         dataSource.invalidate(evt.changes);
+
+        let taskChanges = _.filter(evt.changes, { table: 'task' });
+        _.each(taskChanges, (change) => {
+            let destination = _.pick(change, 'address', 'schema');
+            payloadManager.updatePayloadsBackendProgress(destination);
+        });
     });
     notifier.addEventListener('revalidation', (evt) => {
         dataSource.revalidate(evt.revalidation);
@@ -200,7 +206,7 @@ function start(cfg) {
         let promise = addPayloadTasks(evt.destination, evt.payloads)
         evt.postponeDefault(promise);
     });
-    payloadManager.addEventListener('update', (evt) => {
+    payloadManager.addEventListener('backendprogress', (evt) => {
         // update payloads using information from the backend
         let promise = updateBackendProgress(evt.destination, evt.payloads);
         evt.postponeDefault(promise);
@@ -556,9 +562,9 @@ function addPayloadTasks(destination, payloads) {
  * @return {Promise<Boolean>}
  */
 function updateBackendProgress(destination, payloads) {
-    let location = {
-        address,
-        schema,
+    let query = {
+        address: destination.address,
+        schema: destination.schema,
         table: 'task',
         criteria: {
             token: _.map(payloads, 'id'),

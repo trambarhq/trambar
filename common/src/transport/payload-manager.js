@@ -25,6 +25,7 @@ class PayloadManager extends EventEmitter {
         this.payloads = [];
         this.streams = [];
         this.initialized = false;
+        this.progressInterval = undefined;
     }
 
     activate() {
@@ -40,6 +41,7 @@ class PayloadManager extends EventEmitter {
                 this.connectivityPromise = null;
             }
             this.restartPayloads(this.payloads);
+            this.progressInterval = setInterval(this.updatePayloadsBackendProgress, 10000);
         }
     }
 
@@ -48,6 +50,7 @@ class PayloadManager extends EventEmitter {
             this.active = false;
 
             this.pausePayloads(this.payloads);
+            this.progressInterval = clearInterval(this.progressInterval);
         }
     }
 
@@ -292,18 +295,24 @@ class PayloadManager extends EventEmitter {
     /**
      * Update backend progress of payloads
      *
-     * @param  {Array<Payload>} payloads
+     * @param  {Object|null} destination
      */
-    updatePayloadsBackendProgress() {
-        let payloadGroups = separatePayloads(payloads);
+    updatePayloadsBackendProgress(destination) {
+        let inProgressPayloads = _.filter(this.payloads, {
+            sent: true,
+            completed: false,
+        });
+        let payloadGroups = separatePayloads(inProgressPayloads);
         _.each(payloadGroups, (payloadGroup) => {
-            let { destination, payloads } = payloadGroup;
-            this.requestBackendUpdate(destination, payloads).then((updated) => {
-                if (updated) {
-                    this.triggerEvent(new PayloadManagerEvent('change', this));
-                }
-                return null;
-            });
+            console.log('updatePayloadsBackendProgress')
+            if (!destination || _.isEqual(payloadGroup.destination, destination)) {
+                this.requestBackendUpdate(payloadGroup).then((updated) => {
+                    if (updated) {
+                        this.triggerEvent(new PayloadManagerEvent('change', this));
+                    }
+                    return null;
+                });
+            }
         });
     }
 
@@ -348,20 +357,12 @@ class PayloadManager extends EventEmitter {
      * Emit a "backendprogress" event in expectance of a listener updating
      * the payloads with progress information from the backend
      *
-     * @param  {Object} destination
-     * @param  {Array<Payloads>} payloads
+     * @param  {Object} payloadGroup
      *
      * @return {Promise}
      */
-    requestBackendUpdate(destination, payloads) {
-        let inProgressPayloads = _.filter(this.payloads, {
-            sent: true,
-            completed: false,
-        });
-        let event = new PayloadManagerEvent('backendprogress', this, {
-            destination,
-            payloads: inProgressPayloads
-        });
+    requestBackendUpdate(payloadGroup) {
+        let event = new PayloadManagerEvent('backendprogress', this, payloadGroup);
         this.triggerEvent(event);
         return event.waitForDecision().then(() => {
             return event.defaultPrevented;

@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Moment from 'moment';
 import React, { Component } from 'react';
 
 // widgets
@@ -65,12 +66,12 @@ class PayloadManagerPanel extends Component {
 function renderPayload(payload, index) {
     return (
         <div key={index}>
-            <div>Payload token: {payload.token}</div>
+            <div>Payload ID: {payload.id}</div>
             <div>Resource type: {payload.type}</div>
-            {this.renderTransferStatus(payload)}
-            {this.renderBackendStatus(payload)}
+            {renderTransferStatus(payload)}
+            {renderBackendStatus(payload)}
             <ol>
-                {_.map(payload.parts, this.renderPayloadPart)}
+                {_.map(payload.parts, renderPayloadPart)}
             </ol>
         </div>
     );
@@ -141,7 +142,9 @@ function renderPayloadPart(part, index) {
     } else if (part.stream) {
         type = 'Stream';
     } else if (part.url) {
-        type = 'URL'
+        type = 'URL';
+    } else {
+        type = 'Unknown';
     }
     let size;
     if (part.size > 0) {

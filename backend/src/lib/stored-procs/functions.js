@@ -1,6 +1,7 @@
 module.exports = {
     lowerCase,
     matchAny,
+    hasFalse,
     hasCandidates,
     payloadTokens,
     updatePayload,
@@ -39,6 +40,18 @@ function matchAny(filters, objects) {
 matchAny.args = 'filters jsonb, objects jsonb[]';
 matchAny.ret = 'boolean';
 matchAny.flags = 'IMMUTABLE';
+
+function hasFalse(details) {
+    for (var name in details) {
+        if (!details[name]) {
+            return true;
+        }
+    }
+    return false;
+}
+hasFalse.args = 'details jsonb';
+hasFalse.ret = 'boolean';
+hasFalse.flags = 'IMMUTABLE';
 
 function hasCandidates(details, ids) {
     var candidates = details.candidates;
