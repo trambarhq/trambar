@@ -1047,7 +1047,7 @@ class StoryEditor extends PureComponent {
 
         let resources = draft.details.resources;
         return ResourceUtils.attachMosaic(resources, env).then(() => {
-            return this.saveDraft(draft, true).then((story) => {
+            return this.saveStory(draft, true).then((story) => {
                 return this.sendBookmarks(story, options.bookmarkRecipients).then(() => {
                     let issueDetailsBefore = IssueUtils.extractIssueDetails(draft, repos);
                     let issueDetailsAfter = options.issueDetails;
