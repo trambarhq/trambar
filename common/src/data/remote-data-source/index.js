@@ -192,7 +192,7 @@ class RemoteDataSource extends EventEmitter {
                 handle: session.handle
             };
             return HTTPRequest.fetch('GET', url, payload, options).then((res) => {
-                if (res) {
+                if (res && res.session) {
                     this.grantAuthorization(session, res.session);
                     return true;
                 } else {
@@ -204,8 +204,8 @@ class RemoteDataSource extends EventEmitter {
                     session.authenticationPromise = null;
                 } else {
                     this.discardSession(session);
+                    throw err;
                 }
-                throw err;
             });
         });
         session.authenticationPromise = promise;
@@ -471,12 +471,17 @@ class RemoteDataSource extends EventEmitter {
             location
         });
         this.triggerEvent(event);
-        return event.waitForDecision().then(() => {
-            if (event.defaultPrevented) {
-                // maybe the event listener restored a saved session
-                return !!session.token;
+        return Promise.resolve(event.waitForDecision()).then(() => {
+            let shouldWait = !event.defaultPrevented;
+            if (!shouldWait) {
+                throw new HTTPError(401);
             }
-            return this.waitForAuthorization(session);
+            return this.waitForAuthorization(session).then((success) => {
+                if (!success) {
+                    throw new HTTPError(401);
+                }
+                return true;
+            });
         });
     }
 

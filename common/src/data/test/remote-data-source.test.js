@@ -52,9 +52,9 @@ describe('RemoteDataSource', function() {
                     return { session, system, servers };
                 });
             };
-            dataSource.beginSession(location, 'client').then((result) => {
-                expect(result).to.have.property('system', system);
-                expect(result).to.have.property('servers', servers);
+            return dataSource.beginSession(location, 'client').then((result) => {
+                expect(result).to.have.property('system').that.deep.equals(system);
+                expect(result).to.have.property('servers').that.deep.equals(servers);
             });
         })
         it('should return a fulfilled promise when session was created already', function() {
@@ -72,29 +72,9 @@ describe('RemoteDataSource', function() {
                 expect(promise.isFulfilled()).to.be.true;
             });
         })
-        it('should trigger onChange after failing', function() {
-            let changeEventPromise = new ManualPromise;
-            dataSource.addEventListener('change', changeEventPromise.resolve);
-
-            let location = { address: 'http://gondor.me' };
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.reject(new Error('boo'));
-            };
-            return dataSource.beginSession(location, 'client').then(() => {
-                return false;
-            }).catch((err) => {
-                return true;
-            }).then((rejected) => {
-                expect(rejected).to.be.true;
-                return changeEventPromise.timeout(1000);
-            }).then((evt) => {
-                expect(evt).to.be.object;
-                expect(evt).to.have.property('type', 'change');
-            });
-        })
     })
-    describe('#checkSession()', function() {
-        it('should fire onAuthorization when remote server indicates session is authorized', function() {
+    describe('#checkAuthorization()', function() {
+        it('should fire authorization event when remote server indicates session is authorized', function() {
             let authorizationEventPromise = new ManualPromise;
             dataSource.addEventListener('authorization', authorizationEventPromise.resolve);
             let location = { address: 'http://isengard.me' };
@@ -120,7 +100,7 @@ describe('RemoteDataSource', function() {
                         return { session: sessionLater };
                     });
                 };
-                return dataSource.checkSession(location).then((authorized) => {
+                return dataSource.checkAuthorization(location).then((authorized) => {
                     expect(authorized).to.be.true;
                     expect(dataSource.hasAuthorization(location)).to.be.true;
                     return authorizationEventPromise.timeout(1000);
@@ -153,19 +133,19 @@ describe('RemoteDataSource', function() {
                         return {};
                     });
                 };
-                return dataSource.checkSession(location).then((authorized) => {
+                return dataSource.checkAuthorization(location).then((authorized) => {
                     expect(dataSource.hasAuthorization(location)).to.be.false;
                     expect(authorized).to.be.false;
 
-                    return Promise.race([ expirationEventPromise, violationEventPromise ]).timeout(500);
-                }).then((evt) => {
-                    expect(evt).to.be.null;
+                    // shouldn't trigger event
+                    return expect(Promise.race([ expirationEventPromise, violationEventPromise ]).timeout(200))
+                        .to.eventually.be.rejectedWith(Promise.TimeoutError)
                 });
             });
         })
     })
-    describe('#submitPassword()', function() {
-        it('should trigger onAuthorization when server accepts username/password', function() {
+    describe('#authenticate()', function() {
+        it('should trigger authorization event when server accepts username/password', function() {
             let authorizationEventPromise = new ManualPromise;
             dataSource.addEventListener('authorization', authorizationEventPromise.resolve);
             let location = { address: 'http://mdoom.mordor.me' };
@@ -195,7 +175,12 @@ describe('RemoteDataSource', function() {
                         return { session: sessionLater };
                     });
                 };
-                return dataSource.submitPassword(location, username, password).then(() => {
+                let credentials = {
+                    type: 'password',
+                    username,
+                    password
+                };
+                return dataSource.authenticate(location, credentials).then(() => {
                     expect(dataSource.hasAuthorization(location)).to.be.true;
                     return authorizationEventPromise;
                 }).then((evt) => {
@@ -220,7 +205,7 @@ describe('RemoteDataSource', function() {
             let username = 'frodo';
             let password = 'precious';
             let error = new HTTPError(401, {
-                message: 'You fool!',
+                message: 'username/password are wrong',
                 reason: 'dark-magic',
             });
             HTTPRequest.fetch = (method, url, payload, options) => {
@@ -235,7 +220,12 @@ describe('RemoteDataSource', function() {
                         throw error;
                     });
                 };
-                return expect(dataSource.submitPassword(location, username, password))
+                let credentials = {
+                    type: 'password',
+                    username,
+                    password
+                };
+                return expect(dataSource.authenticate(location, credentials))
                     .to.eventually.be.rejectedWith(Error)
                     .that.has.property('reason', 'dark-magic');
             }).then(() => {
@@ -244,7 +234,7 @@ describe('RemoteDataSource', function() {
                     .to.eventually.be.rejectedWith(Promise.TimeoutError);
             });
         })
-        it('should trigger onChange to restart session when failure is other than 401 Unauthorized', function() {
+        it('should trigger change event to restart session when failure is other than 401 Unauthorized', function() {
             let changeEventPromise = new ManualPromise;
             let expirationEventPromise = new ManualPromise;
             let violationEventPromise = new ManualPromise;
@@ -272,7 +262,12 @@ describe('RemoteDataSource', function() {
                         throw error;
                     });
                 };
-                return expect(dataSource.submitPassword(location, username, password))
+                let credentials = {
+                    type: 'password',
+                    username,
+                    password
+                };
+                return expect(dataSource.authenticate(location, credentials))
                     .to.eventually.be.rejected;
             }).then(() => {
                 Promise.race([ changeEventPromise, expirationEventPromise, violationEventPromise ]).then((evt) => {
@@ -339,18 +334,20 @@ describe('RemoteDataSource', function() {
             });
         })
     })
-    describe('#restoreSession()', function() {
+    describe('#restoreAuthorization()', function() {
         it('should add a session', function() {
             let session = {
                 handle: 'abcdefg',
                 address: 'http://minas-tirith.me',
                 token: '123456789',
                 user_id: 3,
+                area: 'client',
                 etime: Moment().add(1, 'day').toISOString(),
             };
             let location = { address: session.address };
             expect(dataSource.hasAuthorization(location)).to.be.false;
-            dataSource.restoreSession(session);
+            let restored = dataSource.restoreAuthorization(location, session);
+            expect(restored).to.be.true;
             expect(dataSource.hasAuthorization(location)).to.be.true;
         })
         it('should not add an expired session', function() {
@@ -359,11 +356,13 @@ describe('RemoteDataSource', function() {
                 address: 'http://angmar.me',
                 token: '123456789',
                 user_id: 3,
+                area: 'client',
                 etime: Moment().subtract(1, 'day').toISOString(),
             };
             let location = { address: session.address };
             expect(dataSource.hasAuthorization(location)).to.be.false;
-            dataSource.restoreSession(session);
+            let restored = dataSource.restoreAuthorization(location, session);
+            expect(restored).to.be.false;
             expect(dataSource.hasAuthorization(location)).to.be.false;
         })
     })
@@ -374,22 +373,26 @@ describe('RemoteDataSource', function() {
                 address: 'http://minas-tirith.me',
                 token: '123456789',
                 user_id: 3,
-                etime: Moment().subtract(1, 'day').toISOString(),
+                area: 'client',
+                etime: Moment().add(1, 'day').toISOString(),
             };
             let location = { address: session.address, schema: 'global' };
-            dataSource.restoreSession(session);
+            let restored = dataSource.restoreAuthorization(location, session);
+            expect(restored).to.be.true;
             return dataSource.start(location).then((userID) => {
                 expect(userID).to.equal(session.user_id);
-            });
+            }).timeout(100);
         })
         it('should reject with 401 Unauthorized error when there is no session', function() {
+            dataSource.addEventListener('authentication', (evt) => {
+                evt.preventDefault();
+            });
             let location = { address: 'http://minas-morgul.me', schema: 'global' };
             return dataSource.start(location).catch((err) => {
                 return err;
             }).then((err) => {
-                expect(err).to.be.an.instanceof(HTTPError);
                 expect(err).to.have.property('statusCode', 401);
-            });
+            }).timeout(100);
         })
     })
     describe('#find()', function() {
@@ -667,9 +670,10 @@ describe('RemoteDataSource', function() {
                 }).then(() => {
                     expect(discovery).to.equal(1);
                     expect(retrieval).to.equal(0);
-                    return changeEventPromise;
-                }).then((evt) => {
-                    expect(event).to.be.null;
+
+                    // no change event should be emitted
+                    return expect(changeEventPromise.timeout(500))
+                        .to.eventually.be.rejectedWith(Promise.TimeoutError);
                 });
             });
         })
@@ -855,8 +859,6 @@ describe('RemoteDataSource', function() {
             });
         })
         it('should make uncommitted objects available immediately when feature is on', function() {
-            let changeEventPromise = new ManualPromise;
-            dataSource.addEventListener('change', changeEventPromise.resolve);
             dataSource.options.discoveryFlags = {
                 include_uncommitted: true
             };
@@ -872,7 +874,9 @@ describe('RemoteDataSource', function() {
                         storage++;
                         expect(method).to.match(/post/i);
                         expect(payload).to.have.property('objects').that.is.an.array;
-                        return postSaveSearchHappened.then(() => {
+
+                        // wait for the search
+                        return preSaveSearchPromise.then(() => {
                             // return the results only after we've done a search
                             let object = _.clone(payload.objects[0]);
                             object.id = id++;
@@ -892,28 +896,49 @@ describe('RemoteDataSource', function() {
                     }
                 });
             };
-            let postSaveResults = changeEventPromise.then((evt) => {
-                // this should run as such as the new object reach the change queue
-                let query = _.assign({ criteria: {} }, location);
+            // the logic here is a bit convoluted...
+            //
+            // 1. The first thing that happens is that we call save()
+            // 2. save() will place newObject into the change queue
+            // 3. save() then triggers a change event, which causes changeEventPromise
+            //    (below) to fulfill itself
+            // 4. at this point we run the query, which should yield newObject among
+            //    the results (the feature we're testing)
+            // 5. since save() would replace newObject with the saved version
+            //    we want our pseudo-server code above to block until we've
+            //    performed step 4, the reason why it waits for preSaveSearchPromise
+            // 6. once this happens, the pseudo-server code unblocks, and
+            //    HTTPRequest.fetch() returns
+            // 7. save() now has the object "returned by the server", which is
+            //    inserted into the cached query
+            // 8. save() returns and we can check the results from step 4 now
+            //    that we're inside the promise-chain given to Chai
+            // 9. then we run the query again and check that the result of step 7
+            let changeEventPromise = new ManualPromise;
+            dataSource.addEventListener('change', changeEventPromise.resolve);
+            let preSaveSearchPromise = changeEventPromise.then((evt) => {
                 dataSource.removeEventListener('change', changeEventPromise.resolve);
+
+                // perform the query that should yield the object with temporary ID
+                let query = _.assign({ criteria: {} }, location);
                 return dataSource.find(query);
             });
             return dataSource.save(location, [ newObject ]).then((objects) => {
-                // this search should not trigger a remote search,
-                // since it's the same as the one performed in the
-                // onChange handler
-                return dataSource.find(location, {}).then((projects) => {
-                    expect(projects).to.have.length(1);
-                    expect(projects[0]).to.have.property('id').that.is.at.least(1);
+                // the promise belong should fulfill immediately
+                return preSaveSearchPromise.then((projectsImmediately) => {
+                    // project should have a temporary ID
+                    expect(projectsImmediately).to.have.length(1);
+                    expect(projectsImmediately[0]).to.have.property('id').that.is.below(1);
+                });
+            }).then(() => {
+                // this search should not trigger a remote search, since it's
+                // the same as the one performed in the change event handler
+                return dataSource.find(location, {}).then((projectsLater) => {
+                    expect(projectsLater).to.have.length(1);
+                    expect(projectsLater[0]).to.have.property('id').that.is.at.least(1);
                     expect(discovery).to.equal(1);
                     expect(retrieval).to.equal(0);
                 });
-            }).then(() => {
-                return postSaveQueryPromise.timeout(1000);
-            }).then((projects) => {
-                // project should have a temporary ID
-                expect(projects).to.have.length(1);
-                expect(projects[0]).to.have.property('id').that.is.below(1);
             });
         })
         it('should block search on a table until saving is complete', function() {
@@ -1236,7 +1261,7 @@ describe('RemoteDataSource', function() {
                     // the initial call to find() will return what we got before
                     return changeEventPromise.timeout(1000);
                 }).then((evt) => {
-                    // a subsequent call triggered by onChange will actually find
+                    // a subsequent call triggered by change event will actually find
                     // the updated results
                     return dataSource.find(query).then((found) => {
                         expect(found[0]).to.have.property('gn', 3);
