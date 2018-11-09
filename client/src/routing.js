@@ -75,12 +75,10 @@ const routes = {
             date: '${date}',
         },
         hash: [
-            'N${highlightNotificationID}',
             'n${scrollToNotificationID}',
         ],
         params: {
             date: String,
-            highlightNotificationID: Number,
             scrollToNotificationID: Number,
         },
         load: (match) => {

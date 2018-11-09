@@ -207,6 +207,22 @@ class StoryListSync extends PureComponent {
     }
 
     /**
+     * Change the URL hash so page is anchor at given story
+     *
+     * @param  {Number|undefined} scrollToStoryID
+     */
+    reanchorAtStory(scrollToStoryID) {
+        let { route } = this.props;
+        let params = {
+            scrollToStoryID,
+            highlightStoryID: undefined,
+            scrollToReactionID: undefined,
+            highlightReactionID: undefined,
+        };
+        route.reanchor(params);
+    }
+
+    /**
      * Called when SmartList wants an item's id
      *
      * @param  {Object} evt
@@ -281,11 +297,10 @@ class StoryListSync extends PureComponent {
 
             if (story.id === highlightStoryID) {
                 highlighting = true;
-                // suppress highlighting after a second
+                // suppress highlighting after a few seconds
                 setTimeout(() => {
-                    // TODO
-                    // this.props.route.reanchor(_.toLower(hash));
-                }, 1000);
+                    this.reanchorAtStory(story.id)
+                }, 5000);
             }
         } else {
             isDraft = true;
@@ -362,14 +377,7 @@ class StoryListSync extends PureComponent {
      * @param  {Object} evt
      */
     handleStoryAnchorChange = (evt) => {
-        // TODO
-        /*
-        let params = {
-            story: _.get(evt.item, 'id')
-        };
-        let hash = StoryList.getHash(params);
-        this.props.route.reanchor(hash);
-        */
+        this.reanchorAtStory((evt.item) ? evt.item.id : undefined);
     }
 
     /**

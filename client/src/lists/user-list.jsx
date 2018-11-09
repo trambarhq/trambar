@@ -32,14 +32,14 @@ class UserList extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { route, env, users } = this.props;
-        let userID = route.params.showingUser || route.params.highlightingUser;
+        let { route, env, users, scrollToUserID } = this.props;
+        let anchorUserID = scrollToUserID;
         let smartListProps = {
             items: sortUsers(users, env),
             offset: 16,
             behind: 4,
             ahead: 8,
-            anchor: (userID) ? `user-${userID}` : undefined,
+            anchor: (anchorUserID) ? `user-${anchorUserID}` : undefined,
 
             onIdentity: this.handleUserIdentity,
             onRender: this.handleUserRender,
@@ -50,6 +50,19 @@ class UserList extends PureComponent {
                 <SmartList {...smartListProps} />
             </div>
         );
+    }
+
+    /**
+     * Change the URL hash so page is anchor at given story
+     *
+     * @param  {Number|undefined} scrollToUserID
+     */
+    reanchorAtUser(scrollToUserID) {
+        let { route } = this.props;
+        let params = {
+            scrollToUserID,
+        };
+        route.reanchor(params);
     }
 
     /**
@@ -129,14 +142,8 @@ class UserList extends PureComponent {
      * @param  {Object} evt
      */
     handleUserAnchorChange = (evt) => {
-        // TODO
-        /*
-        let params = {
-            user: _.get(evt.item, 'id')
-        };
-        let hash = UserList.getHash(params);
-        this.props.route.reanchor(hash);
-        */
+        let { route } = this.props;
+        this.reanchorAtUser((evt.item) ? evt.item.id : undefined);
     }
 
     /**
@@ -213,6 +220,7 @@ if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     UserList.propTypes = {
+        scrollToUserID: PropTypes.number,
         users: PropTypes.arrayOf(PropTypes.object),
         roles: PropTypes.arrayOf(PropTypes.object),
         dailyActivities: PropTypes.object,

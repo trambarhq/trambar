@@ -124,7 +124,6 @@ class BottomNavigation extends PureComponent {
             active: (section === 'news'),
             stacking,
             url: this.getPageURL('news-page'),
-            onClick: (section === 'news') ? this.handleActiveButtonClick : null,
         };
         let notificationsProps = {
             label: t('bottom-nav-notifications'),
@@ -132,7 +131,6 @@ class BottomNavigation extends PureComponent {
             active: (section === 'notifications'),
             stacking,
             url: this.getPageURL('notifications-page'),
-            onClick: (section === 'notifications') ? this.handleActiveButtonClick : null,
         };
         let bookmarksProps = {
             label: t('bottom-nav-bookmarks'),
@@ -140,7 +138,6 @@ class BottomNavigation extends PureComponent {
             active: (section === 'bookmarks'),
             stacking,
             url: this.getPageURL('bookmarks-page'),
-            onClick: (section === 'bookmarks') ? this.handleActiveButtonClick : null,
         };
         let peopleProps = {
             label: t('bottom-nav-people'),
@@ -148,7 +145,6 @@ class BottomNavigation extends PureComponent {
             active: (section === 'people'),
             stacking,
             url: this.getPageURL('people-page'),
-            onClick: (section === 'people') ? this.handleActiveButtonClick : null,
         };
         let settingsProps = {
             label: t('bottom-nav-settings'),
@@ -156,7 +152,6 @@ class BottomNavigation extends PureComponent {
             active: (section === 'settings'),
             stacking,
             url: this.getPageURL('settings-page'),
-            onClick: (section === 'settings') ? this.handleActiveButtonClick : null,
         };
         let newNotificationProps = { database, route, env };
         return (
@@ -210,25 +205,6 @@ class BottomNavigation extends PureComponent {
      */
     handleWindowResize = (evt) => {
         this.detectStacking();
-    }
-
-    /**
-     * Called when user clicks a button that's already active
-     *
-     * @param  {Event} evt
-     */
-    handleActiveButtonClick = (evt) => {
-        let page = document.getElementsByClassName('page-container')[0];
-        if (page && page.scrollTop > 0) {
-            if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-                // stop momentum scrolling
-                page.style.overflowY = 'hidden';
-                page.scrollTop = 0;
-                page.style.overflowY = 'scroll';
-            } else {
-                page.scrollTop = 0;
-            }
-        }
     }
 }
 

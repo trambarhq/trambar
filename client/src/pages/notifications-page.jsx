@@ -34,7 +34,6 @@ class NotificationsPage extends AsyncComponent {
             route,
             env,
             date,
-            highlightNotificationID,
             scrollToNotificationID,
         } = this.props;
         let db = database.use({ by: this });
@@ -43,7 +42,6 @@ class NotificationsPage extends AsyncComponent {
             notifications: undefined,
 
             date,
-            highlightNotificationID,
             scrollToNotificationID,
             database,
             route,
@@ -104,6 +102,7 @@ class NotificationsPageSync extends PureComponent {
             env,
             notifications,
             currentUser,
+            scrollToNotificationID,
         } = this.props;
         let listProps = {
             notifications,
@@ -111,6 +110,7 @@ class NotificationsPageSync extends PureComponent {
             database,
             route,
             env,
+            scrollToNotificationID,
         };
         return <NotificationList {...listProps} />;
     }
@@ -156,7 +156,6 @@ if (process.env.NODE_ENV !== 'production') {
 
     NotificationsPage.propTypes = {
         date: PropTypes.string,
-        highlightNotificationID: PropTypes.number,
         scrollToNotificationID: PropTypes.number,
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -164,7 +163,6 @@ if (process.env.NODE_ENV !== 'production') {
     };
     NotificationsPageSync.propTypes = {
         date: PropTypes.string,
-        highlightNotificationID: PropTypes.number,
         scrollToNotificationID: PropTypes.number,
         notifications: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,

@@ -33,7 +33,8 @@ class Route {
         return this.routeManager.match(url);
     }
 
-    reanchor(url) {
+    reanchor(params) {
+        this.replace(this.name, params);
     }
 
     keep(callback) {

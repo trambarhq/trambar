@@ -37,6 +37,7 @@ class NotificationList extends AsyncComponent {
             env,
             currentUser,
             notifications,
+            scrollToNotificationID,
         } = this.props;
         let db = database.use({ by: this });
         let props = {
@@ -48,6 +49,7 @@ class NotificationList extends AsyncComponent {
             database,
             route,
             env,
+            scrollToNotificationID,
         };
         meanwhile.show(<NotificationListSync {...props} />);
         return db.start().then((userID) => {
@@ -87,13 +89,13 @@ class NotificationListSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { route, notifications } = this.props;
-        let notificationID = route.params.showingNotification || route.params.highlightingNotification;
+        let { route, notifications, scrollToNotificationID } = this.props;
+        let anchorNotificationID = scrollToNotificationID;
         let smartListProps = {
             items: sortNotifications(notifications),
             behind: 20,
             ahead: 40,
-            anchor: (notificationID) ? `notification-${notificationID}` : undefined,
+            anchor: (anchorNotificationID) ? `notification-${anchorNotificationID}` : undefined,
             offset: 10,
 
             onIdentity: this.handleNotificationIdentity,
@@ -155,6 +157,13 @@ class NotificationListSync extends PureComponent {
     }
 
     /**
+     * Clear timeout on unmount
+     */
+    componentWillUnmount() {
+        clearTimeout(this.markAsSeenTimeout);
+    }
+
+    /**
      * Mark unread notification as read after some time
      */
     scheduleNotificationRead() {
@@ -186,10 +195,16 @@ class NotificationListSync extends PureComponent {
     }
 
     /**
-     * Clear timeout on unmount
+     * Change the URL hash so page is anchor at given notification
+     *
+     * @param  {Number|undefined} scrollToNotificationID
      */
-    componentWillUnmount() {
-        clearTimeout(this.markAsSeenTimeout);
+    reanchorAtNotification(scrollToNotificationID) {
+        let { route } = this.props;
+        let params = {
+            scrollToNotificationID
+        };
+        route.reanchor(params);
     }
 
     /**
@@ -266,14 +281,7 @@ class NotificationListSync extends PureComponent {
      * @return {Object}
      */
     handleNotificationAnchorChange = (evt) => {
-        // TODO
-        /*
-        let params = {
-            notification: _.get(evt.item, 'id')
-        };
-        let hash = NotificationList.getHash(params);
-        this.props.route.reanchor(hash);
-        */
+        this.reanchorAtNotification((evt.item) ? evt.item.id : undefined)
     }
 
     /**
@@ -319,7 +327,8 @@ import Environment from 'env/environment';
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
-    Notification.propTypes = {
+    NotificationList.propTypes = {
+        scrollToNotificationID: PropTypes.number,
         notifications: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
 
@@ -328,6 +337,7 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     NotificationListSync.propTypes = {
+        scrollToNotificationID: PropTypes.number,
         notifications: PropTypes.arrayOf(PropTypes.object),
         currentUser: PropTypes.object,
         users: PropTypes.arrayOf(PropTypes.object),

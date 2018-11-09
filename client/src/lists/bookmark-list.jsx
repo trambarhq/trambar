@@ -193,6 +193,20 @@ class BookmarkListSync extends PureComponent {
     }
 
     /**
+     * Change the URL hash so page is anchor at given story
+     *
+     * @param  {Number|undefined} scrollToStoryID
+     */
+    reanchorAtStory(scrollToStoryID) {
+        let { route } = this.props;
+        let params = {
+            scrollToStoryID,
+            highlightStoryID: undefined,
+        };
+        route.reanchor(params);
+    }
+
+    /**
      * Return id of bookmark view in response to event triggered by SmartList
      *
      * @param  {Object} evt
@@ -254,11 +268,10 @@ class BookmarkListSync extends PureComponent {
 
             if (story.id === highlightStoryID) {
                 highlighting = true;
-                // suppress highlighting after a second
+                // suppress highlighting after a few seconds
                 setTimeout(() => {
-                    // TODO
-                    //route.reanchor(_.toLower(hash));
-                }, 1000);
+                    this.reanchorAtStory(story.id);
+                }, 5000);
             }
         }
         let bookmarkProps;
@@ -343,14 +356,7 @@ class BookmarkListSync extends PureComponent {
      * @param  {Object} evt
      */
     handleBookmarkAnchorChange = (evt) => {
-        // TODO
-        /*
-        let params = {
-            story: _.get(evt.item, 'story_id')
-        };
-        let hash = BookmarkList.getHash(params);
-        this.props.route.reanchor(hash);
-        */
+        this.reanchorAtStory((evt.item) ? evt.item.id : undefined);
     }
 
     /**

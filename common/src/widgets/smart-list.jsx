@@ -4,6 +4,8 @@ import ComponentRefs from 'utils/component-refs';
 
 import './smart-list.scss';
 
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
 /**
  * A component for rendering a list that can be very long. Items are rendered
  * only when the current scroll position make them visible (or likely to be
@@ -25,6 +27,7 @@ class SmartList extends Component {
         this.scrollContainerWidth = 0;
         this.scrollPositionInterval = 0;
         this.scrollToAnchorNode = null;
+        this.lastReportedAnchor = null;
         this.updateAnchor(props, this.state);
         this.updateSlots(props, this.state);
     }
@@ -56,6 +59,16 @@ class SmartList extends Component {
         }
     }
 
+    shouldComponentUpdate(props, state) {
+        if (this.lastReportedAnchor) {
+            if (this.lastReportedAnchor === state.currentAnchor) {
+                this.lastReportedAnchor = null;
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Update anchor
      *
@@ -64,7 +77,7 @@ class SmartList extends Component {
      */
     updateAnchor(nextProps, nextState) {
         if (nextState.currentAnchor !== nextProps.anchor) {
-            nextState.currentAnchor = nextProps.anchor;
+            nextState.currentAnchor = nextProps.anchor || null;
             this.anchorOffset = nextProps.offset;
         }
     }
@@ -321,7 +334,8 @@ class SmartList extends Component {
      * @param  {Object} prevState
      */
     componentDidUpdate(prevProps, prevState) {
-        if (!this.scrolling) {
+        let { currentAnchor } = this.state;
+        if (!this.scrolling || (prevState.currentAnchor && !currentAnchor)) {
             this.maintainScrollPosition();
         }
         this.setSlotHeights();
@@ -375,6 +389,16 @@ class SmartList extends Component {
                         this.scrollContainer.scrollTop = newScrollTop;
                     }
                 }
+            }
+        } else {
+            // scroll back to top
+            if (isIOS && this.scrolling) {
+                // stop momentum scrolling
+                this.scrollContainer.style.overflowY = 'hidden';
+                this.scrollContainer.scrollTop = 0;
+                this.scrollContainer.style.overflowY = 'scroll';
+            } else {
+                this.scrollContainer.scrollTop = 0;
             }
         }
     }
@@ -529,11 +553,13 @@ class SmartList extends Component {
     triggerAnchorChangeEvent(slot) {
         let { onAnchorChange } = this.props;
         if (onAnchorChange) {
+            let item = (slot) ? slot.item : null;
+            let anchor = this.lastReportedAnchor = (slot) ? slot.id : null;
             onAnchorChange({
                 type: 'anchorchange',
                 target: this,
-                anchor: (slot) ? slot.id : null,
-                item: (slot) ? slot.item : null,
+                anchor,
+                item,
             });
         }
     }
@@ -625,8 +651,9 @@ class SmartList extends Component {
         let anchorSlot = this.findAnchorSlot(slots);
         if (anchorSlot && anchorSlot.id !== currentAnchor) {
             currentAnchor = anchorSlot.id;
-            this.triggerAnchorChangeEvent(anchorSlot);
-            this.setState({ currentAnchor });
+            this.setState({ currentAnchor }, () => {
+                this.triggerAnchorChangeEvent(anchorSlot);
+            });
         }
         this.scrolling = true;
         if (this.scrollingEndTimeout) {
