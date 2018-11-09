@@ -195,7 +195,7 @@ class WebsocketNotifier extends Notifier {
             options.lang = alert.locale;
             let notification = new Notification(alert.title, options);
             notification.addEventListener('click', () => {
-                let evt = new NotifierEvent(this, 'alert', { alert });
+                let evt = new NotifierEvent('alert', this, { alert });
                 this.triggerEvent(evt);
                 notification.close();
             });
