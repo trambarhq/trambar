@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { memoizeWeak } from 'utils/memoize';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
 import SmartList from 'widgets/smart-list';
@@ -158,9 +159,8 @@ class UserList extends PureComponent {
 }
 
 const sortUsers = memoizeWeak(null, function(users, env) {
-    let { p } = env.locale;
     let name = (user) => {
-        return p(user.details.name);
+        return UserUtils.getDisplayName(user, env);
     };
     return _.orderBy(users, [ name ], [ 'asc' ]);
 });

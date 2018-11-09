@@ -94,7 +94,7 @@ class PeoplePage extends AsyncComponent {
                 if (selectedUserID) {
                     // find the selected user
                     let user = _.find(users, { id: selectedUserID });
-                    if (!user) {
+                    if (user) {
                         props.selectedUser = user;
                         props.visibleUsers = [ user ];
                     } else {

@@ -34,6 +34,7 @@ class Route {
     }
 
     reanchor(params) {
+        params = _.assign({}, this.params, params);
         this.replace(this.name, params);
     }
 

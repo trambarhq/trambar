@@ -121,9 +121,7 @@ class ReactionView extends PureComponent {
             env,
         };
         if (respondent) {
-            props.url = route.find('person-page', {
-                userID: respondent.id,
-            });
+            props.href = route.find('person-page', { selectedUserID: respondent.id });
         }
         return <ProfileImage {...props} />;
     }
