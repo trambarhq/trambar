@@ -16,7 +16,7 @@ class Link extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            hasFocus: false
+            hasFocus: false,
         };
     }
 
@@ -28,24 +28,23 @@ class Link extends PureComponent {
     render() {
         let { url, alwaysAsLink, children } = this.props;
         let { hasFocus } = this.state;
-        let props = _.omit(this.props, 'url', 'alwaysAsLink');
+        let props = _.omit(this.props, 'url', 'alwaysAsLink', 'blurDelay');
         if (url) {
             if (alwaysAsLink) {
                 // always set href
                 props.href = url;
             } else {
-                // set href only when link has focus
+                // set href only when link has focus on we're in the middle of a click
                 if (hasFocus) {
                     props.href = url;
-                } else {
-                    props['data-url'] = url;
-                }
-                if (props.tabIndex === undefined) {
-                    props.tabIndex = 0;
                 }
                 props.onFocus = this.handleFocus;
                 props.onBlur = this.handleBlur;
             }
+            if (props.tabIndex === undefined) {
+                props.tabIndex = 0;
+            }
+            props.onClick = this.handleClick;
         }
         return (
             <a {...props}>{children}</a>
@@ -69,10 +68,26 @@ class Link extends PureComponent {
     handleBlur = (evt) => {
         this.setState({ hasFocus: false });
     }
+
+    /**
+     * Remove keyboard focus from link
+     *
+     * @param  {Event} evt
+     */
+    handleClick = (evt) => {
+        let { blurDelay } = this.props;
+        let link = evt.currentTarget;
+        if (blurDelay) {
+            setTimeout(() => {
+                link.blur();
+            }, blurDelay);
+        }
+    }
 }
 
 Link.defaultProps = {
-    alwaysAsLink: true, // TODO: set this back to false
+    alwaysAsLink: false,
+    blurDelay: 200,
 };
 
 export {

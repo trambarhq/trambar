@@ -220,7 +220,6 @@ function Button(props) {
         children,
         active,
         stacking,
-        onClick
     } = props;
     className = 'button' + ((className) ? ` ${className}` : '');
     if (active) {
@@ -231,7 +230,7 @@ function Button(props) {
     }
     if (stacking) {
         return (
-            <Link className={className} url={url} onClick={onClick}>
+            <Link className={className} url={url}>
                 <i className={`fa fa-${icon}`} />
                     {children}
                     {' '}
@@ -240,7 +239,7 @@ function Button(props) {
         );
     } else {
         return (
-            <Link className={className} url={url} onClick={onClick}>
+            <Link className={className} url={url}>
                 <i className={`fa fa-${icon}`} />
                 {' '}
                 <span className="label">{label}</span>
