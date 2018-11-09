@@ -89,12 +89,9 @@ class Application extends PureComponent {
             mode = 'single-col';
         }
         let className = `application ${mode}`;
-        // TODO
-        /*
-        if (this.state.theme.keyboard) {
+        if (env.androidKeyboard) {
             className += ` keyboard`;
         }
-        */
         if (env.pointingDevice === 'mouse') {
             className += ' no-touch';
         }

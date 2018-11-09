@@ -15,6 +15,7 @@ class EnvironmentMonitor extends EventEmitter {
         this.screenHeight = screen.height;
         this.viewportWidth = viewport.offsetWidth;
         this.viewportHeight = viewport.offsetHeight;
+        this.orientation = getOrientation();
         this.devicePixelRatio = window.devicePixelRatio;
         this.webpSupport = isWebpSupported();
         this.browser = detectBrowser();
@@ -52,6 +53,7 @@ class EnvironmentMonitor extends EventEmitter {
 
     monitor(enabled) {
         toggleEventListener(window, 'resize', this.handleWindowResize, enabled);
+        toggleEventListener(window, 'orientationchange', this.handleWindowResize, enabled);
         toggleEventListener(window, 'visibilitychange', this.handleVisibilityChange, enabled);
         toggleEventListener(window, 'mousemove', this.handleMouseEvent, enabled);
         toggleEventListener(window, 'mousedown', this.handleMouseEvent, enabled);
@@ -151,6 +153,7 @@ class EnvironmentMonitor extends EventEmitter {
         this.viewportWidth = viewport.offsetWidth;
         this.viewportHeight = viewport.offsetHeight;
         this.devicePixelRatio = window.devicePixelRatio;
+        this.orientation = getOrientation();
         this.triggerEvent(new EnvironmentMonitorEvent('change', this));
     }
 
@@ -253,7 +256,10 @@ function getBattery() {
     } else {
         return Promise.resolve();
     }
+}
 
+function getOrientation() {
+    return _.get(screen, 'orientation.type', 'unknown');
 }
 
 let uaFragmentsBrowser = {
