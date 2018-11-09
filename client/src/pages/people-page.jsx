@@ -214,21 +214,27 @@ class PeoplePage extends AsyncComponent {
                 }
             } else {
                 // deal with situation where we're showing stories by someone
-                // who're not on the team
-                let authorIDs = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
-                let memberIDs = _.map(props.members, 'id');
-                let nonMemberUserIDs = _.difference(authorIDs, memberIDs);
-                let publicOnly = (props.currentUser.type === 'guest');
-                if (!_.isEmpty(nonMemberUserIDs)) {
-                    return UserFinder.findUsers(db, nonMemberUserIDs).then((users) => {
-                        // add non-members
-                        props.visibleUsers = _.concat(props.visibleUsers, users);
-                        meanwhile.show(<PeoplePageSync {...props} />);
-                        return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, users, publicOnly).then((stats) => {
-                            // add their stats
-                            props.dailyActivities = _.assign({}, props.dailyActivities, stats);
+                // who're not on the team (only when we're searching for stories)
+                if (search || date) {
+                    let authorIDs = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
+                    let memberIDs = _.map(props.members, 'id');
+                    let nonMemberUserIDs = _.difference(authorIDs, memberIDs);
+                    let publicOnly = (props.currentUser.type === 'guest');
+                    if (!_.isEmpty(nonMemberUserIDs)) {
+                        return UserFinder.findUsers(db, nonMemberUserIDs).then((users) => {
+                            // add non-members
+                            if (props.visibleUsers) {
+                                props.visibleUsers = _.concat(props.visibleUsers, users);
+                            } else {
+                                props.visibleUsers = users;
+                            }
+                            meanwhile.show(<PeoplePageSync {...props} />);
+                            return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, users, publicOnly).then((stats) => {
+                                // add their stats
+                                props.dailyActivities = _.assign({}, props.dailyActivities, stats);
+                            });
                         });
-                    });
+                    }
                 }
             }
         }).then(() => {
