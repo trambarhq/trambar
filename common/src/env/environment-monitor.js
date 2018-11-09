@@ -73,14 +73,14 @@ class EnvironmentMonitor extends EventEmitter {
             }
         });
 
-        this.scheduleDateCheck(enabled);
-
         if (this.platform === 'cordova') {
             toggleEventListener(document, 'pause', this.handlePause, enabled);
             toggleEventListener(document, 'resume', this.handleResume, enabled);
         } else {
             toggleEventListener(navigator.mediaDevices, 'devicechange', this.handleDeviceChange, enabled);
         }
+
+        this.scheduleDateCheck(enabled);
     }
 
     scheduleDateCheck(enabled) {
@@ -211,7 +211,7 @@ class EnvironmentMonitor extends EventEmitter {
         if (mediaDevices) {
             mediaDevices.enumerateDevices().then((devices) => {
                 this.devices = devices;
-                this.recorders = getRecordingSupport(this.platform, devices);
+                this.recorders = getRecordingSupport(devices);
                 this.triggerEvent(new EnvironmentMonitorEvent('change', this));
             });
         }
