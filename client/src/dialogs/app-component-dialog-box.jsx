@@ -120,7 +120,7 @@ if (process.env.NODE_ENV !== 'production') {
 
     AppComponentDialogBox.propTypes = {
         show: PropTypes.bool,
-        component: PropTypes.object.isRequired,
+        component: PropTypes.object,
         env: PropTypes.instanceOf(Environment).isRequired,
         onClose: PropTypes.func,
     };
