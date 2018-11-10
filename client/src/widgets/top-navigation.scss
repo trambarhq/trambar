@@ -30,12 +30,8 @@
 
         .no-touch & {
             &:hover {
-                color: $navigation-text-color;
+                color: $navigation-hover-text-color;
             }
-        }
-
-        &:hover {
-            color: $navigation-hover-text-color;
         }
 
         &.active {

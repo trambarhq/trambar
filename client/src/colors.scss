@@ -1,8 +1,10 @@
 $off-white: #eeeeee;
 $off-black: #111111;
-$light-gray: #cccccc;
-$gray: #666666;
-$dark-grey: #444444;
+$lighter-gray: #c0c0c0;
+$light-gray: #a0a0a0;
+$gray: #808080;
+$dark-gray: #505050;
+$darker-gray: #303030;
 $orange: #fca326;
 $sharp-orange: #fc6d26;
 $brown: #4d3936;
@@ -25,7 +27,7 @@ $scroll-bar-background-color: rgba(0,0,0,.2);
 $scroll-bar-light-shadow-color: rgba(255,255,255,.2);
 $scroll-bar-light-background-color: rgba(255,255,255,.1);
 
-$text-field-border-color: $dark-grey;
+$text-field-border-color: $dark-gray;
 $text-field-background-color: $off-white;
 
 $viewport-background-color: $brown;
@@ -34,8 +36,8 @@ $button-background-color: $brown;
 $button-text-color: $gray;
 $button-hover-background-color: #806666;
 $button-hover-text-color: $off-white;
-$button-active-border-color: #333333;
-$button-supplemental-text-color: #999999;
+$button-active-border-color: $darker-gray;
+$button-supplemental-text-color: $light-gray;
 
 $option-button-text-color: $gray;
 $option-button-selected-text-color: $off-white;
@@ -43,9 +45,9 @@ $option-button-menu-text-color: $black;
 
 $start-page-background-color: $brown;
 $start-page-cordova-background-color: #211a1a;
-$start-page-text-color: $light-gray;
+$start-page-text-color: $lighter-gray;
 $start-page-highlighted-text-color: $off-white;
-$start-page-button-border-color: $light-gray;
+$start-page-button-border-color: $lighter-gray;
 $start-page-button-hover-background-color: $orange;
 $start-page-button-hover-text-color: $black;
 $start-page-button-badge-color: #606060;
@@ -53,7 +55,7 @@ $start-page-button-error-color: $bright-red;
 
 $error-page-text-color: $off-white;
 
-$panel-text-color: $light-gray;
+$panel-text-color: $lighter-gray;
 $panel-title-text-color: $off-white;
 $panel-background-color: $dark-brown;
 $panel-border-color: #211a1a;
@@ -64,7 +66,7 @@ $panel-icon-overlay-color: #bbbbbb;
 $bookmark-border-color: $off-black;
 
 $dialog-box-background-color: $dark-brown;
-$dialog-box-text-color: $light-gray;
+$dialog-box-text-color: $lighter-gray;
 $dialog-box-critical-text-color: $off-white;
 $dialog-box-shadow-color: $black;
 
@@ -72,42 +74,42 @@ $navigation-background-color: #262626;
 $navigation-border-color: #323232;
 $navigation-text-color: #888888;
 $navigation-hover-text-color: $off-white;
-$navigation-selected-text-color: $white;
-$navigation-disabled-text-color: #333333;
+$navigation-selected-text-color: $off-white;
+$navigation-disabled-text-color: $darker-gray;
 $navigation-danger-text-color: #993333;
 
 $search-box-text-color: $off-white;
-$search-box-background-color: #333333;
+$search-box-background-color: $darker-gray;
 $search-box-placeholder-text-color: $gray;
 $search-tag-text-color: $gray;
-$search-tag-hover-text-color: #999999;
-$search-tag-selected-border-color: #444444;
+$search-tag-hover-text-color: $light-gray;
+$search-tag-selected-border-color: $dark-gray;
 
-$calendar-text-color: #999999;
-$calendar-border-color: #444444;
+$calendar-text-color: $light-gray;
+$calendar-border-color: $dark-gray;
 $calendar-active-text-color: #cccccc;
 $calendar-inactive-text-color: $gray;
 $calendar-hover-text-color: $off-white;
-$calendar-weekend-background-color: #333333;
+$calendar-weekend-background-color: $darker-gray;
 $calendar-today-text-color: $white;
 $calendar-today-background-color: $black;
 $calendar-selected-text-color: $black;
 $calendar-selected-background-color: $off-white;
 
-$role-filter-border-color: #444444;
+$role-filter-border-color: $dark-gray;
 $role-filter-band-text-color: $off-white;
 $role-filter-band-background-color: #1a1a1a;
 $role-filter-selected-background-color: $off-white;
 $role-filter-selected-text-color: $black;
 
-$time-text-color: #666666;
-$time-today-text-color: #aaaaaa;
-$time-yesterday-text-color: #999999;
+$time-text-color: $gray;
+$time-today-text-color: $lighter-gray;
+$time-yesterday-text-color: $light-gray;
 
-$story-text-color: $light-gray;
+$story-text-color: $lighter-gray;
 $story-link-hover-color: $off-white;
 
-$reaction-text-color: $light-gray;
+$reaction-text-color: $lighter-gray;
 $reaction-link-hover-color: $off-white;
 $reaction-status-text-color: $gray;
 
@@ -119,7 +121,7 @@ $app-component-border-color: #211a1a;
 $app-component-background-color: #cccccc;
 $app-component-icon-color: $black;
 $app-component-icon-background-color: $orange;
-$app-component-text-color: #333333;
+$app-component-text-color: $darker-gray;
 
 $media-view-overlay-color: $black;
 $media-view-overlay-hover-color: $off-white;
@@ -131,7 +133,7 @@ $media-editor-duration-text-color: $off-white;
 
 $media-bar-background-color: $black;
 $media-bar-icon-color: $gray;
-$media-bar-text-color: #999999;
+$media-bar-text-color: $light-gray;
 $media-bar-hover-text-color: $off-white;
 
 $notification-badge-text-color: $black;
@@ -154,11 +156,11 @@ $duration-indicator-blinker-color: $bright-red;
 $story-emblem-color: #211a1a;
 $story-reaction-link-text-color: $gray;
 $story-reaction-link-hover-text-color: $off-white;
-$story-text-color: $light-gray;
+$story-text-color: $lighter-gray;
 $story-link-hover-text-color: $off-white;
 $story-survey-bar-border-color: #aaaaaa;
-$story-survey-bar-text-color: #333333;
-$story-survey-count-text-color: $light-gray;
+$story-survey-bar-text-color: $darker-gray;
+$story-survey-count-text-color: $lighter-gray;
 $story-push-added-text-color: $bright-green;
 $story-push-deleted-text-color: $bright-red;
 $story-push-modified-text-color: $bright-blue;
@@ -179,13 +181,13 @@ $user-view-name-text-color: $off-white;
 $user-view-tag-text-color: $gray;
 $user-view-tag-hover-text-color: $off-white;
 
-$user-statistics-label-color: #999999;
-$user-statistics-grid-color: #444444;
+$user-statistics-label-color: $light-gray;
+$user-statistics-grid-color: $dark-gray;
 $user-statistics-grid-emphasis-color: $gray;
 $user-statistics-arrow-color: $off-white;
 
-$user-activity-text-color: #999999;
-$user-activity-hover-text-color: #eeeeee;
+$user-activity-text-color: $light-gray;
+$user-activity-hover-text-color: $off-white;
 $user-activity-recent-text-color: #cccccc;
 
 $new-item-alert-text-color: $off-black;
@@ -195,12 +197,12 @@ $option-button-danger-text-color: $bright-red;
 
 $loading-animation-color: $white;
 
-$profile-image-placeholder-background-color: #999999;
+$profile-image-placeholder-background-color: $light-gray;
 
 $media-placeholder-text-color: $gray;
 $media-placeholder-border-color: rgba(127, 127, 127, 0.15);
 
-$media-thumbnail-border-color: #333333;
+$media-thumbnail-border-color: $darker-gray;
 
 $device-placeholder-icon-color: $off-black;
 $device-placeholder-stop-sign-color: $bright-red;
@@ -208,10 +210,10 @@ $device-placeholder-stop-sign-color: $bright-red;
 $mobile-device-android-icon-color: #97c03d;
 $mobile-device-windows-icon-color: #0caee9;
 $mobile-device-ios-icon-color: #ffffff;
-$mobile-device-icon-color: #eeeeee;
+$mobile-device-icon-color: $off-white;
 
 $qr-scanner-overlay-background-color: #211a1a;
-$qr-scanner-overlay-text-color: $light-gray;
+$qr-scanner-overlay-text-color: $lighter-gray;
 $qr-scanner-overlay-success-text-color: $bright-green;
 $qr-scanner-overlay-error-text-color: $bright-red;
 $qr-scanner-overlay-ui-text-color: $off-white;
@@ -222,19 +224,19 @@ $alert-negative-background-color: $bright-red;
 $alert-neutral-background-color: $bright-yellow;
 $alert-text-color: $black;
 
-$profile-image-placeholder-background-color: #999999;
+$profile-image-placeholder-background-color: $light-gray;
 
 $audio-capture-volume-bar-color: $gray;
 
 $issue-label-default-text-color: #ffffff;
-$issue-label-default-background-color: #444444;
+$issue-label-default-background-color: $dark-gray;
 
 $empty-message-text-color: $white;
 
 $diagnostics-open-text-color: $off-white;
 $diagnostics-open-border-color: $off-white;
-$diagnostics-separator-color: $light-gray;
+$diagnostics-separator-color: $lighter-gray;
 $diagnostics-progress-text-color: $green;
 $diagnostics-error-text-color: $red;
 $diagnostics-table-border-color: $gray;
-$diagnostics-version-text-color: $light-gray;
+$diagnostics-version-text-color: $lighter-gray;
