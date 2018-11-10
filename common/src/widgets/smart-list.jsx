@@ -33,13 +33,6 @@ class SmartList extends Component {
     }
 
     /**
-     * Reset scroll position
-     */
-    releaseAnchor() {
-        this.setState({ currentAnchor: null });
-    }
-
-    /**
      * Change state.currentAnchor when props.anchor changes
      *
      * @param  {Object} nextProps

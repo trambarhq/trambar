@@ -265,14 +265,7 @@ class BookmarkListSync extends PureComponent {
                     }
                 }
             }
-
-            if (story.id === highlightStoryID) {
-                highlighting = true;
-                // suppress highlighting after a few seconds
-                setTimeout(() => {
-                    this.reanchorAtStory(story.id);
-                }, 7000);
-            }
+            highlighting = (story.id === highlightStoryID);
         }
         let bookmarkProps;
         if (editing || evt.needed) {
@@ -334,6 +327,7 @@ class BookmarkListSync extends PureComponent {
                     payloads,
                     route,
                     env,
+                    onEdit: handleStoryEdit,
                 };
                 return (
                     <ErrorBoundary env={env}>
@@ -376,6 +370,18 @@ class BookmarkListSync extends PureComponent {
      */
     handleNewBookmarkAlertClick = (evt) => {
         this.setState({ hiddenStoryIDs: [] });
+    }
+
+    /**
+     * Stop StoryView from highlighting a second time when it eventual remounts
+     *
+     * @param  {Object} evt
+     */
+    handleStoryEdit = (evt) => {
+        let { highlightStoryID } = this.props;
+        if (evt.target.props.story.id === highlightStoryID) {
+            this.reanchorAtStory(highlightStoryID);
+        }
     }
 }
 

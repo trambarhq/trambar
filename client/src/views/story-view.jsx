@@ -741,10 +741,16 @@ class StoryView extends PureComponent {
      * @param  {Object} options
      */
     setOptions(options) {
-        let { story, bookmark, onBump } = this.props;
+        let { story, bookmark, onBump, onEdit } = this.props;
         let { options: before } = this.state;
         this.setState({ options }, () => {
             if (options.editStory && !before.editStory) {
+                if (onEdit) {
+                    onEdit({
+                        type: 'bump',
+                        target: this,
+                    });
+                }
                 if (story.id > 1) {
                     // create a temporary object linked to this one
                     let tempCopy = _.omit(story, 'id', 'published', 'ptime');
@@ -973,5 +979,6 @@ if (process.env.NODE_ENV !== 'production') {
         env: PropTypes.instanceOf(Environment).isRequired,
 
         onBump: PropTypes.func,
+        onEdit: PropTypes.func,
     };
 }

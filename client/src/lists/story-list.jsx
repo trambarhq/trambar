@@ -3,7 +3,6 @@ import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import { memoizeWeak } from 'utils/memoize';
-import ComponentRefs from 'utils/component-refs';
 import * as UserFinder from 'objects/finders/user-finder';
 import * as RepoFinder from 'objects/finders/repo-finder';
 import * as BookmarkFinder from 'objects/finders/bookmark-finder';
@@ -130,9 +129,6 @@ class StoryListSync extends PureComponent {
 
     constructor(props) {
         super(props);
-        this.components = ComponentRefs({
-            list: SmartList
-        });
         this.state = {
             hiddenStoryIDs: [],
         };
@@ -154,14 +150,12 @@ class StoryListSync extends PureComponent {
             highlightStoryID,
             scrollToStoryID,
         } = this.props;
-        let { setters } = this.components;
         stories = sortStories(stories, pendingStories);
         if (acceptNewStory) {
             stories = attachDrafts(stories, draftStories, currentUser);
         }
         let anchorStoryID = scrollToStoryID || highlightStoryID;
         let smartListProps = {
-            ref: setters.list,
             items: stories,
             offset: 20,
             behind: 4,
@@ -295,14 +289,7 @@ class StoryListSync extends PureComponent {
                     }
                 }
             }
-
-            if (story.id === highlightStoryID) {
-                highlighting = true;
-                // suppress highlighting after a few seconds
-                setTimeout(() => {
-                    this.reanchorAtStory(story.id, highlightReactionID || scrollToReactionID);
-                }, 7000);
-            }
+            highlighting = (story.id === highlightStoryID);
         } else {
             isDraft = true;
         }
@@ -359,6 +346,7 @@ class StoryListSync extends PureComponent {
                     route,
                     env,
                     onBump: this.handleStoryBump,
+                    onEdit: this.handleStoryEdit,
                 };
                 return (
                     <ErrorBoundary env={env}>
@@ -406,8 +394,19 @@ class StoryListSync extends PureComponent {
      * @param  {Object} evt
      */
     handleStoryBump = (evt) => {
-        let { list } = this.components;
-        list.releaseAnchor();
+        this.reanchorAtStory(null);
+    }
+
+    /**
+     * Stop StoryView from highlighting a second time when it eventual remounts
+     *
+     * @param  {Object} evt
+     */
+    handleStoryEdit = (evt) => {
+        let { highlightStoryID, highlightReactionID } = this.props;
+        if (evt.target.props.story.id === highlightStoryID) {
+            this.reanchorAtStory(highlightStoryID, highlightReactionID);
+        }
     }
 }
 
