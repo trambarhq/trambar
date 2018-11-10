@@ -5,6 +5,7 @@
     }
 
     .sortable-table {
+
         #type {
             width: 10em;
         }
@@ -23,6 +24,10 @@
 
         #mtime {
             width: 10em;
+        }
+
+        .resource-view {
+            display: inline-block;
         }
 
         .action-badge {
