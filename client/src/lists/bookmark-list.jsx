@@ -327,7 +327,7 @@ class BookmarkListSync extends PureComponent {
                     payloads,
                     route,
                     env,
-                    onEdit: handleStoryEdit,
+                    onEdit: this.handleStoryEdit,
                 };
                 return (
                     <ErrorBoundary env={env}>

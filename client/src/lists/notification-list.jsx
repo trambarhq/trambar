@@ -12,7 +12,11 @@ import NotificationView from 'views/notification-view';
 import NewItemsAlert from 'widgets/new-items-alert';
 import ErrorBoundary from 'widgets/error-boundary';
 
-require('./notification-list.scss');
+import './notification-list.scss';
+
+const minimumSeenDelay = 3000;
+const maximumSeenDelay = 5000;
+const delayPerNotification = 1500;
 
 /**
  * Asynchronous component that retrieves data needed by a notification list
@@ -81,6 +85,8 @@ class NotificationListSync extends PureComponent {
         this.state = {
             hiddenNotificationIDs: [],
         };
+        this.notificationViewDurations = {};
+        this.notificationViewInterval = 0;
     }
 
     /**
@@ -139,59 +145,61 @@ class NotificationListSync extends PureComponent {
      * Schedule timeout function that marks notifications as read on mount
      */
     componentDidMount() {
-        this.scheduleNotificationRead();
-    }
-
-    /**
-     * Schedule timeout function that marks notifications as read when list changes
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    componentDidUpdate(prevProps, prevState) {
-        let { notifications } = this.props;
-        let { hiddenNotificationIDs } = this.state;
-        if (prevProps.notifications !== notifications || prevState.hiddenNotificationIDs !== hiddenNotificationIDs) {
-            this.scheduleNotificationRead();
-        }
+        this.notificationViewInterval = setInterval(this.updateNotificationView.bind(this), 250);
     }
 
     /**
      * Clear timeout on unmount
      */
     componentWillUnmount() {
-        clearTimeout(this.markAsSeenTimeout);
+        clearInterval(this.notificationViewInterval);
     }
 
     /**
      * Mark unread notification as read after some time
      */
-    scheduleNotificationRead() {
-        let { notifications } = this.props;
-        let { hiddenNotificationIDs } = this.state;
-        // need a small delay here, since hiddenNotificationIDs isn't updated
-        // until the SmartList's componentDidUpdate() is called
-        setTimeout(() => {
-            let unread = _.filter(notifications, (notification) => {
-                if (!notification.seen) {
-                    if (!_.includes(hiddenNotificationIDs, notification.id)) {
-                        return true;
-                    }
+    updateNotificationView() {
+        let { env, notifications, hiddenNotificationIDs } = this.props;
+        if (!env.focus || !env.visible)  {
+            return;
+        }
+        let unread = _.filter(notifications, (notification) => {
+            if (!notification.seen) {
+                if (!_.includes(hiddenNotificationIDs, notification.id)) {
+                    return true;
                 }
-            });
-            if (!_.isEmpty(unread)) {
-                let delay = unread.length;
-                if (delay > 5) {
-                    delay = 5;
-                } else if (delay < 2) {
-                    delay = 2;
-                }
-                clearTimeout(this.markAsSeenTimeout);
-                this.markAsSeenTimeout = setTimeout(() => {
-                    this.markAsSeen(unread);
-                }, delay * 1000);
             }
-        }, 50);
+        });
+
+        // remove the one that have appeared recently
+        let maximumDuration = 0;
+        _.remove(unread, (notification) => {
+            let viewDuration = this.notificationViewDurations[notification.id] || 0;
+            viewDuration += 250;
+            this.notificationViewDurations[notification.id] = viewDuration;
+            if (viewDuration < minimumSeenDelay) {
+                return true;
+            }
+        });
+        if (_.isEmpty(unread)) {
+            return;
+        }
+
+        // what the require view duration ought to be--the more notifications
+        // there are, the longer it is
+        let requiredDuration = unread.length * delayPerNotification;
+        if (requiredDuration < minimumSeenDelay) {
+            requiredDuration = minimumSeenDelay;
+        } else if (requiredDuration > maximumSeenDelay) {
+            requiredDuration = maximumSeenDelay;
+        }
+        let allReady = _.every(unread, (notification) => {
+            let viewDuration = this.notificationViewDurations[notification.id] || 0;
+            return (viewDuration > requiredDuration);
+        })
+        if (allReady) {
+            this.markAsSeen(unread);
+        }
     }
 
     /**

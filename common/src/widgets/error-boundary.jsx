@@ -13,7 +13,14 @@ class ErrorBoundary extends Component {
 
     constructor(props) {
         super(props);
-        this.state = { error: null };
+        this.state = { error: null, errorChildren: null };
+    }
+
+    static getDerivedStateFromProps(props, state) {
+        if (props.children !== state.errorChildren) {
+            return { error: null, errorChildren: null };
+        }
+        return null;
     }
 
     render() {
@@ -26,8 +33,8 @@ class ErrorBoundary extends Component {
     }
 
     componentDidCatch(error, info) {
-        let { env } = this.props;
-        this.setState({ error });
+        let { env, children } = this.props;
+        this.setState({ error, errorChildren: children });
         env.logError(error, info);
     }
 }

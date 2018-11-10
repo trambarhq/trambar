@@ -6,6 +6,7 @@ class EnvironmentMonitor extends EventEmitter {
     constructor(options) {
         super();
         let viewport = document.body.parentNode;
+        this.focus = true;
         this.visible = true;
         this.paused = false;
         this.online = isOnline();
@@ -52,6 +53,8 @@ class EnvironmentMonitor extends EventEmitter {
     }
 
     monitor(enabled) {
+        toggleEventListener(window, 'blur', this.handleWindowBlur, enabled);
+        toggleEventListener(window, 'focus', this.handleWindowFocus, enabled);
         toggleEventListener(window, 'resize', this.handleWindowResize, enabled);
         toggleEventListener(window, 'orientationchange', this.handleWindowResize, enabled);
         toggleEventListener(window, 'visibilitychange', this.handleVisibilityChange, enabled);
@@ -141,11 +144,41 @@ class EnvironmentMonitor extends EventEmitter {
         this.triggerEvent(new EnvironmentMonitorEvent('change', this));
     }
 
+    /**
+     * Called when user switches to another window
+     *
+     * @param  {Event} evt
+     */
+    handleWindowBlur = (evt) => {
+        this.focus = false;
+        this.triggerEvent(new EnvironmentMonitorEvent('change', this));
+    }
+
+    /**
+     * Called when user switches back to the  window
+     *
+     * @param  {Event} evt
+     */
+    handleWindowFocus = (evt) => {
+        this.focus = true;
+        this.triggerEvent(new EnvironmentMonitorEvent('change', this));
+    }
+
+    /**
+     * Called when user switches to another tab or minimize the window
+     *
+     * @param  {Event} evt
+     */
     handleVisibilityChange = (evt) => {
         this.visible = (document.visibilityState === 'visible');
         this.triggerEvent(new EnvironmentMonitorEvent('change', this));
     }
 
+    /**
+     * Called when window is resized or the screen orientation changes
+     *
+     * @param  {Event} evt
+     */
     handleWindowResize = (evt) => {
         let viewport = document.body.parentNode;
         this.screenWidth = screen.width;

@@ -6,6 +6,7 @@ import * as ResourceUtils from 'objects/utils/resource-utils';
 class Environment {
     constructor(envMonitor, extra) {
         this.envMonitor = envMonitor;
+        this.focus = envMonitor.focus;
         this.visible = envMonitor.visible;
         this.online = envMonitor.online;
         this.connectionType = envMonitor.connectionType;
