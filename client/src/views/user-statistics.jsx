@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 import Chartist, { Svg } from 'widgets/chartist';
 import Moment from 'moment';
 import { memoizeWeak, memoizeStrong } from 'utils/memoize';
-import * as StoryTypes from 'objects/types/story-types';
+import StoryTypes from 'objects/types/story-types';
 
 import './user-statistics.scss';
 
