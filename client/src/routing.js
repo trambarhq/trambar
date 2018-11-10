@@ -12,13 +12,50 @@ class NumberArray {
     }
 }
 
+class HashMultiIDs {
+    constructor(map) {
+        this.map = map;
+    }
+
+    from(hash, params) {
+        let reg = /([a-zA-Z])(\d+)/g
+        let m;
+        while (m = reg.exec(hash)) {
+            let hashName = m[1];
+            let id = parseInt(m[2])
+            let regExp = new RegExp(`${hashName}(\\d+)`);
+            let paramName = this.map[hashName];
+            if (paramName) {
+                params[paramName] = id;
+            }
+        }
+        return true;
+    }
+
+    to(params) {
+        let parts = [];
+        let used = {};
+        for (let hashName in this.map) {
+            let paramName = this.map[hashName];
+            if (!used[paramName]) {
+                let id = params[paramName];
+                if (id) {
+                    parts.push(hashName + id);
+                    used[paramName] = true;
+                }
+            }
+        }
+        return parts.join('');
+    }
+}
+
 const routes = {
     'bookmarks-page': {
         path: '/bookmarks/',
-        hash: [
-            'S${highlightStoryID}',
-            's${scrollToStoryID}',
-        ],
+        hash: new HashMultiIDs({
+            s: 'scrollToStoryID',
+            S: 'highlightStoryID',
+        }),
         params: {
             scrollToStoryID: Number,
             highlightStoryID: Number,
@@ -40,12 +77,12 @@ const routes = {
             search: '${search}',
             date: '${date}',
         },
-        hash: [
-            'S${highlightStoryID}',
-            's${scrollToStoryID}',
-            'R${highlightReactionID}',
-            'r${scrollToReactionID}',
-        ],
+        hash: new HashMultiIDs({
+            s: 'scrollToStoryID',
+            S: 'highlightStoryID',
+            r: 'scrollToReactionID',
+            R: 'highlightReactionID',
+        }),
         params: {
             roleIDs: NumberArray,
             search: String,
@@ -74,9 +111,9 @@ const routes = {
         query: {
             date: '${date}',
         },
-        hash: [
-            'n${scrollToNotificationID}',
-        ],
+        hash: new HashMultiIDs({
+            n: 'scrollToNotificationID',
+        }),
         params: {
             date: String,
             scrollToNotificationID: Number,
@@ -101,9 +138,9 @@ const routes = {
             search: '${search}',
             date: '${date}',
         },
-        hash: [
-            'u${scrollToUserID}',
-        ],
+        hash: new HashMultiIDs({
+            u: 'scrollToUserID',
+        }),
         params: {
             roleIDs: NumberArray,
             search: String,
@@ -131,12 +168,12 @@ const routes = {
             search: '${search}',
             date: '${date}',
         },
-        hash: [
-            'S${highlightStoryID}',
-            's${scrollToStoryID}',
-            'R${highlightReactionID}',
-            'r${scrollToReactionID}',
-        ],
+        hash: new HashMultiIDs({
+            s: 'scrollToStoryID',
+            S: 'highlightStoryID',
+            r: 'scrollToReactionID',
+            R: 'highlightReactionID',
+        }),
         params: {
             search: String,
             date: String,

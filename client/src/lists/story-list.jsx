@@ -210,13 +210,14 @@ class StoryListSync extends PureComponent {
      * Change the URL hash so page is anchor at given story
      *
      * @param  {Number|undefined} scrollToStoryID
+     * @param  {Number|undefined} scrollToReactionID
      */
-    reanchorAtStory(scrollToStoryID) {
+    reanchorAtStory(scrollToStoryID, scrollToReactionID) {
         let { route } = this.props;
         let params = {
             scrollToStoryID,
             highlightStoryID: undefined,
-            scrollToReactionID: undefined,
+            scrollToReactionID,
             highlightReactionID: undefined,
         };
         route.reanchor(params);
@@ -299,8 +300,8 @@ class StoryListSync extends PureComponent {
                 highlighting = true;
                 // suppress highlighting after a few seconds
                 setTimeout(() => {
-                    this.reanchorAtStory(story.id)
-                }, 5000);
+                    this.reanchorAtStory(story.id, highlightReactionID || scrollToReactionID);
+                }, 7000);
             }
         } else {
             isDraft = true;

@@ -47,6 +47,7 @@ class ReactionList extends PureComponent {
             offset: 4,
             inverted: true,
             fresh: false,
+            noReset: true,
 
             onIdentity: this.handleReactionIdentity,
             onTransition: this.handleReactionTransition,

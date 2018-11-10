@@ -271,7 +271,7 @@ class BookmarkListSync extends PureComponent {
                 // suppress highlighting after a few seconds
                 setTimeout(() => {
                     this.reanchorAtStory(story.id);
-                }, 5000);
+                }, 7000);
             }
         }
         let bookmarkProps;

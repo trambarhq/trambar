@@ -48,7 +48,9 @@ class SmartList extends Component {
         let { anchor, items } = this.props;
         let nextState = _.clone(this.state);
         if (nextProps.anchor !== anchor) {
-            this.updateAnchor(nextProps, nextState);
+            if (nextProps.anchor || !nextProps.noReset) {
+                this.updateAnchor(nextProps, nextState);
+            }
         }
         if (nextProps.items !== items) {
             this.updateSlots(nextProps, nextState);
@@ -748,6 +750,7 @@ SmartList.defaultProps = {
     offset: 0,
     inverted: false,
     transitioning: 5,
+    noReset: false,
 };
 
 export {
@@ -766,6 +769,7 @@ if (process.env.NODE_ENV !== 'production') {
         offset: PropTypes.number,
         inverted: PropTypes.bool,
         transitioning: PropTypes.number,
+        noReset: PropTypes.bool,
 
         onIdentity: PropTypes.func.isRequired,
         onTransition: PropTypes.func,
