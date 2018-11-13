@@ -1,13 +1,9 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Async = require('async-do-while');
-var TaskLog = require('task-log');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Async from 'async-do-while';
+import * as TaskLog from 'task-log';
 
-var CommitImporter = require('gitlab-adapter/commit-importer');
-
-module.exports = {
-    reconstructPush,
-};
+import * as CommitImporter from 'gitlab-adapter/commit-importer';
 
 /**
  * Reconstruct a push
@@ -28,7 +24,7 @@ function reconstructPush(db, server, repo, type, branch, headId, tailId, count) 
         // obtain a linear list of commits--ignoring branching within the push
         var chain = getCommitChain(commits, headId);
         if (!tailId) {
-            // a new branch--count only changes from commits that are 
+            // a new branch--count only changes from commits that are
             // checked directly into branch
             chain = _.filter(chain, { initial_branch: branch });
         }
@@ -223,3 +219,7 @@ function getCommitChain(commits, headId) {
     } while(id);
     return chain;
 }
+
+export {
+    reconstructPush,
+};

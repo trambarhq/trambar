@@ -1,11 +1,7 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Phantom = require('phantom');
-var Moment = require('moment');
-
-module.exports = {
-    createScreenshot,
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Phantom from 'phantom';
+import Moment from 'moment';
 
 /**
  * Make screencap of website, returning the document title
@@ -118,3 +114,7 @@ function B(promise) {
 process.on('beforeExit', () => {
     shutdownPhantom();
 });
+
+export {
+    createScreenshot,
+};

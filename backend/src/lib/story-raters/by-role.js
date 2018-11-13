@@ -1,9 +1,9 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
+import _ from 'lodash';
+import Promise from 'bluebird';
 
-var Role = require('accessors/role');
+import Role from 'accessors/role';
 
-module.exports = {
+const ByRole = {
     type: 'by-role',
     calculation: 'immediate',
     columns: [ 'role_ids' ],
@@ -139,4 +139,9 @@ module.exports = {
         }
         this.roleCache.splice(index, 1);
     },
+};
+
+export {
+    ByRole as default,
+    ByRole,
 };

@@ -1,10 +1,6 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Localization = require('localization');
-
-module.exports = {
-    format,
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
+import * as Localization from 'localization';
 
 function format(system, schema, user, notification, locale) {
     var title = Localization.pick(locale, system.details.title);
@@ -140,3 +136,7 @@ function applyClippingRectangle(url, clip, width, height, quality) {
     filters.push(`qu${quality}`)
     return `${url}/${filters.join('+')}`;
 }
+
+export {
+    format,
+};

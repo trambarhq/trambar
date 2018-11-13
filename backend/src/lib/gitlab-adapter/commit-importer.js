@@ -1,18 +1,14 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var Crypto = require('crypto');
-var ParseDiff = require('parse-diff');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import Crypto from 'crypto';
+import ParseDiff from 'parse-diff';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-var Transport = require('gitlab-adapter/transport');
+import * as Transport from 'gitlab-adapter/transport';
 
 // accessors
-var Commit = require('accessors/commit');
-
-module.exports = {
-    importCommit,
-};
+import Commit from 'accessors/commit';
 
 /**
  * Import a commit from Gitlab
@@ -233,3 +229,7 @@ function hash(text) {
     var hash = Crypto.createHash('md5').update(text);
     return hash.digest("hex");
 }
+
+export {
+    importCommit,
+};

@@ -1,9 +1,9 @@
-var _ = require('lodash');
-var Moment = require('moment');
+import _ from 'lodash';
+import Moment from 'moment';
 
-var Story = require('accessors/story');
+import Story from 'accessors/story';
 
-module.exports = {
+const DailyActivities = {
     type: 'daily-activities',
     // tables from which the stats are derived
     sourceTables: [ 'story' ],
@@ -70,3 +70,8 @@ module.exports = {
         });
     }
 }
+
+export {
+    DailyActivities as default,
+    DailyActivities,
+};

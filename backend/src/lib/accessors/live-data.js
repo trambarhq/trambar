@@ -1,9 +1,9 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Database = require('database');
-var Data = require('accessors/data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Database from 'database';
+import Data from 'accessors/data';
 
-module.exports = _.create(Data, {
+const LiveData = _.create(Data, {
     columns: {
         id: Number,
         gn: Number,
@@ -293,3 +293,8 @@ module.exports = _.create(Data, {
         });
     },
 });
+
+export {
+    LiveData as default,
+    LiveData,
+};

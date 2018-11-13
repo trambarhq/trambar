@@ -1,19 +1,10 @@
-var _ = require('lodash');
-var FS = require('fs');
+import _ from 'lodash';
+import FS from 'fs';
 
 var root = '/var/cache/media';
 var image = `${root}/images`;
 var video = `${root}/videos`;
 var audio = `${root}/audios`;
-
-module.exports = exports = {
-    root,
-    image,
-    video,
-    audio,
-
-    create,
-};
 
 /**
  * Create cache folders if they don't exist yet
@@ -26,3 +17,12 @@ function create() {
         }
     });
 }
+
+export {
+    root,
+    image,
+    video,
+    audio,
+
+    create,
+};

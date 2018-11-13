@@ -1,27 +1,14 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Crypto = require('crypto')
-var Database = require('database');
-var TaskLog = require('task-log');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
-var Server = require('accessors/server');
-var HTTPError = require('errors/http-error').default;
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Crypto from 'crypto'
+import Database from 'database';
+import * as TaskLog from 'task-log';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
+import Server from 'accessors/server';
+import HTTPError from 'errors/http-error';
 
-var Transport = require('gitlab-adapter/transport');
-var RepoAssociation = require('gitlab-adapter/repo-association');
-
-module.exports = {
-    installHooks,
-    installFailedHooks,
-    installServerHooks,
-    installSystemHook,
-    installProjectHook,
-    removeHooks,
-    removeServerHooks,
-    removeSystemHook,
-    removeProjectHook,
-    verifyHookRequest,
-};
+import * as Transport from 'gitlab-adapter/transport';
+import * as RepoAssociation from 'gitlab-adapter/repo-association';
 
 var problematicServerIDs = [];
 
@@ -462,3 +449,16 @@ function getSecretToken() {
 }
 
 var secretToken;
+
+export {
+    installHooks,
+    installFailedHooks,
+    installServerHooks,
+    installSystemHook,
+    installProjectHook,
+    removeHooks,
+    removeServerHooks,
+    removeSystemHook,
+    removeProjectHook,
+    verifyHookRequest,
+};

@@ -1,10 +1,14 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var HTTPError = require('errors/http-error').default;
-var ExternalData = require('accessors/external-data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import HTTPError from 'errors/http-error';
+import ExternalData from 'accessors/external-data';
+import Bookmark from 'accessors/bookmark';
+import Notification from 'accessors/notification';
+import User from 'accessors/user';
+import Task from 'accessors/task';
 
-module.exports = _.create(ExternalData, {
+const Story = _.create(ExternalData, {
     schema: 'project',
     table: 'story',
     columns: {
@@ -125,7 +129,6 @@ module.exports = _.create(ExternalData, {
             var propNames = [ 'deleted', 'type', 'tags', 'unfinished_tasks', 'language_codes', 'user_ids', 'role_ids', 'published', 'ready', 'public', 'external', 'ptime', 'btime', 'mtime', 'itime', 'etime' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'ptime' ]).then(() => {
-                    var Task = require('accessors/task');
                     return Task.createUpdateTrigger(db, schema, 'updateStory', 'updateResource', [ this.table ]).then(() => {});
                 });
             });
@@ -221,7 +224,7 @@ module.exports = _.create(ExternalData, {
             if (typeof(criteria.per_user_limit) === 'number') {
                 // use a lateral join to limit the number of results per user
                 // apply conditions on sub-query
-                var user = require('accessors/user').getTableName('global');
+                var user = User.getTableName('global');
                 var story = this.getTableName(schema);
                 var conditions = _.concat(`${user}.id = ANY(user_ids)`, query.conditions);
                 var subquery = `
@@ -402,8 +405,6 @@ module.exports = _.create(ExternalData, {
      associate: function(db, schema, objects, originals, rows, credentials) {
          return Promise.try(() => {
              var deletedStories = _.filter(rows, { deleted: true });
-             var Bookmark = require('accessors/bookmark');
-             var Notification = require('accessors/notification');
              return Promise.all([
                  Bookmark.deleteAssociated(db, schema, { story: deletedStories }),
                  Notification.deleteAssociated(db, schema, { story: deletedStories }),
@@ -496,7 +497,6 @@ module.exports = _.create(ExternalData, {
      * @return {Promise}
      */
     updateUserRoles: function(db, schema, userIds) {
-        var User = require('accessors/user');
         var userTable = User.getTableName('global');
         var storyTable = this.getTableName(schema);
 
@@ -587,3 +587,8 @@ module.exports = _.create(ExternalData, {
         return Promise.props(promises);
     },
 });
+
+export {
+    Story as default,
+    Story,
+}

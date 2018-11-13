@@ -1,9 +1,11 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var HTTPError = require('errors/http-error').default;
-var Data = require('accessors/data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import HTTPError from 'errors/http-error';
+import Data from 'accessors/data';
+import Task from 'accessors/task';
+import Repo from 'accessors/repo';
 
-module.exports = _.create(Data, {
+const Server = _.create(Data, {
     schema: 'global',
     table: 'server',
     columns: {
@@ -86,7 +88,6 @@ module.exports = _.create(Data, {
             var propNames = [ 'deleted', 'disabled', 'type' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 // completion of tasks will automatically update details->resources
-                var Task = require('accessors/task');
                 return Task.createUpdateTrigger(db, schema, 'updateServer', 'updateResource', [ this.table ]);
             });
         });
@@ -179,7 +180,6 @@ module.exports = _.create(Data, {
                      return !serverAfter.deleted && serverBefore.deleted;
                  }
              });
-             var Repo = require('accessors/repo');
              return Promise.all([
                  Repo.deleteAssociated(db, schema, { server: deletedServers }),
                  Repo.restoreAssociated(db, schema, { server: undeletedServers }),
@@ -226,3 +226,8 @@ var sensitiveSettings = [
     'api.refresh_token',
     'oauth.client_secret',
 ];
+
+export {
+    Server as default,
+    Server,
+};

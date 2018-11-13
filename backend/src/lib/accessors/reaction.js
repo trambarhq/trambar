@@ -1,10 +1,12 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var HTTPError = require('errors/http-error').default;
-var ExternalData = require('accessors/external-data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import HTTPError from 'errors/http-error';
+import ExternalData from 'accessors/external-data';
+import Task from 'accessors/task';
+import Notification from 'accessors/notification';
 
-module.exports = _.create(ExternalData, {
+const Reaction = _.create(ExternalData, {
     schema: 'project',
     table: 'reaction',
     columns: {
@@ -110,7 +112,6 @@ module.exports = _.create(ExternalData, {
                 return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'ptime' ]).then(() => {
                     // completion of tasks will automatically update
                     // details->resources and ready
-                    var Task = require('accessors/task');
                     return Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table, 'ready', 'published' ]);
                 });
             });
@@ -277,7 +278,6 @@ module.exports = _.create(ExternalData, {
      associate: function(db, schema, objects, originals, rows, credentials) {
          return Promise.try(() => {
              var deletedReactions = _.filter(rows, { deleted: true });
-             var Notification = require('accessors/notification');
              return Promise.all([
                  Notification.deleteAssociated(db, schema, { reaction: deletedReactions }),
              ]);
@@ -355,7 +355,7 @@ module.exports = _.create(ExternalData, {
      * @return {Promise}
      */
     deleteAssociated: function(db, schema, associations) {
-        return promises = _.mapValues(associations, (objects, type) => {
+        var promises = _.mapValues(associations, (objects, type) => {
             if (_.isEmpty(objects)) {
                 return;
             }
@@ -399,3 +399,8 @@ module.exports = _.create(ExternalData, {
         return Promise.props(promises);
     },
 });
+
+export {
+    Reaction as default,
+    Reaction,
+};

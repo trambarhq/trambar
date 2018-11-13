@@ -1,10 +1,10 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
 
-var RetrievalTimeRatings = require('story-raters/ratings/retrieval-time-ratings');
+import RetrievalTimeRatings from 'story-raters/ratings/retrieval-time-ratings';
 
-module.exports = {
+const ByRetrievalTime = {
     type: 'by-retrieval-time',
     calculation: 'deferred',
 
@@ -28,4 +28,9 @@ module.exports = {
         var rating = RetrievalTimeRatings[period] || 0;
         return rating;
     },
+};
+
+export {
+    ByRetrievalTime as default,
+    ByRetrievalTime,
 };

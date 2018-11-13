@@ -1,10 +1,10 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var HTTPError = require('errors/http-error').default;
-var Data = require('accessors/data');
-var StoredProcs = require('stored-procs/functions');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import HTTPError from 'errors/http-error';
+import Data from 'accessors/data';
+import StoredProcs from 'stored-procs/functions';
 
-module.exports = _.create(Data, {
+const ExternalData = _.create(Data, {
     columns: {
         id: Number,
         gn: Number,
@@ -166,3 +166,8 @@ module.exports = _.create(Data, {
         return db.execute(sql).return(true);
     },
 });
+
+export {
+    ExternalData as default,
+    ExternalData,
+};

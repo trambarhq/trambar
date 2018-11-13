@@ -1,4 +1,4 @@
-module.exports = {
+const ratings = {
     'push': 20,
     'merge': 50,
     'branch': 0,
@@ -10,4 +10,8 @@ module.exports = {
     'story': 10,
     'survey': 30,
     'task-list': 20,
+};
+
+export {
+    ratings as default
 };

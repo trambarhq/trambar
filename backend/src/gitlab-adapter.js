@@ -1,37 +1,31 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var Express = require('express');
-var BodyParser = require('body-parser');
-var DNSCache = require('dnscache');
-var Database = require('database');
-var Shutdown = require('shutdown');
-var TaskQueue = require('utils/task-queue').default;
-var StoryTypes = require('objects/types/story-types');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import Express from 'express';
+import BodyParser from 'body-parser';
+import DNSCache from 'dnscache';
+import Database from 'database';
+import * as Shutdown from 'shutdown';
+import TaskQueue from 'utils/task-queue';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-var RepoAssociation = require('gitlab-adapter/repo-association');
-var HookManager = require('gitlab-adapter/hook-manager');
-var EventImporter = require('gitlab-adapter/event-importer');
-var RepoImporter = require('gitlab-adapter/repo-importer');
-var UserImporter = require('gitlab-adapter/user-importer');
-var MilestoneImporter = require('gitlab-adapter/milestone-importer');
-var IssueExporter = require('gitlab-adapter/issue-exporter');
+import * as RepoAssociation from 'gitlab-adapter/repo-association';
+import * as HookManager from 'gitlab-adapter/hook-manager';
+import * as EventImporter from 'gitlab-adapter/event-importer';
+import * as RepoImporter from 'gitlab-adapter/repo-importer';
+import * as UserImporter from 'gitlab-adapter/user-importer';
+import * as MilestoneImporter from 'gitlab-adapter/milestone-importer';
+import * as IssueExporter from 'gitlab-adapter/issue-exporter';
 
 // accessors
-var Project = require('accessors/project');
-var Reaction = require('accessors/reaction');
-var Repo = require('accessors/repo');
-var Server = require('accessors/server');
-var Story = require('accessors/story');
-var System = require('accessors/system');
-var Task = require('accessors/task');
-var User = require('accessors/user');
-
-module.exports = {
-    start,
-    stop,
-};
+import Project from 'accessors/project';
+import Reaction from 'accessors/reaction';
+import Repo from 'accessors/repo';
+import Server from 'accessors/server';
+import Story from 'accessors/story';
+import System from 'accessors/system';
+import Task from 'accessors/task';
+import User from 'accessors/user';
 
 var server;
 var database;
@@ -782,3 +776,8 @@ if (process.argv[1] === __filename) {
     start();
     Shutdown.on(stop);
 }
+
+export {
+    start,
+    stop,
+};

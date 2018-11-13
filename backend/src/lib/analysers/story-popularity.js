@@ -1,8 +1,8 @@
-var _ = require('lodash');
+import _ from 'lodash';
 
-var Reaction = require('accessors/reaction');
+import Reaction from 'accessors/reaction';
 
-module.exports = {
+const StoryPopularity = {
     type: 'story-popularity',
     // tables from which the stats are derived
     sourceTables: [ 'reaction' ],
@@ -48,3 +48,8 @@ module.exports = {
         });
     }
 }
+
+export {
+    StoryPopularity as default,
+    StoryPopularity,
+};

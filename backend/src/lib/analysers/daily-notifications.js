@@ -1,8 +1,8 @@
-var _ = require('lodash');
-var Moment = require('moment-timezone');
-var Notification = require('accessors/notification');
+import _ from 'lodash';
+import Moment from 'moment-timezone';
+import Notification from 'accessors/notification';
 
-module.exports = {
+const DailyNotifications = {
     type: 'daily-notifications',
     // tables from which the stats are derived
     sourceTables: [ 'notification' ],
@@ -57,3 +57,8 @@ module.exports = {
         });
     }
 }
+
+export {
+    DailyNotifications as default,
+    DailyNotifications,
+};

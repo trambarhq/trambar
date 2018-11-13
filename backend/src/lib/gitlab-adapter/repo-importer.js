@@ -1,21 +1,16 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var TaskLog = require('task-log');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import * as TaskLog from 'task-log';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-var Transport = require('gitlab-adapter/transport');
-var UserImporter = require('gitlab-adapter/user-importer');
+import * as Transport from 'gitlab-adapter/transport';
+import * as UserImporter from 'gitlab-adapter/user-importer';
 
 // accessors
-var Project = require('accessors/project');
-var Repo = require('accessors/repo');
-var Story = require('accessors/story');
-
-module.exports = {
-    importEvent,
-    importRepositories,
-};
+import Project from 'accessors/project';
+import Repo from 'accessors/repo';
+import Story from 'accessors/story';
 
 /**
  * Import an activity log entry about an issue
@@ -320,3 +315,8 @@ function fetchMembers(server, glRepoId) {
     var url = `/projects/${glRepoId}/members`;
     return Transport.fetchAll(server, url);
 }
+
+export {
+    importEvent,
+    importRepositories,
+};

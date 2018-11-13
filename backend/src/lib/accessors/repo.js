@@ -1,10 +1,11 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var HTTPError = require('errors/http-error').default;
-var ExternalData = require('accessors/external-data');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import HTTPError from 'errors/http-error';
+import ExternalData from 'accessors/external-data';
+import Task from 'accessors/task';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-module.exports = _.create(ExternalData, {
+const Repo = _.create(ExternalData, {
     schema: 'global',
     table: 'repo',
     columns: {
@@ -94,7 +95,6 @@ module.exports = _.create(ExternalData, {
             var propNames = [ 'deleted', 'external', 'mtime', 'itime', 'etime' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 // completion of tasks will automatically update details->resources
-                var Task = require('accessors/task');
                 return Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table ]);
             });
         });
@@ -148,7 +148,7 @@ module.exports = _.create(ExternalData, {
      * @return {Promise}
      */
     deleteAssociated: function(db, schema, associations) {
-        return promises = _.mapValues(associations, (objects, type) => {
+        var promises = _.mapValues(associations, (objects, type) => {
             if (_.isEmpty(objects)) {
                 return;
             }
@@ -192,3 +192,8 @@ module.exports = _.create(ExternalData, {
         return Promise.props(promises);
     },
 });
+
+export {
+    Repo as default,
+    Repo
+};

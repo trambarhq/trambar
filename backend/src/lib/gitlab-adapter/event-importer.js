@@ -1,27 +1,22 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var TaskLog = require('task-log');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import * as TaskLog from 'task-log';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-var Transport = require('gitlab-adapter/transport');
-var IssueImporter = require('gitlab-adapter/issue-importer');
-var MergeRequestImporter = require('gitlab-adapter/merge-request-importer');
-var MilestoneImporter = require('gitlab-adapter/milestone-importer');
-var BranchImporter = require('gitlab-adapter/branch-importer');
-var PushImporter = require('gitlab-adapter/push-importer');
-var RepoImporter = require('gitlab-adapter/repo-importer');
-var UserImporter = require('gitlab-adapter/user-importer');
-var WikiImporter = require('gitlab-adapter/wiki-importer');
-var NoteImporter = require('gitlab-adapter/note-importer');
+import * as Transport from 'gitlab-adapter/transport';
+import * as IssueImporter from 'gitlab-adapter/issue-importer';
+import * as MergeRequestImporter from 'gitlab-adapter/merge-request-importer';
+import * as MilestoneImporter from 'gitlab-adapter/milestone-importer';
+import * as BranchImporter from 'gitlab-adapter/branch-importer';
+import * as PushImporter from 'gitlab-adapter/push-importer';
+import * as RepoImporter from 'gitlab-adapter/repo-importer';
+import * as UserImporter from 'gitlab-adapter/user-importer';
+import * as WikiImporter from 'gitlab-adapter/wiki-importer';
+import * as NoteImporter from 'gitlab-adapter/note-importer';
 
 // accessors
-var Story = require('accessors/story');
-
-module.exports = {
-    importEvents,
-    importHookEvent,
-};
+import Story from 'accessors/story';
 
 /**
  * Retrieve activity log entries from Gitlab server and turn them into stories
@@ -211,3 +206,8 @@ function normalizeToken(s) {
     s = _.replace(s, /[\s\-]/g, '_');
     return s;
 }
+
+export {
+    importEvents,
+    importHookEvent,
+};

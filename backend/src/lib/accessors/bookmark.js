@@ -1,9 +1,9 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var HTTPError = require('errors/http-error').default;
-var Data = require('accessors/data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import HTTPError from 'errors/http-error';
+import Data from 'accessors/data';
 
-module.exports = _.create(Data, {
+const Bookmark = _.create(Data, {
     schema: 'project',
     table: 'bookmark',
     columns: {
@@ -215,7 +215,7 @@ module.exports = _.create(Data, {
      * @return {Promise}
      */
     deleteAssociated: function(db, schema, associations) {
-        return promises = _.mapValues(associations, (objects, type) => {
+        var promises = _.mapValues(associations, (objects, type) => {
             if (_.isEmpty(objects)) {
                 return;
             }
@@ -231,3 +231,8 @@ module.exports = _.create(Data, {
         return Promise.props(promises);
     },
 });
+
+export {
+    Bookmark as default,
+    Bookmark,
+};

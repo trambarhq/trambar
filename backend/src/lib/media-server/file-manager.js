@@ -1,17 +1,8 @@
-var _ = require('lodash');
-var Promise = require('bluebird')
-var FS = Promise.promisifyAll(require('fs'));
-var Request = require('request');
-var Crypto = require('crypto');
-
-module.exports = {
-    moveFile,
-    saveFile,
-    hashFile,
-    downloadFile,
-    preserveFile,
-    makeTempPath,
-};
+import _ from 'lodash';
+import Promise from 'bluebird'
+import FS from 'fs'; Promise.promisifyAll(FS);
+import Request from 'request';
+import Crypto from 'crypto';
 
 /**
  * Save file to cache folder, using the MD5 hash of its content as name
@@ -169,3 +160,12 @@ function makeTempPath(dstFolder, url, ext) {
     }
     return `${dstFolder}/${hash}${ext}`;
 }
+
+export {
+    moveFile,
+    saveFile,
+    hashFile,
+    downloadFile,
+    preserveFile,
+    makeTempPath,
+};

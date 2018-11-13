@@ -1,24 +1,14 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var FS = Promise.promisifyAll(require('fs'));
-var Path = require('path');
-var Readline = require('readline');
-var ChildProcess = require('child_process');
-var Crypto = require('crypto');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import FS from 'fs'; Promise.promisifyAll(FS);
+import Path from 'path';
+import Readline from 'readline';
+import ChildProcess from 'child_process';
+import Crypto from 'crypto';
 
-var CacheFolders = require('media-server/cache-folders');
-var FileManager = require('media-server/file-manager');
-var ImageManager = require('media-server/image-manager');
-
-module.exports = {
-    startTranscodingJob,
-    findTranscodingJob,
-    transcodeSegment,
-    endTranscodingJob,
-    awaitTranscodingJob,
-    requestPosterGeneration,
-    awaitPosterGeneration,
-};
+import * as CacheFolders from 'media-server/cache-folders';
+import * as FileManager from 'media-server/file-manager';
+import * as ImageManager from 'media-server/image-manager';
 
 var transcodingJobs = [];
 var encodingProfiles = [
@@ -645,3 +635,13 @@ setInterval(() => {
         }
     });
 }, 30 * 1000);
+
+export {
+    startTranscodingJob,
+    findTranscodingJob,
+    transcodeSegment,
+    endTranscodingJob,
+    awaitTranscodingJob,
+    requestPosterGeneration,
+    awaitPosterGeneration,
+};

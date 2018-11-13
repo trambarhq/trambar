@@ -1,11 +1,11 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
 
-var TypeDiversityRatings = require('story-raters/ratings/type-diversity-ratings');
-var UserDiversityRatings = require('story-raters/ratings/user-diversity-ratings');
+import TypeDiversityRatings from 'story-raters/ratings/type-diversity-ratings';
+import UserDiversityRatings from 'story-raters/ratings/user-diversity-ratings';
 
-module.exports = {
+const ByDiversity = {
     type: 'by-diversity',
     calculation: 'immediate',
     columns: [ 'type', 'user_ids' ],
@@ -57,4 +57,9 @@ module.exports = {
         }
         return rating;
     },
+};
+
+export {
+    ByDiversity as default,
+    ByDiversity,
 };

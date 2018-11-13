@@ -1,9 +1,9 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
+import _ from 'lodash';
+import Promise from 'bluebird';
 
-var StoryTypeRatings = require('story-raters/ratings/story-type-ratings');
+import StoryTypeRatings from 'story-raters/ratings/story-type-ratings';
 
-module.exports = {
+const ByType = {
     type: 'by-type',
     calculation: 'immediate',
     columns: [ 'type' ],
@@ -20,4 +20,9 @@ module.exports = {
 
     handleEvent: function(evt) {
     },
+};
+
+export {
+    ByType as default,
+    ByType,
 };

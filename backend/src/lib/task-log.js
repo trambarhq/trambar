@@ -1,15 +1,10 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Database = require('database');
-var Shutdown = require('shutdown');
-var TaskQueue = require('utils/task-queue').default;
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Database from 'database';
+import * as Shutdown from 'shutdown';
+import TaskQueue from 'utils/task-queue';
 
-var Task = require('accessors/task');
-
-module.exports ={
-    start,
-    last,
-};
+import Task from 'accessors/task';
 
 /**
  * Start a task log
@@ -176,4 +171,9 @@ TaskLog.prototype.save = function() {
         console.log(`[${this.id || 'NOP'}] ${this.action}: ${state}`);
     });
     return this.savePromise;
+};
+
+export {
+    start,
+    last,
 };

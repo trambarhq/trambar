@@ -1,18 +1,14 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var Localization = require('localization');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import * as Localization from 'localization';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-var PushReconstructor = require('gitlab-adapter/push-reconstructor');
-var PushDecorator = require('gitlab-adapter/push-decorator');
+import * as PushReconstructor from 'gitlab-adapter/push-reconstructor';
+import * as PushDecorator from 'gitlab-adapter/push-decorator';
 
 // accessors
-var Story = require('accessors/story');
-
-module.exports = {
-    importEvent,
-};
+import Story from 'accessors/story';
 
 /**
  * Import an activity log entry about a push
@@ -166,3 +162,7 @@ function copyPushProperties(story, system, server, repo, author, push, component
     storyAfter.itime = new String('NOW()');
     return storyAfter;
 }
+
+export {
+    importEvent,
+};

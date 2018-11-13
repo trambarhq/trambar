@@ -1,10 +1,10 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var Data = require('accessors/data');
-var HTTPError = require('errors/http-error').default;
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import Data from 'accessors/data';
+import HTTPError from 'errors/http-error';
 
-module.exports = _.create(Data, {
+const Notification = _.create(Data, {
     schema: 'both',
     table: 'notification',
     columns: {
@@ -198,7 +198,7 @@ module.exports = _.create(Data, {
      * @return {Promise}
      */
     deleteAssociated: function(db, schema, associations) {
-        return promises = _.mapValues(associations, (objects, type) => {
+        var promises = _.mapValues(associations, (objects, type) => {
             if (_.isEmpty(objects)) {
                 return;
             }
@@ -221,3 +221,8 @@ module.exports = _.create(Data, {
         return Promise.props(promises);
     },
 });
+
+export {
+    Notification as default,
+    Notification,
+};

@@ -1,11 +1,4 @@
-var _ = require('lodash');
-
-module.exports = {
-    translate,
-    name,
-    pick,
-    getDefaultLanguageCode,
-};
+import _ from 'lodash';
 
 /**
  * Return a string object of the name with the gender attached
@@ -133,3 +126,10 @@ function getCountryCode(locale) {
     }
     return country;
 }
+
+export {
+    translate,
+    name,
+    pick,
+    getDefaultLanguageCode,
+};

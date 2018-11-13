@@ -1,16 +1,11 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
 // accessors
-var Project = require('accessors/project');
-var Repo = require('accessors/repo');
-var Server = require('accessors/server');
-
-module.exports = {
-    find,
-    findOne,
-};
+import Project from 'accessors/project';
+import Repo from 'accessors/repo';
+import Server from 'accessors/server';
 
 /**
  * Return a list of objects containing project, repo, and server
@@ -128,3 +123,8 @@ function findOne(db, criteria) {
         return a;
     });
 }
+
+export {
+    find,
+    findOne,
+};

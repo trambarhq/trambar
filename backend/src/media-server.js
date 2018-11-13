@@ -1,31 +1,26 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var FS = Promise.promisifyAll(require('fs'));
-var Path = require('path');
-var Express = require('express');
-var CORS = require('cors');
-var BodyParser = require('body-parser');
-var Multer  = require('multer');
-var Moment = require('moment');
-var DNSCache = require('dnscache');
-var FileType = require('file-type');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import FS from 'fs'; Promise.promisifyAll(FS);
+import Path from 'path';
+import Express from 'express';
+import CORS from 'cors';
+import BodyParser from 'body-parser';
+import Multer from 'multer';
+import Moment from 'moment';
+import DNSCache from 'dnscache';
+import FileType from 'file-type';
 
-var Database = require('database');
-var Shutdown = require('shutdown');
-var Task = require('accessors/task');
-var HTTPError = require('errors/http-error').default;
+import Database from 'database';
+import Task from 'accessors/task';
+import HTTPError from 'errors/http-error';
+import * as Shutdown from 'shutdown';
 
-var CacheFolders = require('media-server/cache-folders');
-var FileManager = require('media-server/file-manager');
-var ImageManager = require('media-server/image-manager');
-var VideoManager = require('media-server/video-manager');
-var WebsiteCapturer = require('media-server/website-capturer');
-var StockPhotoImporter = require('media-server/stock-photo-importer');
-
-module.exports = {
-    start,
-    stop,
-};
+import * as CacheFolders from 'media-server/cache-folders';
+import * as FileManager from 'media-server/file-manager';
+import * as ImageManager from 'media-server/image-manager';
+import * as VideoManager from 'media-server/video-manager';
+import * as WebsiteCapturer from 'media-server/website-capturer';
+import * as StockPhotoImporter from 'media-server/stock-photo-importer';
 
 var server;
 var cacheControl = {
@@ -705,3 +700,8 @@ if (process.argv[1] === __filename) {
     start();
     Shutdown.on(stop);
 }
+
+export {
+    start,
+    stop,
+};

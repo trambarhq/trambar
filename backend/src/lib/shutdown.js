@@ -1,12 +1,5 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-
-module.exports = {
-    on,
-    off,
-    initiate,
-    close,
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
 
 var listeners = [];
 
@@ -101,3 +94,10 @@ process.on('SIGUSR2', initiate);
 process.on('uncaughtException', function(err) {
     console.error(err);
 });
+
+export {
+    on,
+    off,
+    initiate,
+    close,
+};

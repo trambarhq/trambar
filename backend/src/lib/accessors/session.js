@@ -1,9 +1,9 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var Data = require('accessors/data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import Data from 'accessors/data';
 
-module.exports = _.create(Data, {
+const Session = _.create(Data, {
     schema: 'global',
     table: 'session',
     columns: {
@@ -152,3 +152,8 @@ module.exports = _.create(Data, {
     import: null,
     export: null,
 });
+
+export {
+    Session as default,
+    Session
+};

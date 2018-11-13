@@ -1,9 +1,10 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var HTTPError = require('errors/http-error').default;
-var ExternalData = require('accessors/external-data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import HTTPError from 'errors/http-error';
+import ExternalData from 'accessors/external-data';
+import Task from 'accessors/task';
 
-module.exports = _.create(ExternalData, {
+const Role = _.create(ExternalData, {
     schema: 'global',
     table: 'role',
     columns: {
@@ -91,7 +92,6 @@ module.exports = _.create(ExternalData, {
             var propNames = [ 'deleted', 'disabled', 'general', 'external', 'mtime', 'itime', 'etime' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 // completion of tasks will automatically update details->resources
-                var Task = require('accessors/task');
                 return Task.createUpdateTrigger(db, schema, 'updateRole', 'updateResource', [ this.table ]);
             });
         });
@@ -161,3 +161,8 @@ module.exports = _.create(ExternalData, {
         throw new HTTPError(403);
     },
 });
+
+export {
+    Role as default,
+    Role,
+};

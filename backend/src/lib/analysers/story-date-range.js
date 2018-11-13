@@ -1,7 +1,7 @@
-var _ = require('lodash');
-var Story = require('accessors/story');
+import _ from 'lodash';
+import Story from 'accessors/story';
 
-module.exports = {
+const StoryDateRange = {
     type: 'story-date-range',
     // tables from which the stats are derived
     sourceTables: [ 'story' ],
@@ -43,3 +43,8 @@ module.exports = {
         });
     }
 }
+
+export {
+    StoryDateRange as default,
+    StoryDateRange,
+};

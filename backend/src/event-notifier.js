@@ -1,40 +1,35 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var Database = require('database');
-var Shutdown = require('shutdown');
-var HTTPError = require('errors/http-error').default;
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import Database from 'database';
+import * as Shutdown from 'shutdown';
+import HTTPError from 'errors/http-error';
 
-var ListenerManager = require('event-notifier/listener-manager');
-var NotificationGenerator = require('event-notifier/notification-generator');
-var AlertComposer = require('event-notifier/alert-composer');
+import * as ListenerManager from 'event-notifier/listener-manager';
+import * as NotificationGenerator from 'event-notifier/notification-generator';
+import * as AlertComposer from 'event-notifier/alert-composer';
 
 // global accessors
-var Device = require('accessors/device');
-var Picture = require('accessors/picture');
-var Project = require('accessors/project');
-var Repo = require('accessors/repo');
-var Role = require('accessors/role');
-var Server = require('accessors/server');
-var Subscription = require('accessors/subscription');
-var System = require('accessors/system');
-var User = require('accessors/user');
+import Device from 'accessors/device';
+import Picture from 'accessors/picture';
+import Project from 'accessors/project';
+import Repo from 'accessors/repo';
+import Role from 'accessors/role';
+import Server from 'accessors/server';
+import Subscription from 'accessors/subscription';
+import System from 'accessors/system';
+import User from 'accessors/user';
 
 // project accessors
-var Bookmark = require('accessors/bookmark');
-var Listing = require('accessors/listing');
-var Reaction = require('accessors/reaction');
-var Statistics = require('accessors/statistics');
-var Story = require('accessors/story');
+import Bookmark from 'accessors/bookmark';
+import Listing from 'accessors/listing';
+import Reaction from 'accessors/reaction';
+import Statistics from 'accessors/statistics';
+import Story from 'accessors/story';
 
 // appear in both
-var Notification = require('accessors/notification');
-var Task = require('accessors/task');
-
-module.exports = {
-    start,
-    stop,
-};
+import Notification from 'accessors/notification';
+import Task from 'accessors/task';
 
 var accessors = [
     Device,
@@ -239,3 +234,8 @@ if (process.argv[1] === __filename) {
     start();
     Shutdown.on(stop);
 }
+
+export {
+    start,
+    stop,
+};

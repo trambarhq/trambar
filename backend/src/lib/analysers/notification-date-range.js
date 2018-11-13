@@ -1,7 +1,7 @@
-var _ = require('lodash');
-var Notification = require('accessors/notification');
+import _ from 'lodash';
+import Notification from 'accessors/notification';
 
-module.exports = {
+const NotificationDateRange = {
     type: 'notification-date-range',
     // tables from which the stats are derived
     sourceTables: [ 'notification' ],
@@ -39,3 +39,8 @@ module.exports = {
         });
     }
 }
+
+export {
+    NotificationDateRange as default,
+    NotificationDateRange,
+};

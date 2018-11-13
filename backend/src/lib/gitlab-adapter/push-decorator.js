@@ -1,17 +1,13 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Path = require('path');
-var Request = require('request');
-var Ignore = require('ignore');
-var MarkGor = require('mark-gor');
-var HTTPError = require('errors/http-error').default;
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Path from 'path';
+import Request from 'request';
+import Ignore from 'ignore';
+import MarkGor from 'mark-gor';
+import HTTPError from 'errors/http-error';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-var Transport = require('gitlab-adapter/transport');
-
-module.exports = {
-    retrieveDescriptions,
-};
+import * as Transport from 'gitlab-adapter/transport';
 
 /**
  * Retrieve component descriptions about a push
@@ -551,3 +547,7 @@ function Component(id, text, url) {
         this.image = { url };
     }
 }
+
+export {
+    retrieveDescriptions,
+};

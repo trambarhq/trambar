@@ -1,9 +1,9 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Data = require('accessors/data');
-var HTTPError = require('errors/http-error').default;
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Data from 'accessors/data';
+import HTTPError from 'errors/http-error';
 
-module.exports = _.create(Data, {
+const Task = _.create(Data, {
     schema: 'both',
     table: 'task',
     columns: {
@@ -214,18 +214,23 @@ module.exports = _.create(Data, {
      * @param  {String} schema
      * @param  {String} triggerName
      * @param  {String} method
-     * @param  {Array<String>} arguments
+     * @param  {Array<String>} args
      *
      * @return {Promise<Boolean>}
      */
-    createUpdateTrigger: function(db, schema, triggerName, method, arguments) {
+    createUpdateTrigger: function(db, schema, triggerName, method, args) {
         var table = this.getTableName(schema);
         var sql = `
             CREATE TRIGGER "${triggerName}"
             AFTER UPDATE ON ${table}
             FOR EACH ROW
-            EXECUTE PROCEDURE "${method}"(${arguments.join(', ')});
+            EXECUTE PROCEDURE "${method}"(${args.join(', ')});
         `;
         return db.execute(sql).return(true);
     },
 });
+
+export {
+    Task as default,
+    Task
+};

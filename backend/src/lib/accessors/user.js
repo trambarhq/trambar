@@ -1,9 +1,13 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var HTTPError = require('errors/http-error').default;
-var ExternalData = require('accessors/external-data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import HTTPError from 'errors/http-error';
+import ExternalData from 'accessors/external-data';
+import Project from 'accessors/project';
+import Story from 'accessors/story';
+import Reaction from 'accessors/reaction';
+import Task from 'accessors/task';
 
-module.exports = _.create(ExternalData, {
+const User = _.create(ExternalData, {
     schema: 'global',
     table: 'user',
     columns: {
@@ -106,7 +110,6 @@ module.exports = _.create(ExternalData, {
             var propNames = [ 'deleted', 'requested_project_ids', 'external', 'mtime', 'itime', 'etime' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
-                    var Task = require('accessors/task');
                     return Task.createUpdateTrigger(db, schema, 'updateUser', 'updateResource', [ this.table ]);
                 });
             });
@@ -230,7 +233,6 @@ module.exports = _.create(ExternalData, {
             if (userBefore && !userBefore.deleted && !_.isEmpty(userReceived.requested_project_ids)) {
                 // remove ids of projects that'd accept the user automatically
                 // as well as those that can't be joined
-                var Project = require('accessors/project');
                 var projectIds = userReceived.requested_project_ids;
                 var criteria = { id: projectIds, deleted: false };
                 return Project.find(db, schema, criteria, 'id, settings').then((projects) => {
@@ -407,7 +409,6 @@ module.exports = _.create(ExternalData, {
         if (_.isEmpty(newMembers)) {
             return Promise.resolve();
         }
-        var Project = require('accessors/project');
         var projectIds = _.map(_.keys(newMembers), parseInt);
         var criteria = { id: projectIds, deleted: false };
         // update user_ids column in project table
@@ -448,11 +449,9 @@ module.exports = _.create(ExternalData, {
         }
 
         // find projects the users belongs to
-        var Project = require('accessors/project');
         var userIds = _.map(usersWithRoleChanges, 'id');
         var criteria = { user_ids: userIds, deleted: false };
         return Project.find(db, schema, criteria, 'name').each((project) => {
-            var Story = require('accessors/story');
             return Story.updateUserRoles(db, project.name, userIds);
         });
     },
@@ -485,9 +484,6 @@ module.exports = _.create(ExternalData, {
                 return;
             }
 
-            var Project = require('accessors/project');
-            var Story = require('accessors/story');
-            var Reaction = require('accessors/reaction');
             // go through each project
             var criteria = { deleted: false };
             return Project.find(db, schema, criteria, 'name').each((project) => {
@@ -502,3 +498,8 @@ module.exports = _.create(ExternalData, {
         });
     },
 });
+
+export {
+    User as default,
+    User,
+};

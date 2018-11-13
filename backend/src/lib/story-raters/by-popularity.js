@@ -1,11 +1,11 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
+import _ from 'lodash';
+import Promise from 'bluebird';
 
-var Statistics = require('accessors/statistics');
+import Statistics from 'accessors/statistics';
 
-var ReactionTypeRatings = require('story-raters/ratings/reaction-type-ratings');
+import ReactionTypeRatings from 'story-raters/ratings/reaction-type-ratings';
 
-module.exports = {
+const ByPopularity = {
     type: 'by-popularity',
     calculation: 'immediate',
     columns: [ 'id' ],
@@ -152,4 +152,9 @@ module.exports = {
         }
         this.statisticsCache.splice(index, 1);
     },
+};
+
+export {
+    ByPopularity as default,
+    ByPopularity,
 };

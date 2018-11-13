@@ -1,21 +1,17 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var Crypto = require('crypto');
-var TaskLog = require('task-log');
-var HTTPError = require('errors/http-error').default;
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import Crypto from 'crypto';
+import * as TaskLog from 'task-log';
+import HTTPError from 'errors/http-error';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-var Transport = require('gitlab-adapter/transport');
-var UserImporter = require('gitlab-adapter/user-importer');
+import * as Transport from 'gitlab-adapter/transport';
+import * as UserImporter from 'gitlab-adapter/user-importer';
 
-var Commit = require('accessors/commit');
-var Story = require('accessors/story');
-var Reaction = require('accessors/reaction');
-
-module.exports = {
-    importEvent,
-};
+import Commit from 'accessors/commit';
+import Story from 'accessors/story';
+import Reaction from 'accessors/reaction';
 
 /**
  * @param  {Database} db
@@ -267,3 +263,7 @@ function hash(text) {
     var hash = Crypto.createHash('md5').update(text);
     return hash.digest("hex");
 }
+
+export {
+    importEvent,
+};

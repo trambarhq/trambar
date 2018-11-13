@@ -1,11 +1,9 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var FS = require('fs');
-var PgPool = require('pg-pool')
-var PgTypes = require('pg').types;
-var Async = require('async-do-while');
-
-module.exports = Database;
+import _ from 'lodash';
+import Promise from 'bluebird';
+import FS from 'fs';
+import PgPool from 'pg-pool'
+import Pg from 'pg';
+import Async from 'async-do-while';
 
 var BIGINT_OID = 20;
 var TIMESTAMPTZ_OID = 1184
@@ -25,8 +23,8 @@ function parseDate(val) {
     }
     return val;
 }
-PgTypes.setTypeParser(TIMESTAMPTZ_OID, parseDate);
-PgTypes.setTypeParser(TIMESTAMP_OID, parseDate);
+Pg.types.setTypeParser(TIMESTAMPTZ_OID, parseDate);
+Pg.types.setTypeParser(TIMESTAMP_OID, parseDate);
 
 /**
  * Retrieve bigint as Number unless doing so triggers an overflow
@@ -43,7 +41,7 @@ function parseBigInt(val) {
         return val;
     }
 }
-PgTypes.setTypeParser(BIGINT_OID, parseBigInt);
+Pg.types.setTypeParser(BIGINT_OID, parseBigInt);
 
 var config = {
     host: process.env.POSTGRES_HOST,
@@ -523,4 +521,9 @@ Database.prototype.createDictionaries = function(languageCode) {
         var list = (stem) ? [ stem, 'simple' ] : [ 'simple' ]
         return Promise.resolve(list);
     };
+};
+
+export {
+    Database as default,
+    Database,
 };

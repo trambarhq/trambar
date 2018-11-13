@@ -1,40 +1,33 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var JsDAV = require('jsDAV');
-var JsDAVLocksBackendFS = require('jsDAV/lib/DAV/plugins/locks/fs');
-var JsDAVPromise = require('jsdav-promise');
-var File = JsDAVPromise.File;
-var Collection = JsDAVPromise.Collection;
+import _ from 'lodash';
+import Promise from 'bluebird';
+import JsDAV from 'jsDAV';
+import JsDAVLocksBackendFS from 'jsDAV/lib/DAV/plugins/locks/fs';
+import { File, Collection, Conflict } from 'jsdav-promise';
 
-var Database = require('database');
-var Shutdown = require('shutdown');
+import Database from 'database';
+import * as Shutdown from 'shutdown';
 
 // accessors
-var Commit = require('accessors/commit');
-var Device = require('accessors/device');
-var Picture = require('accessors/picture');
-var Project = require('accessors/project');
-var Repo = require('accessors/repo');
-var Role = require('accessors/role');
-var Server = require('accessors/server');
-var Session = require('accessors/session');
-var Subscription = require('accessors/subscription');
-var System = require('accessors/system');
-var User = require('accessors/user');
+import Commit from 'accessors/commit';
+import Device from 'accessors/device';
+import Picture from 'accessors/picture';
+import Project from 'accessors/project';
+import Repo from 'accessors/repo';
+import Role from 'accessors/role';
+import Server from 'accessors/server';
+import Session from 'accessors/session';
+import Subscription from 'accessors/subscription';
+import System from 'accessors/system';
+import User from 'accessors/user';
 
-var Bookmark = require('accessors/bookmark');
-var Listing = require('accessors/listing');
-var Reaction = require('accessors/reaction');
-var Statistics = require('accessors/statistics');
-var Story = require('accessors/story');
+import Bookmark from 'accessors/bookmark';
+import Listing from 'accessors/listing';
+import Reaction from 'accessors/reaction';
+import Statistics from 'accessors/statistics';
+import Story from 'accessors/story';
 
-var Notification = require('accessors/notification');
-var Task = require('accessors/task');
-
-module.exports = {
-    start,
-    stop,
-};
+import Notification from 'accessors/notification';
+import Task from 'accessors/task';
 
 var globalAccessors = [
     Commit,
@@ -128,19 +121,19 @@ function start() {
                 var object = (text) ? JSON.parse(text) : {};
                 var m = /^(\d+)\.json$/.exec(name);
                 if (!m) {
-                    return Promise.reject(new JsDAVPromise.Conflict);
+                    return Promise.reject(new Conflict);
                 }
                 var id = parseInt(m[1]);
                 if (object.id) {
                     if (object.id !== id) {
-                        return Promise.reject(new JsDAVPromise.Conflict);
+                        return Promise.reject(new Conflict);
                     }
                 } else {
                     object.id = id;
                 }
                 return this.accessor.findOne(db, this.schema, { id, deleted: false }, `id`).then((row) => {
                     if (row) {
-                        return Promise.reject(new JsDAVPromise.Conflict);
+                        return Promise.reject(new Conflict);
                     }
                     return this.accessor.insertOne(db, this.schema, object).then((row) => {
                         return true;
@@ -245,3 +238,8 @@ if (process.argv[1] === __filename) {
     start();
     Shutdown.on(stop);
 }
+
+export {
+    start,
+    stop,
+};

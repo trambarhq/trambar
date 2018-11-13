@@ -1,13 +1,13 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Request = require('request');
-var CSVParse = require('csv-parse');
-var ToUTF8 = require('to-utf-8')
-var HTTPError = require('errors/http-error').default;
-var Data = require('accessors/data');
-var StringSimilarity = require('string-similarity');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Request from 'request';
+import CSVParse from 'csv-parse';
+import ToUTF8 from 'to-utf-8'
+import HTTPError from 'errors/http-error';
+import Data from 'accessors/data';
+import StringSimilarity from 'string-similarity';
 
-module.exports = _.create(Data, {
+const Device = _.create(Data, {
     schema: 'global',
     table: 'device',
     columns: {
@@ -451,4 +451,9 @@ var wpModelNumbers = {
     'Lumia 950': /RM\-(1104|1105|1118)/,
     'Lumia 950XL': /RM\-(1085|1116)/,
     'Lumia Icon': /RM\-(927)/,
+};
+
+export {
+    Device as default,
+    Device,
 };

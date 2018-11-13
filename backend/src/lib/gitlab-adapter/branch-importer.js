@@ -1,13 +1,9 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
 // accessors
-var Story = require('accessors/story');
-
-module.exports = {
-    importEvent,
-};
+import Story from 'accessors/story';
 
 /**
  * Import an activity log entry about a push
@@ -63,3 +59,7 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
         }
     }).return(null);
 }
+
+export {
+    importEvent,
+};

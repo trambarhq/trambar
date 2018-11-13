@@ -1,9 +1,9 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Crypto = require('crypto')
-var LiveData = require('accessors/live-data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Crypto from 'crypto'
+import LiveData from 'accessors/live-data';
 
-module.exports = _.create(LiveData, {
+const Statistics = _.create(LiveData, {
     schema: 'project',
     table: 'statistics',
     columns: {
@@ -192,3 +192,8 @@ function hash(filters) {
     var hash = Crypto.createHash('md5').update(text);
     return hash.digest("hex");
 }
+
+export {
+    Statistics as default,
+    Statistics,
+};

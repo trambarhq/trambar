@@ -1,30 +1,20 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var Request = require('request');
-var TaskLog = require('task-log');
-var HTTPError = require('errors/http-error').default;
-var ExternalDataUtils = require('objects/utils/external-data-utils');
-var UserTypes = require('objects/types/user-types');
-var UserSettings = require('objects/settings/user-settings');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import Request from 'request';
+import * as TaskLog from 'task-log';
+import HTTPError from 'errors/http-error';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
+import { DefaultUserSettings } from 'objects/settings/user-settings';
 
-var Transport = require('gitlab-adapter/transport');
+import * as Transport from 'gitlab-adapter/transport';
 
 // accessors
-var Project = require('accessors/project');
-var Repo = require('accessors/repo');
-var Server = require('accessors/server');
-var Story = require('accessors/story');
-var User = require('accessors/user');
-
-module.exports = {
-    importEvent,
-    importUsers,
-    findUser,
-    findUserByName,
-    findUsersByName,
-    copyUserProperties,
-};
+import Project from 'accessors/project';
+import Repo from 'accessors/repo';
+import Server from 'accessors/server';
+import Story from 'accessors/story';
+import User from 'accessors/user';
 
 /**
  * Import an activity log entry about someone joining or leaving the project
@@ -346,7 +336,7 @@ function copyUserProperties(user, server, image, glUser) {
     if (!userAfter) {
         userAfter = {
             role_ids: _.get(server, 'settings.user.role_ids', []),
-            settings: UserSettings.default,
+            settings: DefaultUserSettings,
         };
     }
     ExternalDataUtils.addLink(userAfter, server, {
@@ -468,3 +458,12 @@ function importProfileImage(glUser) {
         });
     });
 }
+
+export {
+    importEvent,
+    importUsers,
+    findUser,
+    findUserByName,
+    findUsersByName,
+    copyUserProperties,
+};

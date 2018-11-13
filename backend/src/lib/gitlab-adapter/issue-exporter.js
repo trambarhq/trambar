@@ -1,25 +1,21 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var TaskLog = require('task-log');
-var Localization = require('localization');
-var HTTPError = require('errors/http-error').default;
-var MarkdownExporter = require('utils/markdown-exporter');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import * as TaskLog from 'task-log';
+import * as Localization from 'localization';
+import HTTPError from 'errors/http-error';
+import * as MarkdownExporter from 'utils/markdown-exporter';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-var Transport = require('gitlab-adapter/transport');
+import * as Transport from 'gitlab-adapter/transport';
 
 // accessors
-var Reaction = require('accessors/reaction');
-var Repo = require('accessors/repo');
-var Story = require('accessors/story');
-var Server = require('accessors/server');
-var System = require('accessors/system');
-var User = require('accessors/user');
-
-module.exports = {
-    exportStory,
-};
+import Reaction from 'accessors/reaction';
+import Repo from 'accessors/repo';
+import Story from 'accessors/story';
+import Server from 'accessors/server';
+import System from 'accessors/system';
+import User from 'accessors/user';
 
 /**
  * Export a story to issue tracker
@@ -678,3 +674,7 @@ function moveIssue(server, glSrcProjectId, glSrcIssueNumber, glDstProjectId, glU
     var props = { to_project_id: glDstProjectId };
     return Transport.post(server, url, props, glUserId);
 }
+
+export {
+    exportStory,
+};

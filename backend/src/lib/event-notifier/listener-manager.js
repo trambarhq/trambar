@@ -1,28 +1,21 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Express = require('express');
-var CORS = require('cors');
-var BodyParser = require('body-parser');
-var HTTP = require('http');
-var SockJS = require('sockjs');
-var Request = require('request');
-var Async = require('async-do-while');
-var Crypto = Promise.promisifyAll(require('crypto'));
-var XML2JS = require('xml2js');
-var HTTPError = require('errors/http-error').default;
-var Shutdown = require('shutdown');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Express from 'express';
+import CORS from 'cors';
+import BodyParser from 'body-parser';
+import HTTP from 'http';
+import SockJS from 'sockjs';
+import Request from 'request';
+import Async from 'async-do-while';
+import Crypto from 'crypto'; Promise.promisifyAll(Crypto);
+import XML2JS from 'xml2js';
+import HTTPError from 'errors/http-error';
+import * as Shutdown from 'shutdown';
 
 // accessors
-var Subscription = require('accessors/subscription');
-var System = require('accessors/system');
-var User = require('accessors/user');
-
-module.exports = {
-    listen,
-    find,
-    send,
-    shutdown,
-};
+import Subscription from 'accessors/subscription';
+import System from 'accessors/system';
+import User from 'accessors/user';
 
 var server;
 var sockets = [];
@@ -585,3 +578,10 @@ function Listener(user, subscription) {
     this.user = user;
     this.subscription = subscription;
 }
+
+export {
+    listen,
+    find,
+    send,
+    shutdown,
+};

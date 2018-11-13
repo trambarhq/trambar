@@ -1,8 +1,8 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var ExternalData = require('accessors/external-data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import ExternalData from 'accessors/external-data';
 
-module.exports = _.create(ExternalData, {
+const Commit = _.create(ExternalData, {
     schema: 'global',
     table: 'commit',
     columns: {
@@ -104,3 +104,8 @@ module.exports = _.create(ExternalData, {
         return false;
     },
 });
+
+export {
+    Commit as default,
+    Commit,
+};

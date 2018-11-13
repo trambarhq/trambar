@@ -1,15 +1,11 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
 // accessors
-var Story = require('accessors/story');
-var User = require('accessors/user');
-
-module.exports = {
-    importHookEvent,
-};
+import Story from 'accessors/story';
+import User from 'accessors/user';
 
 /**
  * Import a wiki related event
@@ -118,3 +114,7 @@ function copyEventProperties(story, system, server, repo, author, glHookEvent) {
     });
     return storyAfter;
 }
+
+export {
+    importHookEvent,
+};

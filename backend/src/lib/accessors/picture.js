@@ -1,9 +1,10 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var HTTPError = require('errors/http-error').default;
-var Data = require('accessors/data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import HTTPError from 'errors/http-error';
+import Data from 'accessors/data';
+import Task from 'accessors/task';
 
-module.exports = _.create(Data, {
+const Picture = _.create(Data, {
     schema: 'global',
     table: 'picture',
     columns: {
@@ -65,7 +66,6 @@ module.exports = _.create(Data, {
             var propNames = [ 'deleted', 'purpose', 'user_id' ];
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
-                    var Task = require('accessors/task');
                     return Task.createUpdateTrigger(db, schema, 'updatePicture', 'updateResource', [ this.table ]);
                 });
             });
@@ -126,3 +126,8 @@ module.exports = _.create(Data, {
         throw new HTTPError(403);
     },
 });
+
+export {
+    Picture as default,
+    Picture,
+};

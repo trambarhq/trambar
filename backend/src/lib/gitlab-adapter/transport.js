@@ -1,21 +1,12 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Request = require('request');
-var FS = Promise.promisifyAll(require('fs'));
-var Path = require('path');
-var Async = require('async-do-while');
-var HTTPError = require('errors/http-error').default;
-var Database = require('database');
-var Server = require('accessors/server');
-
-module.exports = {
-    fetch,
-    fetchAll,
-    fetchEach,
-    post,
-    put,
-    remove,
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Request from 'request';
+import FS from 'fs'; Promise.promisifyAll(FS);
+import Path from 'path';
+import Async from 'async-do-while';
+import HTTPError from 'errors/http-error';
+import Database from 'database';
+import Server from 'accessors/server';
 
 var PAGE_SIZE = 50;
 var PAGE_LIMIT = 1000;
@@ -467,3 +458,12 @@ if (CACHE_FOLDER) {
         return `${CACHE_FOLDER}/${domain}${path}`;
     }
 }
+
+export {
+    fetch,
+    fetchAll,
+    fetchEach,
+    post,
+    put,
+    remove,
+};

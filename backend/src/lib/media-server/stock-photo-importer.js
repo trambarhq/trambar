@@ -1,16 +1,12 @@
-var Promise = require('bluebird');
-var FS = Promise.promisifyAll(require('fs'));
-var Path = require('path');
-var Database = require('database');
+import Promise from 'bluebird';
+import FS from 'fs'; Promise.promisifyAll(FS);
+import Path from 'path';
+import Database from 'database';
 
-var Picture = require('accessors/picture');
+import Picture from 'accessors/picture';
 
-var CacheFolders = require('media-server/cache-folders');
-var ImageManager = require('media-server/image-manager');
-
-module.exports = {
-    importPhotos,
-};
+import * as CacheFolders from 'media-server/cache-folders';
+import * as ImageManager from 'media-server/image-manager';
 
 function importPhotos() {
     Database.open().then((db) => {
@@ -51,3 +47,7 @@ function importPhotos() {
         });
     });
 }
+
+export {
+    importPhotos,
+};

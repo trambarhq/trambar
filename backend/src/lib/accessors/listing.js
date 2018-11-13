@@ -1,13 +1,13 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Crypto = require('crypto')
-var Database = require('database');
-var HTTPError = require('errors/http-error').default;
-var LiveData = require('accessors/live-data');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Crypto from 'crypto'
+import Database from 'database';
+import HTTPError from 'errors/http-error';
+import LiveData from 'accessors/live-data';
 
-var ByRetrievalTime = require('story-raters/by-retrieval-time');
+import ByRetrievalTime from 'story-raters/by-retrieval-time';
 
-module.exports = _.create(LiveData, {
+const Listing = _.create(LiveData, {
     schema: 'project',
     table: 'listing',
     columns: {
@@ -455,3 +455,8 @@ function hash(filters) {
     var hash = Crypto.createHash('md5').update(text);
     return hash.digest("hex");
 }
+
+export {
+    Listing as default,
+    Listing,
+};

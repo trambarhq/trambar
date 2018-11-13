@@ -1,18 +1,10 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var FS = Promise.promisifyAll(require('fs'));
-var Sharp = require('sharp');
-var Piexif = require("piexifjs");
-var Moment = require('moment');
-var DOMParser = require('xmldom').DOMParser;
-var XMLSerializer = require('xmldom').XMLSerializer;
-
-module.exports = {
-    applyFilters,
-    getImageMetadata,
-    getJPEGDescription,
-    addJPEGDescription,
-};
+import _ from 'lodash';
+import Promise from 'bluebird';
+import FS from 'fs'; Promise.promisifyAll(FS);
+import Sharp from 'sharp';
+import Piexif from "piexifjs";
+import Moment from 'moment';
+import { DOMParser, XMLSerializer } from 'xmldom';
 
 /**
  * Return metadata of an image file
@@ -323,3 +315,10 @@ function getJPEGDescription(path) {
 }
 
 process.env.VIPS_WARNING = false;
+
+export {
+    applyFilters,
+    getImageMetadata,
+    getJPEGDescription,
+    addJPEGDescription,
+};

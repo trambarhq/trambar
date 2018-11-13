@@ -1,37 +1,31 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Express = require('express');
-var CORS = require('cors');
-var BodyParser = require('body-parser');
-var Passport = require('passport')
-var Crypto = Promise.promisifyAll(require('crypto'));
-var FS = Promise.promisifyAll(require('fs'));
-var Moment = require('moment');
-var Request = require('request');
-var HtpasswdAuth = require('htpasswd-auth');
-var Async = require('async-do-while');
-var HTTPError = require('errors/http-error').default;
-var Database = require('database');
-var Shutdown = require('shutdown');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
-var UserTypes = require('objects/types/user-types');
-var UserSettings = require('objects/settings/user-settings');
-var Whitelist = require('utils/whitelist');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Express from 'express';
+import CORS from 'cors';
+import BodyParser from 'body-parser';
+import Passport from 'passport';
+import Crypto from 'crypto'; Promise.promisifyAll(Crypto);
+import FS from 'fs'; Promise.promisifyAll(FS);
+import Moment from 'moment';
+import Request from 'request';
+import HtpasswdAuth from 'htpasswd-auth';
+import Async from 'async-do-while';
+import HTTPError from 'errors/http-error';
+import Database from 'database';
+import * as Shutdown from 'shutdown';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
+import { DefaultUserSettings } from 'objects/settings/user-settings';
+import * as Whitelist from 'utils/whitelist';
 
-var GitlabUserImporter = require('gitlab-adapter/user-importer');
+import * as GitlabUserImporter from 'gitlab-adapter/user-importer';
 
 // accessors
-var Device = require('accessors/device');
-var Project = require('accessors/project');
-var Server = require('accessors/server');
-var Session = require('accessors/session');
-var System = require('accessors/system');
-var User = require('accessors/user');
-
-module.exports = {
-    start,
-    stop,
-};
+import Device from 'accessors/device';
+import Project from 'accessors/project';
+import Server from 'accessors/server';
+import Session from 'accessors/session';
+import System from 'accessors/system';
+import User from 'accessors/user';
 
 const SESSION_LIFETIME_AUTHENTICATION = 120; // minutes
 const SESSION_LIFETIME_DEVICE_ACTIVATION = 60;
@@ -811,7 +805,7 @@ function findUserByName(username) {
                     username,
                     type: 'admin',
                     details: { name },
-                    settings: UserSettings.default,
+                    settings: DefaultUserSettings,
                 };
                 return User.insertOne(db, 'global', user);
             }
@@ -1068,7 +1062,7 @@ function copyUserProperties(user, server, image, profile) {
         } else {
             userAfter = {
                 role_ids: _.get(server, 'settings.user.role_ids', []),
-                settings: UserSettings.default,
+                settings: DefaultUserSettings,
             };
         }
 
@@ -1345,3 +1339,8 @@ if (process.argv[1] === __filename) {
     start();
     Shutdown.on(stop);
 }
+
+export {
+    start,
+    stop,
+};

@@ -1,10 +1,11 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Data = require('accessors/data');
-var HTTPError = require('errors/http-error').default;
-var ProjectUtils = require('objects/utils/project-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Data from 'accessors/data';
+import Project from 'accessors/project';
+import HTTPError from 'errors/http-error';
+import * as ProjectUtils from 'objects/utils/project-utils';
 
-module.exports = _.create(Data, {
+const Subscription = _.create(Data, {
     schema: 'global',
     table: 'subscription',
     columns: {
@@ -137,7 +138,6 @@ module.exports = _.create(Data, {
 
             if (subscriptionReceived.schema !== 'global' && subscriptionReceived.schema !== '*') {
                 // don't allow user to subscribe to a project that he has no access to
-                var Project = require('accessors/project');
                 var criteria = {
                     name: subscriptionReceived.schema,
                     deleted: false,
@@ -193,3 +193,8 @@ module.exports = _.create(Data, {
         }
     }
 });
+
+export {
+    Subscription as default,
+    Subscription,
+};

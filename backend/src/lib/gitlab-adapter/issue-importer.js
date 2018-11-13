@@ -1,20 +1,15 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var Localization = require('localization');
-var TagScanner = require('utils/tag-scanner');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import * as Localization from 'localization';
+import * as TagScanner from 'utils/tag-scanner';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-var Transport = require('gitlab-adapter/transport');
-var AssignmentImporter = require('gitlab-adapter/assignment-importer');
+import * as Transport from 'gitlab-adapter/transport';
+import * as AssignmentImporter from 'gitlab-adapter/assignment-importer';
 
 // accessors
-var Story = require('accessors/story');
-
-module.exports = {
-    importEvent,
-    importHookEvent,
-};
+import Story from 'accessors/story';
 
 /**
  * Import an activity log entry about an issue
@@ -296,3 +291,8 @@ function fetchIssueByNumber(server, glProjectId, glIssueNumber) {
     var url = `/projects/${glProjectId}/issues/${glIssueNumber}`;
     return Transport.fetch(server, url);
 }
+
+export {
+    importEvent,
+    importHookEvent,
+};

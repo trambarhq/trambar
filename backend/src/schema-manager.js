@@ -1,41 +1,33 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var Crypto = Promise.promisifyAll(require('crypto'));
-var Database = require('database');
-var Shutdown = require('shutdown');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import Crypto from 'crypto'; Promise.promisifyAll(Crypto);
+import Database from 'database';
+import * as Shutdown from 'shutdown';
 
 // global accessors
-var Commit = require('accessors/commit');
-var Device = require('accessors/device');
-var Picture = require('accessors/picture');
-var Project = require('accessors/project');
-var Repo = require('accessors/repo');
-var Role = require('accessors/role');
-var Server = require('accessors/server');
-var Session = require('accessors/session');
-var Subscription = require('accessors/subscription');
-var System = require('accessors/system');
-var User = require('accessors/user');
+import Commit from 'accessors/commit';
+import Device from 'accessors/device';
+import Picture from 'accessors/picture';
+import Project from 'accessors/project';
+import Repo from 'accessors/repo';
+import Role from 'accessors/role';
+import Server from 'accessors/server';
+import Session from 'accessors/session';
+import Subscription from 'accessors/subscription';
+import System from 'accessors/system';
+import User from 'accessors/user';
 
 // project accessors
-var Bookmark = require('accessors/bookmark');
-var Listing = require('accessors/listing');
-var Reaction = require('accessors/reaction');
-var Statistics = require('accessors/statistics');
-var Story = require('accessors/story');
+import Bookmark from 'accessors/bookmark';
+import Listing from 'accessors/listing';
+import Reaction from 'accessors/reaction';
+import Statistics from 'accessors/statistics';
+import Story from 'accessors/story';
 
 // appear in both
-var Notification = require('accessors/notification');
-var Task = require('accessors/task');
-
-module.exports = {
-    start,
-    stop,
-    createSchema,
-    deleteSchema,
-    renameSchema,
-};
+import Notification from 'accessors/notification';
+import Task from 'accessors/task';
 
 var database;
 var messageQueueInterval;
@@ -507,3 +499,11 @@ if (process.argv[1] === __filename) {
     start();
     Shutdown.on(stop);
 }
+
+export {
+    start,
+    stop,
+    createSchema,
+    deleteSchema,
+    renameSchema,
+};

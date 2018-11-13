@@ -1,21 +1,13 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
-var ExternalDataUtils = require('objects/utils/external-data-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
+import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-var Transport = require('gitlab-adapter/transport');
-var UserImporter = require('gitlab-adapter/user-importer');
+import * as Transport from 'gitlab-adapter/transport';
+import * as UserImporter from 'gitlab-adapter/user-importer';
 
 // accessors
-var Reaction = require('accessors/reaction');
-
-module.exports = {
-    findIssueAssignments,
-    findMergeRequestAssignments,
-    importAssignments,
-
-    ObjectMovedError,
-};
+import Reaction from 'accessors/reaction';
 
 /**
 - * Add assignment reactions to story
@@ -240,3 +232,11 @@ function ObjectMovedError() {
 };
 
 ObjectMovedError.prototype = Object.create(Error.prototype)
+
+export {
+    findIssueAssignments,
+    findMergeRequestAssignments,
+    importAssignments,
+
+    ObjectMovedError,
+};

@@ -1,9 +1,9 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var HTTPError = require('errors/http-error').default;
-var TagScanner = require('utils/tag-scanner');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import HTTPError from 'errors/http-error';
+import * as TagScanner from 'utils/tag-scanner';
 
-module.exports = {
+const Data = {
     schema: '?',
     table: '?',
     columns: {
@@ -944,7 +944,7 @@ module.exports = {
      *
      * @return {Promise}
      */
-    createResourceCoalescenceTrigger: function(db, schema, arguments) {
+    createResourceCoalescenceTrigger: function(db, schema, args) {
         var table = this.getTableName(schema);
         // trigger name needs to be smaller than "indicateDataChange" so it runs first
         var sql = [
@@ -952,13 +952,13 @@ module.exports = {
                 CREATE TRIGGER "coalesceResourcesOnInsert"
                 BEFORE INSERT ON ${table}
                 FOR EACH ROW
-                EXECUTE PROCEDURE "coalesceResources"(${arguments.join(', ')});
+                EXECUTE PROCEDURE "coalesceResources"(${args.join(', ')});
             `,
             `
                 CREATE TRIGGER "coalesceResourcesOnUpdate"
                 BEFORE UPDATE ON ${table}
                 FOR EACH ROW
-                EXECUTE PROCEDURE "coalesceResources"(${arguments.join(', ')});
+                EXECUTE PROCEDURE "coalesceResources"(${args.join(', ')});
             `
         ];
         return db.execute(sql.join('\n')).return(true);
@@ -1086,3 +1086,8 @@ var regExp = new RegExp(`[@#][${characters}][${digits}${characters}]*`, 'g');
 function removePunctuations(s) {
     return s.replace(punctRE, '');
 }
+
+export {
+    Data as default,
+    Data,
+};

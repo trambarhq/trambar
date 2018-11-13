@@ -1,18 +1,14 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Moment = require('moment');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Moment from 'moment';
 
 // accessors
-var Bookmark = require('accessors/bookmark');
-var Notification = require('accessors/notification');
-var Project = require('accessors/project');
-var Reaction = require('accessors/reaction');
-var Story = require('accessors/story');
-var User = require('accessors/user');
-
-module.exports = {
-    generate,
-};
+import Bookmark from 'accessors/bookmark';
+import Notification from 'accessors/notification';
+import Project from 'accessors/project';
+import Reaction from 'accessors/reaction';
+import Story from 'accessors/story';
+import User from 'accessors/user';
 
 /**
  * Create new notification objects based on database events
@@ -511,3 +507,7 @@ function checkUserPreference(user, notification) {
     }
     return false;
 }
+
+export {
+    generate,
+};

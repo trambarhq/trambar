@@ -1,10 +1,13 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Data = require('accessors/data');
-var HTTPError = require('errors/http-error').default;
-var ProjectUtils = require('objects/utils/project-utils');
+import _ from 'lodash';
+import Promise from 'bluebird';
+import Data from 'accessors/data';
+import Task from 'accessors/task';
+import Repo from 'accessors/repo';
+import User from 'accessors/user';
+import HTTPError from 'errors/http-error';
+import * as ProjectUtils from 'objects/utils/project-utils';
 
-module.exports = _.create(Data, {
+const Project = _.create(Data, {
     schema: 'global',
     table: 'project',
     columns: {
@@ -97,7 +100,6 @@ module.exports = _.create(Data, {
             return this.createNotificationTriggers(db, schema, propNames).then(() => {
                 return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
                     // completion of tasks will automatically update details->resources
-                    var Task = require('accessors/task');
                     return Task.createUpdateTrigger(db, schema, 'updateProject', 'updateResource', [ this.table ]);
                 });
             });
@@ -182,8 +184,6 @@ module.exports = _.create(Data, {
                 var newRepoIds = _.difference(projectReceived.repo_ids, projectBefore.repo_ids);
                 if (!_.isEmpty(newRepoIds)) {
                     // add users with access to repos to project
-                    var Repo = require('accessors/repo');
-                    var User = require('accessors/user');
                     var criteria = { id: newRepoIds, deleted: false };
                     return Repo.find(db, schema, criteria, 'user_ids').then((repos) => {
                         var userIds = _.uniq(_.flatten(_.map(repos, 'user_ids')));
@@ -273,7 +273,6 @@ module.exports = _.create(Data, {
             return Promise.resolve();
         }
         // load the users and update requested_project_ids column
-        var User = require('accessors/user');
         var criteria = { id: newMemberIds };
         return User.find(db, schema, criteria, 'id, requested_project_ids').then((users) => {
             _.each(users, (user) => {
@@ -307,3 +306,8 @@ module.exports = _.create(Data, {
         return db.execute(sql, params);
     },
 });
+
+export {
+    Project as default,
+    Project
+};
