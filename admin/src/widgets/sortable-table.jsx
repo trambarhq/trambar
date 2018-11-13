@@ -155,18 +155,18 @@ class SortableTable extends PureComponent {
                 if (!column) {
                     return;
                 }
+                let dir = 'asc';
                 sortColumns = _.slice(sortColumns);
                 sortDirections = _.slice(sortDirections);
                 let index = _.indexOf(sortColumns, column);
                 if (index !== -1) {
+                    if (index === 0) {
+                        if (sortDirections[0] === 'asc') {
+                            dir = 'desc';
+                        }
+                    }
                     sortColumns.splice(index, 1);
                     sortDirections.splice(index, 1);
-                }
-                let dir = 'asc';
-                if (index === 0) {
-                    if (sortDirections[0] === 'asc') {
-                        dir = 'desc';
-                    }
                 }
                 sortColumns.unshift(column);
                 sortDirections.unshift(dir);

@@ -260,7 +260,8 @@ class TaskAlertBarSync extends PureComponent {
      * @param  {Object} prevState
      */
     componentDidUpdate(prevProps, prevState) {
-        let { env, showing, rendering } = this.state;
+        let { env } = this.props;
+        let { showing, rendering } = this.state;
         if (!prevState.showing && showing) {
             if (!rendering) {
                 this.setState({ rendering: true, hidden: true });

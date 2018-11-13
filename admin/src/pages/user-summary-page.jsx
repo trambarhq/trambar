@@ -6,7 +6,7 @@ import ComponentRefs from 'utils/component-refs';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as RoleFinder from 'objects/finders/role-finder';
 import * as UserFinder from 'objects/finders/user-finder';
-import * as UserTypes from 'objects/types/user-types';
+import UserTypes from 'objects/types/user-types';
 import * as UserSettings from 'objects/settings/user-settings';
 import * as StatisticsFinder from 'objects/finders/statistics-finder';
 import * as SystemFinder from 'objects/finders/system-finder';

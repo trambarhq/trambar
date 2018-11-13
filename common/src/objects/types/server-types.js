@@ -13,5 +13,6 @@ const IntegratedServerTypes = [
 
 export {
     ServerTypes as default,
+    ServerTypes,
     IntegratedServerTypes
 };

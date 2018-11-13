@@ -7,7 +7,7 @@ import ComponentRefs from 'utils/component-refs';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as RoleFinder from 'objects/finders/role-finder';
 import * as UserFinder from 'objects/finders/user-finder';
-import * as UserTypes from 'objects/types/user-types';
+import UserTypes from 'objects/types/user-types';
 
 // widgets
 import PushButton from 'widgets/push-button';

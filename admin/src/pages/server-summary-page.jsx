@@ -6,7 +6,7 @@ import { memoizeWeak } from 'utils/memoize';
 import ComponentRefs from 'utils/component-refs';
 import * as RoleFinder from 'objects/finders/role-finder';
 import * as ServerFinder from 'objects/finders/server-finder';
-import ServerTypes from 'objects/types/server-types';
+import { ServerTypes, IntegratedServerTypes } from 'objects/types/server-types';
 import * as ServerSettings from 'objects/settings/server-settings';
 import * as SystemFinder from 'objects/finders/system-finder';
 import * as SlugGenerator from 'utils/slug-generator';
@@ -64,7 +64,7 @@ class ServerSummaryPage extends AsyncComponent {
                 props.system = system;
             });
         }).then(() => {
-            if (creating) {
+            if (!creating) {
                 return ServerFinder.findServer(db, serverID).then((server) => {
                     props.server = server;
                 });
@@ -336,7 +336,7 @@ class ServerSummaryPageSync extends PureComponent {
         } else {
             let server = this.getServer();
             let active = !server.deleted && !server.disabled;
-            let hasIntegration = _.includes(ServerTypes.integrated, server.type);
+            let hasIntegration = _.includes(IntegratedServerTypes, server.type);
             let hasAccessToken = !!_.get(server, 'settings.api.access_token');
             let hasOAuthCredentials = !!(_.get(server, 'settings.oauth.client_id') && _.get(server, 'settings.oauth.client_secret'));
             let preselected, alert;
@@ -1032,7 +1032,7 @@ class ServerSummaryPageSync extends PureComponent {
         let { t } = env.locale;
         let serverType = this.getServerProperty('type');
         let apiAccess;
-        if (_.includes(ServerTypes.integrated, serverType)) {
+        if (_.includes(IntegratedServerTypes, serverType)) {
             let token = this.getServerProperty('settings.api.access_token');
             if (token) {
                 apiAccess = t('server-summary-api-access-acquired');
