@@ -81,20 +81,6 @@ function findIndexMapping(listA, listB) {
     return map;
 }
 
-function hasPoster(res) {
-    if (!res) {
-        if (res.poster_url) {
-            return true;
-        }
-        let url = `payload:${res.payload_token}/poster`;
-        let blob = BlobManager.find(url);
-        if (blob) {
-            return true;
-        }
-    }
-    return false;
-}
-
 function getImageDimensions(res, params) {
     if (!params) {
         params = {};
@@ -560,7 +546,6 @@ export {
     getVideoURL,
     getAudioURL,
     getMarkdownIconURL,
-    hasPoster,
     parseJSONEncodedURL,
     attachMosaic,
 };

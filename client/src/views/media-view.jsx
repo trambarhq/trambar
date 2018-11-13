@@ -231,13 +231,14 @@ class MediaView extends PureComponent {
     renderAudio(res, key) {
         let { audioURL } = this.state;
         let className = 'audio';
-        if (!ResourceUtils.hasPoster(res)) {
+        let poster = this.renderImageElement(res);
+        if (!poster) {
             className += ' posterless';
         }
         let action = (!audioURL) ? 'play' : 'stop';
         return (
             <div key={key} className={className} onClick={this.handleAudioClick}>
-                {this.renderImageElement(res)}
+                {poster}
                 <div className="overlay">
                     <div className="icon">
                         <i className={`fa fa-${action}-circle`} />
