@@ -1498,7 +1498,7 @@ class StoryEditor extends PureComponent {
                 this.saveDraft(draft);
                 break;
             case 'story-type-set':
-                draft = _.decoupleSet(draft, 'details.type', evt.value);
+                draft = _.decoupleSet(draft, 'type', evt.value);
                 // attach a list template to the story if there's no list yet
                 if (draft.type === 'task-list' || draft.type === 'survey') {
                     textArea = textArea.getElement();

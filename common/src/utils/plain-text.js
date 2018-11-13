@@ -36,7 +36,7 @@ function renderSurvey(text, answers, onChange) {
                     onChange,
                 };
                 return (
-                    <span>
+                    <span key={key}>
                         {item.before}
                         <label>
                             <input {...inputProps} />

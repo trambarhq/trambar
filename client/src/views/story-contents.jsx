@@ -100,7 +100,7 @@ class StoryContents extends PureComponent {
      */
     hasUserVoted() {
         let { reactions, currentUser } = this.props;
-        if (reactions === null) {
+        if (reactions === undefined) {
             return undefined;
         }
         let vote = getUserVote(reactions, currentUser);
@@ -646,6 +646,7 @@ class StoryContents extends PureComponent {
         if (!this.canUserVote()) {
             return null;
         }
+        console.log('Voted: ' + this.hasUserVoted());
         if (this.hasUserVoted() !== false) {
             return null;
         }
