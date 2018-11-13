@@ -58,13 +58,6 @@ class RemoteDataSource extends EventEmitter {
             this.startTime = Moment();
             // force validation of schema signatures
             this.revalidate();
-            // reconcile changes and invalidate all searches
-            this.invalidate().then(() => {
-                // send pending changes
-                _.each(this.changeQueue, (change) => {
-                    change.dispatch();
-                });
-            });
         }
     }
 
@@ -73,6 +66,21 @@ class RemoteDataSource extends EventEmitter {
             clearInterval(this.sessionCheckInterval);
             this.sessionCheckInterval = 0;
             this.active = false;
+        }
+    }
+
+    /**
+     * Dispatch pending changes
+     */
+    dispatchPending() {
+        if (this.active) {
+            // reconcile changes and invalidate all searches
+            this.invalidate().then(() => {
+                // send pending changes
+                _.each(this.changeQueue, (change) => {
+                    change.dispatch();
+                });
+            });
         }
     }
 
@@ -649,6 +657,13 @@ class RemoteDataSource extends EventEmitter {
                     blocking = 'incomplete'
                 }
             }
+            let { refreshInterval } = this.options;
+            let elapsed = (Moment() - this.startTime) * (1 / 1000);
+            if (elapsed < refreshInterval) {
+                // consider objects retrieved prior to the start of the
+                // app to be stale
+                refreshInterval = elapsed;
+            }
             let search;
             let existingSearch = this.findExistingSearch(newSearch);
             if (existingSearch) {
@@ -667,13 +682,6 @@ class RemoteDataSource extends EventEmitter {
                 }
                 let status;
                 if (existingSearch.promise.isFulfilled()) {
-                    let { refreshInterval } = this.options;
-                    let elapsed = Moment() - this.startTime;
-                    if (elapsed < refreshInterval) {
-                        // consider objects retrieved prior to the start of the
-                        // app to be stale
-                        refreshInterval = elapsed;
-                    }
                     if (existingSearch.isFresh(refreshInterval)) {
                         status = 'complete';
                     } else {
@@ -714,7 +722,6 @@ class RemoteDataSource extends EventEmitter {
                     let status;
                     if (newSearch.isMeetingExpectation()) {
                         // local search yield the expected number of objects
-                        let { refreshInterval } = this.options;
                         if (newSearch.isSufficientlyRecent(refreshInterval)) {
                             // we got everything we need
                             status = 'complete';

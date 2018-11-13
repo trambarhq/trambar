@@ -91,6 +91,7 @@ function start(cfg) {
             dataSource.activate();
             payloadManager.activate();
             notifier.activate();
+            changeNotification();
 
             if (codePush) {
                 codePush.check(1 * 60 * 60);
@@ -403,22 +404,8 @@ function changeSubscription() {
     let { address, schema } = currentLocation;
     let watch = (applicationArea === 'admin') ? '*' : schema;
     let { localeCode } = localeManager;
-    let oldSubscriptionRecord;
-    // see if the subscription is to the right server
-    if (currentSubscription.address === address) {
-        oldSubscriptionRecord = currentSubscription.record;
-        // see if we're watching the right schema(s)
-        if (currentSubscription.watch === watch) {
-            if (currentSubscription.record) {
-                // locale has to match
-                if (currentSubscription.record.locale === localeCode) {
-                    return;
-                }
-            }
-        }
-    }
-    currentSubscription = {};
-    if (!currentConnection.token) {
+    let { method, token, relay, details } = currentConnection;
+    if (!token) {
         // notifier hasn't establshed a connection yet
         return;
     }
@@ -426,15 +413,12 @@ function changeSubscription() {
         // we don't have access yet
         return;
     }
-    if (!watch) {
-        // not watching anything
-        return;
-    }
-    if (process.env.NODE_ENV !== 'production') {
-        console.log(`Updating data-change subscription -> ${address}/${watch}`);
-    }
     dataSource.start(currentLocation).then((currentUserID) => {
-        let { method, token, relay, details } = currentConnection;
+        if (!watch) {
+            // not watching anything
+            return;
+        }
+
         let record = {
             user_id: currentUserID,
             area: applicationArea,
@@ -442,12 +426,20 @@ function changeSubscription() {
             schema: watch,
             method,
             token,
-            relay,
+            relay: relay || null,
             details,
         };
-        if (oldSubscriptionRecord) {
+        if (currentSubscription.record) {
+            let oldRecord = _.pick(currentSubscription.record, _.keys(record));
+            if (_.isEqual(oldRecord, record)) {
+                // no need to update
+                return;
+            }
             // update the existing record instead of creating a new one
-            record.id = oldSubscriptionRecord.id;
+            record.id = currentSubscription.record.id;
+        }
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(`Updating data-change subscription -> ${address}/${watch}`);
         }
         let subscriptionLocation = {
             address,
@@ -456,7 +448,12 @@ function changeSubscription() {
         };
         return dataSource.save(subscriptionLocation, [ record ]).get(0).then((record) => {
             if (record) {
-                currentSubscription = { address, watch, record };
+                currentSubscription = { address, record };
+
+                // dispatch items in change queue once subscription is
+                // reestablished, so that we don't miss the notification
+                // caused by the changes
+                dataSource.dispatchPending();
             }
         });
     });

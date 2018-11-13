@@ -135,6 +135,9 @@ class WebsocketNotifier extends Notifier {
             this.socket = null;
             this.reconnectionCount = 0;
             socket.close();
+
+            let event = new NotifierEvent('disconnect', this);
+            this.triggerEvent(event);
         }
         this.connectionPromise = null;
         this.address = '';
