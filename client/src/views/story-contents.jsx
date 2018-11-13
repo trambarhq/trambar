@@ -646,7 +646,6 @@ class StoryContents extends PureComponent {
         if (!this.canUserVote()) {
             return null;
         }
-        console.log('Voted: ' + this.hasUserVoted());
         if (this.hasUserVoted() !== false) {
             return null;
         }

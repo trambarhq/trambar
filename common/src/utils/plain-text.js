@@ -77,7 +77,7 @@ function renderSurveyResults(text, voteCounts) {
                     className += ' unanimous';
                 }
                 return (
-                    <span>
+                    <span key={key}>
                         {item.before}
                         <span className={className}>
                             <span className="label">{renderEmoji(item.label)}</span>
