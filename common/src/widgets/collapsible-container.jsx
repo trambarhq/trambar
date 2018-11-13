@@ -28,7 +28,7 @@ class CollapsibleContainer extends PureComponent {
         // save contents in state if open = true, so that we don't need them
         // when show become false
         let { open, children } = props;
-        if (open) {
+        if (open || children) {
             return { contents: children };
         } else {
             return { renderedAsClosed: true };
