@@ -381,7 +381,7 @@ const Reaction = _.create(ExternalData, {
      * @return {Promise}
      */
     restoreAssociated: function(db, schema, associations) {
-        return promises = _.mapValues(associations, (objects, type) => {
+        var promises = _.mapValues(associations, (objects, type) => {
             if (_.isEmpty(objects)) {
                 return;
             }
