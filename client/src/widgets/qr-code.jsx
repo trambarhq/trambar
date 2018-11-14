@@ -1,6 +1,5 @@
 import React, { PureComponent } from 'react';
 import ComponentRefs from 'utils/component-refs';
-import QRCodeGenerator from 'qrcode';
 
 /**
  * Component for generating and displaying a QR code.
@@ -48,10 +47,12 @@ class QRCode extends PureComponent {
      * Draw QR code into canvas
      */
     redraw() {
-        let { text, scale } = this.props;
-        let { canvas } = this.components;
-        let options = { scale };
-        QRCodeGenerator.toCanvas(canvas, text, options, (err) => {});
+        import('qrcode' /* webpackChunkName: "qrcode" */).then((module) => {
+            let { text, scale } = this.props;
+            let { canvas } = this.components;
+            let options = { scale };
+            module.toCanvas(canvas, text, options, (err) => {});
+        });
     }
 }
 
