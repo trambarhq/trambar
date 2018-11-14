@@ -44,7 +44,7 @@ class ServerSummaryPage extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env, serverID, editing } = this.props;
+        let { database, route, env, serverID, editing, scrollToTaskID } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let creating = (serverID === 'new');
         let props = {
@@ -57,6 +57,7 @@ class ServerSummaryPage extends AsyncComponent {
             env,
             editing: editing || creating,
             creating,
+            scrollToTaskID,
         };
         meanwhile.show(<ServerSummaryPageSync {...props} />);
         return db.start().then((userID) => {
@@ -1085,7 +1086,7 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderTaskList() {
-        let { database, route, env, server } = this.props;
+        let { database, route, env, server, scrollToTaskID } = this.props;
         let { t } = env.locale;
         if (!server) {
             return null;
@@ -1093,8 +1094,8 @@ class ServerSummaryPageSync extends PureComponent {
         let historyProps = {
             server,
             database,
-            route,
             env,
+            scrollToTaskID,
             onSelectionClear: this.handleTaskSelectionClear,
         };
         return (
@@ -1532,6 +1533,7 @@ if (process.env.NODE_ENV !== 'production') {
             PropTypes.number,
             PropTypes.oneOf([ 'new' ]),
         ]).isRequired,
+        scrollToTaskID: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,
@@ -1543,6 +1545,7 @@ if (process.env.NODE_ENV !== 'production') {
         system: PropTypes.object,
         server: PropTypes.object,
         roles: PropTypes.arrayOf(PropTypes.object),
+        scrollToTaskID: PropTypes.number,
 
         database: PropTypes.instanceOf(Database).isRequired,
         route: PropTypes.instanceOf(Route).isRequired,

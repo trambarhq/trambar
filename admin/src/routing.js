@@ -130,8 +130,8 @@ var routes = {
         query: {
             edit: '${editing}',
         },
-        hash: [ 'T${taskID}' ],
-        params: { serverID: NumberOrNew, editing: Boolean, taskID: Number },
+        hash: 'T${scrollToTaskID}',
+        params: { serverID: NumberOrNew, editing: Boolean, scrollToTaskID: Number },
         load: (match) => {
             match.params.key = match.path;
             return import('pages/server-summary-page' /* webpackChunkName: "page-server-summary" */).then((module) => {

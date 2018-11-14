@@ -28,13 +28,13 @@ class TaskList extends AsyncComponent {
      * @return {Promise<ReactElement>}
      */
     renderAsync(meanwhile) {
-        let { database, route, env, server } = this.props;
+        let { database, env, server, scrollToTaskID } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
             tasks: undefined,
             server,
-            route,
             env,
+            scrollToTaskID,
         };
         meanwhile.show(<TaskListSync {...props} />);
         return db.start().then((currentUserID) => {
@@ -59,13 +59,12 @@ class TaskListSync extends PureComponent {
 
     constructor(props) {
         super(props);
-        let { route } = props;
+        let { scrollToTaskID } = props;
         this.components = ComponentRefs({
             container: HTMLDivElement,
         });
-        let taskID = route.params.task;
         this.state = {
-            expandedTaskIDs: (taskID) ? [ taskID ] : [],
+            expandedTaskIDs: (scrollToTaskID) ? [ scrollToTaskID ] : [],
         };
     }
 
@@ -176,19 +175,17 @@ class TaskListSync extends PureComponent {
      * @return {ReactElement|null}
      */
     render() {
-        let { route, tasks } = this.props;
+        let { tasks, scrollToTaskID } = this.props;
         let { setters } = this.components;
-        let taskID = route.params.task;
         let smartListProps = {
             items: sortTasks(tasks),
             offset: 5,
             behind: 20,
             ahead: 20,
-            anchor: (taskID) ? `task-${taskID}` : undefined,
+            anchor: (scrollToTaskID) ? `task-${scrollToTaskID}` : undefined,
 
             onIdentity: this.handleTaskIdentity,
             onRender: this.handleTaskRender,
-            onAnchorChange: this.handleAnchorChange,
         };
         return (
             <div className="task-list" ref={setters.container}>
@@ -323,9 +320,9 @@ class TaskListSync extends PureComponent {
      * Scroll component into view if a task is specified by a hash
      */
     componentDidMount() {
-        let { route } = this.props;
+        let { scrollToTaskID } = this.props;
         let { container } = this.components;
-        if (route.params.task) {
+        if (scrollToTaskID) {
             if (container) {
                 container.scrollIntoView();
             }
@@ -373,16 +370,6 @@ class TaskListSync extends PureComponent {
         }
         this.setState({ expandedTaskIDs });
     }
-
-    /**
-     * Called when user scrolls to a different item
-     *
-     * @param  {Object} evt
-     */
-    handleAnchorChange = (evt) => {
-        let { route } = this.props;
-        route.reanchor('');
-    }
 }
 
 let sortTasks = memoizeWeak(null, function(tasks) {
@@ -419,21 +406,20 @@ export {
 };
 
 import Database from 'data/database';
-import Route from 'routing/route';
 import Environment from 'env/environment';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
     TaskList.propTypes = {
+        scrollToTaskID: PropTypes.number,
         server: PropTypes.object,
         database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
     TaskListSync.propTypes = {
+        scrollToTaskID: PropTypes.number,
         tasks: PropTypes.arrayOf(PropTypes.object),
-        route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }
