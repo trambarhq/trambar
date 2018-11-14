@@ -109,7 +109,7 @@ class ServerListPageSync extends PureComponent {
      */
     componentWillReceiveProps(nextProps) {
         let { editing } = this.props;
-        if (nextProps.editing) {
+        if (nextProps.editing !== editing) {
             if (nextProps.editing) {
                 // initial list of ids to the current list
                 this.setState({
@@ -564,6 +564,7 @@ class ServerListPageSync extends PureComponent {
         let { servers } = this.props;
         let { disablingServerIDs, restoringServerIDs } = this.state;
         let serverID = parseInt(evt.currentTarget.getAttribute('data-server-id'));
+        let server = _.find(servers, { id: serverID });
         if (server.deleted || server.disabled) {
             if (_.includes(restoringServerIDs, server.id)) {
                 restoringServerIDs = _.without(restoringServerIDs, server.id);
@@ -574,7 +575,7 @@ class ServerListPageSync extends PureComponent {
             if (_.includes(disablingServerIDs, server.id)) {
                 disablingServerIDs = _.without(disablingServerIDs, server.id);
             } else {
-                disablingServerIDs = _concat(disablingServerIDs, server.id);
+                disablingServerIDs = _.concat(disablingServerIDs, server.id);
             }
         }
         let hasChanges = !_.isEmpty(restoringServerIDs) || !_.isEmpty(disablingServerIDs);
