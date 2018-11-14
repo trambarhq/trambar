@@ -10,7 +10,7 @@ import UserTypes from 'objects/types/user-types';
 import * as UserSettings from 'objects/settings/user-settings';
 import * as StatisticsFinder from 'objects/finders/statistics-finder';
 import * as SystemFinder from 'objects/finders/system-finder';
-import SlugGenerator from 'utils/slug-generator';
+import * as SlugGenerator from 'utils/slug-generator';
 
 // widgets
 import PushButton from 'widgets/push-button';
