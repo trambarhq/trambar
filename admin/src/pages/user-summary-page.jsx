@@ -60,7 +60,7 @@ class UserSummaryPage extends AsyncComponent {
             route,
             env,
             payloads,
-            member: !!projectID,
+            projectID,
             editing: editing || creating,
             creating,
         };
@@ -230,9 +230,9 @@ class UserSummaryPageSync extends PureComponent {
      * @return {Promise}
      */
     returnToList() {
-        let { route, member } = this.props;
-        if (member) {
-            let params = { projectID: route.params.projectID };
+        let { route, projectID } = this.props;
+        if (projectID) {
+            let params = { projectID };
             return route.push('member-list-page', params);
         } else {
             return route.push('user-list-page');
@@ -286,7 +286,7 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { route, env, project, member } = this.props;
+        let { route, env, project, projectID } = this.props;
         let { hasChanges, problems } = this.state;
         let { setters } = this.components;
         let { t, p } = env.locale;
@@ -295,7 +295,7 @@ class UserSummaryPageSync extends PureComponent {
         return (
             <div className="user-summary-page">
                 {this.renderButtons()}
-                <h2>{t(member ? 'user-summary-member-$name' : 'user-summary-$name', name)}</h2>
+                <h2>{t(projectID ? 'user-summary-member-$name' : 'user-summary-$name', name)}</h2>
                 <UnexpectedError>{problems.unexpected}</UnexpectedError>
                 {this.renderForm()}
                 {this.renderSocialLinksToggle()}
@@ -314,7 +314,7 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { env, user, member, editing } = this.props;
+        let { env, user, projectID, editing } = this.props;
         let { hasChanges, adding } = this.state;
         let { t } = env.locale;
         if (editing) {
@@ -325,7 +325,7 @@ class UserSummaryPageSync extends PureComponent {
                     </PushButton>
                     {' '}
                     <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
-                        {t(member ? 'user-summary-member-save' : 'user-summary-save')}
+                        {t(projectID ? 'user-summary-member-save' : 'user-summary-save')}
                     </PushButton>
                 </div>
             );
@@ -341,7 +341,7 @@ class UserSummaryPageSync extends PureComponent {
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
                         <option name="return" onClick={this.handleReturnClick}>
-                            {t(member ? 'user-summary-member-return' : 'user-summary-return')}
+                            {t(projectID ? 'user-summary-member-return' : 'user-summary-return')}
                         </option>
                         <option name="add" onClick={this.handleAddClick}>
                             {t('user-summary-add')}
@@ -358,7 +358,7 @@ class UserSummaryPageSync extends PureComponent {
                     </ComboButton>
                     {' '}
                     <PushButton className="emphasis" onClick={this.handleEditClick}>
-                        {t(member ? 'user-summary-member-edit' : 'user-summary-edit')}
+                        {t(projectID ? 'user-summary-member-edit' : 'user-summary-edit')}
                     </PushButton>
                 </div>
             );
@@ -790,9 +790,9 @@ class UserSummaryPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderChart() {
-        let { env, statistics, member, creating } = this.props;
+        let { env, statistics, projectID, creating } = this.props;
         let { t } = env.locale;
-        if (!member) {
+        if (!projectID) {
             return null;
         }
         if (creating) {
@@ -1194,8 +1194,8 @@ if (process.env.NODE_ENV !== 'production') {
         payloads: PropTypes.instanceOf(Payloads).isRequired,
     };
     UserSummaryPageSync.propTypes = {
-        member: PropTypes.bool,
         editing: PropTypes.bool,
+        projectID: PropTypes.number,
         creating: PropTypes.bool,
         system: PropTypes.object,
         user: PropTypes.object,

@@ -46,6 +46,7 @@ class RepoSummaryPage extends AsyncComponent {
             repo: undefined,
             statistics: undefined,
 
+            projectID,
             database,
             route,
             env,
@@ -164,8 +165,8 @@ class RepoSummaryPageSync extends PureComponent {
      * @return {Promise}
      */
     returnToList() {
-        let { route } = this.props;
-        let params = { projectID: route.params.projectID };
+        let { route, projectID } = this.props;
+        let params = { projectID };
         return route.push('repo-list-page', params);
     }
 
@@ -230,7 +231,7 @@ class RepoSummaryPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { route, env, project, editing } = this.props;
+        let { route, env, project, repo, editing } = this.props;
         let { hasChanges } = this.state;
         let { t } = env.locale;
         if (editing) {
@@ -246,8 +247,7 @@ class RepoSummaryPageSync extends PureComponent {
                 </div>
             );
         } else {
-            let repoID = route.params.repo;
-            let active = (project) ? _.includes(project.repo_ids, repoID) : true;
+            let active = (project && repo) ? _.includes(project.repo_ids, repo.id) : true;
             let preselected = (!active) ? 'restore' : undefined;
             return (
                 <div key="view" className="buttons">
@@ -553,6 +553,7 @@ if (process.env.NODE_ENV !== 'production') {
     };
     RepoSummaryPageSync.propTypes = {
         editing: PropTypes.bool,
+        projectID: PropTypes.number.isRequired,
         system: PropTypes.object,
         repo: PropTypes.object,
         project: PropTypes.object,
