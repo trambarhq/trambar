@@ -8,7 +8,7 @@ import './action-badge.scss'
 function ActionBadge(props) {
     let { env, type } = props;
     let { t } = env.locale;
-    let className = 'action-badge', icon;
+    let className = 'text', icon;
     switch (props.type) {
         case 'add':
         case 'approve':
@@ -26,8 +26,12 @@ function ActionBadge(props) {
     }
     let label = t(`action-badge-${type}`);
     return (
-        <div className={className}>
-            <i className={`fa fa-${icon}`} /> {label}
+        <div className="action-badge">
+            <div className="container">
+                <span className={className}>
+                    <i className={`fa fa-${icon}`} /> {label}
+                </span>
+            </div>
         </div>
     );
 }

@@ -1,22 +1,35 @@
 @import '../colors';
 
 .action-badge {
-    font-size: 0.7em;
-    color: $badge-text-color;
-    padding: 2px 4px 2px 4px;
     float: right;
-    text-transform: uppercase;
-    margin-left: 0.1em;
+    position: relative;
+    width: 0px;
 
-    .fa {
-        margin-right: 2px;
-    }
+    .container {
+        font-size: 0.7em;
+        width: 20em;
+        position: absolute;
+        top: 0.15em;
+        right: 0.1em;
+        text-align: right;
 
-    &.add {
-        background-color: $badge-add-background-color;
-    }
+        .text {
+            color: $badge-text-color;
+            padding: 2px 4px 2px 4px;
+            text-transform: uppercase;
+            vertical-align: middle;
 
-    &.remove {
-        background-color: $badge-remove-background-color;
+            .fa {
+                margin-right: 2px;
+            }
+
+            &.add {
+                background-color: $badge-add-background-color;
+            }
+
+            &.remove {
+                background-color: $badge-remove-background-color;
+            }
+        }
     }
 }
