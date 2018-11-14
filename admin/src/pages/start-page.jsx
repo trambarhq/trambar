@@ -30,17 +30,16 @@ class StartPage extends AsyncComponent {
         return db.start().then((currentUserID) => {
             return SystemFinder.findSystem(db).then((system) => {
                 if (_.isEmpty(system)) {
+                    // wait for welcome message to transition out
                     props.onAnimationEnd = (evt) => {
-                        route.replace('settings-page', { edit: true });
+                        route.replace('settings-page', { editing: true });
                     };
                 } else {
                     return route.replace('project-list-page');
                 }
             });
-        }).then((system) => {
+        }).then(() => {
             return <StartPageSync {...props} />;
-        }).catch((err) => {
-            return null;
         });
     }
 }
