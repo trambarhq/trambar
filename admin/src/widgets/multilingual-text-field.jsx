@@ -188,7 +188,7 @@ class MultilingualTextField extends PureComponent {
      * @return {ReactElement|null}
      */
     renderPopup() {
-        let { value, readyOnly } = this.props;
+        let { value, readOnly } = this.props;
         let { hoverLanguageCode, arrowPosition } = this.state;
         if (!hoverLanguageCode || readOnly) {
             return null;

@@ -53,7 +53,7 @@
         cursor: pointer;
 
         &.selected {
-            color: $text-field-language-tab-text-color;
+            color: $text-field-language-tab-background-color;
             background-size: 100% 100%;
             background-repeat: no-repeat;
             background: linear-gradient(45deg, transparent 1.2em, $normal-background-color 0) bottom left;
