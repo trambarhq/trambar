@@ -179,13 +179,14 @@ function installSystemHook(host, server) {
         }
         var url = getSystemHookEndpoint(host, server);
         var hookProps = getSystemHookProps(url);
-        _.each(glHooks, (glHook) => {
+        return Promise.each(glHooks, (glHook) => {
             if (glHook.url === url) {
                 console.log(`Removing existing hook: ${glHook.url}`);
-                destroySystemHook(server, glHook);
+                return destroySystemHook(server, glHook);
             }
+        }).then(() => {
+            return createSystemHook(server, hookProps);
         });
-        return createSystemHook(server, hookProps);
     });
 }
 
@@ -209,13 +210,14 @@ function installProjectHook(host, server, repo, project) {
         // remove existing hooks
         var url = getProjectHookEndpoint(host, server, repo, project);
         var hookProps = getProjectHookProps(url);
-        _.each(glHooks, (glHook) => {
+        return Promise.each(glHooks, (glHook) => {
             if (glHook.url === url) {
                 console.log(`Removing existing hook: ${glHook.url}`);
-                destroyProjectHook(server, repoLink.project.id, glHook);
+                return destroyProjectHook(server, repoLink.project.id, glHook);
             }
+        }).then(() => {
+            return createProjectHook(server, repoLink.project.id, hookProps);
         });
-        return createProjectHook(server, repoLink.project.id, hookProps);
     });
 }
 
