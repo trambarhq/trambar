@@ -8,7 +8,7 @@ import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 import * as Transport from 'gitlab-adapter/transport';
 
 // accessors
-import Commit from 'accessors/commit';
+import Commit from '../accessors/commit';
 
 /**
  * Import a commit from Gitlab
@@ -134,6 +134,36 @@ function fetchDiff(server, glProjectId, glCommitId) {
 }
 
 /**
+ * Parse the diff of a file in a commit
+ *
+ * @param  {Object} file
+ *
+ * @return {Object|null}
+ */
+function parseFileDiff(file) {
+    var diff = file.diff;
+    if (!diff) {
+        return null;
+    }
+    if (diff.substr(0, 2) === '@@') {
+        // context is missing (GitLab 11)
+        var header1, header2;
+        if (file.new_file) {
+            header1 = `--- /dev/null\n`;
+        } else {
+            header1 = `--- a/${file.old_path}\n`;
+        }
+        if (file.deleted_file) {
+            header2 = `+++ /dev/null\n`;
+        } else {
+            header2 = `+++ b/${file.new_path}\n`;
+        }
+        diff = header1 + header2 + diff;
+    }
+    return _.first(ParseDiff(diff));
+}
+
+/**
  * Return lists of files that were changed, added, removed, or renamed
  *
  * @param  {Object} glDiff
@@ -153,7 +183,7 @@ function countChanges(glDiff) {
     _.each(glDiff, (file) => {
         // parse diff if there's one
         try {
-            var diff = (file.diff) ? _.first(ParseDiff(file.diff)) : null;
+            var diff = parseFileDiff(file);
             // record file disposition
             if (file.new_file) {
                 cf.added.push(file.new_path);
@@ -180,7 +210,6 @@ function countChanges(glDiff) {
 
             // count lines added, removed, or modified
             if (diff) {
-                var diff = _.first(ParseDiff(file.diff));
                 if (diff.additions > 0 && diff.deletions > 0) {
                     var changes = _.flatten(_.map(diff.chunks, 'changes'));
                     var changes = _.flatten(_.map(diff.chunks, 'changes'));
