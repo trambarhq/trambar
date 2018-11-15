@@ -1634,7 +1634,7 @@ class RemoteDataSource extends EventEmitter {
                     return false;
                 }
                 let query = _.assign({ criteria: { id: ids } }, search.getLocation());
-                return cache.find(query).then((objects) => {
+                return this.cache.find(query).then((objects) => {
                     search.results = insertObjects(search.results, objects);
                     return true;
                 });
