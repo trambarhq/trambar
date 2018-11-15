@@ -1,7 +1,9 @@
 class NumberArray {
     static from(s) {
         if (s) {
-            return s.split(',').map(parseInt);
+            return s.split(',').map((s) => {
+                return parseInt(s);
+            });
         } else {
             return [];
         }
