@@ -151,6 +151,18 @@ function copyIssueProperties(story, system, server, repo, author, assignments, g
     var tags = _.union(descriptionTags, labelTags);
     var langCode = Localization.getDefaultLanguageCode(system);
 
+    var state = glIssue.state;
+    if (state === 'opened') {
+        if (story) {
+            // GitLab 11 doesn't report a state of reopened anymore
+            // derived it based on the previous state
+            var prevState = story.details.state;
+            if (prevState === 'closed' || prevState === 'reopened') {
+                state = 'reopened';
+            }
+        }
+    }
+
     var storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         issue: {
@@ -191,7 +203,7 @@ function copyIssueProperties(story, system, server, repo, author, assignments, g
         overwrite: 'match-previous:labels',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.state', {
-        value: glIssue.state,
+        value: state,
         overwrite: 'always',
         ignore: exported,
     });
