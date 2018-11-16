@@ -677,6 +677,21 @@ class StoryView extends PureComponent {
     }
 
     /**
+     * Hide a bookmark
+     *
+     * @param  {Bookmark} bookmark
+     *
+     * @return {Promise<Bookmark>}
+     */
+    hideBookmark(bookmark) {
+        let { database } = this.props;
+        let db = database.use({ by: this });
+        let bookmarkAfter = _.clone(bookmark);
+        bookmarkAfter.hidden = true;
+        return db.saveOne({ table: 'bookmark' }, bookmarkAfter);
+    }
+
+    /**
      * Send bookmarks to list of users
      *
      * @param  {Story} story
@@ -785,7 +800,7 @@ class StoryView extends PureComponent {
             }
             if (options.keepBookmark !== before.keepBookmark) {
                 if (bookmark && !options.keepBookmark) {
-                    this.removeBookmarks([ bookmark ]);
+                    this.hideBookmark(bookmark);
                 }
             }
             if (!_.isEqual(options.issueDetails, before.issueDetails)) {

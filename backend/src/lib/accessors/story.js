@@ -553,7 +553,12 @@ const Story = _.create(ExternalData, {
                     lead_author_id: userIds,
                     deleted: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: true });
+                return this.updateMatching(db, schema, criteria, { deleted: true }).then((stories) => {
+                    return Promise.all([
+                        Bookmark.deleteAssociated(db, schema, { story: stories }),
+                        Notification.deleteAssociated(db, schema, { story: stories }),
+                    ]);
+                });
             }
         });
         return Promise.props(promises);
@@ -568,7 +573,7 @@ const Story = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-    restoreAssociated: function(db, schema, userIds) {
+    restoreAssociated: function(db, schema, associations) {
         var promises = _.mapValues(associations, (objects, type) => {
             if (_.isEmpty(objects)) {
                 return;
@@ -581,7 +586,12 @@ const Story = _.create(ExternalData, {
                     // don't restore stories that were manually deleted
                     suppressed: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: false });
+                return this.updateMatching(db, schema, criteria, { deleted: false }).then((stories) => {
+                    return Promise.all([
+                        Bookmark.restoreAssociated(db, schema, { story: stories }),
+                        Notification.restoreAssociated(db, schema, { story: stories }),
+                    ]);
+                });
             }
         });
         return Promise.props(promises);

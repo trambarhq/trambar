@@ -100,29 +100,6 @@ class BookmarkView extends PureComponent {
         }
         return <span className="name">{contents}</span>
     }
-
-    /**
-     * Remove bookmark from remote database
-     *
-     * @param  {Bookmark} bookmark
-     *
-     * @return {Promise<Bookmark>}
-     */
-    removeBookmark(bookmark) {
-        let { database } = this.props;
-        let db = database.use({ by: this });
-        return db.removeOne({ table: 'bookmark' }, bookmark);
-    }
-
-    /**
-     * Called when user clicks close button
-     *
-     * @param  {Event} evt
-     */
-    handleCloseClick = (evt) => {
-        let { bookmark } = this.props;
-        this.removeBookmark(bookmark);
-    }
 }
 
 export {

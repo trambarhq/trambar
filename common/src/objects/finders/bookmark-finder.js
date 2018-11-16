@@ -43,6 +43,7 @@ function findBookmarksForUser(db, user, minimum) {
         table: 'bookmark',
         criteria: {
             target_user_id: user.id,
+            hidden: false,
         },
         prefetch: true,
         minimum

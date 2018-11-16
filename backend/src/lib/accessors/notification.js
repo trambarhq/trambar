@@ -20,6 +20,7 @@ const Notification = _.create(Data, {
         user_id: Number,
         target_user_id: Number,
         seen: Boolean,
+        suppressed: Boolean,
     },
     criteria: {
         id: Number,
@@ -30,6 +31,7 @@ const Notification = _.create(Data, {
         user_id: Number,
         target_user_id: Number,
         seen: Boolean,
+        suppressed: Boolean,
 
         time_range: String,
         newer_than: String,
@@ -61,12 +63,36 @@ const Notification = _.create(Data, {
                 user_id int NOT NULL DEFAULT 0,
                 target_user_id int NOT NULL,
                 seen boolean NOT NULL DEFAULT false,
+                suppressed boolean NOT NULL DEFAULT false,
                 PRIMARY KEY (id)
             );
             CREATE INDEX ON ${table} (target_user_id) WHERE deleted = false;
             CREATE INDEX ON ${table} (id) WHERE seen = false AND deleted = false;
         `;
         return db.execute(sql);
+    },
+
+    /**
+     * Upgrade table in schema to given DB version (from one version prior)
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Number} version
+     *
+     * @return {Promise<Boolean>}
+     */
+    upgrade: function(db, schema, version) {
+        if (version === 2) {
+            // adding: suppressed
+            var table = this.getTableName(schema);
+            var sql = `
+                ALTER TABLE ${table}
+                ADD COLUMN IF NOT EXISTS
+                suppressed boolean NOT NULL DEFAULT false;
+            `;
+            return db.execute(sql).return(true);
+        }
+        return Promise.resolve(false);
     },
 
     /**
@@ -203,19 +229,50 @@ const Notification = _.create(Data, {
                 return;
             }
             if (type === 'story') {
-                var storyIds = _.map(objects, 'id');
                 var criteria = {
-                    story_id: storyIds,
+                    story_id: _.map(objects, 'id'),
                     deleted: false,
                 };
                 return this.updateMatching(db, schema, criteria, { deleted: true });
             } else if (type === 'reaction') {
-                var reactionIds = _.map(objects, 'id');
                 var criteria = {
-                    reaction_id: storyIds,
+                    reaction_id: _.map(objects, 'id'),
                     deleted: false,
                 };
                 return this.updateMatching(db, schema, criteria, { deleted: true });
+            }
+        });
+        return Promise.props(promises);
+    },
+
+    /**
+     * Mark notifications associated with stories or reactions as deleted
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} associations
+     *
+     * @return {Promise}
+     */
+    restoreAssociated: function(db, schema, associations) {
+        var promises = _.mapValues(associations, (objects, type) => {
+            if (_.isEmpty(objects)) {
+                return;
+            }
+            if (type === 'story') {
+                var criteria = {
+                    story_id: _.map(objects, 'id'),
+                    deleted: true,
+                    suppressed: false,
+                };
+                return this.updateMatching(db, schema, criteria, { deleted: false });
+            } else if (type === 'reaction') {
+                var criteria = {
+                    reaction_id: _.map(objects, 'id'),
+                    deleted: true,
+                    suppressed: false,
+                };
+                return this.updateMatching(db, schema, criteria, { deleted: false });
             }
         });
         return Promise.props(promises);

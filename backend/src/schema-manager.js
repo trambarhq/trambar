@@ -65,7 +65,7 @@ function start() {
         }).then(() => {
             return initializeDatabase(db);
         }).then((created) => {
-            if (created) {
+            if (!created) {
                 return upgradeDatabase(db);
             }
         }).then(() => {
@@ -263,14 +263,18 @@ var projectAccessors = [
 function upgradeSchema(db, schema) {
     var accessors = (schema === 'global') ? globalAccessors : projectAccessors;
     return getSchemaVersion(db, schema).then((currentVersion) => {
-        var latestVersion = _.max(_.map(accessors), 'version');
+        var latestVersion = _.max(_.map(accessors, 'version'));
         var jumps = _.range(currentVersion, latestVersion);
         return Promise.each(jumps, (version) => {
             return Promise.each(accessors, (accessor) => {
-                return accessor.upgrade(db, version + 1);
+                return accessor.upgrade(db, schema, version + 1);
             });
         }).then(() => {
-            return jumps.length > 0;
+            if (jumps.length > 0) {
+                return setSchemaVersion(db, schema, latestVersion);
+            } else {
+                return false;
+            }
         });
     });
 }

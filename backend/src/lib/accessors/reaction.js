@@ -365,7 +365,9 @@ const Reaction = _.create(ExternalData, {
                     user_id: userIds,
                     deleted: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: true });
+                return this.updateMatching(db, schema, criteria, { deleted: true }).then((reactions) => {
+                    return Notification.deleteAssociated(db, schema, { reaction: reactions });
+                });
             }
         });
         return Promise.props(promises);
@@ -393,7 +395,9 @@ const Reaction = _.create(ExternalData, {
                     // don't restore reactions that were manually deleted
                     suppressed: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: false });
+                return this.updateMatching(db, schema, criteria, { deleted: false }).then((reactions) => {
+                    return Notification.restoreAssociated(db, schema, { reaction: reactions });
+                });
             }
         });
         return Promise.props(promises);

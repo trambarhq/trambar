@@ -295,7 +295,7 @@ class StoryListSync extends PureComponent {
         }
         if (isDraft) {
             let storyAuthors = findAuthors(authors, story);
-            let storyRecommendations = findRecommendations(recommendations, story);
+            let storyRecommendations = findRecommendations(recommendations, story, currentUser);
             let storyRecipients = findRecipients(recipients, storyRecommendations);
             if (_.isEmpty(storyAuthors) && currentUser) {
                 storyAuthors = array(currentUser);
@@ -324,7 +324,7 @@ class StoryListSync extends PureComponent {
                 let storyReactions = findReactions(reactions, story);
                 let storyAuthors = findAuthors(authors, story);
                 let storyRespondents = findRespondents(respondents, reactions);
-                let storyRecommendations = findRecommendations(recommendations, story);
+                let storyRecommendations = findRecommendations(recommendations, story, currentUser);
                 let storyRecipients = findRecipients(recipients, recommendations);
                 let pending = !_.includes(stories, story);
                 let storyProps = {
@@ -489,10 +489,17 @@ const findRespondents = memoizeWeak(null, function(users, reactions) {
     return [];
 });
 
-const findRecommendations = memoizeWeak(null, function(recommendations, story) {
+const findRecommendations = memoizeWeak(null, function(recommendations, story, currentUser) {
     if (story) {
         let storyID = story.published_version_id || story.id;
-        let list = _.filter(recommendations, { story_id: storyID });
+        let list = _.filter(recommendations, (bookmark) => {
+            if (bookmark.story_id === storyID) {
+                // omit those hidden by the current user
+                if (!(bookmark.hidden && bookmark.target_user_id === currentUser.id)) {
+                    return true;
+                }
+            }
+        });
         if (!_.isEmpty(list)) {
             return list;
         }
