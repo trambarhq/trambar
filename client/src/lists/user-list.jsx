@@ -167,12 +167,9 @@ const sortUsers = memoizeWeak(null, function(users, env) {
 
 const findRoles = memoizeWeak(null, function(roles, user) {
     if (user) {
-        let list = _.filter(_.map(user.role_ids, (roleId) => {
+        return _.filter(_.map(user.role_ids, (roleId) => {
             return _.find(roles, { id: roleId });
         }));
-        if (!_.isEmpty(list)) {
-            return list;
-        }
     }
 });
 
@@ -189,22 +186,16 @@ const findListing = memoizeWeak(null, function(listings, user) {
 const findListingStories = memoizeWeak(null, function(stories, listing) {
     if (listing) {
         let hash = _.keyBy(stories, 'id');
-        let list = _.filter(_.map(listing.story_ids, (id) => {
+        return _.filter(_.map(listing.story_ids, (id) => {
             return hash[id];
         }));
-        if (!_.isEmpty(list)) {
-            return list;
-        }
     }
 });
 
 const findUserStories = memoizeWeak(null, function(stories, user) {
-    let list = _.filter(stories, (story) => {
+    return _.filter(stories, (story) => {
         return _.includes(story.user_ids, user.id);
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 export {

@@ -401,52 +401,37 @@ const findStory = memoizeWeak(null, function(stories, bookmark) {
 
 const findReactions = memoizeWeak(null, function(reactions, story) {
     if (story) {
-        let list = _.filter(reactions, { story_id: story.id });
-        if (!_.isEmpty(list)) {
-            return list;
-        }
+        return _.filter(reactions, { story_id: story.id });
     }
 });
 
 const findAuthors = memoizeWeak(null, function(users, story) {
     if (story) {
-        let list = _.filter(_.map(story.user_ids, (userID) => {
+        return _.filter(_.map(story.user_ids, (userID) => {
            return _.find(users, { id: userID });
         }));
-        if (!_.isEmpty(list)) {
-            return list;
-        }
     }
 });
 let findSenders = findAuthors;
 
 const findRespondents = memoizeWeak(null, function(users, reactions) {
     let respondentIDs = _.uniq(_.map(reactions, 'user_id'));
-    let list = _.filter(_.map(respondentIDs, (userID) => {
+    return _.filter(_.map(respondentIDs, (userID) => {
         return _.find(users, { id: userID });
     }));
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 const findRecommendations = memoizeWeak(null, function(recommendations, story) {
     if (story) {
         let storyID = story.published_version_id || story.id;
-        let list = _.filter(recommendations, { story_id: storyID });
-        if (!_.isEmpty(list)) {
-            return list;
-        }
+        return _.filter(recommendations, { story_id: storyID });
     }
 });
 
 const findRecipients = memoizeWeak(null, function(recipients, recommendations) {
-    let list = _.filter(recipients, (recipient) => {
+    return _.filter(recipients, (recipient) => {
         return _.some(recommendations, { target_user_id: recipient.id });
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 function getAuthorIDs(stories, currentUser) {

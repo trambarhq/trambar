@@ -457,42 +457,31 @@ let getStoryTime = function(story) {
 
 const findReactions = memoizeWeak(null, function(reactions, story) {
     if (story) {
-        let list = _.filter(reactions, { story_id: story.id });
-        if (!_.isEmpty(list)) {
-            return list;
-        }
+        return _.filter(reactions, { story_id: story.id });
     }
 });
 
 const findAuthors = memoizeWeak(null, function(users, story) {
     if (story) {
         let hash = _.keyBy(users, 'id');
-        let list = _.filter(_.map(story.user_ids, (userID) => {
+        return _.filter(_.map(story.user_ids, (userID) => {
             return hash[userID];
         }));
-        if (!_.isEmpty(list)) {
-            return list;
-        }
     }
-    return [];
 });
 
 const findRespondents = memoizeWeak(null, function(users, reactions) {
     let respondentIDs = _.uniq(_.map(reactions, 'user_id'));
     let hash = _.keyBy(users, 'id');
-    let list = _.filter(_.map(respondentIDs, (userID) => {
+    return _.filter(_.map(respondentIDs, (userID) => {
         return hash[userID];
     }));
-    if (!_.isEmpty(list)) {
-        return list;
-    }
-    return [];
 });
 
 const findRecommendations = memoizeWeak(null, function(recommendations, story, currentUser) {
     if (story) {
         let storyID = story.published_version_id || story.id;
-        let list = _.filter(recommendations, (bookmark) => {
+        return _.filter(recommendations, (bookmark) => {
             if (bookmark.story_id === storyID) {
                 // omit those hidden by the current user
                 if (!(bookmark.hidden && bookmark.target_user_id === currentUser.id)) {
@@ -500,21 +489,13 @@ const findRecommendations = memoizeWeak(null, function(recommendations, story, c
                 }
             }
         });
-        if (!_.isEmpty(list)) {
-            return list;
-        }
     }
-    return [];
 });
 
 const findRecipients = memoizeWeak(null, function(recipients, recommendations) {
-    let list = _.filter(recipients, (recipient) => {
+    return _.filter(recipients, (recipient) => {
         return _.some(recommendations, { target_user_id: recipient.id });
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
-    return [];
 });
 
 function getAuthorIDs(stories) {
