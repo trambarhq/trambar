@@ -18,6 +18,17 @@ function load(importFuncs, progress) {
                     resolve(modules);
                 }
             }).catch((err) => {
+                if (/Loading chunk/i.test(err.message)) {
+                    if (typeof(performance) === 'object' && typeof(performance.navigation) === 'object') {
+                        if (performance.navigation.type !== 1) {
+                            if (navigator.onLine) {
+                                // force reloading from server
+                                console.log('Reloading page...');
+                                location.reload(true);
+                            }
+                        }
+                    }
+                }
                 console.error(err);
                 if (reject) {
                     reject(err);

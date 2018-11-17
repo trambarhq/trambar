@@ -50,6 +50,7 @@ function start(cfg) {
         basePath: cfg.routeManager.basePath,
         routes: cfg.routeManager.routes,
         rewrites: cfg.routeManager.rewrites,
+        reloadFaultyScript: true,
     });
     localeManager = new LocaleManager({
         directory: languages
