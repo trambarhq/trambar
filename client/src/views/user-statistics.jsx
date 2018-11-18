@@ -414,10 +414,15 @@ const getUpperRange = memoizeWeak(null, function(series, additive) {
         });
     }
     // leave some room at the top
-    if (highest <= 17) {
-        return 20;
-    } else if (highest <= 42) {
-        return 50;
+    if (highest < 100) {
+        let upper = Math.ceil(highest / 10) * 10;
+        while ((highest / upper) > 0.85) {
+            upper += 10;
+        }
+        if (upper < 20) {
+            upper = 20;
+        }
+        return upper;
     } else {
         let upper = Math.ceil(highest / 100) * 100;
         while ((highest / upper) > 0.85) {
