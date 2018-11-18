@@ -28,6 +28,7 @@ class SmartList extends Component {
         this.scrollPositionInterval = 0;
         this.scrollToAnchorNode = null;
         this.lastReportedAnchor = null;
+        this.anchorEventTimeout = 0;
         this.updateAnchor(props, this.state);
         this.updateSlots(props, this.state);
     }
@@ -538,6 +539,7 @@ class SmartList extends Component {
     componentWillUnmount() {
         this.scrollContainer.removeEventListener('scroll', this.handleScroll);
         window.removeEventListener('resize', this.handleWindowResize);
+        clearTimeout(this.anchorEventTimeout);
     }
 
     /**
@@ -568,11 +570,14 @@ class SmartList extends Component {
     triggerBeforeAnchorEvent(slots) {
         let { onBeforeAnchor } = this.props;
         if (onBeforeAnchor) {
-            onBeforeAnchor({
-                type: 'beforeanchor',
-                target: this,
-                items: _.map(slots, 'item'),
-            });
+            clearTimeout(this.anchorEventTimeout);
+            this.anchorEventTimeout = setTimeout(() => {
+                onBeforeAnchor({
+                    type: 'beforeanchor',
+                    target: this,
+                    items: _.map(slots, 'item'),
+                });
+            }, 250);
         }
     }
 
