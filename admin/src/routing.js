@@ -198,6 +198,7 @@ var routes = {
         }
     },
     'error-page': {
+        path: '*',
         load: (match) => {
             match.params.key = match.name;
             return import('pages/error-page' /* webpackChunkName: "page-error" */).then((module) => {

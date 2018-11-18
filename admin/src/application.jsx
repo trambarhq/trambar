@@ -172,6 +172,7 @@ class Application extends PureComponent {
             notifier,
         } = this.props;
         dataSource.addEventListener('change', this.handleDatabaseChange);
+        dataSource.addEventListener('stupefaction', this.handleStupefaction);
         routeManager.addEventListener('beforechange', this.handleRouteBeforeChange, true);
         routeManager.addEventListener('change', this.handleRouteChange);
         payloadManager.addEventListener('change', this.handlePayloadsChange);
@@ -192,6 +193,16 @@ class Application extends PureComponent {
         let { address } = route.context;
         let database = new Database(evt.target, { address });
         this.setState({ database });
+    }
+
+    /**
+     * Called when data source fails to find an expected object
+     *
+     * @param  {RemoteDataSourceEvent} evt
+     */
+    handleStupefaction = (evt) => {
+        let { routeManager } = this.props;
+        routeManager.substitute('error-page');
     }
 
     /**

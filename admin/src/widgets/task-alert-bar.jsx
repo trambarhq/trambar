@@ -155,9 +155,7 @@ class TaskAlertBarSync extends PureComponent {
                 serverID: serverID,
                 scrollToTaskID: selectedTask.id,
             };
-            console.log(params);
             url = route.find('server-summary-page', params);
-            console.log(url);
         }
         return url;
     }

@@ -1530,7 +1530,7 @@ class RemoteDataSource extends EventEmitter {
         if (!session) {
             return Promise.reject(new HTTPError(400));
         }
-        let { schema, table } = location;
+        let { address, schema, table } = location;
         let { basePath } = this.options;
         if (!schema) {
             return Promise.reject(new HTTPError(400, 'No schema specified'));
@@ -1544,7 +1544,7 @@ class RemoteDataSource extends EventEmitter {
         } else if (action === 'discovery') {
             flags = _.omit(this.options.discoveryFlags, 'include_uncommitted');
         }
-        let url = `${session.address}${basePath}/${action}/${schema}/${table}/`;
+        let url = `${address}${basePath}/${action}/${schema}/${table}/`;
         let req = _.assign({}, payload, flags, { auth_token: session.token });
         let options = {
             contentType: 'json',

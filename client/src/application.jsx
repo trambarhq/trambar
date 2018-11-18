@@ -204,6 +204,8 @@ class Application extends PureComponent {
         dataSource.addEventListener('change', this.handleDatabaseChange);
         dataSource.addEventListener('requeststart', this.handleRequestStart);
         dataSource.addEventListener('requestend', this.handleRequestEnd);
+        dataSource.addEventListener('violation', this.handleViolation);
+        dataSource.addEventListener('stupefaction', this.handleStupefaction);
         routeManager.addEventListener('beforechange', this.handleRouteBeforeChange, true);
         routeManager.addEventListener('change', this.handleRouteChange);
         payloadManager.addEventListener('change', this.handlePayloadsChange);
@@ -329,6 +331,26 @@ class Application extends PureComponent {
                 }
             }
         }, 300);
+    }
+
+    /**
+     * Called when an access violation error occurs
+     *
+     * @param  {RemoteDataSourceEvent} evt
+     */
+    handleViolation = (evt) => {
+        let { routeManager } = this.props;
+        routeManager.replace('start-page', {}, { schema: null });
+    }
+
+    /**
+     * Called when data source fails to find an expected object
+     *
+     * @param  {RemoteDataSourceEvent} evt
+     */
+    handleStupefaction = (evt) => {
+        let { routeManager } = this.props;
+        routeManager.substitute('error-page');
     }
 
     /**

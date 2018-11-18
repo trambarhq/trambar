@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import HTTPError from 'errors/http-error';
 
 // widgets
 import Unicorn from 'unicorn.svg';
@@ -37,19 +36,12 @@ class ErrorPage extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let error = new HTTPError(404)
-        let message;
-        if (error.statusCode === 404) {
-            message = `The page you're trying to reach doesn't exist. But then again, who does?`;
-        } else {
-            message = `The application is behaving in ways its maker never intended.`;
-        }
         return (
             <PageContainer className="error-page">
                 <div className="graphic"><Unicorn /></div>
                 <div className="text">
-                    <h1 className="title">{error.statusCode} {error.message}</h1>
-                    <p>{message}</p>
+                    <h1 className="title">404 Not Found</h1>
+                    <p>The page you're trying to reach doesn't exist. But then again, who does?</p>
                 </div>
             </PageContainer>
         );

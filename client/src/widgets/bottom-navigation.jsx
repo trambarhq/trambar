@@ -8,6 +8,7 @@ import * as UserFinder from 'objects/finders/user-finder';
 
 // widgets
 import Link from 'widgets/link';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import './bottom-navigation.scss';
 
@@ -158,7 +159,9 @@ class BottomNavigation extends PureComponent {
             <div ref={setters.container} className="container">
                 <Button {...newsProps} />
                 <Button {...notificationsProps}>
-                    <NewNotificationsBadge {...newNotificationProps} />
+                    <ErrorBoundary env={env} showError={false}>
+                        <NewNotificationsBadge {...newNotificationProps} />
+                    </ErrorBoundary>
                 </Button>
                 <Button {...bookmarksProps} />
                 <Button {...peopleProps} />
