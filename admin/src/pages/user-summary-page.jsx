@@ -247,7 +247,7 @@ class UserSummaryPageSync extends PureComponent {
     startNew() {
         let { route } = this.props;
         let params = _.clone(route.params);
-        params.user = 'new';
+        params.userID = 'new';
         return route.replace(route.name, params);
     }
 

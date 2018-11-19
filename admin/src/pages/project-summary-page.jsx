@@ -225,7 +225,7 @@ class ProjectSummaryPageSync extends PureComponent {
     startNew() {
         let { route } = this.props;
         let params = _.clone(route.params);
-        params.project = 'new';
+        params.projectID = 'new';
         return route.replace(route.name, params);
     }
 

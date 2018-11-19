@@ -212,7 +212,7 @@ class RoleSummaryPageSync extends PureComponent {
     startNew() {
         let { route } = this.props;
         let params = _.clone(route.params);
-        params.role = 'new';
+        params.roleID = 'new';
         return route.replace(route.name, params);
     }
 
