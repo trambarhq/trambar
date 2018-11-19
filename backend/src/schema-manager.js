@@ -220,7 +220,9 @@ function addDatabaseRoles(db) {
 function upgradeDatabase(db) {
     return upgradeSchema(db, 'global').then((globalChanged) => {
         return Project.find(db, 'global', { deleted: false }, 'name').map((project) => {
-            return upgradeSchema(db, project.name);
+            return upgradeSchema(db, project.name).catch((err) => {
+                console.log(`Unable to upgrade schema "${project.name}: ${err.message}"`);
+            });
         }).then((projectsChanged) => {
             return globalChanged || _.some(projectsChanged);
         });

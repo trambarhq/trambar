@@ -130,6 +130,8 @@ function fetchDirtyStatistics(db) {
         return Statistics.find(db, schema, criteria, 'id, atime').each((row) => {
             addToStatisticsQueue(schema, row.id, row.atime);
             return null;
+        }).catch((err) => {
+            console.log(`Unable to scan for out-of-date statistics: ${err.message}`);
         });
     });
 }
@@ -147,6 +149,8 @@ function fetchDirtyListings(db) {
         return Listing.find(db, schema, criteria, 'id, atime').each((row) => {
             addToListingQueue(schema, row.id, row.atime);
             return null;
+        }).catch((err) => {
+            console.log(`Unable scan for out-of-date story listings: ${err.message}`);
         });
     });
 }
