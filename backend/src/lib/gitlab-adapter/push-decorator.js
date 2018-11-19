@@ -9,39 +9,122 @@ import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
 import * as Transport from 'gitlab-adapter/transport';
 
+var isRelative = /^\s*\.\.\//;
+var isTrambar = /(^|\/).trambar\//;
+
 /**
  * Retrieve component descriptions about a push
  *
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {Push} push
- * @param  {String} languageCode
+ * @param  {String} defLang
  *
  * @return {Promise<Array<Object>>}
  */
-function retrieveDescriptions(server, repo, push, languageCode) {
-    clearAffectedCacheEntries(server, repo, push);
-
-    var commitId = push.headId;
-    return loadDescriptors(server, repo, commitId, '', languageCode).then((descriptors) => {
-        return findMatchingComponents(push, descriptors);
+function retrieveDescriptions(server, repo, push, defLang) {
+    return createDescriptionContext(server, repo, push, defLang).then((cxt) => {
+        return findMatchingComponents(cxt, push);
     }).then((components) => {
         return _.map(components, (component) => {
             return _.pick(component, 'text', 'image', 'icon')
         });
+    }).catch((err) => {
+        console.log(`Unable to retrieve descriptions: ${err.message}`);
+        return [];
+    });
+}
+
+var descriptionContextCache = {};
+
+/**
+ * Create a description context, retrieving descriptions from server if
+ * necessary
+ *
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Push} push
+ * @param  {String} defLang
+ *
+ * @return {Promise<Context>}
+ */
+function createDescriptionContext(server, repo, push, defLang) {
+    var cachePath = [ defLang, server.id, repo.id, push.headId ];
+    var cxt = _.get(descriptionContextCache, cachePath);
+    if (cxt) {
+        return Promise.resolve(cxt);
+    }
+    cxt = new Context(server, repo, push.headId, defLang);
+    inheritPreviousContext(cxt, push);
+    return loadDescriptors(cxt, '').then(() => {
+        _.set(descriptionContextCache, cachePath, cxt);
+        return cxt;
     });
 }
 
 /**
- * Find component definition in a .trambar folder matching
- * a file
+ * Copy information from context of the previous push
  *
+ * @param  {Context} cxt
  * @param  {Push} push
- * @param  {Array<Descriptor>} descriptors
+ */
+function inheritPreviousContext(cxt, push) {
+    var prevPath = [ cxt.defaultLanguageCode, cxt.server.id, cxt.repo.id, push.tailId ];
+    var prev = _.get(descriptionContextCache, prevPath);
+    if (!prev) {
+        return;
+    }
+
+    // copy descriptors from previous context unless files has changed
+    var fileChanges = _.filter(_.concat(
+        push.files.deleted,
+        push.files.modified,
+        _.map(push.files.renamed, 'before')
+    ));
+    for (var filePath in prev.descriptors) {
+        if (!_.includes(fileChanges, filePath)) {
+            cxt.descriptors[filePath] = prev.descriptors[filePath];
+        }
+    }
+
+    // copy folder listing from previous context unless files in them have
+    // been added, removed, or renamed
+    var fileMovements = _.filter(_.concat(
+        push.files.added,
+        push.files.deleted,
+        _.map(push.files.renamed, 'before'),
+        _.map(push.files.renamed, 'after')
+    ));
+    var folderChanges = _.uniq(_.map(fileMovements, (path) => {
+        var dir = Path.dirname(path);
+        if (dir === '.') {
+            dir = '';
+        }
+        return dir;
+    }));
+    for (var folderPath in prev.folders) {
+        if (!_.includes(folderChanges, folderPath)) {
+            cxt.folders[folderPath] = prev.folders[folderPath];
+        }
+    }
+
+    // once a context has been reuse, there's little chance it'll be needed
+    // again; get rid of it after a while
+    clearTimeout(prev.removalTimeout);
+    prev.removalTimeout = setTimeout(() => {
+        _.unset(descriptionContextCache, prevPath);
+    }, 10 * 60 * 1000);
+}
+
+/**
+ * Find component definition in a .trambar folder matching files in a push
+ *
+ * @param  {Context} cxt
+ * @param  {Push} push
  *
  * @return {Array<Component>}
  */
-function findMatchingComponents(push, descriptors) {
+function findMatchingComponents(cxt, push) {
     var fileChanges = _.filter(_.concat(
         push.files.added,
         push.files.deleted,
@@ -51,9 +134,11 @@ function findMatchingComponents(push, descriptors) {
     ));
     var matching = [];
     _.each(fileChanges, (path) => {
-        _.each(descriptors, (descriptor) => {
+        _.each(cxt.descriptors, (descriptor) => {
             if (!_.includes(matching, descriptor)) {
                 if (matchDescriptor(path, descriptor)) {
+                    console.log(`Match for ${path}`);
+                    console.log(descriptor);
                     matching.push(descriptor);
                 }
             }
@@ -61,8 +146,6 @@ function findMatchingComponents(push, descriptors) {
     });
     return _.map(matching, 'component');
 }
-
-var isTrambar = /\/.trambar\//;
 
 /**
  * Return true if a path matches the descriptor's rules
@@ -116,100 +199,22 @@ function isInFolder(filePath, folderPath) {
 }
 
 /**
- * Clear cache entries affected by changes
- *
- * @param  {Server} server
- * @param  {Repo} repo
- * @param  {Push} push
- */
-function clearAffectedCacheEntries(server, repo, push) {
-    // clear cached info of files
-    var fileChanges = _.filter(_.concat(
-        push.files.deleted,
-        push.files.modified,
-        _.map(push.files.renamed, 'before')
-    ));
-    _.each(fileChanges, (path) => {
-        clearDescriptorCache(server, repo, path);
-    });
-
-    // clear cached info of folders
-    var folderChanges = _.uniq(_.map(_.filter(_.concat(
-        push.files.added,
-        push.files.deleted,
-        _.map(push.files.renamed, 'before'),
-        _.map(push.files.renamed, 'after')
-    )), (path) => {
-        var dir = Path.dirname(path);
-        if (dir === '.') {
-            dir = '';
-        }
-        return dir;
-    }));
-    _.each(folderChanges, (path) => {
-        clearFolderCache(server, repo, path);
-    });
-}
-
-var descriptorCache = {};
-
-/**
- * Return cache entry for repo
- *
- * @param  {Server} server
- * @param  {Repo} repo
- *
- * @return {Object}
- */
-function getDescriptorCache(server, repo) {
-    var path = [ server.id, repo.id ];
-    var cache = _.get(descriptorCache, path);
-    if (!cache) {
-        cache = {};
-        _.set(descriptorCache, path, cache);
-    }
-    return cache;
-}
-
-/**
- * Clear cached .trambar folders
- *
- * @param  {Server} server
- * @param  {Repo} repo
- * @param  {String} filePath
- *
- * @return {Boolean}
- */
-function clearDescriptorCache(server, repo, filePath) {
-    var cache = getDescriptorCache(server, repo);
-    if (cache[filePath]) {
-        delete cache[filePath];
-        return true;
-    }
-    return false;
-}
-
-/**
  * Load Trambar descriptor from repo
  *
- * @param  {Server} server
- * @param  {Repo} repo
- * @param  {String} commitId
+ * @param  {Context} cxt
  * @param  {String} folderPath
- * @param  {String} path
- * @param  {String} languageCode
+ * @param  {String} filePath
  *
- * @return {Promise<Descriptor>}
+ * @return {Promise}
  */
-function loadDescriptor(server, repo, commitId, folderPath, path, languageCode) {
-    var cache = getDescriptorCache(server, repo);
-    var info = cache[path];
-    if (info) {
-        return Promise.resolve(info);
+function loadDescriptor(cxt, folderPath, filePath) {
+    var descriptor = cxt.descriptors[filePath];
+    if (descriptor) {
+        return Promise.resolve();
     }
-    return parseDescriptorFile(server, repo, commitId, path, languageCode).then((info) => {
+    return parseDescriptorFile(cxt, filePath).then((info) => {
         var rules = info.rules;
-        var name = _.replace(Path.basename(path), /\.\w+$/, '');
+        var name = _.replace(Path.basename(filePath), /\.\w+$/, '');
         if (!rules) {
             // implict rule: match <filename>.*
             rules = [ `${name}.*` ];
@@ -217,35 +222,32 @@ function loadDescriptor(server, repo, commitId, folderPath, path, languageCode) 
         var id = `${folderPath}/${name}`;
         var component = new Component(id, info.descriptions, info.icon);
         var descriptor = new Descriptor(name, folderPath, rules, component);
-        cache[path] = descriptor;
-        return descriptor;
+        cxt.descriptors[filePath] = descriptor;
     });
-    return promise;
 }
 
 /**
  * Load Trambar descriptors from repo recursively
  *
- * @param  {Server} server
- * @param  {Repo} repo
- * @param  {String} commitId
+ * @param  {Context} cxt
  * @param  {String} folderPath
- * @param  {String} languageCode
  *
- * @return {Promise<Array<Descriptor>>}
+ * @return {Promise}
  */
-function loadDescriptors(server, repo, commitId, folderPath, languageCode) {
+function loadDescriptors(cxt, folderPath) {
+    // scan .trambar folder
     var tfPath = (folderPath) ? `${folderPath}/.trambar` : '.trambar';
-    return scanFolder(server, repo, commitId, tfPath).filter((fileRecord) => {
+    return scanFolder(cxt, tfPath).filter((fileRecord) => {
         if (fileRecord.type === 'blob') {
             return /\.md$/.test(fileRecord.name);
         } else {
             return false;
         }
     }).mapSeries((fileRecord) => {
-        return loadDescriptor(server, repo, commitId, folderPath, fileRecord.path, languageCode);
+        return loadDescriptor(cxt, folderPath, fileRecord.path);
     }).then((descriptors) => {
-        return scanFolder(server, repo, commitId, folderPath).filter((fileRecord) => {
+        // recurse into subfolders
+        return scanFolder(cxt, folderPath).filter((fileRecord) => {
             if (fileRecord.type === 'tree') {
                 // .trambar folder cannot be nested
                 if (fileRecord.name !== '.trambar') {
@@ -253,11 +255,7 @@ function loadDescriptors(server, repo, commitId, folderPath, languageCode) {
                 }
             }
         }).each((subfolderRecord) => {
-            return loadDescriptors(server, repo, commitId, subfolderRecord.path, languageCode).each((descriptor) => {
-                descriptors.push(descriptor);
-            });
-        }).then(() => {
-            return descriptors;
+            return loadDescriptors(cxt, subfolderRecord.path);
         });
     });
 }
@@ -265,16 +263,14 @@ function loadDescriptors(server, repo, commitId, folderPath, languageCode) {
 /**
  * Parse a Trambar-specific Markdown file
  *
- * @param  {Server} server
- * @param  {Repo} repo
- * @param  {String} commitId
+ * @param  {Context} cxt
  * @param  {String} path
  * @param  {String} defaultLanguageCode
  *
  * @return {Promise<Object>}
  */
-function parseDescriptorFile(server, repo, commitId, path, defaultLanguageCode) {
-    return retrieveFile(server, repo, commitId, path).then((file) => {
+function parseDescriptorFile(cxt, path) {
+    return retrieveFile(cxt, path).then((file) => {
         var text = getFileContents(file, 'utf-8');
         var parser = new MarkGor.Parser;
         var tokens = parser.parse(text);
@@ -306,8 +302,8 @@ function parseDescriptorFile(server, repo, commitId, path, defaultLanguageCode) 
             }
             currentLanguageTokens.push(token);
         });
-        if (!languageTokens[defaultLanguageCode]) {
-            languageTokens[defaultLanguageCode] = defaultLanguageTokens;
+        if (!languageTokens[cxt.defaultLanguageCode]) {
+            languageTokens[cxt.defaultLanguageCode] = defaultLanguageTokens;
         }
         var descriptions = _.mapValues(languageTokens, (tokens) => {
             var fragments = _.map(tokens, 'captured');
@@ -324,70 +320,29 @@ function parseDescriptorFile(server, repo, commitId, path, defaultLanguageCode) 
     });
 }
 
-var folderCache = {};
-
-/**
- * Return cache entry for repo
- *
- * @param  {Server} server
- * @param  {Repo} repo
- *
- * @return {Object}
- */
-function getFolderCache(server, repo) {
-    var path = [ server.id, repo.id ];
-    var cache = _.get(folderCache, path);
-    if (!cache) {
-        cache = {};
-        _.set(folderCache, path, cache);
-    }
-    return cache;
-}
-
-/**
- * Clear cached file lists
- *
- * @param  {Server} server
- * @param  {Repo} repo
- * @param  {String} path
- *
- * @return {Boolean}
- */
-function clearFolderCache(server, repo, path) {
-    var cache = getFolderCache(server, repo);
-    if (cache[path]) {
-        delete cache[path];
-        return true;
-    }
-    return false;
-}
-
 /**
  * Scan git tree for list of objects
  *
- * @param  {Server} server
- * @param  {Repo} repo
- * @param  {String} commitId
+ * @param  {Context} cxt
  * @param  {String} folderPath
  *
  * @return {Promise<Array<Object>>}
  */
-function scanFolder(server, repo, commitId, folderPath) {
-    var cache = getFolderCache(server, repo);
-    var listing = cache[folderPath];
+function scanFolder(cxt, folderPath) {
+    var listing = cxt.folders[folderPath];
     if (listing) {
         return Promise.resolve(listing);
     }
     return Promise.try(() => {
         console.log(`Scanning ${folderPath || '[ROOT]'}`);
-        var repoLink = ExternalDataUtils.findLink(repo, server);
+        var repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
         var projectId = repoLink.project.id;
         var url = `projects/${projectId}/repository/tree`;
         var query = {
             path: folderPath,
-            ref: commitId,
+            ref: cxt.headId,
         };
-        return Transport.fetchAll(server, url, query).catch((err) => {
+        return Transport.fetchAll(cxt.server, url, query).catch((err) => {
             if (err instanceof HTTPError) {
                 if (err.statusCode === 404) {
                     return [];
@@ -395,7 +350,7 @@ function scanFolder(server, repo, commitId, folderPath) {
             }
             throw err;
         }).then((listing) => {
-            cache[folderPath] = listing;
+            cxt.folders[folderPath] = listing;
             return listing;
         });
     });
@@ -404,25 +359,24 @@ function scanFolder(server, repo, commitId, folderPath) {
 /**
  * Retrieve a file from Gitlab
  *
- * @param  {Server} server
- * @param  {Repo} repo
- * @param  {String} commitId
+ * @param  {Context} cxt
  * @param  {String} filePath
  *
  * @return {Promise<Object>}
  */
-function retrieveFile(server, repo, commitId, filePath) {
+function retrieveFile(cxt, filePath) {
     return Promise.try(() => {
-        if (!/(^|\/).trambar\//.test(filePath)) {
+        // only files in a .trambar folder is ever retrieved
+        if (!isTrambar.test(filePath)) {
             throw new Error(`Not in .trambar folder: ${filePath}`);
         }
         console.log(`Retrieving file: ${filePath}`);
-        var repoLink = ExternalDataUtils.findLink(repo, server);
+        var repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
         var projectId = repoLink.project.id;
         var pathEncoded = encodeURIComponent(filePath);
         var url = `/projects/${projectId}/repository/files/${pathEncoded}`;
-        var query = { ref: commitId };
-        return Transport.fetch(server, url, query);
+        var query = { ref: cxt.headId };
+        return Transport.fetch(cxt.server, url, query);
     });
 }
 
@@ -511,8 +465,6 @@ function Descriptor(name, folderPath, rules, component) {
     var hierarchicalRules = [];
     var relativeRules = [];
     var trambarRules = [];
-    var isRelative = /^\s*\.\.\//;
-    var isTrambar = /\/.trambar\//;
     _.each(rules, (rule) => {
         if (!rule) {
             return;
@@ -546,6 +498,16 @@ function Component(id, text, url) {
     } else if (url) {
         this.image = { url };
     }
+}
+
+function Context(server, repo, headId, defaultLanguageCode) {
+    this.server = server;
+    this.repo = repo;
+    this.headId = headId;
+    this.defaultLanguageCode = defaultLanguageCode;
+    this.folders = {};
+    this.descriptors = {};
+    this.removalTimeout = 0;
 }
 
 export {
