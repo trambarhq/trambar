@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
+import Async from 'async-do-while';
 import Data from 'accessors/data';
 import Task from 'accessors/task';
 import Repo from 'accessors/repo';
@@ -305,6 +306,50 @@ const Project = _.create(Data, {
         `;
         return db.execute(sql, params);
     },
+
+    getSiganture: function(db, schema, credentials) {
+        var signature;
+        var attempts = 0;
+        Async.do(() => {
+            if (!/^[\w\-]+$/.test(schema)) {
+                return Promise.resolve(new HTTPError(404));
+            }
+            var table = `"${schema}"."meta"`;
+            var sql = `SELECT signature FROM ${table} LIMIT 1`;
+            return db.query(sql).then((rows) => {
+                if (_.isEmpty(rows)) {
+                    throw new HTTPError(404);
+                }
+                var tokens = [];
+                tokens.push(rows[0].signature);
+                tokens.push(credentials.user.type);
+                if (credentials.project) {
+                    if (_.includes(credentials.project.user_ids, credentials.user.id)) {
+                        tokens.push('member')
+                    }
+                }
+                signature = _.join(tokens, ':');
+            }).catch((err) => {
+                if (err.code === '42P01') {
+                    // wait for schema has not been created yet
+                    attempts++;
+                    return Promise.delay(500);
+                } else {
+                    throw err;
+                }
+            });
+        });
+        Async.while(() => {
+            return !signature && attempts < 20;
+        });
+        Async.return(() => {
+            if (!signature) {
+                throw new HTTPError(404);
+            }
+            return signature;
+        });
+        return Async.end();
+    }
 });
 
 export {

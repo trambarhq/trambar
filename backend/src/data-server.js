@@ -124,27 +124,7 @@ function handleSignature(req, res) {
         return checkAuthorization(db, params.auth_token).then((userId) => {
             return fetchCredentials(db, userId, schema);
         }).then((credentials) => {
-            if (!/^[\w\-]+$/.test(schema)) {
-                throw new HTTPError(404);
-            }
-            var table = `"${schema}"."meta"`;
-            var sql = `SELECT signature FROM ${table} LIMIT 1`;
-            return db.query(sql).then((rows) => {
-                if (_.isEmpty(rows)) {
-                    throw new HTTPError(404);
-                }
-                var tokens = [];
-                tokens.push(rows[0].signature);
-                tokens.push(credentials.user.type);
-                if (credentials.project) {
-                    if (_.includes(credentials.project.user_ids, credentials.user.id)) {
-                        tokens.push('member')
-                    }
-                }
-                return _.join(tokens, ':');
-            }).catch((err) => {
-                throw new HTTPError(404);
-            });
+            return Project.getSiganture(db, schema, credentials);
         });
     }).then((signature) => {
         sendResponse(res, { signature });
