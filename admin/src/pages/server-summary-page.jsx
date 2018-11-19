@@ -1399,6 +1399,7 @@ class ServerSummaryPageSync extends PureComponent {
      */
     handleGitlabUserOptionClick = (evt) => {
         let mapping = this.getServerProperty('settings.user.mapping') || {};
+        mapping = _.clone(mapping);
         switch (evt.name) {
             case 'import-admin-disabled':
                 mapping.admin = undefined;
