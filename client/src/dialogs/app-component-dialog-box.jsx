@@ -50,7 +50,7 @@ class AppComponentDialogBox extends PureComponent {
         if (component.image) {
             return (
                 <div className="picture">
-                    <ResourceView resource={component.image} height={48} env={env} />
+                    <ResourceView resource={component.image} height={128} env={env} />
                 </div>
             );
         } else {

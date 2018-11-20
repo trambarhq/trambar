@@ -137,8 +137,6 @@ function findMatchingComponents(cxt, push) {
         _.each(cxt.descriptors, (descriptor) => {
             if (!_.includes(matching, descriptor)) {
                 if (matchDescriptor(path, descriptor)) {
-                    console.log(`Match for ${path}`);
-                    console.log(descriptor);
                     matching.push(descriptor);
                 }
             }
@@ -220,9 +218,11 @@ function loadDescriptor(cxt, folderPath, filePath) {
             rules = [ `${name}.*` ];
         }
         var id = `${folderPath}/${name}`;
-        var component = new Component(id, info.descriptions, info.icon);
-        var descriptor = new Descriptor(name, folderPath, rules, component);
-        cxt.descriptors[filePath] = descriptor;
+        return importImage(cxt, folderPath, info.icon).then((image) => {
+            var component = new Component(id, info.descriptions, image);
+            var descriptor = new Descriptor(name, folderPath, rules, component);
+            cxt.descriptors[filePath] = descriptor;
+        });
     });
 }
 
@@ -406,11 +406,38 @@ var gitConflicts = /<{7}\s\w+\r?\n([\s\S]*?\r?\n)={7}\r?\n([\s\S]*?\r?\n)>{7}\s\
 /**
  * Upload file to media server
  *
+ * @param  {Context} cxt
+ * @param  {String} folderPath
+ * @param  {String} url
+ *
+ * @return {Promise<Object|undefined>}
+ */
+function importImage(cxt, folderPath, url) {
+    if (/^\w+:/.test(url)) {
+        // absolute URL
+        return Promise.resolve(url);
+    }
+    var tfPath = (folderPath) ? `${folderPath}/.trambar` : '.trambar';
+    var imageName = url;
+    if (/^\.\//.test(imageName)) {
+        imageName = imageName.substr(2);
+    }
+    var imagePath = `${tfPath}/${imageName}`;
+    return retrieveFile(cxt, imagePath).then((file) => {
+        return updateImage(file);
+    }).catch((err) => {
+        return;
+    });
+}
+
+/**
+ * Upload file to media server
+ *
  * @param  {Object} file
  *
  * @return {Promise<Object|undefined>}
  */
-function importImage(file) {
+function updateImage(file) {
     return new Promise((resolve, reject) => {
         var buffer = getFileContents(file);
         var options = {
@@ -484,19 +511,25 @@ function Descriptor(name, folderPath, rules, component) {
     this.matchingTrambar = parseFnmatchRules(trambarRules);
 }
 
-function Component(id, text, url) {
+function Component(id, text, image) {
     this.id = id;
     this.text = text;
-    if (/^fa:\/\//.test(url)) {
-        // special Font-Awesome URL fa://
-        var parts = _.split(url.substr(5), '/');
-        this.icon = {
-            class: parts[0],
-            backgroundColor: parts[1] || null,
-            color: parts[2] || null,
-        };
-    } else if (url) {
-        this.image = { url };
+    if (typeof(image) === 'object') {
+        this.image = image;
+    } else if (typeof(image) === 'string' && image) {
+        if (/^fa:\/\//.test(image)) {
+            // special Font-Awesome URL fa://
+            var parts = _.split(image.substr(5), '/');
+            this.icon = {
+                class: parts[0],
+                backgroundColor: parts[1] || null,
+                color: parts[2] || null,
+            };
+        } else {
+            this.image = {
+                url: image
+            };
+        }
     }
 }
 
