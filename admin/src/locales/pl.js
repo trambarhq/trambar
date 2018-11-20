@@ -2,7 +2,6 @@ import 'moment/locale/pl';
 import {
     cardinal,
     genderize,
-    pastTenseEnding,
 } from 'locale/grammars/polish';
 
 const phrases = {

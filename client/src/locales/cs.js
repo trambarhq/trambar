@@ -107,12 +107,12 @@ let phrases = {
         if (audios > 0) {
             objects.push(cardinal(audios, 'audioklip', 'audioklipy'));
         }
-        let e = pastTenseEnding(names, names.length > 1);
-        return `${list(names)} posíla${e} následující ${list(objects)}:`;
+        let l = pastTenseEnding(names, names.length > 1);
+        return `${list(names)} posíla${l} následující ${list(objects)}:`;
     },
     'issue-export-$names-wrote': (names) => {
-        let e = pastTenseEnding(names, names.length > 1);
-        return `${list(names)} napsa${e}:`;
+        let l = pastTenseEnding(names, names.length > 1);
+        return `${list(names)} napsa${l}:`;
     },
     'issue-ok': 'OK',
     'issue-repo': 'Úložiště',
@@ -166,16 +166,16 @@ let phrases = {
             case 'post': story = 'váš příspěvek.'; break;
             default: story = 'váš příběh';
         }
-        let e = pastTenseEnding(name);
-        return `${name} komentova${e} ${story}`;
+        let l = pastTenseEnding(name);
+        return `${name} komentova${l} ${story}`;
     },
     'notification-$name-completed-task': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} dokonči${e} úkol na vašem seznamu`;
+        let l = pastTenseEnding(name);
+        return `${name} dokonči${l} úkol na vašem seznamu`;
     },
     'notification-$name-is-assigned-to-your-issue': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} je přidělen${e} do vašeho problému`;
+        let l = pastTenseEnding(name);
+        return `${name} je přidělen${l} do vašeho problému`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {
@@ -184,13 +184,13 @@ let phrases = {
             case 'post': story = 'vašeho příspěvku'; break;
             default: story = 'vašeho příběhu';
         }
-        let e = pastTenseEnding(name);
+        let l = pastTenseEnding(name);
         return `${name} má rád ${story}`;
     },
     'notification-$name-mentioned-you-in-$reaction': (name, reaction) => {
         reaction = 'komentáři';
-        let e = pastTenseEnding(name);
-        return `${name} zmíni${e} se o vás v ${reaction}`;
+        let l = pastTenseEnding(name);
+        return `${name} zmíni${l} se o vás v ${reaction}`;
     },
     'notification-$name-mentioned-you-in-$story': (name, story) => {
         switch (story) {
@@ -201,16 +201,16 @@ let phrases = {
             case 'merge-request': story = 'žádosti o sloučení'; break;
             default: story = 'příběhu';
         }
-        let e = pastTenseEnding(name);
-        return `${name} zmíni${e} se o vás v ${story}`;
+        let l = pastTenseEnding(name);
+        return `${name} zmíni${l} se o vás v ${story}`;
     },
     'notification-$name-merged-code-to-$branch': (name, branch) => {
-        let e = pastTenseEnding(name);
-        return `${name} slouči${e} změny do větve „${branch}”`;
+        let l = pastTenseEnding(name);
+        return `${name} slouči${l} změny do větve „${branch}”`;
     },
     'notification-$name-opened-an-issue': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} otevře${e} problém`;
+        let l = pastTenseEnding(name);
+        return `${name} otevře${l} problém`;
     },
     'notification-$name-posted-a-note-about-your-$story': (name, story) => {
         switch (story) {
@@ -218,20 +218,20 @@ let phrases = {
             case 'issue': story = 'vaš problém'; break;
             case 'merge-request': story = 'vaši žádost o sloučení'; break;
         }
-        let e = pastTenseEnding(name);
-        return `${name} komentova${e} ${story}`;
+        let l = pastTenseEnding(name);
+        return `${name} komentova${l} ${story}`;
     },
     'notification-$name-posted-a-survey': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} zveřejni${e} anketu`;
+        let l = pastTenseEnding(name);
+        return `${name} zveřejni${l} anketu`;
     },
     'notification-$name-pushed-code-to-$branch': (name, branch) => {
-        let e = pastTenseEnding(name);
-        return `${name} posunova${e} změny do větve „${branch}”`;
+        let l = pastTenseEnding(name);
+        return `${name} posunova${l} změny do větve „${branch}”`;
     },
     'notification-$name-requested-to-join': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} požáda${e} o vstup do tohoto projektu`;
+        let l = pastTenseEnding(name);
+        return `${name} požáda${l} o vstup do tohoto projektu`;
     },
     'notification-$name-sent-bookmark-to-$story': (name, story) => {
         switch (story) {
@@ -240,12 +240,12 @@ let phrases = {
             case 'post': story = 'příspěvku'; break;
             default: story = 'příběhu';
         }
-        let e = pastTenseEnding(name);
-        return `${name} posla${e} vám záložku k ${story}`;
+        let l = pastTenseEnding(name);
+        return `${name} posla${l} vám záložku k ${story}`;
     },
     'notification-$name-voted-in-your-survey': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} odpovědě${e} na vaši anketu`;
+        let l = pastTenseEnding(name);
+        return `${name} odpovědě${l} na vaši anketu`;
     },
     'notification-option-assignment': 'Když je k vašemu problému přiřazen někdo',
     'notification-option-bookmark': 'Když vám někdo pošle záložku',
@@ -322,51 +322,51 @@ let phrases = {
     'qr-scanner-code-used': 'Zastaralý QR kód',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} přida${e} tento příspěvek na bugtracker`;
+        let l = pastTenseEnding(name);
+        return `${name} přida${l} tento příspěvek na bugtracker`;
     },
     'reaction-$name-cast-a-vote': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} hlasova${e}`;
+        let l = pastTenseEnding(name);
+        return `${name} hlasova${l}`;
     },
     'reaction-$name-commented-on-branch': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} komentova${e} tuto větev`;
+        let l = pastTenseEnding(name);
+        return `${name} komentova${l} tuto větev`;
     },
     'reaction-$name-commented-on-issue': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} komentova${e} tento problém`;
+        let l = pastTenseEnding(name);
+        return `${name} komentova${l} tento problém`;
     },
     'reaction-$name-commented-on-merge': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} komentova${e} toto sloučení kódu`;
+        let l = pastTenseEnding(name);
+        return `${name} komentova${l} toto sloučení kódu`;
     },
     'reaction-$name-commented-on-merge-request': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} komentova${e} tuto žádost o sloučení`;
+        let l = pastTenseEnding(name);
+        return `${name} komentova${l} tuto žádost o sloučení`;
     },
     'reaction-$name-commented-on-push': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} komentova${e} tento přesun`;
+        let l = pastTenseEnding(name);
+        return `${name} komentova${l} tento přesun`;
     },
     'reaction-$name-commented-on-tag': (name) => {
-        let e = pastTenseEnding(name);
-        return `${name} komentova${e} tento tag`;
+        let l = pastTenseEnding(name);
+        return `${name} komentova${l} tento tag`;
     },
     'reaction-$name-completed-a-task': (name) => {
-        let ve = pastTenseEnding(name);
-        let ae = ve.substr(1);
-        return `${name} by${ve} dokončen${ae} úkol`;
+        let l = pastTenseEnding(name);
+        let e = l.substr(1);
+        return `${name} by${l} dokončen${e} úkol`;
     },
     'reaction-$name-is-assigned-to-issue': (name) => {
-        let ve = pastTenseEnding(name);
-        let ae = ve.substr(1);
-        return `${name} by${ve} přidělen${ae} tomuto problému`;
+        let l = pastTenseEnding(name);
+        let e = l.substr(1);
+        return `${name} by${l} přidělen${e} tomuto problému`;
     },
     'reaction-$name-is-assigned-to-merge-request': (name) => {
-        let ve = pastTenseEnding(name);
-        let ae = ve.substr(1);
-        return `${name} by${ve} přidělen${ae} této žádosti o sloučení`;
+        let l = pastTenseEnding(name);
+        let e = l.substr(1);
+        return `${name} by${l} přidělen${e} této žádosti o sloučení`;
     },
     'reaction-$name-is-editing': (name) => {
         return `${name} upravuje komentář...`;
@@ -465,68 +465,68 @@ let phrases = {
         return cardinal(count, '1 reakce', '2 reakcí', '5 reakcí');
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
-        let e = pastTenseEnding(name);
-        return `Stvoři${e} větve „${branch}” v projektu „${repo}”`;
+        let l = pastTenseEnding(name);
+        return `Stvoři${l} větve „${branch}” v projektu „${repo}”`;
     },
     'story-$name-created-$milestone': (name, milestone) => {
-        let e = pastTenseEnding(name);
-        return `Vytvoři${e} milník „${milestone}”`;
+        let l = pastTenseEnding(name);
+        return `Vytvoři${l} milník „${milestone}”`;
     },
     'story-$name-created-$page': (name, page) => {
-        let e = pastTenseEnding(name);
-        return `Vytvoři${e} wiki stránku „${page}”`;
+        let l = pastTenseEnding(name);
+        return `Vytvoři${l} wiki stránku „${page}”`;
     },
     'story-$name-created-$repo': (name, repo) => {
-        let e = pastTenseEnding(name);
-        let text = `Vytvoři${e} projekt`;
+        let l = pastTenseEnding(name);
+        let text = `Vytvoři${l} projekt`;
         if (repo) {
             text += ` „${repo}”`;
         }
         return text;
     },
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
-        let e = pastTenseEnding(name);
-        return `Stvoři${e} tag „${tag}” v projektu „${repo}”`;
+        let l = pastTenseEnding(name);
+        return `Stvoři${l} tag „${tag}” v projektu „${repo}”`;
     },
     'story-$name-deleted-$page': (name, page) => {
-        let e = pastTenseEnding(name);
-        return `Smaza${e} stránku wiki „${page}”`;
+        let l = pastTenseEnding(name);
+        return `Smaza${l} stránku wiki „${page}”`;
     },
     'story-$name-deleted-$repo': (name, repo) => {
-        let e = pastTenseEnding(name);
-        let text = `Smaza${e} projekt`;
+        let l = pastTenseEnding(name);
+        let text = `Smaza${l} projekt`;
         if (repo) {
             text += ` „${repo}”`;
         }
         return text;
     },
     'story-$name-imported-$repo': (name, repo) => {
-        let e = pastTenseEnding(name);
-        let text = `Importova${e} projekt`;
+        let l = pastTenseEnding(name);
+        let text = `Importova${l} projekt`;
         if (repo) {
             text += ` „${repo}”`;
         }
         return text;
     },
     'story-$name-joined-$repo': (name, repo) => {
-        let e = pastTenseEnding(name);
-        let text = `Vstoupi${e} Do projektu`;
+        let l = pastTenseEnding(name);
+        let text = `Vstoupi${l} Do projektu`;
         if (repo) {
             text += ` „${repo}”`;
         }
         return text;
     },
     'story-$name-left-$repo': (name, repo) => {
-        let e = pastTenseEnding(name);
-        let text = `Opusti${e} projekt`;
+        let l = pastTenseEnding(name);
+        let text = `Opusti${l} projekt`;
         if (repo) {
             text += ` „${repo}”`;
         }
         return text;
     },
     'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-        let e = pastTenseEnding(name);
-        let text = `Slouči${e} změny`;
+        let l = pastTenseEnding(name);
+        let text = `Slouči${l} změny`;
         if (branches && branches.length > 0) {
             let sources = branches.map((branch) => {
                 return `„${branch}”`;
@@ -541,28 +541,28 @@ let phrases = {
         return text;
     },
     'story-$name-opened-issue-$number-$title': (name, number, title) => {
-        let e = pastTenseEnding(name);
-        let text = `Otevře${e} problém ${number}`;
+        let l = pastTenseEnding(name);
+        let text = `Otevře${l} problém ${number}`;
         if (title) {
             text += `: ${title}`;
         }
         return text;
     },
     'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-        let e = pastTenseEnding(name);
-        let text = `Posunova${e} změny do větve „${branch}”`;
+        let l = pastTenseEnding(name);
+        let text = `Posunova${l} změny do větve „${branch}”`;
         if (repo) {
             text += ` projektu „${repo}”`;
         }
         return text;
     },
     'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
-        let e = pastTenseEnding(name);
+        let l = pastTenseEnding(name);
         return `Požádal sloučit větve „${branch1}” do větve „${branch2}”.`;
     },
     'story-$name-updated-$page': (name, page) => {
-        let e = pastTenseEnding(name);
-        return `Aktualizova${e} stránku wiki „${page}”`;
+        let l = pastTenseEnding(name);
+        return `Aktualizova${l} stránku wiki „${page}”`;
     },
     'story-add-coauthor': 'Přidat spoluautora',
     'story-add-remove-coauthor': 'Přidat/Odebrat spoluautora',
@@ -667,89 +667,89 @@ let phrases = {
     'user-actions': 'Akce',
 
     'user-activity-$name-created-branch': (name) => {
-        let e = pastTenseEnding(name);
-        return `Vytvoři${e} větev`;
+        let l = pastTenseEnding(name);
+        return `Vytvoři${l} větev`;
     },
     'user-activity-$name-created-merge-request': (name) => {
-        let e = pastTenseEnding(name);
-        return `Vytvoři${e} žádost o sloučení`;
+        let l = pastTenseEnding(name);
+        return `Vytvoři${l} žádost o sloučení`;
     },
     'user-activity-$name-created-milestone': (name) => {
-        let e = pastTenseEnding(name);
-        return `Vytvoři${e} milník.`;
+        let l = pastTenseEnding(name);
+        return `Vytvoři${l} milník.`;
     },
     'user-activity-$name-created-repo': (name) => {
-        let e = pastTenseEnding(name);
-        return `Vytvoři${e} projekt git.`;
+        let l = pastTenseEnding(name);
+        return `Vytvoři${l} projekt git.`;
     },
     'user-activity-$name-created-tag': (name) => {
-        let e = pastTenseEnding(name);
-        return `Vytvoři${e} tag`;
+        let l = pastTenseEnding(name);
+        return `Vytvoři${l} tag`;
     },
     'user-activity-$name-deleted-repo': (name) => {
-        let e = pastTenseEnding(name);
-        return `Smaza${e} projekt git`;
+        let l = pastTenseEnding(name);
+        return `Smaza${l} projekt git`;
     },
     'user-activity-$name-edited-wiki-page': (name) => {
-        let e = pastTenseEnding(name);
-        return `Upravi${e} stránku wiki`;
+        let l = pastTenseEnding(name);
+        return `Upravi${l} stránku wiki`;
     },
     'user-activity-$name-imported-repo': (name) => {
-        let e = pastTenseEnding(name);
-        return `Importova${e} projekt git`;
+        let l = pastTenseEnding(name);
+        return `Importova${l} projekt git`;
     },
     'user-activity-$name-joined-repo': (name) => {
-        let e = pastTenseEnding(name);
-        return `Připoji${e} se k projektu git`;
+        let l = pastTenseEnding(name);
+        return `Připoji${l} se k projektu git`;
     },
     'user-activity-$name-left-repo': (name) => {
-        let e = pastTenseEnding(name);
-        return `Opusti${e} projekt git`;
+        let l = pastTenseEnding(name);
+        return `Opusti${l} projekt git`;
     },
     'user-activity-$name-merged-code': (name) => {
-        let e = pastTenseEnding(name);
-        return `Proved${e} sloučení kódu.`;
+        let l = pastTenseEnding(name);
+        return `Proved${l} sloučení kódu.`;
     },
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
         let audios = cardinal(count, 'audioklip', '2 audioklipy', '5 audioklipů');
-        let e = pastTenseEnding(name);
-        return `Zveřejni${e} ${audios}`;
+        let l = pastTenseEnding(name);
+        return `Zveřejni${l} ${audios}`;
     },
     'user-activity-$name-posted-$count-links': (name, count) => {
         let links = cardinal(count, 'odkaz', 'odkazy');
         let website = cardinal(count, 'webovou stránku', '2 webové stránky', '5 webových stránek');
-        let e = pastTenseEnding(name);
-        return `Posla${e} ${links} na ${website}`
+        let l = pastTenseEnding(name);
+        return `Posla${l} ${links} na ${website}`
     },
     'user-activity-$name-posted-$count-pictures': (name, count) => {
         let pictures = cardinal(count, 'obrázek', '2 obrázky', '5 obrázků');
-        let e = pastTenseEnding(name);
-        return `Zveřejni${e} ${pictures}`;
+        let l = pastTenseEnding(name);
+        return `Zveřejni${l} ${pictures}`;
     },
     'user-activity-$name-posted-$count-video-clips': (name, count) => {
         let videos = cardinal(count, 'videoklip', '2 videoklipy', '5 videoklipů');
-        let e = pastTenseEnding(name);
-        return `Zveřejni${e} ${videos}`;
+        let l = pastTenseEnding(name);
+        return `Zveřejni${l} ${videos}`;
     },
     'user-activity-$name-pushed-code': (name) => {
-        let e = pastTenseEnding(name);
-        return `Posunova${e} změny do repozitáře`;
+        let l = pastTenseEnding(name);
+        return `Posunova${l} změny do repozitáře`;
     },
     'user-activity-$name-reported-issue': (name) => {
-        let e = pastTenseEnding(name);
-        return `Ohlási${e} problém`;
+        let l = pastTenseEnding(name);
+        return `Ohlási${l} problém`;
     },
     'user-activity-$name-started-survey': (name) => {
-        let e = pastTenseEnding(name);
-        return `Vytvoři${e} anketu`;
+        let l = pastTenseEnding(name);
+        return `Vytvoři${l} anketu`;
     },
     'user-activity-$name-started-task-list': (name) => {
-        let e = pastTenseEnding(name);
-        return `Vytvoři${e} seznam úkolů`;
+        let l = pastTenseEnding(name);
+        return `Vytvoři${l} seznam úkolů`;
     },
     'user-activity-$name-wrote-post': (name) => {
-        let e = pastTenseEnding(name);
-        return `Napsa${e} příspěvek`;
+        let l = pastTenseEnding(name);
+        return `Napsa${l} příspěvek`;
     },
     'user-activity-back': 'Dozadu',
     'user-activity-more': 'Více',

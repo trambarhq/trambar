@@ -2,7 +2,6 @@ import 'moment/locale/cs';
 import {
     cardinal,
     genderize,
-    pastTenseEnding,
 } from 'locale/grammars/czech';
 
 const phrases = {

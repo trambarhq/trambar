@@ -2,7 +2,6 @@ import 'moment/locale/ru';
 import {
     cardinal,
     genderize,
-    pastTenseEnding,
 } from 'locale/grammars/russian';
 
 const phrases = {
