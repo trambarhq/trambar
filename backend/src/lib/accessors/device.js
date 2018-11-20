@@ -30,6 +30,7 @@ const Device = _.create(Data, {
         user_id: Number,
         session_handle: String,
     },
+    version: 2,
 
     /**
      * Create table in schema
@@ -77,6 +78,30 @@ const Device = _.create(Data, {
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
         `;
         return db.execute(sql).return(true);
+    },
+
+    /**
+     * Upgrade table in schema to given DB version (from one version prior)
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Number} version
+     *
+     * @return {Promise<Boolean>}
+     */
+    upgrade: function(db, schema, version) {
+        if (version === 2) {
+            // make index of session_handle unique
+            var table = this.getTableName(schema);
+            var sql = `
+                DELETE FROM ${table} a USING ${table} b
+                WHERE a.id > b.id AND a.session_handle = b.session_handle;
+                DROP INDEX global.device_session_handle_idx;
+                CREATE UNIQUE INDEX ON ${table} (session_handle) WHERE deleted = false;
+            `;
+            return db.execute(sql).return(true);
+        }
+        return Promise.resolve(false);
     },
 
     /**

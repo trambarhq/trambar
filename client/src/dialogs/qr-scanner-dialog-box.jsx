@@ -2,7 +2,6 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent, Children } from 'react';
 import ReactDOM from 'react-dom';
-import Async from 'async-do-while';
 
 // widgets
 import PushButton from 'widgets/push-button';
@@ -22,15 +21,9 @@ class QRScannerDialogBox extends PureComponent {
         super(props);
         this.state = {
             available: false,
+            scanning: false,
             found: false,
         };
-    }
-
-    static getDerivedStateFromProps(props, state) {
-        if (!props.show || props.error) {
-            return { found: false };
-        }
-        return null;
     }
 
     /**
@@ -49,7 +42,7 @@ class QRScannerDialogBox extends PureComponent {
      * @param  {Object]} prevState
      */
     componentDidUpdate(prevProps, prevState) {
-        let { show } = this.props;
+        let { show, error } = this.props;
         let { available } = this.state;
         if (available && show) {
             this.show();
@@ -85,35 +78,14 @@ class QRScannerDialogBox extends PureComponent {
      * Create (or update) the camera overlay
      */
     show() {
-        let { env, error, children, onResult } = this.props;
-        let { found } = this.state;
+        let { env, error, children } = this.props;
+        let { scanning, found } = this.state;
         let { t } = env.locale;
         if (!this.overlayNode) {
             // show the camera preview, which appears behind the webview
             if (QRScanner) {
                 QRScanner.showAsync().then((status) => {
-                    Async.do(() => {
-                        return QRScanner.scanAsync().then((result) => {
-                            if (onResult) {
-                                this.setState({ found: true });
-                                onResult({
-                                    type: 'result',
-                                    target: this,
-                                    result,
-                                });
-                            }
-                            return null;
-                        }).catch((err) => {
-                            if (err.name !== 'SCAN_CANCELED') {
-                                console.error(err);
-                            }
-                        }).delay(1000);
-                    });
-                    Async.while(() => {
-                        let { show } = this.props;
-                        return show;
-                    });
-                    return Async.end();
+                    return this.startScanning();
                 });
             } else {
                 if (process.env.NODE_ENV !== 'production') {
@@ -131,7 +103,6 @@ class QRScannerDialogBox extends PureComponent {
                         if (evt.keyCode === 0x0d) {
                             let url = evt.target.value;
                             if (onResult) {
-                                this.setState({ found: true });
                                 onResult({
                                     type: 'result',
                                     target: this,
@@ -145,6 +116,10 @@ class QRScannerDialogBox extends PureComponent {
             }
             this.overlayNode = document.createElement('DIV');
             document.body.appendChild(this.overlayNode);
+        } else {
+            if (error) {
+                this.startScanning();
+            }
         }
 
         let cancelProps = {
@@ -187,6 +162,36 @@ class QRScannerDialogBox extends PureComponent {
         ReactDOM.render(element, this.overlayNode);
     }
 
+    startScanning() {
+        let { onResult } = this.props;
+        let { scanning } = this.state;
+        if (scanning) {
+            return;
+        }
+        this.setState({ scanning: true, found: false });
+        QRScanner.scanAsync().then((result) => {
+            this.setState({ scanning: false, found: true });
+            if (onResult) {
+                onResult({
+                    type: 'result',
+                    target: this,
+                    result,
+                });
+            }
+            return null;
+        });
+    }
+
+    stopScanning() {
+        let { scanning } = this.state;
+        if (!scanning) {
+            return;
+        }
+        this.setState({ scanning: false });
+        QRScanner.cancelScanAsync();
+    }
+
+
     /**
      * Destroy the camera overlay
      */
@@ -194,7 +199,7 @@ class QRScannerDialogBox extends PureComponent {
         if (this.overlayNode) {
             if (QRScanner) {
                 QRScanner.hideAsync().then(() => {
-                    return QRScanner.cancelScanAsync();
+                    this.stopScanning();
                 });
             } else {
                 if (process.env.NODE_ENV !== 'production') {
