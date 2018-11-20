@@ -649,11 +649,20 @@ class SmartList extends Component {
             return;
         }
         let anchorSlot = this.findAnchorSlot(slots);
-        if (anchorSlot && anchorSlot.id !== currentAnchor) {
-            currentAnchor = anchorSlot.id;
-            this.setState({ currentAnchor }, () => {
-                this.triggerAnchorChangeEvent(anchorSlot);
-            });
+        if (anchorSlot) {
+            if (anchorSlot.id !== currentAnchor) {
+                currentAnchor = anchorSlot.id;
+                this.setState({ currentAnchor }, () => {
+                    this.triggerAnchorChangeEvent(anchorSlot);
+                });
+            }
+        } else {
+            if (currentAnchor) {
+                currentAnchor = null;
+                this.setState({ currentAnchor }, () => {
+                    this.triggerAnchorChangeEvent(null);
+                });
+            }
         }
         this.scrolling = true;
         if (this.scrollingEndTimeout) {
