@@ -35,7 +35,7 @@ function retrieveDescriptions(server, repo, push, defLang) {
     });
 }
 
-var descriptionContextCache = {};
+var descriptionContexts = [];
 
 /**
  * Create a description context, retrieving descriptions from server if
@@ -49,15 +49,29 @@ var descriptionContextCache = {};
  * @return {Promise<Context>}
  */
 function createDescriptionContext(server, repo, push, defLang) {
-    var cachePath = [ defLang, server.id, repo.id, push.headId ];
-    var cxt = _.get(descriptionContextCache, cachePath);
+    var cxt = _.find(descriptionContexts, (cxt) => {
+        if (cxt.server.id === server.id) {
+            if (cxt.repo.id === repo.id) {
+                if (cxt.defaultLanguageCode === defLang) {
+                    if (cxt.headId === push.headId) {
+                        return true;
+                    }
+                }
+            }
+        }
+    });
     if (cxt) {
+        cxt.server = server;
+        cxt.repo = repo;
         return Promise.resolve(cxt);
     }
     cxt = new Context(server, repo, push.headId, defLang);
     inheritPreviousContext(cxt, push);
     return loadDescriptors(cxt, '').then(() => {
-        _.set(descriptionContextCache, cachePath, cxt);
+        descriptionContexts.unshift(cxt);
+        if (descriptionContexts.length > 1000) {
+            descriptionContexts.splice(1000);
+        }
         return cxt;
     });
 }
@@ -69,8 +83,17 @@ function createDescriptionContext(server, repo, push, defLang) {
  * @param  {Push} push
  */
 function inheritPreviousContext(cxt, push) {
-    var prevPath = [ cxt.defaultLanguageCode, cxt.server.id, cxt.repo.id, push.tailId ];
-    var prev = _.get(descriptionContextCache, prevPath);
+    var prev = _.find(descriptionContexts, (prev) => {
+        if (prev.server.id === cxt.server.id) {
+            if (prev.repo.id === cxt.repo.id) {
+                if (prev.defaultLanguageCode === cxt.defaultLanguageCode) {
+                    if (prev.headId === push.tailId) {
+                        return true;
+                    }
+                }
+            }
+        }
+    });
     if (!prev) {
         return;
     }
@@ -107,13 +130,6 @@ function inheritPreviousContext(cxt, push) {
             cxt.folders[folderPath] = prev.folders[folderPath];
         }
     }
-
-    // once a context has been reuse, there's little chance it'll be needed
-    // again; get rid of it after a while
-    clearTimeout(prev.removalTimeout);
-    prev.removalTimeout = setTimeout(() => {
-        _.unset(descriptionContextCache, prevPath);
-    }, 10 * 60 * 1000);
 }
 
 /**
