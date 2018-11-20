@@ -361,12 +361,12 @@ let phrases = {
     'reaction-$name-is-assigned-to-issue': (name) => {
         let ve = pastTenseEnding(name);
         let ae = ve.substr(1);
-        return `${name} byl${ve} přidělen${ae} tomuto problému`;
+        return `${name} by${ve} přidělen${ae} tomuto problému`;
     },
     'reaction-$name-is-assigned-to-merge-request': (name) => {
         let ve = pastTenseEnding(name);
         let ae = ve.substr(1);
-        return `${name} byl${ve} přidělen${ae} této žádosti o sloučení`;
+        return `${name} by${ve} přidělen${ae} této žádosti o sloučení`;
     },
     'reaction-$name-is-editing': (name) => {
         return `${name} upravuje komentář...`;

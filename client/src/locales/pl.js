@@ -26,13 +26,13 @@ const phrases = {
     'activation-schema': 'Projekt',
 
     'alert-$count-new-bookmarks': (count) => {
-        return cardinal(count, 'nowa zakładka', 'nowe zakładki', 'nowych zakładek');
+        return cardinal(count, '1 nowa zakładka', '2 nowe zakładki', '5 nowych zakładek');
     },
     'alert-$count-new-notifications': (count) => {
-        return cardinal(count, 'nowe powiadomienie', 'nowe powiadomienia', 'nowych powiadomień');
+        return cardinal(count, '1 nowe powiadomienie', '2 nowe powiadomienia', '5 nowych powiadomień');
     },
     'alert-$count-new-stories': (count) => {
-        return cardinal(count, 'nowa wiadomość', 'nowe wiadomości', 'nowych wiadomości');
+        return cardinal(count, '1 nowa wiadomość', '2 nowe wiadomości', '5 nowych wiadomości');
     },
 
     'app-component-close': 'Zamknij',
@@ -48,10 +48,10 @@ const phrases = {
     'audio-capture-stop': 'Zatrzymaj',
 
     'bookmark-$count-other-users': (count) => {
-        return cardinal(count, 'inna osoba', 'inne osoby', 'innych osób');
+        return cardinal(count, '1 inna osoba', '2 inne osoby', '5 innych osób');
     },
     'bookmark-$count-users': (count) => {
-        return cardinal(count, 'osoba', 'osoby', 'osób');
+        return cardinal(count, '1 osoba', '2 osoby', '5 osób');
     },
     'bookmark-$name-recommends-this': (name) => {
         return `${name} poleca to`;
@@ -450,7 +450,7 @@ const phrases = {
     'social-network-stackoverflow': 'URL profilu na StackOverflow',
     'social-network-twitter': 'Nazwa użytkownika na Twitterze',
 
-    'start-activation-add-server': 'Add project from another server',
+    'start-activation-add-server': 'Dodaj projekt z innego serwera',
     'start-activation-instructions': (ui) => {
         return [
             'Aby uzyskać dostęp do serwera Trambar na tym urządzeniu, najpierw zaloguj się do serwera za pomocą przeglądarki internetowej. Wybierz projekt, a następnie przejdź do strony ',
@@ -492,7 +492,7 @@ const phrases = {
     'statistics-pie': 'Kołowy',
 
     'story-$count-reactions': (count) => {
-        return cardinal(count, 'reakcja', 'reakcje', 'reakcji');
+        return cardinal(count, '1 reakcja', '2 reakcje', '5 reakcji');
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         let e = pastTenseEnding(name, 3);
@@ -600,7 +600,7 @@ const phrases = {
     'story-add-remove-coauthor': 'Dodaj/Usuń współautora',
     'story-audio': 'Audio',
     'story-author-$count-others': (count) => {
-        return cardinal(count, 'inna osoba', 'inne osoby', 'innych osób');
+        return cardinal(count, '1 inna osoba', '2 inne osoby', '5 innych osób');
     },
     'story-author-$name1-and-$name2': (name1, name2) => {
         return [ name1, ` i `, name2 ];
@@ -626,32 +626,32 @@ const phrases = {
     'story-photo': 'Zdjęcie',
     'story-post': 'Wysłaj',
     'story-push-added-$count-files': (count) => {
-        let files = cardinal(count, 'płik', 'płiki', 'płików');
+        let files = cardinal(count, '1 płik', '2 płiki', '5 płików');
         return `${files} dodano`;
     },
     'story-push-added-$count-lines': (count) => {
-        let lines = cardinal(count, 'linia', 'linie', 'liń');
+        let lines = cardinal(count, '1 linia', '2 linie', '5 liń');
         return `${lines} dodano`;
     },
     'story-push-components-changed': 'Następujące części zostały zmienione:',
     'story-push-deleted-$count-files': (count) => {
-        let files = cardinal(count, 'płik', 'płiki', 'płików');
+        let files = cardinal(count, '1 płik', '2 płiki', ' 5 płików');
         return `${files} usunięto`;
     },
     'story-push-deleted-$count-lines': (count) => {
-        let lines = cardinal(count, 'linia', 'linie', 'liń');
+        let lines = cardinal(count, '1 linia', '2 linie', '5 liń');
         return `${lines} usunięto`;
     },
     'story-push-modified-$count-files': (count) => {
-        let files = cardinal(count, 'płik', 'płiki', 'płików');
+        let files = cardinal(count, '1 płik', '2 płiki', '5 płików');
         return `${files} zmodyfikowano`;
     },
     'story-push-modified-$count-lines': (count) => {
-        let lines = cardinal(count, 'linia', 'linie', 'liń');
+        let lines = cardinal(count, '1 linia', '2 linie', '5 liń');
         return `${lines} zmodyfikowano`;
     },
     'story-push-renamed-$count-files': (count) => {
-        let files = cardinal(count, 'płik', 'płiki', 'płików');
+        let files = cardinal(count, '1 płik', '2 płiki', '5 płików');
         return `${files} przemianowano`;
     },
     'story-remove-yourself': 'Usuń siebie',
@@ -744,7 +744,7 @@ const phrases = {
         return `Wykona${e} scalenie zmian`;
     },
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        let audios = cardinal(count, 'klip audio', 'klipy audio', 'klipów audio');
+        let audios = cardinal(count, 'klip audio', '2 klipy audio', '5 klipów audio');
         let e = pastTenseEnding(name, 3);
         return `Wysła${e} ${audios}`;
     },
@@ -755,12 +755,12 @@ const phrases = {
         return `Wysła${e} ${links} do ${website}`
     },
     'user-activity-$name-posted-$count-pictures': (name, count) => {
-        let pictures = cardinal(count, 'zdjęcie', 'zdjęcia', 'zdjęć');
+        let pictures = cardinal(count, 'zdjęcie', '2 zdjęcia', '5 zdjęć');
         let e = pastTenseEnding(name, 3);
         return `Wysła${e} ${pictures}`;
     },
     'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        let videos = cardinal(count, 'klip wideo', 'klipy wideo', 'klipów wideo');
+        let videos = cardinal(count, 'klip wideo', '2 klipy wideo', '5 klipów wideo');
         let e = pastTenseEnding(name, 3);
         return `Wysła${e} ${videos}`;
     },
@@ -817,43 +817,43 @@ const phrases = {
     'user-statistics-legend-wiki': 'Edycje Wiki',
     'user-statistics-today': 'Dziś',
     'user-statistics-tooltip-$count-branch': (count) => {
-        return cardinal(count, 'gałąź', 'gałęzi', 'gałęzi');
+        return cardinal(count, '1 gałąź', '2 gałęzi', '5 gałęzi');
     },
     'user-statistics-tooltip-$count-issue': (count) => {
-        return cardinal(count, 'zgłoszenie błędu', 'zgłoszenia błędu', 'zgłoszeń błędu');
+        return cardinal(count, '1 zgłoszenie błędu', '2 zgłoszenia błędu', '5 zgłoszeń błędu');
     },
     'user-statistics-tooltip-$count-member': (count) => {
-        return cardinal(count, 'zmiana członkostwa', 'zmiany członkostwa', 'zmian członkostwa');
+        return cardinal(count, '1 zmiana członkostwa', '2 zmiany członkostwa', '5 zmian członkostwa');
     },
     'user-statistics-tooltip-$count-merge': (count) => {
-        return cardinal(count, 'scalenie zmian', 'scalenia zmian', 'scaleń zmian');
+        return cardinal(count, '1 scalenie zmian', '2 scalenia zmian', '5 scaleń zmian');
     },
     'user-statistics-tooltip-$count-merge-request': (count) => {
-        return cardinal(count, 'prośba o połączenie', 'prośby o połączenie', 'próśb o połączenie');
+        return cardinal(count, '1 prośba o połączenie', '2 prośby o połączenie', '5 próśb o połączenie');
     },
     'user-statistics-tooltip-$count-milestone': (count) => {
-        return cardinal(count, 'kamień milowy', 'kamienie milowe', 'kamieni milowych');
+        return cardinal(count, '1 kamień milowy', '2 kamienie milowe', '5 kamieni milowych');
     },
     'user-statistics-tooltip-$count-post': (count) => {
-        return cardinal(count, 'post', 'posty', 'postów');
+        return cardinal(count, '1 post', '2 posty', '5 postów');
     },
     'user-statistics-tooltip-$count-push': (count) => {
-        return cardinal(count, 'wgrywanie zmian', 'wgrywania zmian', 'wgrywań zmian');
+        return cardinal(count, '1 wgrywanie zmian', '2 wgrywania zmian', '5 wgrywań zmian');
     },
     'user-statistics-tooltip-$count-repo': (count) => {
-        return cardinal(count, 'zmiana repozytorium', 'zmiany repozytorium', 'zmian repozytorium');
+        return cardinal(count, '1 zmiana repozytorium', '2 zmiany repozytorium', '5 zmian repozytorium');
     },
     'user-statistics-tooltip-$count-survey': (count) => {
-        return cardinal(count, 'ankieta', 'ankiety', 'ankiet');
+        return cardinal(count, '1 ankieta', '2 ankiety', '5 ankiet');
     },
     'user-statistics-tooltip-$count-tag': (count) => {
-        return cardinal(count, 'tag', 'tagi', 'tagów');
+        return cardinal(count, '1 tag', '2 tagi', '5 tagów');
     },
     'user-statistics-tooltip-$count-task-list': (count) => {
-        return cardinal(count, 'lista zadań', 'listy zadań', 'list zadań');
+        return cardinal(count, '1 lista zadań', '2 listy zadań', '5 list zadań');
     },
     'user-statistics-tooltip-$count-wiki': (count) => {
-        return cardinal(count, 'edycja strony wiki', 'edycje strony wiki', 'edycji strony wiki');
+        return cardinal(count, '1 edycja strony wiki', '2 edycje strony wiki', '5 edycji strony wiki');
     },
 
     'video-capture-accept': 'Przyjmij',

@@ -4,7 +4,7 @@ import {
     gender,
     genderize,
     pastTenseEnding,
-} from 'locale/grammars/polish';
+} from 'locale/grammars/russian';
 
 let phrases = {
     'action-contact-by-email': 'Связаться по электронной почте',
@@ -25,13 +25,13 @@ let phrases = {
     'activation-schema': 'Проект',
 
     'alert-$count-new-bookmarks': (count) => {
-        return cardinal(count, 'новая закладка', 'новые закладки', 'новых закладок');
+        return cardinal(count, '1 новая закладка', '2 новые закладки', '5 новых закладок');
     },
     'alert-$count-new-notifications': (count) => {
-        return cardinal(count, 'новое уведомление', 'новых уведомления', 'новых уведомлений');
+        return cardinal(count, '1 новое уведомление', '2 новых уведомления', '5 новых уведомлений');
     },
     'alert-$count-new-stories': (count) => {
-        return cardinal(count, 'новый рассказ', 'новых рассказа', 'новых рассказов');
+        return cardinal(count, '1 новый рассказ', '2 новых рассказа', '5 новых рассказов');
     },
 
     'app-component-close': 'Закрыть',
@@ -47,10 +47,10 @@ let phrases = {
     'audio-capture-stop': 'Прекратить',
 
     'bookmark-$count-other-users': (count) => {
-        return cardinal(count, 'другой пользователь', 'других пользователя', 'других пользователей');
+        return cardinal(count, '1 другой пользователь', '2 других пользователя', '5 других пользователей');
     },
     'bookmark-$count-users': (count) => {
-        return cardinal(count, 'пользователь', 'пользователя', 'пользователей');
+        return cardinal(count, '1 пользователь', '2 пользователя', '5 пользователей');
     },
     'bookmark-$name-recommends-this': (name) => {
         return `${name} рекомендует это`;
@@ -192,8 +192,8 @@ let phrases = {
     },
     'notification-$name-is-assigned-to-your-issue': (name) => {
         let ve = pastTenseEnding(name);
-        let ae = ve;
-        return `${name} был${ve} назначен${ae} на ваш отчёт об ошибке`;
+        let ae = ve.substr(1);
+        return `${name} бы${ve} назначен${ae} на ваш отчёт об ошибке`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {
@@ -377,12 +377,13 @@ let phrases = {
     },
     'reaction-$name-is-assigned-to-issue': (name) => {
         let ve = pastTenseEnding(name);
-        let ae = ve;
-        return `${name} был${ve} назначен${ae} на этот отчёт об ошибке`;
+        let ae = ve.substr(1);
+        return `${name} бы${ve} назначен${ae} на этот отчёт об ошибке`;
     },
     'reaction-$name-is-assigned-to-merge-request': (name) => {
         let e = pastTenseEnding(name);
-        return `${name} был назначен на этот запрос слияния`;
+        let ae = ve.substr(1);
+        return `${name} бы${ve} назначен${ae} на этот запрос слияния`;
     },
     'reaction-$name-is-editing': (name) => {
         return `${name} редактирует комментарий...`;
@@ -478,7 +479,7 @@ let phrases = {
     'statistics-pie': 'Круговая',
 
     'story-$count-reactions': (count) => {
-        return cardinal(count, 'реакция', 'реакции', 'реакций');
+        return cardinal(count, '1 реакция', '2 реакции', '5 реакций');
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
         let e = pastTenseEnding(name);
@@ -613,32 +614,32 @@ let phrases = {
     'story-photo': 'Фото',
     'story-post': 'Опубликовать',
     'story-push-added-$count-files': (count) => {
-        let files = cardinal(count, 'файл', 'файла', 'файлов');
+        let files = cardinal(count, '1 файл', '2 файла', '5 файлов');
         return `${files} добавлено`;
     },
     'story-push-added-$count-lines': (count) => {
-        let lines = cardinal(count, 'линия', 'линии', 'линий');
+        let lines = cardinal(count, '1 линия', '2 линии', '5 линий');
         return `${lines} добавлено`;
     },
     'story-push-components-changed': 'Изменено следующие части:',
     'story-push-deleted-$count-files': (count) => {
-        let files = cardinal(count, 'файл', 'файла', 'файлов');
+        let files = cardinal(count, '1 файл', '2 файла', '5 файлов');
         return `${files} удалено`;
     },
     'story-push-deleted-$count-lines': (count) => {
-        let lines = cardinal(count, 'линия', 'линии', 'линий');
+        let lines = cardinal(count, '1 линия', '2 линии', '5 линий');
         return `${lines} удалено`;
     },
     'story-push-modified-$count-files': (count) => {
-        let files = cardinal(count, 'файл', 'файла', 'файлов');
+        let files = cardinal(count, '1 файл', '2 файла', '5 файлов');
         return `${files} изменено`;
     },
     'story-push-modified-$count-lines': (count) => {
-        let lines = cardinal(count, 'линия', 'линии', 'линий');
+        let lines = cardinal(count, '1 линия', '2 линии', '5 линий');
         return `${lines} изменено`;
     },
     'story-push-renamed-$count-files': (count) => {
-        let files = cardinal(count, 'файл', 'файла', 'файлов');
+        let files = cardinal(count, '1 файл', '2 файла', '5 файлов');
         return `${files} переименовано`;
     },
     'story-remove-yourself': 'Удалите себя',
@@ -672,7 +673,7 @@ let phrases = {
         return `${min} м. назад`;
     },
     'time-$minutes-ago': (minutes) => {
-        let time = cardinal(hours, 'Минута', '2 минуты', '5 минут');
+        let time = cardinal(minutes, 'Минута', '2 минуты', '5 минут');
         return `${time} назад`;
     },
     'time-just-now': 'Прямо сейчас',
@@ -730,22 +731,22 @@ let phrases = {
         return `Выполни${e} слияние`;
     },
     'user-activity-$name-posted-$count-audio-clips': (name, count) => {
-        let audios = cardinal(count, 'аудиоклип', 'аудиоклипа', 'аудиоклипов');
+        let audios = cardinal(count, 'аудиоклип', '2 аудиоклипа', '5 аудиоклипов');
         let e = pastTenseEnding(name);
         return `Опубликова${e} ${audios}`;
     },
     'user-activity-$name-posted-$count-links': (name, count) => {
-        let links = cardinal(count, 'веб-ссылка', 'веб-ссылки', 'веб-ссылок');
+        let links = cardinal(count, 'веб-ссылка', '2 веб-ссылки', '5 веб-ссылок');
         let e = pastTenseEnding(name);
         return `Опубликова${e} ${links}`;
     },
     'user-activity-$name-posted-$count-pictures': (name, count) => {
-        let pictures = cardinal(count, 'фото', 'фото', 'фото');
+        let pictures = cardinal(count, 'фото', '2 фото', '5 фото');
         let e = pastTenseEnding(name);
         return `Опубликова${e} ${pictures}`;
     },
     'user-activity-$name-posted-$count-video-clips': (name, count) => {
-        let videos = cardinal(count, 'видеоклип', 'видеоклипа', 'видеоклипов');
+        let videos = cardinal(count, 'видеоклип', '2 видеоклипа', '5 видеоклипов');
         let e = pastTenseEnding(name);
         return `Опубликова${e} ${videos}`;
     },
@@ -802,43 +803,43 @@ let phrases = {
     'user-statistics-legend-wiki': 'Правки wiki',
     'user-statistics-today': 'Cегодня',
     'user-statistics-tooltip-$count-branch': (count) => {
-        return cardinal(count, 'ветка', 'ветки', 'веток');
+        return cardinal(count, '1 ветка', '2 ветки', '5 веток');
     },
     'user-statistics-tooltip-$count-issue': (count) => {
-        return cardinal(count, 'отчёт', 'отчёта', 'отчётов');
+        return cardinal(count, '1 отчёт', '2 отчёта', '5 отчётов');
     },
     'user-statistics-tooltip-$count-member': (count) => {
-        return cardinal(count, 'изменение членства', 'изменения членства', 'изменений членства');
+        return cardinal(count, '1 изменение членства', '2 изменения членства', '5 изменений членства');
     },
     'user-statistics-tooltip-$count-merge': (count) => {
-        return cardinal(count, 'слияние', 'слияния', 'слияний');
+        return cardinal(count, '1 слияние', '2 слияния', '5 слияний');
     },
     'user-statistics-tooltip-$count-merge-request': (count) => {
-        return cardinal(count, 'запрос слияния', 'запроса слияния', 'запросов слияния');
+        return cardinal(count, '1 запрос слияния', '2 запроса слияния', '5 запросов слияния');
     },
     'user-statistics-tooltip-$count-milestone': (count) => {
-        return cardinal(count, 'веха', 'вехи', 'вех');
+        return cardinal(count, '1 веха', '2 вехи', '5 вех');
     },
     'user-statistics-tooltip-$count-post': (count) => {
-        return cardinal(count, 'сообщение', 'сообщений', 'сообщений');
+        return cardinal(count, '1 сообщение', '2 сообщений', '5 сообщений');
     },
     'user-statistics-tooltip-$count-push': (count) => {
-        return cardinal(count, 'помещение', 'помещения', 'помещений');
+        return cardinal(count, '1 помещение', '2 помещения', '5 помещений');
     },
     'user-statistics-tooltip-$count-repo': (count) => {
-        return cardinal(count, 'изменение репозитория', 'изменения репозитория', 'изменений репозитория');
+        return cardinal(count, '1 изменение репозитория', '2 изменения репозитория', '5 изменений репозитория');
     },
     'user-statistics-tooltip-$count-survey': (count) => {
-        return cardinal(count, 'опрос', 'опроса', 'опросов');
+        return cardinal(count, '1 опрос', '2 опроса', '5 опросов');
     },
     'user-statistics-tooltip-$count-tag': (count) => {
-        return cardinal(count, 'тег', 'теги', 'тегов');
+        return cardinal(count, '1 тег', '2 теги', '5 тегов');
     },
     'user-statistics-tooltip-$count-task-list': (count) => {
-        return cardinal(count, 'список задач', 'списка задач', 'списков задач');
+        return cardinal(count, '1 список задач', '2 списка задач', '5 списков задач');
     },
     'user-statistics-tooltip-$count-wiki': (count) => {
-        return cardinal(count, 'правка wiki', 'правки wiki', 'правок wiki');
+        return cardinal(count, '1 правка wiki', '2 правки wiki', '5 правок wiki');
     },
 
     'video-capture-accept': 'Принять',
