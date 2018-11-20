@@ -148,7 +148,8 @@ class NavigationTreeSync extends PureComponent {
         }
         let url;
         if (!disabled && node.page) {
-            url = route.find(node.page, route.params);
+            let params = _.omit(route.params, 'editing');
+            url = route.find(node.page, params);
         }
         let subtree;
         return (
