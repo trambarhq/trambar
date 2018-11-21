@@ -274,7 +274,7 @@ const phrases = {
     'role-summary-users': 'Użytkownicy',
 
     'role-tooltip-$count-others': (count) => {
-        return cardinal(count, 'inna', 'inne', 'innych');
+        return cardinal(count, '1 inna', '2 inne', '5 innych');
     },
 
     'server-list-add': 'Dodaj nowy server',
