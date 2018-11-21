@@ -170,7 +170,6 @@ const traditionalPhrases = {
         let projects = cardinalT(count, '這個項目', '這三個項目');
         return `你確定要恢復${projects}？`;
     },
-    'project-list-deleted': '已刪除',
     'project-list-edit': '編輯項目列表',
     'project-list-save': '保存項目列表',
     'project-list-status-archived': '已存檔',
@@ -745,7 +744,6 @@ const simplifiedPhrases = {
         let projects = cardinalS(count, '这个项目', '这三个项目');
         return `你确定要恢复${projects}？`;
     },
-    'project-list-deleted': '已删除',
     'project-list-edit': '编辑项目列表',
     'project-list-save': '保存项目列表',
     'project-list-status-archived': '已存档',

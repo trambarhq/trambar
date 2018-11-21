@@ -145,7 +145,6 @@ const phrases = {
         let projects = cardinal(count, 'das ausgewählte Projekt', 'diese 2 Projekte');
         return `Möchten Sie ${project} wirklich wiederherstellen?`;
     },
-    'project-list-deleted': 'Gelöscht',
     'project-list-edit': 'Projektliste bearbeiten',
     'project-list-save': 'Projektliste speichern',
     'project-list-status-archived': 'Archiviert',

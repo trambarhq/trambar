@@ -143,7 +143,6 @@ const phrases = {
         let projects = cardinal(count, 'det valgte prosjektet', 'disse 2 prosjektene');
         return `Er du sikker på at du vil gjenopprette ${projects}?`
     },
-    'project-list-deleted': 'Slettet',
     'project-list-edit': 'Rediger prosjektliste',
     'project-list-save': 'Lagre prosjektliste',
     'project-list-status-archived': 'Arkivert',

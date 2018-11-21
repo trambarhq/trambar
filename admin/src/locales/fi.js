@@ -143,7 +143,6 @@ const phrases = {
         let projects = cardinal(count, 'valitun projektin', 'nämä 2 projektia');
         return `Haluatko letmasti palauttaa ${projects}?`;
     },
-    'project-list-deleted': 'Poistettu',
     'project-list-edit': 'Muokkaa projektiluetteloa',
     'project-list-save': 'Tallenna projektiluettelo',
     'project-list-status-archived': 'Arkistoitu',

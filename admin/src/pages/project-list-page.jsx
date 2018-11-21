@@ -452,7 +452,7 @@ class ProjectListPageSync extends PureComponent {
                 }
                 return <td>{t('date-range-$start-$end', start, end)}</td>;
             } else {
-                return <td>{t('project-list-deleted')}</td>;
+                return <td>{t('project-list-status-deleted')}</td>;
             }
         }
     }

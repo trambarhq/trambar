@@ -146,7 +146,6 @@ const phrases = {
         let projects = cardinal(count, 'vybraný projekt', 'tyto 2 projekty', 'těchto 5 projektů');
         return `Opravdu chcete ${projects} obnovit?`;
     },
-    'project-list-deleted': 'Smazány',
     'project-list-edit': 'Upravit seznam projektů',
     'project-list-save': 'Uložit seznam projektů',
     'project-list-status-archived': 'Archivovány',

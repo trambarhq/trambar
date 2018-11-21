@@ -146,7 +146,6 @@ const phrases = {
         let projects = cardinal(count, 'wybrany projekt', 'te 2 wybrane projekty', 'tych 5 wybranych projektów');
         return `Czy na pewno chcesz przywrócić ${projects}?`;
     },
-    'project-list-deleted': 'Usunięty',
     'project-list-edit': 'Zmodyfikuj listę projektów',
     'project-list-save': 'Zapisz listę projektów',
     'project-list-status-archived': 'Zarchiwizowany',
