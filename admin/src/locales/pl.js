@@ -397,7 +397,7 @@ const phrases = {
     'sign-off-menu-sign-off': 'Wyloguj się',
 
     'table-heading-api-access': 'Dostęp API',
-    'table-heading-date-range': 'Active period',
+    'table-heading-date-range': 'Aktywny okres',
     'table-heading-email': 'E-mail',
     'table-heading-issue-tracker': 'Issue-tracker',
     'table-heading-last-modified': 'Zmodyfikowano',
@@ -405,7 +405,7 @@ const phrases = {
     'table-heading-name': 'Imię i nazwisko',
     'table-heading-oauth': 'Autoryzacja OAuth',
     'table-heading-projects': 'Projekty',
-    'table-heading-repositories': 'Repositories',
+    'table-heading-repositories': 'Repozytoria',
     'table-heading-roles': 'Role',
     'table-heading-server': 'Serwery',
     'table-heading-this-month': 'Bieżący miesiąc',
