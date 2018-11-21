@@ -164,7 +164,7 @@ const phrases = {
     'project-summary-access-control-non-member-comment': 'Osoby niebędące członkami mogą komentować',
     'project-summary-access-control-non-member-view': 'Osoby niebędące członkami mogą zobaczyć zawartość projektu',
     'project-summary-add': 'Dodaj nowy projekt',
-    'project-summary-archive': 'Archive project',
+    'project-summary-archive': 'Zarchiwizuj projekt',
     'project-summary-cancel': 'Anuluj',
     'project-summary-confirm-archive': 'Czy na pewno chcesz zarchiwizować ten projekt?',
     'project-summary-confirm-delete': 'Czy na pewno chcesz usunąć ten projekt?',
@@ -245,7 +245,7 @@ const phrases = {
     'role-list-title': 'Role',
 
     'role-summary-$title': (title) => {
-        let text = 'Role';
+        let text = 'Rola';
         if (title) {
             text += `: ${title}`;
         }
