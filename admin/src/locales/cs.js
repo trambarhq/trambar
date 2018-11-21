@@ -188,7 +188,7 @@ const phrases = {
     'project-summary-title': 'Název',
 
     'project-tooltip-$count-others': (count) => {
-        return cardinal(count, 'další', 'další', 'dalších');
+        return cardinal(count, '1 další', '2 další', '5 dalších');
     },
 
     'repo-list-cancel': 'Zrušit',
