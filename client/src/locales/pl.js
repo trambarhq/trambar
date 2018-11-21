@@ -70,7 +70,7 @@ const phrases = {
     'bookmark-$you-bookmarked-it-and-$others-recommends-it': (you, users, count) => {
         let l = pastTenseEnding(you, 2);
         let verb = plural(count) ? 'polecają' : 'poleca';
-        return [ `Założy${l} zakładkę do tego (i `, users, ` ${verb} it)` ];
+        return [ `Założy${l} zakładkę do tego (i `, users, ` ${verb} go)` ];
     },
     'bookmark-recommendations': 'Polecenia',
 
@@ -430,7 +430,7 @@ const phrases = {
 
     'settings-development': 'Opcje programistyczne',
     'settings-device': 'Urządzenie mobilne',
-    'settings-devices': 'Urządzenis mobilne',
+    'settings-devices': 'Urządzenia mobilne',
     'settings-language': 'Język',
     'settings-mobile-alert': 'Alert mobilny',
     'settings-notification': 'Powiadomienie',
