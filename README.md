@@ -6,6 +6,7 @@ Trambar is a companion tool for GitLab. It lets you transform your GitLab activi
 Trambar is designed to work with self-hosted instances of GitLab. It's not possible currently to pair it with an account at [gitlab.com](https://about.gitlab.com/).
 
 * [Features](#features)
+* [Screenshots](docs/screenshots.md)
 * [Demo](docs/demo.md)
 * [Getting started](docs/getting-started.md)
 * [User guide](docs/user-guide.md)
