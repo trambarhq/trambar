@@ -41,7 +41,9 @@ class PayloadManager extends EventEmitter {
                 this.connectivityPromise = null;
             }
             this.restartPayloads(this.payloads);
-            this.progressInterval = setInterval(this.updatePayloadsBackendProgress, 10000);
+            this.progressInterval = setInterval(() => {
+                this.updatePayloadsBackendProgress();
+            }, 10000);
         }
     }
 
