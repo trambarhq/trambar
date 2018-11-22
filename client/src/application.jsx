@@ -458,7 +458,7 @@ class Application extends PureComponent {
             // don't retain the previous route when there's no transition effect
             prevRoute = null;
         }
-        this.setState({ route, prevRoute, database, env });
+        this.setState({ route, prevRoute, database, payloads, env });
     }
 
     /**
