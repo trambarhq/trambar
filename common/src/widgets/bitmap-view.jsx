@@ -36,7 +36,6 @@ class BitmapView extends PureComponent {
         // give empty canvas a size so it scale correctly when empty
         props.width = 4;
         props.height = 4;
-        props.style = _.assign({ width, height }, props.style);
         return <canvas ref={setters.canvas} {...props} />
     }
 
