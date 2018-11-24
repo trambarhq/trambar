@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 class Route {
     constructor(routeManager) {
         this.routeManager = routeManager;
@@ -11,6 +13,21 @@ class Route {
         this.hash = routeManager.hash;
         this.public = routeManager.route.public;
         this.callbacks = [];
+
+        let module = routeManager.params.module;
+        if (process.env.NODE_ENV !== 'production') {
+            if (!module) {
+                if (!route.name) {
+                    throw new Error('No routing information');
+                } else {
+                    throw new Error('No component for route: ' + route.name);
+                }
+            } else if (!module.default) {
+                throw new Error('Component not exported as default: ' + route.name);
+            }
+        }
+        this.page = module.default;
+        this.pageParams = _.pick(this.params, _.keys(routeManager.route.params), 'key');
     }
 
     change(url, options) {

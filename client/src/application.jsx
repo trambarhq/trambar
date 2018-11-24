@@ -136,30 +136,37 @@ class Application extends PureComponent {
         );
     }
 
+    /**
+     * Render the current page
+     *
+     * @return {ReactElement}
+     */
     renderCurrentPage() {
         let { database, route, env, payloads } = this.state;
-        let CurrentPage = getRouteClass(route);
-        if (!CurrentPage) {
-            return null;
-        }
+        let CurrentPage = route.page;
         let pageProps = _.assign({
             database,
             route,
             payloads,
             env,
-        }, _.omit(route.params, 'module', 'ui'));
+        }, route.pageParams);
         if (CurrentPage.diagnostics) {
             _.assign(pageProps, this.props);
         }
         return <CurrentPage {...pageProps} />;
     }
 
+    /**
+     * Render the previous page, if it uses transition
+     *
+     * @return {ReactElement|null}
+     */
     renderPreviousPage() {
         let { database, prevRoute, env, payloads } = this.state;
-        let PreviousPage = getRouteClass(prevRoute);
-        if (!PreviousPage) {
+        if (!prevRoute) {
             return null;
         }
+        let PreviousPage = prevRoute.page;
         let pageProps = _.assign({
             database,
             route: prevRoute,
@@ -167,7 +174,7 @@ class Application extends PureComponent {
             env,
             transitionOut: true,
             onTransitionOut: this.handlePageTransitionOut,
-        }, _.omit(prevRoute.params, 'module', 'ui'));
+        }, prevRoute.pageParams);
         return <PreviousPage {...pageProps} />;
     }
 
@@ -448,8 +455,7 @@ class Application extends PureComponent {
             env = new Environment(envMonitor, extra);
         }
         let transitionOut = false;
-        let PreviousPage = getRouteClass(prevRoute);
-        if (PreviousPage && PreviousPage.useTransition) {
+        if (prevRoute && prevRoute.page.useTransition) {
             if (prevRoute.params.key !== route.params.key) {
                 transitionOut = true;
             }
@@ -524,27 +530,6 @@ class Application extends PureComponent {
             return (evt.returnValue = 'Are you sure?');
         }
     }
-}
-
-function getRouteClass(route) {
-    if (!route) {
-        return null;
-    }
-    let { module } = route.params;
-    if (process.env.NODE_ENV !== 'production') {
-        if (!module) {
-            if (!route.name) {
-                console.log('No routing information');
-            } else {
-                console.log('No component for route: ' + route.name);
-            }
-            return null;
-        } else if (!module.default) {
-            console.log('Component not exported as default: ' + route.name);
-            return null;
-        }
-    }
-    return module.default;
 }
 
 export {

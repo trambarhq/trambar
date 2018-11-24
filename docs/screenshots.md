@@ -3,7 +3,7 @@ Screenshots
 
 ## Start screen
 
-![Start screen](screenshots/start-page.jpg??)
+![Start screen](screenshots/start-page.jpg)
 
 ## News
 
@@ -15,7 +15,7 @@ Screenshots
 
 ## Bookmarks
 
-![Bookmarks](screenshots/bookmarks-page.jpg?)
+![Bookmarks](screenshots/bookmarks-page.jpg)
 
 ## People
 
@@ -35,7 +35,7 @@ Screenshots
 
 ## Mobile interface
 
-![News - Chinese](screenshots/news-page-mobile-zh.jpg?) ![News - Russian](screenshots/news-page-mobile-ru.jpg?)
+![News - Chinese](screenshots/news-page-mobile-zh.jpg) ![News - Russian](screenshots/news-page-mobile-ru.jpg)
 
 ## Administrative console
 
