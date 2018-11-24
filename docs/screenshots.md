@@ -32,3 +32,11 @@ Screenshots
 ## Audio recording
 
 ![Audio recording](screenshots/audio-recorder.jpg)
+
+## Mobile interface
+
+![News - Chinese](screenshots/news-page-mobile-zh.jpg?) ![News - Russian](screenshots/news-page-mobile-ru.jpg?)
+
+## Administrative console
+
+![Admin console](screenshots/admin-project-page.jpg)
