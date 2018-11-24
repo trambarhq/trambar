@@ -1,12 +1,15 @@
-require('moment/locale/zh-cn');
-require('moment/locale/zh-hk');
-require('moment/locale/zh-tw');
-require('moment').defineLocale('zh-sg', { parentLocale: 'zh-cn' });
-require('moment').defineLocale('zh-mo', { parentLocale: 'zh-hk' });
+import 'moment/locale/zh-cn';
+import 'moment/locale/zh-hk';
+import 'moment/locale/zh-tw';
+import { cardinalT, cardinalS } from 'locale/grammars/chinese';
+
+import Moment from 'moment';
+Moment.defineLocale('zh-sg', { parentLocale: 'zh-cn' });
+Moment.defineLocale('zh-mo', { parentLocale: 'zh-hk' });
 
 // remove white-spaces from relative time
 ['zh-cn', 'zh-hk', 'zh-tw'].forEach((locale) => {
-    let localeData = require('moment').localeData('zh-cn');
+    let localeData = Moment.localeData('zh-cn');
     let relativeTime = localeData._relativeTime;
     for (let key in relativeTime) {
         let value = relativeTime[key];
@@ -616,19 +619,19 @@ let traditionalPhrases = {
     'telephone-dialog-close': '關閉',
 
     'time-$days-ago': (days) => {
-        return cardinal(days, '一天前');
+        return cardinalT(days, '一天前');
     },
     'time-$hours-ago': (hours) => {
-        return cardinal(hours, '一小時前');
+        return cardinalT(hours, '一小時前');
     },
     'time-$hr-ago': (hr) => {
-        return cardinal(hr, '一小時前');
+        return cardinalT(hr, '一小時前');
     },
     'time-$min-ago': (min) => {
-        return cardinal(hr, '一分鐘前');
+        return cardinalT(hr, '一分鐘前');
     },
     'time-$minutes-ago': (minutes) => {
-        return cardinal(hr, '一分鐘前');
+        return cardinalT(hr, '一分鐘前');
     },
     'time-just-now': '剛才',
     'time-yesterday': '昨天',
@@ -1336,19 +1339,19 @@ let simplifiedPhrases = {
     'telephone-dialog-close': '关闭',
 
     'time-$days-ago': (days) => {
-        return cardinal(days, '一天前');
+        return cardinalS(days, '一天前');
     },
     'time-$hours-ago': (hours) => {
-        return cardinal(hours, '一小时前');
+        return cardinalS(hours, '一小时前');
     },
     'time-$hr-ago': (hr) => {
-        return cardinal(hr, '一小时前');
+        return cardinalS(hr, '一小时前');
     },
     'time-$min-ago': (min) => {
-        return cardinal(min, '一分钟前');
+        return cardinalS(min, '一分钟前');
     },
     'time-$minutes-ago': (minutes) => {
-        return cardinal(minutes, '一分钟前');
+        return cardinalS(minutes, '一分钟前');
     },
     'time-just-now': '刚才',
     'time-yesterday': '昨天',
@@ -1805,13 +1808,13 @@ let cantonesePhrases = {
     },
 
     'time-$days-ago': (days) => {
-        return cardinal(days, '一日前');
+        return cardinalT(days, '一日前');
     },
     'time-$hours-ago': (hours) => {
-        return cardinal(hours, '一個鐘頭前');
+        return cardinalT(hours, '一個鐘頭前');
     },
     'time-$hr-ago': (hr) => {
-        return cardinal(hr, '一個鐘頭前');
+        return cardinalT(hr, '一個鐘頭前');
     },
     'time-just-now': '啱啱線',
     'time-yesterday': '尋日',

@@ -1,5 +1,10 @@
 import 'moment/locale/cs';
-import { list, cardinal, genderize, pastTenseEnding } from 'locale/grammars/czech';
+import {
+    cardinal,
+    list,
+    genderize,
+    pastTenseEnding
+} from 'locale/grammars/czech';
 
 let phrases = {
     'action-contact-by-email': 'Kontaktovat e-mailem',

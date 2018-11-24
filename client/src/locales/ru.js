@@ -1,7 +1,7 @@
 import 'moment/locale/ru';
 import {
     cardinal,
-    gender,
+    list,
     genderize,
     pastTenseEnding,
 } from 'locale/grammars/russian';

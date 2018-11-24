@@ -2,6 +2,7 @@ import 'moment/locale/pl';
 import {
     plural,
     cardinal,
+    list,
     gender,
     genderize,
     pastTenseEnding,
