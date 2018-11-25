@@ -53,7 +53,7 @@ class Calendar extends PureComponent {
             isWeekend.push(isWeekend.shift());
         }
         let titleFormat = (showYear) ? 'MMMM YYYY' : 'MMMM';
-        let title = firstDay.format(titleFormat);
+        let title = _.capitalize(firstDay.format(titleFormat));
         let headings = _.map(dayLabels, (label, index) => {
             let classNames = [
                 isWeekend[index] ? 'weekend' : 'workweek'
