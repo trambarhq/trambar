@@ -301,7 +301,7 @@ class SignInPageSync extends PureComponent {
         return this.openPopUpWindow(url).then(() => {
             // retrieve authorization object from server
             let db = database.use({ by: this });
-            return db.checkSession().catch((err) => {
+            return db.checkAuthorization().catch((err) => {
                 let errors = _.clone(errors);
                 errors[serverID] = err;
                 this.setState({ errors });
