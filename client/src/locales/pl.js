@@ -259,7 +259,7 @@ const phrases = {
     'notification-$name-pushed-code-to-$branch': (name, branch) => {
         let l = pastTenseEnding(name, 3);
         let a = (l === 'ł') ? 'ą' : 'ę';
-        return `Wypchn${a}${l} zmiany gałęzi „${branch}”`;
+        return `${name} wypchn${a}${l} zmiany gałęzi „${branch}”`;
     },
     'notification-$name-requested-to-join': (name) => {
         let l = pastTenseEnding(name, 3);
@@ -269,7 +269,7 @@ const phrases = {
         switch (story) {
             case 'survey': story = 'ankiety'; break;
             case 'task-list': story = 'listy zadań'; break;
-            case 'post': story = ' posta'; break;
+            case 'post': story = 'posta'; break;
             default: story = 'wiadomości';
         }
         let l = pastTenseEnding(name, 3);
