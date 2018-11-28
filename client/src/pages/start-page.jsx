@@ -270,7 +270,7 @@ class StartPageSync extends PureComponent {
     renderDescription() {
         let { env, system } = this.props;
         let { t, p } = env.locale;
-        if (!system) {
+        if (!system || !system.details) {
             return null;
         }
         let { title, description } = system.details;
