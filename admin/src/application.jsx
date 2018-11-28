@@ -88,21 +88,7 @@ class Application extends PureComponent {
      */
     render() {
         let { database, route, env, payloads } = this.state;
-        let { module } = route.params;
-        if (process.env.NODE_ENV !== 'production') {
-            if (!module) {
-                if (!route.name) {
-                    console.log('No routing information');
-                } else {
-                    console.log('No component for route: ' + route.name);
-                }
-                return null;
-            } else if (!module.default) {
-                console.log('Component not exported as default: ' + route.name);
-                return null;
-            }
-        }
-        let CurrentPage = module.default;
+        let CurrentPage = route.page;
         let navProps = {
             database,
             route,
@@ -114,7 +100,7 @@ class Application extends PureComponent {
             route,
             env,
             payloads,
-        }, route.params);
+        }, route.pageParams);
         return (
             <div className="application" id="application">
                 <SideNavigation {...navProps} />
