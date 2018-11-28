@@ -31,7 +31,7 @@ class RoleTooltip extends PureComponent {
                 });
             }
             let title0 = p(role0.details.title) || role0.name;
-            let first = <a href={url0} key={0}>{title0}</a>;
+            first = <a href={url0} key={0}>{title0}</a>;
             roles = _.slice(roles, 1);
         }
         let contents;
