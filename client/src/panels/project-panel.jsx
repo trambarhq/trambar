@@ -525,9 +525,7 @@ class ProjectPanel extends PureComponent {
         db.endSession().then(() => {
             // delete links of all projects on server
             let serverLinks = _.filter(projectLinks, { address: context.address });
-            return db.remove({ schema: 'local', table: 'project_link' }, serverLinks).then(() => {
-                return route.replace('start-page', {}, { schema: null });
-            });
+            return db.remove({ schema: 'local', table: 'project_link' }, serverLinks);
         });
     }
 }

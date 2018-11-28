@@ -735,7 +735,7 @@ class ServerSummaryPageSync extends PureComponent {
         let address = _.get(system, 'settings.address');
         let warning;
         if (!address) {
-            if (system === undefined) {
+            if (system) {
                 warning = t('server-summary-system-address-missing');
             }
             address = window.location.origin;

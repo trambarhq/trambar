@@ -29,6 +29,9 @@ class SignOffMenu extends AsyncComponent {
         let { database, route, env } = this.props;
         let { t, p } = env.locale;
         let db = database.use({ schema: 'global', by: this });
+        if (!db.authorized) {
+            return null;
+        }
         meanwhile.show(<div className="sign-off-menu" />);
         return db.start().then((currentUserID) => {
             return UserFinder.findUser(db, currentUserID).then((user) => {
@@ -57,9 +60,7 @@ class SignOffMenu extends AsyncComponent {
      */
     handleSignOffClick = (evt) => {
         let { database, route } = this.props;
-        database.endSession().then(() => {
-            route.push('sign-in-page');
-        });
+        database.endSession();
     }
 }
 

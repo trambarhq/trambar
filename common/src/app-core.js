@@ -116,8 +116,8 @@ function start(cfg) {
                     // first, see if there's a saved session
                     let promise = loadSession(address).then((session) => {
                         if (!dataSource.restoreAuthorization(location, session)) {
+                            // there was none or it's expired--show the sign-in page
                             if (!route.signIn) {
-                                // there was none or it's expired--show the sign-in page
                                 let signInPageName = _.findKey(routeManager.routes, { signIn: true });
                                 return evt.substitute(signInPageName).then(() => {
                                     // ask the data-source to request authentication
@@ -153,7 +153,9 @@ function start(cfg) {
     });
     dataSource.addEventListener('expiration', (evt) => {
         // remove the expired session
-        removeSession(evt.session);
+        removeSession(evt.session).then(() => {
+            return routeManager.replace(routeManager.name, routeManager.params);
+        });
     });
     notifier.addEventListener('connection', (evt) => {
         currentConnection = evt.connection;

@@ -37,6 +37,9 @@ class NavigationTree extends AsyncComponent {
             route,
             env,
         };
+        if (!db.authorized) {
+            return <NavigationTreeSync {...props} />;
+        }
         meanwhile.show(<NavigationTreeSync {...props} />);
         return db.start().then((currentUserID) => {
             let params = route.params;
@@ -431,6 +434,7 @@ class NavigationTreeSync extends PureComponent {
     repositionArrow() {
         let { route } = this.props;
         let { arrowCount } = this.state;
+        let tries = 0;
         clearInterval(this.arrowRepositioningInterval);
         this.arrowRepositioningInterval = setInterval(() => {
             let { arrowPosition } = this.state;
@@ -457,8 +461,9 @@ class NavigationTreeSync extends PureComponent {
                 let containerRect = container.getBoundingClientRect();
                 pos = Math.floor(linkRect.top + ((linkRect.height - arrowRect.height) / 2) - containerRect.top) + 1;
             }
-            if (pos !== arrowPosition || arrowCount !== level) {
+            if ((pos !== arrowPosition || arrowCount !== level) && tries < 20) {
                 this.setState({ arrowPosition: pos, arrowAction: action, arrowCount: level });
+                tries++;
             } else {
                 clearInterval(this.arrowRepositioningInterval);
             }
