@@ -405,7 +405,7 @@ function changeNotification() {
  */
 function changeSubscription() {
     let { address, schema } = currentLocation;
-    let watch = (applicationArea === 'admin') ? '*' : schema;
+    let watch = (applicationArea === 'admin') ? '*' : (schema || 'global');
     let { localeCode } = localeManager;
     let { method, token, relay, details } = currentConnection;
     if (!token) {

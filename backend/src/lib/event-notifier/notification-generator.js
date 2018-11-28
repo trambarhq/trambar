@@ -240,6 +240,9 @@ function generateReactionPublicationNotifications(db, event) {
  */
 function generateBookmarkNotifications(db, event) {
     return Promise.try(() => {
+        if (!isModifying(event, 'bookmark')) {
+            return [];
+        }
         var senderIdsBefore = event.previous.user_ids;
         var senderIdsAfter = event.current.user_ids;
         if (!_.isEmpty(senderIdsBefore) || _.isEmpty(senderIdsAfter)) {
