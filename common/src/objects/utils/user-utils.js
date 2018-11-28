@@ -238,16 +238,14 @@ function canAddIssue(user, story, repos, access) {
         return false;
     }
     if (StoryUtils.isTrackable(story)) {
-        if (canModerate(user) || isAuthor(user, story)) {
-            // see if user is a member of one of the repos
-            return _.some(repos, (repo) => {
-                if (_.includes(repo.user_ids, user.id)) {
-                    if (repo.details.issues_enabled) {
-                        return true;
-                    }
+        // see if user is a member of one of the repos
+        return _.some(repos, (repo) => {
+            if (_.includes(repo.user_ids, user.id)) {
+                if (repo.details.issues_enabled) {
+                    return true;
                 }
-            });
-        }
+            }
+        });
     }
     return false;
 }
