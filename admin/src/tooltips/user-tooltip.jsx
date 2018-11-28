@@ -30,7 +30,7 @@ class UserTooltip extends PureComponent {
         let list = _.map(users, (user, i) => {
             let url;
             if (project) {
-                url = route.find('user-summary-page', {
+                url = route.find('member-summary-page', {
                     projectID: project.id,
                     userID: user.id,
                 });
