@@ -53,7 +53,7 @@ function find(db, params) {
  */
 function findDailyActivitiesOfProject(db, project, publicOnly) {
     if (!project || project.deleted) {
-        return null;
+        return Promise.resolve(null);
     }
     // load story-date-range statistics
     let query = {
@@ -122,8 +122,8 @@ function findDailyActivitiesOfProjects(db, projects) {
  * @return {Promise<Object>}
  */
 function findDailyActivitiesOfUser(db, project, user, publicOnly) {
-    if (!user) {
-        return null;
+    if (!user || user.deleted) {
+        return Promise.resolve(null);
     }
     return findDailyActivitiesOfUsers(db, project, [ user ], publicOnly).then((hash) => {
         return _.get(hash, user.id, null);
@@ -141,7 +141,7 @@ function findDailyActivitiesOfUser(db, project, user, publicOnly) {
  * @return {Promise<Object>}
  */
 function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
-    if (!project) {
+    if (!project || project.deleted) {
         return Promise.resolve(null);
     }
     let schema = project.name;
@@ -208,8 +208,8 @@ function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
  * @return {Promise<Object>}
  */
 function findDailyNotificationsOfUser(db, project, user) {
-    if (!user) {
-        return null;
+    if (!user || user.deleted) {
+        return Promise.resolve(null);
     }
     return findDailyNotificationsOfUsers(db, project, [ user ]).then((hash) => {
         return _.get(hash, user.id, null);
@@ -226,7 +226,7 @@ function findDailyNotificationsOfUser(db, project, user) {
  * @return {Promise<Object>}
  */
 function findDailyNotificationsOfUsers(db, project, users) {
-    if (!project) {
+    if (!project || project.deleted) {
         return Promise.resolve(null);
     }
     let schema = project.name;
@@ -283,8 +283,8 @@ function findDailyNotificationsOfUsers(db, project, users) {
  * @return {Promise<Object>}
  */
 function findDailyActivitiesOfRepo(db, project, repo) {
-    if (!repo) {
-        return null;
+    if (!project || project.deleted || !repo || repo.deleted) {
+        return Promise.resolve(null);
     }
     return findDailyActivitiesOfRepos(db, project, [ repo ]).then((hash) => {
         return _.get(hash, repo.id, null);
@@ -301,7 +301,7 @@ function findDailyActivitiesOfRepo(db, project, repo) {
  * @return {Promise<Object>}
  */
 function findDailyActivitiesOfRepos(db, project, repos) {
-    if (!project) {
+    if (!project || project.deleted) {
         return Promise.resolve(null);
     }
     let schema = project.name;
