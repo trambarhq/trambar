@@ -85,35 +85,14 @@ class NavigationTreeSync extends PureComponent {
     constructor(props) {
         super(props);
         this.components = ComponentRefs({
-            activeLink: HTMLAnchorElement,
             container: HTMLElement,
             arrow: HTMLElement,
         });
         this.state = {
-            arrowPosition: 0,
+            arrowPosition: -1,
             arrowCount: 0,
             arrowAction: '',
-
-            project: props.project || emptyObject,
-            user: props.user || emptyObject,
-            role: props.role || emptyObject,
-            repo: props.repo || emptyObject,
-            server: props.server || emptyObject,
         };
-    }
-
-    /**
-     * Save copies of objects so we can still render their names while
-     * the section is collapsing
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let keys = _.keys(this.state);
-        let objects = _.pickBy(_.pick(nextProps, keys), Boolean);
-        if (!_.isEmpty(objects)) {
-            this.setState(objects);
-        }
     }
 
     render() {
@@ -138,39 +117,29 @@ class NavigationTreeSync extends PureComponent {
 
     renderNode(node, level, key) {
         let { route, disabled } = this.props;
-        let { setters } = this.components;
-        if (!node) {
-            return;
-        }
-        let ref;
-        if (this.isActive(node)) {
-            ref = setters.activeLink;
-        }
         let url;
         if (!disabled && node.page) {
             let params = _.omit(route.params, 'editing');
             url = route.find(node.page, params);
         }
-        let subtree;
         return (
             <div key={key} className={`level${level}`}>
-                <a ref={ref} href={url}>{node.label}</a>
+                <a href={url}>{node.label}</a>
                 {this.renderChildNodes(node, level + 1)}
             </div>
         );
     }
 
     renderChildNodes(node, level) {
-        if (_.isEmpty(node.children)) {
-            return null;
-        }
-        let props = {
-            open: node.showChildren || this.hasActiveChild(node),
-            children: _.map(node.children, (childNode, i) => {
+        let children = _.filter(node.children);
+        let open = !_.isEmpty(children);
+        let contents;
+        if (open) {
+            contents = _.map(children, (childNode, i) => {
                 return this.renderNode(childNode, level, i)
-            })
+            });
         }
-        return <CollapsibleContainer {...props} />;
+        return <CollapsibleContainer open={open}>{contents}</CollapsibleContainer>;
     }
 
     renderArrow() {
@@ -205,17 +174,6 @@ class NavigationTreeSync extends PureComponent {
         }
     }
 
-    isActive(node) {
-        let { route } = this.props;
-        return node.page === route.name;
-    }
-
-    hasActiveChild(node) {
-        return _.some(node.children, (node) => {
-            return this.isActive(node) || this.hasActiveChild(node);
-        });
-    }
-
     /**
      * Return root-level nav nodes
      *
@@ -228,7 +186,7 @@ class NavigationTreeSync extends PureComponent {
             this.getRoleListNode(),
             this.getServerListNode(),
             this.getSettingsNode(),
-        ]
+        ];
     }
 
     /**
@@ -253,23 +211,22 @@ class NavigationTreeSync extends PureComponent {
      * @return {Object}
      */
     getProjectNode() {
-        let { route, env } = this.props;
-        let { project } = this.state;
+        let { route, env, project } = this.props;
         let { t, p } = env.locale;
-        let label;
-        if (route.params.projectID === 'new') {
+        let page = 'project-summary-page';
+        let label, children;
+        if (project) {
+            label = p(project.details.title) || project.name || '-';
+            children = [
+                this.getMemberListNode(),
+                this.getRepoListNode(),
+            ];
+        } else if (route.params.projectID === 'new') {
             label = <i>{t('nav-project-new')}</i>;
         } else {
-            label = p(project.details.title) || project.name || '-';
+            return null;
         }
-        let page = 'project-summary-page';
-        // show children when there's actually a project
-        let showChildren = (typeof(route.params.projectID) === 'number');
-        let children = [
-            this.getMemberListNode(),
-            this.getRepoListNode(),
-        ];
-        return { label, page, children, showChildren };
+        return { label, page, children };
     }
 
     /**
@@ -281,10 +238,7 @@ class NavigationTreeSync extends PureComponent {
         let { route, env } = this.props;
         let { t } = env.locale;
         let label = t('nav-members');
-        let page;
-        if (typeof(route.params.projectID) === 'number') {
-            page = 'member-list-page';
-        }
+        let page = 'member-list-page';
         let children = [
             this.getMemberNode(),
         ];
@@ -297,17 +251,16 @@ class NavigationTreeSync extends PureComponent {
      * @return {Object}
      */
     getMemberNode() {
-        let { route, env } = this.props;
-        let { user } = this.state;
+        let { route, env, user } = this.props;
         let { t, p } = env.locale;
-        let label, page;
-        if (route.params.userID === 'new') {
+        let page = 'member-summary-page';
+        let label
+        if (user) {
+            label = p(user.details.name) || user.username || '-';
+        } else if (route.params.userID === 'new') {
             label = <i>{t('nav-member-new')}</i>;
         } else {
-            label = p(user.details.name) || user.username || '-';
-        }
-        if (route.params.projectID && route.params.userID) {
-            page = 'member-summary-page';
+            return null;
         }
         return { label, page };
     }
@@ -320,11 +273,8 @@ class NavigationTreeSync extends PureComponent {
     getRepoListNode() {
         let { route, env } = this.props;
         let { t } = env.locale;
+        let page = 'repo-list-page';
         let label = t('nav-repositories');
-        let page;
-        if (typeof(route.params.projectID) === 'number') {
-            page = 'repo-list-page';
-        }
         let children = [
             this.getRepoNode(),
         ];
@@ -337,13 +287,14 @@ class NavigationTreeSync extends PureComponent {
      * @return {Object}
      */
     getRepoNode() {
-        let { route, env } = this.props;
-        let { repo } = this.state;
+        let { route, env, repo } = this.props;
         let { t, p } = env.locale;
-        let label = p(repo.details.title) || repo.name || '-';
-        let page;
-        if (route.params.projectID && route.params.repoID) {
-            page = 'repo-summary-page';
+        let page = 'repo-summary-page';
+        let label;
+        if (repo) {
+            label = p(repo.details.title) || repo.name || '-';
+        } else {
+            return null;
         }
         return { label, page };
     }
@@ -356,8 +307,8 @@ class NavigationTreeSync extends PureComponent {
     getUserListNode() {
         let { env } = this.props;
         let { t } = env.locale;
-        let label = t('nav-users');
         let page = 'user-list-page';
+        let label = t('nav-users');
         let children = [
             this.getUserNode(),
         ];
@@ -370,17 +321,16 @@ class NavigationTreeSync extends PureComponent {
      * @return {Object}
      */
     getUserNode() {
-        let { route, env } = this.props;
-        let { user } = this.state;
+        let { route, env, user } = this.props;
         let { t, p } = env.locale;
-        let label, page;
-        if (route.params.userID === 'new') {
+        let page = 'user-summary-page';
+        let label;
+        if (user) {
+            label = p(user.details.name) || user.username || '-';
+        } else if (route.params.userID === 'new') {
             label = <i>{t('nav-user-new')}</i>;
         } else {
-            label = p(user.details.name) || user.username || '-';
-        }
-        if (route.params.userID) {
-            page = 'user-summary-page';
+            return null;
         }
         return { label, page };
     }
@@ -393,8 +343,8 @@ class NavigationTreeSync extends PureComponent {
     getRoleListNode() {
         let { env } = this.props;
         let { t } = env.locale;
-        let label = t('nav-roles');
         let page = 'role-list-page';
+        let label = t('nav-roles');
         let children = [
             this.getRoleNode(),
         ];
@@ -407,17 +357,16 @@ class NavigationTreeSync extends PureComponent {
      * @return {Object}
      */
     getRoleNode() {
-        let { route, env } = this.props;
-        let { role } = this.state;
+        let { route, env, role } = this.props;
         let { t, p } = env.locale;
-        let label, page;
-        if (route.params.roleID === 'new') {
+        let page = 'role-summary-page';
+        let label;
+        if (role) {
+            label = p(role.details.title) || role.name || '-';
+        } else if (route.params.roleID === 'new') {
             label = <i>{t('nav-role-new')}</i>;
         } else {
-            label = p(role.details.title) || role.name || '-';
-        }
-        if (route.params.roleID) {
-            page = 'role-summary-page';
+            return null;
         }
         return { label, page };
     }
@@ -430,8 +379,8 @@ class NavigationTreeSync extends PureComponent {
     getServerListNode() {
         let { env } = this.props;
         let { t } = env.locale;
-        let label = t('nav-servers');
         let page = 'server-list-page';
+        let label = t('nav-servers');
         let children = [
             this.getServerNode(),
         ];
@@ -444,20 +393,19 @@ class NavigationTreeSync extends PureComponent {
      * @return {Object}
      */
     getServerNode() {
-        let { route, env } = this.props;
-        let { server } = this.state;
+        let { route, env, server } = this.props;
         let { t, p } = env.locale;
-        let label, page;
-        if (route.params.serverID === 'new') {
-            label = <i>{t('nav-server-new')}</i>;
-        } else {
+        let page = 'server-summary-page';
+        let label;
+        if (server) {
             label = p(server.details.title);
             if (!label) {
                 label = (server.type) ? t(`server-type-${server.type}`) : '-';
             }
-        }
-        if (route.params.serverID) {
-            page = 'server-summary-page';
+        } else if (route.params.serverID === 'new') {
+            label = <i>{t('nav-server-new')}</i>;
+        } else {
+            return null;
         }
         return { label, page };
     }
@@ -470,8 +418,8 @@ class NavigationTreeSync extends PureComponent {
     getSettingsNode() {
         let { env } = this.props;
         let { t, p } = env.locale;
-        let label = t('nav-settings');
         let page = 'settings-page';
+        let label = t('nav-settings');
         return { label, page };
     }
 
@@ -481,33 +429,24 @@ class NavigationTreeSync extends PureComponent {
      * @return {Object}
      */
     repositionArrow() {
-        setTimeout(() => {
-            let { arrowCount } = this.state;
-            let { activeLink } = this.components;
-            // find the link level
-            let level = 0;
-            if (activeLink) {
-                for (let n = activeLink; n; n = n.parentNode) {
-                    let m;
-                    if (m = /level(\d)/.exec(n.className)) {
-                        level = parseInt(m[1]);
-                        break;
-                    }
-                }
-            }
-
+        let { route } = this.props;
+        let { arrowCount } = this.state;
+        clearInterval(this.arrowRepositioningInterval);
+        this.arrowRepositioningInterval = setInterval(() => {
+            let { arrowPosition } = this.state;
+            let { arrow, container } = this.components;
+            let links = container.getElementsByTagName('A');
+            let activeLink = _.find(links, (link) => {
+                return route.url === link.getAttribute('href');
+            });
+            let level = getLinkLevel(activeLink);
             let action = '';
             if (level > arrowCount) {
                 action = 'extending';
             } else if (level < arrowCount) {
                 action = 'retracting';
             }
-            this.setState({ arrowAction: action, arrowCount: level })
-        }, 50);
 
-        let interval = setInterval(() => {
-            let { arrowPosition } = this.state;
-            let { arrow, container, activeLink } = this.components;
             // calculate the position of the arrow
             // happens in an interval function since the link will
             // move during transition
@@ -518,13 +457,24 @@ class NavigationTreeSync extends PureComponent {
                 let containerRect = container.getBoundingClientRect();
                 pos = Math.floor(linkRect.top + ((linkRect.height - arrowRect.height) / 2) - containerRect.top) + 1;
             }
-            if (pos !== arrowPosition) {
-                this.setState({ arrowPosition: pos });
+            if (pos !== arrowPosition || arrowCount !== level) {
+                this.setState({ arrowPosition: pos, arrowAction: action, arrowCount: level });
             } else {
-                clearInterval(interval);
+                clearInterval(this.arrowRepositioningInterval);
             }
         }, 50);
     }
+}
+
+function getLinkLevel(link) {
+    for (let n = link; n; n = n.parentNode) {
+        let m;
+        if (m = /level(\d)/.exec(n.className)) {
+            return parseInt(m[1]);
+            break;
+        }
+    }
+    return 0;
 }
 
 const emptyObject = { details: {} };
