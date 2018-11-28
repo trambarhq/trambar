@@ -30,10 +30,14 @@ class ImageCroppingDialogBox extends PureComponent {
     static getDerivedStateFromProps(props, state) {
         let { image, show } = props;
         let { currentImage } = state;
-        if (show) {
+        if (show && image) {
             if (image !== currentImage) {
+                let clippingRect = image.clip;
+                if (!clippingRect) {
+                    clippingRect = ImageCropping.centerSquare(image.width, image.height);
+                }
                 return {
-                    clippingRect: image.clip,
+                    clippingRect,
                     currentImage: image,
                     hasChanged: false,
                 };
