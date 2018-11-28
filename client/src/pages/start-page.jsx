@@ -525,19 +525,18 @@ class StartPageSync extends PureComponent {
     renderOAuthButton(server, i) {
         let { database, env } = this.props;
         let { oauthErrors } = this.state;
-        let { type } = server;
         let { title } = server.details;
         let { t, p } = env.locale;
-        let icon = getServerIcon(type);
+        let icon = getServerIcon(server.type);
         let url = database.getOAuthURL(server);
         let props = {
             className: 'oauth-button',
             href: url,
             onClick: this.handleOAuthButtonClick,
             target: '_blank',
-            'data-type': type,
+            'data-id': server.id,
         };
-        let error = oauthErrors[type];
+        let error = oauthErrors[server.id];
         if (error) {
             let text = t(`start-error-${error.reason}`);
             props.className += ' error';
@@ -556,7 +555,7 @@ class StartPageSync extends PureComponent {
                         <i className={`fa fa-fw fa-${icon}`}></i>
                     </span>
                     <span className="label">
-                        {p(title) || t(`server-type-${type}`)}
+                        {p(title) || t(`server-type-${server.type}`)}
                     </span>
                 </a>
             );
@@ -896,12 +895,12 @@ class StartPageSync extends PureComponent {
         evt.preventDefault();
         evt.stopPropagation();
         let url = evt.currentTarget.getAttribute('href');
-        let provider = evt.currentTarget.getAttribute('data-type');
+        let providerID = evt.currentTarget.getAttribute('data-id');
         return this.openPopUpWindow(url).then(() => {
             let db = database.use({ by: this });
             return db.checkAuthorization().catch((err) => {
                 oauthErrors = _.clone(oauthErrors);
-                oauthErrors[provider] = err;
+                oauthErrors[providerID] = err;
                 this.setState({ oauthErrors });
             });
         });
