@@ -687,7 +687,7 @@ let sortProjects = memoizeWeak(null, function(projects, users, repos, statistics
                 };
             case 'repos':
                 return (project) => {
-                    return _.size(findUsers(repos, project));
+                    return _.size(findRepos(repos, project));
                 };
             case 'range':
                 return (project) => {
