@@ -51,7 +51,7 @@ class UserTooltip extends PureComponent {
         });
         let listURL;
         if (project) {
-            listURL = route.find('member-list-page', { project: project.id });
+            listURL = route.find('member-list-page', { projectID: project.id });
         } else {
             listURL = route.find('user-list-page');
         }
