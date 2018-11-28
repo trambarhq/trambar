@@ -441,7 +441,12 @@ class NavigationTreeSync extends PureComponent {
             let { arrow, container } = this.components;
             let links = container.getElementsByTagName('A');
             let activeLink = _.find(links, (link) => {
-                return route.url === link.getAttribute('href');
+                var url = route.url;
+                var qi = url.indexOf('?');
+                if (qi !== -1) {
+                    url = url.substr(0, qi);
+                }
+                return url === link.getAttribute('href');
             });
             let level = getLinkLevel(activeLink);
             let action = '';
