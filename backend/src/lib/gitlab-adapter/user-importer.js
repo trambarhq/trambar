@@ -191,12 +191,7 @@ function findExistingUser(db, server, users, glUser) {
         }
     });
     if (user) {
-        if (user.disabled) {
-            // restore it
-            return User.updateOne(db, 'global', { id: user.id, disabled: false });
-        } else {
-            return Promise.resolve(user);
-        }
+        return Promise.resolve(user);
     }
     // match by username ("root" only) or email
     var strategies = [ 'username', 'email' ];
@@ -332,6 +327,12 @@ function copyUserProperties(user, server, image, glUser) {
     } else {
         userType = mapping.user;
     }
+    var disabled = false;
+    if (!userType) {
+        // create as disabled if user import is disabled
+        userType = 'guest';
+        disabled = true;
+    }
     var userAfter = _.cloneDeep(user);
     if (!userAfter) {
         userAfter = {
@@ -344,6 +345,10 @@ function copyUserProperties(user, server, image, glUser) {
             id: glUser.id,
             username: glUser.username,
         }
+    });
+    ExternalDataUtils.importProperty(userAfter, server, 'disabled', {
+        value: disabled,
+        overwrite: 'match-previous:disabled',
     });
     ExternalDataUtils.importProperty(userAfter, server, 'type', {
         value: userType,
@@ -382,11 +387,6 @@ function copyUserProperties(user, server, image, glUser) {
         value: image,
         replace: 'match-previous',
     });
-    if (!userAfter.type) {
-        // create as disabled if user import is disabled
-        userAfter.type = 'regular';
-        userAfter.disabled = true;
-    }
     if (_.isEqual(userAfter, user)) {
         return user;
     }
