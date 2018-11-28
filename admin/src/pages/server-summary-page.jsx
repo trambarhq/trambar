@@ -1091,6 +1091,10 @@ class ServerSummaryPageSync extends PureComponent {
         if (!server) {
             return null;
         }
+        let hasIntegration = _.includes(IntegratedServerTypes, server.type);
+        if (!hasIntegration) {
+            return null;
+        }
         let historyProps = {
             server,
             database,
