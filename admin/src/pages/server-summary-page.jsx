@@ -342,7 +342,7 @@ class ServerSummaryPageSync extends PureComponent {
             let hasOAuthCredentials = !!(_.get(server, 'settings.oauth.client_id') && _.get(server, 'settings.oauth.client_secret'));
             let preselected, alert;
             if (active) {
-                if (hasIntegration && !hasAccessToken) {
+                if (hasIntegration && !hasAccessToken && hasOAuthCredentials) {
                     preselected = 'acquire';
                     alert = true;
                 } else if (hasOAuthCredentials && credentialsChanged) {
