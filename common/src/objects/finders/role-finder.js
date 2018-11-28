@@ -76,7 +76,8 @@ function findRolesOfUsers(db, users) {
         schema: 'global',
         table: 'role',
         criteria: {
-            id: roleIDs
+            id: roleIDs,
+            disabled: false,
         }
     });
 }
