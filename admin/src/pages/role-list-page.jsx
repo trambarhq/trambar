@@ -529,6 +529,10 @@ let sortRoles = memoizeWeak(null, function(roles, users, env, columns, direction
                 return (role) => {
                     return p(role.details.title)
                 };
+            case 'users':
+                return (role) => {
+                    return _.size(findUsers(users, role));
+                };
             default:
                 return column;
         }
