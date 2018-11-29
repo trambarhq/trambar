@@ -1461,7 +1461,7 @@ class StoryEditor extends PureComponent {
      * @param  {Event} evt
      */
     handleDrop = (evt) => {
-        let { mediaImport } = this.components;
+        let { mediaImporter } = this.components;
         mediaImporter.importFiles(evt.files)
         mediaImporter.importDataItems(evt.items)
     }
