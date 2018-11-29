@@ -414,7 +414,7 @@ const phrases = {
     'table-heading-username': 'Uživatelské jméno',
     'table-heading-users': 'Uživatelé',
 
-    'task-$seconds': (seconds) => {
+    'task-$seconds': (count) => {
         return cardinal(count, '1 sekunda', '2 sekundy', '5 sekund');
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {

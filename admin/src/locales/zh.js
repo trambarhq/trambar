@@ -222,7 +222,7 @@ const traditionalPhrases = {
     },
     'repo-list-edit': '編輯數據庫列表',
     'repo-list-issue-tracker-enabled-false': '',
-    'repo-list-issue-tracker-enabled-true': 'Enabled',
+    'repo-list-issue-tracker-enabled-true': '啟用',
     'repo-list-save': '保存數據庫列表',
     'repo-list-title': '數據庫',
 
@@ -298,7 +298,7 @@ const traditionalPhrases = {
     'role-summary-users': '用戶',
 
     'role-tooltip-$count-others': (count) => {
-        return cardinalT(coun, `還有一個`);
+        return cardinalT(count, `還有一個`);
     },
 
     'server-list-add': '添加服務器',
@@ -796,7 +796,7 @@ const simplifiedPhrases = {
     },
     'repo-list-edit': '编辑数据库列表',
     'repo-list-issue-tracker-enabled-false': '',
-    'repo-list-issue-tracker-enabled-true': 'Enabled',
+    'repo-list-issue-tracker-enabled-true': '启用',
     'repo-list-save': '保存数据库列表',
     'repo-list-title': '数据库',
 
