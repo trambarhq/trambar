@@ -495,11 +495,6 @@ function getUploadURL(destination, id, type, part) {
                 uri = `/srv/media/audios/poster/${schema}/`;
             }
             break;
-        case 'website':
-            if (part === 'poster') {
-                uri = `/srv/media/html/poster/${schema}/`;
-            }
-            break;
     }
     return (uri) ? `${address}${uri}?token=${id}` : null;
 }

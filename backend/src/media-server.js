@@ -19,7 +19,6 @@ import * as CacheFolders from 'media-server/cache-folders';
 import * as FileManager from 'media-server/file-manager';
 import * as ImageManager from 'media-server/image-manager';
 import * as VideoManager from 'media-server/video-manager';
-import * as WebsiteCapturer from 'media-server/website-capturer';
 import * as StockPhotoImporter from 'media-server/stock-photo-importer';
 
 var server;
@@ -46,7 +45,6 @@ function start() {
         app.get('/srv/media/audios/:filename/original/:alias', handleAudioRequest);
         app.get('/srv/media/audios/:filename', handleAudioRequest);
         app.get('/srv/media/cliparts/:filename', handleClipartRequest);
-        app.post('/srv/media/html/poster/:schema/', upload.array(), handleWebsitePoster);
         app.post('/srv/media/images/upload/:schema/', upload.single('file'), handleImageUpload);
         app.post('/srv/media/videos/upload/:schema/', upload.single('file'), handleVideoUpload);
         app.post('/srv/media/videos/poster/:schema/', upload.single('file'), handleVideoPoster);
@@ -225,53 +223,6 @@ function handleClipartRequest(req, res) {
         res.sendFile(path);
     }).catch((err) => {
         sendError(res, new HTTPError(404));
-    });
-}
-
-/**
- * Handle request for website screenshit
- *
- * @param  {Request} req
- * @param  {Response} res
- */
-function handleWebsitePoster(req, res) {
-    // generate hash from URL + date
-    var schema = req.params.schema;
-    var token = req.query.token;
-    var url = req.body.url;
-    return checkTaskToken(schema, token, 'add-website').then((taskId) => {
-        if (!url) {
-            throw new HTTPError(400);
-        }
-        var tempPath = FileManager.makeTempPath(CacheFolders.image, url, '.jpg');
-        var options = {
-            onProgress: (progress) => {
-                saveTaskProgress(schema, taskId, progress);
-            }
-        };
-        WebsiteCapturer.createScreenshot(url, tempPath, options).then((title) => {
-            // rename it to its MD5 hash once we have the data
-            var file = { path: tempPath };
-            return FileManager.preserveFile(file, null, CacheFolders.image).then((imagePath) => {
-                return ImageManager.getImageMetadata(imagePath).then((metadata) => {
-                    var details = {
-                        poster_url: getFileURL(imagePath),
-                        title: metadata.title,
-                        width: metadata.width,
-                        height: metadata.height,
-                    };
-                    return saveTaskOutcome(schema, taskId, 'poster', details);
-                }).then(() => {
-                    return ImageManager.addJPEGDescription(title, imagePath);
-                });
-            });
-        });
-        // got nothing to return
-        return {};
-    }).then((results) => {
-        sendJSON(res, results);
-    }).catch((err) => {
-        sendError(res, err);
     });
 }
 

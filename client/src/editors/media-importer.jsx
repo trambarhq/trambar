@@ -4,7 +4,6 @@ import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import * as MediaLoader from 'media/media-loader';
 import * as MediaTagReader from 'media/media-tag-reader';
-import * as LinkParser from 'utils/link-parser';
 import * as QuickStart from 'media/quick-start';
 import * as BlobReader from 'transport/blob-reader';
 import ResourceTypes from 'objects/types/resource-types';
@@ -60,14 +59,6 @@ class MediaImporter extends PureComponent {
      */
     getResourceType(mimeType) {
         let type = MediaLoader.extractFileCategory(mimeType);
-        if (type === 'application') {
-            switch (MediaLoader.extractFileFormat(mimeType)) {
-                case 'x-mswinurl':
-                case 'x-desktop':
-                    type = 'website';
-                    break;
-            }
-        }
         if (this.isAcceptable(type)) {
             return type;
         }
@@ -128,8 +119,6 @@ class MediaImporter extends PureComponent {
                 return this.importVideoFile(file);
             case 'audio':
                 return this.importAudioFile(file);
-            case 'website':
-                return this.importBookmarkFile(file);
         }
     }
 
@@ -263,29 +252,6 @@ class MediaImporter extends PureComponent {
     }
 
     /**
-     * Import a bookmark/shortcut file
-     *
-     * @param  {File} file
-     *
-     * @return {Promise<Object|undefined>}
-     */
-    importBookmarkFile(file) {
-        let { payloads } = this.props;
-        return BlobReader.loadText(file).then((text) => {
-            let link = LinkParser.parse(text);
-            if (link && /https?:/.test(link.url)) {
-                let payload = payloads.add('website').attachURL(link.url, 'poster');
-                return {
-                    type: 'website',
-                    payload_token: payload.id,
-                    url: link.url,
-                    title: link.name || _.replace(file.name, /\.\w+$/, ''),
-                };
-            }
-        });
-    }
-
-    /**
      * Attach non-file drag-and-drop contents
      *
      * @param  {Array<DataTransferItem>} items
@@ -308,14 +274,6 @@ class MediaImporter extends PureComponent {
                             type: 'image',
                             payload_token: payload.id,
                             filename: filename,
-                        };
-                    } else if (type === 'website') {
-                        let payload = payloads.add('website').attachURL(url, 'poster');
-                        return {
-                            type: 'website',
-                            payload_token: payload.id,
-                            url: url,
-                            title: getInnerText(html),
                         };
                     }
                 }
