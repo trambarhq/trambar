@@ -235,7 +235,7 @@ class UserImagePanel extends PureComponent {
         } else {
             let takeProps = {
                 label: t('user-image-snap'),
-                hidden: !canTakePicture,
+                hidden: !_.includes(env.recorders, 'image'),
                 onClick: this.handleTakeClick,
             };
             let selectProps = {
