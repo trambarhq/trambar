@@ -621,7 +621,7 @@ class MemberListPageSync extends PureComponent {
         let { route } = this.props;
         let params = _.clone(route.params);
         params.userID = 'new';
-        return route.push('user-summary-page', params);
+        return route.push('member-summary-page', params);
     }
 
     /**

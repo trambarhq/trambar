@@ -324,13 +324,13 @@ class NavigationTreeSync extends PureComponent {
      * @return {Object}
      */
     getUserNode() {
-        let { route, env, user } = this.props;
+        let { route, env, user, project } = this.props;
         let { t, p } = env.locale;
         let page = 'user-summary-page';
         let label;
-        if (user) {
+        if (user && !project) {
             label = p(user.details.name) || user.username || '-';
-        } else if (route.params.userID === 'new') {
+        } else if (route.params.userID === 'new' && !project) {
             label = <i>{t('nav-user-new')}</i>;
         } else {
             return null;
