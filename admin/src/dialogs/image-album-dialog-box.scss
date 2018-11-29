@@ -24,6 +24,11 @@
             margin: 0.3em 0.4em 0.3em 0.4em;
             cursor: pointer;
 
+            IMG, CANVAS, svg {
+                width: 120px;
+                height: 120px;
+            }
+
             * {
                 display: block;
             }
