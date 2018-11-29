@@ -111,7 +111,7 @@ const Server = _.create(Data, {
                 var row = rows[index];
                 object.type = row.type;
                 object.name = row.name;
-                if (credentials.unrestricted) {
+                if (credentials.unrestricted || process.env.ADMIN_GUEST_MODE) {
                     object.settings = _.obscure(row.settings, sensitiveSettings);
                     object.disabled = row.disabled;
                 } else {

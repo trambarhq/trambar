@@ -622,20 +622,24 @@ function getServerIcon(type) {
 }
 
 function hasOAuthCredentials(server) {
-    let oauth = server.settings.oauth;
-    if (oauth) {
-        if (oauth.client_id && oauth.client_secret) {
-            return true;
+    if (server && server.settings) {
+        let oauth = server.settings.oauth;
+        if (oauth) {
+            if (oauth.client_id && oauth.client_secret) {
+                return true;
+            }
         }
     }
     return false;
 }
 
 function hasAPICredentials(server) {
-    let api = server.settings.api;
-    if (api) {
-        if (api.access_token) {
-            return true;
+    if (server && server.settings) {
+        let api = server.settings.api;
+        if (api) {
+            if (api.access_token) {
+                return true;
+            }
         }
     }
     return false;
