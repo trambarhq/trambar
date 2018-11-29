@@ -104,36 +104,16 @@ class SettingsPageSync extends PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            user: null,
             original: null,
         };
     }
 
-    /**
-     * Return current user, possibility with unsaved modifications
-     *
-     * @return {User}
-     */
-    getUser() {
-        let { currentUser } = this.props;
-        let { user } = this.state;
-        return user || currentUser;
-    }
-
-    /**
-     * Update state on prop changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { currentUser } = nextProps;
-        if (nextProps.currentUser !== currentUser) {
-            let state = { user: null };
-            if (nextProps.currentUser && !nextProps.currentUser.uncommitted) {
-                state.original = nextProps.currentUser;
-            }
-            this.setState(state);
+    static getDerivedStateFromProps(props, state) {
+        let { currentUser } = props;
+        if (currentUser && !currentUser.uncommitted) {
+            return { original: currentUser };
         }
+        return null;
     }
 
     /**
@@ -172,14 +152,13 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDevelopmentPanel() {
-        let { route, env } = this.props;
-        let user = this.getUser();
-        let enabled = _.get(user, 'settings.development.show_panel');
+        let { route, env, currentUser } = this.props;
+        let enabled = _.get(currentUser, 'settings.development.show_panel');
         if (!enabled) {
             return null;
         }
         let panelProps = {
-            currentUser: user,
+            currentUser,
             route,
             env,
             onChange: this.handleChange,
@@ -200,10 +179,11 @@ class SettingsPageSync extends PureComponent {
             database,
             route,
             env,
+            currentUser,
         } = this.props;
         let panelProps = {
             system,
-            currentUser: this.getUser(),
+            currentUser,
             currentProject,
             projectLinks,
             database,
@@ -242,9 +222,9 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderUserInfoPanel() {
-        let { env } = this.props;
+        let { env, currentUser } = this.props;
         let panelProps = {
-            currentUser: this.getUser(),
+            currentUser,
             env,
             onChange: this.handleChange,
         };
@@ -257,9 +237,9 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderUserImagePanel() {
-        let { env, payloads } = this.props;
+        let { env, payloads, currentUser } = this.props;
         let panelProps = {
-            currentUser: this.getUser(),
+            currentUser,
             payloads,
             env,
             onChange: this.handleChange,
@@ -273,9 +253,9 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderSocialNetworkPanel() {
-        let { env } = this.props;
+        let { env, currentUser } = this.props;
         let panelProps = {
-            currentUser: this.getUser(),
+            currentUser,
             env,
             onChange: this.handleChange,
         };
@@ -288,9 +268,9 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement}
      */
     renderNotificationPanel() {
-        let { env, repos } = this.props;
+        let { env, currentUser, repos } = this.props;
         let panelProps = {
-            currentUser: this.getUser(),
+            currentUser,
             repos,
             env,
             onChange: this.handleChange,
@@ -304,12 +284,12 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderWebAlertPanel() {
-        let { env, repos } = this.props;
+        let { env, currentUser, repos } = this.props;
         if (env.platform === 'cordova') {
             return null;
         }
         let panelProps = {
-            currentUser: this.getUser(),
+            currentUser,
             repos,
             env,
             onChange: this.handleChange,
@@ -323,12 +303,12 @@ class SettingsPageSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderMobileAlertPanel() {
-        let { env, devices, repos } = this.props;
+        let { env, currentUser, devices, repos } = this.props;
         if (_.isEmpty(devices)) {
             return null;
         }
         let panelProps = {
-            currentUser: this.getUser(),
+            currentUser,
             repos,
             env,
             onChange: this.handleChange,
@@ -398,10 +378,7 @@ class SettingsPageSync extends PureComponent {
      * @param  {Object} evt
      */
     handleChange = (evt) => {
-        let user = evt.user;
-        this.setState({ user }, () => {
-            this.saveUser(user, evt.immediate || false);
-        });
+        this.saveUser(evt.user, evt.immediate || false);
     }
 
     /**
@@ -410,10 +387,9 @@ class SettingsPageSync extends PureComponent {
      * @param  {Object} evt
      */
     handleKonamiCode = (evt) => {
-        let user = _.decoupleSet(this.getUser(), 'settings.development.show_panel', true);
-        this.setState({ user }, () => {
-            this.saveUser(user, true);
-        });
+        let { currentUser } = this.props;
+        let userAfter = _.decoupleSet(currentUser, 'settings.development.show_panel', true);
+        this.saveUser(userAfter, true);
     }
 }
 
