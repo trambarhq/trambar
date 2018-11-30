@@ -51,13 +51,9 @@ class ImageCropper extends PureComponent {
                 onMouseDown: this.handleMouseDown,
                 onFocus: this.handleFocus,
                 onBlur: this.handleBlur,
+                onWheel: this.handleMouseWheel,
+                onKeyDown: this.handleKeyDown,
             });
-            if (hasFocus) {
-                _.assign(containerProps, {
-                    onWheel: this.handleMouseWheel,
-                    onKeyDown: this.handleKeyDown,
-                });
-            }
         }
         let imageProps = {
             ref: setters.image,
@@ -293,12 +289,16 @@ class ImageCropper extends PureComponent {
      * @param  {Event} evt
      */
     handleMouseWheel = (evt) => {
+        let { hasFocus } = this.state;
         let { image, container } = this.components;
         let clippingRect = this.getClippingRect();
         evt.preventDefault();
 
         if (!image || !container || !clippingRect) {
             return;
+        }
+        if (!hasFocus) {
+            this.focus();
         }
         let divider = 4;
         if (evt.shiftKey) {
@@ -533,8 +533,9 @@ class ImageCropper extends PureComponent {
      * @param  {Event} evt
      */
     handleKeyDown = (evt) => {
+        let { hasFocus } = this.state;
         let { container } = this.components;
-        if (evt.keyCode === 27) {
+        if (hasFocus && evt.keyCode === 27) {
             container.blur();
         }
     }
