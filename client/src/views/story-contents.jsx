@@ -852,6 +852,7 @@ class StoryContents extends PureComponent {
      */
      handleMarkdownClick = (evt) => {
          let { env, story } = this.props;
+         let { audioURL } = this.state;
          let resources = _.get(story, 'details.resources');
          let target = evt.target;
          if (target.viewportElement) {
@@ -875,7 +876,8 @@ class StoryContents extends PureComponent {
                      window.open(res.url, '_blank');
                  } else if (res.type === 'audio') {
                      let version = chooseAudioVersion(res);
-                     let audioURL = ResourceUtils.getAudioURL(res, { version }, env);
+                     let selected = ResourceUtils.getAudioURL(res, { version }, env);
+                     audioURL = (selected === audioURL) ? null : selected;
                      this.setState({ audioURL });
                  }
              }

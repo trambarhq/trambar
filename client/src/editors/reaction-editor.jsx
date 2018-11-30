@@ -533,7 +533,7 @@ class ReactionEditor extends PureComponent {
      * @param  {Object} evt
      */
     handleReference = (evt) => {
-        let { evn } = this.props;
+        let { env } = this.props;
         let { draft } = this.state;
         let resources = draft.details.resources;
         let res = Markdown.findReferencedResource(resources, evt.name);

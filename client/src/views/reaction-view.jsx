@@ -35,8 +35,9 @@ class ReactionView extends PureComponent {
         });
         this.state = {
             options: defaultOptions,
-            selectedResourceURL: null,
+            selectedResourceName: null,
             showingReferencedMedia: false,
+            audioURL: null,
         };
         this.updateOptions(this.state, this.props);
     }
@@ -138,7 +139,7 @@ class ReactionView extends PureComponent {
         let name = UserUtils.getDisplayName(respondent, env);
         let gender = UserUtils.getGender(respondent);
         g(name, gender);
-        this.resourcesReferenced = {};
+        this.resourcesReferenced = [];
         if (reaction.published && reaction.ready !== false) {
             let url, target;
             switch (reaction.type) {
@@ -324,7 +325,7 @@ class ReactionView extends PureComponent {
         let { env, reaction } = this.props;
         let resources = _.get(reaction, 'details.resources');
         if (!_.isEmpty(this.resourcesReferenced)) {
-            resources = _.difference(resources, _.values(this.resourcesReferenced));
+            resources = _.difference(resources, this.resourcesReferenced);
         }
         if (_.isEmpty(resources)) {
             return null;
@@ -343,11 +344,15 @@ class ReactionView extends PureComponent {
      * @return {ReactElement|null}
      */
     renderReferencedMediaDialog() {
-        let { env } = this.props;
-        let { showingReferencedMedia, selectedResourceURL } = this.state;
-        let selectedResource = this.resourcesReferenced[selectedResourceURL];
+        let { env, reaction } = this.props;
+        let { showingReferencedMedia, selectedResourceName } = this.state;
+        let resources = _.get(reaction, 'details.resources');
+        let res = Markdown.findReferencedResource(resources, selectedResourceName);
+        if (!res) {
+            return null;
+        }
         let zoomableResources = getZoomableResources(this.resourcesReferenced);
-        let zoomableIndex = _.indexOf(zoomableResources, selectedResource);
+        let zoomableIndex = _.indexOf(zoomableResources, res);
         if (zoomableIndex === -1) {
             return null;
         }
@@ -423,9 +428,11 @@ class ReactionView extends PureComponent {
         let res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
             // remember the resource and the url
-            this.resourcesReferenced[url] = res;
+            if (!_.includes(this.resourcesReferenced, res)) {
+                this.resourcesReferenced.push(res);
+            }
             let url = ResourceUtils.getMarkdownIconURL(res, evt.forImage, env);
-            return { href: url, title: undefined };
+            return { href: url, title: evt.name };
         }
     }
 
@@ -435,22 +442,39 @@ class ReactionView extends PureComponent {
      * @param  {Event} evt
      */
     handleMarkdownClick = (evt) => {
-        let { env } = this.props;
+        let { env, reaction } = this.props;
+        let { audioURL } = this.state;
+        let resources = _.get(reaction, 'details.resources');
         let target = evt.target;
-        if (target.tagName === 'IMG') {
-            let src = target.getAttribute('src');
-            let res = this.resourcesReferenced[src];
+        if (target.viewportElement) {
+            target = target.viewportElement;
+        }
+        let name;
+        if (target.tagName === 'svg') {
+            let title = target.getElementsByTagName('title')[0];
+            if (title) {
+                name = title.textContent;
+            }
+        } else {
+            name = evt.target.title;
+        }
+        if (name) {
+            let res = Markdown.findReferencedResource(resources, name);
             if (res) {
                 if (res.type === 'image' || res.type === 'video') {
-                    this.setState({ selectedResourceURL: src, showingReferencedMedia: true });
+                    this.setState({ selectedResourceName: name, showingReferencedMedia: true });
                 } else if (res.type === 'website') {
-                    window.open(res.url);
+                    window.open(res.url, '_blank');
                 } else if (res.type === 'audio') {
                     let version = chooseAudioVersion(res);
-                    let audioURL = ResourceUtils.getAudioURL(res, { version }, env);
+                    let selected = ResourceUtils.getAudioURL(res, { version }, env);
+                    audioURL = (selected === audioURL) ? null : selected;
                     this.setState({ audioURL });
                 }
-            } else {
+            }
+        } else {
+            if (target.tagName === 'IMG') {
+                let src = target.getAttribute('src');
                 let targetRect = target.getBoundingClientRect();
                 let width = target.naturalWidth + 50;
                 let height = target.naturalHeight + 50;
