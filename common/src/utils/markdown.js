@@ -110,7 +110,7 @@ function renderSurvey(text, answers, onChange, onReference) {
                 }
                 return (
                     <div className="list-item" key={key}>
-                        <label>
+                        <label onClick={handleClick}>
                             <input type="radio" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
                             {' '}
                             {label}
@@ -205,7 +205,7 @@ function renderTaskList(text, answers, onChange, onReference) {
                 }
                 return (
                     <div className="list-item" key={key}>
-                        <label>
+                        <label onClick={handleClick}>
                             <input type="checkbox" name={item.list} value={item.key} checked={checked} readOnly={!onChange} onChange={onChange} />
                             {' '}
                             {label}
@@ -376,6 +376,16 @@ function findReferencedResource(resources, name) {
         }
     }
     return null;
+}
+
+function handleClick(evt) {
+    switch (evt.target.tagName) {
+        case 'IMG':
+        case 'svg':
+        case 'CANVAS':
+            evt.preventDefault();
+            break;
+    }
 }
 
 export {
