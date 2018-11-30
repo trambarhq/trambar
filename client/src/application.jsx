@@ -473,7 +473,7 @@ class Application extends PureComponent {
      * @param  {Object} evt
      */
     handleAlertClick = (evt) => {
-        let { database } = this.props;
+        let { database } = this.state;
         let alert = evt.alert;
         // create an object take has some of Notification's properties
         let notification = {
