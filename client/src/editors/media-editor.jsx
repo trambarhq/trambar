@@ -177,9 +177,9 @@ class MediaEditor extends PureComponent {
         }
         let res = resources[resourceIndex];
         resources = _.slice(resources);
-        resources.splice(index, 1);
-        resources.splice(index - 1, 0, res);
-        this.triggerChangeEvent(resources, index - 1);
+        resources.splice(resourceIndex, 1);
+        resources.splice(resourceIndex - 1, 0, res);
+        this.triggerChangeEvent(resources, resourceIndex - 1);
     }
 
     /**
