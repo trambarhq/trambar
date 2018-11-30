@@ -469,13 +469,13 @@ const User = _.create(ExternalData, {
     updateContentDeletion: function(db, schema, usersBefore, usersAfter) {
         return Promise.try(() => {
             var deletedUsers = _.filter(usersAfter, (userAfter, index) => {
-                var userBefore = usersAfter[index];
+                var userBefore = usersBefore[index];
                 if (userBefore) {
                     return userAfter.deleted && !userBefore.deleted;
                 }
             });
             var undeletedUsers = _.filter(usersAfter, (userAfter, index) => {
-                var userBefore = usersAfter[index];
+                var userBefore = usersBefore[index];
                 if (userBefore) {
                     return !userAfter.deleted && userBefore.deleted;
                 }
