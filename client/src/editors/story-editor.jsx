@@ -1035,8 +1035,8 @@ class StoryEditor extends PureComponent {
      * @return {[type]}
      */
     publishStory() {
-        let { env } = this.props;
-        let { draft, options, authors, repos } = this.state;
+        let { env, authors, repos } = this.props;
+        let { draft, options } = this.state;
         draft = _.clone(draft);
         if (!draft.type) {
             draft.type = 'post';
