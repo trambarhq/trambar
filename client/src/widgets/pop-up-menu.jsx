@@ -277,12 +277,10 @@ function isInside(node, container) {
 }
 
 function getRelativePosition(node, container) {
-    let left = node.offsetLeft;
-    let top = node.offsetTop;
-    for (let p = node.offsetParent; p && p !== container; p = p.offsetParent) {
-        left += p.offsetLeft - p.scrollLeft;
-        top += p.offsetTop - p.scrollTop;
-    }
+    let rect1 = node.getBoundingClientRect()
+    let rect2 = container.getBoundingClientRect();
+    let left = rect1.left - rect2.left + container.scrollLeft;
+    let top = rect1.top - rect2.top + container.scrollTop;
     return { left, top };
 }
 
