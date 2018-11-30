@@ -38,7 +38,7 @@ class MediaDialogBox extends PureComponent {
             if (index < 0) {
                 index = 0;
             } else if (index > resources.length - 1) {
-                index = index > resources.length - 1;
+                index = resources.length - 1;
             }
             this.setState({ selectedIndex: index }, () => {
                 resolve(index);
