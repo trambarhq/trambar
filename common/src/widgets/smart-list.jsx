@@ -381,20 +381,22 @@ class SmartList extends Component {
                     let actualOffset = anchorBottom - containerScrollBottom;
                     if (actualOffset !== anchorOffset) {
                         let newScrollBottom = Math.max(0, anchorBottom - anchorOffset);
-                        let newScrollTop = containerScrollHeight - newScrollBottom - containerOffsetHeight
+                        let newScrollTop = containerScrollHeight - newScrollBottom - containerOffsetHeight;
                         this.scrollContainer.scrollTop = newScrollTop;
                     }
                 }
             }
         } else {
             // scroll back to top
-            if (isIOS && this.scrolling) {
-                // stop momentum scrolling
-                this.scrollContainer.style.overflowY = 'hidden';
-                this.scrollContainer.scrollTop = 0;
-                this.scrollContainer.style.overflowY = 'scroll';
-            } else {
-                this.scrollContainer.scrollTop = 0;
+            if (!inverted) {
+                if (isIOS && this.scrolling) {
+                    // stop momentum scrolling
+                    this.scrollContainer.style.overflowY = 'hidden';
+                    this.scrollContainer.scrollTop = 0;
+                    this.scrollContainer.style.overflowY = 'scroll';
+                } else {
+                    this.scrollContainer.scrollTop = 0;
+                }
             }
         }
     }
@@ -627,7 +629,9 @@ class SmartList extends Component {
                     }
                 }
             }
-            this.anchorOffset = (anchorSlot) ? anchorBottom - containerScrollBottom : undefined;
+            if (anchorBottom) {
+                this.anchorOffset = (anchorSlot) ? anchorBottom - containerScrollBottom : undefined;
+            }
         }
         return anchorSlot;
     }
