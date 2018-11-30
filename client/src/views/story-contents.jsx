@@ -837,7 +837,9 @@ class StoryContents extends PureComponent {
         let res = Markdown.findReferencedResource(resources, evt.name);
         if (res) {
             // remember that resource is referenced in Markdown
-            this.resourcesReferenced.push(res);
+            if (!_.includes(this.resourcesReferenced, res)) {
+                this.resourcesReferenced.push(res);
+            }
             let url = ResourceUtils.getMarkdownIconURL(res, evt.forImage, env);
             return { href: url, title: evt.name };
         }
