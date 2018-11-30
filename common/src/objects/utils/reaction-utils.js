@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import ReactionTypes from 'objects/types/reaction-types';
+import ReactionTypes, { EditableReactionTypes } from 'objects/types/reaction-types';
 import { mergeRemoteChanges } from 'objects/utils/story-utils';
 
 /**
@@ -51,7 +51,7 @@ function isEditable(reaction) {
     if (!reaction) {
         return false;
     }
-    return _.includes(ReactionTypes.editable, reaction.type);
+    return _.includes(EditableReactionTypes, reaction.type);
 }
 
 /**
