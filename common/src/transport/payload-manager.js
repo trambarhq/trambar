@@ -332,6 +332,10 @@ class PayloadManager extends EventEmitter {
         if (_.isEmpty(unapprovedPayloads)) {
             return Promise.resolve();
         }
+        // set approved to true immediately to prevent it being sent again
+        _.each(unapprovedPayloads, (payload) => {
+            payload.approved = true;
+        });
         let event = new PayloadManagerEvent('permission', this, {
             destination,
             payloads: unapprovedPayloads
@@ -340,15 +344,14 @@ class PayloadManager extends EventEmitter {
         return event.waitForDecision().then(() => {
             // default action is to proceed with the upload
             if (!event.defaultPrevented) {
-                _.each(unapprovedPayloads, (payload) => {
-                    payload.approved = true;
-                });
                 return true;
             } else {
                 return false;
             }
         }).catch((err) => {
             _.each(unapprovedPayloads, (payload) => {
+                // set it back to false
+                payload.approved = false;
                 payload.error = err;
             });
             return false;
