@@ -19,6 +19,15 @@ import User from 'accessors/user';
  * @return {Promise<Array<Object>>}
  */
 function generate(db, events) {
+    // filter out undelete events
+    events = _.filter(events, (event) => {
+        if (event.diff.deleted && event.previous.deleted) {
+            return false;
+        } else {
+            return true;
+        }
+    });
+    
     // filter out event triggered by data import
     events = _.filter(events, (event) => {
         if (event.table === 'story' || event.table === 'reaction') {
