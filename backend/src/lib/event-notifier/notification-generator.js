@@ -19,15 +19,15 @@ import User from 'accessors/user';
  * @return {Promise<Array<Object>>}
  */
 function generate(db, events) {
-    // filter out undelete events
+    // filter out delete and undelete events
     events = _.filter(events, (event) => {
-        if (event.diff.deleted && event.previous.deleted) {
+        if (event.diff.deleted) {
             return false;
         } else {
             return true;
         }
     });
-    
+
     // filter out event triggered by data import
     events = _.filter(events, (event) => {
         if (event.table === 'story' || event.table === 'reaction') {
@@ -250,6 +250,9 @@ function generateReactionPublicationNotifications(db, event) {
 function generateBookmarkNotifications(db, event) {
     return Promise.try(() => {
         if (!isModifying(event, 'bookmark')) {
+            return [];
+        }
+        if (event.diff.hidden) {
             return [];
         }
         var senderIdsBefore = event.previous.user_ids;
