@@ -36,7 +36,8 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
         };
         return Story.findOne(db, schema, criteria, '*').then((story) => {
             return AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest).then((assignments) => {
-                var storyAfter = copyMergeRequestProperties(story, system, server, repo, author, assignments, glMergeRequest);
+                var opener = (glEvent.action_name === 'opened') ? author : null;
+                var storyAfter = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
                 if (storyAfter === story) {
                     return story;
                 }
@@ -87,7 +88,10 @@ function importHookEvent(db, system, server, repo, project, author, glHookEvent)
                 throw new Error('Story not found')
             }
             return AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest).then((assignments) => {
-                var storyAfter = copyMergeRequestProperties(story, system, server, repo, author, assignments, glMergeRequest);
+                // the author of the hook event isn't the merge request's author,
+                // hence we're passing null here
+                var opener = null;
+                var storyAfter = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
                 if (storyAfter === story) {
                     return story;
                 }
@@ -117,29 +121,19 @@ function importHookEvent(db, system, server, repo, project, author, glHookEvent)
  * @param  {System} system
  * @param  {Server} server
  * @param  {Repo} repo
- * @param  {User} author
+ * @param  {User} opener
  * @param  {Array<Object>} assignments
  * @param  {Object} glMergeRequest
  *
  * @return {Story}
  */
-function copyMergeRequestProperties(story, system, server, repo, author, assignments, glMergeRequest) {
+function copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest) {
     var descriptionTags = TagScanner.findTags(glMergeRequest.description);
     var labelTags = _.map(glMergeRequest.labels, (label) => {
         return `#${_.replace(label, /\s+/g, '-')}`;
     });
     var tags = _.union(descriptionTags, labelTags);
     var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
-
-    var authorIds = [ author.id ];
-    var assigneeIds = [];
-    var roleIds = author.role_ids;
-
-    // add ids of any new assignees
-    _.each(assignments, (assignment) => {
-        assigneeIds = _.union(assigneeIds, [ assignment.user.id ]);
-        roleIds = _.union(roleIds, assignment.user.role_ids);
-    });
 
     var storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
@@ -160,18 +154,16 @@ function copyMergeRequestProperties(story, system, server, repo, author, assignm
         value: [ defLangCode ],
         overwrite: 'always',
     });
-    ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
-        value: _.union(authorIds, assigneeIds),
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
-        value: roleIds,
-        overwrite: 'always',
-    });
-    ExternalDataUtils.importProperty(storyAfter, server, 'details.assignees', {
-        value: assigneeIds,
-        overwrite: 'always',
-    });
+    if (opener) {
+        ExternalDataUtils.importProperty(storyAfter, server, 'user_ids', {
+            value: [ opener.id ],
+            overwrite: 'always',
+        });
+        ExternalDataUtils.importProperty(storyAfter, server, 'role_ids', {
+            value: opener.role_ids,
+            overwrite: 'always',
+        });
+    }
     ExternalDataUtils.importProperty(storyAfter, server, 'details.state', {
         value: glMergeRequest.state,
         overwrite: 'always',
