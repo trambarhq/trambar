@@ -628,10 +628,10 @@ let traditionalPhrases = {
         return cardinalT(hr, '一小時前');
     },
     'time-$min-ago': (min) => {
-        return cardinalT(hr, '一分鐘前');
+        return cardinalT(min, '一分鐘前');
     },
     'time-$minutes-ago': (minutes) => {
-        return cardinalT(hr, '一分鐘前');
+        return cardinalT(minutes, '一分鐘前');
     },
     'time-just-now': '剛才',
     'time-yesterday': '昨天',
