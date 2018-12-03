@@ -19,9 +19,9 @@ import User from 'accessors/user';
  * @return {Promise<Array<Object>>}
  */
 function generate(db, events) {
-    // filter out delete and undelete events
+    // filter out undelete events
     events = _.filter(events, (event) => {
-        if (event.diff.deleted) {
+        if (event.diff.deleted && event.previous.deleted) {
             return false;
         } else {
             return true;
@@ -252,7 +252,7 @@ function generateBookmarkNotifications(db, event) {
         if (!isModifying(event, 'bookmark')) {
             return [];
         }
-        if (event.diff.hidden) {
+        if (event.current.hidden) {
             return [];
         }
         var senderIdsBefore = event.previous.user_ids;
