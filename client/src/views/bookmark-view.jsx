@@ -95,7 +95,7 @@ class BookmarkView extends PureComponent {
                 };
                 let popup = <MultipleUserNames key={1} {...props} />;
                 g(name1, others[0].details.gender);
-                contents = t('bookmark-$name1-and-$others-recommend-this', name1, popup, others.length - 1);
+                contents = t('bookmark-$name1-and-$name2-recommend-this', name1, popup);
             }
         }
         return <span className="name">{contents}</span>
