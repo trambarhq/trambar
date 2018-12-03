@@ -193,7 +193,7 @@ class ReactionView extends PureComponent {
                                 url = RepoUtils.getIssueNoteURL(repo, reaction);
                                 break;
                             case 'merge-request':
-                                url = RepUtils.getMergeRequestNoteURL(repo, reaction);
+                                url = RepoUtils.getMergeRequestNoteURL(repo, reaction);
                                 break;
                         }
                         target = repo.type;
