@@ -442,30 +442,24 @@ class PeoplePageSync extends PureComponent {
 }
 
 const findUsersWithRoles = memoizeWeak(null, function(users, roleIDs) {
-    let list = _.filter(users, (user) => {
+    return _.filter(users, (user) => {
         return _.some(user.role_ids, (roleID) => {
             return _.includes(roleIDs, roleID);
         });
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 const findUsersWithActivitiesOnDate = memoizeWeak(null, function(users, statistics, date) {
-    let list = _.filter(users, (user) => {
+    return _.filter(users, (user) => {
         let userStats = statistics[user.id];
         if (userStats) {
             return userStats.daily[date];
         }
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 const findUsersWithStoriesWithTags = memoizeWeak(null, function(users, statistics, tags) {
-    let list = _.filter(users, (user) => {
+    return _.filter(users, (user) => {
         let userStats = statistics[user.id];
         if (userStats) {
             return _.some(userStats.daily, (counts, date) => {
@@ -475,20 +469,14 @@ const findUsersWithStoriesWithTags = memoizeWeak(null, function(users, statistic
             });
         }
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 const findUsersWithStories = memoizeWeak(null, function(users, stories) {
-    let list = _.filter(users, (user) => {
+    return _.filter(users, (user) => {
         return _.some(stories, (story) => {
             return _.includes(story.user_ids, user.id);
         });
     });
-    if (!_.isEmpty(list)) {
-        return list;
-    }
 });
 
 export {
