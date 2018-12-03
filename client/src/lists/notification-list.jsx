@@ -159,7 +159,8 @@ class NotificationListSync extends PureComponent {
      * Mark unread notification as read after some time
      */
     updateNotificationView() {
-        let { env, notifications, hiddenNotificationIDs } = this.props;
+        let { env, notifications } = this.props;
+        let { hiddenNotificationIDs } = this.state;
         if (!env.focus || !env.visible)  {
             return;
         }
