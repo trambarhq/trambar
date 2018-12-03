@@ -851,6 +851,8 @@ class StoryContents extends PureComponent {
      * @param  {Event} evt
      */
      handleMarkdownClick = (evt) => {
+         evt.preventDefault();
+
          let { env, story } = this.props;
          let { audioURL } = this.state;
          let resources = _.get(story, 'details.resources');
@@ -882,7 +884,9 @@ class StoryContents extends PureComponent {
                  }
              }
          } else {
-             if (target.tagName === 'IMG') {
+             if (target.tagName === 'A') {
+                 window.open(target.href, '_blank');
+             } else if (target.tagName === 'IMG') {
                  let src = target.getAttribute('src');
                  let targetRect = target.getBoundingClientRect();
                  let width = target.naturalWidth + 50;

@@ -79,6 +79,12 @@
             svg {
                 width: 1.5em;
             }
+
+            A {
+                &:link, &:visited {
+                    text-decoration: underline;
+                }
+            }
         }
 
         &.survey, &.task-list {

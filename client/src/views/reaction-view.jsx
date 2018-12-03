@@ -442,6 +442,8 @@ class ReactionView extends PureComponent {
      * @param  {Event} evt
      */
     handleMarkdownClick = (evt) => {
+        evt.preventDefault();
+
         let { env, reaction } = this.props;
         let { audioURL } = this.state;
         let resources = _.get(reaction, 'details.resources');
@@ -473,7 +475,9 @@ class ReactionView extends PureComponent {
                 }
             }
         } else {
-            if (target.tagName === 'IMG') {
+            if (target.tagName === 'A') {
+                window.open(target.href, '_blank');
+            } else if (target.tagName === 'IMG') {
                 let src = target.getAttribute('src');
                 let targetRect = target.getBoundingClientRect();
                 let width = target.naturalWidth + 50;
