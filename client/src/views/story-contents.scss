@@ -37,6 +37,10 @@
             color: $story-issue-closed-color;
         }
 
+        .status-merged {
+            color: $story-issue-merged-color;
+        }
+
         .tags {
             line-height: 1.6em;
         }

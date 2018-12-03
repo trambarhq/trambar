@@ -563,6 +563,7 @@ let americanPhrases = {
     'story-file': 'File',
     'story-issue-current-status': 'Current status:',
     'story-issue-status-closed': 'Closed',
+    'story-issue-status-merged': 'Merged',
     'story-issue-status-opened': 'Open',
     'story-issue-status-reopened': 'Reopened',
     'story-like': 'Like',

@@ -548,6 +548,7 @@ const phrases = {
     'story-file': 'Tiedosto',
     'story-issue-current-status': 'Nykyinen tila:',
     'story-issue-status-closed': 'Suljettu',
+    'story-issue-status-merged': 'Yhdistetty',
     'story-issue-status-opened': 'Avoinna',
     'story-issue-status-reopened': 'Avattu uudelleen',
     'story-like': 'Tykkää',

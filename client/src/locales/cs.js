@@ -587,6 +587,7 @@ let phrases = {
     'story-file': 'Soubor',
     'story-issue-current-status': 'Aktuální stav:',
     'story-issue-status-closed': 'Uzavřený',
+    'story-issue-status-merged': 'Sloučeny',
     'story-issue-status-opened': 'Otevřený',
     'story-issue-status-reopened': 'Otevřený znovu',
     'story-like': 'To se mi líbí',

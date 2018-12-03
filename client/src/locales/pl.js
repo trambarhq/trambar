@@ -615,6 +615,7 @@ const phrases = {
     'story-file': 'Plik',
     'story-issue-current-status': 'Aktualny stan:',
     'story-issue-status-closed': 'Zamknięty',
+    'story-issue-status-merged': 'Scalony',
     'story-issue-status-opened': 'Otwarty',
     'story-issue-status-reopened': 'Ponownie otwarty',
     'story-like': 'Polub',

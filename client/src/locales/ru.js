@@ -602,6 +602,7 @@ let phrases = {
     'story-file': 'Файл',
     'story-issue-current-status': 'Текущее состояние:',
     'story-issue-status-closed': 'Закрытый',
+    'story-issue-status-merged': 'Слитый',
     'story-issue-status-opened': 'Открытый',
     'story-issue-status-reopened': 'Вновь открытый',
     'story-like': 'Нравиться',

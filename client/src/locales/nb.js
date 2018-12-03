@@ -532,6 +532,7 @@ const phrases = {
     'story-file': 'Fil',
     'story-issue-current-status': 'Nåværende status:',
     'story-issue-status-closed': 'Lukket',
+    'story-issue-status-merged': 'Fusjonert',
     'story-issue-status-opened': 'Åpen',
     'story-issue-status-reopened': 'Gjenåpnet',
     'story-like': 'Liker',

@@ -556,6 +556,7 @@ const phrases = {
     'story-file': 'Datei',
     'story-issue-current-status': 'Aktueller Status:',
     'story-issue-status-closed': 'Geschlossen',
+    'story-issue-status-merged': 'Zusammengeführt',
     'story-issue-status-opened': 'Offen',
     'story-issue-status-reopened': 'Wiedereröffnet',
     'story-like': 'Gefällt mir',
