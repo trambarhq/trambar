@@ -52,7 +52,7 @@ function getMergeRequestURL(repo, story) {
     let mergeRequestLink = ExternalDataUtils.findLinkByRelations(story, 'merge_request');
     let mergeRequestID = _.get(mergeRequestLink, 'merge_request.number');
     if (repoURL && mergeRequestID) {
-        url = `${repo.details.web_url}/merge_requests/${milestoneID}`;
+        url = `${repo.details.web_url}/merge_requests/${mergeRequestID}`;
     }
     return url;
 }
