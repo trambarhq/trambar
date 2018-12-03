@@ -316,18 +316,22 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderRepoText() {
-        let { env, story, authors, repo } = this.props;
+        let { env, story, authors, currentUser, repo } = this.props;
         let { t, p, g } = env.locale;
         let { action } = story.details;
         let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
         let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         let repoName = RepoUtils.getDisplayName(repo, env);
-        let url = RepoUtils.getURL(repo);
+        let url, target;
+        if (UserUtils.canAccessRepo(currentUser, repo)) {
+            url = RepoUtils.getURL(repo);
+            target = repo.type;
+        }
         return (
             <div className="text repo">
                 <p>
-                    <a href={url} target="_blank">
+                    <a href={url} target={target}>
                         {t(`story-$name-${action}-$repo`, name, repoName)}
                     </a>
                 </p>
@@ -341,18 +345,22 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderMemberText() {
-        let { env, story, authors, repo } = this.props;
+        let { env, story, authors, currentUser, repo } = this.props;
         let { t, p, g } = env.locale;
         let { action } = story.details;
         let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
         let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         let repoName = RepoUtils.getDisplayName(repo, env);
-        let url = RepoUtils.getURL(repo);
+        let url, target;
+        if (UserUtils.canAccessRepo(currentUser, repo)) {
+            url = RepoUtils.getMembershipPageURL(repo);
+            target = repo.type;
+        }
         return (
             <div className="text member">
                 <p>
-                    <a href={url} target="_blank">
+                    <a href={url} target={target}>
                         {t(`story-$name-${action}-$repo`, name, repoName)}
                     </a>
                 </p>
@@ -403,14 +411,15 @@ class StoryContents extends PureComponent {
         let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
         let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
-        let url;
+        let url, target;
         if (UserUtils.canAccessRepo(currentUser, repo)) {
             url = RepoUtils.getMilestoneURL(repo, story);
+            target = repo.type;
         }
         return (
             <div className="text milestone">
                 <p>
-                    <a href={url} target="_blank">
+                    <a href={url} target={target}>
                         {t(`story-$name-created-$milestone`, name, p(title))}
                     </a>
                 </p>
@@ -430,14 +439,15 @@ class StoryContents extends PureComponent {
         let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
         let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
-        let url;
+        let url, target;
         if (UserUtils.canAccessRepo(currentUser, repo)) {
             url = RepoUtils.getMergeRequestURL(repo, story);
+            target = repo.type;
         }
         return (
             <div className="text merge-request">
                 <p>
-                    <a href={url} target="_blank">
+                    <a href={url} target={target}>
                         {t(`story-$name-requested-merge-$branch1-into-$branch2`, name, branch1, branch2)}
                     </a>
                 </p>
@@ -453,20 +463,24 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderWikiText() {
-        let { env, story, authors } = this.props;
+        let { env, story, authors, currentUser, repo } = this.props;
         let { t, p, g } = env.locale;
-        let { action, title, url } = story.details;
+        let { action, title } = story.details;
         let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
         let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         title = _.capitalize(title);
-        if (action === 'delete') {
-            url = undefined;
+        let url, target;
+        if (UserUtils.canAccessRepo(currentUser, repo)) {
+            if (action !== 'delete') {
+                url = story.details.url;
+                target = repo.type;
+            }
         }
         return (
             <div className="text wiki">
                 <p>
-                    <a href={url} target="_blank">
+                    <a href={url} target={target}>
                         {t(`story-$name-${action}d-$page`, name, title)}
                     </a>
                 </p>
@@ -480,7 +494,7 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderPushText() {
-        let { env, story, authors, repo, currentUser } = this.props;
+        let { env, story, authors, currentUser, repo } = this.props;
         let { t, g } = env.locale;
         let {
             comment_ids: commitIDs,
@@ -492,9 +506,10 @@ class StoryContents extends PureComponent {
         g(name, gender);
         let commits = _.size(commitIDs);
         let repoName = RepoUtils.getDisplayName(repo, env);
-        let url;
+        let url, target;
         if (UserUtils.canAccessRepo(currentUser, repo)) {
             url = RepoUtils.getPushURL(repo, story);
+            target = repo.type;
         }
         let text;
         if (story.type === 'push') {
@@ -505,7 +520,7 @@ class StoryContents extends PureComponent {
         return (
             <div className="text push">
                 <p>
-                    <a href={url} target="_blank">{text}</a>
+                    <a href={url} target={target}>{text}</a>
                 </p>
                 {this.renderChanges()}
             </div>
@@ -518,16 +533,17 @@ class StoryContents extends PureComponent {
      * @return {ReactElement}
      */
     renderBranchText() {
-        let { env, story, authors, repo, currentUser } = this.props;
+        let { env, story, authors, currentUser, repo } = this.props;
         let { t, g } = env.locale;
         let { branch } = story.details;
         let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
         let gender = UserUtils.getGender(authors ? authors[0] : null);
         g(name, gender);
         let repoName = RepoUtils.getDisplayName(repo, env);
-        let url;
+        let url, target;
         if (UserUtils.canAccessRepo(currentUser, repo)) {
             url = RepoUtils.getBranchURL(repo, story);
+            target = repo.type;
         }
         let text;
         if (story.type === 'branch') {
@@ -538,7 +554,7 @@ class StoryContents extends PureComponent {
         return (
             <div className="text push">
                 <p>
-                    <a href={url} target="_blank">{text}</a>
+                    <a href={url} target={target}>{text}</a>
                 </p>
                 {this.renderChanges()}
             </div>
