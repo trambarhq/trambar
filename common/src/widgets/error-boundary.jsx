@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React, { Component } from 'react';
 
 require('./error-boundary.scss');
@@ -31,9 +32,9 @@ class ErrorBoundary extends Component {
         let { children, showError } = this.props;
         let { error } = this.state;
         if (error) {
-            // don't ender 404 error since we handle that by redirecting
-            // to error page
-            if (showError && error.statusCode !== 404) {
+            let expectedErrors = [ 403, 404 ];
+            // don't render 403 and 404 errors since we handle those by redirecting
+            if (showError && !_.includes(expectedErrors, error.statusCode)) {
                 return <div className="error-boundary">{error.message}</div>;
             } else {
                 return null;

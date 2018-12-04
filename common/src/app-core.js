@@ -50,7 +50,7 @@ function start(cfg) {
         basePath: cfg.routeManager.basePath,
         routes: cfg.routeManager.routes,
         rewrites: cfg.routeManager.rewrites,
-        preloadingDelay: 3000,
+        preloadingDelay: (envMonitor.platform === 'browser') ? 3000 : NaN,
         reloadFaultyScript: true,
     });
     localeManager = new LocaleManager({
