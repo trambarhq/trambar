@@ -197,8 +197,12 @@ let americanPhrases = {
     'notification-$name-completed-task': (name) => {
         return `${name} completed a task on your list`;
     },
-    'notification-$name-is-assigned-to-your-issue': (name) => {
-        return `${name} is assigned to your issue`;
+    'notification-$name-is-assigned-to-your-$story': (name, story) => {
+        switch (story) {
+            case 'issue': story = 'issue'; break;
+            case 'merge-request': story = 'merge request'; break;
+        }
+        return `${name} is assigned to your ${story}`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {

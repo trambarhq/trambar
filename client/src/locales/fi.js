@@ -179,7 +179,11 @@ const phrases = {
     'notification-$name-completed-task': (name) => {
         return `${name} täytti tehtävänsä luettelossasi`;
     },
-    'notification-$name-is-assigned-to-your-issue': (name) => {
+    'notification-$name-is-assigned-to-your-$story': (name, story) => {
+        switch (story) {
+            case 'issue': story = 'asiallenne'; break;
+            case 'merge-request': story = 'yhdistämispyyntösi'; break;
+        }
         return `${name} oli määrätty asiallenne`;
     },
     'notification-$name-likes-your-$story': (name, story) => {

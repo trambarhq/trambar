@@ -206,10 +206,14 @@ const phrases = {
         let l = pastTenseEnding(name, 3);
         return `${name} wykona${l} zadanie z Twojej listy`;
     },
-    'notification-$name-is-assigned-to-your-issue': (name) => {
+    'notification-$name-is-assigned-to-your-$story': (name, story) => {
+        switch (story) {
+            case 'issue': 'twojego problemu'; break;
+            case 'merge-request': story = 'twojej prośby o połączenie'; break;
+        }
         let l = pastTenseEnding(name, 3);
         let y = (l === 'ła') ? 'a' : 'y';
-        return `${name} zosta${l} przydzielon${y} do twojego problemu`;
+        return `${name} zosta${l} przydzielon${y} do ${story}`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {

@@ -203,8 +203,12 @@ let traditionalPhrases = {
     'notification-$name-completed-task': (name) => {
         return `${name}完成了在你的列表上一個任務`;
     },
-    'notification-$name-is-assigned-to-your-issue': (name) => {
-        return `${name}被分配到你的問題`;
+    'notification-$name-is-assigned-to-your-$story': (name, story) => {
+        switch (story) {
+            case 'issue': story = '問題'; break;
+            case 'merge-request': story = '合併請求'; break;
+        }
+        return `${name}被分配到你的${story}`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {
@@ -924,8 +928,12 @@ let simplifiedPhrases = {
     'notification-$name-completed-task': (name) => {
         return `${name}完成了在你的列表上一个任务`;
     },
-    'notification-$name-is-assigned-to-your-issue': (name) => {
-        return `${name}被分配到你的问题`;
+    'notification-$name-is-assigned-to-your-$story': (name, story) => {
+        switch (story) {
+            case 'issue': story = '问题'; break;
+            case 'merge-request': story = '合并请求'; break;
+        }
+        return `${name}被分配到你的${story}`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {
@@ -1530,8 +1538,12 @@ let cantonesePhrases = {
     'notification-$name-completed-task': (name) => {
         return `${name}完成咗喺你個列表上嘅一個任務`;
     },
-    'notification-$name-is-assigned-to-your-issue': (name) => {
-        return `${name}被分配到你嘅問題`;
+    'notification-$name-is-assigned-to-your-$story': (name, story) => {
+        switch (story) {
+            case 'issue': story = '問題'; break;
+            case 'merge-request': story = '合併請求'; break;
+        }
+        return `${name}被分配到你嘅${story}`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {

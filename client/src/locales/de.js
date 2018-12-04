@@ -185,8 +185,12 @@ const phrases = {
     'notification-$name-completed-task': (name) => {
         return `${name} hat eine Aufgabe auf Ihrer Aufgabenliste abgeschlossen`;
     },
-    'notification-$name-is-assigned-to-your-issue': (name) => {
-        return `${name} ist Ihrem Problem zugewiesen`;
+    'notification-$name-is-assigned-to-your-$story': (name, story) => {
+        switch (story) {
+            case 'issue': story = 'Ihrem Problem'; break;
+            case 'merge-request': story = 'Ihrem Merge-Request'; break;
+        }
+        return `${name} ist ${story} zugewiesen`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {

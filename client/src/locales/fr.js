@@ -177,8 +177,12 @@ const phrases = {
     'notification-$name-completed-task': (name) => {
         return `${name} a terminé une tâche sur votre liste`;
     },
-    'notification-$name-is-assigned-to-your-issue': (name) => {
-        return `${name} est affecté à votre problème`;
+    'notification-$name-is-assigned-to-your-$story': (name, story) => {
+        switch (story) {
+            case 'issue': story = 'votre problème'; break;
+            case 'merge-request': story = 'votre requête de fusion'; break;
+        }
+        return `${name} est affecté à ${story}`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {

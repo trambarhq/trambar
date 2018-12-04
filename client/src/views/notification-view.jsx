@@ -178,7 +178,7 @@ class NotificationView extends PureComponent {
             case 'note':
                 return t('notification-$name-posted-a-note-about-your-$story', name, storyType);
             case 'assignment':
-                return t('notification-$name-is-assigned-to-your-issue', name);
+                return t('notification-$name-is-assigned-to-your-$story', name, storyType || 'issue');
             case 'push':
                 return t('notification-$name-pushed-code-to-$branch', name, branch);
             case 'merge':

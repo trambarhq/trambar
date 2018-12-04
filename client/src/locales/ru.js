@@ -190,10 +190,14 @@ let phrases = {
         let l = pastTenseEnding(name);
         return `${name} выполнил задачу в вашем списке`;
     },
-    'notification-$name-is-assigned-to-your-issue': (name) => {
+    'notification-$name-is-assigned-to-your-$story': (name, story) => {
+        switch (story) {
+            case 'issue': story = 'ваш отчёт об ошибке'; break;
+            case 'merge-request': story = 'ваш запрос слияния'; break;
+        }
         let l = pastTenseEnding(name);
         let e = l.substr(1);
-        return `${name} бы${l} назначен${e} на ваш отчёт об ошибке`;
+        return `${name} бы${l} назначен${e} на ${story}`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {

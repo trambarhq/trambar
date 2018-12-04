@@ -178,9 +178,13 @@ let phrases = {
         let l = pastTenseEnding(name);
         return `${name} dokonči${l} úkol na vašem seznamu`;
     },
-    'notification-$name-is-assigned-to-your-issue': (name) => {
+    'notification-$name-is-assigned-to-your-$story': (name, story) => {
+        switch (story) {
+            case 'issue': story = 'vašemu problému'; break;
+            case 'merge-request': story = 'vaší žádosti o sloučení'; break;
+        }
         let l = pastTenseEnding(name);
-        return `${name} je přidělen${l} do vašeho problému`;
+        return `${name} je přidělen${l} k ${story}`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {

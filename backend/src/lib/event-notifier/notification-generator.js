@@ -217,6 +217,7 @@ function generateReactionPublicationNotifications(db, event) {
                 case 'like':
                 case 'comment':
                 case 'note':
+                case 'assignment':
                     details = {
                         story_type: story.type
                     };

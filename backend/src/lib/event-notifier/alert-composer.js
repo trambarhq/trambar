@@ -41,7 +41,7 @@ function getNotificationText(user, notification, locale) {
         case 'note':
             return t('notification-$name-posted-a-note-about-your-$story', name, notification.details.story_type);
         case 'assignment':
-            return t('notification-$name-is-assigned-to-your-issue', name);
+            return t('notification-$name-is-assigned-to-your-$story', name, notification.details.story_type);
         case 'tracking':
             return t('notification-$name-added-your-post-to-issue-tracker', name);
         case 'push':
