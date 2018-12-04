@@ -20,14 +20,12 @@ import * as CommitImporter from 'gitlab-adapter/commit-importer';
  * @return {Promise<Object>}
  */
 function reconstructPush(db, server, repo, type, branch, headId, tailId, count) {
-    return importCommits(db, server, repo, branch, headId, count).then((commits) => {
+    return importCommits(db, server, repo, branch, headId, tailId, count).then((commits) => {
         // obtain a linear list of commits--ignoring branching within the push
         var chain = getCommitChain(commits, headId);
-        if (!tailId) {
-            // a new branch--count only changes from commits that are
-            // checked directly into branch
-            chain = _.filter(chain, { initial_branch: branch });
-        }
+
+        // count only changes from commits that are checked directly into branch
+        chain = _.filter(chain, { initial_branch: branch });
 
         // merge changes of commits
         var lines = mergeLineChanges(chain);
@@ -49,11 +47,12 @@ function reconstructPush(db, server, repo, type, branch, headId, tailId, count) 
  * @param  {Repo} repo
  * @param  {String} branch
  * @param  {String} headId
+ * @param  {String} tailId
  * @param  {Number} count
  *
  * @return {Promise<Object<Commits>>}
  */
-function importCommits(db, server, repo, branch, headId, count) {
+function importCommits(db, server, repo, branch, headId, tailId, count) {
     var taskLog = TaskLog.start('gitlab-push-import', {
         server_id: server.id,
         server: server.name,
@@ -69,6 +68,9 @@ function importCommits(db, server, repo, branch, headId, count) {
         if (commits[commitId]) {
             return;
         }
+        if (commitId === tailId) {
+            return;
+        }
         return CommitImporter.importCommit(db, server, repo, branch, commitId).then((commit) => {
             commits[commitId] = commit;
             commitIds.push(commitId);
@@ -79,16 +81,16 @@ function importCommits(db, server, repo, branch, headId, count) {
                 queue.push(parentId);
             });
         }).tap(() => {
-            taskLog.report(commitIds.length, count, { added: commitIds });
+            var retrieved = commitIds.length;
+            var total = count;
+            if (retrieved + queue.length > total) {
+                total = retrieved + queue.length;
+            }
+            taskLog.report(retrieved, total, { added: commitIds });
         });
     });
     Async.while(() => {
-        if (!_.isEmpty(queue)) {
-            if (commitIds.length < count) {
-                return true;
-            }
-        }
-        return false;
+        return !_.isEmpty(queue);
     });
     Async.return(() => {
         return commits;
@@ -157,7 +159,9 @@ function mergeFileChanges(chain) {
                 // if the file was added by this push, don't treat it
                 // as a modification
                 if (!_.includes(pf.added, path)) {
-                    pf.modified.push(path);
+                    if (!_.includes(pf.modified, path)) {
+                        pf.modified.push(path);
+                    }
                 }
             });
         }
