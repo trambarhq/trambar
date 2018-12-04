@@ -96,9 +96,9 @@ function importCommits(db, server, repo, branch, headId, tailId, count) {
         return commits;
     });
     return Async.end().tap(() => {
-        taskLog.finish();
+        return taskLog.finish();
     }).tapCatch((err) => {
-        taskLog.abort(err);
+        return taskLog.abort(err);
     });
 }
 

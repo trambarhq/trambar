@@ -98,25 +98,26 @@ TaskLog.prototype.report = function(current, total, details) {
 
 /**
  * Record that the task is done
+ *
+ * @return {Promise<Task>}
  */
 TaskLog.prototype.finish = function() {
     if (this.completion === 100 && this.saved) {
         // already has the right values
-        return;
+        return Promise.resolve(null);
     }
-    // indicate we don't want to skip the call by omitting frequency
     this.completion = 100;
     this.saved = false;
-    this.queue.schedule('log', () => {
-        Shutdown.off(this.shutdownListener);
-        return this.save();
-    });
+    Shutdown.off(this.shutdownListener);
+    return this.save();
 };
 
 /**
  * Record that the task failed to finish, probably due to an error
  *
  * @param  {Error|undefined} err
+ *
+ * @return {Promise<Task>}
  */
 TaskLog.prototype.abort = function(err) {
     this.error = err;
@@ -124,10 +125,8 @@ TaskLog.prototype.abort = function(err) {
     this.details.error = _.pick(err, 'message', 'stack', 'code', 'statusCode');
     this.failed = true;
     this.saved = false;
-    this.queue.schedule('log', () => {
-        Shutdown.off(this.shutdownListener);
-        return this.save();
-    });
+    Shutdown.off(this.shutdownListener);
+    return this.save();
 };
 
 /**

@@ -86,10 +86,9 @@ function importEvents(db, system, server, repo, project, glHookEvent) {
             }).catch((err) => {
             });
         }).tap(() => {
-            taskLog.finish();
+            return taskLog.finish();
         }).tapCatch((err) => {
-            console.error(err.message);
-            taskLog.abort(err);
+            return taskLog.abort(err);
         });
     });
 }

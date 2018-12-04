@@ -104,9 +104,9 @@ function installServerHooks(db, host, server) {
                 });
             });
         }).tap(() => {
-            taskLog.finish();
+            return taskLog.finish();
         }).tapCatch((err) => {
-            taskLog.abort(err);
+            return taskLog.abort(err);
         });
     });
 }
