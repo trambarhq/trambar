@@ -62,7 +62,7 @@ function fetch(method, url, payload, options) {
             reject(new Error('Request timed out'));
         };
         xhr.onerror = function(evt) {
-            reject(new Error(evt.message));
+            reject(new Error('Unable to connect'));
         };
         xhr.onabort = function(evt) {
             reject(new Error('Transfer aborted: ' + url));
