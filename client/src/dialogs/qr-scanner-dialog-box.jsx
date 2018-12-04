@@ -138,7 +138,15 @@ class QRScannerDialogBox extends PureComponent {
                     text = t('qr-scanner-code-used');
                     break;
                 default:
-                    text = `${error.statusCode} - ${error.message}`;
+                    if (error.statusCode) {
+                        if (error.message) {
+                            text = `${error.statusCode} - ${error.message}`;
+                        } else {
+                            text = `${error.statusCode}`;
+                        }
+                    } else {
+                        text = error.message || 'ERROR';
+                    }
             }
             message = <span className="error">{text}</span>;
         } else {
