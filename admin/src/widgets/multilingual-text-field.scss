@@ -54,13 +54,11 @@
 
         &.selected {
             color: $text-field-language-tab-background-color;
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            background: linear-gradient(45deg, transparent 1.2em, $normal-background-color 0) bottom left;
+            background: linear-gradient(45deg, transparent 1.2em, $normal-background-color 0) no-repeat bottom left;
             cursor: default;
 
             &:first-child {
-                background: linear-gradient(315deg, transparent 1.2em, $normal-background-color 0) bottom right;
+                background: linear-gradient(315deg, transparent 1.2em, $normal-background-color 0) no-repeat bottom right;
             }
         }
     }
