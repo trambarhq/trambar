@@ -550,8 +550,9 @@ import 'sockjs-client';
 import 'react-dom';
 import 'relaks';
 
-// pull in all widgets for the same reason
+// pull in all widgets and views for the same reason
 require.context('widgets', true);
+require.context('views', true);
 
 // pull in shims
 require.context('shims', true);
