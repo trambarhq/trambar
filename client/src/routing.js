@@ -244,6 +244,7 @@ const routes = {
                 match.params.module = module;
             });
         },
+        start: true,
         signIn: true,
     },
     'error-page': {

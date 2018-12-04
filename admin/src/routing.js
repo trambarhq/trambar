@@ -160,6 +160,7 @@ var routes = {
                 match.params.module = module;
             });
         },
+        start: true,
     },
     'sign-in-page': {
         load: (match) => {

@@ -155,7 +155,9 @@ function start(cfg) {
     dataSource.addEventListener('expiration', (evt) => {
         // remove the expired session
         removeSession(evt.session).then(() => {
-            return routeManager.replace(routeManager.name, routeManager.params);
+            // redirect to start page
+            let startPageName = _.findKey(routeManager.routes, { start: true });
+            return routeManager.push(startPageName, {}, { schema: undefined });
         });
     });
     notifier.addEventListener('connection', (evt) => {
