@@ -197,7 +197,9 @@ class QRScannerDialogBox extends PureComponent {
             return;
         }
         this.setState({ scanning: false });
-        QRScanner.cancelScanAsync();
+        if (QRScanner) {
+            QRScanner.cancelScanAsync();
+        }
     }
 
 

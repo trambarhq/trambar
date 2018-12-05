@@ -283,7 +283,7 @@ class MediaView extends PureComponent {
      */
     renderImageElement(res) {
         let { env, width } = this.props;
-        let url = ResourceUtils.getImageURL(res, {}, env);
+        let url = ResourceUtils.getImageURL(res, { original: true }, env);
         if (!url) {
             return null;
         }
