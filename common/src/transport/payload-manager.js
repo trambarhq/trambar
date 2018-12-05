@@ -306,7 +306,6 @@ class PayloadManager extends EventEmitter {
         });
         let payloadGroups = separatePayloads(inProgressPayloads);
         _.each(payloadGroups, (payloadGroup) => {
-            console.log('updatePayloadsBackendProgress')
             if (!destination || _.isEqual(payloadGroup.destination, destination)) {
                 this.requestBackendUpdate(payloadGroup).then((updated) => {
                     if (updated) {
@@ -518,25 +517,23 @@ class PayloadManager extends EventEmitter {
     sendPayloadCordovaFile(payload, part) {
         var url = this.getUploadURL(payload, part);
         var file = part.cordovaFile;
-        return new Promise((resolve, reject) => {
-            var index = _.indexOf(this.parts, part);
-            var token = `${this.id}-${index + 1}`;
+        var index = _.indexOf(this.parts, part);
+        var token = `${this.id}-${index + 1}`;
+        part.uploaded = 0;
+        part.promise = new Promise((resolve, reject) => {
             var options ={
                 onSuccess: (upload) => {
+                    this.updatePayloadProgress(payload, part, 1);
                     resolve(upload.serverResponse);
                 },
                 onError: (err) => {
                     reject(err);
                 },
                 onProgress: (upload) => {
-                    if (evt.lengthComputable) {
-                        this.updatePayloadProgress(payload, part, upload.progress / 100);
-                    }
+                    this.updatePayloadProgress(payload, part, upload.progress / 100);
                 },
             };
-
             BackgroundFileTransfer.send(token, file.fullPath, url, options);
-            part.uploaded = 0;
         }).then((res) => {
             if (!(res instanceof Object)) {
                 // plugin didn't automatically decode JSON response
@@ -548,6 +545,10 @@ class PayloadManager extends EventEmitter {
             }
             return res;
         });
+        part.promise.cancel = () => {
+            BackgroundFileTransfer.cancel(token);
+        };
+        return part.promise;
     }
 
     /**
@@ -752,7 +753,7 @@ class PayloadManager extends EventEmitter {
      * @param  {Number} completed
      */
     updatePayloadProgress(payload, part, completed) {
-        if (completed) {
+        if (completed > 0) {
             part.uploaded = Math.round(part.size * completed);
             if (payload.onProgress) {
                 payload.onProgress(new PayloadManagerEvent('progress', payload, {
