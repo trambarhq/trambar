@@ -72,6 +72,7 @@ class QRScannerDialogBox extends PureComponent {
      */
     componentWillUnmount() {
         this.hide();
+        shutdownQRScanner();
     }
 
     /**
@@ -117,7 +118,7 @@ class QRScannerDialogBox extends PureComponent {
             this.overlayNode = document.createElement('DIV');
             document.body.appendChild(this.overlayNode);
         } else {
-            if (error) {
+            if (!scanning) {
                 this.startScanning();
             }
         }
@@ -311,7 +312,6 @@ class CameraOverlay extends PureComponent {
     componentWillUnmount() {
         let app = document.getElementById('app-container');
         app.style.visibility = '';
-        shutdownQRScanner();
     }
 }
 
