@@ -118,7 +118,7 @@ class QRScannerDialogBox extends PureComponent {
             this.overlayNode = document.createElement('DIV');
             document.body.appendChild(this.overlayNode);
         } else {
-            if (!scanning) {
+            if (!found || error) {
                 this.startScanning();
             }
         }
@@ -196,7 +196,7 @@ class QRScannerDialogBox extends PureComponent {
         if (!scanning) {
             return;
         }
-        this.setState({ scanning: false });
+        this.setState({ scanning: false, found: false });
         if (QRScanner) {
             QRScanner.cancelScanAsync();
         }
