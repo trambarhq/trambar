@@ -311,6 +311,7 @@ class CameraOverlay extends PureComponent {
     componentWillUnmount() {
         let app = document.getElementById('app-container');
         app.style.visibility = '';
+        shutdownQRScanner();
     }
 }
 
@@ -330,6 +331,7 @@ function initializeQRScanner() {
                     case 'pausePreview':
                     case 'resumePreview':
                     case 'getStatus':
+                    case 'destroy':
                         // these functions expect single-argument callback
                         return function() {
                             return new Promise((resolve, reject) => {
@@ -345,6 +347,13 @@ function initializeQRScanner() {
         });
     }
     return true;
+}
+
+function shutdownQRScanner() {
+    if (QRScanner) {
+        QRScanner.destroyAsync();
+        QRScanner = null;
+    }
 }
 
 export {
