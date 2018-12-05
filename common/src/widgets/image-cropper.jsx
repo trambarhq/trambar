@@ -380,7 +380,7 @@ class ImageCropper extends PureComponent {
      */
     handlePanStart = (evt) => {
         let { image, container } = this.components;
-        let { clippingRect } = this.state;
+        let clippingRect = this.getClippingRect();
         if (evt.pointerType === 'mouse') {
             // don't handle mouse events through Hammer
             return;
