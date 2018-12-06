@@ -271,7 +271,7 @@ class PushNotifier extends Notifier {
             // if notification was received in the background, the event is
             // triggered when the user clicks on the notification
             if (!notification.alert.foreground) {
-                event = new NotifierEvent(this, 'alert', {
+                event = new NotifierEvent('alert', this, {
                     alert: notification.alert
                 });
             }

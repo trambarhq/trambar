@@ -473,7 +473,7 @@ class Application extends PureComponent {
      * @param  {Object} evt
      */
     handleAlertClick = (evt) => {
-        let { database } = this.state;
+        let { database, route } = this.state;
         let alert = evt.alert;
         // create an object take has some of Notification's properties
         let notification = {
@@ -485,15 +485,15 @@ class Application extends PureComponent {
         };
         let url = NotificationView.getNotificationURL(notification, this.state.route);
         let target = NotificationView.getNotificationTarget(notification);
+        let a = document.createElement('A');
+        a.href = url;
         if (target) {
-            // create a link and click it to open a new tab
-            let a = document.createElement('A');
-            a.href = url;
+            // click it to open a new tab
             a.target = target;
             a.click();
         } else {
             // handle it internally
-            this.state.route.change(url);
+            route.change(a);
             window.focus();
         }
 

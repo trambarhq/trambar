@@ -101,7 +101,11 @@ function start(cfg) {
         } else {
             dataSource.deactivate();
             payloadManager.deactivate();
-            notifier.deactivate();
+
+            // push notifier stays on when app is inactive
+            if (!(notifier instanceof PushNotifier)) {
+                notifier.deactivate();
+            }
         }
     });
     routeManager.addEventListener('beforechange', (evt) => {
