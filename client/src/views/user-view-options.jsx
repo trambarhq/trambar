@@ -235,8 +235,11 @@ class UserViewOptions extends PureComponent {
      * @param  {Event} evt
      */
     handlePhoneClick = (evt) => {
-        evt.preventDefault();
-        this.setState({ showingPhoneNumber: true });
+        let { env } = this.props;
+        if (env.platform === 'browser') {
+            evt.preventDefault();
+            this.setState({ showingPhoneNumber: true });
+        }
     }
 
     /**
