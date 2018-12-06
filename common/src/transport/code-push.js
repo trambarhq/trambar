@@ -15,7 +15,6 @@ class CodePush extends EventEmitter {
         this.lastSyncTime = '';
         this.currentPackage = null;
         this.pendingPackage = null;
-        this.selectedDeployment = _.first(this.getDeploymentNames()) || '';
     }
 
     /**
@@ -55,7 +54,6 @@ class CodePush extends EventEmitter {
             if (!_.includes(names, name)) {
                 throw new Error(`Unrecognized deployment name: ${name}`);
             }
-            this.selectedDeployment = name;
             return name;
         }).catch((err) => {
             return _.first(names);
@@ -69,7 +67,6 @@ class CodePush extends EventEmitter {
      */
     saveDeploymentName(type) {
         return writeTextFile('codepush', type).then(() => {
-            this.selectedDeployment = type;
             this.checkForUpdate();
             return null;
         });

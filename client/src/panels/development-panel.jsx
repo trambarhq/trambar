@@ -17,6 +17,13 @@ import './development-panel.scss';
 class DevelopmentPanel extends PureComponent {
     static displayName = 'DevelopmentPanel';
 
+    constructor(props) {
+        super(props);
+        let { env } = props;
+        let names = env.codePush.getDeploymentNames();
+        this.state = { deploymentName: _.first(names) };
+    }
+
     /**
      * Change a property of the user object
      *
@@ -124,10 +131,11 @@ class DevelopmentPanel extends PureComponent {
      */
     renderDeploymentOption(name, index) {
         let { env } = this.props;
+        let { deploymentName } = this.state;
         let { t } = env.locale;
         let buttonProps = {
             label: t(`development-code-push-$deployment`, name),
-            selected: (name === env.codePush.selectedDeployment),
+            selected: (name === deploymentName),
             onClick: this.handleDeploymentOptionClick,
             id: name,
         };
@@ -151,6 +159,18 @@ class DevelopmentPanel extends PureComponent {
                 <PushButton {...showProps} />
             </div>
         );
+    }
+
+    /**
+     * Fetch the name on mount
+     *
+     * @return {[type]}
+     */
+    componentDidMount() {
+        let { env } = this.props;
+        env.codePush.loadDeploymentName().then((deploymentName) => {
+            this.setState({ deploymentName });
+        });
     }
 
     /**
@@ -181,6 +201,7 @@ class DevelopmentPanel extends PureComponent {
         let { env } = this.props;
         let deploymentName = evt.currentTarget.id;
         env.codePush.saveDeploymentName(deploymentName);
+        this.setState({ deploymentName });
     }
 
     /**
