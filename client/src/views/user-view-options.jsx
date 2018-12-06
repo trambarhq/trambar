@@ -87,7 +87,7 @@ class UserViewOptions extends PureComponent {
             let skypeProps = {
                 label: t('action-contact-by-skype'),
                 icon: 'skype',
-                url: `skype:${skypeUsername}`,
+                url: `skype:${skypeUsername}?chat`,
                 hidden: !skypeUsername,
                 onClick: this.handleLinkClick,
             };
