@@ -49,7 +49,6 @@ class StartPage extends AsyncComponent {
             env,
             transitionOut,
             activationCode,
-            activationSchema,
             onTransitionOut,
         } = this.props;
         let db = database.use({ schema: 'global', by: this });
@@ -61,7 +60,6 @@ class StartPage extends AsyncComponent {
             projectLinks: undefined,
 
             transitionOut,
-            activationSchema,
             database,
             route,
             env,
@@ -155,14 +153,6 @@ class StartPageSync extends PureComponent {
                 lastError: null,
             });
         }
-    }
-
-    static getDerivedStateFromProps(props, state) {
-        let { activationSchema, transitionOut } = props;
-        if (activationSchema && transitionOut) {
-            return { transitionMethod: 'slow' };
-        }
-        return null;
     }
 
     /**
@@ -318,10 +308,10 @@ class StartPageSync extends PureComponent {
      */
     renderMobileGreeting() {
         let { env, currentUser } = this.props;
-        let { scanningQRCode } = this.state;
+        let { scanningQRCode, enteringManually } = this.state;
         let { t } = env.locale;
         let className = 'welcome';
-        if (scanningQRCode) {
+        if (scanningQRCode || enteringManually) {
             let name;
             if (currentUser) {
                 name = UserUtils.getDisplayName(currentUser, env);
@@ -801,9 +791,10 @@ class StartPageSync extends PureComponent {
      * @return {Promise}
      */
     activateMobileSession(params) {
-        let { database } = this.props;
+        let { database, route } = this.props;
         let { address, schema, activationCode } = params || {};
         let db = database.use({ address, schema });
+        clearTimeout(this.invalidCodeTimeout);
         return db.acquireMobileSession(activationCode).then((userID) => {
             if (schema) {
                 this.navigateToProject(address, schema);
@@ -820,6 +811,10 @@ class StartPageSync extends PureComponent {
             return db.saveOne({ schema: 'global', table: 'device' }, device);
         }).catch((err) => {
             db.releaseMobileSession();
+            this.setState({ activationError: err });
+            this.invalidCodeTimeout = setTimeout(() => {
+                this.setState({ activationError: null });
+            }, 5000);
             throw err;
         });
     }
@@ -1021,18 +1016,8 @@ class StartPageSync extends PureComponent {
      * @param  {Object} evt
      */
     handleScanResult = (evt) => {
-        let { route } = this.props;
-        if (this.invalidCodeTimeout) {
-            clearTimeout(this.invalidCodeTimeout);
-        }
-        // see if the URL is a valid activation link
         let params = UniversalLink.parseActivationURL(evt.result);
-        this.activateMobileSession(params).catch((err) => {
-            this.setState({ activationError: err });
-            this.invalidCodeTimeout = setTimeout(() => {
-                this.setState({ activationError: null });
-            }, 5000);
-        })
+        this.activateMobileSession(params)
     }
 
     /**
@@ -1050,17 +1035,12 @@ class StartPageSync extends PureComponent {
      * @param  {Object} evt
      */
     handleActivationConfirm = (evt) => {
-        let { route } = this.props;
-        this.handleActivationCancel();
-        // redirect to start page, now with server address, schema, as well as
-        // the activation code
-        let params = { activationCode: evt.code };
-        let context = {
-            cors: true,
+        let params = {
             address: evt.address,
             schema: evt.schema,
+            activationCode: evt.code,
         };
-        route.push('start-page', params, context);
+        this.activateMobileSession(params);
     }
 
     /**

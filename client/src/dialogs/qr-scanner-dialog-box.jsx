@@ -79,7 +79,7 @@ class QRScannerDialogBox extends PureComponent {
      * Create (or update) the camera overlay
      */
     show() {
-        let { env, error, children } = this.props;
+        let { env, error, children, onResult } = this.props;
         let { scanning, found } = this.state;
         let { t } = env.locale;
         if (!this.overlayNode) {
@@ -175,6 +175,9 @@ class QRScannerDialogBox extends PureComponent {
         let { onResult } = this.props;
         let { scanning } = this.state;
         if (scanning) {
+            return;
+        }
+        if (!QRScanner) {
             return;
         }
         this.setState({ scanning: true, found: false });
