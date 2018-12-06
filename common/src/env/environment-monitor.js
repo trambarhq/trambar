@@ -9,7 +9,7 @@ class EnvironmentMonitor extends EventEmitter {
         this.focus = true;
         this.visible = true;
         this.paused = false;
-        this.online = isOnline();
+        this.online = navigator.onLine;
         this.connectionType = getConnectionType();
         this.battery = {};
         this.screenWidth = screen.width;
@@ -130,6 +130,7 @@ class EnvironmentMonitor extends EventEmitter {
     handlePause = (evt) => {
         this.visible = false;
         this.paused = true;
+        this.online = navigator.onLine;
         this.triggerEvent(new EnvironmentMonitorEvent('change', this));
     }
 
@@ -141,6 +142,7 @@ class EnvironmentMonitor extends EventEmitter {
     handleResume = (evt) => {
         this.visible = true;
         this.paused = false;
+        this.online = navigator.onLine;
         this.triggerEvent(new EnvironmentMonitorEvent('change', this));
     }
 
@@ -252,19 +254,6 @@ class EnvironmentMonitor extends EventEmitter {
             });
         }
     }
-}
-
-/**
- * Return true if there's network connection
- *
- * @return {Boolean}
- */
-function isOnline() {
-    let connection = getNetworkAPI();
-    if (connection) {
-        return (connection.type !== 'none');
-    }
-    return navigator.onLine;
 }
 
 function getConnectionType() {
