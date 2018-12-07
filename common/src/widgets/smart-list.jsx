@@ -23,6 +23,7 @@ class SmartList extends Component {
         });
         this.state = {};
         this.scrolling = false;
+        this.scrollingInterrupted = false;
         this.scrollContainer = null;
         this.scrollContainerWidth = 0;
         this.scrollPositionInterval = 0;
@@ -75,6 +76,10 @@ class SmartList extends Component {
         if (nextState.currentAnchor !== nextProps.anchor) {
             nextState.currentAnchor = nextProps.anchor || null;
             this.anchorOffset = nextProps.offset;
+            if (this.scrolling) {
+                // interrupt scrolling
+                this.scrollingInterrupted = true;
+            }
         }
     }
 
@@ -331,8 +336,10 @@ class SmartList extends Component {
      */
     componentDidUpdate(prevProps, prevState) {
         let { currentAnchor } = this.state;
-        if (!this.scrolling || (prevState.currentAnchor && !currentAnchor)) {
+        if (!this.scrolling || this.scrollingInterrupted) {
             this.maintainScrollPosition();
+            this.scrolling = false;
+            this.scrollingInterrupted = false;
         }
         this.setSlotHeights();
         this.markUnseenSlots();
@@ -367,7 +374,9 @@ class SmartList extends Component {
                     if (actualOffset !== anchorOffset) {
                         // don't reposition when it's at the top
                         let newScrollTop = Math.max(0, anchorTop - anchorOffset);
-                        this.scrollContainer.scrollTop = newScrollTop;
+                        if (this.scrollContainer.scrollTop !== newScrollTop) {
+                            this.scrollContainer.scrollTop = newScrollTop;
+                        }
                     }
                 } else {
                     // calculate the equivalent of offsetTop and scrollTop,
@@ -383,19 +392,24 @@ class SmartList extends Component {
                         let newScrollBottom = Math.max(0, anchorBottom - anchorOffset);
                         let newScrollTop = containerScrollHeight - newScrollBottom - containerOffsetHeight;
                         this.scrollContainer.scrollTop = newScrollTop;
+                        if (this.scrollContainer.scrollTop !== newScrollTop) {
+                            this.scrollContainer.scrollTop = newScrollTop;
+                        }
                     }
                 }
             }
         } else {
             // scroll back to top
-            if (!inverted) {
-                if (isIOS && this.scrolling) {
-                    // stop momentum scrolling
-                    this.scrollContainer.style.overflowY = 'hidden';
-                    this.scrollContainer.scrollTop = 0;
-                    this.scrollContainer.style.overflowY = 'scroll';
-                } else {
-                    this.scrollContainer.scrollTop = 0;
+            if (this.scrollContainer.scrollTop !== 0) {
+                if (!inverted) {
+                    if (isIOS && this.scrolling) {
+                        // stop momentum scrolling
+                        this.scrollContainer.style.overflowY = 'hidden';
+                        this.scrollContainer.scrollTop = 0;
+                        this.scrollContainer.style.overflowY = 'scroll';
+                    } else {
+                        this.scrollContainer.scrollTop = 0;
+                    }
                 }
             }
         }
@@ -662,7 +676,7 @@ class SmartList extends Component {
             }
         } else {
             if (currentAnchor) {
-                currentAnchor = null;
+                currentAnchor = undefined;
                 this.setState({ currentAnchor }, () => {
                     this.triggerAnchorChangeEvent(null);
                 });
