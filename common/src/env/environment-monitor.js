@@ -53,21 +53,32 @@ class EnvironmentMonitor extends EventEmitter {
     }
 
     monitor(enabled) {
-        toggleEventListener(window, 'blur', this.handleWindowBlur, enabled);
-        toggleEventListener(window, 'focus', this.handleWindowFocus, enabled);
+        // monitor whether app is active
+        if (this.platform === 'cordova') {
+            toggleEventListener(document, 'pause', this.handlePause, enabled);
+            toggleEventListener(document, 'resume', this.handleResume, enabled);
+        } else {
+            toggleEventListener(window, 'blur', this.handleWindowBlur, enabled);
+            toggleEventListener(window, 'focus', this.handleWindowFocus, enabled);
+        }
+
+        // monitor screen size/orientation change
         toggleEventListener(window, 'resize', this.handleWindowResize, enabled);
         toggleEventListener(window, 'orientationchange', this.handleWindowResize, enabled);
         toggleEventListener(window, 'visibilitychange', this.handleVisibilityChange, enabled);
+
+        // monitor pointing device
         toggleEventListener(window, 'mousemove', this.handleMouseEvent, enabled);
         toggleEventListener(window, 'mousedown', this.handleMouseEvent, enabled);
         toggleEventListener(window, 'touchstart', this.handleTouchEvent, enabled);
 
+        // monitor network connectivity
         toggleEventListener(window, 'online', this.handleOnline, enabled);
         toggleEventListener(window, 'offline', this.handleOffline, enabled);
-
         let network = getNetworkAPI();
         toggleEventListener(network, 'typechange', this.handleConnectionTypeChange, enabled);
 
+        // monitor battery
         getBattery().then((battery) => {
             if (battery) {
                 toggleEventListener(battery, 'levelchange', this.handleBatteryChange, enabled);
@@ -78,12 +89,8 @@ class EnvironmentMonitor extends EventEmitter {
             }
         });
 
-        if (this.platform === 'cordova') {
-            toggleEventListener(document, 'pause', this.handlePause, enabled);
-            toggleEventListener(document, 'resume', this.handleResume, enabled);
-        } else {
-            toggleEventListener(navigator.mediaDevices, 'devicechange', this.handleDeviceChange, enabled);
-        }
+        // monitor for device changes
+        toggleEventListener(navigator.mediaDevices, 'devicechange', this.handleDeviceChange, enabled);
 
         this.scheduleDateCheck(enabled);
     }
@@ -128,6 +135,7 @@ class EnvironmentMonitor extends EventEmitter {
      * @param  {Event} evt
      */
     handlePause = (evt) => {
+        this.focused = false;
         this.visible = false;
         this.paused = true;
         this.online = navigator.onLine;
@@ -140,10 +148,13 @@ class EnvironmentMonitor extends EventEmitter {
      * @param  {Event} evt
      */
     handleResume = (evt) => {
-        this.visible = true;
-        this.paused = false;
-        this.online = navigator.onLine;
-        this.triggerEvent(new EnvironmentMonitorEvent('change', this));
+        setTimeout(() => {
+            this.focused = true;
+            this.visible = true;
+            this.paused = false;
+            this.online = navigator.onLine;
+            this.triggerEvent(new EnvironmentMonitorEvent('change', this));
+        }, 250);
     }
 
     /**
@@ -152,6 +163,7 @@ class EnvironmentMonitor extends EventEmitter {
      * @param  {Event} evt
      */
     handleWindowBlur = (evt) => {
+        console.log('blur')
         this.focus = false;
         this.triggerEvent(new EnvironmentMonitorEvent('change', this));
     }
@@ -182,6 +194,7 @@ class EnvironmentMonitor extends EventEmitter {
      * @param  {Event} evt
      */
     handleWindowResize = (evt) => {
+        console.log('resize')
         let viewport = document.body.parentNode;
         this.screenWidth = screen.width;
         this.screenHeight = screen.height;
