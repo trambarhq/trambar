@@ -220,41 +220,55 @@ class PushNotifier extends Notifier {
         }
         if (cordova.platformId === 'android') {
             let payload = data.additionalData;
-            let notification = this.unpack(payload) || {};
-            if (notification) {
-                this.dispatchNotification(notification);
-            }
-            if (data.count !== undefined) {
-                setApplicationIconBadgeNumber(data.count);
+            try {
+                let notification = this.unpack(payload) || {};
+                if (notification) {
+                    this.dispatchNotification(notification);
+                }
+                if (data.count !== undefined) {
+                    setApplicationIconBadgeNumber(data.count);
+                }
+            } catch (err) {
+                console.error(err);
             }
         } else if (cordova.platformId === 'ios') {
             let payload = data.additionalData;
             let notID = payload.notId;
-            let notification = this.unpack(payload) || {};
-            if (notification) {
-                this.dispatchNotification(notification);
-            }
-            if (data.count !== undefined) {
-                setApplicationIconBadgeNumber(data.count);
-            }
-            signalBackgroundTaskCompletion(notID);
-        } else if (cordova.platformId === 'windows') {
-            let notification;
-            if (data.launchArgs) {
-                // notification is clicked while app isn't running
-                let payload = parseJSON(data.launchArgs);
-                notification = this.unpack(payload);
-            } else {
-                // payload is stored as raw data
-                let eventArgs = data.additionalData.pushNotificationReceivedEventArgs;
-                if (eventArgs.notificationType === 3) { // raw
-                    let raw = eventArgs.rawNotification;
-                    let payload = parseJSON(raw.content);
-                    notification = this.unpack(payload);
+            try {
+                let notification = this.unpack(payload) || {};
+                if (notification) {
+                    this.dispatchNotification(notification);
                 }
+                if (data.count !== undefined) {
+                    setApplicationIconBadgeNumber(data.count);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                console.log(notID);
+                signalBackgroundTaskCompletion(notID);
             }
-            if (notification) {
-                this.dispatchNotification(notification);
+        } else if (cordova.platformId === 'windows') {
+            try {
+                let notification;
+                if (data.launchArgs) {
+                    // notification is clicked while app isn't running
+                    let payload = parseJSON(data.launchArgs);
+                    notification = this.unpack(payload);
+                } else {
+                    // payload is stored as raw data
+                    let eventArgs = data.additionalData.pushNotificationReceivedEventArgs;
+                    if (eventArgs.notificationType === 3) { // raw
+                        let raw = eventArgs.rawNotification;
+                        let payload = parseJSON(raw.content);
+                        notification = this.unpack(payload);
+                    }
+                }
+                if (notification) {
+                    this.dispatchNotification(notification);
+                }
+            } catch (err) {
+                console.error(err);
             }
         }
     }

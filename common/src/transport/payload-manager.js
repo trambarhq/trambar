@@ -300,6 +300,9 @@ class PayloadManager extends EventEmitter {
      * @param  {Object|null} destination
      */
     updatePayloadsBackendProgress(destination) {
+        if (!this.active) {
+            return false;
+        }
         let inProgressPayloads = _.filter(this.payloads, {
             sent: true,
             completed: false,
@@ -755,14 +758,16 @@ class PayloadManager extends EventEmitter {
     updatePayloadProgress(payload, part, completed) {
         if (completed > 0) {
             part.uploaded = Math.round(part.size * completed);
-            if (payload.onProgress) {
-                payload.onProgress(new PayloadManagerEvent('progress', payload, {
-                    loaded: payload.getUploaded(),
-                    total: payload.getSize(),
-                    lengthComputable: true,
-                }));
+            if (this.active) {
+                if (payload.onProgress) {
+                    payload.onProgress(new PayloadManagerEvent('progress', payload, {
+                        loaded: payload.getUploaded(),
+                        total: payload.getSize(),
+                        lengthComputable: true,
+                    }));
+                }
+                this.triggerEvent(new PayloadManagerEvent('change', this));
             }
-            this.triggerEvent(new PayloadManagerEvent('change', this));
         }
     }
 

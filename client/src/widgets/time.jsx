@@ -15,6 +15,21 @@ class Time extends PureComponent {
     static displayName = 'Time';
 
     /**
+     * Enable or disable periodic updating of relative time
+     *
+     * @param  {Boolean} enabled
+     */
+    static updateRelativeTime(enabled) {
+        if (updateInterval) {
+            clearInterval(updateInterval);
+            updateInterval = 0;
+        }
+        if (enabled) {
+            updateInterval = setInterval(updateTime, 15 * 1000);
+        }
+    }
+
+    /**
      * Render component
      *
      * @return {ReactElement}
@@ -107,7 +122,7 @@ function updateTime() {
     });
 }
 
-setInterval(updateTime, 15 * 1000);
+let updateInterval = 0;
 
 Time.defaultProps = {
     compact: false,
@@ -115,7 +130,7 @@ Time.defaultProps = {
 
 export {
     Time as default,
-    Time
+    Time,
 };
 
 import Environment from 'env/environment';

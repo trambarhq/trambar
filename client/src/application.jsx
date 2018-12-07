@@ -22,6 +22,7 @@ import BottomNavigation from 'widgets/bottom-navigation';
 import UploadProgress from 'widgets/upload-progress';
 import NotificationView from 'views/notification-view';
 import ErrorBoundary from 'widgets/error-boundary';
+import Time from 'widgets/time';
 
 import 'utils/lodash-extra';
 import 'application.scss';
@@ -222,8 +223,8 @@ class Application extends PureComponent {
         if (codePush) {
             codePush.addEventListener('change', this.handleCodePushChange);
         }
-
         window.addEventListener('beforeunload', this.handleBeforeUnload);
+        Time.updateRelativeTime(true);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -403,6 +404,8 @@ class Application extends PureComponent {
         let extra = { locale, address, widthDefinitions, codePush };
         let env = new Environment(envMonitor, extra);
         this.setState({ env });
+
+        Time.updateRelativeTime(!env.paused);
     }
 
     /**

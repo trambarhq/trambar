@@ -951,7 +951,7 @@ class RemoteDataSource extends EventEmitter {
         if (changes) {
             changes = this.omitOwnChanges(changes);
             if (_.isEmpty(changes)) {
-                return;
+                return Promise.resolve();
             }
         }
         return this.reconcileChanges(changes).then(() => {
@@ -1099,6 +1099,9 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise}
      */
     reconcileChanges(changes) {
+        if (!this.active) {
+            return Promise.resolve();
+        }
         return Promise.each(this.changeQueue, (change) => {
             if (change.onConflict === false) {
                 // don't need to reconcile object removal

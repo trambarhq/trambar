@@ -9,6 +9,7 @@ class Environment {
         this.focus = envMonitor.focus;
         this.visible = envMonitor.visible;
         this.online = envMonitor.online;
+        this.paused = envMonitor.paused;
         this.connectionType = envMonitor.connectionType;
         this.screenWidth = envMonitor.screenWidth;
         this.screenHeight = envMonitor.screenHeight;
