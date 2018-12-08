@@ -23,14 +23,58 @@ class IssueDialogBox extends PureComponent {
     static displayName = 'IssueDialogBox';
 
     constructor(props) {
-        let { issue } = props;
         super(props);
         this.components = ComponentRefs({
             textField: TextField
         });
         this.state = {
-            newIssue: issue ? null : this.getDefaultIssue(),
+            newIssue: null,
+            originalIssue: null,
         };
+    }
+
+    /**
+     * Derive an issue from props when none is provided
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     *
+     * @return {Object|null}
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { show, issue } = props;
+        let { originalIssue } = state;
+        if (show) {
+            if (originalIssue !== issue || originalIssue == null) {
+                let newIssue = null;
+                if (!issue) {
+                    let { env, story, repos } = props;
+                    let { p } = env.locale;
+                    let { text } = story.details;
+                    let langText = p(text);
+                    // look for a title in the text
+                    let paragraphs = _.split(_.trim(langText), /[\r\n]+/);
+                    let first = TagScanner.removeTags(paragraphs[0]);
+                    // use first paragraph as title only if it isn't very long
+                    let title = '';
+                    if (first.length < 100) {
+                        title = first;
+                    }
+
+                    // look for tags that match labels
+                    let allLabels = _.uniq(_.flatten(_.map(repos, 'details.labels')));
+                    let labels = _.filter(allLabels, (label) => {
+                        let tag = `#${_.replace(label, /\s+/g, '-')}`;
+                        return _.includes(story.tags, tag);
+                    });
+                    if (title || !_.isEmpty(labels)) {
+                        newIssue = { title, labels };
+                    }
+                }
+                return { newIssue, originalIssue: issue };
+            }
+        }
+        return null;
     }
 
     /**
@@ -61,38 +105,6 @@ class IssueDialogBox extends PureComponent {
             window.localStorage.last_selected_repo_id = value;
         }
         this.setState({ newIssue: newIssueAfter });
-    }
-
-    /**
-     * Derive issue details from story
-     *
-     * @return {Object|null}
-     */
-    getDefaultIssue() {
-        let { env, story, repos } = this.props;
-        let { p } = env.locale;
-        let { text } = story.details;
-        let langText = p(text);
-        // look for a title in the text
-        let paragraphs = _.split(_.trim(langText), /[\r\n]+/);
-        let first = TagScanner.removeTags(paragraphs[0]);
-        // use first paragraph as title only if it isn't very long
-        let title = '';
-        if (first.length < 100) {
-            title = first;
-        }
-
-        // look for tags that match labels
-        let allLabels = _.uniq(_.flatten(_.map(repos, 'details.labels')));
-        let labels = _.filter(allLabels, (label) => {
-            let tag = `#${_.replace(label, /\s+/g, '-')}`;
-            return _.includes(story.tags, tag);
-        });
-
-        if (!title && _.isEmpty(labels)) {
-            return null;
-        }
-        return { title, labels };
     }
 
     /**
@@ -135,24 +147,6 @@ class IssueDialogBox extends PureComponent {
             return _.toLower(p(repo.details.title) || repo.name);
         });
         return repos;
-    }
-
-    /**
-     * Update start when props change
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { show } = this.props;
-        if (nextProps.show !== show) {
-            if (nextProps.show) {
-                let issue;
-                if (!nextProps.issue) {
-                    issue = this.getDefaultIssue();
-                }
-                this.setState({ issue });
-            }
-        }
     }
 
     /**
