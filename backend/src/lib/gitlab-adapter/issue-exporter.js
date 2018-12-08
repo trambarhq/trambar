@@ -553,7 +553,7 @@ function findRepoServer(db, repo) {
 function findActingUser(db, task) {
     var criteria = {
         id: task.user_id,
-        delete: false
+        deleted: false
     };
     return User.findOne(db, 'global', criteria, '*').then((user) => {
         if (!user) {
@@ -566,7 +566,7 @@ function findActingUser(db, task) {
 function findAuthors(db, story) {
     var criteria = {
         id: story.user_ids,
-        delete: false
+        deleted: false
     };
     return User.find(db, 'global', criteria, '*');
 }

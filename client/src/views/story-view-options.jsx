@@ -151,12 +151,13 @@ class StoryViewOptions extends PureComponent {
      * @return {ReactElement}
      */
     renderIssueDialogBox() {
-        let { env, story, reactions, repos, options } = this.props;
+        let { env, currentUser, story, reactions, repos, options } = this.props;
         let { enteringIssueDetails } = this.state;
         // don't allow issue to be deleted once someone has been assigned to it
         let props = {
             show: enteringIssueDetails,
             allowDeletion: !_.some(reactions, { type: 'assignment '}),
+            currentUser,
             story,
             issue: options.issueDetails,
             repos,

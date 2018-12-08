@@ -225,12 +225,17 @@ function canBumpStory(user, story, access) {
  *
  * @param  {User} user
  * @param  {Story} story
- * @param  {Array<Repo>} repos
+ * @param  {Repo|Array<Repo>} repo
  * @param  {String} access
  *
  * @return {Boolean}
  */
-function canAddIssue(user, story, repos, access) {
+function canAddIssue(user, story, repo, access) {
+    if (repo instanceof Array) {
+        return _.some(repo, (repo) => {
+            return canAddIssue(user, story, repo, access);
+        });
+    }
     if (!user) {
         return false;
     }
@@ -239,13 +244,11 @@ function canAddIssue(user, story, repos, access) {
     }
     if (StoryUtils.isTrackable(story)) {
         // see if user is a member of one of the repos
-        return _.some(repos, (repo) => {
-            if (_.includes(repo.user_ids, user.id)) {
-                if (repo.details.issues_enabled) {
-                    return true;
-                }
+        if (_.includes(repo.user_ids, user.id)) {
+            if (repo.details.issues_enabled) {
+                return true;
             }
-        });
+        }
     }
     return false;
 }

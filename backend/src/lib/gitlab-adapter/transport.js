@@ -169,19 +169,20 @@ function impersonate(server, userId) {
     if (ui) {
         return Promise.resolve(ui.token);
     }
+    // delete old impersonation tokens first
     return getImpersonations(server, userId).then((impersonations) => {
-        var matching = _.find(impersonations, { name: 'trambar', active: true });
-        if (matching) {
-            userImpersonations[userId] = matching;
-            return matching.token;
-        }
+        var matching = _.filter(impersonations, { name: 'trambar' });
+        return Promise.each(matching, (ui) => {
+            return deleteImpersonations(server, userId, ui);
+        });
+    }).then(() => {
         var impersonationProps = {
             name: 'trambar',
             scopes: [ 'api' ],
         };
-        return createImpersonation(server, userId, impersonationProps).then((impersonation) => {
-            userImpersonations[userId] = impersonation;
-            return impersonation.token;
+        return createImpersonation(server, userId, impersonationProps).then((ui) => {
+            userImpersonations[userId] = ui;
+            return ui.token;
         });
     });
 }
@@ -198,6 +199,20 @@ function getImpersonations(server, userId) {
     var url = `/users/${userId}/impersonation_tokens`;
     var query = { state: 'active' };
     return fetch(server, url, query);
+}
+
+/**
+ * Revoke an impersonation token
+ *
+ * @param  {Server} server
+ * @param  {Number} userId
+ * @param  {Object} ui
+ *
+ * @return {Promise}
+ */
+function deleteImpersonations(server, userId, ui) {
+    var url = `/users/${userId}/impersonation_tokens/${ui.id}`;
+    return remove(server, url);
 }
 
 /**

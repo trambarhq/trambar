@@ -163,7 +163,6 @@ class EnvironmentMonitor extends EventEmitter {
      * @param  {Event} evt
      */
     handleWindowBlur = (evt) => {
-        console.log('blur')
         this.focus = false;
         this.triggerEvent(new EnvironmentMonitorEvent('change', this));
     }
@@ -194,7 +193,6 @@ class EnvironmentMonitor extends EventEmitter {
      * @param  {Event} evt
      */
     handleWindowResize = (evt) => {
-        console.log('resize')
         let viewport = document.body.parentNode;
         this.screenWidth = screen.width;
         this.screenHeight = screen.height;

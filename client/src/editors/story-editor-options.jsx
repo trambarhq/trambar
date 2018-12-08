@@ -147,11 +147,12 @@ class StoryEditorOptions extends PureComponent {
      * @return {ReactElement}
      */
     renderIssueDialogBox() {
-        let { env, options, story, repos } = this.props;
+        let { env, options, currentUser, story, repos } = this.props;
         let { enteringIssueDetails } = this.state;
         let props = {
             show: enteringIssueDetails,
             allowDeletion: false,
+            currentUser,
             story,
             issue: options.issueDetails,
             repos,

@@ -4,6 +4,7 @@ import React, { PureComponent } from 'react';
 import ComponentRefs from 'utils/component-refs';
 import * as TagScanner from 'utils/tag-scanner';
 import * as RepoUtils from 'objects/utils/repo-utils';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
 import Overlay from 'widgets/overlay';
@@ -125,10 +126,10 @@ class IssueDialogBox extends PureComponent {
      * @return {Array<Object>}
      */
     getAvailableRepos() {
-        let { env, repos } = this.props;
+        let { env, currentUser, story, repos } = this.props;
         let { p } = env.locale;
         repos = _.filter(repos, (repo) => {
-            return repo.details.issues_enabled;
+            return UserUtils.canAddIssue(currentUser, story, repo, 'read-write');
         });
         repos = _.sortBy(repos, (repo) => {
             return _.toLower(p(repo.details.title) || repo.name);
@@ -446,6 +447,7 @@ if (process.env.NODE_ENV !== 'production') {
     IssueDialogBox.propTypes = {
         show: PropTypes.bool,
         allowDeletion: PropTypes.bool.isRequired,
+        currentUser: PropTypes.object.isRequired,
         story: PropTypes.object.isRequired,
         repos: PropTypes.arrayOf(PropTypes.object),
         issue: PropTypes.object,
