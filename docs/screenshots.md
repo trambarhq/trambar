@@ -1,5 +1,5 @@
 Screenshots
------------
+===========
 
 ## Start screen
 
@@ -7,7 +7,7 @@ Screenshots
 
 ## News
 
-![News](screenshots/news-page.jpg?)
+![News](screenshots/news-page.jpg)
 
 ## Notifications
 
@@ -23,7 +23,13 @@ Screenshots
 
 ## Settings
 
-![People](screenshots/settings-page.jpg)
+![Settings](screenshots/settings-page.jpg)
+
+## Image survey
+
+![Image survey](screenshots/image-survey-before.jpg)
+
+![Image survey results](screenshots/image-survey-after.jpg)
 
 ## Video recording
 
