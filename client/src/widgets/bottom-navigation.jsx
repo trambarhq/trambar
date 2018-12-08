@@ -5,6 +5,7 @@ import ComponentRefs from 'utils/component-refs';
 import HTTPError from 'errors/http-error';
 import * as NotificationFinder from 'objects/finders/notification-finder';
 import * as UserFinder from 'objects/finders/user-finder';
+import { setApplicationIconBadgeNumber } from 'transport/push-notifier';
 
 // widgets
 import Link from 'widgets/link';
@@ -284,6 +285,8 @@ class NewNotificationsBadge extends AsyncComponent {
                     if (env.platform === 'browser') {
                         changeFavIcon(count);
                         changeDocumentTitle(count);
+                    } else if (env.platform === 'cordova') {
+                        setApplicationIconBadgeNumber(count);
                     }
                     if (!count) {
                         return null;

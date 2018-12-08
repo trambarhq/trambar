@@ -383,4 +383,5 @@ function isDebugMode() {
 export {
     PushNotifier as default,
     PushNotifier,
+    setApplicationIconBadgeNumber,
 };
