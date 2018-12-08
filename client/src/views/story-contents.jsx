@@ -867,7 +867,9 @@ class StoryContents extends PureComponent {
      * @param  {Event} evt
      */
      handleMarkdownClick = (evt) => {
-         evt.preventDefault();
+         if (evt.target.tagName !== 'INPUT') {
+             evt.preventDefault();
+         }
 
          let { env, story } = this.props;
          let { audioURL } = this.state;
