@@ -1,5 +1,5 @@
 Trambar User Guide - Administrative Console
--------------------------------------------
+===========================================
 
 * [Sign in](#sign-in)
 * [Projects](#projects)

@@ -1,5 +1,5 @@
 System Architecture
--------------------
+===================
 
 * [Trambar subsystems](#trambar-subsystems)
 * [Backend details](#backend-details)

@@ -1,5 +1,5 @@
 Trambar User Guide
-------------------
+==================
 
 * [Start - web browser](#start---web-browser)
 * [Start - mobile app](#start---mobile-app)

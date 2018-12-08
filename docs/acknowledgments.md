@@ -1,5 +1,5 @@
 Acknowledgments
----------------
+===============
 
 Trambar makes use of the following open source software. Many thanks to contributors of these projects.
 
@@ -16,7 +16,6 @@ Trambar makes use of the following open source software. Many thanks to contribu
 * [FFmpeg](https://www.ffmpeg.org/)
 * [Nginx](https://www.nginx.com/)
 * [Node.js](https://nodejs.org/)
-* [PhantomJS](http://phantomjs.org/)
 * [PLV8](https://github.com/plv8/plv8)
 * [PostgreSQL](https://www.postgresql.org/)
 

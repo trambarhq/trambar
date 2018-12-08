@@ -1,5 +1,5 @@
-# Trambar Multilingual Support
-
+Trambar Multilingual Support
+============================
 
 | Language  | User interface | Admin console instructions | User manual |
 |-----------|----------------|----------------------------|-------------|

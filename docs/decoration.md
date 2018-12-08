@@ -1,5 +1,5 @@
 Trambar Decoration
-------------------
+==================
 
 Trambar decoration files are special Markdown text files that annotates your application's codebase from the point of view of an end user. They're used to indicate which parts of the application have changed after a push or a merge. The short descriptions are meant to give non-programmers a sense of where progress is being made. They may also guide QA efforts.
 

@@ -1,5 +1,5 @@
 Getting Started
----------------
+===============
 
 Trambar Server is a [Docker](https://www.docker.com/) app. Installation and updates are managed by a [CLI utility](https://github.com/chung-leong/trambar-cli).
 
