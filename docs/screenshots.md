@@ -46,3 +46,7 @@ Screenshots
 ## Administrative console
 
 ![Admin console](screenshots/admin-project-page.jpg)
+
+## Video exported to GitLab issue tracker
+
+![Issue](screenshots/video-issue.jpg)
