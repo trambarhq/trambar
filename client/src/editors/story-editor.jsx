@@ -1318,6 +1318,10 @@ class StoryEditor extends PureComponent {
      * @param  {Event} evt
      */
     handleTextClick = (evt) => {
+        if (evt.target.tagName !== 'INPUT') {
+            evt.preventDefault();
+        }
+
         let { draft, options } = this.state;
         let target = evt.target;
         if (target.viewportElement) {
@@ -1340,6 +1344,18 @@ class StoryEditor extends PureComponent {
                 let selectedResourceIndex = _.indexOf(resources, res);
                 options = _.decoupleSet(options, 'preview', 'media');
                 this.setState({ selectedResourceIndex, options });
+            }
+        } else {
+            if (target.tagName === 'A') {
+                window.open(target.href, '_blank');
+            } else if (target.tagName === 'IMG') {
+                let src = target.getAttribute('src');
+                let targetRect = target.getBoundingClientRect();
+                let width = target.naturalWidth + 50;
+                let height = target.naturalHeight + 50;
+                let left = targetRect.left + window.screenLeft;
+                let top = targetRect.top + window.screenTop;
+                window.open(target.src, '_blank', `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`);
             }
         }
     }
