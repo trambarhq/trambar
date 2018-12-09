@@ -28,8 +28,8 @@ class IssueDialogBox extends PureComponent {
             textField: TextField
         });
         this.state = {
-            newIssue: null,
-            originalIssue: null,
+            newIssue: undefined,
+            originalIssue: undefined,
         };
     }
 
@@ -45,7 +45,7 @@ class IssueDialogBox extends PureComponent {
         let { show, issue } = props;
         let { originalIssue } = state;
         if (show) {
-            if (originalIssue !== issue || originalIssue == null) {
+            if (originalIssue !== issue) {
                 let newIssue = null;
                 if (!issue) {
                     let { env, story, repos } = props;
@@ -281,9 +281,7 @@ class IssueDialogBox extends PureComponent {
             } else {
                 changed = false;
             }
-            if (issue && issue.id) {
-                canDelete = true;
-            }
+            canDelete = true;
         }
         if (!allowDeletion) {
             canDelete = false;

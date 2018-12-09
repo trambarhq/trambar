@@ -151,7 +151,7 @@ class StoryEditorOptions extends PureComponent {
         let { enteringIssueDetails } = this.state;
         let props = {
             show: enteringIssueDetails,
-            allowDeletion: false,
+            allowDeletion: true,
             currentUser,
             story,
             issue: options.issueDetails,
