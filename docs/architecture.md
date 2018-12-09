@@ -195,10 +195,10 @@ Trambar Web Client is based on React. The React component tree is the app's main
 
 ## Bootstrap sequence
 
-1. After HTML page load event triggers bootstrap function ([main.js](https://github.com/chung-leong/trambar/blob/master/client/src/main.js))
-2. External libraries ([libraries.js](https://github.com/chung-leong/trambar/blob/master/client/src/libraries.js)) are asynchronously loaded, along with application code
-3. AppCore ([app-core.js](https://github.com/chung-leong/trambar/blob/master/common/src/app-core.js)) initiates data sources
-4. `<Application />` is rendered, with props returned by AppCore ([application.jsx](https://github.com/chung-leong/trambar/blob/master/client/src/application.jsx))
+1. After HTML page load event triggers bootstrap function ([main.js](https://github.com/trambarhq/trambar/blob/master/client/src/main.js))
+2. External libraries ([libraries.js](https://github.com/trambarhq/trambar/blob/master/client/src/libraries.js)) are asynchronously loaded, along with application code
+3. AppCore ([app-core.js](https://github.com/trambarhq/trambar/blob/master/common/src/app-core.js)) initiates data sources
+4. `<Application />` is rendered, with props returned by AppCore ([application.jsx](https://github.com/trambarhq/trambar/blob/master/client/src/application.jsx))
 
 ## Data sources
 
@@ -206,19 +206,19 @@ AppCore is responsible for initiating data sources used by the application. It s
 
 Data sources are classes that provide data. There are five of them:
 
-* `RemoteDataSource` - Handles data retrieval from and storage to a database on a remote server ([remote-data-source/index.js](https://github.com/chung-leong/trambar/blob/master/common/src/data/remote-data-source/index.js))
-* `RouteManager` - Maps the current URL to a page component ([relaks-route-manager](https://github.com/chung-leong/relaks-route-manager))
-* `LocaleManager` - Provides text used in the user interface in different languages ([locale-manager.js](https://github.com/chung-leong/trambar/blob/master/common/src/locale/locale-manager.js))
-* `PayloadManager` - Handles file uploads ([payload-manager.js](https://github.com/chung-leong/trambar/blob/master/common/src/transport/payload-manager.js))
-* `EnvironmentMonitor` - Monitors the operating environment ([environment-monitor.js](https://github.com/chung-leong/trambar/blob/master/common/src/env/environment-monitor.js))
+* `RemoteDataSource` - Handles data retrieval from and storage to a database on a remote server ([remote-data-source/index.js](https://github.com/trambarhq/trambar/blob/master/common/src/data/remote-data-source/index.js))
+* `RouteManager` - Maps the current URL to a page component ([relaks-route-manager](https://github.com/trambarhq/relaks-route-manager))
+* `LocaleManager` - Provides text used in the user interface in different languages ([locale-manager.js](https://github.com/trambarhq/trambar/blob/master/common/src/locale/locale-manager.js))
+* `PayloadManager` - Handles file uploads ([payload-manager.js](https://github.com/trambarhq/trambar/blob/master/common/src/transport/payload-manager.js))
+* `EnvironmentMonitor` - Monitors the operating environment ([environment-monitor.js](https://github.com/trambarhq/trambar/blob/master/common/src/env/environment-monitor.js))
 
 Each data source is wrapped by a proxy objects:
 
-* `RemoteDataSource` -> `Database` ([database.js](https://github.com/chung-leong/trambar/blob/master/common/src/data/database.js))
-* `RouteManager` -> `Route` ([route.js](https://github.com/chung-leong/trambar/blob/master/common/src/routing/route.js))
-* `LocalManager` -> `Locale` ([locale.js](https://github.com/chung-leong/trambar/blob/master/common/src/locale/locale.js))
-* `PayloadManager` -> `Payloads` ([payloads.js](https://github.com/chung-leong/trambar/blob/master/common/src/transport/payloads.js))
-* `EnvironmentMonitor` -> `Environment` ([environment.js](https://github.com/chung-leong/trambar/blob/master/common/src/env/environment.js))
+* `RemoteDataSource` -> `Database` ([database.js](https://github.com/trambarhq/trambar/blob/master/common/src/data/database.js))
+* `RouteManager` -> `Route` ([route.js](https://github.com/trambarhq/trambar/blob/master/common/src/routing/route.js))
+* `LocalManager` -> `Locale` ([locale.js](https://github.com/trambarhq/trambar/blob/master/common/src/locale/locale.js))
+* `PayloadManager` -> `Payloads` ([payloads.js](https://github.com/trambarhq/trambar/blob/master/common/src/transport/payloads.js))
+* `EnvironmentMonitor` -> `Environment` ([environment.js](https://github.com/trambarhq/trambar/blob/master/common/src/env/environment.js))
 
 These proxy objects are passed as props to nearly every single component in Trambar. They expose functionalities that can be utilized by components to obtain necessary data and perform actions, such as navigating to a different page or saving data to the remote database. They also act as signals that changes have occurred and updates to the user interface are necessary.
 
@@ -246,9 +246,9 @@ Of the five data sources described above, four are able to readily provide new i
 
 `RemoteDataSource` is rather different as the operations it performs are inherently asynchronous. It takes time to retrieve data from a database. It takes time to transfer that data across the Internet. When a component asks for data needed to render itself, it must wait for it to arrive.
 
-Trambar deals with asynchronousity with the help of [Relaks](https://github.com/chung-leong/relaks), a small library that allows a React component to implement an asynchronous render method. In lieu of a `ReactElement`, the method returns a [promise](https://promisesaplus.com/) of a `ReactElement`.
+Trambar deals with asynchronousity with the help of [Relaks](https://github.com/trambarhq/relaks), a small library that allows a React component to implement an asynchronous render method. In lieu of a `ReactElement`, the method returns a [promise](https://promisesaplus.com/) of a `ReactElement`.
 
-Such a component is implemented as an asynchronous-synchronous pair. The asynchronous half retrieves the necessary data then hands that data to its synchronous half. A relatively simple example is *NotificationList* ([notification-list.jsx](https://github.com/chung-leong/trambar/blob/master/client/src/lists/notification-list.jsx)). It accepts a list of notification objects and displays them:
+Such a component is implemented as an asynchronous-synchronous pair. The asynchronous half retrieves the necessary data then hands that data to its synchronous half. A relatively simple example is *NotificationList* ([notification-list.jsx](https://github.com/trambarhq/trambar/blob/master/client/src/lists/notification-list.jsx)). It accepts a list of notification objects and displays them:
 
 ![Notification list](img/client-notification-list.png)
 
@@ -298,7 +298,7 @@ renderAsync(meanwhile) {
 
 These objects will be absent initially. The component makes the best effort with what it's given. Without a name it cannot formulate a proper sentence. It can, however, render the frame so the user would see that something is there.
 
-The *StoryList* component works in the same way, only that its synchronous companion requires many more related objects ([story-list.jsx](https://github.com/chung-leong/trambar/blob/master/client/src/lists/story-list.jsx)). In addition to the stories' authors, it wants the reactions to the stories, as well as the users who reacted. It also wants bookmarks to the stories and their recipients. As these objects are retrieved, `renderAsync()` calls `meanwhile.show()` to rerender *StoryListSync* with new data added to the props. This progressive rendering mechanism means the end user will see the story list immediately, even through retrieval of all necessary data could take a second or two.
+The *StoryList* component works in the same way, only that its synchronous companion requires many more related objects ([story-list.jsx](https://github.com/trambarhq/trambar/blob/master/client/src/lists/story-list.jsx)). In addition to the stories' authors, it wants the reactions to the stories, as well as the users who reacted. It also wants bookmarks to the stories and their recipients. As these objects are retrieved, `renderAsync()` calls `meanwhile.show()` to rerender *StoryListSync* with new data added to the props. This progressive rendering mechanism means the end user will see the story list immediately, even through retrieval of all necessary data could take a second or two.
 
 ### Data queries
 
@@ -306,7 +306,7 @@ Data queries occurs in two stages. In the discovery stage, client sends the quer
 
 ### Debugging frontend code
 
-First, clone the [Trambar repo](https://github.com/chung-leong/trambar) at GitHub. Then run `npm install` in the sub-folders `common`, `client`, and `admin`.
+First, clone the [Trambar repo](https://github.com/trambarhq/trambar) at GitHub. Then run `npm install` in the sub-folders `common`, `client`, and `admin`.
 
 To debug the Web Client, run `npm run start` in `client`. This will launch [WebPack DevServer](https://webpack.js.org/configuration/dev-server/). Open a browser window and navigate to http://localhost:8080/https/live.trambar.io/. Replace the domain name in the URL if you wish to use a different backend.
 
