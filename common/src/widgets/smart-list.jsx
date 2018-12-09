@@ -337,8 +337,12 @@ class SmartList extends Component {
         let { currentAnchor } = this.state;
         if (!this.scrolling || this.scrollingInterrupted) {
             this.maintainScrollPosition();
-            this.scrolling = false;
-            this.scrollingInterrupted = false;
+            if (this.scrolling) {
+                clearTimeout(this.scrollingEndTimeout);
+                this.scrolling = false;
+                this.scrollingInterrupted = false;
+                this.scrollingEndTimeout = 0;
+            }
         }
         this.setSlotHeights();
         this.markUnseenSlots();
