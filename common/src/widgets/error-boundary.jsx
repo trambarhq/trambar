@@ -32,8 +32,8 @@ class ErrorBoundary extends Component {
         let { children, showError } = this.props;
         let { error } = this.state;
         if (error) {
-            let expectedErrors = [ 403, 404 ];
-            // don't render 403 and 404 errors since we handle those by redirecting
+            let expectedErrors = [ 401, 403, 404 ];
+            // don't render 401, 403, and 404 errors since we handle those by redirecting
             if (showError && !_.includes(expectedErrors, error.statusCode)) {
                 return <div className="error-boundary">{error.message}</div>;
             } else {

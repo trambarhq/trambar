@@ -218,27 +218,19 @@ class SignInPageSync extends PureComponent {
             'data-id': server.id,
         };
         let error = errors[server.id];
+        let text = name;
         if (error) {
-            let text = t(`sign-in-error-${error.reason}`);
+            text = t(`sign-in-error-${error.reason}`);
             props.className += ' error';
-            return (
-                <a key={server.id} {...props}>
-                    <span className="icon">
-                        <i className={`fa fa-fw fa-${icon}`}></i>
-                    </span>
-                    <span className="error">{text}</span>
-                </a>
-            );
-        } else {
-            return (
-                <a key={server.id} {...props}>
-                    <span className="icon">
-                        <i className={`fa fa-fw fa-${icon}`}></i>
-                    </span>
-                    <span className="label">{name}</span>
-                </a>
-            );
         }
+        return (
+            <a key={server.id} {...props}>
+                <span className="icon">
+                    <i className={`fa fa-fw fa-${icon}`}></i>
+                </span>
+                <span className="label">{text}</span>
+            </a>
+        );
     }
 
     /**
@@ -302,7 +294,7 @@ class SignInPageSync extends PureComponent {
             // retrieve authorization object from server
             let db = database.use({ by: this });
             return db.checkAuthorization().catch((err) => {
-                let errors = _.clone(errors);
+                errors = _.clone(errors);
                 errors[serverID] = err;
                 this.setState({ errors });
             });
