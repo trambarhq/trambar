@@ -29,7 +29,6 @@ class SmartList extends Component {
         this.scrollPositionInterval = 0;
         this.scrollToAnchorNode = null;
         this.lastReportedAnchor = null;
-        this.anchorEventTimeout = 0;
         this.updateAnchor(props, this.state);
         this.updateSlots(props, this.state);
     }
@@ -74,7 +73,7 @@ class SmartList extends Component {
      */
     updateAnchor(nextProps, nextState) {
         if (nextState.currentAnchor !== nextProps.anchor) {
-            nextState.currentAnchor = nextProps.anchor || null;
+            nextState.currentAnchor = nextProps.anchor || undefined;
             this.anchorOffset = nextProps.offset;
             if (this.scrolling) {
                 // interrupt scrolling
@@ -555,7 +554,6 @@ class SmartList extends Component {
     componentWillUnmount() {
         this.scrollContainer.removeEventListener('scroll', this.handleScroll);
         window.removeEventListener('resize', this.handleWindowResize);
-        clearTimeout(this.anchorEventTimeout);
     }
 
     /**
@@ -586,14 +584,11 @@ class SmartList extends Component {
     triggerBeforeAnchorEvent(slots) {
         let { onBeforeAnchor } = this.props;
         if (onBeforeAnchor) {
-            clearTimeout(this.anchorEventTimeout);
-            this.anchorEventTimeout = setTimeout(() => {
-                onBeforeAnchor({
-                    type: 'beforeanchor',
-                    target: this,
-                    items: _.map(slots, 'item'),
-                });
-            }, 250);
+            onBeforeAnchor({
+                type: 'beforeanchor',
+                target: this,
+                items: _.map(slots, 'item'),
+            });
         }
     }
 
@@ -667,20 +662,12 @@ class SmartList extends Component {
             return;
         }
         let anchorSlot = this.findAnchorSlot(slots);
+        let newAnchor;
         if (anchorSlot) {
-            if (anchorSlot.id !== currentAnchor) {
-                currentAnchor = anchorSlot.id;
-                this.setState({ currentAnchor }, () => {
-                    this.triggerAnchorChangeEvent(anchorSlot);
-                });
-            }
-        } else {
-            if (currentAnchor) {
-                currentAnchor = undefined;
-                this.setState({ currentAnchor }, () => {
-                    this.triggerAnchorChangeEvent(null);
-                });
-            }
+            newAnchor = anchorSlot.id;
+        }
+        if (newAnchor !== currentAnchor) {
+            this.setState({ currentAnchor: newAnchor });
         }
         this.scrolling = true;
         if (this.scrollingEndTimeout) {
@@ -689,6 +676,7 @@ class SmartList extends Component {
         this.scrollingEndTimeout = setTimeout(() => {
             this.scrolling = false;
             this.scrollingEndTimeout = 0;
+            this.triggerAnchorChangeEvent(anchorSlot);
         }, 500);
     }
 
