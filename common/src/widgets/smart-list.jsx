@@ -554,6 +554,9 @@ class SmartList extends Component {
     componentWillUnmount() {
         this.scrollContainer.removeEventListener('scroll', this.handleScroll);
         window.removeEventListener('resize', this.handleWindowResize);
+        if (this.scrollingEndTimeout) {
+            clearTimeout(this.scrollingEndTimeout);
+        }
     }
 
     /**
