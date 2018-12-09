@@ -235,6 +235,8 @@ function canAddIssue(user, story, repo, access) {
         return _.some(repo, (repo) => {
             return canAddIssue(user, story, repo, access);
         });
+    } else if (!repo) {
+        return false;
     }
     if (!user) {
         return false;
