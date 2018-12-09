@@ -350,7 +350,7 @@ class BookmarkListSync extends PureComponent {
      * @param  {Object} evt
      */
     handleBookmarkAnchorChange = (evt) => {
-        this.reanchorAtStory((evt.item) ? evt.item.id : undefined);
+        this.reanchorAtStory((evt.item) ? evt.item.story_id : undefined);
     }
 
     /**
