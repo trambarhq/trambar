@@ -171,9 +171,11 @@ class DevelopmentPanel extends PureComponent {
      */
     componentDidMount() {
         let { env } = this.props;
-        env.codePush.loadDeploymentName().then((deploymentName) => {
-            this.setState({ deploymentName });
-        });
+        if (env.codePush) {
+            env.codePush.loadDeploymentName().then((deploymentName) => {
+                this.setState({ deploymentName });
+            });
+        }
     }
 
     /**
@@ -202,6 +204,9 @@ class DevelopmentPanel extends PureComponent {
      */
     handleDeploymentOptionClick = (evt) => {
         let { env } = this.props;
+        if (!env.codePush) {
+            return null;
+        }
         let deploymentName = evt.currentTarget.id;
         env.codePush.saveDeploymentName(deploymentName);
         this.setState({ deploymentName });
