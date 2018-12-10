@@ -63,7 +63,7 @@ For evaluation on your own computer, you should create a test instance of GitLab
    > Full path of certificate:  
    > Full path of private key:
 
-7. Choose the HTTP port for HTTP and HTTPS:
+7. Choose the ports for HTTP and HTTPS:
 
    > HTTPS port: [443]  
    > HTTP port: [80]
@@ -72,7 +72,7 @@ For evaluation on your own computer, you should create a test instance of GitLab
 
    > Password for Trambar root account:
 
-9. Wait while the installation script install Docker and retrieve Trambar's images from [Docker Hub](https://hub.docker.com/u/trambar/dashboard/). The process should take a minute or two in a cloud-based server with high Internet bandwidth.
+9. Wait while the installation script install Docker and retrieve Trambar's images from [Docker Hub](https://hub.docker.com/u/trambar/dashboard/). The process should take a minute or two on a cloud-based server with high Internet bandwidth.
 
 10. Start Trambar server:
 
