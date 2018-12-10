@@ -20,7 +20,10 @@ class DevelopmentPanel extends PureComponent {
     constructor(props) {
         super(props);
         let { env } = props;
-        let names = env.codePush.getDeploymentNames();
+        let names;
+        if (env.codePush) {
+            names = env.codePush.getDeploymentNames();
+        }
         this.state = { deploymentName: _.first(names) };
     }
 
