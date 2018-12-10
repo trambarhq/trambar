@@ -6,7 +6,6 @@ import BodyParser from 'body-parser';
 import HTTP from 'http';
 import SockJS from 'sockjs';
 import Request from 'request';
-import Async from 'async-do-while';
 import Crypto from 'crypto'; Promise.promisifyAll(Crypto);
 import XML2JS from 'xml2js';
 import HTTPError from 'errors/http-error';
@@ -17,52 +16,50 @@ import Subscription from 'accessors/subscription';
 import System from 'accessors/system';
 import User from 'accessors/user';
 
-var server;
-var sockets = [];
+let server;
+let sockets = [];
 
 /**
  * Start listening for incoming Web Socket connection
  *
  * @return {Promise}
  */
-function listen() {
-    return Promise.try(() => {
-        // set up endpoint for push subscription
-        var app = Express();
-        app.use(CORS());
-        app.use(BodyParser.json());
-        app.set('json spaces', 2);
+async function listen() {
+    // set up endpoint for push subscription
+    let app = Express();
+    app.use(CORS());
+    app.use(BodyParser.json());
+    app.set('json spaces', 2);
 
-        app.post('/srv/push/signature', handleSignatureValidation);
+    app.post('/srv/push/signature', handleSignatureValidation);
 
-        // set up SockJS server
-        var sockJS = SockJS.createServer({
-            sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.1.2/sockjs.min.js',
-            log: (severity, message) => {
-                if (severity === 'error') {
-                    console.error(message);
-                }
-            },
-        });
-        sockJS.on('connection', (socket) => {
-            if (socket) {
-                sockets.push(socket);
-                socket.on('close', () => {
-                    _.pull(sockets, socket);
-                });
-
-                // assign a random id to socket
-                return Crypto.randomBytesAsync(16).then((buffer) => {
-                    socket.token = buffer.toString('hex');
-                    socket.write(JSON.stringify({ socket: socket.token }));
-                });
+    // set up SockJS server
+    let sockJS = SockJS.createServer({
+        sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.1.2/sockjs.min.js',
+        log: (severity, message) => {
+            if (severity === 'error') {
+                console.error(message);
             }
-        });
-
-        server = HTTP.createServer(app);
-        sockJS.installHandlers(server, { prefix: '/srv/socket' });
-        server.listen(80, '0.0.0.0');
+        },
     });
+    sockJS.on('connection', async (socket) => {
+        if (socket) {
+            sockets.push(socket);
+            socket.on('close', () => {
+                _.pull(sockets, socket);
+            });
+
+            // assign a random id to socket
+
+            let buffer = await Crypto.randomBytesAsync(16);
+            socket.token = buffer.toString('hex');
+            socket.write(JSON.stringify({ socket: socket.token }));
+        }
+    });
+
+    server = HTTP.createServer(app);
+    sockJS.installHandlers(server, { prefix: '/srv/socket' });
+    server.listen(80, '0.0.0.0');
 }
 
 /**
@@ -70,15 +67,15 @@ function listen() {
  *
  * @return {Promise}
  */
-function shutdown() {
-    _.each(sockets, (socket) => {
+async function shutdown() {
+    for (let socket of sockets) {
         // for some reason socket is undefined sometimes during shutdown
         if (socket) {
             socket.end();
         }
-    });
+    }
     sockets = [];
-    return Shutdown.close(server);
+    await Shutdown.close(server);
 }
 
 /**
@@ -88,26 +85,22 @@ function shutdown() {
  *
  * @return {Promise<Array<Listener>>}
  */
-function find(db, schema) {
-    var criteria = {
-        deleted: false
+async function find(db, schema) {
+    let subscriptionCriteria = { deleted: false };
+    let subscriptions = await Subscription.findCached(db, 'global', subscriptionCriteria, '*');
+    let userCriteria = {
+        id: _.map(subscriptions, 'user_id'),
+        deleted: false,
     };
-    return Subscription.findCached(db, 'global', criteria, '*').then((subscriptions) => {
-        var criteria = {
-            id: _.map(subscriptions, 'user_id'),
-            deleted: false,
-        };
-        return User.findCached(db, 'global', criteria, '*').then((users) => {
-            var listeners = [];
-            _.each(subscriptions, (subscription) => {
-                var user = _.find(users, { id: subscription.user_id });
-                if (user) {
-                    listeners.push(new Listener(user, subscription));
-                }
-            });
-            return listeners;
-        });
-    });
+    let users = await User.findCached(db, 'global', userCriteria, '*');
+    let listeners = [];
+    for (let subscription of subscriptions) {
+        let user = _.find(users, { id: subscription.user_id });
+        if (user) {
+            listeners.push(new Listener(user, subscription));
+        }
+    }
+    return listeners;
 }
 
 /**
@@ -117,10 +110,9 @@ function find(db, schema) {
  *
  * @return {Promise}
  */
-function send(db, messages) {
-    return sendToWebsockets(db, messages).then(() => {
-        return sendToPushRelays(db, messages);
-    });
+async function send(db, messages) {
+    await sendToWebsockets(db, messages);
+    await sendToPushRelays(db, messages);
 }
 
 /**
@@ -131,21 +123,22 @@ function send(db, messages) {
  *
  * @return {Promise}
  */
-function sendToWebsockets(db, messages) {
-    return filterWebsocketMessages(messages).each((message) => {
+async function sendToWebsockets(db, messages) {
+    let desiredMessages = await filterWebsocketMessages(messages);
+    for (let message of desiredMessages) {
         // dispatch web-socket messages
-        var listener = message.listener;
-        var subscription = listener.subscription;
-        var socket = _.find(sockets, { token: subscription.token });
+        let listener = message.listener;
+        let subscription = listener.subscription;
+        let socket = _.find(sockets, { token: subscription.token });
         if (socket) {
-            var messageType = _.first(_.keys(message.body));
+            let messageType = _.first(_.keys(message.body));
             console.log(`Sending message (${messageType}) to socket ${socket.token} (${listener.user.username})`);
             socket.write(JSON.stringify(message.body));
         } else {
             subscription.deleted = true;
-            return Subscription.updateOne(db, 'global', subscription);
+            await Subscription.updateOne(db, 'global', subscription);
         }
-    });
+    }
 }
 
 /**
@@ -156,15 +149,15 @@ function sendToWebsockets(db, messages) {
  *
  * @return {Promise<Array<Message>>}
  */
-function filterWebsocketMessages(messages) {
-    return Promise.filter(messages, (message) => {
+async function filterWebsocketMessages(messages) {
+    return _.filter(messages, (message) => {
         if (message.listener.type !== 'websocket') {
             return false;
         }
         if (message.body.alert) {
-            var user = message.listener.user;
-            var name = _.snakeCase(message.body.alert.type);
-            var receiving = _.get(user, `settings.web_alert.${name}`, false);
+            let user = message.listener.user;
+            let name = _.snakeCase(message.body.alert.type);
+            let receiving = _.get(user, `settings.web_alert.${name}`, false);
             if (!receiving) {
                 return false;
             }
@@ -173,75 +166,63 @@ function filterWebsocketMessages(messages) {
     });
 }
 
-function sendToPushRelays(db, messages) {
-    return getServerSignature().then((signature) => {
-        return filterPushMessages(messages).then((messages) => {
-            // in theory, it's possible to see multiple relays if it's
-            // changed after subscriptions were created
-            var messagesByRelay = _.groupBy(messages, 'listener.subscription.relay');
-            var messageLists = _.values(messagesByRelay);
-            var relays = _.keys(messagesByRelay);
-            return Promise.each(messageLists, (messages, index) => {
-                var relay = relays[index];
-                // merge identifical messages
-                var messagesByJSON = {};
-                var subscriptions = [];
-                _.each(messages, (message) => {
-                    var subscription = message.listener.subscription;
-                    var json = JSON.stringify(message.body);
-                    var m = messagesByJSON[json];
-                    if (m) {
-                        if (!_.includes(m.tokens, subscription.token)) {
-                            m.tokens.push(subscription.token);
-                        }
-                        if (!_.includes(m.methods, subscription.method)) {
-                            m.methods.push(subscription.method);
-                        }
-                    } else {
-                        m = messagesByJSON[json] = {
-                            body: message.body,
-                            tokens: [ subscription.token ],
-                            methods: [ subscription.method ],
-                            address: message.address,
-                        };
-                    }
-                    if (!_.includes(subscriptions, subscription)) {
-                        subscriptions.push(subscription);
-                    }
-                });
-                var pushMessages = _.map(messagesByJSON, (message) => {
-                    return packagePushMessage(message);
-                });
-                var url = `${relay}/dispatch`;
-                var payload = {
-                    address: _.get(messages, [ 0, 'address' ]),
-                    signature,
-                    messages: pushMessages
+async function sendToPushRelays(db, messages) {
+    let signature = await getServerSignature();
+    let desiredMessages = filterPushMessages(messages);
+    // in theory, it's possible to see multiple relays if a different relay is
+    // selected after subscriptions were created
+    let messagesByRelay = _.entries(_.groupBy(messages, 'listener.subscription.relay'));
+    for (let [ relay, messages ] of messagesByRelay) {
+        // merge identifical messages
+        let messagesByJSON = {};
+        let subscriptions = [];
+        for (let message of messages) {
+            let subscription = message.listener.subscription;
+            let json = JSON.stringify(message.body);
+            let m = messagesByJSON[json];
+            if (m) {
+                if (!_.includes(m.tokens, subscription.token)) {
+                    m.tokens.push(subscription.token);
+                }
+                if (!_.includes(m.methods, subscription.method)) {
+                    m.methods.push(subscription.method);
+                }
+            } else {
+                m = messagesByJSON[json] = {
+                    body: message.body,
+                    tokens: [ subscription.token ],
+                    methods: [ subscription.method ],
+                    address: message.address,
                 };
-                return post(url, payload).then((result) => {
-                    var errors = result.errors;
-                    if (!_.isEmpty(errors)) {
-                        console.error(errors);
-                    }
-
-                    // delete subscriptions that are no longer valid
-                    var expiredTokens = result.invalid_tokens;
-                    var expiredSubscriptions = _.filter(subscriptions, (subscription) => {
-                        if (_.includes(expiredTokens, subscription.token)) {
-                            return true;
-                        }
-                    });
-                    return Promise.each(expiredSubscriptions, (subscription) => {
-                        subscription.deleted = true;
-                        return Subscription.updateOne(db, 'global', subscription);
-                    });
-                }).catch((err) => {
-                    console.log('Error encountered posting messages at relay');
-                    console.error(err);
-                });
-            });
+            }
+            if (!_.includes(subscriptions, subscription)) {
+                subscriptions.push(subscription);
+            }
+        }
+        let pushMessages = _.map(messagesByJSON, (message) => {
+            return packagePushMessage(message);
         });
-    });
+        let url = `${relay}/dispatch`;
+        let payload = {
+            address: _.get(messages, [ 0, 'address' ]),
+            signature,
+            messages: pushMessages
+        };
+        let result = await post(url, payload);
+        let errors = result.errors;
+        if (!_.isEmpty(errors)) {
+            console.error(errors);
+        }
+
+        // delete subscriptions that are no longer valid
+        let expiredTokens = result.invalid_tokens;
+        for (let subscription of subscriptions) {
+            if (_.includes(expiredTokens, subscription.token)) {
+                subscription.deleted = true;
+                await Subscription.updateOne(db, 'global', subscription);
+            }
+        }
+    }
 }
 
 /**
@@ -252,19 +233,19 @@ function sendToPushRelays(db, messages) {
  *
  * @return {Promise<Array<Message>>}
  */
-function filterPushMessages(messages) {
-    return Promise.filter(messages, (message) => {
+async function filterPushMessages(messages) {
+    return _.filter(messages, (message) => {
         if (message.listener.type !== 'push') {
             return false;
         }
         if (message.body.alert) {
-            var user = message.listener.user;
-            var name = _.snakeCase(message.body.alert.type);
-            var receiving = _.get(user, `settings.mobile_alert.${name}`, false);
+            let user = message.listener.user;
+            let name = _.snakeCase(message.body.alert.type);
+            let receiving = _.get(user, `settings.mobile_alert.${name}`, false);
             if (!receiving) {
                 return false;
             }
-            var hasWebSession = _.some(messages, (m) => {
+            let hasWebSession = _.some(messages, (m) => {
                 if (m.listener.type === 'websocket') {
                     if (m.listener.user.id === user.id) {
                         return true;
@@ -272,7 +253,7 @@ function filterPushMessages(messages) {
                 }
             });
             if (hasWebSession) {
-                var sendToBoth = _.get(user, `settings.mobile_alert.web_session`, false);
+                let sendToBoth = _.get(user, `settings.mobile_alert.web_session`, false);
                 if (!sendToBoth) {
                     return false;
                 }
@@ -359,10 +340,10 @@ var apnsNotId = 1;
  * @return {Object}
  */
 function packageAppleMessage(message) {
-    var aps = { address: message.address };
+    let aps = { address: message.address };
     if (message.body.alert) {
-        _.each(message.body.alert, (value, name) => {
-            switch (name) {
+        let alert = _.transform(message.body.alert, (alert, value, key) => {
+            switch (key) {
                 case 'message':
                     aps.alert = value;
                     aps.sound = 'default';
@@ -371,16 +352,14 @@ function packageAppleMessage(message) {
                 case 'profile_image':
                     break;
                 default:
-                    aps[name] = value;
+                    aps[key] = value;
             }
         });
+        _.assign(aps, alert);
     } else {
-        _.each(message.body, (value, name) => {
-            aps[name] = value;
-        });
-        aps['content-available'] = 1;
+        _.assign(aps, message.body, { 'content-available': 1 });
     }
-    var notId = apnsNotId++;
+    let notId = apnsNotId++;
     if (apnsNotId >= 2147483647) {
         apnsNotId = 1;
     }
@@ -398,10 +377,9 @@ function packageAppleMessage(message) {
  * @return {Object}
  */
 function packageWindowsMessage(message) {
-    var data = { address: message.address };
     if (message.body.alert) {
-        var alert = message.body.alert;
-        var toast = {
+        let alert = message.body.alert;
+        let toast = {
             $: {},
             visual: {
                 binding: {
@@ -414,23 +392,15 @@ function packageWindowsMessage(message) {
             }
         };
         if (alert.profile_image) {
-            var url = message.address + alert.profile_image;
+            let url = message.address + alert.profile_image;
             toast.visual.binding.$.template = 'ToastImageAndText02';
             toast.visual.binding.image = { $: { id: 1, src: url } };
         }
 
         // add launch data
-        _.each(alert, (value, name) => {
-            switch (name) {
-                case 'title':
-                case 'message':
-                case 'profile_image':
-                    break;
-                default:
-                    data[name] = value;
-            }
-        });
-        toast.$.launch = JSON.stringify(data);
+        let launchData = _.omit(alert, 'title', 'message', 'profile_image');
+        _.assign(launchData, { address: message.address });
+        toast.$.launch = JSON.stringify(launchData);
 
         var builder = new XML2JS.Builder({ headless: true });
         return {
@@ -443,9 +413,7 @@ function packageWindowsMessage(message) {
             },
         };
     } else {
-        _.each(message.body, (value, name) => {
-            data[name] = value;
-        });
+        let data = _.assign({ address: message.address }, message.body);
         return {
             body: JSON.stringify(data),
             attributes: {
@@ -458,21 +426,19 @@ function packageWindowsMessage(message) {
     }
 }
 
-var serverSignature;
+let serverSignature;
 
 /**
  * Return a randomly generated server ID
  *
  * @return {Promise<String>}
  */
-function getServerSignature() {
-    if (serverSignature) {
-        return Promise.resolve(serverSignature);
-    }
-    return Crypto.randomBytesAsync(16).then((buffer) => {
+async function getServerSignature() {
+    if (!serverSignature) {
+        let buffer = await Crypto.randomBytesAsync(16);
         serverSignature = buffer.toString('hex');
-        return serverSignature;
-    });
+    }
+    return serverSignature;
 }
 
 /**
@@ -498,24 +464,20 @@ function handleSignatureValidation(req, res) {
  *
  * @return {Promise<Object>}
  */
-function post(url, payload) {
-    var options = {
-        json: true,
-        body: payload,
-        method: 'post',
-        url,
-    };
-    var succeeded = false;
-    var attempts = 1;
-    var result = null;
-    var delayInterval = 500;
-    var lastError;
-    Async.do(() => {
-        return attempt(options).then((body) => {
-            result = body;
-            succeeded = true;
-        }).catch((err) => {
-            lastError = err;
+async function post(url, payload) {
+    let canceled = false;
+    let attempts = 1;
+    let delayInterval = 500;
+    while (true) {
+        try {
+            let options = {
+                json: true,
+                body: payload,
+                method: 'post',
+                url,
+            };
+            return attempt(options);
+        } catch (err) {
             if (err instanceof HTTPError) {
                 if (err.statusCode === 429) {
                     // being rate-limited
@@ -525,26 +487,15 @@ function post(url, payload) {
                     throw err;
                 }
             }
-        });
-    });
-    Async.while(() => {
-        if (!succeeded) {
             if (attempts < 10) {
-                // try again after a delay
-                return Promise.delay(delayInterval).then(() => {
-                    attempts++;
-                    delayInterval *= 2;
-                    return true;
-                });
+                await Promise.delay(delayInterval);
+                attempts++;
+                delayInterval *= 2;
             } else {
-                throw lastError;
+                throw err;
             }
         }
-    });
-    Async.return(() => {
-        return result;
-    });
-    return Async.end();
+    }
 }
 
 /**
@@ -554,8 +505,8 @@ function post(url, payload) {
  *
  * @return {Promise<Object>}
  */
-function attempt(options) {
-    return new Promise((resolve, reject) => {
+async function attempt(options) {
+    let body = await new Promise((resolve, reject) => {
         Request(options, (err, resp, body) => {
             if (!err && resp && resp.statusCode >= 400) {
                 err = new HTTPError(resp.statusCode);
@@ -567,16 +518,19 @@ function attempt(options) {
             }
         });
     });
+    return body;
 }
 
-function Listener(user, subscription) {
-    if (subscription.method === 'websocket') {
-        this.type = 'websocket';
-    } else {
-        this.type = 'push';
+class Listener {
+    constructor(user, subscription) {
+        if (subscription.method === 'websocket') {
+            this.type = 'websocket';
+        } else {
+            this.type = 'push';
+        }
+        this.user = user;
+        this.subscription = subscription;
     }
-    this.user = user;
-    this.subscription = subscription;
 }
 
 export {
