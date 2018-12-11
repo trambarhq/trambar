@@ -101,21 +101,21 @@ async function generateCoauthoringNotifications(db, event) {
     if (event.current.type === 'issue' || event.current.type === 'merge-request') {
         return [];
     }
-    let newCoauthorIds = getNewCoauthorIds(event);
-    if (_.isEmpty(newCoauthorIds)) {
+    let newCoauthorIDs = getNewCoauthorIds(event);
+    if (_.isEmpty(newCoauthorIDs)) {
         return [];
     }
     let schema = event.schema;
     let notificationType = 'coauthor';
     let storyId = event.id;
     let leadAuthorId = event.current.user_ids[0];
-    let entries = _.map(newCoauthorIds, (coauthorId) => {
+    let entries = _.map(newCoauthorIDs, (coauthorID) => {
         return {
             notification: {
                 type: notificationType,
                 story_id: storyId,
                 user_id: leadAuthorId,
-                target_user_id: coauthorId,
+                target_user_id: coauthorID,
             },
             schema,
         };
@@ -431,9 +431,9 @@ function isPublishing(event, table) {
 function getNewCoauthorIds(event) {
     if (isModifying(event, 'story')) {
         if (event.diff.user_ids) {
-            var coauthorIdsBefore = _.slice(event.previous.user_ids, 1);
-            var coauthorIdsAfter = _.slice(event.current.user_ids, 1);
-            return _.difference(coauthorIdsAfter, coauthorIdsBefore);
+            var coauthorIDsBefore = _.slice(event.previous.user_ids, 1);
+            var coauthorIDsAfter = _.slice(event.current.user_ids, 1);
+            return _.difference(coauthorIDsAfter, coauthorIDsBefore);
         }
     }
     return [];

@@ -307,7 +307,7 @@ const Project = _.create(Data, {
         return db.execute(sql, params);
     },
 
-    getSiganture: function(db, schema, credentials) {
+    getSignature: function(db, schema, credentials) {
         var signature;
         var attempts = 0;
         Async.do(() => {

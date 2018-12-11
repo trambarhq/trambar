@@ -330,7 +330,7 @@ function packageFirebaseMessage(message) {
     };
 }
 
-var apnsNotId = 1;
+let apnsNotID = 1;
 
 /**
  * Package a message for delivery through APNS
@@ -359,12 +359,13 @@ function packageAppleMessage(message) {
     } else {
         _.assign(aps, message.body, { 'content-available': 1 });
     }
-    let notId = apnsNotId++;
-    if (apnsNotId >= 2147483647) {
-        apnsNotId = 1;
+    let notID = apnsNotID++;
+    if (apnsNotID >= 2147483647) {
+        apnsNotID = 1;
     }
     return {
-        body: { aps, notId },
+        // push notification looks for "notId"
+        body: { aps, notId: notID },
         attributes: {},
     };
 }
