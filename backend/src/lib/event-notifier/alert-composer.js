@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import * as Localization from 'localization';
 
 function format(system, schema, user, notification, locale) {

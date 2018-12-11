@@ -1,12 +1,12 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import Express from 'express';
 import CORS from 'cors';
 import BodyParser from 'body-parser';
 import HTTP from 'http';
 import SockJS from 'sockjs';
 import Request from 'request';
-import Crypto from 'crypto'; Promise.promisifyAll(Crypto);
+import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
 import XML2JS from 'xml2js';
 import HTTPError from 'errors/http-error';
 import * as Shutdown from 'shutdown';
@@ -168,10 +168,10 @@ async function filterWebsocketMessages(messages) {
 
 async function sendToPushRelays(db, messages) {
     let signature = await getServerSignature();
-    let desiredMessages = filterPushMessages(messages);
+    let desiredMessages = await filterPushMessages(messages);
     // in theory, it's possible to see multiple relays if a different relay is
     // selected after subscriptions were created
-    let messagesByRelay = _.entries(_.groupBy(messages, 'listener.subscription.relay'));
+    let messagesByRelay = _.entries(_.groupBy(desiredMessages, 'listener.subscription.relay'));
     for (let [ relay, messages ] of messagesByRelay) {
         // merge identifical messages
         let messagesByJSON = {};
@@ -488,7 +488,7 @@ async function post(url, payload) {
                 }
             }
             if (attempts < 10) {
-                await Promise.delay(delayInterval);
+                await Bluebird.delay(delayInterval);
                 attempts++;
                 delayInterval *= 2;
             } else {
