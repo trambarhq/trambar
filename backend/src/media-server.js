@@ -632,6 +632,8 @@ function getFileType(path) {
                 };
             }
             return info;
+        }).finally(() => {
+            return FS.closeAsync(fd);
         });
     });
 }
