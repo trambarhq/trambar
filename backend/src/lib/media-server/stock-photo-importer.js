@@ -8,44 +8,45 @@ import Picture from 'accessors/picture';
 import * as CacheFolders from 'media-server/cache-folders';
 import * as ImageManager from 'media-server/image-manager';
 
-function importPhotos() {
-    Database.open().then((db) => {
-        return db.need('global').then(() => {
-            var purposes = [ 'background', 'profile-image', 'project-emblem' ];
-            return Promise.map(purposes, (purpose) => {
-                var folder = Path.resolve(`../media/${purpose}`);
-                return FS.readdirAsync(folder).each((file) => {
-                    var url = `/srv/media/images/${file}`;
-                    var criteria = { purpose, url };
-                    return Picture.findOne(db, 'global', criteria, 'id').then((picture) => {
-                        if (picture) {
-                            return false;
-                        }
-                        // assume the files are already named as their MD5 hash
-                        var srcPath = `${folder}/${file}`;
-                        return ImageManager.getImageMetadata(srcPath).then((metadata) => {
-                            var details = {
-                                url,
-                                width: metadata.width,
-                                height: metadata.height,
-                                format: metadata.format,
-                            };
-                            var picture = { purpose, details };
-                            return Picture.insertOne(db, 'global', picture);
-                        }).then((picture) => {
-                            var dstPath = `${CacheFolders.image}/${file}`;
-                            return FS.statAsync(dstPath).then((stat) => {
-                                return true;
-                            }).catch((err) => {
-                                console.log(dstPath + ' -> ' + srcPath);
-                                return FS.symlinkAsync(srcPath, dstPath).return(true);
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    });
+async function importPhotos() {
+    let db = await Database.open();
+    await db.need('global');
+    let purposes = [ 'background', 'profile-image', 'project-emblem' ];
+    for (let purpose of purposes) {
+        let folder = Path.resolve(`../media/${purpose}`);
+        let files = await FS.readdirAsync(folder);
+        for (let file of files) {
+            let url = `/srv/media/images/${file}`;
+            let pictureCriteria = { purpose, url };
+            let picture = await Picture.findOne(db, 'global', pictureCriteria, 'id');
+            if (picture) {
+                // exists in the database already
+                continue;
+            }
+
+            // assume the files are already named as their MD5 hash
+            let srcPath = `${folder}/${file}`;
+            let metadata = ImageManager.getImageMetadata(srcPath);
+
+            let details = {
+                url,
+                width: metadata.width,
+                height: metadata.height,
+                format: metadata.format,
+            };
+            picture = { purpose, details };
+            await Picture.insertOne(db, 'global', picture);
+
+            let dstPath = `${CacheFolders.image}/${file}`;
+            try {
+                await FS.statAsync(dstPath);
+            } catch (err) {
+                console.log(dstPath + ' -> ' + srcPath);
+                await FS.symlinkAsync(srcPath, dstPath);
+
+            }
+        }
+    }
 }
 
 export {

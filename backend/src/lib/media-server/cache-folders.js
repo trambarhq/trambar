@@ -1,21 +1,24 @@
 import _ from 'lodash';
-import FS from 'fs';
+import Bluebird from 'bluebird';
+import FS from 'fs'; Bluebird.promisifyAll(FS);
 
-var root = '/var/cache/media';
-var image = `${root}/images`;
-var video = `${root}/videos`;
-var audio = `${root}/audios`;
+const root = '/var/cache/media';
+const image = `${root}/images`;
+const video = `${root}/videos`;
+const audio = `${root}/audios`;
 
 /**
  * Create cache folders if they don't exist yet
  */
-function create() {
-    var folders = [ root, image, video, audio ];
-    _.each(folders, (folder) => {
-        if (!FS.existsSync(folder)) {
-            FS.mkdirSync(folder);
+async function create() {
+    let folders = [ root, image, video, audio ];
+    for (let folder of folders) {
+        try {
+            await FS.statAsync(folder);
+        } catch (err) {
+            await FS.mkdirAsync(folder);
         }
-    });
+    }
 }
 
 export {
