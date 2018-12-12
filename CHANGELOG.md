@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 1.2.0
+
+* Implemented user registration whitelisting.
+* Made emojis bigger when they're the only contents.
+* Splitted pages into separate modules.
+* Migrated to React 16.
+* Refactored codebase to ES6 syntax.
+* Refactored data providers.
+* Consolidated SASS color definitions.
+* Improved build process.
+
+* Fixed task list merging.
+* Fixed non-updating of milestone titles.
+* Fixed unnecessary reloading by image editor.
+* Fixed notification badge clearing.
+* Fixed multiple.
+* Fixed uploading bug.
+
 ## 1.1.0
 
 * Added Czech, French, and German localization.
