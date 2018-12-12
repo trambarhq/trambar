@@ -152,6 +152,7 @@ function renderTaskList(text, answers, onChange) {
 }
 
 let needEmojiHandling = !hasEmojiSupport();
+let needSkinToneStripping = !needEmojiHandling && !hasSkinToneSupport();
 
 /**
  * Render text that might contain emojis unsupported by browser
@@ -163,6 +164,9 @@ let needEmojiHandling = !hasEmojiSupport();
  */
 function renderEmoji(text, options) {
     if (!needEmojiHandling) {
+        if (needSkinToneStripping) {
+            text = stripSkinTone(text);
+        }
         return [ text ];
     }
     // use custom function so we can add prefix to key
@@ -189,6 +193,24 @@ function renderEmojiImage(parentKey, code, string, characterKey) {
  * @return {Boolean}
  */
 function hasEmojiSupport() {
+    return canDrawEmoji('\ud83d\ude03');
+}
+
+/**
+ * Return true if browser supports emojis with different skin tones
+ *
+ * @return {Boolean}
+ */
+function hasSkinToneSupport() {
+    return canDrawEmoji('\ud83c\udffb');
+}
+
+/**
+ * Return true browser is able to draw the specified emoji
+ *
+ * @return {Boolean}
+ */
+function canDrawEmoji(text) {
     let canvas = document.createElement('canvas');
     if (!canvas.getContext) {
         return false;
@@ -197,12 +219,24 @@ function hasEmojiSupport() {
     if (!context.fillText) {
         return false;
     }
-    let smile = '\ud83d\ude03';
     context.textBaseline = "top";
     context.font = "32px Arial";
-    context.fillText(smile, 0, 0);
+    context.fillText(text, 0, 0);
     let pixels = context.getImageData(16, 16, 1, 1).data;
     return pixels[0] !== 0;
+}
+
+const skinToneRegExp = /\ud83c\udffb|\ud83c\udffc|\ud83c\udffd|\ud83c\udffe|\ud83c\udfff/g;
+
+/**
+ * Strip skin tone modifier from a string
+ *
+ * @param  {String} s
+ *
+ * @return {String}
+ */
+function stripSkinTone(s) {
+    return s.replace(skinToneRegExp, '');
 }
 
 let emojiRegex;
