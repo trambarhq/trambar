@@ -19,7 +19,9 @@ For evaluation on your own computer, you should create a test instance of GitLab
 
 ## Installation on Linux
 
-1. Install **npm** if it's not a default part of the distro you're using.
+1. Install **npm** if it's not a default part of the distro you're using. For instance, if the server is a Debian instance on AWS, the following command would install npm:
+
+   `sudo apt-get -y update && sudo apt-get -y install npm`
 
 2. Install **trambar-cli**:
 
