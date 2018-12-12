@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import FS from 'fs'; Promise.promisifyAll(FS);
+import Bluebird from 'bluebird';
+import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Path from 'path';
 import Express from 'express';
 import CORS from 'cors';
