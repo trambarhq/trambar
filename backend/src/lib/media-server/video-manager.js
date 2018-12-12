@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import FS from 'fs'; Promise.promisifyAll(FS);
+import Bluebird from 'bluebird';
+import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Path from 'path';
 import Readline from 'readline';
 import ChildProcess from 'child_process';
@@ -10,8 +10,8 @@ import * as CacheFolders from 'media-server/cache-folders';
 import * as FileManager from 'media-server/file-manager';
 import * as ImageManager from 'media-server/image-manager';
 
-var transcodingJobs = [];
-var encodingProfiles = [
+let transcodingJobs = [];
+let encodingProfiles = [
     {
         type: 'video',
         name: '1000kbps',
@@ -55,12 +55,12 @@ var encodingProfiles = [
 /**
  * Find a transcoding job by id
  *
- * @param  {String} jobId
+ * @param  {String} jobID
  *
  * @return {Object|null}
  */
-function findTranscodingJob(jobId) {
-    return _.find(transcodingJobs, { id: jobId }) || null;
+function findTranscodingJob(jobID) {
+    return _.find(transcodingJobs, { id: jobID }) || null;
 }
 
 /**
@@ -68,14 +68,14 @@ function findTranscodingJob(jobId) {
  *
  * @param  {String|null} srcPath
  * @param  {String} type
- * @param  {String} jobId
+ * @param  {String} jobID
  *
  * @return {Promise<Object>}
  */
-function startTranscodingJob(srcPath, type, jobId) {
-    var profiles = _.filter(encodingProfiles, { type });
-    var job = {
-        id: jobId,
+async function startTranscodingJob(srcPath, type, jobID) {
+    let profiles = _.filter(encodingProfiles, { type });
+    let job = {
+        id: jobID,
         type: type,
         destination: CacheFolders[type],
         streaming: !srcPath,
@@ -85,107 +85,90 @@ function startTranscodingJob(srcPath, type, jobId) {
         progress: 0,
         onProgress: null,
     };
-    return Promise.each(profiles, (profile) => {
+    for (let profile of profiles) {
         // see if the destination file exists already
-        var dstPath = `${job.destination}/${job.id}.${profile.name}.${profile.format}`;
-        var outputFile = _.clone(profile);
+        let dstPath = `${job.destination}/${job.id}.${profile.name}.${profile.format}`;
+        let outputFile = _.clone(profile);
         outputFile.path = dstPath;
         job.outputFiles.push(outputFile);
-        return FS.lstatAsync(dstPath).then(() => {
-            // get its duration and dimensions
-            return probeFile(outputFile).then(() => {
-                if (!outputFile.duration) {
-                    throw new Error('Existing file seems to be empty');
-                }
-            });
-        }).catch((err) => {
+
+        try {
+            // in case the file exists already
+            await FS.lstatAsync(dstPath);
+            await probeFile(outputFile);
+            if (!outputFile.duration) {
+                await FS.unlinkAsync(dstPath);
+                throw new Error('Existing file seems to be empty');
+            }
+        } catch (err) {
             // launch an instance of FFmpeg to create the file
-            return spawnFFmpeg(srcPath, dstPath, profile);
-        }).then((ffmpeg) => {
+            let ffmpeg = await spawnFFmpeg(srcPath, dstPath, profile);
             outputFile.ffmpeg = ffmpeg;
+            outputFile.ffmpegPromise = new Promise((resolve, reject) => {
+                ffmpeg.once('exit', (code) => {
+                    if (code === 0) {
+                        resolve()
+                    } else {
+                        reject(new Error(`Process exited with error code ${code}`));
+                    }
+                });
+                ffmpeg.once('error', reject);
+            });
+        }
+    }
+
+
+    if (job.streaming) {
+        // add queue and other variables needed for streaming in video
+        job.queue = [];
+        job.working = false;
+        job.closed = false;
+        job.aborted = false;
+        job.totalByteCount = 0;
+        job.processedByteCount = 0;
+        job.lastProgressTime = 0;
+        job.lastSegmentTime = new Date;
+
+        // create write stream to save original
+        job.inputFile.path = `${job.destination}/${job.id}`;
+        job.writeStream = FS.createWriteStream(job.inputFile.path);
+        job.writeStreamPromise = new Promise((resolve, reject) => {
+            job.writeStream.once('finish', resolve);
+            job.writeStream.once('error', reject);
         });
-    }).then(() => {
-        // create a promise that fulfills when all instances of ffmpeg have exited
-        job.promise = Promise.map(job.outputFiles, (outputFile) => {
-            var ffmpeg = outputFile.ffmpeg;
-            if (ffmpeg) {
-                // wait for ffmpeg to exit
-                return waitForExit(ffmpeg).then(() => {
-                    // get the generated file's dimensions
-                    return probeFile(outputFile);
+
+        // calculate MD5 hash along the way
+        job.md5Hash = Crypto.createHash('md5');
+        job.md5HashPromise = new Promise((resolve, reject) => {
+            job.md5Hash.once('readable', resolve);
+        });
+    } else {
+        // track progress by reading ffmpeg's stderr output
+        // we'll need the duration of the source file
+        job.totalDuration = 0;
+        await probeFile(job.inputFile);
+        job.totalDuration = job.inputFile.duration;
+
+        let re = /out_time_ms=(.*)/;
+        _.each(job.outputFiles, (outputFile) => {
+            if (outputFile.ffmpeg) {
+                outputFile.processedDuration = 0;
+
+                let rl = Readline.createInterface({ input: outputFile.ffmpeg.stdout });
+                rl.on('line', (line) => {
+                    let m = re.exec(line);
+                    if (m) {
+                        let outTime = parseInt(m[1]);
+                        outputFile.processedDuration = outTime / 1000;
+                        calculateProgress(job);
+                    }
                 });
             }
         });
+    }
 
-        if (job.streaming) {
-            // add queue and other variables needed for streaming in video
-            job.queue = [];
-            job.working = false;
-            job.closed = false;
-            job.aborted = false;
-            job.totalByteCount = 0;
-            job.processedByteCount = 0;
-            job.lastProgressTime = 0;
-            job.lastSegmentTime = new Date;
-
-            // create write stream to save original
-            job.inputFile.path = `${job.destination}/${job.id}`;
-            job.writeStream = FS.createWriteStream(job.inputFile.path);
-            var filePromise = new Promise((resolve, reject) => {
-                job.writeStream.once('error', reject);
-                job.writeStream.once('finish', resolve);
-            });
-
-            // calculate MD5 hash along the way
-            job.md5Hash = Crypto.createHash('md5');
-            var hashPromise = new Promise((resolve, reject) => {
-                job.md5Hash.once('readable', () => {
-                    resolve(job.md5Hash.read().toString('hex'));
-                });
-            });
-
-            // wait for processes to finish, then rename the files, using the
-            // MD5 hash of the original
-            job.promise = job.promise.then(() => {
-                return Promise.join(hashPromise, filePromise, (hash) => {
-                    job.inputFile.hash = hash;
-                    return probeFile(job.inputFile).then(() => {
-                        var files = _.concat(job.inputFile, job.outputFiles);
-                        return Promise.map(files, (file) => {
-                            return renameFile(file, job.id, hash);
-                        });
-                    });
-                });
-            });
-        } else {
-            // track progress by reading ffmpeg's stderr output
-            // we'll need the duration of the source file
-            job.totalDuration = 0;
-            probeFile(job.inputFile).then(() => {
-                job.totalDuration = job.inputFile.duration;
-
-                var re = /out_time_ms=(.*)/;
-                _.each(job.outputFiles, (outputFile) => {
-                    if (outputFile.ffmpeg) {
-                        outputFile.processedDuration = 0;
-
-                        var rl = Readline.createInterface({ input: outputFile.ffmpeg.stdout });
-                        rl.on('line', (line) => {
-                            var m = re.exec(line);
-                            if (m) {
-                                var outTime = parseInt(m[1]);
-                                outputFile.processedDuration = outTime / 1000;
-                                calculateProgress(job);
-                            }
-                        });
-                    }
-                });
-            });
-        }
-
-        transcodingJobs.push(job);
-        return job;
-    });
+    transcodingJobs.push(job);
+    return job;
 }
 
 /**
@@ -195,10 +178,9 @@ function startTranscodingJob(srcPath, type, jobId) {
  *
  * @return {Promise}
  */
-function probeFile(file) {
-    return probeMediaFile(file.path).then((info) => {
-        _.assign(file, info);
-    });
+async function probeFile(file) {
+    let info = await probeMediaFile(file.path)
+    _.assign(file, info);
 }
 
 /**
@@ -210,13 +192,13 @@ function probeFile(file) {
  *
  * @return {Promise}
  */
-function renameFile(file, match, replacement) {
-    var tempPath = file.path;
-    var permPath = _.replace(tempPath, match, replacement);
-    return FileManager.moveFile(tempPath, permPath).then(() => {
-        file.path = permPath;
-    });
+async function renameFile(file, match, replacement) {
+    let tempPath = file.path;
+    let permPath = _.replace(tempPath, match, replacement);
+    await FileManager.moveFile(tempPath, permPath);
+    file.path = permPath;
 }
+
 
 /**
  * Wait for transcoding job to finish
@@ -225,8 +207,36 @@ function renameFile(file, match, replacement) {
  *
  * @return {Promise}
  */
-function awaitTranscodingJob(job) {
-    return job.promise;
+async function awaitTranscodingJob(job) {
+    // wait for ffmpeg processes to finish
+    for (let outputFile of job.outputFiles) {
+        if (outputFile.ffmpegPromise) {
+            // wait for ffmpeg to exit
+            await outputFile.ffmpegPromise;
+
+            // then get info about the file
+            await probeFile(outputFile);
+        }
+    }
+
+    if (job.streaming) {
+        // wait for saving of input file
+        await job.writeStreamPromise;
+
+        // wait for MD5 hash
+        await job.md5HashPromise;
+        let hash = job.md5Hash.read().toString('hex');
+        job.inputFile.hash
+
+        // get metadata of the input file, now that we have the whole thing
+        await probeFile(job.inputFile);
+
+        // rename all files, using the MD5 hash of the original file
+        await renameFile(job.inputFile, job.id, hash);
+        for (let outputFile of job.outputFiles) {
+            await renameFile(outputFile, job.id, hash);
+        }
+    }
 }
 
 /**
@@ -236,11 +246,48 @@ function awaitTranscodingJob(job) {
  *
  * @return {Promise}
  */
-function awaitPosterGeneration(job) {
-    if (!job.posterFile) {
+async function awaitPosterGeneration(job) {
+    let posterFile = job.posterFile;
+    if (!posterFile) {
         throw new Error('Poster generation not requested');
     }
-    return job.posterFile.promise;
+
+    let dstFolder = posterFile.temporaryFolder;
+    try {
+        // wait for ffmpeg to exit
+        await posterFile.ffmpegPromise;
+
+        // scan dstFolder for files
+        let names = await FS.readdirAsync(dstFolder);
+        let largestFile;
+        for (let name of names) {
+            let path = `${dstFolder}/${name}`;
+            let stat = await FS.statAsync(path);
+            if (!largestFile || stat.size > largestFile.size) {
+                largestFile = { path, size: stat.size };
+            }
+        }
+        if (largestFile) {
+            // obtain metadata nad move file into image cache folder
+            let meta = await ImageManager.getImageMetadata(largestFile.path);
+            let imagePath = await FileManager.preserveFile(largestFile, null, CacheFolders.image);
+            posterFile.path = imagePath;
+            posterFile.width = meta.width;
+            posterFile.height = meta.height;
+        }
+    } finally {
+        // delete the folder, along with any remaining files
+        try {
+            let names = await FS.readdirAsync(dstFolder);
+            for (let name of names) {
+                let path = `${dstFolder}/${name}`;
+                await FS.unlinkAsync(path);
+            }
+            await FS.rmdirAsync(dstFolder);
+        } catch (err) {
+            console.error(err);
+        }
+    }
 }
 
 /**
@@ -251,7 +298,7 @@ function awaitPosterGeneration(job) {
  */
 function transcodeSegment(job, file) {
     if (!job.closed) {
-        var inputStream = FS.createReadStream(file.path);
+        let inputStream = FS.createReadStream(file.path);
         job.queue.push(inputStream);
         job.totalByteCount += file.size;
         job.lastSegmentTime = new Date;
@@ -262,7 +309,7 @@ function transcodeSegment(job, file) {
     if (job.posterFile && job.posterFile.ffmpeg) {
         // handle poster generation in separate quene so process isn't slowed
         // down by back pressure from transcoding
-        var inputStream = FS.createReadStream(file.path);
+        let inputStream = FS.createReadStream(file.path);
         job.posterQueue.push(inputStream);
         if (!job.workingOnPoster) {
             processNextStreamSegmentForPoster(job);
@@ -291,7 +338,7 @@ function endTranscodingJob(job, abort) {
     } else {
         // close the streams that aren't used
         if (job.posterQueue) {
-            var inputStream;
+            let inputStream;
             while (inputStream = job.posterQueue.shift()) {
                 inputStream.close();
             }
@@ -305,7 +352,7 @@ function endTranscodingJob(job, abort) {
  * @param  {Object} job
  */
 function processNextStreamSegment(job) {
-    var inputStream = job.queue.shift();
+    let inputStream = job.queue.shift();
     if (inputStream && !job.aborted) {
         job.working = true;
         // save contents of the original file
@@ -353,7 +400,7 @@ function processNextStreamSegment(job) {
  * @param  {Object} job
  */
 function processNextStreamSegmentForPoster(job) {
-    var inputStream = job.posterQueue.shift();
+    let inputStream = job.posterQueue.shift();
     if (inputStream && !job.aborted) {
         job.workingOnPoster = true;
         inputStream.pipe(job.posterFile.ffmpeg.stdin, { end: false });
@@ -375,14 +422,14 @@ function processNextStreamSegmentForPoster(job) {
  * @param  {Object} job
  */
 function calculateProgress(job) {
-    var progress;
+    let progress;
     if (job.streaming) {
         // don't perform calculation when final size isn't known
         if (job.closed) {
             progress = Math.round(job.processedByteCount / job.totalByteCount * 100);
         }
     } else {
-        var durations = [];
+        let durations = [];
         _.each(job.outputFiles, (outputFile) => {
             if (outputFile.ffmpeg) {
                 durations.push(outputFile.processedDuration);
@@ -399,9 +446,9 @@ function calculateProgress(job) {
             job.progress = progress;
             if (job.onProgress) {
                 // don't report that frequently
-                var now = new Date;
-                var elapsed = (job.lastProgressTime) ? now - job.lastProgressTime : Infinity;
-                if (elapsed > 2000 || progress === 100) {
+                let now = new Date;
+                let elapsed = (job.lastProgressTime) ? now - job.lastProgressTime : Infinity;
+                if (elapsed > 5000 || progress === 100) {
                     job.onProgress({ type: 'progress', target: job });
                     job.lastProgressTime = now;
                 }
@@ -415,71 +462,51 @@ function calculateProgress(job) {
  *
  * @param  {Job} job
  *
- * @return {Promise<Object>}
+ * @return {Promise}
  */
-function requestPosterGeneration(job) {
-    var srcPath = (job.streaming) ? null : job.inputFile.path;
-    var dstPath = `${job.destination}/${job.id}.screencaps/%d.jpg`;
-    var dstFolder = Path.dirname(dstPath);
-    return FS.mkdirAsync(dstFolder).catch((err) => {
+async function requestPosterGeneration(job) {
+    let srcPath = (job.streaming) ? null : job.inputFile.path;
+    let dstPath = `${job.destination}/${job.id}.screencaps/%d.jpg`;
+    let dstFolder = Path.dirname(dstPath);
+
+    // create temporary folder for holding thumbnail images
+    try {
+        FS.mkdirAsync(dstFolder);
+    } catch (err) {
         if (err.code !== 'EEXIST') {
             throw err;
         }
-    }).then(() => {
-        var profile = {
-            screenCap: {
-                quality: 2,
-                count: 3
-            }
-        };
-        var ffmpeg = spawnFFmpeg(srcPath, dstPath, profile);
-        if (ffmpeg.stdin) {
-            // we expect ffmpeg to drop the connection as soon as it has enough data
-            ffmpeg.stdin.on('error', (err) => {
-                job.posterFile.ffmpeg = null;
-            });
+    }
+
+    let profile = {
+        screenCap: {
+            quality: 2,
+            count: 3
         }
-        job.posterQueue = [];
-        job.posterFile = {};
-        job.posterFile.ffmpeg = ffmpeg;
-        job.posterFile.promise = waitForExit(ffmpeg).then(() => {
-            // scan dstFolder for files
-            return FS.readdirAsync(dstFolder).then((names) => {
-                // find the largest of them (most interesting, hopefully)
-                return Promise.reduce(names, (selected, name) => {
-                    var path = `${dstFolder}/${name}`;
-                    return FS.statAsync(path).then((stat) => {
-                        if (!selected || selected.size < stat.size) {
-                            return { path, size: stat.size };
-                        } else {
-                            return selected;
-                        }
-                    });
-                }, null);
-            }).then((file) => {
-                if (file) {
-                    // move file into image cache folder
-                    return ImageManager.getImageMetadata(file.path).then((meta) => {
-                        return FileManager.preserveFile(file, null, CacheFolders.image).then((imagePath) => {
-                            _.assign(job.posterFile, {
-                                path: imagePath,
-                                width: meta.width,
-                                height: meta.height,
-                            });
-                        });
-                    });
-                }
-            });
-        }).finally(() => {
-            // delete the folder, along with any remaining files
-            return FS.readdirAsync(dstFolder).each((name) => {
-                return FS.unlinkAsync(`${dstFolder}/${name}`).catch((err) => {});
-            }).then(() => {
-                return FS.unlinkAsync(dstFolder).catch((err) => {});
-            })
+    };
+    let posterFile = {};
+    let ffmpeg = spawnFFmpeg(srcPath, dstPath, profile);
+    if (ffmpeg.stdin) {
+        // we expect ffmpeg to drop the connection as soon as it has enough data
+        ffmpeg.stdin.once('error', (err) => {
+            posterFile.ffmpeg = null;
         });
-        return null;
+    }
+    posterFile.temporaryFolder = dstFolder;
+    posterFile.ffmpeg = ffmpeg;
+    posterFile.ffmpegPromise = new Promise((resolve, reject) => {
+        ffmpeg.once('exit', (code) => {
+            if (code === 0) {
+                resolve()
+            } else {
+                reject(new Error(`Process exited with error code ${code}`));
+            }
+        });
+        ffmpeg.once('error', reject);
     });
+
+    job.posterQueue = [];
+    job.posterFile = posterFile;
 }
 
 /**
@@ -492,9 +519,9 @@ function requestPosterGeneration(job) {
  * @return {ChildProcess}
  */
 function spawnFFmpeg(srcPath, dstPath, profile) {
-    var cmd = 'ffmpeg';
-    var args = [], arg = Array.prototype.push.bind(args);
-    var options = {
+    let cmd = 'ffmpeg';
+    let args = [], arg = Array.prototype.push.bind(args);
+    let options = {
         stdio: [ 'inherit', 'inherit', 'inherit' ]
     };
 
@@ -527,19 +554,19 @@ function spawnFFmpeg(srcPath, dstPath, profile) {
         arg('-ac', profile.audioChannels);
     }
     if (profile.maximum) {
-        var w = profile.maximum.width;
-        var h = profile.maximum.height;
-        var a = _.round(w / h, 3);
+        let w = profile.maximum.width;
+        let h = profile.maximum.height;
+        let a = _.round(w / h, 3);
         // if actual aspect ratio is great than w/h, scale = width:-2
         // if actual aspect ratio is less than w/h, scale = -2:height
         //
         // -2 ensures the automatic dimension is divisible by 2
-        var scale = `'if(gt(a,${a}),min(iw,${w}),-2)':'if(gt(a,${a}),-2,min(ih,${h}))'`;
+        let scale = `'if(gt(a,${a}),min(iw,${w}),-2)':'if(gt(a,${a}),-2,min(ih,${h}))'`;
         arg('-vf', `scale=${scale}`);
     }
     if (profile.screenCap) {
-        var count = profile.screenCap.count || 1;
-        var quality = profile.screenCap.quality || 5;
+        let count = profile.screenCap.count || 1;
+        let quality = profile.screenCap.quality || 5;
         arg('-vf', `select='eq(pict_type,I)'`);
         arg('-vsync', 'vfr');
         arg('-vframes', count);
@@ -557,78 +584,55 @@ function spawnFFmpeg(srcPath, dstPath, profile) {
  *
  * @return {Object}
  */
-function probeMediaFile(srcPath) {
-    return new Promise((resolve, reject) => {
-        var cmd = `ffprobe`;
-        var args = [], arg = Array.prototype.push.bind(args);
+async function probeMediaFile(srcPath) {
+    let output = await new Promise((resolve, reject) => {
+        let cmd = `ffprobe`;
+        let args = [], arg = Array.prototype.push.bind(args);
         arg('-print_format', 'json');
         arg('-show_streams');
         arg(srcPath);
 
         ChildProcess.execFile(cmd, args, (err, stdout, stderr) => {
-            if (!err) {
-                var dump = JSON.parse(stdout);
-                var info = {};
-                var videoStream = _.find(dump.streams, { codec_type: 'video' });
-                var audioStream = _.find(dump.streams, { codec_type: 'audio' });
-                if (videoStream) {
-                    var rotation = 0;
-                    _.each(videoStream.side_data_list, (item) => {
-                        if (typeof(item.rotation) === 'number') {
-                            rotation = (item.rotation + 360) % 360;
-                        }
-                    });
-                    switch (rotation) {
-                        case 90:
-                        case 270:
-                            info.width = videoStream.height;
-                            info.height = videoStream.width;
-                            break;
-                        default:
-                            info.width = videoStream.width;
-                            info.height = videoStream.height;
-                            break;
-                    }
-                    info.duration = videoStream.duration * 1000;
-                } else if (audioStream) {
-                    info.duration = audioStream.duration * 1000;
+            resolve(!err ? stdout : null);
+        });
+    });
+    let info = {};
+    if (output) {
+        let dump = JSON.parse(output);
+        let videoStream = _.find(dump.streams, { codec_type: 'video' });
+        let audioStream = _.find(dump.streams, { codec_type: 'audio' });
+        if (videoStream) {
+            let rotation = 0;
+            _.each(videoStream.side_data_list, (item) => {
+                if (typeof(item.rotation) === 'number') {
+                    rotation = (item.rotation + 360) % 360;
                 }
-                resolve(info);
-            } else {
-                resolve(null);
+            });
+            switch (rotation) {
+                case 90:
+                case 270:
+                    info.width = videoStream.height;
+                    info.height = videoStream.width;
+                    break;
+                default:
+                    info.width = videoStream.width;
+                    info.height = videoStream.height;
+                    break;
             }
-        });
-    });
-}
-
-/**
- * Wait for process to exit
- *
- * @param  {Process} childProcess
- *
- * @return {Promise}
- */
-function waitForExit(childProcess) {
-    return new Promise((resolve, reject) => {
-        childProcess.on('exit', (code, signal) => {
-            if (code === 0) {
-                resolve()
-            } else {
-                reject(new Error(`Process exited with error code ${code}`));
-            }
-        });
-        childProcess.on('error', (err) => {
-            reject(err)
-        });
-    });
+            info.duration = videoStream.duration * 1000;
+        } else if (audioStream) {
+            info.duration = audioStream.duration * 1000;
+        }
+    }
+    return info;
 }
 
 // cancel a stream if nothing is received after a while
 setInterval(() => {
     _.each(transcodingJobs, (job) => {
         if (job.streaming && !job.closed) {
-            var now = new Date;
-            var elapsed = now - job.lastSegmentTime;
+            let now = new Date;
+            let elapsed = now - job.lastSegmentTime;
             if (elapsed > 60 * 60 * 1000) {
                 endTranscodingJob(job, true);
             }
