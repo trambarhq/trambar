@@ -1,11 +1,11 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import Express from 'express';
 import CORS from 'cors';
 import BodyParser from 'body-parser';
 import Passport from 'passport';
-import Crypto from 'crypto'; Promise.promisifyAll(Crypto);
-import FS from 'fs'; Promise.promisifyAll(FS);
+import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
+import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Moment from 'moment';
 import Request from 'request';
 import HtpasswdAuth from 'htpasswd-auth';
@@ -32,11 +32,11 @@ const SESSION_LIFETIME_DEVICE_ACTIVATION = 60;
 const SESSION_LIFETIME_ADMIN = 60 * 24 * 1;
 const SESSION_LIFETIME_CLIENT = 60 * 24 * 30;
 
-var server;
-var cleanUpInterval;
+let server;
+let cleanUpInterval;
 
-function start() {
-    var app = Express();
+async function start() {
+    let app = Express();
     app.set('json spaces', 2);
     app.use(CORS());
     app.use(BodyParser.json());
@@ -66,9 +66,9 @@ function start() {
     cleanUpInterval = setInterval(deleteExpiredSessions, 60 * 60 * 1000);
 }
 
-function stop() {
+async function stop() {
     clearInterval(cleanUpInterval);
-    return Shutdown.close(server);
+    await Shutdown.close(server);
 };
 
 /**
@@ -89,7 +89,7 @@ function sendHTML(res, html) {
  */
 function sendErrorHTML(res, err) {
     err = sanitizeError(err);
-    var html = `
+    let html = `
         <h1>${err.statusCode} ${err.name}</h1>
         <p>${err.message}</p>
     `;
@@ -132,7 +132,7 @@ function sanitizeError(err) {
     if (!err.statusCode) {
         // not an expected error
         console.error(err);
-        var message = err.message;
+        let message = err.message;
         if (process.env.NODE_ENV === 'production') {
             message = 'The application has encountered an unexpected fault';
         }
@@ -147,58 +147,47 @@ function sanitizeError(err) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleSessionStart(req, res) {
-    var area = _.toLower(req.body.area);
-    var handle = _.toLower(req.body.handle);
-    return findSystem().then((system) => {
+async function handleSessionStart(req, res) {
+    try {
+        let area = _.toLower(req.body.area);
+        let originalHandle = _.toLower(req.body.handle);
         if (!(area === 'client' || area === 'admin')) {
             throw new HTTPError(400);
         }
-        if (!handle) {
-            return createRandomToken(8).then((handle) => {
-                // create session object
-                var etime = getFutureTime(SESSION_LIFETIME_AUTHENTICATION);
-                return saveSession({ area, handle, etime });
-            }).then((session) => {
-                return findOAuthServers(area).then((servers) => {
-                    return {
-                        session: _.pick(session, 'handle', 'etime'),
-                        system: _.pick(system, 'details'),
-                        servers: _.map(servers, (server) => {
-                            return _.pick(server, 'id', 'type', 'details')
-                        })
-                    };
-                });
-            })
+        let result;
+        if (!originalHandle) {
+            let handle = await createRandomToken(8);
+            // create session object
+            let etime = getFutureTime(SESSION_LIFETIME_AUTHENTICATION);
+            let session = await saveSession({ area, handle, etime });
+            let system = await findSystem();
+            let servers = await findOAuthServers(area);
+            result = {
+                session: _.pick(session, 'handle', 'etime'),
+                system: _.pick(system, 'details'),
+                servers: _.map(servers, (server) => {
+                    return _.pick(server, 'id', 'type', 'details')
+                })
+            };
         } else {
-            return findSession(handle).then((orgSession) => {
-                if (orgSession.area !== area) {
-                    throw new HTTPError(403);
-                }
-                return createRandomToken(8).then((handle) => {
-                    return createRandomToken(16).then((token) => {
-                        var etime = getFutureTime(SESSION_LIFETIME_DEVICE_ACTIVATION);
-                        var session = {
-                            area,
-                            handle,
-                            token,
-                            etime,
-                            user_id: orgSession.user_id
-                        };
-                        return saveSession(session).then((session) => {
-                            return {
-                                session: _.pick(session, 'handle', 'etime')
-                            };
-                        });
-                    });
-                });
-            });
+            // create session for mobile device
+            let originalSession = await findSession(originalHandle);
+            if (originalSession.area !== area) {
+                throw new HTTPError(403);
+            }
+            let userID = originalSession.user_id;
+            let handle = await createRandomToken(8);
+            let token = await createRandomToken(16);
+            let etime = getFutureTime(SESSION_LIFETIME_DEVICE_ACTIVATION);
+            let session = await saveSession({ area, handle, token, etime, user_id: userID });
+            result = {
+                session: _.pick(session, 'handle', 'etime')
+            };
         }
-    }).then((info) => {
-        sendJSON(res, info);
-    }).catch((err) => {
+        sendJSON(res, result);
+    } catch (err) {
         sendErrorJSON(res, err);
-    });
+    }
 }
 
 /**
@@ -207,25 +196,22 @@ function handleSessionStart(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleHTPasswdRequest(req, res) {
-    var handle = _.toLower(req.body.handle);
-    var username = _.trim(_.toLower(req.body.username));
-    var password = _.trim(req.body.password);
-    return findSession(handle).then((session) => {
-        return findHtpasswdRecord(username, password).then(() => {
-            return findUserByName(username).then((user) => {
-                return authorizeUser(session, user, {}, true).then((session) => {
-                    return {
-                        session: _.pick(session, 'token', 'user_id', 'etime')
-                    };
-                });
-            });
-        })
-    }).then((info) => {
-        sendJSON(res, info);
-    }).catch((err) => {
+async function handleHTPasswdRequest(req, res) {
+    try {
+        let handle = _.toLower(req.body.handle);
+        let username = _.trim(_.toLower(req.body.username));
+        let password = _.trim(req.body.password);
+        let session = await findSession(handle);
+        let matched = await findHtpasswdRecord(username, password);
+        let user = await findUserByName(username);
+        let sessionAfter = await authorizeUser(session, user, {}, true);
+        let result = {
+            session: _.pick(sessionAfter, 'token', 'user_id', 'etime')
+        };
+        sendJSON(res, result);
+    } catch (err) {
         sendErrorJSON(res, err);
-    });
+    }
 }
 
 /**
@@ -235,31 +221,32 @@ function handleHTPasswdRequest(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleSessionRetrieval(req, res) {
-    var handle = _.toLower(req.query.handle);
-    return findSession(handle).then((session) => {
+async function handleSessionRetrieval(req, res) {
+    try {
+        let handle = _.toLower(req.query.handle);
+        let session = await findSession(handle);
         if (session.activated) {
             throw new HTTPError(410);
         }
+        let result;
         if (session.token) {
             session.activated = true;
             session.etime = getFutureTime(SESSION_LIFETIME_CLIENT);
-            return saveSession(session).then((session) => {
-                return {
-                    session: _.pick(session, 'token', 'user_id', 'etime')
-                };
-            });
+            let sessionAfter = await saveSession(session);
+            result = {
+                session: _.pick(sessionAfter, 'token', 'user_id', 'etime')
+            };
         } else {
-            var error = session.details.error;
+            let error = session.details.error;
             if (error) {
                 throw new HTTPError(error);
             }
+            result = null;
         }
-    }).then((info) => {
-        sendJSON(res, info);
-    }).catch((err) => {
+        sendJSON(res, result);
+    } catch (err) {
         sendErrorJSON(res, err);
-    });
+    }
 }
 
 /**
@@ -268,17 +255,15 @@ function handleSessionRetrieval(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleSessionTermination(req, res) {
-    var handle = _.toLower(req.body.handle);
-    return removeSession(handle).then((session) => {
-        return removeDevices(session.handle).then(() => {
-            return {};
-        });
-    }).then((info) => {
-        sendJSON(res, info);
-    }).catch((err) => {
+async function handleSessionTermination(req, res) {
+    try {
+        let handle = _.toLower(req.body.handle);
+        let session = await removeSession(handle);
+        let devices = await removeDevices(session.handle);
+        sendJSON(res, {});
+    } catch (err) {
         sendErrorJSON(res, err);
-    });
+    }
 }
 
 /**
@@ -288,37 +273,35 @@ function handleSessionTermination(req, res) {
  * @param  {Response}  res
  * @param  {Function} done
  */
-function handleOAuthRequest(req, res, done) {
-    var query = extractQueryVariables(req.query);
-    var serverId = parseInt(query.sid);
-    var handle = _.toLower(query.handle);
-    return findSession(handle).then((session) => {
-        return findSystem().then((system) => {
-            return findServer(serverId).then((server) => {
-                var params = { sid: serverId, handle };
-                return authenticateThruPassport(req, res, system, server, params).then((account) => {
-                    return findMatchingUser(server, account).then((user) => {
-                        // save the info from provider for potential future use
-                        var details = {
-                            profile: account.profile._json,
-                            access_token: account.accessToken,
-                            refresh_token: account.refreshToken,
-                        };
-                        return authorizeUser(session, user, details);
-                    });
-                }).catch((err) => {
-                    // save the error
-                    session.details.error = _.pick(err, 'statusCode', 'code', 'message', 'reason', 'stack');
-                    return saveSession(session);
-                });
-            });
-        });
-    }).then(() => {
-        var html = `<script> close() </script>`;
+async function handleOAuthRequest(req, res, done) {
+    try {
+        let query = extractQueryVariables(req.query);
+        let serverID = parseInt(query.sid);
+        let handle = _.toLower(query.handle);
+        let session = await findSession(handle);
+        try {
+            let system = await findSystem();
+            let server = await findServer(serverID);
+            let params = { sid: serverID, handle };
+            let account = await authenticateThruPassport(req, res, system, server, params);
+            let user = await findMatchingUser(server, account);
+            // save the info from provider for potential future use
+            let details = {
+                profile: account.profile._json,
+                access_token: account.accessToken,
+                refresh_token: account.refreshToken,
+            };
+            await authorizeUser(session, user, details);
+        } catch (err) {
+            // save the error
+            session.details.error = _.pick(err, 'statusCode', 'code', 'message', 'reason', 'stack');
+            await saveSession(session);
+        }
+        let html = `<script> close() </script>`;
         sendHTML(res, html);
-    }).catch((err) => {
+    } catch (err) {
         sendErrorHTML(res, err);
-    });
+    }
 }
 
 /**
@@ -328,30 +311,28 @@ function handleOAuthRequest(req, res, done) {
  * @param  {Response}  res
  * @param  {Function}  done
  */
-function handleOAuthTestRequest(req, res, done) {
-    var query = extractQueryVariables(req.query);
+async function handleOAuthTestRequest(req, res, done) {
+    let query = extractQueryVariables(req.query);
     if (!query.test) {
         return done();
     }
-    var serverId = parseInt(query.sid);
-    return findSystem().then((system) => {
-        return findServer(serverId).then((server) => {
-            var params = { test: 1, sid: serverId, handle: 'TEST' };
-            return authenticateThruPassport(req, res, system, server, params).then((account) => {
-                console.log(`OAuth authentication test:\n`);
-                console.log(`Display name = ${account.profile.displayName}`);
-                console.log(`User name = ${account.profile.username}`);
-                console.log(`User ID = ${account.profile.id}`);
-                console.log(`Email = ${_.map(account.profile.emails, 'value').join(', ')}`);
-                console.log(`Server type = ${server.type}`);
-            });
-        });
-    }).then(() => {
-        var html = `<h1>OK</h1>`;
+    try {
+        let serverID = parseInt(query.sid);
+        let system = await findSystem();
+        let server = await findServer(serverID);
+        let params = { test: 1, sid: serverID, handle: 'TEST' };
+        let account = await authenticateThruPassport(req, res, system, server, params);
+        console.log(`OAuth authentication test:\n`);
+        console.log(`Display name = ${account.profile.displayName}`);
+        console.log(`User name = ${account.profile.username}`);
+        console.log(`User ID = ${account.profile.id}`);
+        console.log(`Email = ${_.map(account.profile.emails, 'value').join(', ')}`);
+        console.log(`Server type = ${server.type}`);
+        let html = `<h1>OK</h1>`;
         sendHTML(res, html);
-    }).catch((err) => {
+    } catch (err) {
         sendErrorHTML(res, err);
-    });
+    }
 }
 
 /**
@@ -361,49 +342,46 @@ function handleOAuthTestRequest(req, res, done) {
  * @param  {Response}  res
  * @param  {Function}  done
  */
-function handleOAuthActivationRequest(req, res, done) {
-    var query = extractQueryVariables(req.query);
+async function handleOAuthActivationRequest(req, res, done) {
+    let query = extractQueryVariables(req.query);
     if (!query.activation) {
         return done();
     }
-    var serverId = parseInt(query.sid);
-    var handle = _.toLower(query.handle);
-    return findSession(handle).then((session) => {
+    try {
+        let serverID = parseInt(query.sid);
+        let handle = _.toLower(query.handle);
+        let session = await findSession(handle);
         // make sure we have admin access
         if (session.area !== 'admin') {
             throw new HTTPError(403);
         }
-        return findSystem().then((system) => {
-            return findServer(serverId).then((server) => {
-                var params = { activation: 1, sid: serverId, handle };
-                return authenticateThruPassport(req, res, system, server, params).then((account) => {
-                    var profile = account.profile._json;
-                    var isAdmin = false;
-                    if (server.type === 'gitlab') {
-                        isAdmin = profile.is_admin;
-                    }
-                    if (!isAdmin) {
-                        var username = account.profile.username;
-                        throw new HTTPError(403, {
-                            reason: 'insufficient-access-right',
-                            message: `The account "${username}" does not have administrative access`,
-                        });
-                    }
-                    // save the access and refresh tokens
-                    server.settings.api = {
-                        access_token: account.accessToken,
-                        refresh_token: account.refreshToken,
-                    };
-                    return saveServer(server);
-                });
+        let system = await findSystem();
+        let server = await findServer(serverID);
+        let params = { activation: 1, sid: serverID, handle };
+        let account = await authenticateThruPassport(req, res, system, server, params);
+        let profile = account.profile._json;
+        let isAdmin = false;
+        if (server.type === 'gitlab') {
+            isAdmin = profile.is_admin;
+        }
+        if (!isAdmin) {
+            let username = account.profile.username;
+            throw new HTTPError(403, {
+                reason: 'insufficient-access-right',
+                message: `The account "${username}" does not have administrative access`,
             });
-        });
-    }).then(() => {
-        var html = `<h1>OK</h1>`;
+        }
+        // save the access and refresh tokens
+        server.settings.api = {
+            access_token: account.accessToken,
+            refresh_token: account.refreshToken,
+        };
+        await saveServer(server);
+        let html = `<h1>OK</h1>`;
         sendHTML(res, html);
-    }).catch((err) => {
+    } catch (err) {
         sendErrorHTML(res, err);
-    });
+    }
 }
 
 /**
@@ -414,27 +392,28 @@ function handleOAuthActivationRequest(req, res, done) {
  * @param  {Response}  res
  * @param  {Function}  done
  */
-function handleOAuthDeauthorizationRequest(req, res, done) {
-    var provider = req.params.provider;
-    var signedRequest = req.body.signed_request;
-    return findServersByType(req.params.provider).then((servers) => {
-        var matchingServer, payload, lastError;
-        _.each(servers, (server) => {
+async function handleOAuthDeauthorizationRequest(req, res, done) {
+    try {
+        let provider = req.params.provider;
+        let signedRequest = req.body.signed_request;
+        let servers = await findServersByType(req.params.provider);
+        let matchingServer, payload, lastError;
+        for (let server in servers) {
             // see which server has the right secret
             // having multiple servers isn't really a normal use case
-            var secret = _.get(server, 'settings.oauth.client_secret');
+            let secret = _.get(server, 'settings.oauth.client_secret');
             if (secret) {
                 try {
                     payload = parseDeauthorizationRequest(signedRequest, secret);
                     if (payload) {
                         matchingServer = server;
-                        return false;
+                        break;
                     }
                 } catch (err) {
                     lastError = err;
                 }
             }
-        });
+        }
         if (payload) {
             return detachExternalAccount(matchingServer, payload.user_id);
         } else {
@@ -442,12 +421,11 @@ function handleOAuthDeauthorizationRequest(req, res, done) {
                 throw lastError;
             }
         }
-    }).then(() => {
         sendJSON(res, { status: 'ok' });
-    }).catch((err) => {
+    } catch (err) {
         console.error(err);
         sendErrorJSON(res, err);
-    });
+    }
 }
 
 /**
@@ -456,19 +434,20 @@ function handleOAuthDeauthorizationRequest(req, res, done) {
  * @param  {Request}   req
  * @param  {Response}  res
  */
-function handleLegalDocumentRequest(req, res) {
-    return Database.open().then((db) => {
-        return System.findOne(db, 'global', { deleted: false }, 'details').then((system) => {
-            var name = req.params.name;
-            var path = `${__dirname}/templates/${name}.ejs`;
-            var company = _.get(system, 'details.company_name', 'Our company');
-            FS.readFileAsync(path, 'utf-8').then((text) => {
-                var fn = _.template(text);
-                var html = fn({ company });
-                res.type('html').send(html);
-            });
-        });
-    });
+async function handleLegalDocumentRequest(req, res) {
+    try {
+        let db = await Database.open();
+        let system = await System.findOne(db, 'global', { deleted: false }, 'details');
+        let name = req.params.name;
+        let path = `${__dirname}/templates/${name}.ejs`;
+        let company = _.get(system, 'details.company_name', 'Our company');
+        let text = await FS.readFileAsync(path, 'utf-8');
+        let fn = _.template(text);
+        let html = fn({ company });
+        sendHTML(res, html);
+    } catch (err) {
+        sendErrorHTML(res, err);
+    }
 }
 
 /**
@@ -482,42 +461,41 @@ function handleLegalDocumentRequest(req, res) {
  *
  * @return {Promise<Session>}
  */
-function authorizeUser(session, user, details, activate) {
-    return createRandomToken(16).then((token) => {
-        if (session.area === 'admin' && user.type !== 'admin') {
-            if (!process.env.ADMIN_GUEST_MODE) {
-                throw new HTTPError(403, {
-                    reason: 'restricted-area',
-                    username: user.username,
-                });
-            }
-        }
-        if (user.disabled) {
+async function authorizeUser(session, user, details, activate) {
+    let token = await createRandomToken(16);
+    if (session.area === 'admin' && user.type !== 'admin') {
+        if (!process.env.ADMIN_GUEST_MODE) {
             throw new HTTPError(403, {
-                reason: 'account-disabled',
+                reason: 'restricted-area',
                 username: user.username,
             });
         }
-        if (session.user_id && session.user_id !== user.id) {
-            // the session is already associated with a different user, what the...
-            throw new HTTPError(400);
-        }
-        if (session.token) {
-            throw new HTTPError(400);
-        }
-        session.user_id = user.id;
-        session.token = token;
-        if (session.area === 'client') {
-            session.etime = getFutureTime(SESSION_LIFETIME_CLIENT);
-        } else if (session.area === 'admin') {
-            session.etime = getFutureTime(SESSION_LIFETIME_ADMIN);
-        }
-        if (activate) {
-            session.activated = true;
-        }
-        session.details = _.assign(_.omit(session.details, 'error'), details);
-        return saveSession(session);
-    });
+    }
+    if (user.disabled) {
+        throw new HTTPError(403, {
+            reason: 'account-disabled',
+            username: user.username,
+        });
+    }
+    if (session.user_id && session.user_id !== user.id) {
+        // the session is already associated with a different user, what the...
+        throw new HTTPError(400);
+    }
+    if (session.token) {
+        throw new HTTPError(400);
+    }
+    session.user_id = user.id;
+    session.token = token;
+    if (session.area === 'client') {
+        session.etime = getFutureTime(SESSION_LIFETIME_CLIENT);
+    } else if (session.area === 'admin') {
+        session.etime = getFutureTime(SESSION_LIFETIME_ADMIN);
+    }
+    if (activate) {
+        session.activated = true;
+    }
+    session.details = _.assign(_.omit(session.details, 'error'), details);
+    return saveSession(session);
 }
 
 /**
@@ -531,46 +509,47 @@ function authorizeUser(session, user, details, activate) {
  *
  * @return {Promise<Object>}
  */
-function authenticateThruPassport(req, res, system, server, params) {
+async function authenticateThruPassport(req, res, system, server, params) {
     return new Promise((resolve, reject) => {
-        var provider = req.params.provider;
+        let provider = req.params.provider;
         // query variables are send as the state parameter
-        var query = _.reduce(params, (query, value, name) => {
+        let query = _.reduce(params, (query, value, name) => {
             if (query) {
                 query += '&';
             }
             query += name + '=' + value;
             return query;
         }, '');
-        var address = _.get(system, 'settings.address');
+        let address = _.get(system, 'settings.address');
         if (!address) {
             throw new HTTPError(400, { message: 'Missing site address' });
         }
-        var settings = addServerSpecificSettings(server, {
+        let settings = addServerSpecificSettings(server, {
             clientID: server.settings.oauth.client_id,
             clientSecret: server.settings.oauth.client_secret,
             baseURL: server.settings.oauth.base_url,
             callbackURL: `${address}/srv/session/${provider}/callback/`,
         });
-        var options = addServerSpecificOptions(server, params, {
+        let options = addServerSpecificOptions(server, params, {
             session: false,
             state: query,
         });
+
         // create strategy object, resolving promise when we have the profile
-        var Strategy = findPassportPlugin(server);
-        var strategy = new Strategy(settings, (accessToken, refreshToken, profile, done) => {
+        let Strategy = findPassportPlugin(server);
+        let strategy = new Strategy(settings, (accessToken, refreshToken, profile, done) => {
             // just resolve the promise--no need to call done() since we're not
             // using Passport as an Express middleware
             resolve({ accessToken, refreshToken, profile });
         });
         // trigger Passport middleware manually
         Passport.use(strategy);
-        var authType = server.type;
-        var auth = Passport.authenticate(strategy.name, options, (err, user, info) => {
+        let authType = server.type;
+        let auth = Passport.authenticate(strategy.name, options, (err, user, info) => {
             // if this callback is called, then authentication has failed, since
             // the callback passed to Strategy() resolves the promise and does
             // not invoke done()
-            var message, reason;
+            let message, reason;
             if (info && info.message) {
                 message = info.message;
             } else if (err && err.message) {
@@ -579,7 +558,7 @@ function authenticateThruPassport(req, res, system, server, params) {
                         message = err.oauthError.message;
                     } else if (err.oauthError.data) {
                         try {
-                            var oauthResult = JSON.parse(err.oauthError.data);
+                            let oauthResult = JSON.parse(err.oauthError.data);
                             if (oauthResult.error) {
                                 message = oauthResult.error.message;
                             }
@@ -601,36 +580,32 @@ function authenticateThruPassport(req, res, system, server, params) {
  * Remove link between user and an external account
  *
  * @param  {Server} server
- * @param  {String|Number} externalUserId
+ * @param  {String|Number} externalUserID
  *
  * @return {Promise<User>}
  */
-function detachExternalAccount(server, externalUserId) {
-    return Database.open().then((db) => {
-        var criteria = {
-            external_object: ExternalDataUtils.createLink(server, {
-                user: { id: externalUserId },
-            }),
+async function detachExternalAccount(server, externalUserID) {
+    let db = await Database.open();
+    let criteria = {
+        external_object: ExternalDataUtils.createLink(server, {
+            user: { id: externalUserID },
+        }),
+    };
+    let user = await User.findOne(db, 'global', criteria, '*');
+    if (!user) {
+        return null;
+    }
+    ExternalDataUtils.removeLink(user, server);
+    let userAfter = await User.saveOne(db, 'global', user);
+    // delete active sessions when user is not connected to any account
+    if (ExternalDataUtils.countLinks(userAfter) === 0) {
+        let sessionCriteria = {
+            deleted: false,
+            user_id: userAfter.id,
         };
-        return User.findOne(db, 'global', criteria, '*').then((user) => {
-            if (!user) {
-                return null;
-            }
-            ExternalDataUtils.removeLink(user, server);
-            return User.saveOne(db, 'global', user).then((user) => {
-                // delete active sessions when user is not connected to any account
-                if (ExternalDataUtils.countLinks(user) === 0) {
-                    var sessionCriteria = {
-                        deleted: false,
-                        user_id: user.id,
-                    };
-                    return Session.updateMatching(db, 'global', sessionCriteria, { deleted: true }).then(() => {
-                        return user;
-                    });
-                }
-            });
-        });
-    });
+        await Session.updateMatching(db, 'global', sessionCriteria, { deleted: true });
+    }
+    return userAfter;
 }
 
 /**
@@ -640,10 +615,9 @@ function detachExternalAccount(server, externalUserId) {
  *
  * @return {Promise<Session>}
  */
-function saveSession(session) {
-    return Database.open().then((db) => {
-        return Session.saveOne(db, 'global', session);
-    });
+async function saveSession(session) {
+    let db = await Database.open();
+    return Session.saveOne(db, 'global', session);
 }
 
 /**
@@ -653,16 +627,14 @@ function saveSession(session) {
  *
  * @return {Promise<Session>}
  */
-function removeSession(handle) {
-    return Database.open().then((db) => {
-        return Session.findOne(db, 'global', { handle }, 'id').then((session) => {
-            if (!session) {
-                throw new HTTPError(404);
-            }
-            session.deleted = true;
-            return Session.updateOne(db, 'global', session);
-        });
-    });
+async function removeSession(handle) {
+    let db = await Database.open();
+    let session = await Session.findOne(db, 'global', { handle }, 'id');
+    if (!session) {
+        throw new HTTPError(404);
+    }
+    session.deleted = true;
+    return Session.updateOne(db, 'global', session);
 }
 
 /**
@@ -672,20 +644,18 @@ function removeSession(handle) {
  *
  * @return {Promise<Session>}
  */
-function findSession(handle) {
-    return Database.open().then((db) => {
-        var criteria = {
-            handle,
-            expired: false,
-            deleted: false,
-        };
-        return Session.findOne(db, 'global', criteria, '*').then((session) => {
-            if (!session) {
-                throw new HTTPError(404);
-            }
-            return session;
-        });
-    });
+async function findSession(handle) {
+    let db = await Database.open();
+    let criteria = {
+        handle,
+        expired: false,
+        deleted: false,
+    };
+    let session = await Session.findOne(db, 'global', criteria, '*');
+    if (!session) {
+        throw new HTTPError(404);
+    }
+    return session;
 }
 
 /**
@@ -693,30 +663,27 @@ function findSession(handle) {
  *
  * @return {Promise<System>}
  */
-function findSystem() {
-    return Database.open().then((db) => {
-        var criteria = { deleted: false };
-        return System.findOne(db, 'global', criteria, '*');
-    });
+async function findSystem() {
+    let db = await Database.open();
+    let criteria = { deleted: false };
+    return System.findOne(db, 'global', criteria, '*');
 }
 
 /**
  * Find a server object
  *
- * @param  {Number} serverId
+ * @param  {Number} serverID
  *
  * @return {Promise<Server>}
  */
-function findServer(serverId) {
-    return Database.open().then((db) => {
-        var criteria = { id: serverId, deleted: false };
-        return Server.findOne(db, 'global', criteria, '*').then((server) => {
-            if (!server) {
-                throw new HTTPError(400);
-            }
-            return server;
-        });
-    });
+async function findServer(serverID) {
+    let db = await Database.open();
+    let criteria = { id: serverID, deleted: false };
+    let server = await Server.findOne(db, 'global', criteria, '*');
+    if (!server) {
+        throw new HTTPError(400);
+    }
+    return server;
 }
 
 /**
@@ -726,11 +693,10 @@ function findServer(serverId) {
  *
  * @return {Promise<Server>}
  */
-function findServersByType(type) {
-    return Database.open().then((db) => {
-        var criteria = { type, deleted: false };
-        return Server.find(db, 'global', criteria, '*');
-    });
+async function findServersByType(type) {
+    let db = await Database.open();
+    let criteria = { type, deleted: false };
+    return Server.find(db, 'global', criteria, '*');
 }
 
 /**
@@ -740,16 +706,17 @@ function findServersByType(type) {
  *
  * @return {Promise<Array<Server>>}
  */
-function findOAuthServers(area) {
-    return Database.open().then((db) => {
-        var criteria = {
-            deleted: false,
-            disabled: false,
-        };
-        return Server.find(db, 'global', criteria, '*').filter((server) => {
-            return canProvideAccess(server, area);
-        });
+async function findOAuthServers(area) {
+    let db = await Database.open();
+    let criteria = {
+        deleted: false,
+        disabled: false,
+    };
+    let servers = await Server.find(db, 'global', criteria, '*');
+    let availableServers = _.filter(servers, (server) => {
+        return canProvideAccess(server, area);
     });
+    return availableServers;
 }
 
 /**
@@ -759,29 +726,26 @@ function findOAuthServers(area) {
  *
  * @return {Promise<Server>}
  */
-function saveServer(server) {
-    return Database.open().then((db) => {
-        return Server.saveOne(db, 'global', server);
-    });
+async function saveServer(server) {
+    let db = await Database.open();
+    return Server.saveOne(db, 'global', server);
 }
 
 /**
  * Find a user object
  *
- * @param  {Number} userId
+ * @param  {Number} userID
  *
  * @return {Promise<User>}
  */
-function findUser(userId) {
-    return Database.open().then((db) => {
-        var criteria = { id: userId, deleted: false };
-        return User.findOne(db, 'global', criteria, '*').then((user) => {
-            if (!user) {
-                throw new HTTPError(401);
-            }
-            return user;
-        });
-    });
+async function findUser(userID) {
+    let db = await Database.open();
+    let criteria = { id: userID, deleted: false };
+    let user = await User.findOne(db, 'global', criteria, '*');
+    if (!user) {
+        throw new HTTPError(401);
+    }
+    return user;
 }
 
 /**
@@ -791,27 +755,26 @@ function findUser(userId) {
  *
  * @return {Promise<User>}
  */
-function findUserByName(username) {
-    return Database.open().then((db) => {
-        var criteria = { username, deleted: false };
-        return User.findOne(db, 'global', criteria, '*').then((user) => {
-            if (!user) {
-                // create the admin user if it's not there
-                var name = _.capitalize(username);
-                if (name === 'Root') {
-                    name = 'Administrator';
-                }
-                var user = {
-                    username,
-                    type: 'admin',
-                    details: { name },
-                    settings: DefaultUserSettings,
-                };
-                return User.insertOne(db, 'global', user);
-            }
-            return user;
-        });
-    });
+async function findUserByName(username) {
+    let db = await Database.open();
+    let criteria = { username, deleted: false };
+    let user = await User.findOne(db, 'global', criteria, '*');
+    if (!user) {
+        // create the admin user if it's not there
+        let name = _.capitalize(username);
+        if (name === 'Root') {
+            name = 'Administrator';
+        }
+        let userNew = {
+            username,
+            type: 'admin',
+            details: { name },
+            settings: DefaultUserSettings,
+        };
+        user = await User.insertOne(db, 'global', userNew);
+    }
+    return user;
+
 }
 
 /**
@@ -821,14 +784,13 @@ function findUserByName(username) {
  *
  * @return {Array<Device>}
  */
-function removeDevices(handles) {
-    return Database.open().then((db) => {
-        var criteria = {
-            session_handle: handles,
-            deleted: false,
-        };
-        return Device.updateMatching(db, 'global', criteria, { deleted: true });
-    });
+async function removeDevices(handles) {
+    let db = await Database.open();
+    let criteria = {
+        session_handle: handles,
+        deleted: false,
+    };
+    return Device.updateMatching(db, 'global', criteria, { deleted: true });
 }
 
 /**
@@ -839,78 +801,62 @@ function removeDevices(handles) {
  *
  * @return {Promise<User>}
  */
-function findMatchingUser(server, account) {
+async function findMatchingUser(server, account) {
+    let db = await Database.open();
     // look for a user with the external id
-    return Database.open().then((db) => {
-        var profile = account.profile;
-        var criteria = {
-            external_object: ExternalDataUtils.createLink(server, {
-                user: { id: getProfileId(profile) },
-            }),
-            deleted: false,
-        };
-        return User.findOne(db, 'global', criteria, '*').then((user) => {
+    let profile = account.profile;
+    let criteria = {
+        external_object: ExternalDataUtils.createLink(server, {
+            user: { id: getProfileID(profile) },
+        }),
+        deleted: false,
+    };
+    let user = await User.findOne(db, 'global', criteria, '*');
+    if (!user) {
+        let emails = _.filter(_.map(profile.emails, 'value'));
+        for (let email of emails) {
+            let criteria = {
+                email: email,
+                deleted: false,
+                order: 'id'
+            };
+            user = await User.findOne(db, 'global', criteria, '*');
             if (user) {
-                return user;
+                break;
             }
-            // find a user with the email address
-            return Promise.reduce(_.map(profile.emails, 'value'), (matching, email) => {
-                if (matching) {
-                    return matching;
-                }
-                if (!email) {
-                    return null;
-                }
-                var criteria = {
-                    email: email,
-                    deleted: false,
-                    order: 'id'
-                };
-                return User.findOne(db, 'global', criteria, '*');
-            }, null);
-        }).then((user) => {
-            if (user) {
-                return user;
-            }
-            if (server.type === 'gitlab' && profile.username === 'root') {
-                var criteria = {
-                    username: profile.username,
-                    deleted: false,
-                };
-                return User.findOne(db, 'global', criteria, '*');
-            } else {
-                return null;
-            }
-        }).then((user) => {
-            if (user) {
-                // update profile in background
-                retrieveProfileImage(profile).then((image) => {
-                    var userAfter = copyUserProperties(user, server, image, profile);
-                    if(_.isEqual(userAfter, user)) {
-                        return user;
-                    }
-                    return User.updateOne(db, 'global', userAfter);
-                });
-                return user;
-            } else {
-                if (!acceptNewUser(server, profile)) {
-                    throw new HTTPError(403, {
-                        reason: 'existing-users-only',
-                    });
-                }
-                return retrieveProfileImage(profile).then((image) => {
-                    var userAfter = copyUserProperties(null, server, image, profile);
-                    if (userAfter.disabled) {
-                        // don't create disabled user
-                        throw new HTTPError(403, {
-                            reason: 'existing-users-only',
-                        });
-                    }
-                    return User.insertUnique(db, 'global', userAfter);
-                });
-            }
-        });
-    });
+        }
+    }
+    if (!user) {
+        // map Gitlab root user to root
+        if (server.type === 'gitlab' && profile.username === 'root') {
+            let criteria = {
+                username: profile.username,
+                deleted: false,
+            };
+            user = await User.findOne(db, 'global', criteria, '*');
+        }
+    }
+    if (!user) {
+        // create the user if server allows it
+        if (!acceptNewUser(server, profile)) {
+            throw new HTTPError(403, {
+                reason: 'existing-users-only',
+            });
+        }
+        let image = await retrieveProfileImage(profile);
+        let userNew = copyUserProperties(null, server, image, profile);
+        if (userNew.disabled) {
+            // don't create disabled user
+            throw new HTTPError(403, {
+                reason: 'existing-users-only',
+            });
+        }
+        user = await User.insertUnique(db, 'global', userAfter);
+    } else {
+        // update profile image (without waiting)
+        updateProfileImage(db, user, server, profile);
+    }
+    return user;
 }
 
 /**
@@ -921,17 +867,16 @@ function findMatchingUser(server, account) {
  *
  * @return {Promise}
  */
-function findHtpasswdRecord(username, password) {
-    var htpasswdPath = process.env.HTPASSWD_PATH;
-    return FS.readFileAsync(htpasswdPath, 'utf-8').then((data) => {
-        return HtpasswdAuth.authenticate(username, password, data);
-    }).then((successful) => {
+async function findHtpasswdRecord(username, password) {
+    try {
+        let htpasswdPath = process.env.HTPASSWD_PATH;
+        let data = await FS.readFileAsync(htpasswdPath, 'utf-8');
+        let successful = await HtpasswdAuth.authenticate(username, password, data);
         if (successful !== true) {
-            return Promise.delay(Math.random() * 1000).then(() => {
-                throw new HTTPError(401);
-            });
+            await Bluebird.delay(Math.random() * 1000);
+            throw new HTTPError(401);
         }
-    }).catch((err) => {
+    } catch (err) {
         if (err.code === 'ENOENT') {
             // password file isn't there
             throw new HTTPError(403, {
@@ -940,7 +885,7 @@ function findHtpasswdRecord(username, password) {
         } else {
             throw err;
         }
-    });
+    }
 }
 
 /**
@@ -951,7 +896,7 @@ function findHtpasswdRecord(username, password) {
  * @return {Function}
  */
 function findPassportPlugin(server) {
-    var plugins = {
+    let plugins = {
         dropbox: 'passport-dropbox-oauth2',
         facebook: 'passport-facebook',
         github: 'passport-github',
@@ -959,7 +904,7 @@ function findPassportPlugin(server) {
         google: 'passport-google-oauth2',
         windows: 'passport-windowslive',
     };
-    var module = require(plugins[server.type]);
+    let module = require(plugins[server.type]);
     if (!(module instanceof Function)) {
         if (module.Strategy) {
             module = module.Strategy;
@@ -1008,14 +953,14 @@ function canProvideAccess(server, area) {
  * @return {Boolean}
  */
 function acceptNewUser(server, profile) {
-    var type = _.get(server, 'settings.user.type');
-    var mapping = _.get(server, 'settings.user.mapping');
+    let type = _.get(server, 'settings.user.type');
+    let mapping = _.get(server, 'settings.user.mapping');
     if (!type && !_.some(mapping)) {
         return false;
     }
-    var whitelist = _.trim(_.get(server, 'settings.user.whitelist'));
+    let whitelist = _.trim(_.get(server, 'settings.user.whitelist'));
     if (whitelist) {
-        var emails = _.map(profile.emails, 'value');
+        let emails = _.map(profile.emails, 'value');
         return _.some(emails, (email) => {
             return Whitelist.match(email, whitelist);
         });
@@ -1031,7 +976,7 @@ function acceptNewUser(server, profile) {
  *
  * @return {Number|String}
  */
-function getProfileId(profile) {
+function getProfileID(profile) {
     // return the id from the raw object if it's there so we have the
     // correct JS type
     return profile._json.id || profile.id;
@@ -1048,15 +993,15 @@ function getProfileId(profile) {
  * @return {User|null}
  */
 function copyUserProperties(user, server, image, profile) {
-    var json = profile._json;
+    let json = profile._json;
     if (server.type === 'gitlab') {
         // use GitlabAdapter's importer
         return GitlabUserImporter.copyUserProperties(user, server, image, json);
     } else {
-        var email = _.first(_.map(profile.emails, 'value'));
-        var username = profile.username || proposeUsername(profile);
-        var userType = _.get(server, 'settings.user.type');
-        var userAfter;
+        let email = _.first(_.map(profile.emails, 'value'));
+        let username = profile.username || proposeUsername(profile);
+        let userType = _.get(server, 'settings.user.type');
+        let userAfter;
         if (user) {
             userAfter = _.cloneDeep(user);
         } else {
@@ -1068,7 +1013,7 @@ function copyUserProperties(user, server, image, profile) {
 
         ExternalDataUtils.addLink(userAfter, server, {
             user: {
-                id: getProfileId(profile),
+                id: getProfileID(profile),
                 username: profile.username,
             }
         });
@@ -1122,12 +1067,12 @@ function proposeUsername(profile) {
     if (profile.username) {
         return profile.username;
     }
-    var email = _.get(profile.emails, '0.value');
+    let email = _.get(profile.emails, '0.value');
     if (email) {
         return _.replace(email, /@.*/, '');
     }
-    var lname = toSimpleLatin(profile.name.familyName);
-    var fname = toSimpleLatin(profile.name.givenName);
+    let lname = toSimpleLatin(profile.name.familyName);
+    let fname = toSimpleLatin(profile.name.givenName);
     if (lname && fname) {
         return fname.charAt(0) + lname;
     } else if (fname || lname) {
@@ -1156,8 +1101,8 @@ function toSimpleLatin(s) {
  *
  * @return {Promise<Object>}
  */
-function retrieveProfileImage(profile) {
-    var url = profile.avatarURL;
+async function retrieveProfileImage(profile) {
+    let url = profile.avatarURL;
     if (!url) {
         url = _.get(profile.photos, '0.value') || _.get(profile.avatarURL);
     }
@@ -1165,9 +1110,9 @@ function retrieveProfileImage(profile) {
         url = profile.avatarUrl;
     }
     if (!url) {
-        return Promise.resolve(null);
+        return null;
     }
-    var options = {
+    let options = {
         json: true,
         url: 'http://media_server/srv/internal/import',
         body: { url },
@@ -1185,16 +1130,37 @@ function retrieveProfileImage(profile) {
 }
 
 /**
+ * Update a user's profile image
+ *
+ * @param  {Database} db
+ * @param  {User} user
+ * @param  {Server} server
+ * @param  {Object} profile
+ *
+ * @return {Promise}
+ */
+async function updateProfileImage(db, user, server, profile) {
+    try {
+        let image = await retrieveProfileImage(profile);
+        let userAfter = copyUserProperties(user, server, image, profile);
+        if(!_.isEqual(userAfter, user)) {
+            await User.updateOne(db, 'global', userAfter);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+/**
  * Create a random token with given number of bytes
  *
  * @param  {Number} bytes
  *
  * @return {Promise<String>}
  */
-function createRandomToken(bytes) {
-    return Crypto.randomBytesAsync(bytes).then((buffer) => {
-        return buffer.toString('hex');
-    });
+async function createRandomToken(bytes) {
+    let buffer = await Crypto.randomBytesAsync(bytes);
+    return buffer.toString('hex');
 }
 
 /**
@@ -1277,12 +1243,12 @@ function extractQueryVariables(query) {
  * @return {Object}
  */
 function parseQueryString(queryString) {
-    var values = {};
-    var pairs = _.split(queryString, '&');
+    let values = {};
+    let pairs = _.split(queryString, '&');
     _.each(pairs, (pair) => {
-        var parts = _.split(pair, '=');
-        var name = decodeURIComponent(parts[0]);
-        var value = decodeURIComponent(parts[1] || '');
+        let parts = _.split(pair, '=');
+        let name = decodeURIComponent(parts[0]);
+        let value = decodeURIComponent(parts[1] || '');
         value = _.replace(value, /\+/g, ' ');
         values[name] = value;
     });
@@ -1299,20 +1265,20 @@ function parseQueryString(queryString) {
  * @return {Object}
  */
 function parseDeauthorizationRequest(signedRequest, appSecret){
-    var [ signatureReceived, payloadBase64 ] = signedRequest.split('.');
-    var payloadText = new Buffer(payloadBase64, 'base64').toString();
-    var payload = JSON.parse(payloadText);
-    var algorithm = _.toLower(payload.algorithm);
+    let [ signatureReceived, payloadBase64 ] = signedRequest.split('.');
+    let payloadText = new Buffer(payloadBase64, 'base64').toString();
+    let payload = JSON.parse(payloadText);
+    let algorithm = _.toLower(payload.algorithm);
     if (!_.startsWith(algorithm, 'hmac-')) {
-        throw new Error(`Unsupported hashing scheme: ${algorithm}`);
+        throw new HTTPError(400, `Unsupported hashing scheme: ${algorithm}`);
     }
-    var hmac = Crypto.createHmac(algorithm.substr(5), appSecret);
-    var signatureCalculated = hmac.update(payloadBase64).digest('base64');
+    let hmac = Crypto.createHmac(algorithm.substr(5), appSecret);
+    let signatureCalculated = hmac.update(payloadBase64).digest('base64');
     signatureCalculated = _.replace(signatureCalculated, /\//g, '_');
     signatureCalculated = _.replace(signatureCalculated, /\+/g, '-');
     signatureCalculated = _.trimEnd(signatureCalculated, '=');
     if (signatureReceived !== signatureCalculated) {
-        throw new Error(`Signature does not match`);
+        throw new HTTPError(403, `Signature does not match`);
     }
     return payload;
 }
@@ -1322,17 +1288,16 @@ function parseDeauthorizationRequest(signedRequest, appSecret){
  *
  * @return {Promise<Array>}
  */
-function deleteExpiredSessions() {
-    return Database.open().then((db) => {
-        var criteria = {
-            authorization_id: null,
-            expired: true,
-        };
-        return Session.updateMatching(db, 'global', criteria, { deleted: true }).then((sessions) => {
-            var handles = _.map(sessions, 'handle');
-            return removeDevices(handles).return(sessions);
-        });
-    });
+async function deleteExpiredSessions() {
+    let db = await Database.open();
+    let criteria = {
+        authorization_id: null,
+        expired: true,
+    };
+    let sessions = await Session.updateMatching(db, 'global', criteria, { deleted: true });
+    let handles = _.map(sessions, 'handle');
+    await removeDevices(handles)
+    return sessions;
 }
 
 if (process.argv[1] === __filename) {
