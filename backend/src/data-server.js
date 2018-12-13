@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Express from 'express';
 import CORS from 'cors';
 import BodyParser from 'body-parser';

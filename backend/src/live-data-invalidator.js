@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import FS from 'fs';
 import Database from 'database';
 import * as Shutdown from 'shutdown';

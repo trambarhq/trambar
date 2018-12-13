@@ -68,38 +68,50 @@ function start() {
     });
 }
 
-function stop() {
-    return Shutdown.close(server).then(() => {
-        if (database) {
-            return stopPeriodicTasks().finally(() => {
-                database.close();
-                database = null;
-            });
-        }
-    });
+async function stop() {
+    await Shutdown.close(server);
+    if (database) {
+        await stopPeriodicTasks();
+        database.close();
+        database = null;
+    }
 }
 
-var taskQueue = new TaskQueue;
+let taskQueue = new TaskQueue;
 
 /**
  * Called when changes occurs in the database
  *
  * @param  {Array<Object>} events
  */
-function handleDatabaseChanges(events) {
-    var db = database;
-    Promise.each(events, (event) => {
+async function handleDatabaseChanges(events) {
+    let db = database;
+    for (let event of events) {
         if (event.action === 'DELETE') {
-            return;
+            continue;
         }
-        switch (event.table) {
-            case 'server': return handleServerChangeEvent(db, event);
-            case 'project': return handleProjectChangeEvent(db, event);
-            case 'story': return handleStoryChangeEvent(db, event);
-            case 'system': return handleSystemChangeEvent(db, event);
-            case 'task': return handleTaskChangeEvent(db, event);
+        try {
+            switch (event.table) {
+                case 'server':
+                    await handleServerChangeEvent(db, event);
+                    break;
+                case 'project':
+                    await handleProjectChangeEvent(db, event);
+                    break;
+                case 'story':
+                    await handleStoryChangeEvent(db, event);
+                    break;
+                case 'system':
+                    await handleSystemChangeEvent(db, event);
+                    break;
+                case 'task':
+                    await handleTaskChangeEvent(db, event);
+                    break;
+            }
+        } catch (err) {
+            console.error(err);
         }
-    });
+    }
 }
 
 /**
@@ -110,33 +122,29 @@ function handleDatabaseChanges(events) {
  *
  * @return {Promise|undefined}
  */
-function handleServerChangeEvent(db, event) {
-    var criteria = {
+async function handleServerChangeEvent(db, event) {
+    let criteria = {
         id: event.id,
         type: 'gitlab',
     };
-    return Server.findOne(db, 'global', criteria, '*').then((server) => {
-        if (event.diff.settings) {
-            if (hasAccessToken(server)) {
-                return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
-                    return RepoImporter.importRepositories(db, server).catch((err) => {
-                        console.error(err.message);
-                    });
-                });
+    let server = Server.findOne(db, 'global', criteria, '*');
+    if (event.diff.settings) {
+        if (hasAccessToken(server)) {
+            return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
+                return RepoImporter.importRepositories(db, server);
+            });
+        }
+    }
+    if (event.diff.deleted || event.diff.disabled) {
+        if (hasAccessToken(server)) {
+            let host = await getServerAddress(db);
+            if (!event.current.deleted && !event.current.disabled) {
+                await HookManager.installServerHooks(db, host, server);
+            } else {
+                await HookManager.removeServerHooks(db, host, server);
             }
         }
-        if (event.diff.deleted || event.diff.disabled) {
-            if (hasAccessToken(server)) {
-                return getServerAddress(db).then((host) => {
-                    if (!event.current.deleted && !event.current.disabled) {
-                        return HookManager.installServerHooks(db, host, server);
-                    } else {
-                        return HookManager.removeServerHooks(db, host, server);
-                    }
-                });
-            }
-        }
-    });
+    }
 }
 
 /**
@@ -146,34 +154,37 @@ function handleServerChangeEvent(db, event) {
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise|undefined}
+ * @return {Promise}
  */
-function handleProjectChangeEvent(db, event) {
+async function handleProjectChangeEvent(db, event) {
     if (event.diff.repo_ids) {
-        var repoIdsBefore = event.previous.repo_ids;
-        var repoIdsAfter = event.current.repo_ids;
-        var newRepoIds = _.difference(repoIdsAfter, repoIdsBefore);
-        var missingRepoIds = _.difference(repoIdsBefore, repoIdsAfter);
-        return Project.findOne(db, 'global', { id: event.id }, '*').then((project) => {
-            return connectRepositories(db, project, newRepoIds).then(() => {
-                return disconnectRepositories(db, project, missingRepoIds);
-            });
-        });
+        let repoIdsBefore = event.previous.repo_ids;
+        let repoIdsAfter = event.current.repo_ids;
+        let newRepoIds = _.difference(repoIdsAfter, repoIdsBefore);
+        let missingRepoIds = _.difference(repoIdsBefore, repoIdsAfter);
+        let project = await Project.findOne(db, 'global', { id: event.id }, '*');
+        if (project) {
+            if (!_.isEmpty(newRepoIds)) {
+                await connectRepositories(db, project, newRepoIds);
+            }
+            if (!_.isEmpty(missingRepoIds)) {
+                await disconnectRepositories(db, project, missingRepoIds)
+            }
+        }
     } else if (event.diff.archived || event.diff.deleted) {
-        var offlineBefore = event.previous.archived || event.previous.deleted;
-        var offlineAfter = event.current.archived || event.current.deleted;
+        let offlineBefore = event.previous.archived || event.previous.deleted;
+        let offlineAfter = event.current.archived || event.current.deleted;
         if (offlineBefore !== offlineAfter) {
             // remove or restore hooks
-            return getServerAddress(db).then((host) => {
-                return RepoAssociation.find(db, { id: event.id }).each((a) => {
-                    var { server, repo, project } = a;
-                    if (offlineAfter) {
-                        return HookManager.removeProjectHook(host, server, repo, project);
-                    } else {
-                        return HookManager.installProjectHook(host, server, repo, project);
-                    }
-                });
-            });
+            let host = await getServerAddress(db);
+            let list = await RepoAssociation.find(db, { id: event.id });
+            for (let { server, repo, project } of list) {
+                if (offlineAfter) {
+                    await HookManager.removeProjectHook(host, server, repo, project);
+                } else {
+                    await HookManager.installProjectHook(host, server, repo, project);
+                }
+            }
         }
     }
 }
@@ -188,40 +199,32 @@ function handleProjectChangeEvent(db, event) {
  *
  * @return {Promise}
  */
-function connectRepositories(db, project, repoIds) {
-    if (!project || _.isEmpty(repoIds)) {
-        return Promise.resolve();
-    }
-    return getServerAddress(db).then((host) => {
-        // load the repos in question
-        var criteria = {
-            id: repoIds,
-            type: 'gitlab',
+async function connectRepositories(db, project, repoIds) {
+    let host = await getServerAddress(db);
+    // load the repos in question
+    let criteria = {
+        id: repoIds,
+        type: 'gitlab',
+        deleted: false
+    };
+    let repos = await Repo.find(db, 'global', criteria, '*');
+    for (let repo of repos) {
+        let repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+        let criteria = {
+            id: repoLink.server_id,
             deleted: false
         };
-        return Repo.find(db, 'global', criteria, '*').each((repo) => {
-            var repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
-            var criteria = {
-                id: repoLink.server_id,
-                deleted: false
-            };
-            return Server.find(db, 'global', criteria, '*').each((server) => {
-                // schedule event import
-                taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
-                    // make sure the project-specific schema exists
-                    return db.need(project.name).then(() => {
-                        return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
-                            return EventImporter.importEvents(db, system, server, repo, project);
-                        });
-                    });
-                });
-                // install hook on repo
-                return HookManager.installProjectHook(host, server, repo, project);
-            });
+        let server = await Server.find(db, 'global', criteria, '*');
+        // schedule event import
+        taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, async () => {
+            // make sure the project-specific schema exists
+            await db.need(project.name);
+            let system = await System.findOne(db, 'global', { deleted: false }, '*');
+            return EventImporter.importEvents(db, system, server, repo, project);
         });
-    }).catch((err) => {
-        console.error(err.message);
-    });
+        // install hook on repo
+        await HookManager.installProjectHook(host, server, repo, project);
+    }
 }
 
 /**
@@ -233,29 +236,25 @@ function connectRepositories(db, project, repoIds) {
  *
  * @return {Promise}
  */
-function disconnectRepositories(db, project, repoIds) {
-    if (!project || _.isEmpty(repoIds)) {
-        return Promise.resolve();
+async function disconnectRepositories(db, project, repoIds) {
+    let host = await getServerAddress(db);
+    // load the repos in question
+    let criteria = {
+        id: repoIds,
+        type: 'gitlab',
+        deleted: false
+    };
+    let repo = await Repo.find(db, 'global', criteria, '*');
+    let repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+    let criteria = {
+        id: repoLink.server_id,
+        deleted: false
+    };
+    let servers = await Server.find(db, 'global', criteria, '*');
+    for (let server of servers) {
+        // remove hook on repo
+        await HookManager.removeProjectHook(host, server, repo, project);
     }
-    return getServerAddress(db).then((host) => {
-        // load the repos in question
-        var criteria = {
-            id: repoIds,
-            type: 'gitlab',
-            deleted: false
-        };
-        return Repo.find(db, 'global', criteria, '*').each((repo) => {
-            var repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
-            var criteria = {
-                id: repoLink.server_id,
-                deleted: false
-            };
-            return Server.find(db, 'global', criteria, '*').each((server) => {
-                // remove hook on repo
-                return HookManager.removeProjectHook(host, server, repo, project);
-            });
-        });
-    });
 }
 
 /**
@@ -264,9 +263,9 @@ function disconnectRepositories(db, project, repoIds) {
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise|undefined}
+ * @return {Promise}
  */
-function handleStoryChangeEvent(db, event) {
+async function handleStoryChangeEvent(db, event) {
     if (event.current.mtime === event.current.etime) {
         // change is caused by a prior export
         return;
@@ -281,29 +280,26 @@ function handleStoryChangeEvent(db, event) {
         return;
     }
     // look for the export task and run it again
-    var schema = event.schema;
-    return Story.findOne(db, schema, { id: event.id }, '*').then((story) => {
-        var criteria = {
-            type: 'export-issue',
-            completion: 100,
-            failed: false,
-            options: {
-                story_id: story.id,
-            },
-            deleted: false,
-        };
-        return Task.findOne(db, schema, criteria, 'id, user_id').then((task) => {
-            if (task) {
-                // reexport only if the exporting user is among the author
-                if (_.includes(event.current.user_ids, task.user_id)) {
-                    task.completion = 50;
-                    return Task.saveOne(db, schema, task).then((task) => {
-                        return exportStory(db, schema, task);
-                    });
-                }
-            }
-        });
-    });
+    let schema = event.schema;
+    let story = await Story.findOne(db, schema, { id: event.id }, '*');
+    let taskCriteria = {
+        type: 'export-issue',
+        completion: 100,
+        failed: false,
+        options: {
+            story_id: story.id,
+        },
+        deleted: false,
+    };
+    let task = await Task.findOne(db, schema, taskCriteria, 'id, user_id');
+    if (task) {
+        // reexport only if the exporting user is among the author
+        if (_.includes(event.current.user_ids, task.user_id)) {
+            task.completion = 50;
+            task = await Task.saveOne(db, schema, task);
+            await exportStory(db, schema, task);
+        }
+    }
 }
 
 /**
@@ -314,7 +310,7 @@ function handleStoryChangeEvent(db, event) {
  *
  * @return {Promise|undefined}
  */
-function handleTaskChangeEvent(db, event) {
+async function handleTaskChangeEvent(db, event) {
     if (event.current.action !== 'export-issue') {
         return;
     }
@@ -328,11 +324,10 @@ function handleTaskChangeEvent(db, event) {
     if (event.current.deleted) {
         return;
     }
-    return Task.findOne(db, schema, { id: event.id, deleted: false }, '*').then((task) => {
-        if (task) {
-            return exportStory(db, schema, task);
-        }
-    });
+    let task = await Task.findOne(db, schema, { id: event.id, deleted: false }, '*');
+    if (task) {
+        await exportStory(db, schema, task);
+    }
 }
 
 /**
@@ -342,34 +337,32 @@ function handleTaskChangeEvent(db, event) {
  * @param  {String} schema
  * @param  {Task} task
  *
- * @return {Promise<Task>}
+ * @return {Promise}
  */
-function exportStory(db, schema, task) {
-    return Project.findOne(db, 'global', { name: schema }, '*').then((project) => {
-        return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
-            return IssueExporter.exportStory(db, system, project, task);
-        });
-    }).then((story) => {
+async function exportStory(db, schema, task) {
+    try {
+        let project = await Project.findOne(db, 'global', { name: schema }, '*');
+        let system = await System.findOne(db, 'global', { deleted: false }, '*');
+        let story = await IssueExporter.exportStory(db, system, project, task);
         task.completion = 100;
         task.failed = false;
         task.etime = new String('NOW()');
         delete task.details.error;
         if (story) {
-            var issueLink = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
+            let issueLink = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
             _.assign(task.details, _.pick(issueLink, 'repo', 'issue'));
         }
-        return Task.saveOne(db, schema, task);
-    }).catch((err) => {
+        await Task.saveOne(db, schema, task);
+    } catch (err) {
         task.details.error = _.pick(err, 'message', 'statusCode');
         task.failed = true;
         if (err.statusCode >= 400 && err.statusCode <= 499) {
             // stop trying
             task.deleted = true;
         }
-        return Task.saveOne(db, schema, task).throw(err);
-    }).catch((err) => {
-        console.error(err.message);
-    });
+        await Task.saveOne(db, schema, task)
+        throw err;
+    }
 }
 
 /**
@@ -378,17 +371,20 @@ function exportStory(db, schema, task) {
  * @param  {Database} db
  * @param  {Object} event
  *
- * @return {Promise|undefined}
+ * @return {Promise}
  */
-function handleSystemChangeEvent(db, event) {
+async function handleSystemChangeEvent(db, event) {
     if (event.diff.settings) {
-        var hostBefore = (event.previous.settings) ? event.previous.settings.address : '';
-        var hostAfter = event.current.settings.address;
-        return HookManager.removeHooks(db, hostBefore).then(() => {
-            return HookManager.installHooks(db, hostAfter);
-        }).catch((err) => {
-            console.error(err.message);
-        });
+        let hostBefore = (event.previous.settings) ? event.previous.settings.address : '';
+        let hostAfter = event.current.settings.address;
+        if (hostBefore !== hostAfter) {
+            if (hostBefore) {
+                await HookManager.removeHooks(db, hostBefore);
+            }
+            if (hostAfter) {
+                await HookManager.installHooks(db, hostAfter);
+            }
+        }
     }
 }
 
@@ -397,14 +393,17 @@ function handleSystemChangeEvent(db, event) {
  *
  * @param  {Request} req
  * @param  {Response} res
+ *
+ * @return {Promise}
  */
-function handleSystemHookCallback(req, res) {
-    var glHookEvent = req.body;
-    var db = database;
-    var serverId = parseInt(req.params.serverId);
-    return Server.findOne(db, 'global', { id: serverId, deleted: false }, '*').then((server) => {
+async function handleSystemHookCallback(req, res) {
+    try {
         HookManager.verifyHookRequest(req);
 
+        let glHookEvent = req.body;
+        let db = database;
+        let serverId = parseInt(req.params.serverId);
+        let server = await Server.findOne(db, 'global', { id: serverId, deleted: false }, '*');
         switch (glHookEvent.event_name) {
             case 'project_create':
             case 'project_destroy':
@@ -413,20 +412,22 @@ function handleSystemHookCallback(req, res) {
             case 'project_update':
             case 'user_add_to_team':
             case 'user_remove_from_team':
-                return taskQueue.schedule(`import_system_events:${server.id}`, () => {
+                taskQueue.schedule(`import_system_events:${server.id}`, async () => {
                     return RepoImporter.importRepositories(db, server);
                 });
+                break;
             case 'user_create':
             case 'user_destroy':
-                return taskQueue.schedule(`import_system_events:${server.id}`, () => {
+                taskQueue.schedule(`import_system_events:${server.id}`, async () => {
                     return UserImporter.importUsers(db, server);
                 });
+                break;
         }
-    }).catch((err) => {
-        console.error(err.message);
-    }).finally(() => {
+    } catch (err) {
+        console.error(err);
+    } finally {
         res.end();
-    });
+    }
 }
 
 /**
@@ -434,39 +435,37 @@ function handleSystemHookCallback(req, res) {
  *
  * @param  {Request} req
  * @param  {Response} res
+ *
+ * @return {Promise}
  */
-function handleProjectHookCallback(req, res) {
-    var glHookEvent = req.body;
-    var db = database;
-    var criteria = {
-        server_id: parseInt(req.params.serverId),
-        repo_id: parseInt(req.params.repoId),
-        project_id: parseInt(req.params.projectId),
-    };
-    return RepoAssociation.findOne(db, criteria).then((a) => {
+async function handleProjectHookCallback(req, res) {
+    try {
         HookManager.verifyHookRequest(req);
 
-        var ts = Moment().valueOf();
-        var { server, repo, project } = a;
-        return taskQueue.schedule(`import_hook_event:${repo.id}-${project.id}-${ts}`, () => {
-            return System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
-                return EventImporter.importHookEvent(db, system, server, repo, project, glHookEvent).then((story) => {
-                    if (story === false) {
-                        // hook event wasn't handled--scan activity log
-                        return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
-                            return EventImporter.importEvents(db, system, server, repo, project, glHookEvent).catch((err) => {
-                                console.error(err.message);
-                            });
-                        });
-                    }
+        let glHookEvent = req.body;
+        let db = database;
+        let criteria = {
+            server_id: parseInt(req.params.serverId),
+            repo_id: parseInt(req.params.repoId),
+            project_id: parseInt(req.params.projectId),
+        };
+        let { server, repo, project } = await RepoAssociation.findOne(db, criteria);
+        let ts = Moment().valueOf();
+        taskQueue.schedule(`import_hook_event:${repo.id}-${project.id}-${ts}`, async () => {
+            let system = await System.findOne(db, 'global', { deleted: false }, '*');
+            let story = await EventImporter.importHookEvent(db, system, server, repo, project, glHookEvent);
+            if (story === false) {
+                // hook event wasn't handled--scan activity log
+                return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, async () => {
+                    return EventImporter.importEvents(db, system, server, repo, project, glHookEvent);
                 });
-            });
+            }
         });
-    }).catch((err) => {
-        console.error(err.message);
-    }).finally(() => {
+    } catch (err) {
+        console.error(err);
+    } finally {
         res.end();
-    });
+    }
 }
 
 /**
@@ -474,27 +473,21 @@ function handleProjectHookCallback(req, res) {
  *
  * @return {Promise}
  */
-function startHookMaintenance() {
-    var db = database;
-    return getServerAddress(db).then((host) => {
-        return HookManager.installHooks(db, host);
-    }).catch((err) => {
-        console.error(err.message);
-    });
+async function startHookMaintenance() {
+    let db = database;
+    let host = await getServerAddress(db);
+    await HookManager.installHooks(db, host);
 }
 
 /**
  * Attempt to install hooks that fail previous
  *
- * @return {null}
+ * @return {Promise}
  */
-function performPeriodicHookMaintenance() {
-    var db = database;
-    return getServerAddress(db).then((host) => {
-        return HookManager.installFailedHooks(db, host);
-    }).catch((err) => {
-        console.error(err.message);
-    });
+async function performPeriodicHookMaintenance() {
+    let db = database;
+    let host = await getServerAddress(db);
+    await HookManager.installFailedHooks(db, host);
 }
 
 /**
@@ -502,36 +495,30 @@ function performPeriodicHookMaintenance() {
  *
  * @return {Promise}
  */
-function stopHookMaintenance() {
-    return getServerAddress(database).then((host) => {
-        return HookManager.removeHooks(database, host);
-    }).catch((err) => {
-        console.error(err.message);
-    });
+async function stopHookMaintenance() {
+    let db = database;
+    let host = await getServerAddress(db);
+    await HookManager.removeHooks(db, host);
 }
 
 /**
  * Reimport repos from all servers
  *
- * @return {null}
+ * @return {Promise}
  */
-function performPeriodicRepoImport() {
-    var db = database;
-    var criteria = {
+async function performPeriodicRepoImport() {
+    let db = database;
+    let criteria = {
         type: 'gitlab',
         disabled: false,
         deleted: false
     };
-    Server.find(db, 'global', criteria, '*').each((server) => {
-        if (hasAccessToken(server)) {
-            return taskQueue.schedule(`import_server_repos:${server.id}`, () => {
-                return RepoImporter.importRepositories(db, server).catch((err) => {
-                    console.error(err.message);
-                });
-            });
-        }
-    });
-    return null;
+    let server = await Server.find(db, 'global', criteria, '*');
+    if (hasAccessToken(server)) {
+        taskQueue.schedule(`import_server_repos:${server.id}`, async () => {
+            return RepoImporter.importRepositories(db, server);
+        });
+    }
 }
 
 /**
@@ -539,19 +526,15 @@ function performPeriodicRepoImport() {
  *
  * @return {null}
  */
-function performPeriodicEventImport() {
-    var db = database;
-    System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
-        RepoAssociation.find(db).each((a) => {
-            var { server, repo, project } = a;
-            return taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, () => {
-                return EventImporter.importEvents(db, system, server, repo, project).catch((err) => {
-                    console.error(err.message);
-                });
-            });
+async function performPeriodicEventImport() {
+    let db = database;
+    let system = await System.findOne(db, 'global', { deleted: false }, '*');
+    let list = await RepoAssociation.find(db);
+    for (let { server, repo, project } of list) {
+        taskQueue.schedule(`import_repo_events:${repo.id}-${project.id}`, async () => {
+            return EventImporter.importEvents(db, system, server, repo, project);
         });
-    });
-    return null;
+    }
 }
 
 /**
@@ -559,46 +542,38 @@ function performPeriodicEventImport() {
  *
  * @return {null}
  */
-function performPeriodicUserImport() {
-    var db = database;
-    var criteria = {
+async function performPeriodicUserImport() {
+    let db = database;
+    let criteria = {
         type: 'gitlab',
         deleted: false,
         disabled: false,
     };
-    Server.find(db, 'global', criteria, '*').each((server) => {
+    let servers = await Server.find(db, 'global', criteria, '*');
+    for (let server of servers) {
         if (hasAccessToken(server)) {
-            return taskQueue.schedule(`import_users:${server.id}`, () => {
-                return UserImporter.importUsers(db, server).catch((err) => {
-                    console.error(err.message);
-                });
+            taskQueue.schedule(`import_users:${server.id}`, () => {
+                return UserImporter.importUsers(db, server);
             });
         }
-    });
-    return null;
+    }
 }
 
 /**
  * Scan milestones for change
- *
- * @return {null}
  */
-function performPeriodicMilestoneUpdate() {
-    var db = database;
-    System.findOne(db, 'global', { deleted: false }, '*').then((system) => {
-        if (!system) {
-            return;
-        }
-        return RepoAssociation.find(db).each((a) => {
-            var { server, repo, project } = a;
-            return taskQueue.schedule(`update_milestones:${server.id}-${project.id}-${repo.id}`, () => {
-                return MilestoneImporter.updateMilestones(db, system, server, repo, project).catch((err) => {
-                    console.error(err.message);
-                });
-            });
+async function performPeriodicMilestoneUpdate() {
+    let db = database;
+    let system = await System.findOne(db, 'global', { deleted: false }, '*');
+    if (!system) {
+        return;
+    }
+    let list = await RepoAssociation.find(db);
+    for (let { server, repo, project } of list) {
+        taskQueue.schedule(`update_milestones:${server.id}-${project.id}-${repo.id}`, async () => {
+            return MilestoneImporter.updateMilestones(db, system, server, repo, project);
         });
-    });
-    return null;
+    }
 }
 
 /**
@@ -606,33 +581,33 @@ function performPeriodicMilestoneUpdate() {
  *
  * @return {null}
  */
-function performPeriodicExportRetry() {
+async function performPeriodicExportRetry() {
     // look for story they have failed and put them into the queue
-    var db = database;
-    RepoAssociation.find(db).then((list) => {
-        return _.uniq(_.map(list, 'project'));
-    }).each((project) => {
+    let db = database;
+    let list = await RepoAssociation.find(db);
+    let projects = _.uniq(_.map(list, 'project'));
+    for (let project of projects) {
         // load export tasks that failed and try them again
-        var schema = project.name;
-        var criteria = {
+        let schema = project.name;
+        let criteria = {
             action: 'export-issue',
             complete: false,
             newer_than: Moment().startOf('day').subtract(3, 'day'),
             deleted: false,
         };
-        return Task.find(db, schema, criteria, '*').each((task) => {
-            taskQueue.schedule(`export_story:${task.id}`, () => {
+        let tasks = await Task.find(db, schema, criteria, '*');
+        for (let task of tasks) {
+            taskQueue.schedule(`export_story:${task.id}`, async () => {
                 return exportStory(db, schema, task);
             });
-        });
-    });
-    return null;
+        }
+    }
 }
 
 const SEC = 1000;
 const MIN = 60 * SEC;
 
-var periodicTasks = [
+let periodicTasks = [
     {
         name: 'import-users',
         every: 5 * MIN,
@@ -677,26 +652,25 @@ var periodicTasks = [
         run: performPeriodicExportRetry,
     }
 ];
-var periodicTasksInterval;
-var periodicTasksLastRun;
+let periodicTasksInterval;
+let periodicTasksLastRun;
 
 /**
  * Start periodic tasks
  */
-function startPeriodicTasks() {
-    return Promise.each(periodicTasks, (task) => {
+async function startPeriodicTasks() {
+    for (let task of periodicTasks) {
         task.delay += task.every;
-        return Promise.try(() => {
+        try {
             if (task.start) {
-                return task.start();
+                await task.start();
             }
-        }).catch((err) => {
-            console.error(err.message);
-        });
-    }).finally(() => {
-        periodicTasksLastRun = Moment();
-        periodicTasksInterval = setInterval(runPeriodicTasks, 5 * 1000);
-    });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    periodicTasksLastRun = Moment();
+    periodicTasksInterval = setInterval(runPeriodicTasks, 5 * 1000);
 }
 
 /**
@@ -704,44 +678,42 @@ function startPeriodicTasks() {
  *
  * @return {null}
  */
-function runPeriodicTasks() {
-    var now = Moment();
-    var elapsed = now - periodicTasksLastRun;
+async function runPeriodicTasks() {
+    let now = Moment();
+    let elapsed = now - periodicTasksLastRun;
     periodicTasksLastRun = now;
-    var readyTasks = _.filter(periodicTasks, (task) => {
+    let readyTasks = _.filter(periodicTasks, (task) => {
         task.delay -= elapsed;
         if (task.delay <= 0) {
             task.delay = task.every;
             return true;
         }
     });
-    Promise.each(readyTasks, (task) => {
-        return Promise.try(() => {
+    for (let task of readyTasks) {
+        try {
             if (task.run) {
-                return task.run();
+                await task.run();
             }
-        }).catch((err) => {
-            console.error(err.message);
-        });
-    });
-    return null;
+        } catch (err) {
+            console.error(err);
+        }
+    }
 }
 
 /**
  * Stop periodic tasks
  */
-function stopPeriodicTasks() {
+async function stopPeriodicTasks() {
     periodicTasksInterval = clearInterval(periodicTasksInterval);
-
-    return Promise.each(periodicTasks, (task) => {
-        return Promise.try(() => {
+    for (let task of periodicTasks) {
+        try {
             if (task.stop) {
-                return task.stop();
+                await task.stop();
             }
-        }).catch((err) => {
-            console.error(err.message);
-        });
-    });
+        } catch (err) {
+            console.error(err);
+        }
+    }
 }
 
 /**
@@ -764,12 +736,11 @@ function hasAccessToken(server) {
  *
  * @return {Promise<String>}
  */
-function getServerAddress(db) {
-    var criteria = { deleted: false };
-    return System.findOne(db, 'global', criteria, 'settings').then((system) => {
-        var address = _.get(system, 'settings.address');
-        return _.trimEnd(address, ' /');
-    });
+async function getServerAddress(db) {
+    let criteria = { deleted: false };
+    let system = await System.findOne(db, 'global', criteria, 'settings');
+    var address = _.get(system, 'settings.address');
+    return _.trimEnd(address, ' /');
 }
 
 if (process.argv[1] === __filename) {
