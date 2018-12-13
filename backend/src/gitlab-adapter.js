@@ -27,8 +27,8 @@ import System from 'accessors/system';
 import Task from 'accessors/task';
 import User from 'accessors/user';
 
-var server;
-var database;
+let server;
+let database;
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
@@ -38,7 +38,7 @@ function start() {
         return db.need('global').then(() => {
             return new Promise((resolve, reject) => {
                 // listen for Webhook invocation
-                var app = Express();
+                let app = Express();
                 app.use(BodyParser.json());
                 app.set('json spaces', 2);
                 app.post('/srv/gitlab/hook/:serverId', handleSystemHookCallback);
@@ -49,7 +49,7 @@ function start() {
             });
         }).then(() => {
             // listen for database change events
-            var tables = [
+            let tables = [
                 'project',
                 'server',
                 'story',
@@ -177,7 +177,8 @@ async function handleProjectChangeEvent(db, event) {
         if (offlineBefore !== offlineAfter) {
             // remove or restore hooks
             let host = await getServerAddress(db);
-            let list = await RepoAssociation.find(db, { id: event.id });
+            let criteria = { server: { id: event.id } };
+            let list = await RepoAssociation.find(db, criteria);
             for (let { server, repo, project } of list) {
                 if (offlineAfter) {
                     await HookManager.removeProjectHook(host, server, repo, project);
@@ -317,7 +318,7 @@ async function handleTaskChangeEvent(db, event) {
     if (!event.diff.options) {
         return;
     }
-    var schema = event.schema;
+    let schema = event.schema;
     if (schema === 'global') {
         return;
     }
@@ -724,8 +725,8 @@ async function stopPeriodicTasks() {
  * @return {Boolean}
  */
 function hasAccessToken(server) {
-    var accessToken = _.get(server, 'settings.api.access_token');
-    var oauthBaseURL = _.get(server, 'settings.oauth.base_url');
+    let accessToken = _.get(server, 'settings.api.access_token');
+    let oauthBaseURL = _.get(server, 'settings.oauth.base_url');
     return !!(accessToken && oauthBaseURL);
 }
 
@@ -739,7 +740,7 @@ function hasAccessToken(server) {
 async function getServerAddress(db) {
     let criteria = { deleted: false };
     let system = await System.findOne(db, 'global', criteria, 'settings');
-    var address = _.get(system, 'settings.address');
+    let address = _.get(system, 'settings.address');
     return _.trimEnd(address, ' /');
 }
 

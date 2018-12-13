@@ -25,7 +25,7 @@ import Reaction from 'accessors/reaction';
  *
  * @return {Promise<Story|null>}
  */
-function importEvent(db, system, server, repo, project, author, glEvent, glHookEvent) {
+async function importEvent(db, system, server, repo, project, author, glEvent, glHookEvent) {
     switch (_.toLower(glEvent.note.noteable_type)) {
         case 'issue':
             return importIssueNote(db, system, server, repo, project, author, glEvent);
@@ -35,7 +35,7 @@ function importEvent(db, system, server, repo, project, author, glEvent, glHookE
         case 'commit':
             return importCommitNote(db, system, server, repo, project, author, glEvent, glHookEvent);
         default:
-            return Promise.resolve(null);
+            return null;
     }
 }
 
@@ -52,23 +52,20 @@ function importEvent(db, system, server, repo, project, author, glEvent, glHookE
  *
  * @return {Promise<Story|null>}
  */
-function importIssueNote(db, system, server, repo, project, author, glEvent) {
-    var schema = project.name;
-    var criteria = {
+async function importIssueNote(db, system, server, repo, project, author, glEvent) {
+    let schema = project.name;
+    let criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
             issue: { id: glEvent.note.noteable_id }
         })
     };
-    return Story.findOne(db, schema, criteria, '*').then((story) => {
-        if (!story) {
-            throw new HTTPError(404, 'Story not found');
-        }
-        var reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
-        return Reaction.insertOne(db, schema, reactioNew).return(story);
-    }).catch((err) => {
-        console.error(err.message);
-        return null;
-    });
+    let story = await Story.findOne(db, schema, criteria, '*');
+    if (!story) {
+        throw new HTTPError(404, 'Story not found');
+    }
+    let reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
+    await Reaction.insertOne(db, schema, reactioNew)
+    return story;
 }
 
 /**
@@ -84,23 +81,20 @@ function importIssueNote(db, system, server, repo, project, author, glEvent) {
  *
  * @return {Promise<Story|null>}
  */
-function importMergeRequestNote(db, system, server, repo, project, author, glEvent) {
-    var schema = project.name;
-    var criteria = {
+async function importMergeRequestNote(db, system, server, repo, project, author, glEvent) {
+    let schema = project.name;
+    let criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
             merge_request: { id: glEvent.note.noteable_id }
         })
     };
-    return Story.findOne(db, schema, criteria, '*').then((story) => {
-        if (!story) {
-            throw new HTTPError(404, 'Story not found');
-        }
-        var reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
-        return Reaction.insertOne(db, schema, reactioNew).return(story);
-    }).catch((err) => {
-        console.error(err.message);
-        return null;
-    });
+    let story = await Story.findOne(db, schema, criteria, '*');
+    if (!story) {
+        throw new HTTPError(404, 'Story not found');
+    }
+    let reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
+    await Reaction.insertOne(db, schema, reactioNew);
+    return story;
 }
 
 /**
@@ -116,30 +110,26 @@ function importMergeRequestNote(db, system, server, repo, project, author, glEve
  *
  * @return {Promise<Story|null>}
  */
-function importCommitNote(db, system, server, repo, project, author, glEvent, glHookEvent) {
+async function importCommitNote(db, system, server, repo, project, author, glEvent, glHookEvent) {
     // need to find the commit id first, since Gitlab doesn't include it
     // in the activity log entry
-    return findCommitId(db, server, repo, glEvent, glHookEvent).then((commitId) => {
-        if (!commitId) {
-            throw new HTTPError(404, 'Commit not found');
-        }
-        var schema = project.name;
-        var criteria = {
-            external_object: ExternalDataUtils.extendLink(server, repo, {
-                commit: { id: commitId }
-            })
-        };
-        return Story.findOne(db, schema, criteria, '*').then((story) => {
-            if (!story) {
-                throw new HTTPError(404, 'Story not found');
-            }
-            var reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
-            return Reaction.insertOne(db, schema, reactioNew).return(story);
-        });
-    }).catch((err) => {
-        console.error(err.message);
-        return null;
-    });
+    let commitID = await findCommitID(db, server, repo, glEvent, glHookEvent);
+    if (!commitID) {
+        throw new HTTPError(404, 'Commit not found');
+    }
+    let schema = project.name;
+    let criteria = {
+        external_object: ExternalDataUtils.extendLink(server, repo, {
+            commit: { id: commitID }
+        })
+    };
+    let story = await Story.findOne(db, schema, criteria, '*');
+    if (!story) {
+        throw new HTTPError(404, 'Story not found');
+    }
+    let reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
+    await Reaction.insertOne(db, schema, reactioNew);
+    return story;
 }
 
 /**
@@ -151,40 +141,37 @@ function importCommitNote(db, system, server, repo, project, author, glEvent, gl
  * @param  {Object} glEvent
  * @param  {Object} glHookEvent
  *
- * @return {Promise<String>}
+ * @return {Promise<String|undefined>}
  */
-function findCommitId(db, server, repo, glEvent, glHookEvent) {
+async function findCommitID(db, server, repo, glEvent, glHookEvent) {
     if (glHookEvent) {
         // the object sent through the hook has the commit id
         // we can use that when we're responding to a call from Gitlab
         if (glHookEvent.object_attributes.id === glEvent.note.id) {
-            var commitId = glHookEvent.object_attributes.commit_id;
-            return Promise.resolve(commitId);
+            let commitID = glHookEvent.object_attributes.commit_id;
+            return commitID;
         }
     }
 
-    var criteria = {
+    let criteria = {
         title_hash: hash(glEvent.target_title),
         external_object: ExternalDataUtils.findLink(repo, server),
     };
-    return Commit.find(db, 'global', criteria, '*').then((commits) => {
-        return Promise.reduce(commits, (match, commit) => {
-            if (match) {
-                return match;
+    let commits = Commit.find(db, 'global', criteria, '*');
+    for (let commit of commits) {
+        let commitLink = ExternalDataUtils.findLink(commit, server);
+        let commitID = commitLink.commit.id;
+        let projectID = commitLink.project.id;
+        let glNotes = await fetchCommitNotes(server, projectID, commitID);
+        let found = _.some(glNotes, (glNote) => {
+            if (glNote.note === glEvent.note.body) {
+                return true;
             }
-            var commitLink = ExternalDataUtils.findLink(commit, server);
-            var commitId = commitLink.commit.id;
-            var projectId = commitLink.project.id;
-            return fetchCommitNotes(server, projectId, commitId).then((glNotes) => {
-                var found = _.some(glNotes, (glNote) => {
-                    if (glNote.note === glEvent.note.body) {
-                        return true;
-                    }
-                });
-                return (found) ? commitId : null;
-            });
-        }, null);
-    });
+        });
+        if (found) {
+            return commitID;
+        }
+    }
 }
 
 /**
@@ -201,8 +188,8 @@ function findCommitId(db, server, repo, glEvent, glHookEvent) {
  * @return {Reaction}
  */
 function copyEventProperties(reaction, system, server, story, author, glNote) {
-    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
-    var reactionAfter = _.cloneDeep(reaction) || {};
+    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let reactionAfter = _.cloneDeep(reaction) || {};
     ExternalDataUtils.inheritLink(reactionAfter, server, story, {
         note: { id: _.get(glNote, 'note.id') }
     });
@@ -241,14 +228,14 @@ function copyEventProperties(reaction, system, server, story, author, glNote) {
  * Retrieve merge request notes from Gitlab server
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
- * @param  {String} glCommitId
+ * @param  {Number} glProjectID
+ * @param  {String} glCommitID
  * @param  {String} glObjectType
  *
  * @return {Promise<Array<Object>>}
  */
-function fetchCommitNotes(server, glProjectId, glCommitId) {
-    var url = `/projects/${glProjectId}/repository/commits/${glCommitId}/comments`;
+async function fetchCommitNotes(server, glProjectID, glCommitID) {
+    let url = `/projects/${glProjectID}/repository/commits/${glCommitID}/comments`;
     return Transport.fetchAll(server, url);
 }
 
@@ -260,7 +247,7 @@ function fetchCommitNotes(server, glProjectId, glCommitId) {
  * @return {String}
  */
 function hash(text) {
-    var hash = Crypto.createHash('md5').update(text);
+    let hash = Crypto.createHash('md5').update(text);
     return hash.digest("hex");
 }
 

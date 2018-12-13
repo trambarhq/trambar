@@ -11,30 +11,32 @@ import Server from 'accessors/server';
  * Return a list of objects containing project, repo, and server
  *
  * @param  {Database} db
- * @param  {Object|undefined} projectCriteria
- * @param  {Object|undefined} repoCriteria
- * @param  {Object|undefined} serverCriteria
+ * @param  {Object|undefined} criteria
  *
  * @return {Array<Object>}
  */
-function find(db, projectCriteria, repoCriteria, serverCriteria) {
-    // load projects
-    if (!projectCriteria) {
-        projectCriteria = {
-            deleted: false,
-            archived: false,
-        };
-    }
-    if (!repoCriteria) {
-        repoCriteria = {
-            deleted: false,
-        };
-    }
-    if (!serverCriteria) {
-        serverCriteria = {
-            deleted: false,
-            disabled: false,
-        };
+function find(db, criteria) {
+    let projectCriteria = {
+        deleted: false,
+        archived: false,
+    };
+    let repoCriteria = {
+        deleted: false,
+    };
+    let serverCriteria = {
+        deleted: false,
+        disabled: false,
+    };
+    if (criteria) {
+        if (criteria.project) {
+            projectCriteria = criteria.project;
+        }
+        if (criteria.repo) {
+            repoCriteria = criteria.repo;
+        }
+        if (criteria.server) {
+            serverCriteria = criteria.server;
+        }
     }
     return Project.find(db, 'global', projectCriteria, '*').then((projects) => {
         // load repos

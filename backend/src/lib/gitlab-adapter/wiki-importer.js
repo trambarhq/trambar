@@ -20,33 +20,31 @@ import User from 'accessors/user';
  *
  * @return {Promise<Story|null>}
  */
-function importHookEvent(db, system, server, repo, project, author, glHookEvent) {
-    var schema = project.name;
+async function importHookEvent(db, system, server, repo, project, author, glHookEvent) {
+    let schema = project.name;
     // see if there's story about this page recently
-    var criteria = {
+    // one story a day about a page is enough
+    let criteria = {
         newer_than: Moment().subtract(1, 'day').toISOString(),
         external_object: ExternalDataUtils.extendLink(server, repo, {
             wiki: { id: glHookEvent.object_attributes.slug }
         }),
     };
-    return Story.findOne(db, schema, criteria, 'id').then((recentStory) => {
-        if (recentStory) {
-            if (glHookEvent.object_attributes.action === 'delete') {
-                // remove the story if the page is no longer there
-                var columns = {
-                    id: recentStory.id,
-                    deleted: true,
-                };
-                return Story.updateOne(db, schema, columns).return(null);
-            } else {
-                // ignore, as one story a day about a page is enough
-                return null;
-            }
-        } else {
-            var storyNew = copyEventProperties(null, system, server, repo, author, glHookEvent);
-            return Story.saveOne(db, schema, storyNew);
+    let recentStory = await Story.findOne(db, schema, criteria, 'id');
+    if (recentStory) {
+        if (glHookEvent.object_attributes.action === 'delete') {
+            // remove the story if the page is no longer there
+            let columns = {
+                id: recentStory.id,
+                deleted: true,
+            };
+            await Story.updateOne(db, schema, columns);
         }
-    });
+        return null;
+    } else {
+        let storyNew = copyEventProperties(null, system, server, repo, author, glHookEvent);
+        return Story.saveOne(db, schema, storyNew);
+    }
 }
 
 /**
@@ -62,9 +60,9 @@ function importHookEvent(db, system, server, repo, project, author, glHookEvent)
  * @return {Object|null}
 */
 function copyEventProperties(story, system, server, repo, author, glHookEvent) {
-    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
 
-    var storyAfter = _.cloneDeep(story) || {};
+    let storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         wiki: { id: glHookEvent.object_attributes.slug }
     });

@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import * as TaskLog from 'task-log';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
@@ -13,7 +12,7 @@ import Repo from 'accessors/repo';
 import Story from 'accessors/story';
 
 /**
- * Import an activity log entry about an issue
+ * Import an activity log entry about an repo action
  *
  * @param  {Database} db
  * @param  {System} system
@@ -25,9 +24,9 @@ import Story from 'accessors/story';
  *
  * @return {Promise<Story>}
  */
-function importEvent(db, system, server, repo, project, author, glEvent) {
-    var schema = project.name;
-    var storyNew = copyEventProperties(null, system, server, repo, author, glEvent);
+async function importEvent(db, system, server, repo, project, author, glEvent) {
+    let schema = project.name;
+    let storyNew = copyEventProperties(null, system, server, repo, author, glEvent);
     return Story.insertOne(db, schema, storyNew);
 }
 
@@ -44,9 +43,9 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
  * @return {Story}
  */
 function copyEventProperties(story, system, server, repo, author, glEvent) {
-    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
 
-    var storyAfter = _.cloneDeep(story) || {};
+    let storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo);
     ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: 'repo',
@@ -95,77 +94,81 @@ function copyEventProperties(story, system, server, repo, author, glEvent) {
  *
  * @return {Promise<Array<Repo>>}
  */
-function importRepositories(db, server) {
-    var taskLog = TaskLog.start('gitlab-repo-import', {
+async function importRepositories(db, server) {
+    let taskLog = TaskLog.start('gitlab-repo-import', {
         server_id: server.id,
         server: server.name,
     });
-    // find existing repos connected with server (including deleted ones)
-    var criteria = {
-        external_object: ExternalDataUtils.createLink(server)
-    };
-    return Repo.find(db, 'global', criteria, '*').then((repos) => {
-        var added = [];
-        var deleted = [];
-        var modified = [];
-        // get list of repos from Gitlab
-        return fetchRepos(server).then((glRepos) => {
-            // delete ones that no longer exists
-            return Promise.each(repos, (repo) => {
-                var repoLink = ExternalDataUtils.findLink(repo, server);
-                if (!_.some(glRepos, { id: repoLink.project.id })) {
-                    deleted.push(repo.name);
-                    return Repo.updateOne(db, 'global', { id: repo.id, deleted: true });
+    try {
+        // find existing repos connected with server (including deleted ones)
+        let criteria = {
+            external_object: ExternalDataUtils.createLink(server)
+        };
+        let repos = await Repo.find(db, 'global', criteria, '*');
+        let glRepos = await fetchRepos(server);
+
+        // delete ones that no longer exists at GitLab
+        let deleted = [];
+        for (let repo of repos) {
+            let repoLink = ExternalDataUtils.findLink(repo, server);
+            if (!_.some(glRepos, { id: repoLink.project.id })) {
+                deleted.push(repo.name);
+                await Repo.updateOne(db, 'global', { id: repo.id, deleted: true });
+            }
+        }
+
+        let added = [];
+        let modified = [];
+        for (let glRepo of glRepos) {
+            let glLabels = await fetchLabels(server, glRepo.id);
+            let glUsers = await fetchMembers(server, glRepo.id);
+
+            // find members
+            let members = [];
+            for (let glUser of glUsers) {
+                let member = await UserImporter.findUser(db, server, glUser);
+                if (member) {
+                    members.push(member);
                 }
-            }).return(glRepos);
-        }).mapSeries((glRepo, index, count) => {
-            // fetch issue-tracker labels
-            return fetchLabels(server, glRepo.id).then((glLabels) => {
-                // find matching repo
-                return fetchMembers(server, glRepo.id).then((glUsers) => {
-                    // add owner to the list
-                    if (!_.some(glUsers, { id: glRepo.creator_id })) {
-                        glUsers.push({ id: glRepo.creator_id });
+            }
+            // add owner to the list
+            if (!_.some(glUsers, { id: glRepo.creator_id })) {
+                let member = await UserImporter.findUser(db, server, { id: glRepo.creator_id });
+                if (member) {
+                    members.push(member);
+                }
+            }
+
+            let repo = findExistingRepo(db, server, repos, glRepo);
+            let repoAfter = copyRepoDetails(repo, server, members, glRepo, glLabels);
+            if (repoAfter !== repo) {
+                if (repo) {
+                    repo = await Repo.updateOne(db, 'global', repoAfter);
+                    modified.push(repoAfter.name);
+                } else {
+                    repo = await Repo.insertOne(db, 'global', repoAfter);
+                    added.push(repoAfter.name);
+                }
+
+                // add new members to Trambar project
+                let newMembers = _.filter(members, (user) => {
+                    // exclude root user
+                    if (user.username !== 'root') {
+                        if (!user.disabled && !user.deleted) {
+                            return !_.includes(repo.user_ids);
+                        }
                     }
-                    return Promise.mapSeries(glUsers, (glUser) => {
-                        return UserImporter.findUser(db, server, glUser);
-                    }).filter(Boolean);
-                }).then((members) => {
-                    return findExistingRepo(db, server, repos, glRepo).then((repo) => {
-                        var repoAfter = copyRepoDetails(repo, server, members, glRepo, glLabels);
-                        if (repoAfter === repo) {
-                            return repo;
-                        }
-                        if (repo) {
-                            modified.push(repoAfter.name);
-                            return Repo.updateOne(db, 'global', repoAfter).then((repoAfter) => {
-                                var newMembers = _.filter(members, (user) => {
-                                    // exclude root user
-                                    if (user.username !== 'root') {
-                                        if (!user.disabled && !user.deleted) {
-                                            return !_.includes(repo.user_ids);
-                                        }
-                                    }
-                                });
-                                return addProjectMembers(db, repoAfter, newMembers).return(repoAfter);
-                            });
-                        } else {
-                            added.push(repoAfter.name);
-                            return Repo.insertOne(db, 'global', repoAfter);
-                        }
-                    });
                 });
-            }).tap(() => {
-                if (!_.isEmpty(added) || !_.isEmpty(deleted) || !_.isEmpty(modified)) {
-                    taskLog.report(index + 1, count, { added, deleted, modified });
-                }
-            });
-        });
-    }).tap(() => {
-        return taskLog.finish();
-    }).tapCatch((err) => {
-        return taskLog.abort(err);
-    });
+                await addProjectMembers(db, repoAfter, newMembers);
+            }
+            if (added.length + deleted.length + modified.length > 0) {
+                taskLog.report(index + 1, count, { added, deleted, modified });
+            }
+        }
+        await taskLog.finish();
+    } catch (err) {
+        await taskLog.abort(err);
+    }
 }
 
 /**
@@ -178,8 +181,8 @@ function importRepositories(db, server) {
  *
  * @return {Promise<Repo|null>}
  */
-function findExistingRepo(db, server, repos, glRepo) {
-    var repo = _.find(repos, (repo) => {
+async function findExistingRepo(db, server, repos, glRepo) {
+    let repo = _.find(repos, (repo) => {
         return ExternalDataUtils.findLink(repo, server, {
             project: { id: glRepo.id }
         });
@@ -187,12 +190,10 @@ function findExistingRepo(db, server, repos, glRepo) {
     if (repo) {
         if (repo.deleted) {
             // restore it
-            return Repo.updateOne(db, 'global', { id: repo.id, deleted: false });
-        } else {
-            return Promise.resolve(repo);
+            repo = await Repo.updateOne(db, 'global', { id: repo.id, deleted: false });
         }
     }
-    return Promise.resolve(null);
+    return repo || null;
 }
 
 /**
@@ -204,16 +205,19 @@ function findExistingRepo(db, server, repos, glRepo) {
  *
  * @return {Promise<Array<Project>>}
  */
-function addProjectMembers(db, repo, users) {
-    var newUserIds = _.map(users, 'id');
-    var criteria = {
+async function addProjectMembers(db, repo, users) {
+    let newUserIDs = _.map(users, 'id');
+    let criteria = {
         repo_ids: [ repo.id ]
     };
-    return Project.find(db, 'global', criteria, 'id, user_ids').mapSeries((project) => {
-        var existingUserIds = project.user_ids;
-        project.user_ids = _.union(existingUserIds, newUserIds);
-        return Project.updateOne(db, 'global', project);
-    });
+    let projectList = [];
+    let projects = await Project.find(db, 'global', criteria, 'id, user_ids');
+    for (let project of projects) {
+        project.user_ids = _.union(project.user_ids, newUserIDs);
+        project = await Project.updateOne(db, 'global', project);
+        projectList.push(project);
+    }
+    return projectList;
 }
 
 /**
@@ -228,7 +232,7 @@ function addProjectMembers(db, repo, users) {
  * @return {Repo}
  */
 function copyRepoDetails(repo, server, members, glRepo, glLabels) {
-    var repoAfter = _.cloneDeep(repo) || {};
+    let repoAfter = _.cloneDeep(repo) || {};
     ExternalDataUtils.addLink(repoAfter, server, {
         project: { id: glRepo.id }
     });
@@ -285,8 +289,8 @@ function copyRepoDetails(repo, server, members, glRepo, glLabels) {
  *
  * @return {Promise<Array<Object>>}
  */
-function fetchRepos(server) {
-    var url = `/projects`;
+async function fetchRepos(server) {
+    let url = `/projects`;
     return Transport.fetchAll(server, url);
 }
 
@@ -294,12 +298,12 @@ function fetchRepos(server) {
  * Retrieve all labels used by a Gitlab repo
  *
  * @param  {Server} server
- * @param  {Number} glRepoId
+ * @param  {Number} glRepoID
  *
  * @return {Promise<Object>}
  */
-function fetchLabels(server, glRepoId) {
-    var url = `/projects/${glRepoId}/labels`;
+async function fetchLabels(server, glRepoID) {
+    let url = `/projects/${glRepoID}/labels`;
     return Transport.fetchAll(server, url);
 }
 
@@ -307,12 +311,12 @@ function fetchLabels(server, glRepoId) {
  * Retrieve member records from Gitlab (these are not complete user records)
  *
  * @param  {Server} server
- * @param  {Number} glRepoId
+ * @param  {Number} glRepoID
  *
  * @return {Promise<Array<Object>>}
  */
-function fetchMembers(server, glRepoId) {
-    var url = `/projects/${glRepoId}/members`;
+async function fetchMembers(server, glRepoID) {
+    let url = `/projects/${glRepoID}/members`;
     return Transport.fetchAll(server, url);
 }
 
