@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import * as TaskLog from 'task-log';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
@@ -30,67 +29,64 @@ import Story from 'accessors/story';
  *
  * @return {Promise}
  */
-function importEvents(db, system, server, repo, project, glHookEvent) {
-    var options = {
+async function importEvents(db, system, server, repo, project, glHookEvent) {
+    let options = {
         server_id: server.id,
         repo_id: repo.id,
         project_id: project.id,
     };
-    return TaskLog.last('gitlab-event-import', options).then((lastTask) => {
-        var lastEventTime = _.get(lastTask, 'details.last_event_time');
-        var repoLink = ExternalDataUtils.findLink(repo, server);
-        var url = `/projects/${repoLink.project.id}/events`;
-        var params = { sort: 'asc' };
-        if (lastEventTime) {
-            // after only supports a date for some reason
-            // need to start one day back to ensure all events are fetched
-            var dayBefore = Moment(lastEventTime).subtract(1, 'day');
-            params.after = dayBefore.format('YYYY-MM-DD');
-        }
-        var taskLog = TaskLog.start('gitlab-event-import', {
-            server_id: server.id,
-            server: server.name,
-            repo_id: repo.id,
-            repo: repo.name,
-            project_id: project.id,
-            project: project.name,
-        });
-        var added = [];
-        var firstEventAge;
-        var now = Moment();
-        return Transport.fetchEach(server, url, params, (glEvent, index, total) => {
-            var ctime = glEvent.created_at;
+    let lastTask = await TaskLog.last('gitlab-event-import', options);
+    let lastEventTime = _.get(lastTask, 'details.last_event_time');
+    let repoLink = ExternalDataUtils.findLink(repo, server);
+    let url = `/projects/${repoLink.project.id}/events`;
+    let params = { sort: 'asc' };
+    if (lastEventTime) {
+        // after only supports a date for some reason
+        // need to start one day back to ensure all events are fetched
+        let dayBefore = Moment(lastEventTime).subtract(1, 'day');
+        params.after = dayBefore.format('YYYY-MM-DD');
+    }
+    let taskLog = TaskLog.start('gitlab-event-import', {
+        server_id: server.id,
+        server: server.name,
+        repo_id: repo.id,
+        repo: repo.name,
+        project_id: project.id,
+        project: project.name,
+    });
+    let added = [];
+    let firstEventAge;
+    let now = Moment();
+    try {
+        await Transport.fetchEach(server, url, params, async (glEvent, index, total) => {
+            let ctime = glEvent.created_at;
             if (lastEventTime) {
                 if (ctime <= lastEventTime) {
                     return;
                 }
             }
-            return importEvent(db, system, server, repo, project, glEvent, glHookEvent).then((story) => {
-                if (story) {
-                    added.push(glEvent.action_name);
+            let story = await importEvent(db, system, server, repo, project, glEvent, glHookEvent);
+            if (story) {
+                added.push(glEvent.action_name);
+            }
+            let nom = index + 1;
+            let denom = total;
+            if (!total) {
+                // when the number of events is not yet known, use the event
+                // time to calculate progress
+                let eventAge = now.diff(ctime);
+                if (firstEventAge === undefined) {
+                    firstEventAge = eventAge;
                 }
-            }).tap(() => {
-                var nom = index + 1;
-                var denom = total;
-                if (!total) {
-                    // when the number of events is not yet known, use the event
-                    // time to calculate progress
-                    var eventAge = now.diff(ctime);
-                    if (firstEventAge === undefined) {
-                        firstEventAge = eventAge;
-                    }
-                    nom = (firstEventAge - eventAge);
-                    denom = firstEventAge;
-                }
-                taskLog.report(nom, denom, { added, last_event_time: ctime });
-            }).catch((err) => {
-            });
-        }).tap(() => {
-            return taskLog.finish();
-        }).tapCatch((err) => {
-            return taskLog.abort(err);
+                nom = (firstEventAge - eventAge);
+                denom = firstEventAge;
+            }
+            taskLog.report(nom, denom, { added, last_event_time: ctime });
         });
-    });
+        await taskLog.finish();
+    } catch (err) {
+        await taskLog.abort(err);
+    }
 }
 
 /**
@@ -106,17 +102,20 @@ function importEvents(db, system, server, repo, project, glHookEvent) {
  *
  * @return {Promise<Story|null>}
  */
-function importEvent(db, system, server, repo, project, glEvent, glHookEvent) {
-    var importer = getEventImporter(glEvent);
-    if (!importer) {
-        return Promise.resolve(null);
-    }
-    return UserImporter.findUser(db, server, glEvent.author).then((author) => {
+async function importEvent(db, system, server, repo, project, glEvent, glHookEvent) {
+    try {
+        let importer = getEventImporter(glEvent);
+        if (!importer) {
+            return null;
+        }
+        let author = await UserImporter.findUser(db, server, glEvent.author);
         if (!author) {
             return null;
         }
         return importer.importEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
-    });
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 /**
@@ -132,18 +131,21 @@ function importEvent(db, system, server, repo, project, glEvent, glHookEvent) {
  *
  * @return {Promise<Story|false|null>}
  */
-function importHookEvent(db, system, server, repo, project, glHookEvent) {
-    var importer = getHookEventImporter(glHookEvent);
-    if (!importer) {
-        // not handled
-        return Promise.resolve(false);
-    }
-    return UserImporter.findUser(db, server, glHookEvent.user).then((author) => {
+async function importHookEvent(db, system, server, repo, project, glHookEvent) {
+    try {
+        let importer = getHookEventImporter(glHookEvent);
+        if (!importer) {
+            // not handled
+            return false;
+        }
+        let author = UserImporter.findUser(db, server, glHookEvent.user);
         if (!author) {
             return null;
         }
         return importer.importHookEvent(db, system, server, repo, project, author, glHookEvent);
-    });
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 /**
@@ -154,7 +156,7 @@ function importHookEvent(db, system, server, repo, project, glHookEvent) {
  * @return {Object}
  */
 function getEventImporter(glEvent) {
-    var targetType = normalizeToken(glEvent.target_type);
+    let targetType = normalizeToken(glEvent.target_type);
     switch (targetType) {
         case 'issue': return IssueImporter;
         case 'milestone': return MilestoneImporter;
@@ -163,7 +165,7 @@ function getEventImporter(glEvent) {
         case 'note': return NoteImporter;
     }
 
-    var actionName = normalizeToken(glEvent.action_name);
+    let actionName = normalizeToken(glEvent.action_name);
     switch (actionName) {
         case 'created':
         case 'imported': return RepoImporter;
@@ -191,7 +193,7 @@ function getEventImporter(glEvent) {
  * @return {Object}
  */
 function getHookEventImporter(glHookEvent) {
-    var objectKind = normalizeToken(glHookEvent.object_kind);
+    let objectKind = normalizeToken(glHookEvent.object_kind);
     switch (objectKind) {
         case 'wiki_page': return WikiImporter;
         case 'issue': return IssueImporter;

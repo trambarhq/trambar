@@ -446,9 +446,20 @@ async function handleProjectHookCallback(req, res) {
         let glHookEvent = req.body;
         let db = database;
         let criteria = {
-            server_id: parseInt(req.params.serverId),
-            repo_id: parseInt(req.params.repoId),
-            project_id: parseInt(req.params.projectId),
+            server: {
+                id: parseInt(req.params.serverId),
+                deleted: false,
+                disabled: false,
+            },
+            repo: {
+                id: parseInt(req.params.repoId),
+                deleted: false
+            },
+            project: {
+                id: parseInt(req.params.projectId),
+                deleted: false,
+                disabled: false,
+            },
         };
         let { server, repo, project } = await RepoAssociation.findOne(db, criteria);
         let ts = Moment().valueOf();

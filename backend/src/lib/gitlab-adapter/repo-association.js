@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
+import HTTPError from 'errors/http-error';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
 // accessors
@@ -15,7 +16,7 @@ import Server from 'accessors/server';
  *
  * @return {Array<Object>}
  */
-function find(db, criteria) {
+async function find(db, criteria) {
     let projectCriteria = {
         deleted: false,
         archived: false,
@@ -29,51 +30,43 @@ function find(db, criteria) {
     };
     if (criteria) {
         if (criteria.project) {
-            projectCriteria = criteria.project;
+            projectCriteria = _.clone(criteria.project);
         }
         if (criteria.repo) {
-            repoCriteria = criteria.repo;
+            repoCriteria = _.clone(criteria.repo);
         }
         if (criteria.server) {
-            serverCriteria = criteria.server;
+            serverCriteria = _.clone(criteria.server);
         }
     }
-    return Project.find(db, 'global', projectCriteria, '*').then((projects) => {
-        // load repos
-        var repoIds = _.uniq(_.flatten(_.map(projects, 'repo_ids')));
-        repoCriteria = _.extend({
-            id: repoIds,
-            type: 'gitlab',
-        }, repoCriteria);
-        return Repo.find(db, 'global', repoCriteria, '*').then((repos) => {
-            var serverIds = _.uniq(_.filter(_.map(repos, (repo) => {
-                var repoLink = _.find(repo.external, { type: 'gitlab' });
-                if (repoLink) {
-                    return repoLink.server_id;
+    let projects = await Project.find(db, 'global', projectCriteria, '*');
+    // load repos
+    let repoIDs = _.uniq(_.flatten(_.map(projects, 'repo_ids')));
+    repoCriteria = _.extend({ id: repoIDs, type: 'gitlab' }, repoCriteria);
+    let repos = await Repo.find(db, 'global', repoCriteria, '*');
+    // load server record
+    let serverIDs = _.uniq(_.filter(_.map(repos, (repo) => {
+        let repoLink = _.find(repo.external, { type: 'gitlab' });
+        if (repoLink) {
+            return repoLink.server_id;
+        }
+    })));
+    serverCriteria = _.extend({ id: serverIDs }, serverCriteria);
+    let servers = await Server.find(db, 'global', serverCriteria, '*');
+    let list = [];
+    for (let project of projects) {
+        for (let repoID of project.repo_ids) {
+            let repo = _.find(repos, { id: repoID });
+            if (repo) {
+                let repoLink = _.find(repo.external, { type: 'gitlab' });
+                let server = _.find(servers, { id: repoLink.server_id });
+                if (server) {
+                    list.push({ server, repo, project });
                 }
-            })));
-            // load server record
-            serverCriteria = _.extend({
-                id: serverIds,
-            }, serverCriteria);
-            return Server.find(db, 'global', serverCriteria, '*').then((servers) => {
-                var list = [];
-                _.each(projects, (project) => {
-                    _.each(project.repo_ids, (repoId) => {
-                        var repo = _.find(repos, { id: repoId });
-                        if (repo) {
-                            var repoLink = _.find(repo.external, { type: 'gitlab' });
-                            var server = _.find(servers, { id: repoLink.server_id });
-                            if (server) {
-                                list.push({ server, repo, project });
-                            }
-                        }
-                    });
-                });
-                return list;
-            });
-        });
-    });
+            }
+        }
+    }
+    return list;
 }
 
 /**
@@ -84,46 +77,32 @@ function find(db, criteria) {
  *
  * @return {Promise<Object>}
  */
-function findOne(db, criteria) {
-    if (!_.every(criteria)) {
-        return Promise.reject(new Error('Invalid object id'));
+async function findOne(db, criteria) {
+    let projectCriteria = _.clone(criteria.project);
+    let repoCriteria = _.clone(criteria.repo);
+    let serverCriteria = _.clone(criteria.server);
+
+    let server = await Server.findOne(db, 'global', serverCriteria, '*');
+    let repo = await Repo.findOne(db, 'global', repoCriteria, '*');
+    let project = await Project.findOne(db, 'global', projectCriteria, '*');
+
+    // make sure everything is in order first
+    if (!server) {
+        throw new HTTPError(404, `Missing server:`, serverCriteria);
     }
-    var props = {
-        server: Server.findOne(db, 'global', {
-            id: criteria.server_id,
-            deleted: false,
-            disabled: false,
-        }, '*'),
-        repo: Repo.findOne(db, 'global', {
-            id: criteria.repo_id,
-            deleted: false
-        }, '*'),
-        project: Project.findOne(db, 'global', {
-            id: criteria.project_id,
-            deleted: false,
-            archived: false,
-        }, '*')
-    };
-    return Promise.props(props).then((a) => {
-        var { server, repo, project } = a;
-        // make sure everything is in order first
-        if (!server) {
-            throw new Error(`Missing server: ${criteria.server_id}`);
-        }
-        if (!repo) {
-            throw new Error(`Missing repository: ${criteria.repo_id}`);
-        }
-        if (!project) {
-            throw new Error(`Missing project: ${criteria.project_id}`);
-        }
-        if (!_.includes(project.repo_ids, repo.id)) {
-            throw new Error(`Repository "${repo.name}" (${repo.id}) is not associated with project "${project.name}"`);
-        }
-        if (!ExternalDataUtils.findLink(repo, server)) {
-            throw new Error(`Missing server link: ${repo.name}`);
-        }
-        return a;
-    });
+    if (!repo) {
+        throw new HTTPError(404, `Missing repository:`, repoCriteria);
+    }
+    if (!project) {
+        throw new HTTPError(404, `Missing project:`, projectCriteria);
+    }
+    if (!_.includes(project.repo_ids, repo.id)) {
+        throw new HTTPError(400, `Repository "${repo.name}" (${repo.id}) is not associated with project "${project.name}"`);
+    }
+    if (!ExternalDataUtils.findLink(repo, server)) {
+        throw new HTTPError(400, `Missing server link: ${repo.name}`);
+    }
+    return { server, repo, project };
 }
 
 export {
