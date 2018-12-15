@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import Crypto from 'crypto';
 import * as TaskLog from 'task-log';

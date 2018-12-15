@@ -1,7 +1,5 @@
 import _ from 'lodash';
-import Bluebird from 'bluebird';
 import Request from 'request';
-import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Path from 'path';
 import HTTPError from 'errors/http-error';
 import Database from 'database';

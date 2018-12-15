@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import HTTPError from 'errors/http-error';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
