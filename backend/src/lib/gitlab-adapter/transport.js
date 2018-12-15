@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Bluebird from 'bluebird';
 import Request from 'request';
 import Path from 'path';
 import HTTPError from 'errors/http-error';
@@ -82,11 +83,18 @@ async function fetchEach(server, uri, query, callback) {
                 // we know the total at the last page
                 total = index + objects.length;
             }
-            await callback(object, index++, total);
-            if (objects.length === pageQuery.per_page && pageQuery.page < PAGE_LIMIT) {
-                pageQuery.page++;
-            } else {
-                done = true;
+            for (let object of objects) {
+                let cont = await callback(object, index++, total);
+                if (cont === false) {
+                    done = true;
+                }
+            }
+            if (!done) {
+                if (objects.length === pageQuery.per_page && pageQuery.page < PAGE_LIMIT) {
+                    pageQuery.page++;
+                } else {
+                    done = true;
+                }
             }
         } else {
             done = true;

@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import * as TaskLog from 'task-log';
 import * as Localization from 'localization';
@@ -27,24 +26,21 @@ import User from 'accessors/user';
  *
  * @return {Promise<Story|null>}
  */
-function exportStory(db, system, project, task) {
-    return findSourceStory(db, project, task).then((story) => {
-        return findDestinationRepo(db, task).then((repoAfter) => {
-            return findCurrentRepo(db, story).then((repoBefore) => {
-                if (repoBefore && repoAfter) {
-                    if (repoBefore.id === repoAfter.id) {
-                        return exportStoryUpdate(db, system, project, story, repoAfter, task);
-                    } else {
-                        return exportStoryMove(db, system, project, story, repoBefore, repoAfter, task);
-                    }
-                } else if (repoAfter) {
-                    return exportStoryCreate(db, system, project, story, repoAfter, task);
-                } else if (repoBefore) {
-                    return exportStoryRemove(db, system, project, story, repoBefore, task);
-                }
-            });
-        });
-    });
+async function exportStory(db, system, project, task) {
+    let story = await findSourceStory(db, project, task);
+    let repoAfter = await findDestinationRepo(db, task);
+    let repoBefore = await findCurrentRepo(db, story);
+    if (repoBefore && repoAfter) {
+        if (repoBefore.id === repoAfter.id) {
+            return exportStoryUpdate(db, system, project, story, repoAfter, task);
+        } else {
+            return exportStoryMove(db, system, project, story, repoBefore, repoAfter, task);
+        }
+    } else if (repoAfter) {
+        return exportStoryCreate(db, system, project, story, repoAfter, task);
+    } else if (repoBefore) {
+        return exportStoryRemove(db, system, project, story, repoBefore, task);
+    }
 }
 
 /**
@@ -59,29 +55,23 @@ function exportStory(db, system, project, task) {
  *
  * @return {Promise<Story|null>}
  */
-function exportStoryCreate(db, system, project, story, repo, task) {
-    return findRepoServer(db, repo).then((server) => {
-        return findActingUser(db, task).then((user) => {
-            return findAuthors(db, story).then((authors) => {
-                var repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
-                var glProjectId = repoLink.project.id;
-                var glIssueNumber = undefined;
-                var userLink = findUserLink(user, server);
-                var glUserId = userLink.user.id;
-                var glIssueAfter = exportIssueProperties(null, server, system, project, story, authors, task);
-                return saveIssue(server, glProjectId, glIssueNumber, glIssueAfter, glUserId).then((glIssue) => {
-                    var schema = project.name;
-                    var storyAfter = copyIssueProperties(story, server, repo, glIssue);
-                    return Story.updateOne(db, schema, storyAfter).then((story) => {
-                        var reactionNew = copyTrackingReactionProperties(null, server, project, story, user);
-                        return Reaction.insertOne(db, schema, reactionNew).then((reaction) => {
-                            return story;
-                        });
-                    });
-                });
-            });
-        });
-    });
+async function exportStoryCreate(db, system, project, story, repo, task) {
+    let server = await findRepoServer(db, repo);
+    let user = await findActingUser(db, task);
+    let authors = await findAuthors(db, story);
+    let repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+    let glProjectID = repoLink.project.id;
+    let glIssueNumber = undefined;
+    let userLink = findUserLink(user, server);
+    let glUserID = userLink.user.id;
+    let glIssueAfter = exportIssueProperties(null, server, system, project, story, authors, task);
+    let glIssue = await saveIssue(server, glProjectID, glIssueNumber, glIssueAfter, glUserID);
+    let schema = project.name;
+    let storyAfter = copyIssueProperties(story, server, repo, glIssue);
+    story = await Story.updateOne(db, schema, storyAfter);
+    let reactionNew = copyTrackingReactionProperties(null, server, project, story, user);
+    let reaction = await Reaction.insertOne(db, schema, reactionNew);
+    return story;
 }
 
 /**
@@ -96,31 +86,27 @@ function exportStoryCreate(db, system, project, story, repo, task) {
  *
  * @return {Promise<Story|null>}
  */
-function exportStoryUpdate(db, system, project, story, repo, task) {
-    return findRepoServer(db, repo).then((server) => {
-        return findActingUser(db, task).then((user) => {
-            return findAuthors(db, story).then((authors) => {
-                var issueLink = findIssueLink(story);
-                var glProjectId = issueLink.project.id;
-                var glIssueNumber = issueLink.issue.number;
-                var userLink = findUserLink(user, server);
-                var glUserId = userLink.user.id;
-                return fetchIssue(server, glProjectId, glIssueNumber).then((glIssue) => {
-                    var glIssueAfter = exportIssueProperties(glIssue, server, system, project, story, authors, task);
-                    if (glIssueAfter === glIssue) {
-                        return null;
-                    }
-                    return saveIssue(server, glProjectId, glIssueNumber, glIssueAfter, glUserId).then((glIssue) => {
-                        var schema = project.name;
-                        var storyAfter = copyIssueProperties(story, server, repo, glIssue);
-                        return Story.updateOne(db, schema, storyAfter).then((story) => {
-                            return story;
-                        });
-                    });
-                });
-            });
-        });
-    });
+async function exportStoryUpdate(db, system, project, story, repo, task) {
+    let server = await findRepoServer(db, repo);
+    let user = await findActingUser(db, task);
+    let authors = await findAuthors(db, story);
+    let issueLink = findIssueLink(story);
+    let glProjectID = issueLink.project.id;
+    let glIssueNumber = issueLink.issue.number;
+    let userLink = findUserLink(user, server);
+    let glUserID = userLink.user.id;
+    let glIssue = await fetchIssue(server, glProjectID, glIssueNumber);
+    let glIssueAfter = exportIssueProperties(glIssue, server, system, project, story, authors, task);
+    if (glIssueAfter === glIssue) {
+        return null;
+    }
+    glIssue = await saveIssue(server, glProjectID, glIssueNumber, glIssueAfter, glUserID);
+    let schema = project.name;
+    let storyAfter = copyIssueProperties(story, server, repo, glIssue);
+    if (story !== storyAfter) {
+        story = await Story.updateOne(db, schema, storyAfter);
+    }
+    return story;
 }
 
 /**
@@ -135,39 +121,30 @@ function exportStoryUpdate(db, system, project, story, repo, task) {
  *
  * @return {Promise<Story|null>}
  */
-function exportStoryRemove(db, system, project, story, repo, task) {
-    return findRepoServer(db, repo).then((server) => {
-        return findActingUser(db, task).then((user) => {
-            var issueLink = findIssueLink(story);
-            var glProjectId = issueLink.project.id;
-            var glIssueNumber = issueLink.issue.number;
-            var userLink = findUserLink(user, server);
-            var glUserId = userLink.user.id;
-            return removeIssue(server, glProjectId, glIssueNumber, glUserId).then(() => {
-                var schema = project.name;
-                var storyAfter = deleteIssueProperties(story, server);
-                return Story.updateOne(db, schema, storyAfter).then((story) => {
-                    // remove tracking, note, and assignment reactions
-                    var criteria = {
-                        story_id: story.id,
-                        type: [ 'tracking', 'note', 'assignment' ],
-                        deleted: false,
-                    };
-                    return Reaction.find(db, schema, criteria, 'id').then((reactions) => {
-                        var reactionsAfter = _.map(reactions, (reaction) => {
-                            return { id: reaction.id, deleted: true };
-                        });
-                        return Reaction.save(db, schema, reactionsAfter);
-                    }).then((reactions) => {
-                        return story;
-                    });
-                });
-            });
-        });
-    }).catch((err) => {
-        console.error(err.message);
-        return null;
+async function exportStoryRemove(db, system, project, story, repo, task) {
+    let server = await findRepoServer(db, repo);
+    let user = await findActingUser(db, task);
+    let issueLink = findIssueLink(story);
+    let glProjectID = issueLink.project.id;
+    let glIssueNumber = issueLink.issue.number;
+    let userLink = findUserLink(user, server);
+    let glUserID = userLink.user.id;
+    await removeIssue(server, glProjectID, glIssueNumber, glUserID);
+    let schema = project.name;
+    let storyAfter = deleteIssueProperties(story, server);
+    story = await Story.updateOne(db, schema, storyAfter);
+    // remove tracking, note, and assignment reactions
+    let criteria = {
+        story_id: story.id,
+        type: [ 'tracking', 'note', 'assignment' ],
+        deleted: false,
+    };
+    let reactions = await Reaction.find(db, schema, criteria, 'id');
+    let reactionsAfter = _.map(reactions, (reaction) => {
+        return { id: reaction.id, deleted: true };
     });
+    await Reaction.save(db, schema, reactionsAfter);
+    return story;
 }
 
 /**
@@ -183,9 +160,9 @@ function exportStoryRemove(db, system, project, story, repo, task) {
  *
  * @return {Promise<Story|null>}
  */
-function exportStoryMove(db, system, project, story, fromRepo, toRepo, task) {
-    var fromRepoLink = ExternalDataUtils.findLinkByServerType(fromRepo, 'gitlab');
-    var toRepoLink = ExternalDataUtils.findLinkByServerType(toRepo, 'gitlab');
+async function exportStoryMove(db, system, project, story, fromRepo, toRepo, task) {
+    let fromRepoLink = ExternalDataUtils.findLinkByServerType(fromRepo, 'gitlab');
+    let toRepoLink = ExternalDataUtils.findLinkByServerType(toRepo, 'gitlab');
     if (!fromRepoLink) {
         // moving issue from a server that isn't GitLab
         return exportStoryCreate(db, system, project, story, toRepo, task);
@@ -198,45 +175,36 @@ function exportStoryMove(db, system, project, story, fromRepo, toRepo, task) {
             return exportStoryRemove(db, system, project, story, fromRepo, task);
         });
     }
-    return findRepoServer(db, toRepo).then((server) => {
-        return findActingUser(db, task).then((user) => {
-            var issueLink = findIssueLink(story);
-            var glFromProjectId = issueLink.project.id;
-            var glFromIssueNumber = issueLink.issue.number;
-            var glToProjectId = toRepoLink.project.id;
-            var userLink = findUserLink(user, server);
-            var glUserId = userLink.user.id;
-            return moveIssue(server, glFromProjectId, glFromIssueNumber, glToProjectId, glUserId).then((glIssue) => {
-                var schema = project.name;
-                var storyAfter = copyIssueProperties(story, server, toRepo, glIssue);
-                return Story.updateOne(db, schema, storyAfter).then((story) => {
-                    // update tracking, note, and assignment reactions
-                    var criteria = {
-                        story_id: story.id,
-                        type: [ 'tracking', 'note', 'assignment' ],
-                        deleted: false,
-                    };
-                    return Reaction.find(db, schema, criteria, 'id, type, user_id, external').then((reactions) => {
-                        var reactionsAfter = _.map(reactions, (reaction) => {
-                            return adjustReactionProperties(reaction, server, story);
-                        });
-                        // if the different user is moving the issue, add
-                        // a tracking reaction for him as well
-                        if (!_.some(reactionsAfter, { type: 'tracking', user_id: user.id })) {
-                            var reactionNew = copyTrackingReactionProperties(null, server, project, story, user);
-                            reactionsAfter.push(reactionNew);
-                        }
-                        return Reaction.save(db, schema, reactionsAfter);
-                    }).then((reactions) => {
-                        return story;
-                    });
-                });
-            });
-        }).catch((err) => {
-            console.error(err.message);
-            return null;
-        });
+    let server = await findRepoServer(db, toRepo);
+    let user = await findActingUser(db, task);
+    let issueLink = findIssueLink(story);
+    let glFromProjectID = issueLink.project.id;
+    let glFromIssueNumber = issueLink.issue.number;
+    let glToProjectID = toRepoLink.project.id;
+    let userLink = findUserLink(user, server);
+    let glUserID = userLink.user.id;
+    let glIssue = await moveIssue(server, glFromProjectID, glFromIssueNumber, glToProjectID, glUserID);
+    let schema = project.name;
+    let storyAfter = copyIssueProperties(story, server, toRepo, glIssue);
+    story = await Story.updateOne(db, schema, storyAfter);
+    // update tracking, note, and assignment reactions
+    let criteria = {
+        story_id: story.id,
+        type: [ 'tracking', 'note', 'assignment' ],
+        deleted: false,
+    };
+    let reactions = await Reaction.find(db, schema, criteria, 'id, type, user_id, external');
+    let reactionsAfter = _.map(reactions, (reaction) => {
+        return adjustReactionProperties(reaction, server, story);
     });
+    // if the different user is moving the issue, add
+    // a tracking reaction for him as well
+    if (!_.some(reactionsAfter, { type: 'tracking', user_id: user.id })) {
+        let reactionNew = copyTrackingReactionProperties(null, server, project, story, user);
+        reactionsAfter.push(reactionNew);
+    }
+    await Reaction.save(db, schema, reactionsAfter);
+    return story;
 }
 
 /**
@@ -255,9 +223,9 @@ function exportStoryMove(db, system, project, story, fromRepo, toRepo, task) {
  * @return {Object}
  */
 function exportIssueProperties(glIssue, server, system, project, story, authors, task) {
-    var contents = generateIssueText(system, project, story, authors, task);
+    let contents = generateIssueText(system, project, story, authors, task);
 
-    var glIssueAfter = _.clone(glIssue) || {};
+    let glIssueAfter = _.clone(glIssue) || {};
     ExternalDataUtils.exportProperty(story, server, 'title', glIssueAfter, {
         value: task.options.title,
         overwrite: 'match-previous:title',
@@ -292,28 +260,28 @@ function exportIssueProperties(glIssue, server, system, project, story, authors,
  * @return {String}
  */
 function generateIssueText(system, project, story, authors, task) {
-    var markdown = story.details.markdown;
-    var resources = story.details.resources;
-    var textVersions = _.filter(story.details.text);
-    var text = _.join(textVersions, '\n\n');
+    let markdown = story.details.markdown;
+    let resources = story.details.resources;
+    let textVersions = _.filter(story.details.text);
+    let text = _.join(textVersions, '\n\n');
     if (!markdown) {
         text = MarkdownExporter.escape(text);
     }
-    var authorIds = _.map(authors, 'id');
-    if (!_.isEqual(authorIds, [ task.user_id ])) {
+    let authorIDs = _.map(authors, 'id');
+    if (!_.isEqual(authorIDs, [ task.user_id ])) {
         // indicate who wrote the post when user is exporting someone else's post
-        var language = Localization.getDefaultLanguageCode(system);
-        var authorNames = _.map(authors, (author) => {
+        let language = Localization.getDefaultLanguageCode(system);
+        let authorNames = _.map(authors, (author) => {
             return Localization.name(language, author);
         });
-        var opening;
+        let opening;
         if (_.trim(text)) {
             opening = Localization.translate(language, 'issue-export-$names-wrote', authorNames);
         } else {
-            var resources = story.details.resources;
-            var photos = _.size(_.filter(resources, { type: 'image' }));
-            var videos = _.size(_.filter(resources, { type: 'video' }));
-            var audios = _.size(_.filter(resources, { type: 'audio' }));
+            let resources = story.details.resources;
+            let photos = _.size(_.filter(resources, { type: 'image' }));
+            let videos = _.size(_.filter(resources, { type: 'video' }));
+            let audios = _.size(_.filter(resources, { type: 'audio' }));
             if (photos > 0 || videos > 0 || audios > 0) {
                 opening = Localization.translate(language, 'issue-export-$names-posted-$photos-$videos-$audios', authorNames, photos, videos, audios);
             }
@@ -323,7 +291,7 @@ function generateIssueText(system, project, story, authors, task) {
         }
     }
     // append resources
-    var address = _.get(system, 'settings.address');
+    let address = _.get(system, 'settings.address');
     return MarkdownExporter.attachResources(text, resources, address);
 }
 
@@ -338,12 +306,12 @@ function generateIssueText(system, project, story, authors, task) {
  * @return {Story}
  */
 function copyIssueProperties(story, server, repo, glIssue) {
-    var labelTags = _.map(glIssue.labels, (label) => {
+    let labelTags = _.map(glIssue.labels, (label) => {
         return `#${_.replace(label, /\s+/g, '-')}`;
     });
-    var tags = _.union(story.tags, labelTags);
+    let tags = _.union(story.tags, labelTags);
 
-    var storyAfter = _.cloneDeep(story);
+    let storyAfter = _.cloneDeep(story);
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         issue: {
             id: glIssue.id,
@@ -383,7 +351,7 @@ function copyIssueProperties(story, server, repo, glIssue) {
  * @return {Story}
  */
 function deleteIssueProperties(story, server) {
-    var storyAfter = _.cloneDeep(story);
+    let storyAfter = _.cloneDeep(story);
     storyAfter.type = 'post';
     storyAfter.etime = null;
     storyAfter.exchange = {};
@@ -406,7 +374,7 @@ function deleteIssueProperties(story, server) {
  * @return {Reaction}
  */
 function copyTrackingReactionProperties(reaction, server, project, story, user) {
-    var reactionAfter = _.clone(reaction) || {};
+    let reactionAfter = _.clone(reaction) || {};
     ExternalDataUtils.inheritLink(reactionAfter, server, story);
     ExternalDataUtils.importProperty(reactionAfter, server, 'type', {
         value: 'tracking',
@@ -449,7 +417,7 @@ function copyTrackingReactionProperties(reaction, server, project, story, user) 
  * @return {Reaction}
  */
 function adjustReactionProperties(reaction, server, story) {
-    var reactionAfter = _.cloneDeep(reaction);
+    let reactionAfter = _.cloneDeep(reaction);
     ExternalDataUtils.inheritLink(reactionAfter, server, story);
     return reactionAfter;
 }
@@ -464,10 +432,10 @@ function adjustReactionProperties(reaction, server, story) {
  * @return {Promise<Story|null>}
  */
 function findSourceStory(db, project, task) {
-    var schema = project.name;
-    var storyId = task.options.story_id;
-    var criteria = {
-        id: storyId,
+    let schema = project.name;
+    let storyID = task.options.story_id;
+    let criteria = {
+        id: storyID,
         deleted: false,
     };
     return Story.findOne(db, project.name, criteria, '*').then((story) => {
@@ -486,17 +454,16 @@ function findSourceStory(db, project, task) {
  *
  * @return {Promise<Repo|null>}
  */
-function findDestinationRepo(db, task) {
-    var repoId = task.options.repo_id;
-    if (!repoId) {
-        return Promise.resolve(null);
+async function findDestinationRepo(db, task) {
+    let repoID = task.options.repo_id;
+    if (!repoID) {
+        return null;
     }
-    return Repo.findOne(db, 'global', { id: repoId }, '*').then((repo) => {
-        if (!repo) {
-            throw new HTTPError(404, 'Repo not found');
-        }
-        return repo;
-    });
+    let repo = await Repo.findOne(db, 'global', { id: repoID }, '*');
+    if (!repo) {
+        throw new HTTPError(404, 'Repo not found');
+    }
+    return repo;
 }
 
 /**
@@ -507,22 +474,21 @@ function findDestinationRepo(db, task) {
  *
  * @return {Promise<Repo|null>}
  */
-function findCurrentRepo(db, story) {
-    var issueLink = findIssueLink(story);
+async function findCurrentRepo(db, story) {
+    let issueLink = findIssueLink(story);
     if (!issueLink) {
-        return Promise.resolve(null);
+        return null;
     }
-    var repoLink = _.omit(issueLink, 'issue');
-    var criteria = {
+    let repoLink = _.omit(issueLink, 'issue');
+    let criteria = {
         external_object: repoLink,
         deleted: false
     };
-    return Repo.findOne(db, 'global', criteria, '*').then((repo) => {
-        if (!repo) {
-            throw new HTTPError(404, 'Repo not found');
-        }
-        return repo;
-    });
+    let repo = await Repo.findOne(db, 'global', criteria, '*');
+    if (!repo) {
+        throw new HTTPError(404, 'Repo not found');
+    }
+    return repo;
 }
 
 /**
@@ -533,38 +499,36 @@ function findCurrentRepo(db, story) {
  *
  * @return {Promise<Server>}
  */
-function findRepoServer(db, repo) {
-    var repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
-    var criteria = {
+async function findRepoServer(db, repo) {
+    let repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+    let criteria = {
         id: repoLink.server_id,
         deleted: false
     };
-    return Server.findOne(db, 'global', criteria, '*').then((server) => {
-        if (!server) {
-            throw new HTTPError(404, 'Server not found');
-        }
-        if (server.disabled) {
-            throw new HTTPError(403, 'Server is disabled');
-        }
-        return server;
-    });
+    let server = await Server.findOne(db, 'global', criteria, '*');
+    if (!server) {
+        throw new HTTPError(404, 'Server not found');
+    }
+    if (server.disabled) {
+        throw new HTTPError(403, 'Server is disabled');
+    }
+    return server;
 }
 
-function findActingUser(db, task) {
-    var criteria = {
+async function findActingUser(db, task) {
+    let criteria = {
         id: task.user_id,
         deleted: false
     };
-    return User.findOne(db, 'global', criteria, '*').then((user) => {
-        if (!user) {
-            throw new HTTPError(404, 'User not found');
-        }
-        return user;
-    });
+    let user = await User.findOne(db, 'global', criteria, '*');
+    if (!user) {
+        throw new HTTPError(404, 'User not found');
+    }
+    return user;
 }
 
-function findAuthors(db, story) {
-    var criteria = {
+async function findAuthors(db, story) {
+    let criteria = {
         id: story.user_ids,
         deleted: false
     };
@@ -579,7 +543,7 @@ function findAuthors(db, story) {
  * @return {Object|null}
  */
 function findIssueLink(story) {
-    var link = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
+    let link = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
     if (!link || !link.issue) {
         return null
     }
@@ -594,7 +558,7 @@ function findIssueLink(story) {
  * @return {Object}
  */
 function findUserLink(user, server) {
-    var link = ExternalDataUtils.findLink(user, server);
+    let link = ExternalDataUtils.findLink(user, server);
     if (!link) {
         throw new HTTPError(403, 'User is not associated with a GitLab account')
     }
@@ -605,13 +569,13 @@ function findUserLink(user, server) {
  * Retrieve issue from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
+ * @param  {Number} glProjectID
  * @param  {Number} glIssueNumber
  *
- * @return {Object}
+ * @return {Promise<Object>}
  */
-function fetchIssue(server, glProjectId, glIssueNumber) {
-    var url = `/projects/${glProjectId}/issues/${glIssueNumber}`;
+async function fetchIssue(server, glProjectID, glIssueNumber) {
+    let url = `/projects/${glProjectID}/issues/${glIssueNumber}`;
     return Transport.fetch(server, url);
 }
 
@@ -619,16 +583,16 @@ function fetchIssue(server, glProjectId, glIssueNumber) {
  * Create or update an issue at Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
+ * @param  {Number} glProjectID
  * @param  {Number|undefined} glIssueNumber
  * @param  {Object} glIssue
- * @param  {Number} glUserId
+ * @param  {Number} glUserID
  *
- * @return {Promise}
+ * @return {Promise<Object>}
  */
-function saveIssue(server, glProjectId, glIssueNumber, glIssue, glUserId) {
-    var url = `/projects/${glProjectId}/issues`;
-    var props = {
+async function saveIssue(server, glProjectID, glIssueNumber, glIssue, glUserID) {
+    let url = `/projects/${glProjectID}/issues`;
+    let props = {
         title: glIssue.title,
         description: glIssue.description,
         state: glIssue.state,
@@ -637,9 +601,9 @@ function saveIssue(server, glProjectId, glIssueNumber, glIssue, glUserId) {
     };
     if (glIssueNumber) {
         url += `/${glIssueNumber}`;
-        return Transport.put(server, url, props, glUserId);
+        return Transport.put(server, url, props, glUserID);
     } else {
-        return Transport.post(server, url, props, glUserId);
+        return Transport.post(server, url, props, glUserID);
     }
 }
 
@@ -647,32 +611,32 @@ function saveIssue(server, glProjectId, glIssueNumber, glIssue, glUserId) {
  * Delete issue at Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
+ * @param  {Number} glProjectID
  * @param  {Number} glIssueNumber
- * @param  {Number} glUserId
+ * @param  {Number} glUserID
  *
- * @return {Object}
+ * @return {Promise}
  */
-function removeIssue(server, glProjectId, glIssueNumber, glUserId) {
-    var url = `/projects/${glProjectId}/issues/${glIssueNumber}`;
-    return Transport.remove(server, url, glUserId);
+async function removeIssue(server, glProjectID, glIssueNumber, glUserID) {
+    let url = `/projects/${glProjectID}/issues/${glIssueNumber}`;
+    return Transport.remove(server, url, glUserID);
 }
 
 /**
  * Move an issue at Gitlab from one project to another
  *
  * @param  {Server} server
- * @param  {Number} glSrcProjectId
+ * @param  {Number} glSrcProjectID
  * @param  {Number} glSrcIssueNumber
- * @param  {Number} glDstProjectId
- * @param  {Number} glUserId
+ * @param  {Number} glDstProjectID
+ * @param  {Number} glUserID
  *
- * @return {Object}
+ * @return {Promise<Object>}
  */
-function moveIssue(server, glSrcProjectId, glSrcIssueNumber, glDstProjectId, glUserId) {
-    var url = `/projects/${glSrcProjectId}/issues/${glSrcIssueNumber}/move`;
-    var props = { to_project_id: glDstProjectId };
-    return Transport.post(server, url, props, glUserId);
+async function moveIssue(server, glSrcProjectID, glSrcIssueNumber, glDstProjectID, glUserID) {
+    let url = `/projects/${glSrcProjectID}/issues/${glSrcIssueNumber}/move`;
+    let props = { to_project_id: glDstProjectID };
+    return Transport.post(server, url, props, glUserID);
 }
 
 export {
