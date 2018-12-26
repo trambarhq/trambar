@@ -31,7 +31,7 @@ class PhotoCaptureDialogBoxBrowser extends PureComponent {
             liveVideoWidth: 640,
             liveVideoHeight: 480,
             capturedImage: null,
-            selectedDeviceID: (preferredDevice) ? preferredDevice.deviceID : null,
+            selectedDeviceID: (preferredDevice) ? preferredDevice.deviceId : null,
         };
     }
 
@@ -315,7 +315,7 @@ class PhotoCaptureDialogBoxBrowser extends PureComponent {
         }
         if (env.devices !== prevProps.env.devices) {
             if (selectedDeviceID) {
-                if (!_.some(env.devices, { deviceID: selectedDeviceID })) {
+                if (!_.some(env.devices, { deviceId: selectedDeviceID })) {
                     // reinitialize the camera when the one we were using disappears
                     this.setState({ selectedDeviceID: null }, () => {
                         this.reinitializeCamera();

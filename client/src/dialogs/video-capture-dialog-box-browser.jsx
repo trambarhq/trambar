@@ -35,7 +35,7 @@ class VideoCaptureDialogBoxBrowser extends PureComponent {
             capturedVideo: null,
             capturedImage: null,
             previewURL: null,
-            selectedDeviceID: (preferredDevice) ? preferredDevice.deviceID : null,
+            selectedDeviceID: (preferredDevice) ? preferredDevice.deviceId : null,
             startTime: null,
             duration: 0,
         };

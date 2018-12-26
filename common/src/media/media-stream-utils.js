@@ -24,7 +24,7 @@ function getAudioStream() {
 function getVideoStream(deviceID) {
     return Promise.try(() => {
         let constraints = {
-            video: (deviceID) ? { deviceID } : true,
+            video: (deviceID) ? { deviceId: deviceID } : true,
             audio: true
         };
         return navigator.mediaDevices.getUserMedia(constraints);
@@ -41,7 +41,7 @@ function getVideoStream(deviceID) {
 function getSilentVideoStream(deviceID) {
     return Promise.try(() => {
         let constraints = {
-            video: (deviceID) ? { deviceID } : true
+            video: (deviceID) ? { deviceId: deviceID } : true
         };
         return navigator.mediaDevices.getUserMedia(constraints);
     });

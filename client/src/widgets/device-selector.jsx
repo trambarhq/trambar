@@ -36,8 +36,8 @@ function DeviceSelector(props) {
             label = t('device-selector-mic-$number', index + 1);
         }
         let optionProps = {
-            value: device.deviceID,
-            selected: device.deviceID === props.selectedDeviceID,
+            value: device.deviceId,
+            selected: device.deviceId === props.selectedDeviceID,
         };
         return <option key={index} {...optionProps}>{label}</option>;
     });
@@ -61,7 +61,7 @@ function DeviceSelector(props) {
  */
 DeviceSelector.choose = function(devices, type, descriptor) {
     return _.find(devices, (device) => {
-        if (type === 'video' && device.kind === 'videoinput') {            
+        if (type === 'video' && device.kind === 'videoinput') {
             if (descriptor === 'front') {
                 return /front/i.test(device.label);
             } else if (descriptor === 'back') {
