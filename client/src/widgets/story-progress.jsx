@@ -1,4 +1,5 @@
 import React from 'react';
+import Moment from 'moment';
 import * as StoryUtils from 'objects/utils/story-utils';
 
 // widgets
@@ -26,9 +27,21 @@ function StoryProgress(props) {
             contents = <Time time={story.ptime} env={env} />;
             if (pending) {
                 // story has not made it into listings yet
+                let spinnerStyle = {};
+                let now = Moment();
+                let ptime = Moment(story.ptime);
+                // give story ten seconds to show up before we show the spinner
+                let delay = 10000 - (now - ptime);
+                if (delay > 0) {
+                    spinnerStyle.animationDelay = (delay / 1000) + 's';
+                }
                 contents = (
                     <span>
-                        {contents} <i className="fa fa-spinner fa-pulse" />
+                        {contents}
+                        {' '}
+                        <span className="spinner" style={spinnerStyle}>
+                            <i className="fa fa-spinner fa-pulse" />
+                        </span>
                     </span>
                 );
             }

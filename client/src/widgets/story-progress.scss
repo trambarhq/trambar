@@ -5,8 +5,17 @@
     font-size: 0.9em;
     margin-left: 3.75em;
 
-    .fa-spinner {
-        opacity: 0.5;
+    .spinner {
+        opacity: 0;
         margin-left: 0.1em;
+        animation-name: fade-in;
+        animation-duration: 0.5s;
+        animation-iteration-count: 1;
+        animation-fill-mode: forwards;
+        
+        @keyframes fade-in {
+            0%   { opacity: 0; }
+            100% { opacity: 0.5; }
+        }
     }
 }
