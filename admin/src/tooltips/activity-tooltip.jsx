@@ -29,6 +29,10 @@ class ActivityTooltip extends PureComponent {
         if (!statistics) {
             return null;
         }
+        if (statistics.total === 0 && statistics.dirty) {
+            // don't show 0 when stats are in the process of being generated
+            return null;
+        }
         let label = t('activity-tooltip-$count', statistics.total);
         if (statistics.total === undefined) {
             label = '-';

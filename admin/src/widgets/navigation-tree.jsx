@@ -439,6 +439,11 @@ class NavigationTreeSync extends PureComponent {
         this.arrowRepositioningInterval = setInterval(() => {
             let { arrowPosition } = this.state;
             let { arrow, container } = this.components;
+            if (!container) {
+                // just in case something's wrong
+                clearInterval(this.arrowRepositioningInterval);
+                return;
+            }
             let links = container.getElementsByTagName('A');
             let activeLink = _.find(links, (link) => {
                 var url = route.url;
