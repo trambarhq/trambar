@@ -111,10 +111,10 @@ class PeoplePage extends AsyncComponent {
             // find users with stories using stats
             let users;
             if (date) {
-                users = findUsersWithActivitiesOnDate(props.members, statistics, date);
+                users = findUsersWithActivitiesOnDate(props.members, props.dailyActivities, date);
             } else if (search) {
                 if (tags) {
-                    users = findUsersWithStoriesWithTags(props.members, statistics, tags);
+                    users = findUsersWithStoriesWithTags(props.members, props.dailyActivities, tags);
                 }
             }
             if (users) {

@@ -373,12 +373,11 @@ class ReactionView extends PureComponent {
      *
      * @return {Promise<Reaction>}
      */
-    saveReaction(reaction) {
+    async saveReaction(reaction) {
         let { database } = this.props;
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.saveOne({ table: 'reaction' }, reaction);
-        });
+        let currentUserID = await db.start();
+        return db.saveOne({ table: 'reaction' }, reaction);
     }
 
     /**
@@ -388,9 +387,10 @@ class ReactionView extends PureComponent {
      *
      * @return {Promise<Reaction>}
      */
-    removeReaction(reaction) {
+    async removeReaction(reaction) {
         let { database } = this.props;
         let db = database.use({ by: this });
+        let currentUserID = await db.start();
         return db.removeOne({ table: 'reaction' }, reaction);
     }
 

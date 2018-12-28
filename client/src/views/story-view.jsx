@@ -567,7 +567,7 @@ class StoryView extends PureComponent {
      *
      * @return {Promise<Story>}
      */
-    saveStory(story, immediate) {
+    async saveStory(story, immediate) {
         let { database } = this.props;
         let { options } = this.state;
         let saveOptions = {
@@ -581,20 +581,16 @@ class StoryView extends PureComponent {
             },
         };
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            let newStory = !StoryUtils.isSaved(story);
-            let bookmarkRecipients = options.bookmarkRecipients;
-            return db.saveOne({ table: 'story' }, story, saveOptions).then((story) => {
-                if (newStory && !_.isEmpty(bookmarkRecipients)) {
-                    // bookmarks were added after the story was published but
-                    // not yet saved
-                    return this.sendBookmarks(story, bookmarkRecipients).then((bookmarks) => {
-                        return story;
-                    });
-                }
-                return story
-            });
-        });
+        let currentUserID = await db.start();
+        let newStory = !StoryUtils.isSaved(story);
+        let bookmarkRecipients = options.bookmarkRecipients;
+        let storyAfter = await db.saveOne({ table: 'story' }, story, saveOptions);
+        if (newStory && !_.isEmpty(bookmarkRecipients)) {
+            // bookmarks were added after the story was published but
+            // not yet saved
+            let bookmarks = await this.sendBookmarks(storyAfter, bookmarkRecipients);
+        }
+        return storyAfter;
     }
 
     /**
@@ -617,12 +613,11 @@ class StoryView extends PureComponent {
      *
      * @return {Promise<Reaction>}
      */
-    saveReaction(reaction) {
+    async saveReaction(reaction) {
         let { database } = this.props;
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.saveOne({ table: 'reaction' }, reaction);
-        });
+        let currentUserID = await db.start();
+        return db.saveOne({ table: 'reaction' }, reaction);
     }
 
     /**
@@ -632,12 +627,11 @@ class StoryView extends PureComponent {
      *
      * @return {Promise<Reaction>}
      */
-    removeReaction(reaction) {
+    async removeReaction(reaction) {
         let { database } = this.props;
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.removeOne({ table: 'reaction' }, reaction);
-        });
+        let currentUserID = await db.start();
+        return db.removeOne({ table: 'reaction' }, reaction);
     }
 
     /**
@@ -647,15 +641,14 @@ class StoryView extends PureComponent {
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    saveBookmarks(bookmarks) {
+    async saveBookmarks(bookmarks) {
         let { database } = this.props;
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.save({ table: 'bookmark' }, bookmarks);
-        });
+        let currentUserID = await db.start();
+        return db.save({ table: 'bookmark' }, bookmarks);
     }
 
     /**
@@ -665,15 +658,14 @@ class StoryView extends PureComponent {
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    removeBookmarks(bookmarks) {
+    async removeBookmarks(bookmarks) {
         let { database } = this.props;
         if (_.isEmpty(bookmarks)) {
             return Promise.resolve([]);
         }
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.remove({ table: 'bookmark' }, bookmarks);
-        });
+        let currentUserID = await db.start();
+        return db.remove({ table: 'bookmark' }, bookmarks);
     }
 
     /**
@@ -683,11 +675,12 @@ class StoryView extends PureComponent {
      *
      * @return {Promise<Bookmark>}
      */
-    hideBookmark(bookmark) {
+    async hideBookmark(bookmark) {
         let { database } = this.props;
         let db = database.use({ by: this });
         let bookmarkAfter = _.clone(bookmark);
         bookmarkAfter.hidden = true;
+        let currentUserID = await db.start();
         return db.saveOne({ table: 'bookmark' }, bookmarkAfter);
     }
 
@@ -699,11 +692,11 @@ class StoryView extends PureComponent {
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    sendBookmarks(story, recipientIds) {
+    async sendBookmarks(story, recipientIds) {
         let { database, recommendations, currentUser } = this.props;
         let newBookmarks = [];
         // add bookmarks that don't exist yet
-        _.each(recipientIds, (recipientId) => {
+        for (let recipientId of recipientIds) {
             if (!_.some(recommendations, { target_user_id: recipientId })) {
                 let newBookmark = {
                     story_id: story.published_version_id || story.id,
@@ -712,20 +705,18 @@ class StoryView extends PureComponent {
                 };
                 newBookmarks.push(newBookmark);
             }
-        });
+        }
         // delete bookmarks that aren't needed anymore
         // the backend will handle the fact a bookmark can belong to multiple users
         let redundantBookmarks = [];
-        _.each(recommendations, (bookmark) => {
+        for (let bookmark of recommendations) {
             if (!_.includes(recipientIds, bookmark.target_user_id)) {
                 redundantBookmarks.push(bookmark);
             }
-        });
-        return this.saveBookmarks(newBookmarks).then((newBookmarks) => {
-            return this.removeBookmarks(redundantBookmarks).then((redundantBookmarks) => {
-                return _.concat(newBookmarks, redundantBookmarks);
-            });
-        });
+        }
+        let newBookmarksAfter = await this.saveBookmarks(newBookmarks);
+        let redundantBookmarksAfter = await this.removeBookmarks(redundantBookmarks);
+        return _.concat(newBookmarks, redundantBookmarks);
     }
 
     /**
@@ -736,7 +727,7 @@ class StoryView extends PureComponent {
      *
      * @return {Promise<Task>}
      */
-    sendTask(action, options) {
+    async sendTask(action, options) {
         let { database, currentUser } = this.props;
         let task = {
             action,
@@ -745,9 +736,8 @@ class StoryView extends PureComponent {
             token: RandomToken.generate(),
         };
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.saveOne({ table: 'task' }, task);
-        });
+        let currentUserID = await db.start();
+        return db.saveOne({ table: 'task' }, task);
     }
 
     /**
