@@ -90,8 +90,9 @@ const phrases = {
 
     'empty-currently-offline': 'Du er frakoblet',
 
+    'image-editor-image-transfer-in-progress': 'Kopierer bilde fra web-side...',
     'image-editor-page-rendering-in-progress': 'Gjengir forhåndsvisning av nettsiden...',
-    'image-editor-poster-extraction-in-progress': 'Extracting forhåndsvisning fra video...',
+    'image-editor-poster-extraction-in-progress': 'Trekker ut forhåndsvisning fra video...',
     'image-editor-upload-in-progress': 'Opplasting pågår...',
 
     'issue-cancel': 'Avbryt',

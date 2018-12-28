@@ -196,7 +196,7 @@ module.exports = {
             version: env.VERSION,
         }),
         new ExtractTextPlugin({
-            filename: 'styles.css',
+            filename: 'styles.css?[hash]',
             allChunks: true,
         }),
         // pull library code out of app chunk and into their own files

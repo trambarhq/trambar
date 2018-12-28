@@ -118,6 +118,7 @@ let americanPhrases = {
 
     'empty-currently-offline': 'You are currently offline',
 
+    'image-editor-image-transfer-in-progress': 'Copying image from web-site...',
     'image-editor-page-rendering-in-progress': 'Rendering web-site preview...',
     'image-editor-poster-extraction-in-progress': 'Extracting preview from video...',
     'image-editor-upload-in-progress': 'Upload in progress...',

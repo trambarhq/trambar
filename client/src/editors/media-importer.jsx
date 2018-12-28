@@ -262,20 +262,18 @@ class MediaImporter extends PureComponent {
         let { payloads } = this.props;
         return retrieveDataItemTexts(items).then((strings) => {
             let html = strings['text/html'];
-            let url = strings['text/uri-list'];
-            if (url) {
-                // see if it's an image being dropped
-                let type = /<img\b/i.test(html) ? 'image' : 'website';
-                if (this.isAcceptable(type)) {
-                    if (type === 'image') {
-                        let filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
-                        let payload = payloads.add('image').attachURL(url);
-                        return {
-                            type: 'image',
-                            payload_token: payload.id,
-                            filename: filename,
-                        };
-                    }
+            // see if it's an image being dropped
+            if (/<img\b/i.test(html) && this.isAcceptable('image')) {
+                let m = /<img\b.*?\bsrc="(.*?)"/.exec(html);
+                if (m) {
+                    let url = _.unescape(m[1]);
+                    let filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
+                    let payload = payloads.add('image').attachURL(url);
+                    return {
+                        type: 'image',
+                        payload_token: payload.id,
+                        filename: filename,
+                    };
                 }
             }
         }).then((res) => {

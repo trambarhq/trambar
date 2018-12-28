@@ -92,6 +92,7 @@ const phrases = {
 
     'empty-currently-offline': 'Sie sind derzeit offline',
 
+    'image-editor-image-transfer-in-progress': 'Bild von der Website kopieren...',
     'image-editor-page-rendering-in-progress': 'Website-Vorschau wird gerendert...',
     'image-editor-poster-extraction-in-progress': 'Vorschau wird aus dem Video extrahiert...',
     'image-editor-upload-in-progress': 'Datei wird hochgeladen...',

@@ -95,6 +95,7 @@ let phrases = {
 
     'empty-currently-offline': 'Momentálně jste offline',
 
+    'image-editor-image-transfer-in-progress': 'Kopírování obrázku z webové stránky...',
     'image-editor-page-rendering-in-progress': 'Vykreslení náhledu webové stránky...',
     'image-editor-poster-extraction-in-progress': 'Extrahování náhledu z videa...',
     'image-editor-upload-in-progress': 'Nahrávání probíhá...',

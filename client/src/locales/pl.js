@@ -103,6 +103,7 @@ const phrases = {
 
     'empty-currently-offline': 'Jesteś odłączony od sieci',
 
+    'image-editor-image-transfer-in-progress': 'Kopiowanie obrazu ze strony internetowej...',
     'image-editor-page-rendering-in-progress': 'Renderowanie podglądu strony internetowej...',
     'image-editor-poster-extraction-in-progress': 'Wyodrębnianie podglądu z wideo...',
     'image-editor-upload-in-progress': 'Przesyłanie w toku...',
