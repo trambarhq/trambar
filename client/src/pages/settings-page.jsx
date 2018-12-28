@@ -43,53 +43,27 @@ class SettingsPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, payloads, env } = this.props;
         let db = database.use({ by: this });
         let props = {
-            currentUser: undefined,
-            currentProject: undefined,
-            projectLinks: undefined,
-            repos: undefined,
-            devices: undefined,
-            system: undefined,
-
             database,
             payloads,
             route,
             env,
         };
         meanwhile.show(<SettingsPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return UserFinder.findUser(db, currentUserID).then((user) => {
-                props.currentUser = user;
-            });
-        }).then(() => {
-            return ProjectLinkFinder.findActiveLinks(db).then((links) => {
-                props.projectLinks = links;
-            });
-        }).then(() => {
-            return ProjectFinder.findCurrentProject(db).then((project) => {
-                props.currentProject = project;
-            });
-        }).then(() => {
-            meanwhile.show(<SettingsPageSync {...props} />);
-            return DeviceFinder.findUserDevices(db, props.currentUser, 1).then((devices) => {
-                props.devices = devices;
-            });
-        }).then(() => {
-            meanwhile.show(<SettingsPageSync {...props} />);
-            return RepoFinder.findProjectRepos(db, props.currentProject).then((repos) => {
-                props.repos = repos;
-            })
-        }).then(() => {
-            meanwhile.show(<SettingsPageSync {...props} />);
-            return SystemFinder.findSystem(db).then((system) => {
-                props.system = system;
-            });
-        }).then(() => {
-            return <SettingsPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.currentUser = await UserFinder.findUser(db, currentUserID);
+        props.projectLinks = await ProjectLinkFinder.findActiveLinks(db);
+        props.currentProject = await ProjectFinder.findCurrentProject(db);
+        meanwhile.show(<SettingsPageSync {...props} />);
+        props.devices = await DeviceFinder.findUserDevices(db, props.currentUser, 1);
+        meanwhile.show(<SettingsPageSync {...props} />);
+        props.repos = await RepoFinder.findProjectRepos(db, props.currentProject);
+        meanwhile.show(<SettingsPageSync {...props} />);
+        props.system = await SystemFinder.findSystem(db);
+        return <SettingsPageSync {...props} />;
     }
 }
 
@@ -351,7 +325,7 @@ class SettingsPageSync extends PureComponent {
      *
      * @return {Promise<User>}
      */
-    saveUser(user, immediate) {
+    async saveUser(user, immediate) {
         let { database, payloads } = this.props;
         let { original } = this.state;
         let options = {
@@ -365,11 +339,10 @@ class SettingsPageSync extends PureComponent {
             },
         };
         let db = database.use({ schema: 'global', by: this });
-        return db.saveOne({ table: 'user' }, user, options).then((user) => {
-            // start file upload
-            payloads.dispatch(user);
-            return user;
-        });
+        let userAfter = await db.saveOne({ table: 'user' }, user, options);
+        // start file upload
+        payloads.dispatch(userAfter);
+        return userAfter;
     }
 
     /**

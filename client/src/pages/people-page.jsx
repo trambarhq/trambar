@@ -36,7 +36,7 @@ class PeoplePage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let {
             database,
             route,
@@ -58,13 +58,6 @@ class PeoplePage extends AsyncComponent {
             }
         }
         let props = {
-            project: undefined,
-            members: undefined,
-            stories: undefined,
-            currentUser: undefined,
-            selectedUser: undefined,
-            visibleUsers: undefined,
-
             date,
             roleIDs,
             search,
@@ -80,179 +73,139 @@ class PeoplePage extends AsyncComponent {
         // wait for retrieval of fresh story listing on initial render
         let freshListing = meanwhile.revising() ? false : true;
         meanwhile.show(<PeoplePageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return UserFinder.findUser(db, currentUserID).then((user) => {
-                props.currentUser = user;
-            });
-        }).then(() => {
-            return ProjectFinder.findCurrentProject(db).then((project) => {
-                props.project = project;
-            });
-        }).then((project) => {
-            return UserFinder.findProjectMembers(db, props.project).then((users) => {
-                props.members = users;
-                if (selectedUserID) {
-                    // find the selected user
-                    let user = _.find(users, { id: selectedUserID });
-                    if (user) {
-                        props.selectedUser = user;
-                        props.visibleUsers = [ user ];
-                    } else {
-                        // not on the member list
-                        return UserFinder.findUser(db, selectedUserID).then((user) => {
-                            props.selectedUser = user;
-                            props.visibleUsers = [ user ];
-                        });
-                    }
-                } else {
-                    // if we're not searching for stories, then we know which
-                    // users to list at this point
-                    if (!(search || date)) {
-                        if (!_.isEmpty(roleIDs)) {
-                            // show users with roles
-                            props.visibleUsers = findUsersWithRoles(users, roleIDs);
-                        } else {
-                            // all project members are shown
-                            props.visibleUsers = users;
-                        }
-                    }
-                }
-            });
-        }).then(() => {
-            if (env.isWiderThan('double-col')) {
-                // don't render without stats in single-column mode, since
-                // that affects the height of the view
-                meanwhile.show(<PeoplePageSync {...props} />);
+        let currentUserID = await db.start();
+        props.currentUser = await UserFinder.findUser(db, currentUserID);
+        props.project = await ProjectFinder.findCurrentProject(db);
+        props.members = await UserFinder.findProjectMembers(db, props.project);
+        if (selectedUserID) {
+            // find the selected user
+            let user = _.find(props.members, { id: selectedUserID });
+            if (!user) {
+                // not on the member list
+                user = await UserFinder.findUser(db, selectedUserID);
             }
-            let publicOnly = (props.currentUser.type === 'guest');
-            return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, props.members, publicOnly).then((statistics) => {
-                props.dailyActivities = statistics;
-                if (!props.visibleUsers) {
-                    // find users with stories using stats
-                    let users;
-                    if (date) {
-                        users = findUsersWithActivitiesOnDate(props.members, statistics, date);
-                    } else if (search) {
-                        if (tags) {
-                            users = findUsersWithStoriesWithTags(props.members, statistics, tags);
-                        }
-                    }
-                    if (users) {
-                        if (!_.isEmpty(roleIDs)) {
-                            props.visibleUsers = findUsersWithRoles(users, roleIDs);
-                        } else {
-                            props.visibleUsers = users;
-                        }
-                    }
-                } else if (props.selectedUser) {
-                    // load statistics of selected user if he's not a member
-                    if (!_.some(props.members, { id: props.selectedUser })) {
-                        return StatisticsFinder.findDailyActivitiesOfUser(db, props.project, props.selectedUser, publicOnly).then((selectedUserStats) => {
-                            _.set(props.dailyActivities, props.selectedUser.id, selectedUserStats);
-                        });
-                    }
+            props.selectedUser = user;
+            props.visibleUsers = [ user ];
+        } else {
+            // if we're not searching for stories, then we know which
+            // users to list at this point
+            if (!(search || date)) {
+                if (!_.isEmpty(roleIDs)) {
+                    // show users with roles
+                    props.visibleUsers = findUsersWithRoles(props.members, roleIDs);
+                } else {
+                    // all project members are shown
+                    props.visibleUsers = props.members;
                 }
-            });
-        }).then(() => {
-            // force progress update initially to avoid flicking
-            meanwhile.show(<PeoplePageSync {...props} />, 'initial');
+            }
+        }
+        if (env.isWiderThan('double-col')) {
+            // don't render without stats in single-column mode, since
+            // that affects the height of the view
+            meanwhile.show(<PeoplePageSync {...props} />);
+        }
+        let publicOnly = (props.currentUser.type === 'guest');
+        props.dailyActivities = await StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, props.members, publicOnly);
+
+        if (!props.visibleUsers) {
+            // find users with stories using stats
+            let users;
+            if (date) {
+                users = findUsersWithActivitiesOnDate(props.members, statistics, date);
+            } else if (search) {
+                if (tags) {
+                    users = findUsersWithStoriesWithTags(props.members, statistics, tags);
+                }
+            }
+            if (users) {
+                if (!_.isEmpty(roleIDs)) {
+                    props.visibleUsers = findUsersWithRoles(users, roleIDs);
+                } else {
+                    props.visibleUsers = users;
+                }
+            }
+        } else if (props.selectedUser) {
+            // load statistics of selected user if he's not a member
+            if (!_.some(props.members, { id: props.selectedUser })) {
+                let selectedUserStats = await StatisticsFinder.findDailyActivitiesOfUser(db, props.project, props.selectedUser, publicOnly);
+                _.set(props.dailyActivities, props.selectedUser.id, selectedUserStats);
+            }
+        }
+
+        // force progress update initially to avoid flicking
+        meanwhile.show(<PeoplePageSync {...props} />, 'initial');
+        if (search) {
+            if (tags) {
+                props.stories = await StoryFinder.findStoriesWithTags(db, tags, 5);
+            } else {
+                props.stories = await StoryFinder.findStoriesMatchingText(db, search, env, 5);
+            }
+        } else if (date) {
+            props.stories = await StoryFinder.findStoriesOnDate(db, date, 5);
+            if (!props.selectedUser) {
+                // we have used stats to narrow down the user list earlier; do
+                // it again based on the story list in case we got an incomplete
+                // list due to out-of-date stats
+                props.visibleUsers = null;
+            }
+        } else {
+            props.stories = await StoryFinder.findStoriesByUsersInListings(db, 'news', props.visibleUsers, props.currentUser, 5, freshListing);
+        }
+        if (!props.visibleUsers) {
+            // now that we have the stories, we can see whom should be shown
+            props.visibleUsers = findUsersWithStories(props.members, props.stories);
+        }
+        meanwhile.show(<PeoplePageSync {...props} />);
+        if (props.selectedUser) {
+            // load stories of selected user
             if (search) {
                 if (tags) {
-                    return StoryFinder.findStoriesWithTags(db, tags, 5).then((stories) => {
-                        props.stories = stories;
-                        if (!props.selectedUser) {
-                            // now that we have the stories, we can see whom should be shown
-                            props.visibleUsers = findUsersWithStories(props.members, stories);
-                        }
-                    });
+                    props.selectedUserStories = await StoryFinder.findStoriesByUserWithTags(db, props.selectedUser, tags);
                 } else {
-                    return StoryFinder.findStoriesMatchingText(db, search, env, 5).then((stories) => {
-                        props.stories = stories;
-                        if (!props.selectedUser) {
-                            // now that we have the stories, we can see whom should be shown
-                            props.visibleUsers = findUsersWithStories(props.members, stories);
-                        }
-                    });
+                    props.selectedUserStories = await StoryFinder.findStoriesByUserMatchingText(db, props.selectedUser, search, env);
                 }
             } else if (date) {
-                return StoryFinder.findStoriesOnDate(db, date, 5).then((stories) => {
-                    props.stories = stories;
-                    if (!props.selectedUser) {
-                        // do this for date search as well, even through
-                        // we use stats to narrow down the list earlier, just in
-                        // case we got an incomplete list due to out-of-date stats
-                        props.visibleUsers = findUsersWithStories(props.members, stories);
-                    }
-                })
+                props.selectedUserStories = await StoryFinder.findStoriesByUserOnDate(db, props.selectedUser, date);
             } else {
-                return StoryFinder.findStoriesByUsersInListings(db, 'news', props.visibleUsers, props.currentUser, 5, freshListing).then((stories) => {
-                    props.stories = stories;
-                });
+                props.selectedUserStories = await StoryFinder.findStoriesByUserInListing(db, 'news', props.selectedUser, props.currentUser, freshListing);
             }
-        }).then(() => {
-            meanwhile.show(<PeoplePageSync {...props} />);
-            if (props.selectedUser) {
-                // load stories of selected user
-                if (search) {
-                    if (tags) {
-                        return StoryFinder.findStoriesByUserWithTags(db, props.selectedUser, tags).then((stories) => {
-                            props.selectedUserStories = stories;
-                        });
+        } else {
+            // deal with situation where we're showing stories by someone
+            // who're not on the team (only when we're searching for stories)
+            if (search || date) {
+                let authorIDs = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
+                let memberIDs = _.map(props.members, 'id');
+                let nonMemberUserIDs = _.difference(authorIDs, memberIDs);
+                let publicOnly = (props.currentUser.type === 'guest');
+                if (!_.isEmpty(nonMemberUserIDs)) {
+                    let users = await UserFinder.findUsers(db, nonMemberUserIDs);
+                    // add non-members
+                    if (props.visibleUsers) {
+                        props.visibleUsers = _.concat(props.visibleUsers, users);
                     } else {
-                        return StoryFinder.findStoriesByUserMatchingText(db, props.selectedUser, search, env).then((stories) => {
-                            props.selectedUserStories = stories;
-                        });
+                        props.visibleUsers = users;
                     }
-                } else if (date) {
-                    return StoryFinder.findStoriesByUserOnDate(db, props.selectedUser, date).then((stories) => {
-                        props.selectedUserStories = stories;
-                    });
-                } else {
-                    return StoryFinder.findStoriesByUserInListing(db, 'news', props.selectedUser, props.currentUser, freshListing).then((stories) => {
-                        props.selectedUserStories = stories;
-                    });
+                    meanwhile.show(<PeoplePageSync {...props} />);
+                    let nonMemberStats = await StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, users, publicOnly);
+                    props.dailyActivities = _.assign({}, props.dailyActivities, stats);
                 }
-            } else {
-                // deal with situation where we're showing stories by someone
-                // who're not on the team (only when we're searching for stories)
-                if (search || date) {
-                    let authorIDs = _.uniq(_.flatten(_.map(props.stories, 'user_ids')));
-                    let memberIDs = _.map(props.members, 'id');
-                    let nonMemberUserIDs = _.difference(authorIDs, memberIDs);
-                    let publicOnly = (props.currentUser.type === 'guest');
-                    if (!_.isEmpty(nonMemberUserIDs)) {
-                        return UserFinder.findUsers(db, nonMemberUserIDs).then((users) => {
-                            // add non-members
-                            if (props.visibleUsers) {
-                                props.visibleUsers = _.concat(props.visibleUsers, users);
-                            } else {
-                                props.visibleUsers = users;
-                            }
-                            meanwhile.show(<PeoplePageSync {...props} />);
-                            return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, users, publicOnly).then((stats) => {
-                                // add their stats
-                                props.dailyActivities = _.assign({}, props.dailyActivities, stats);
-                            });
-                        });
+            }
+        }
+
+        // when we're highlighting a story, make sure the story is actually there
+        if (!date) {
+            if (highlightStoryID) {
+                let allStories = props.selectedUserStories;
+                if (!_.find(allStories, { id: highlightStoryID })) {
+                    try {
+                        let story = await StoryFinder.findStory(db, highlightStoryID);
+                        await this.redirectToStory(story);
+                    } catch (err) {
                     }
                 }
             }
-        }).then(() => {
-            // when we're highlighting a story, make sure the story is actually there
-            if (!date) {
-                if (highlightStoryID) {
-                    let allStories = props.selectedUserStories;
-                    if (!_.find(allStories, { id: highlightStoryID })) {
-                        return StoryFinder.findStory(db, highlightStoryID).then((story) => {
-                            return this.redirectToStory(story);
-                        }).catch((err) => {
-                        });
-                    }
-                }
-            }
-        }).then(() => {
-            return <PeoplePageSync {...props} />;
-        });
+        }
+        return <PeoplePageSync {...props} />;
     }
 
     /**
