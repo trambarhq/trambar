@@ -1,32 +1,26 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import HTTPError from 'errors/http-error';
-import Data from 'accessors/data';
+import { Data } from 'accessors/data';
 import Task from 'accessors/task';
 import Repo from 'accessors/repo';
 
-const Server = _.create(Data, {
-    schema: 'global',
-    table: 'server',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        type: String,
-        name: String,
-        disabled: Boolean,
-        settings: Object,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        type: String,
-        name: String,
-        disabled: Boolean,
-    },
+class Server extends Data {
+    constructor() {
+        super();
+        this.schema = 'global';
+        this.table = 'server';
+        _.extend(this.columns, {
+            type: String,
+            name: String,
+            disabled: Boolean,
+            settings: Object,
+        });
+        _.extend(this.criteria, {
+            type: String,
+            name: String,
+            disabled: Boolean,
+        });
+    }
 
     /**
      * Create table in schema
@@ -34,11 +28,11 @@ const Server = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -54,8 +48,8 @@ const Server = _.create(Data, {
             );
             CREATE UNIQUE INDEX ON ${table} (name) WHERE deleted = false;
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Grant privileges to table to appropriate Postgres users
@@ -63,17 +57,17 @@ const Server = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    grant: function(db, schema) {
-        var table = this.getTableName(schema);
+    async grant(db, schema) {
+        let table = this.getTableName(schema);
         // Auth Manager needs to be able to update a server's OAuth tokens
-        var sql = `
+        let sql = `
             GRANT SELECT, UPDATE ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -81,17 +75,18 @@ const Server = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'disabled', 'type' ];
-            return this.createNotificationTriggers(db, schema, propNames).then(() => {
-                // completion of tasks will automatically update details->resources
-                return Task.createUpdateTrigger(db, schema, 'updateServer', 'updateResource', [ this.table ]);
-            });
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'disabled',
+            'type'
+        ]);
+        // completion of tasks will automatically update details->resources
+        await Task.createUpdateTrigger(db, schema, 'updateServer', 'updateResource', [ this.table ]);
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -103,55 +98,53 @@ const Server = _.create(Data, {
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array<Object>>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.type = row.type;
-                object.name = row.name;
-                if (credentials.unrestricted || process.env.ADMIN_GUEST_MODE) {
-                    object.settings = _.obscure(row.settings, sensitiveSettings);
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            object.type = row.type;
+            object.name = row.name;
+            if (credentials.unrestricted || process.env.ADMIN_GUEST_MODE) {
+                object.settings = _.obscure(row.settings, sensitiveSettings);
+                object.disabled = row.disabled;
+            } else {
+                if (row.disabled) {
                     object.disabled = row.disabled;
-                } else {
-                    if (row.disabled) {
-                        object.disabled = row.disabled;
-                    }
                 }
-            });
-            return objects;
-        });
-    },
+            }
+        }
+        return objects;
+    }
 
     /**
-     * Import objects sent by client-side code, applying access control
+     * Import object sent by client-side code
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
+     * @param  {Object} serverReceived
+     * @param  {Object} serverBefore
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Array>}
+     * @return {Promise<Object>}
      */
-    import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials, options).mapSeries((serverReceived, index) => {
-            var serverBefore = originals[index];
-            if (serverReceived.settings instanceof Object) {
-                _.each(sensitiveSettings, (path) => {
-                    // restore the original values if these fields are all x's
-                    var value = _.get(serverReceived.settings, path);
-                    if (/^x+$/.test(value)) {
-                        var originalValue = _.get(serverBefore.settings, path);
-                        _.set(serverReceived.settings, path, originalValue);
-                    }
-                });
+    async importOne(db, schema, serverReceived, serverBefore, credentials, options) {
+        let row = await super.import(db, schema, objects, originals, credentials, options);
+        if (serverReceived.settings instanceof Object) {
+            for (let path of sensitiveSettings) {
+                // restore the original values if these fields are all x's
+                let value = _.get(serverReceived.settings, path);
+                if (/^x+$/.test(value)) {
+                    let originalValue = _.get(serverBefore.settings, path);
+                    _.set(serverReceived.settings, path, originalValue);
+                }
             }
-            return this.ensureUniqueName(db, schema, serverBefore, serverReceived);
-        });
-    },
+        }
+        await this.ensureUniqueName(db, schema, serverBefore, row);
+        return row;
+    }
 
     /**
      * Create associations between newly created or modified rows with
@@ -166,26 +159,22 @@ const Server = _.create(Data, {
      *
      * @return {Promise}
      */
-     associate: function(db, schema, objects, originals, rows, credentials) {
-         return Promise.try(() => {
-             var deletedServers = _.filter(rows, (serverAfter, index) => {
-                 var serverBefore = originals[index];
-                 if (serverBefore) {
-                     return serverAfter.deleted && !serverBefore.deleted;
-                 }
-             });
-             var undeletedServers = _.filter(rows, (serverAfter, index) => {
-                 var serverBefore = originals[index];
-                 if (serverBefore) {
-                     return !serverAfter.deleted && serverBefore.deleted;
-                 }
-             });
-             return Promise.all([
-                 Repo.deleteAssociated(db, schema, { server: deletedServers }),
-                 Repo.restoreAssociated(db, schema, { server: undeletedServers }),
-             ]);
+     async associate(db, schema, objects, originals, rows, credentials) {
+         let deletedServers = _.filter(rows, (serverAfter, index) => {
+             let serverBefore = originals[index];
+             if (serverBefore) {
+                 return serverAfter.deleted && !serverBefore.deleted;
+             }
          });
-     },
+         let undeletedServers = _.filter(rows, (serverAfter, index) => {
+             let serverBefore = originals[index];
+             if (serverBefore) {
+                 return !serverAfter.deleted && serverBefore.deleted;
+             }
+         });
+         await Repo.deleteAssociated(db, schema, { server: deletedServers });
+         await Repo.restoreAssociated(db, schema, { server: undeletedServers });
+     }
 
     /**
      * See if a database change event is relevant to a given user
@@ -196,15 +185,15 @@ const Server = _.create(Data, {
      *
      * @return {Boolean}
      */
-    isRelevantTo: function(event, user, subscription) {
-        if (Data.isRelevantTo.call(this, event, user, subscription)) {
+    isRelevantTo(event, user, subscription) {
+        if (super.isRelevantTo(event, user, subscription)) {
             // not used in client app
             if (subscription.area === 'admin') {
                 return true;
             }
         }
         return false;
-    },
+    }
 
     /**
      * Throw an exception if modifications aren't permitted
@@ -213,21 +202,23 @@ const Server = _.create(Data, {
      * @param  {Object} serverBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(serverReceived, serverBefore, credentials) {
+    checkWritePermission(serverReceived, serverBefore, credentials) {
         if (credentials.unrestricted) {
             return;
         }
         throw new HTTPError(403);
-    },
-});
+    }
+}
 
-var sensitiveSettings = [
+let sensitiveSettings = [
     'api.access_token',
     'api.refresh_token',
     'oauth.client_secret',
 ];
 
+const instance = new Server;
+
 export {
-    Server as default,
+    instance as default,
     Server,
 };

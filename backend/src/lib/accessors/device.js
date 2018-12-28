@@ -1,36 +1,31 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Request from 'request';
 import CSVParse from 'csv-parse';
 import ToUTF8 from 'to-utf-8'
 import HTTPError from 'errors/http-error';
-import Data from 'accessors/data';
+import { Data } from 'accessors/data';
 import StringSimilarity from 'string-similarity';
 
-const Device = _.create(Data, {
-    schema: 'global',
-    table: 'device',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        type: String,
-        details: Object,
-        uuid: String,
-        user_id: Number,
-        session_handle: String,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        type: String,
-        uuid: String,
-        user_id: Number,
-        session_handle: String,
-    },
-    version: 2,
+class Device extends Data {
+    constructor() {
+        super();
+        this.schema = 'global';
+        this.table = 'device';
+        _.extend(this.columns, {
+            type: String,
+            details: Object,
+            uuid: String,
+            user_id: Number,
+            session_handle: String,
+        });
+        _.extend(this.criteria, {
+            type: String,
+            uuid: String,
+            user_id: Number,
+            session_handle: String,
+        });
+        this.version = 2;
+    }
 
     /**
      * Create table in schema
@@ -38,11 +33,11 @@ const Device = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -59,8 +54,8 @@ const Device = _.create(Data, {
             CREATE INDEX ON ${table} (user_id) WHERE deleted = false;
             CREATE INDEX ON ${table} (session_handle) WHERE deleted = false;
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Grant privileges to table to appropriate Postgres users
@@ -68,17 +63,17 @@ const Device = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    grant: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async grant(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             GRANT SELECT, UPDATE ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO client_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Upgrade table in schema to given DB version (from one version prior)
@@ -89,20 +84,21 @@ const Device = _.create(Data, {
      *
      * @return {Promise<Boolean>}
      */
-    upgrade: function(db, schema, version) {
+    async upgrade(db, schema, version) {
         if (version === 2) {
             // make index of session_handle unique
-            var table = this.getTableName(schema);
-            var sql = `
+            let table = this.getTableName(schema);
+            let sql = `
                 DELETE FROM ${table} a USING ${table} b
                 WHERE a.id > b.id AND a.session_handle = b.session_handle;
                 DROP INDEX global.device_session_handle_idx;
                 CREATE UNIQUE INDEX ON ${table} (session_handle) WHERE deleted = false;
             `;
-            return db.execute(sql).return(true);
+            await db.execute(sql);
+            return true;
         }
-        return Promise.resolve(false);
-    },
+        return false;
+    }
 
     /**
      * Attach triggers to the table.
@@ -112,12 +108,15 @@ const Device = _.create(Data, {
      *
      * @return {Promise<Boolean>}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'type', 'user_id', 'session_handle' ];
-            return this.createNotificationTriggers(db, schema, propNames);
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'type',
+            'user_id',
+            'session_handle'
+        ]);
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -131,56 +130,54 @@ const Device = _.create(Data, {
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.user_id = row.user_id;
-                object.type = row.type;
-                object.session_handle = row.session_handle;
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object] of objects) {
+            let row = rows[index];
+            object.user_id = row.user_id;
+            object.type = row.type;
+            object.session_handle = row.session_handle;
 
-                if (row.user_id !== credentials.user.id) {
-                    throw new HTTPError(403);
-                }
-            });
-            return objects;
-        });
-    },
+            if (row.user_id !== credentials.user.id) {
+                throw new HTTPError(403);
+            }
+        }
+        return objects;
+    }
 
     /**
      * Import objects sent by client-side code, applying access control
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
+     * @param  {Object} deviceReceived
+     * @param  {Object} deviceBefore
      * @param  {Object} credentials
      * @param  {Object} options
      *
      * @return {Promise<Array>}
      */
-    import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials, options).each((deviceReceived) => {
-            if (!deviceReceived.deleted && !deviceReceived.id) {
-                // look for an existing record with the same UUID
-                if (deviceReceived.user_id && deviceReceived.uuid) {
-                    var criteria = {
-                        user_id: deviceReceived.user_id,
-                        uuid: deviceReceived.uuid,
-                        deleted: false
-                    };
-                    return this.findOne(db, schema, criteria, 'id').then((row) => {
-                        if (row) {
-                            deviceReceived.id = row.id;
-                        }
-                        if (deviceReceived.type && deviceReceived.details) {
-                            return fixDeviceDetails(deviceReceived);
-                        }
-                    });
+    async importOne(db, schema, deviceReceived, deviceBefore, credentials, options) {
+        let row = await super.importOne(db, schema, deviceReceived, deviceBefore, credentials, options);
+        if (!deviceReceived.deleted && !deviceReceived.id) {
+            // look for an existing record with the same UUID
+            if (deviceReceived.user_id && deviceReceived.uuid) {
+                let criteria = {
+                    user_id: deviceReceived.user_id,
+                    uuid: deviceReceived.uuid,
+                    deleted: false
+                };
+                let existingRow = await this.findOne(db, schema, criteria, 'id');
+                if (existingRow) {
+                    row.id = existingRow.id;
+                }
+                if (row.type && row.details) {
+                    await fixDeviceDetails(row);
                 }
             }
-        });
-    },
+        }
+        return row;
+    }
 
     /**
      * See if a database change event is relevant to a given user
@@ -191,18 +188,18 @@ const Device = _.create(Data, {
      *
      * @return {Boolean}
      */
-    isRelevantTo: function(event, user, subscription) {
+    isRelevantTo(event, user, subscription) {
         if (subscription.area === 'admin') {
             // admin console doesn't use this object currently
             return false;
         }
-        if (Data.isRelevantTo.call(this, event, user, subscription)) {
+        if (super.isRelevantTo(event, user, subscription)) {
             if (event.current.user_id === user.id) {
                 return true;
             }
         }
         return false;
-    },
+    }
 
     /**
      * Throw an exception if modifications aren't permitted
@@ -211,15 +208,15 @@ const Device = _.create(Data, {
      * @param  {Object} deviceBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(deviceReceived, deviceBefore, credentials) {
+    checkWritePermission(deviceReceived, deviceBefore, credentials) {
         if (credentials.unrestricted) {
             return;
         }
         if (deviceReceived.user_id && deviceReceived.user_id !== credentials.user.id) {
             throw new HTTPError(403);
         }
-    },
-});
+    }
+}
 
 /**
  * Attach marketing name to device details if found and fix manufacturer name
@@ -228,14 +225,15 @@ const Device = _.create(Data, {
  *
  * @return {Promise}
  */
-function fixDeviceDetails(device) {
-    var type = device.type;
-    var manufacturer = device.details.manufacturer;
-    var model = device.details.name;
-    return getDeviceDisplayName(type, manufacturer, model).then((displayName) => {
+async function fixDeviceDetails(device) {
+    let type = device.type;
+    let manufacturer = device.details.manufacturer;
+    let model = device.details.name;
+    let displayName = await getDeviceDisplayName(type, manufacturer, model);
+    if (displayName) {
         device.details.display_name = displayName;
-        device.details.manufacturer = getManufactureName(manufacturer);
-    });
+    }
+    device.details.manufacturer = getManufactureName(manufacturer);
 }
 
 /**
@@ -263,7 +261,7 @@ function getManufactureName(manufacturer) {
  *
  * @return {Promise<String|undefined>}
  */
-function getDeviceDisplayName(type, manufacturer, model) {
+async function getDeviceDisplayName(type, manufacturer, model) {
     if (type === 'ios') {
         return getAppleDeviceDisplayName(model);
     } else if (type === 'android') {
@@ -271,7 +269,7 @@ function getDeviceDisplayName(type, manufacturer, model) {
     } else if (type === 'windows') {
         return getWindowsDeviceDisplayName(model);
     } else {
-        return Promise.resolve();
+        return;
     }
 }
 
@@ -282,11 +280,11 @@ function getDeviceDisplayName(type, manufacturer, model) {
  *
  * @return {Promise<String|undefined>}
  */
-function getAppleDeviceDisplayName(model) {
-    var name = _.findKey(appleModelNumbers, (regExp) => {
+async function getAppleDeviceDisplayName(model) {
+    let name = _.findKey(appleModelNumbers, (regExp) => {
         return regExp.test(model);
     });
-    return Promise.resolve(name);
+    return name;
 }
 
 /**
@@ -296,11 +294,11 @@ function getAppleDeviceDisplayName(model) {
  *
  * @return {Promise<String|undefined>}
  */
-function getWindowsDeviceDisplayName(model) {
-    var name = _.findKey(wpModelNumbers, (regExp) => {
+async function getWindowsDeviceDisplayName(model) {
+    let name = _.findKey(wpModelNumbers, (regExp) => {
         return regExp.test(model);
     });
-    return Promise.resolve(name);
+    return name;
 }
 
 /**
@@ -310,35 +308,34 @@ function getWindowsDeviceDisplayName(model) {
  *
  * @return {Promise<String|undefined>}
  */
-function getAndroidDeviceDisplayName(manufacturer, model) {
-    return getAndroidDeviceDatabase().then((db) => {
-        var key1 = _.toLower(manufacturer);
-        var key2 = _.toLower(model);
-        var name = _.get(db, [ key1, key2 ]);
-        if (!name) {
-            // name might not match exactly--look for one that's close enough
-            var candidates = [];
-            _.each(db, (devices, k1) => {
-                var sim1 = StringSimilarity.compareTwoStrings(k1, key1);
-                if (sim1 >= 0.75) {
-                    _.each(devices, (name, k2) => {
-                        var sim2  = StringSimilarity.compareTwoStrings(k2, key2);
-                        if (sim2 >= 0.75) {
-                            candidates.push({ name, score: sim1 + sim2 });
-                        }
-                    });
+async function getAndroidDeviceDisplayName(manufacturer, model) {
+    let db = await getAndroidDeviceDatabase();
+    let key1 = _.toLower(manufacturer);
+    let key2 = _.toLower(model);
+    let name = _.get(db, [ key1, key2 ]);
+    if (!name) {
+        // name might not match exactly--look for one that's close enough
+        let candidates = [];
+        for (let [ k1, devices ] of _.entries(db)) {
+            let sim1 = StringSimilarity.compareTwoStrings(k1, key1);
+            if (sim1 >= 0.75) {
+                for (let [ k2, name ] of _.entries(devices)) {
+                    let sim2  = StringSimilarity.compareTwoStrings(k2, key2);
+                    if (sim2 >= 0.75) {
+                        candidates.push({ name, score: sim1 + sim2 });
+                    }
                 }
-            });
-            candidates = _.sortBy(candidates, 'score');
-            if (!_.isEmpty(candidates)) {
-                name = _.last(candidates).name;
             }
         }
-        return Promise.resolve(name);
-    });
+        candidates = _.sortBy(candidates, 'score');
+        if (!_.isEmpty(candidates)) {
+            name = _.last(candidates).name;
+        }
+    }
+    return name;
 }
 
-var androidDeviceDatabase = {};
+let androidDeviceDatabase = {};
 
 /**
  * Return Android device name database
@@ -347,16 +344,15 @@ var androidDeviceDatabase = {};
  *
  * @return {Promise<Object>}
  */
-function getAndroidDeviceDatabase() {
-    if (androidDeviceDatabase) {
-        return Promise.resolve(androidDeviceDatabase);
-    }
-    return fetchAndroidDeviceDatabase().then((db) => {
-        androidDeviceDatabase = db;
-        return db;
-    }).catch((err) => {
+async function getAndroidDeviceDatabase() {
+    try {
+        if (!androidDeviceDatabase) {
+            androidDeviceDatabase = await fetchAndroidDeviceDatabase();
+        }
+        return androidDeviceDatabase;
+    } catch (err) {
         return {};
-    });
+    }
 }
 
 /**
@@ -364,19 +360,19 @@ function getAndroidDeviceDatabase() {
  *
  * @return {Promise<Object>}
  */
-function fetchAndroidDeviceDatabase() {
+async function fetchAndroidDeviceDatabase() {
     return new Promise((resolve, reject) => {
-        var db = {};
-        var line = 0;
-        var parser = CSVParse({ delimiter: ',' });
+        let db = {};
+        let line = 0;
+        let parser = CSVParse({ delimiter: ',' });
         parser.on('readable', () => {
-            var record;
+            let record;
             while(record = parser.read()) {
                 if (line++ > 0) {
-                    var brand = _.toLower(record[0]);
-                    var names = _.split(record[1], /\s,\s/);
-                    var name = _.replace(names[0], /_/g, ' ');
-                    var model = _.toLower(record[3])
+                    let brand = _.toLower(record[0]);
+                    let names = _.split(record[1], /\s,\s/);
+                    let name = _.replace(names[0], /_/g, ' ');
+                    let model = _.toLower(record[3])
                     _.set(db, [ brand, model ], name);
                 }
             }
@@ -387,7 +383,7 @@ function fetchAndroidDeviceDatabase() {
         parser.on('finish', () => {
             resolve(db);
         });
-        var input = Request('http://storage.googleapis.com/play_public/supported_devices.csv');
+        let input = Request('http://storage.googleapis.com/play_public/supported_devices.csv');
         input.on('err', (err) => {
             reject(err);
         });
@@ -398,19 +394,19 @@ function fetchAndroidDeviceDatabase() {
 /**
  * Update Android device name database
  */
-function updateAndroidDeviceDatabase() {
-    fetchAndroidDeviceDatabase().then((db) => {
-        androidDeviceDatabase = db;
-    }).catch((err) => {
-    });
+async function updateAndroidDeviceDatabase() {
+    try {
+        androidDeviceDatabase = await fetchAndroidDeviceDatabase();
+    } catch (err) {
+    }
 }
 
 function findClosest(hash, key) {
     if (hash) {
-        var entry = hash[key];
+        let entry = hash[key];
         if (!entry) {
-            var keys = _.keys(hash);
-            var closestKey = StringSimilarity.findBestMatch(key, keys);
+            let keys = _.keys(hash);
+            let closestKey = StringSimilarity.findBestMatch(key, keys);
             entry = hashs[closestKey];
         }
         return entry;
@@ -422,7 +418,7 @@ if (process.env.POSTGRES_USER !== 'admin_role') {
     setInterval(updateAndroidDeviceDatabase, 7 * 24 * 60 * 60 * 1000);
 }
 
-var appleModelNumbers = {
+let appleModelNumbers = {
     'iPhone': /iPhone1,1/,
     'iPhone 3G': /iPhone1,2/,
     'iPhone 3GS': /iPhone2,1/,
@@ -458,7 +454,7 @@ var appleModelNumbers = {
     'iPad (6th generation)': /iPad7,[56]/,
 };
 
-var wpModelNumbers = {
+let wpModelNumbers = {
     'Lumia 532': /RM\-(1032|1034|1115)/,
     'Lumia 535': /RM\-(1089|1090|1091|1092)/,
     'Lumia 550': /RM\-(1127|1128|1129)/,
@@ -478,7 +474,9 @@ var wpModelNumbers = {
     'Lumia Icon': /RM\-(927)/,
 };
 
+const instance = new Device;
+
 export {
-    Device as default,
+    instance as default,
     Device,
 };

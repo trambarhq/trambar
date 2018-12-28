@@ -1,31 +1,24 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import ExternalData from 'accessors/external-data';
+import { ExternalData } from 'accessors/external-data';
 
-const Commit = _.create(ExternalData, {
-    schema: 'global',
-    table: 'commit',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        initial_branch: String,
-        title_hash: String,
-        external: Array(Object),
-        exchange: Array(Object),
-        itime: String,
-        etime: String,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        title_hash: String,
-
-        external_object: Object,
-    },
+class Commit extends ExternalData {
+    constructor() {
+        super();
+        this.schema = 'global';
+        this.table = 'commit';
+        _.extend(this.columns, {
+            initial_branch: String,
+            title_hash: String,
+            external: Array(Object),
+            exchange: Array(Object),
+            itime: String,
+            etime: String,
+        });
+        _.extend(this.criteria, {
+            title_hash: String,
+            external_object: Object,
+        });
+    }
 
     /**
      * Create table in schema
@@ -33,11 +26,11 @@ const Commit = _.create(ExternalData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -55,8 +48,8 @@ const Commit = _.create(ExternalData, {
             );
             CREATE INDEX ON ${table} USING gin(("externalIdStrings"(external, 'gitlab', '{commit}'))) WHERE deleted = false;
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Grant privileges to table to appropriate Postgres users
@@ -64,16 +57,16 @@ const Commit = _.create(ExternalData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    grant: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async grant(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT ON ${table} TO client_role;
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -81,14 +74,18 @@ const Commit = _.create(ExternalData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'external', 'mtime', 'itime', 'etime' ];
-            return this.createNotificationTriggers(db, schema, propNames);
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'external',
+            'mtime',
+            'itime',
+            'etime'
+        ]);
+    }
 
     /**
      * See if a database change event is relevant to a given user
@@ -99,13 +96,15 @@ const Commit = _.create(ExternalData, {
      *
      * @return {Boolean}
      */
-    isRelevantTo: function(event, user, subscription) {
+    isRelevantTo(event, user, subscription) {
         // objects aren't currently used on client-side
         return false;
-    },
-});
+    }
+}
+
+const instance = new Commit;
 
 export {
-    Commit as default,
+    instance as default,
     Commit,
 };

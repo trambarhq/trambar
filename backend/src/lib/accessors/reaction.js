@@ -1,59 +1,47 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import Moment from 'moment';
 import HTTPError from 'errors/http-error';
-import ExternalData from 'accessors/external-data';
+import { ExternalData } from 'accessors/external-data';
 import Task from 'accessors/task';
 import Notification from 'accessors/notification';
 
-const Reaction = _.create(ExternalData, {
-    schema: 'project',
-    table: 'reaction',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        type: String,
-        tags: Array(String),
-        language_codes: Array(String),
-        story_id: Number,
-        user_id: Number,
-        published: Boolean,
-        ready: Boolean,
-        suppresed: Boolean,
-        ptime: String,
-        public: Boolean,
-        external: Array(Object),
-        exchange: Array(Object),
-        itime: String,
-        etime: String,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        type: String,
-        tags: Array(String),
-        language_codes: Array(String),
-        story_id: Number,
-        user_id: Number,
-        published: Boolean,
-        ready: Boolean,
-        suppresed: Boolean,
-        public: Boolean,
+class Reaction extends ExternalData {
+    constructor() {
+        super();
+        this.schema = 'project';
+        this.table = 'reaction';
+        _.extend(this.columns, {
+            type: String,
+            tags: Array(String),
+            language_codes: Array(String),
+            story_id: Number,
+            user_id: Number,
+            published: Boolean,
+            ready: Boolean,
+            suppresed: Boolean,
+            ptime: String,
+            public: Boolean,
+        });
+        _.extend(this.criteria, {
+            type: String,
+            tags: Array(String),
+            language_codes: Array(String),
+            story_id: Number,
+            user_id: Number,
+            published: Boolean,
+            ready: Boolean,
+            suppresed: Boolean,
+            public: Boolean,
 
-        server_id: Number,
-        external_object: Object,
-        time_range: String,
-        newer_than: String,
-        older_than: String,
-        search: Object,
-    },
-    accessControlColumns: {
-        public: Boolean,
-    },
+            server_id: Number,
+            time_range: String,
+            newer_than: String,
+            older_than: String,
+            search: Object,
+        });
+        this.accessControlColumns = {
+            public: Boolean,
+        };
+    }
 
     /**
      * Create table in schema
@@ -61,11 +49,11 @@ const Reaction = _.create(ExternalData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -92,8 +80,8 @@ const Reaction = _.create(ExternalData, {
             CREATE INDEX ON ${table} (story_id) WHERE deleted = false;
             CREATE INDEX ON ${table} USING gin(("payloadTokens"(details))) WHERE "payloadTokens"(details) IS NOT NULL;
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -101,22 +89,32 @@ const Reaction = _.create(ExternalData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'type', 'tags', 'language_codes', 'story_id', 'user_id', 'published', 'ready', 'ptime', 'public', 'external', 'mtime', 'itime', 'etime' ];
-            return this.createNotificationTriggers(db, schema, propNames).then(() => {
-                // merge changes to details->resources to avoid race between
-                // client-side changes and server-side changes
-                return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'ptime' ]).then(() => {
-                    // completion of tasks will automatically update
-                    // details->resources and ready
-                    return Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table, 'ready', 'published' ]);
-                });
-            });
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'type',
+            'tags',
+            'language_codes',
+            'story_id',
+            'user_id',
+            'published',
+            'ready',
+            'ptime',
+            'public',
+            'external',
+            'mtime',
+            'itime',
+            'etime'
+        ]);
+        // merge changes to details->resources to avoid race between
+        // client-side changes and server-side changes
+        await this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'ptime' ]);
+        // completion of tasks will automatically update details->resources and ready
+        await Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table, 'ready', 'published' ]);
+    }
 
     /**
      * Filter out rows that user doesn't have access to
@@ -128,12 +126,12 @@ const Reaction = _.create(ExternalData, {
      *
      * @return {Promise<Array<Object>>}
      */
-    filter: function(db, schema, rows, credentials) {
+    async filter(db, schema, rows, credentials) {
         if (credentials.user.type === 'guest') {
             rows = _.filter(rows, { public: true });
         }
-        return Promise.resolve(rows);
-    },
+        return rows;
+    }
 
     /**
      * Add conditions to SQL query based on criteria object
@@ -145,17 +143,17 @@ const Reaction = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-    apply: function(db, schema, criteria, query) {
-        var special = [
+    async apply(db, schema, criteria, query) {
+        let special = [
             'time_range',
             'newer_than',
             'older_than',
             'search',
         ];
-        ExternalData.apply.call(this, _.omit(criteria, special), query);
+        super.apply(_.omit(criteria, special), query);
 
-        var params = query.parameters;
-        var conds = query.conditions;
+        let params = query.parameters;
+        let conds = query.conditions;
         if (criteria.time_range !== undefined) {
             conds.push(`ptime <@ $${params.push(criteria.time_range)}::tsrange`);
         }
@@ -166,63 +164,56 @@ const Reaction = _.create(ExternalData, {
             conds.push(`ptime < $${params.push(criteria.older_than)}`);
         }
         if (criteria.search) {
-            return this.applyTextSearch(db, schema, criteria.search, query);
+            await this.applyTextSearch(db, schema, criteria.search, query);
         }
-        return Promise.resolve();
-    },
+    }
 
     /**
-     * Import objects sent by client-side code, applying access control
+     * Import object sent by client-side code
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
+     * @param  {Object} reactionReceived
+     * @param  {Object} reactionBefore
      * @param  {Object} credentials
      *
-     * @return {Promise<Array>}
+     * @return {Promise<Object>}
      */
-    import: function(db, schema, objects, originals, credentials, options) {
-        return ExternalData.import.call(this, db, schema, objects, originals, credentials).mapSeries((reactionReceived, index) => {
-            var reactionBefore = originals[index];
-            this.checkWritePermission(reactionReceived, reactionBefore, credentials);
+    async importOne(db, schema, reactionReceived, reactionBefore, credentials, options) {
+        let row = await super.importOne(db, schema, reactionReceived, reactionBefore, credentials, options);
+        // set language_codes
+        if (reactionReceived.details) {
+            row.language_codes = _.filter(_.keys(reactionReceived.details.text), { length: 2 });
+        }
 
-            // set language_codes
-            if (reactionReceived.details) {
-                reactionReceived.language_codes = _.filter(_.keys(reactionReceived.details.text), { length: 2 });
-            }
+        // set the ptime if published is set
+        if (reactionReceived.published && !reactionReceived.ptime) {
+            row.ptime = new String('NOW()');
+        }
 
-            // set the ptime if published is set
-            if (reactionReceived.published && !reactionReceived.ptime) {
-                reactionReceived.ptime = new String('NOW()');
-            }
+        // mark reaction as having been manually deleted
+        if (reactionReceived.deleted) {
+            row.suppressed = true;
+        }
 
-            // mark reaction as having been manually deleted
-            if (reactionReceived.deleted) {
-                reactionReceived.suppressed = true;
-            }
-
-            if (!reactionReceived.id) {
-                if (reactionReceived.type === 'like' || reactionReceived.type === 'vote') {
-                    // see if there's an existing like or vote
-                    var criteria = {
-                        type: reactionReceived.type,
-                        story_id: reactionReceived.story_id,
-                        user_id: reactionReceived.user_id,
-                    };
-                    return this.findOne(db, schema, criteria, '*').then((row) => {
-                        if (row) {
-                            // reuse the row--to avoid triggering new notification
-                            reactionReceived.id = row.id;
-                            reactionReceived.deleted = false;
-                        }
-                        return reactionReceived;
-                    });
+        if (!reactionReceived.id) {
+            if (reactionReceived.type === 'like' || reactionReceived.type === 'vote') {
+                // see if there's an existing like or vote
+                let criteria = {
+                    type: reactionReceived.type,
+                    story_id: reactionReceived.story_id,
+                    user_id: reactionReceived.user_id,
+                };
+                let existingRow = await this.findOne(db, schema, criteria, 'id');
+                if (existingRow) {
+                    // reuse the row--to avoid triggering new notification
+                    row.id = existingRow.id;
+                    row.deleted = false;
                 }
             }
-            return reactionReceived;
-        });
-    },
+        }
+        return row;
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -236,31 +227,30 @@ const Reaction = _.create(ExternalData, {
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return ExternalData.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.type = row.type;
-                object.story_id = row.story_id;
-                object.user_id = row.user_id;
-                object.ptime = row.ptime;
-                object.public = row.public;
-                object.published = row.published;
-                object.tags = row.tags;
-                if (row.ready === false) {
-                    object.ready = false;
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            object.type = row.type;
+            object.story_id = row.story_id;
+            object.user_id = row.user_id;
+            object.ptime = row.ptime;
+            object.public = row.public;
+            object.published = row.published;
+            object.tags = row.tags;
+            if (row.ready === false) {
+                object.ready = false;
+            }
+            if (!row.published || !row.ready) {
+                // don't send text when object isn't published and the
+                // user isn't the owner
+                if (object.user_id !== credentials.user.id) {
+                    object.details = _.omit(object.details, 'text', 'resources');
                 }
-                if (!row.published || !row.ready) {
-                    // don't send text when object isn't published and
-                    // there the user isn't the owner
-                    if (object.user_id !== credentials.user.id) {
-                        object.details = _.omit(object.details, 'text', 'resources');
-                    }
-                }
-            });
-            return objects;
-        });
-    },
+            }
+        }
+        return objects;
+    }
 
     /**
      * Create associations between newly created or modified rows with
@@ -275,14 +265,10 @@ const Reaction = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-     associate: function(db, schema, objects, originals, rows, credentials) {
-         return Promise.try(() => {
-             var deletedReactions = _.filter(rows, { deleted: true });
-             return Promise.all([
-                 Notification.deleteAssociated(db, schema, { reaction: deletedReactions }),
-             ]);
-         });
-     },
+     async associate(db, schema, objects, originals, rows, credentials) {
+         let deletedReactions = _.filter(rows, { deleted: true });
+         await Notification.deleteAssociated(db, schema, { reaction: deletedReactions });
+     }
 
     /**
      * See if a database change event is relevant to a given user
@@ -293,18 +279,18 @@ const Reaction = _.create(ExternalData, {
      *
      * @return {Boolean}
      */
-    isRelevantTo: function(event, user, subscription) {
+    isRelevantTo(event, user, subscription) {
         if (subscription.area === 'admin') {
             // admin console doesn't use this object currently
             return false;
         }
-        if (ExternalData.isRelevantTo.call(this, event, user, subscription)) {
+        if (super.isRelevantTo(event, user, subscription)) {
             // reactions are relevant to all user even before they're published
             // that's used to show someone is commenting
             return true;
         }
         return false;
-    },
+    }
 
     /**
      * Throw an exception if modifications aren't permitted
@@ -313,7 +299,7 @@ const Reaction = _.create(ExternalData, {
      * @param  {Object} reactionBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(reactionReceived, reactionBefore, credentials) {
+    checkWritePermission(reactionReceived, reactionBefore, credentials) {
         if (credentials.access !== 'read-comment' && credentials.access !== 'read-write') {
             throw new HTTPError(400);
         }
@@ -343,10 +329,10 @@ const Reaction = _.create(ExternalData, {
                 throw new HTTPError(400);
             }
         }
-    },
+    }
 
     /**
-     * Mark reactions as deleted if their lead authors are those specified
+     * Mark reactions as deleted if their authors are those specified
      *
      * @param  {Database} db
      * @param  {String} schema
@@ -354,24 +340,23 @@ const Reaction = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-    deleteAssociated: function(db, schema, associations) {
-        var promises = _.mapValues(associations, (objects, type) => {
+    async deleteAssociated(db, schema, associations) {
+        for (let [ type, objects ] of _.entries(associations)) {
             if (_.isEmpty(objects)) {
-                return;
+                continue;
             }
             if (type === 'user') {
-                var userIds = _.map(objects, 'id');
-                var criteria = {
+                let userIds = _.map(objects, 'id');
+                let criteria = {
                     user_id: userIds,
                     deleted: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: true }).then((reactions) => {
-                    return Notification.deleteAssociated(db, schema, { reaction: reactions });
-                });
+                let reactions = await this.updateMatching(db, schema, criteria, { deleted: true });
+                // delete notifications about these reactions as well
+                await Notification.deleteAssociated(db, schema, { reaction: reactions });
             }
-        });
-        return Promise.props(promises);
-    },
+        }
+    }
 
     /**
      * Clear deleted flag of reactions beloging to specified users
@@ -382,29 +367,30 @@ const Reaction = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-    restoreAssociated: function(db, schema, associations) {
-        var promises = _.mapValues(associations, (objects, type) => {
+    async restoreAssociated(db, schema, associations) {
+        for (let [ type, objects ] of _.entries(associations)) {
             if (_.isEmpty(objects)) {
-                return;
+                continue;
             }
             if (type === 'user') {
-                var userIds = _.map(objects, 'id');
-                var criteria = {
+                let userIds = _.map(objects, 'id');
+                let criteria = {
                     user_id: userIds,
                     deleted: true,
                     // don't restore reactions that were manually deleted
                     suppressed: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: false }).then((reactions) => {
-                    return Notification.restoreAssociated(db, schema, { reaction: reactions });
-                });
+                let reactions = await this.updateMatching(db, schema, criteria, { deleted: false });
+                // restore notifications as weel
+                await Notification.restoreAssociated(db, schema, { reaction: reactions });
             }
-        });
-        return Promise.props(promises);
-    },
-});
+        }
+    }
+}
+
+const instance = new Reaction;
 
 export {
-    Reaction as default,
+    instance as default,
     Reaction,
 };

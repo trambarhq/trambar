@@ -1,36 +1,29 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import Moment from 'moment';
-import Data from 'accessors/data';
+import { Data } from 'accessors/data';
 
-const Session = _.create(Data, {
-    schema: 'global',
-    table: 'session',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        user_id: Number,
-        handle: String,
-        token: String,
-        activated: Boolean,
-        area: String,
-        etime: String,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        user_id: Number,
-        handle: String,
-        token: String,
-        activated: Boolean,
-        area: String,
+class Session extends Data {
+    constructor() {
+        super();
+        this.schema = 'global';
+        this.table = 'session';
+        _.extend(this.columns, {
+            user_id: Number,
+            handle: String,
+            token: String,
+            activated: Boolean,
+            area: String,
+            etime: String,
+        });
+        _.extend(this.criteria, {
+            user_id: Number,
+            handle: String,
+            token: String,
+            activated: Boolean,
+            area: String,
 
-        expired: Boolean,
-    },
+            expired: Boolean,
+        });
+    }
 
     /**
      * Create table in schema
@@ -38,11 +31,11 @@ const Session = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = `"global"."${this.table}"`;
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName();
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -61,8 +54,8 @@ const Session = _.create(Data, {
             CREATE INDEX ON ${table} (handle);
             CREATE INDEX ON ${table} (token);
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Grant privileges to table to appropriate Postgres users
@@ -70,17 +63,17 @@ const Session = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    grant: function(db, schema) {
+    async grant(db, schema) {
         // authorization check is performed through a stored procedure
         // other DB roles don't need direct access to this table
-        var table = this.getTableName(schema);
-        var sql = `
+        let table = this.getTableName(schema);
+        let sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO auth_role;
         `;
-        return db.execute(sql).return(true);
-    },
+        return db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -88,11 +81,11 @@ const Session = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema);
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+    }
 
     /**
      * Check if authorization token is valid
@@ -103,12 +96,11 @@ const Session = _.create(Data, {
      *
      * @return {Promise<Number|null>}
      */
-    check: function(db, token, area) {
-        var sql = `SELECT "checkAuthorization"($1, $2) AS user_id`;
-        return db.query(sql, [ token, area ]).then((rows) => {
-            return (rows[0]) ? rows[0].user_id : null;
-        });
-    },
+    async check(db, token, area) {
+        let sql = `SELECT "checkAuthorization"($1, $2) AS user_id`;
+        let rows = await db.query(sql, [ token, area ]);
+        return (rows[0]) ? rows[0].user_id : null;
+    }
 
     /**
      * Extend authorization til the given number of day from now
@@ -119,10 +111,10 @@ const Session = _.create(Data, {
      *
      * @return {Promise}
      */
-    extend: function(db, token, days) {
-        var sql = `SELECT "extendAuthorization"($1, $2) AS result`;
-        return db.query(sql, [ token, days ]).return();
-    },
+    async extend(db, token, days) {
+        let sql = `SELECT "extendAuthorization"($1, $2) AS result`;
+        await db.query(sql, [ token, days ]);
+    }
 
     /**
      * Add conditions to SQL query based on criteria object
@@ -132,14 +124,14 @@ const Session = _.create(Data, {
      *
      * @return {Promise}
      */
-    apply: function(criteria, query) {
-        var special = [
+    apply(criteria, query) {
+        let special = [
             'expired',
         ];
-        Data.apply.call(this, _.omit(criteria, special), query);
+        super.apply(_.omit(criteria, special), query);
 
-        var params = query.parameters;
-        var conds = query.conditions;
+        let params = query.parameters;
+        let conds = query.conditions;
         if (criteria.expired !== undefined) {
             if (criteria.expired) {
                 conds.push(`NOW() >= etime`);
@@ -147,13 +139,20 @@ const Session = _.create(Data, {
                 conds.push(`NOW() < etime`);
             }
         }
-    },
+    }
 
-    import: null,
-    export: null,
-});
+    async import() {
+        throw new Error('Cannot write to session');
+    }
+
+    async export() {
+        throw new Error('Cannot retrieve session');
+    }
+}
+
+const instance = new Session;
 
 export {
-    Session as default,
+    instance as default,
     Session
 };

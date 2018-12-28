@@ -1,43 +1,36 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import Data from 'accessors/data';
+import { Data } from 'accessors/data';
 import HTTPError from 'errors/http-error';
 
-const Task = _.create(Data, {
-    schema: 'both',
-    table: 'task',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        action: String,
-        token: String,
-        options: Object,
-        details: Object,
-        completion: Number,
-        failed: Boolean,
-        user_id: Number,
-        etime: String,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        action: String,
-        token: String,
-        completion: Number,
-        failed: Boolean,
-        deleted: Boolean,
-        user_id: Number,
-        options: Object,
-        etime: String,
+class Task extends Data {
+    constructor() {
+        super();
+        this.schema = 'both';
+        this.table = 'task';
+        _.extend(this.columns, {
+            action: String,
+            token: String,
+            options: Object,
+            details: Object,
+            completion: Number,
+            failed: Boolean,
+            user_id: Number,
+            etime: String,
+        });
+        _.extend(this.criteria, {
+            action: String,
+            token: String,
+            completion: Number,
+            failed: Boolean,
+            user_id: Number,
+            options: Object,
+            etime: String,
 
-        newer_than: String,
-        older_than: String,
-        complete: Boolean,
-    },
+            newer_than: String,
+            older_than: String,
+            complete: Boolean,
+        });
+    }
 
     /**
      * Create table in schema
@@ -45,11 +38,11 @@ const Task = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -68,8 +61,8 @@ const Task = _.create(Data, {
             );
             CREATE UNIQUE INDEX ON ${table} (token) WHERE token IS NOT NULL AND deleted = false;
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -77,34 +70,36 @@ const Task = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'action', 'user_id', 'server_id', 'failed', 'deleted' ];
-            return this.createNotificationTriggers(db, schema, propNames);
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'action',
+            'user_id',
+            'server_id',
+            'failed',
+            'deleted'
+        ]);
+    }
 
     /**
      * Add conditions to SQL query based on criteria object
      *
      * @param  {Object} criteria
      * @param  {Object} query
-     *
-     * @return {Promise}
      */
-    apply: function(criteria, query) {
-        var special = [
+    apply(criteria, query) {
+        let special = [
             'options',
             'newer_than',
             'older_than',
             'complete',
         ];
-        Data.apply.call(this, _.omit(criteria, special), query);
+        super.apply(_.omit(criteria, special), query);
 
-        var params = query.parameters;
-        var conds = query.conditions;
+        let params = query.parameters;
+        let conds = query.conditions;
         if (criteria.options !== undefined) {
             conds.push(`options @> $${params.push(criteria.options)}`);
         }
@@ -121,7 +116,7 @@ const Task = _.create(Data, {
                 conds.push(`completion <> 100`);
             }
         }
-    },
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -133,55 +128,28 @@ const Task = _.create(Data, {
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array<Object>>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                // TODO: access control
-                var row = rows[index];
-                object.action = row.action;
-                object.token = row.token;
-                object.user_id = row.user_id;
-                object.etime = row.etime;
-                object.failed = row.failed;
-                object.completion = row.completion;
-                if (credentials.area === 'admin') {
-                    object.server_id = row.server_id;
-                    object.options = row.options;
-                } else {
-                    delete object.details;
-                }
-            });
-            return objects;
-        });
-    },
-
-    /**
-     * Import objects sent by client-side code, applying access control
-     *
-     * @param  {Database} db
-     * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
-     * @param  {Object} credentials
-     * @param  {Object} options
-     *
-     * @return {Promise<Array>}
-     */
-    import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials).mapSeries((taskReceived, index) => {
-            var taskBefore = originals[index];
-            if (taskBefore) {
-                // task cannot be modified
-                throw new HTTPError(400);
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            // TODO: access control
+            let row = rows[index];
+            object.action = row.action;
+            object.token = row.token;
+            object.user_id = row.user_id;
+            object.etime = row.etime;
+            object.failed = row.failed;
+            object.completion = row.completion;
+            if (credentials.area === 'admin') {
+                object.server_id = row.server_id;
+                object.options = row.options;
+            } else {
+                delete object.details;
             }
-            if (taskReceived.user_id !== credentials.user.id) {
-                throw new HTTPError(403);
-            }
-            return taskReceived;
-        });
-    },
+        }
+        return objects;
+    }
 
     /**
      * See if a database change event is relevant to a given user
@@ -192,8 +160,8 @@ const Task = _.create(Data, {
      *
      * @return {Boolean}
      */
-    isRelevantTo: function(event, user, subscription) {
-        if (Data.isRelevantTo.call(this, event, user, subscription)) {
+    isRelevantTo(event, user, subscription) {
+        if (super.isRelevantTo(event, user, subscription)) {
             if (event.current.user_id) {
                 if (event.current.user_id === user.id) {
                     return true;
@@ -205,7 +173,24 @@ const Task = _.create(Data, {
             }
         }
         return false;
-    },
+    }
+
+    /**
+     * Throw if current user cannot make modifications
+     *
+     * @param  {Object} taskReceived
+     * @param  {Object} taskBefore
+     * @param  {Object} credentials
+     */
+    checkWritePermission(taskReceived, taskBefore, credentials) {
+        if (taskBefore) {
+            // task cannot be modified
+            throw new HTTPError(400);
+        }
+        if (taskReceived.user_id !== credentials.user.id) {
+            throw new HTTPError(403);
+        }
+    }
 
     /**
      * Create a trigger on this table that updates another table
@@ -216,21 +201,23 @@ const Task = _.create(Data, {
      * @param  {String} method
      * @param  {Array<String>} args
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    createUpdateTrigger: function(db, schema, triggerName, method, args) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async createUpdateTrigger(db, schema, triggerName, method, args) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TRIGGER "${triggerName}"
             AFTER UPDATE ON ${table}
             FOR EACH ROW
             EXECUTE PROCEDURE "${method}"(${args.join(', ')});
         `;
-        return db.execute(sql).return(true);
-    },
-});
+        await db.execute(sql);
+    }
+}
+
+const instance = new Task;
 
 export {
-    Task as default,
+    instance as default,
     Task
 };

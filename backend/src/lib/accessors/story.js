@@ -1,72 +1,60 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import Moment from 'moment';
 import HTTPError from 'errors/http-error';
-import ExternalData from 'accessors/external-data';
+import { ExternalData } from 'accessors/external-data';
 import Bookmark from 'accessors/bookmark';
 import Notification from 'accessors/notification';
 import User from 'accessors/user';
 import Task from 'accessors/task';
 
-const Story = _.create(ExternalData, {
-    schema: 'project',
-    table: 'story',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        type: String,       // post, commit, merge, deployment, issue, task-start, task-end, survey
-        tags: Array(String),
-        language_codes: Array(String),
-        published_version_id: Number,
-        user_ids: Array(Number),
-        role_ids: Array(Number),
-        published: Boolean,
-        ready: Boolean,
-        suppressed: Boolean,
-        ptime: String,
-        btime: String,
-        public: Boolean,
-        unfinished_tasks: Number,
-        external: Array(Object),
-        exchange: Array(Object),
-        itime: String,
-        etime: String,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        type: String,
-        tags: Array(String),
-        language_codes: Array(String),
-        published_version_id: Number,
-        user_ids: Array(Number),
-        role_ids: Array(Number),
-        published: Boolean,
-        ready: Boolean,
-        suppressed: Boolean,
-        public: Boolean,
+class Story extends ExternalData {
+    constructor() {
+        super();
+        this.schema = 'project';
+        this.table = 'story';
+        _.extend(this.columns, {
+            type: String,
+            tags: Array(String),
+            language_codes: Array(String),
+            published_version_id: Number,
+            user_ids: Array(Number),
+            role_ids: Array(Number),
+            published: Boolean,
+            ready: Boolean,
+            suppressed: Boolean,
+            ptime: String,
+            btime: String,
+            public: Boolean,
+            unfinished_tasks: Number,
+        });
+        _.extend(this.criteria, {
+            type: String,
+            tags: Array(String),
+            language_codes: Array(String),
+            published_version_id: Number,
+            user_ids: Array(Number),
+            role_ids: Array(Number),
+            published: Boolean,
+            ready: Boolean,
+            suppressed: Boolean,
+            public: Boolean,
 
-        server_id: Number,
-        lead_author_id: Number,
-        external_object: Object,
-        exclude: Array(Number),
-        time_range: String,
-        newer_than: String,
-        older_than: String,
-        bumped_after: String,
-        url: String,
-        has_tags: Boolean,
-        has_unfinished_tasks: Boolean,
-        search: Object,
-        per_user_limit: Number,
-    },
-    accessControlColumns: {
-        public: Boolean,
-    },
+            server_id: Number,
+            lead_author_id: Number,
+            exclude: Array(Number),
+            time_range: String,
+            newer_than: String,
+            older_than: String,
+            bumped_after: String,
+            url: String,
+            has_tags: Boolean,
+            has_unfinished_tasks: Boolean,
+            search: Object,
+            per_user_limit: Number,
+        });
+        this.accessControlColumns = {
+            public: Boolean,
+        };
+    }
 
     /**
      * Create table in schema
@@ -74,11 +62,11 @@ const Story = _.create(ExternalData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -112,9 +100,8 @@ const Story = _.create(ExternalData, {
             CREATE INDEX ON ${table} ((COALESCE(ptime, btime))) WHERE published = true AND ready = true;
             CREATE INDEX ON ${table} (id) WHERE unfinished_tasks > 0 AND published = true AND deleted = false;
         `;
-        //
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -122,18 +109,31 @@ const Story = _.create(ExternalData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'type', 'tags', 'unfinished_tasks', 'language_codes', 'user_ids', 'role_ids', 'published', 'ready', 'public', 'external', 'ptime', 'btime', 'mtime', 'itime', 'etime' ];
-            return this.createNotificationTriggers(db, schema, propNames).then(() => {
-                return this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'ptime' ]).then(() => {
-                    return Task.createUpdateTrigger(db, schema, 'updateStory', 'updateResource', [ this.table ]).then(() => {});
-                });
-            });
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'type',
+            'tags',
+            'unfinished_tasks',
+            'language_codes',
+            'user_ids',
+            'role_ids',
+            'published',
+            'ready',
+            'public',
+            'external',
+            'ptime',
+            'btime',
+            'mtime',
+            'itime',
+            'etime'
+        ]);
+        await this.createResourceCoalescenceTrigger(db, schema, [ 'ready', 'ptime' ]);
+        await Task.createUpdateTrigger(db, schema, 'updateStory', 'updateResource', [ this.table ]);
+    }
 
     /**
      * Filter out rows that user doesn't have access to
@@ -145,12 +145,12 @@ const Story = _.create(ExternalData, {
      *
      * @return {Promise<Array<Object>>}
      */
-    filter: function(db, schema, rows, credentials) {
+    async filter(db, schema, rows, credentials) {
         if (credentials.user.type === 'guest') {
             rows = _.filter(rows, { public: true });
         }
-        return Promise.resolve(rows);
-    },
+        return rows;
+    }
 
     /**
      * Add conditions to SQL query based on criteria object
@@ -162,8 +162,8 @@ const Story = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-    apply: function(db, schema, criteria, query) {
-        var special = [
+    async apply(db, schema, criteria, query) {
+        let special = [
             'lead_author_id',
             'time_range',
             'newer_than',
@@ -175,10 +175,10 @@ const Story = _.create(ExternalData, {
             'search',
             'per_user_limit',
         ];
-        ExternalData.apply.call(this, _.omit(criteria, special), query);
+        super.apply(_.omit(criteria, special), query);
 
-        var params = query.parameters;
-        var conds = query.conditions;
+        let params = query.parameters;
+        let conds = query.conditions;
         if (criteria.lead_author_id !== undefined) {
             if (criteria.lead_author_id instanceof Array) {
                 conds.push(`user_ids[1:1] <@ $${params.push(criteria.lead_author_id)}`);
@@ -196,7 +196,7 @@ const Story = _.create(ExternalData, {
             conds.push(`ptime < $${params.push(criteria.older_than)}`);
         }
         if (criteria.bumped_after !== undefined) {
-            var time = `$${params.push(criteria.bumped_after)}`
+            let time = `$${params.push(criteria.bumped_after)}`
             conds.push(`COALESCE(ptime, btime) > ${time}`);
         }
         if (criteria.url !== undefined) {
@@ -216,31 +216,28 @@ const Story = _.create(ExternalData, {
                 conds.push(`unfinished_tasks = 0`);
             }
         }
-        var promise;
         if (criteria.search) {
-            promise = this.applyTextSearch(db, schema, criteria.search, query);
+            await this.applyTextSearch(db, schema, criteria.search, query);
         }
-        return Promise.resolve(promise).then(() => {
-            if (typeof(criteria.per_user_limit) === 'number') {
-                // use a lateral join to limit the number of results per user
-                // apply conditions on sub-query
-                var user = User.getTableName('global');
-                var story = this.getTableName(schema);
-                var conditions = _.concat(`${user}.id = ANY(user_ids)`, query.conditions);
-                var subquery = `
-                    SELECT DISTINCT top_story.id
-                    FROM ${user} JOIN LATERAL (
-                        SELECT * FROM ${story}
-                        WHERE ${conditions.join(' AND ')}
-                        ORDER BY COALESCE(ptime, btime) DESC
-                        LIMIT ${criteria.per_user_limit}
-                    ) top_story ON true
-                `;
-                var condition = `id IN (${subquery})`
-                query.conditions = [ condition ];
-            }
-        });
-    },
+        if (typeof(criteria.per_user_limit) === 'number') {
+            // use a lateral join to limit the number of results per user
+            // apply conditions on sub-query
+            let user = User.getTableName('global');
+            let story = this.getTableName(schema);
+            let conditions = _.concat(`${user}.id = ANY(user_ids)`, query.conditions);
+            let subquery = `
+                SELECT DISTINCT top_story.id
+                FROM ${user} JOIN LATERAL (
+                    SELECT * FROM ${story}
+                    WHERE ${conditions.join(' AND ')}
+                    ORDER BY COALESCE(ptime, btime) DESC
+                    LIMIT ${criteria.per_user_limit}
+                ) top_story ON true
+            `;
+            let condition = `id IN (${subquery})`
+            query.conditions = [ condition ];
+        }
+    }
 
     /**
      * Return SQL expression that yield searchable text
@@ -249,9 +246,9 @@ const Story = _.create(ExternalData, {
      *
      * @return {String}
      */
-    getSearchableText: function(languageCode) {
+    getSearchableText(languageCode) {
         return `"extractStoryText"(type, details, external, '${languageCode}')`;
-    },
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -265,79 +262,79 @@ const Story = _.create(ExternalData, {
      *
      * @return {Promise<Array>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return ExternalData.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.type = row.type;
-                object.user_ids = row.user_ids;
-                object.role_ids = row.role_ids;
-                object.ptime = row.ptime;
-                object.public = row.public;
-                object.published = row.published;
-                object.tags = row.tags;
-                if (row.type === 'task-list') {
-                    object.unfinished_tasks = row.unfinished_tasks;
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            object.type = row.type;
+            object.user_ids = row.user_ids;
+            object.role_ids = row.role_ids;
+            object.ptime = row.ptime;
+            object.public = row.public;
+            object.published = row.published;
+            object.tags = row.tags;
+            if (row.type === 'task-list') {
+                object.unfinished_tasks = row.unfinished_tasks;
+            }
+            if (row.published_version_id) {
+                object.published_version_id = row.published_version_id;
+            }
+            if (row.ready === false) {
+                object.ready = false;
+            }
+            if (row.btime) {
+                object.btime = row.btime;
+            }
+            if (!row.published) {
+                // don't send text when object isn't published and
+                // the user isn't the owner
+                if (!_.includes(object.user_ids, credentials.user.id)) {
+                    object.details = _.omit(object.details, 'text', 'resources');
                 }
-                if (row.published_version_id) {
-                    object.published_version_id = row.published_version_id;
-                }
-                if (row.ready === false) {
-                    object.ready = false;
-                }
-                if (row.btime) {
-                    object.btime = row.btime;
-                }
-                if (!row.published) {
-                    // don't send text when object isn't published and
-                    // the user isn't the owner
-                    if (!_.includes(object.user_ids, credentials.user.id)) {
-                        object.details = _.omit(object.details, 'text', 'resources');
-                    }
-                }
-            });
-            return objects;
-        });
-    },
+            }
+        }
+        return objects;
+    }
 
     /**
      * Import objects sent by client-side code, applying access control
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
+     * @param  {Array<Object>} storiesReceived
+     * @param  {Array<Object>} storiesBefore
      * @param  {Object} credentials
      * @param  {Object} options
      *
      * @return {Promise<Array>}
      */
-    import: function(db, schema, objects, originals, credentials, options) {
-        var storiesPublished = [];
-        return ExternalData.import.call(this, db, schema, objects, originals, credentials).mapSeries((storyReceived, index) => {
-            // make sure current user has permission to modify the object
-            var storyBefore = originals[index];
+    async import(db, schema, storiesReceived, storiesBefore, credentials, options) {
+        let storiesPublished = [];
+        let rows = [];
+        for (let [ index, storyReceived ] of storiesReceived.entries()) {
+            let storyBefore = storiesBefore[index];
             this.checkWritePermission(storyReceived, storyBefore, credentials);
 
+            let row = await super.importOne(db, schema, storyReceived, storyBefore, credentials);
             // set language_codes
             if (storyReceived.details) {
-                storyReceived.language_codes = _.filter(_.keys(storyReceived.details.text), { length: 2 });
+                row.language_codes = _.filter(_.keys(storyReceived.details.text), { length: 2 });
             }
 
             // set the ptime if published is set
             if (storyReceived.published && !storyReceived.ptime) {
-                storyReceived.ptime = new String('NOW()');
+                row.ptime = new String('NOW()');
             }
 
             // update btime if user wants to bump story
             if (storyReceived.bump) {
-                storyReceived.btime = Object('NOW()');
-                delete storyReceived.bump;
+                row.btime = Object('NOW()');
+                delete row.bump;
             }
 
             // mark story as having been manually deleted
             if (storyReceived.deleted) {
-                storyReceived.suppressed = true;
+                row.suppressed = true;
             }
 
             // set unfinished_tasks to null when story type is no longer 'task-list'
@@ -347,47 +344,48 @@ const Story = _.create(ExternalData, {
                 }
             }
 
-            if (storyReceived.published_version_id) {
-                if (storyReceived.published) {
-                    // load the published versions
-                    var criteria = { id: storyReceived.published_version_id, deleted: false };
-                    return this.findOne(db, schema, criteria, '*').then((storyPublished) => {
-                        if (storyPublished) {
-                            // update the original row with properties from the temp copy
-                            var updates = {};
-                            updates.id = storyPublished.id;
-                            updates.details = storyReceived.details;
-                            updates.type = storyReceived.type;
-                            updates.user_ids = storyReceived.user_ids;
-                            updates.role_ids  = storyReceived.role_ids;
-                            updates.public = storyReceived.public;
-                            updates.tags = storyReceived.tags;
-                            updates.language_codes = storyReceived.language_codes;
+            if (storyReceived.published_version_id && storyReceived.published) {
+                // load the original, published version
+                let criteria = { id: storyReceived.published_version_id, deleted: false };
+                let storyPublished = await this.findOne(db, schema, criteria, '*');
+                if (storyPublished) {
+                    // update the original row with properties from the temp copy
+                    let updates = {
+                        id: storyPublished.id,
+                        details: storyReceived.details,
+                        type: storyReceived.type,
+                        user_ids: storyReceived.user_ids,
+                        role_ids: storyReceived.role_ids,
+                        public: storyReceived.public,
+                        tags: storyReceived.tags,
+                        language_codes: storyReceived.language_codes,
+                    };
+                    // check permission again (just in case)
+                    this.checkWritePermission(updates, storyPublished, credentials);
+                    storiesPublished.push(updates);
 
-                            // stick contents of the original row into the temp copy
-                            // so we can retrieve them later potentially
-                            storyReceived.details = storyPublished.details;
-                            storyReceived.type = storyPublished.type;
-                            storyReceived.user_ids = storyPublished.user_ids;
-                            storyReceived.role_ids  = storyPublished.role_ids;
-                            storyReceived.public = storyPublished.public;
-                            storyReceived.tags = storyPublished.tags;
-                            storyReceived.language_codes = storyPublished.language_codes;
-                            storyReceived.deleted = true;
-
-                            // check permission again (just in case)
-                            this.checkWritePermission(updates, storyPublished, credentials);
-                            storiesPublished.push(updates);
-                        }
-                        return storyReceived;
-                    });
+                    // stick contents of the original row into the temp copy
+                    // so we can retrieve them later potentially
+                    row = {
+                        id: storyBefore.id,
+                        details: storyPublished.details,
+                        type: storyPublished.type,
+                        user_ids: storyPublished.user_ids,
+                        role_ids: storyPublished.role_ids,
+                        public: storyPublished.public,
+                        tags: storyPublished.tags,
+                        language_codes: storyPublished.language_codes,
+                        deleted: true,
+                    };
                 }
             }
-            return storyReceived;
-        }).then((storiesReceived) => {
-            return _.concat(storiesReceived, storiesPublished);
-        });
-    },
+            rows.push(row);
+        }
+        for (let storyPublished of storiesPublished) {
+            rows.push(storyPublished);
+        }
+        return rows;
+    }
 
     /**
      * Create associations between newly created or modified rows with
@@ -395,22 +393,18 @@ const Story = _.create(ExternalData, {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
-     * @param  {Array<Object>} rows
+     * @param  {Array<Object>} storiesReceived
+     * @param  {Array<Object>} storiesBefore
+     * @param  {Array<Object>} storiesAfter
      * @param  {Object} credentials
      *
      * @return {Promise}
      */
-     associate: function(db, schema, objects, originals, rows, credentials) {
-         return Promise.try(() => {
-             var deletedStories = _.filter(rows, { deleted: true });
-             return Promise.all([
-                 Bookmark.deleteAssociated(db, schema, { story: deletedStories }),
-                 Notification.deleteAssociated(db, schema, { story: deletedStories }),
-             ]);
-         });
-     },
+     async associate(db, schema, storiesReceived, storiesBefore, storiesAfter, credentials) {
+         let deletedStories = _.filter(storiesAfter, { deleted: true });
+         await Bookmark.deleteAssociated(db, schema, { story: deletedStories });
+         await Notification.deleteAssociated(db, schema, { story: deletedStories });
+     }
 
     /**
      * See if a database change event is relevant to a given user
@@ -421,12 +415,12 @@ const Story = _.create(ExternalData, {
      *
      * @return {Boolean}
      */
-    isRelevantTo: function(event, user, subscription) {
+    isRelevantTo(event, user, subscription) {
         if (subscription.area === 'admin') {
             // admin console doesn't use this object currently
             return false;
         }
-        if (ExternalData.isRelevantTo.call(this, event, user, subscription)) {
+        if (super.isRelevantTo(event, user, subscription)) {
             if (event.current.published && event.current.ready) {
                 return true;
             }
@@ -435,7 +429,7 @@ const Story = _.create(ExternalData, {
             }
         }
         return false;
-    },
+    }
 
     /**
      * Throw an exception if modifications aren't permitted
@@ -444,7 +438,7 @@ const Story = _.create(ExternalData, {
      * @param  {Object} storyBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(storyReceived, storyBefore, credentials) {
+    checkWritePermission(storyReceived, storyBefore, credentials) {
         if (credentials.access !== 'read-write') {
             throw new HTTPError(400);
         }
@@ -460,7 +454,7 @@ const Story = _.create(ExternalData, {
                 if (!_.isEqual(storyReceived.user_ids, storyBefore.user_ids)) {
                     if (storyBefore.user_ids[0] !== credentials.user.id) {
                         // a coauthor can remove himself only
-                        var withoutCurrentUser = _.without(storyBefore.user_ids, credentials.user.id);
+                        let withoutCurrentUser = _.without(storyBefore.user_ids, credentials.user.id);
                         if (!_.isEqual(storyReceived.user_ids, withoutCurrentUser)) {
                             throw new HTTPError(400);
                         }
@@ -483,7 +477,7 @@ const Story = _.create(ExternalData, {
                 throw new HTTPError(400);
             }
         }
-    },
+    }
 
     /**
      * Repopulate role_ids with role ids of authors when their roles change,
@@ -492,46 +486,46 @@ const Story = _.create(ExternalData, {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Number>} userIds
+     * @param  {Array<Number>} userIDs
      *
      * @return {Promise}
      */
-    updateUserRoles: function(db, schema, userIds) {
-        var userTable = User.getTableName('global');
-        var storyTable = this.getTableName(schema);
+    async updateUserRoles(db, schema, userIDs) {
+        let userTable = User.getTableName('global');
+        let storyTable = this.getTableName(schema);
 
         // for normal stories, we update those published earlier on the same day
-        var condition1 = `
+        let condition1 = `
             ptime > current_date::timestamp
         `;
         // for stories where ctime > ptime (meaning they were imported),
         // we update those less than a week old.
-        var condition2 = `
+        let condition2 = `
             ctime > ptime AND ctime > NOW() - INTERVAL '1 week'
         `;
         // subquery that yield story_id and role_id (unnested)
-        var roleIdSubQuery = `
+        let roleIDSubQuery = `
             SELECT s.id AS story_id, UNNEST(u.role_ids) AS role_id
             FROM ${userTable} u
             INNER JOIN ${storyTable} s
             ON u.id = ANY(s.user_ids)
         `;
         // subquery that yield story_id and role_ids (aggregated, distinct)
-        var roleIdsSubQuery = `
+        let roleIDsSubQuery = `
             SELECT story_id, array_agg(DISTINCT role_id) AS role_ids
-            FROM (${roleIdSubQuery}) AS story_role_id
+            FROM (${roleIDSubQuery}) AS story_role_id
             GROUP BY story_id
         `;
-        var sql = `
+        let sql = `
             UPDATE ${storyTable}
             SET role_ids = story_role_ids.role_ids
-            FROM (${roleIdsSubQuery}) AS story_role_ids
+            FROM (${roleIDsSubQuery}) AS story_role_ids
             WHERE (${condition1} OR ${condition2})
             AND user_ids && $1
             AND id = story_role_ids.story_id
         `;
-        return db.execute(sql, [ userIds ]);
-    },
+        await db.execute(sql, [ userIDs ]);
+    }
 
     /**
      * Mark stories as deleted if their lead authors are those specified
@@ -542,27 +536,23 @@ const Story = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-    deleteAssociated: function(db, schema, associations) {
-        var promises = _.mapValues(associations, (objects, type) => {
+    async deleteAssociated(db, schema, associations) {
+        for (let [ type, objects ] of _.entries(associations)) {
             if (_.isEmpty(objects)) {
-                return;
+                continue;
             }
             if (type === 'user') {
-                var userIds = _.map(objects, 'id');
-                var criteria = {
-                    lead_author_id: userIds,
+                let userIDs = _.map(objects, 'id');
+                let criteria = {
+                    lead_author_id: userIDs,
                     deleted: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: true }).then((stories) => {
-                    return Promise.all([
-                        Bookmark.deleteAssociated(db, schema, { story: stories }),
-                        Notification.deleteAssociated(db, schema, { story: stories }),
-                    ]);
-                });
+                let stories = await this.updateMatching(db, schema, criteria, { deleted: true });
+                await Bookmark.deleteAssociated(db, schema, { story: stories });
+                await Notification.deleteAssociated(db, schema, { story: stories });
             }
-        });
-        return Promise.props(promises);
-    },
+        }
+    }
 
     /**
      * Clear deleted flag of stories beloging to specified users
@@ -573,32 +563,30 @@ const Story = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-    restoreAssociated: function(db, schema, associations) {
-        var promises = _.mapValues(associations, (objects, type) => {
+    async restoreAssociated(db, schema, associations) {
+        for (let [ type, objects ] of _.entries(associations)) {
             if (_.isEmpty(objects)) {
-                return;
+                continue;
             }
             if (type === 'user') {
-                var userIds = _.map(objects, 'id');
-                var criteria = {
-                    lead_author_id: userIds,
+                let userIDs = _.map(objects, 'id');
+                let criteria = {
+                    lead_author_id: userIDs,
                     deleted: true,
                     // don't restore stories that were manually deleted
                     suppressed: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: false }).then((stories) => {
-                    return Promise.all([
-                        Bookmark.restoreAssociated(db, schema, { story: stories }),
-                        Notification.restoreAssociated(db, schema, { story: stories }),
-                    ]);
-                });
+                let stories = await this.updateMatching(db, schema, criteria, { deleted: false });
+                await Bookmark.restoreAssociated(db, schema, { story: stories });
+                await Notification.restoreAssociated(db, schema, { story: stories });
             }
-        });
-        return Promise.props(promises);
-    },
-});
+        }
+    }
+}
+
+const instance = new Story;
 
 export {
-    Story as default,
+    instance as default,
     Story,
-}
+};

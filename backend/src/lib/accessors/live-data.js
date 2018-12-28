@@ -1,25 +1,19 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Database from 'database';
-import Data from 'accessors/data';
+import { Data } from 'accessors/data';
 
-const LiveData = _.create(Data, {
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        atime: String,
-        ltime: String,
-        dirty: Boolean,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        dirty: Boolean,
-    },
+class LiveData extends Data {
+    constructor() {
+        super();
+        _.extend(this.columns, {
+            atime: String,
+            ltime: String,
+            dirty: Boolean,
+        });
+        _.extend(this.criteria, {
+            dirty: Boolean,
+        });
+    }
 
     /**
      * Create table in schema
@@ -29,11 +23,11 @@ const LiveData = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise<Boolean>}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -47,8 +41,9 @@ const LiveData = _.create(Data, {
                 PRIMARY KEY (id)
             );
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+        return true;
+    }
 
     /**
      * Attach a modified trigger that accounts for atime, utime, and dirty.
@@ -58,16 +53,17 @@ const LiveData = _.create(Data, {
      *
      * @return {Promise<Boolean>}
      */
-    createChangeTrigger: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async createChangeTrigger(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TRIGGER "indicateLiveDataChangeOnUpdate"
             BEFORE UPDATE ON ${table}
             FOR EACH ROW
             EXECUTE PROCEDURE "indicateLiveDataChange"();
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+        return true;
+    }
 
     /**
      * Attach modified triggers that accounts for atime, utime, and dirty.
@@ -76,15 +72,15 @@ const LiveData = _.create(Data, {
      * @param  {String} schema
      * @param  {Array<String>} propNames
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    createNotificationTriggers: function(db, schema, propNames) {
-        var table = this.getTableName(schema);
-        var args = _.map(propNames, (propName) => {
+    async createNotificationTriggers(db, schema, propNames) {
+        let table = this.getTableName(schema);
+        let args = _.map(propNames, (propName) => {
             // use quotes just in case the name is mixed case
             return `"${propName}"`;
         }).join(', ');
-        var sql = `
+        let sql = `
             CREATE CONSTRAINT TRIGGER "notifyLiveDataChangeOnInsert"
             AFTER INSERT ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
@@ -98,8 +94,8 @@ const LiveData = _.create(Data, {
             FOR EACH ROW
             EXECUTE PROCEDURE "notifyLiveDataChange"(${args});
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -113,21 +109,22 @@ const LiveData = _.create(Data, {
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                if (row.dirty) {
-                    object.dirty = true;
-                }
-                // update access time so regeneration can be expedited
-                this.touch(db, schema, row);
-            });
-            return objects;
-        });
-    },
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            if (row.dirty) {
+                object.dirty = true;
+            }
+            // update access time so regeneration can be expedited
+            this.touch(db, schema, row);
+        }
+        return objects;
+    }
 
-    import: null,
+    async import() {
+        throw new Error('Cannot modify live data');
+    }
 
     /**
      * Lock a row for updates
@@ -140,25 +137,24 @@ const LiveData = _.create(Data, {
      *
      * @return {Promise<Object|null>}
      */
-    lock: function(db, schema, id, interval, columns) {
-        var table = this.getTableName(schema);
-        var parameters = [ id, interval ];
-        var sql = `
+    async lock(db, schema, id, interval, columns) {
+        let table = this.getTableName(schema);
+        let parameters = [ id, interval ];
+        let sql = `
             UPDATE ${table}
             SET ltime = NOW() + CAST($2 AS INTERVAL)
             WHERE id = $1 AND (ltime IS NULL OR ltime < NOW())
             RETURNING ${columns}
         `;
-        return db.query(sql, parameters).get(0).then((row) => {
-            if (row) {
-                if (!this.locked) {
-                    this.locked = [];
-                }
-                this.locked.push({ schema, id });
+        let rows = await db.query(sql, parameters);
+        if (rows[0]) {
+            if (!this.locked) {
+                this.locked = [];
             }
-            return row || null;
-        });
-    },
+            this.locked.push({ schema, id });
+        }
+        return rows[0];
+    }
 
     /**
      * Update a row then unlock it when props are provided. If not, simply
@@ -172,23 +168,23 @@ const LiveData = _.create(Data, {
      *
      * @return {Promise<Object|null>}
      */
-    unlock: function(db, schema, id, props, columns) {
-        var table = this.getTableName(schema);
-        var parameters = [ id ];
-        var sql;
+    async unlock(db, schema, id, props, columns) {
+        let table = this.getTableName(schema);
+        let parameters = [ id ];
+        let assignments = [];
+        let sql;
         if (props) {
-            var assignments = [];
-            var index = parameters.length + 1;
-            _.each(_.keys(this.columns), (name, i) => {
+            let index = parameters.length + 1;
+            for (let name in this.columns) {
                 if (name !== 'id') {
-                    var value = props[name];
+                    let value = props[name];
                     if (value !== undefined) {
-                        var bound = '$' + index++;
+                        let bound = '$' + index++;
                         parameters.push(value);
                         assignments.push(`${name} = ${bound}`);
                     }
                 }
-            });
+            }
             sql = `
                 UPDATE ${table}
                 SET ${assignments.join(',')}, ltime = NULL, dirty = false
@@ -202,11 +198,10 @@ const LiveData = _.create(Data, {
                 WHERE id = $1 AND ltime >= NOW()
             `;
         }
-        return db.query(sql, parameters).get(0).then((row) => {
-            _.pullAllBy(this.locked, { schema, id });
-            return row || null;
-        });
-    },
+        let rows = await db.query(sql, parameters);
+        _.pullAllBy(this.locked, { schema, id });
+        return rows[0] || null;
+    }
 
     /**
      * Unlock any previous locked row
@@ -215,11 +210,14 @@ const LiveData = _.create(Data, {
      *
      * @return {Promise}
      */
-    relinquish: function(db) {
-        return Promise.each(this.locked || [], (lock) => {
-            return this.unlock(db, lock.schema, lock.id);
-        });
-    },
+    async relinquish(db) {
+        if (_.isEmpty(this.locked)) {
+            return;
+        }
+        for (let lock of this.locked) {
+            await this.unlock(db, lock.schema, lock.id);
+        }
+    }
 
     /**
      * Mark rows as dirty
@@ -230,15 +228,15 @@ const LiveData = _.create(Data, {
      *
      * @return {Promise}
      */
-    invalidate: function(db, schema, ids) {
-        var table = this.getTableName(schema);
-        var parameters = [ ids ];
-        var sql = `
+    async invalidate(db, schema, ids) {
+        let table = this.getTableName(schema);
+        let parameters = [ ids ];
+        let sql = `
             UPDATE ${table} SET dirty = true
             WHERE id = ANY($1) RETURNING id, dirty
         `;
-        return db.execute(sql, parameters).return();
-    },
+        await db.execute(sql, parameters);
+    }
 
     /**
      * Update a row's access time
@@ -247,20 +245,21 @@ const LiveData = _.create(Data, {
      * @param  {String} schema
      * @param  {Object} row
      */
-    touch: function(db, schema, row) {
-        var now = new Date;
-        setTimeout(() => {
-            Database.open().then((db) => {
-                this.updateOne(db, schema, {
-                    id: row.id,
-                    atime: now.toISOString(),
-                });
-            });
+    touch(db, schema, row) {
+        let now = new Date;
+        let atime = now.toISOString();
+        setTimeout(async () => {
+            try {
+                let db = await Database.open();
+                await this.updateOne(db, schema, { id: row.id, atime });
+            } catch (err) {
+                console.error(err);
+            }
         }, 20);
-    },
+    }
 
     /**
-     * Look up rows from the database,
+     * Ensure that rows exist in the database
      *
      * @param  {Database} db
      * @param  {String} schema
@@ -270,31 +269,27 @@ const LiveData = _.create(Data, {
      *
      * @return {Array<Object>}
      */
-    vivify: function(db, schema, keys, expectedRows, columns) {
+    async vivify(db, schema, keys, expectedRows, columns) {
         // we need these columns in order to tell which rows are missing
-        var keyColumns = _.keys(keys);
-        var columnsNeeded = columns + ', ' + keyColumns.join(', ');
-        return Data.find.call(this, db, schema, keys, columnsNeeded).then((existingRows) => {
-            // find missing rows
-            var missingRows = [];
-            _.each(expectedRows, (expectedRow) => {
-                // search only by keys
-                var search = _.pick(expectedRow, keyColumns);
-                if (!_.find(existingRows, search)) {
-                    // make row dirty initially
-                    var newRow = _.extend({ dirty: true }, expectedRow)
-                    missingRows.push(newRow);
-                }
-            });
-            // add the ones that are missing
-            return Data.insert.call(this, db, schema, missingRows).then((newRows) => {
-                return _.concat(newRows.reverse(), existingRows);
-            });
-        });
-    },
-});
+        let keyColumns = _.keys(keys);
+        let columnsNeeded = columns + ', ' + keyColumns.join(', ');
+        let existingRows = await super.find(db, schema, keys, columnsNeeded);
+        // find missing rows
+        let missingRows = [];
+        for (let expectedRow of expectedRows) {
+            // search only by keys
+            let search = _.pick(expectedRow, keyColumns);
+            if (!_.find(existingRows, search)) {
+                // make row dirty initially
+                let newRow = _.extend({ dirty: true }, expectedRow)
+                missingRows.push(newRow);
+            }
+        }
+        let newRows = await this.insert(db, schema, missingRows);
+        return _.concat(newRows.reverse(), existingRows);
+    }
+}
 
 export {
-    LiveData as default,
     LiveData,
 };

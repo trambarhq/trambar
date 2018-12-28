@@ -1,43 +1,35 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import Moment from 'moment';
-import Data from 'accessors/data';
+import { Data } from 'accessors/data';
 import HTTPError from 'errors/http-error';
 
-const Notification = _.create(Data, {
-    schema: 'both',
-    table: 'notification',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        type: String,
-        story_id: Number,
-        reaction_id: Number,
-        user_id: Number,
-        target_user_id: Number,
-        seen: Boolean,
-        suppressed: Boolean,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        type: String,
-        story_id: Number,
-        reaction_id: Number,
-        user_id: Number,
-        target_user_id: Number,
-        seen: Boolean,
-        suppressed: Boolean,
+class Notification extends Data {
+    constructor() {
+        super();
+        this.schema = 'both';
+        this.table = 'notification';
+        _.extend(this.columns, {
+            type: String,
+            story_id: Number,
+            reaction_id: Number,
+            user_id: Number,
+            target_user_id: Number,
+            seen: Boolean,
+            suppressed: Boolean,
+        });
+        _.extend(this.criteria, {
+            type: String,
+            story_id: Number,
+            reaction_id: Number,
+            user_id: Number,
+            target_user_id: Number,
+            seen: Boolean,
+            suppressed: Boolean,
 
-        time_range: String,
-        newer_than: String,
-        older_than: String,
-        search: Object,
-    },
+            time_range: String,
+            newer_than: String,
+            older_than: String,
+        });
+    }
 
     /**
      * Create table in schema
@@ -45,11 +37,11 @@ const Notification = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -69,8 +61,8 @@ const Notification = _.create(Data, {
             CREATE INDEX ON ${table} (target_user_id) WHERE deleted = false;
             CREATE INDEX ON ${table} (id) WHERE seen = false AND deleted = false;
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Upgrade table in schema to given DB version (from one version prior)
@@ -79,21 +71,22 @@ const Notification = _.create(Data, {
      * @param  {String} schema
      * @param  {Number} version
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    upgrade: function(db, schema, version) {
+    async upgrade(db, schema, version) {
         if (version === 2) {
             // adding: suppressed
-            var table = this.getTableName(schema);
-            var sql = `
+            let table = this.getTableName(schema);
+            let sql = `
                 ALTER TABLE ${table}
                 ADD COLUMN IF NOT EXISTS
                 suppressed boolean NOT NULL DEFAULT false;
             `;
-            return db.execute(sql).return(true);
+            await db.execute(sql);
+            return true;
         }
-        return Promise.resolve(false);
-    },
+        return false;
+    }
 
     /**
      * Attach triggers to the table.
@@ -101,36 +94,41 @@ const Notification = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'ctime', 'deleted', 'type', 'story_id', 'reaction_id', 'user_id', 'target_user_id', 'seen' ];
-            return this.createNotificationTriggers(db, schema, propNames);
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'ctime',
+            'deleted',
+            'type',
+            'story_id',
+            'reaction_id',
+            'user_id',
+            'target_user_id',
+            'seen'
+        ]);
+    }
 
     /**
      * Add conditions to SQL query based on criteria object
      *
-     * @param  {Database} db
-     * @param  {String} schema
      * @param  {Object} criteria
      * @param  {Object} query
      *
      * @return {Promise}
      */
-    apply: function(db, schema, criteria, query) {
-        var special = [
+    apply(criteria, query) {
+        let special = [
             'time_range',
             'newer_than',
             'older_than',
             'search',
         ];
-        Data.apply.call(this, _.omit(criteria, special), query);
+        super.apply(_.omit(criteria, special), query);
 
-        var params = query.parameters;
-        var conds = query.conditions;
+        let params = query.parameters;
+        let conds = query.conditions;
         if (criteria.time_range !== undefined) {
             conds.push(`ctime <@ $${params.push(criteria.time_range)}::tsrange`);
         }
@@ -140,12 +138,7 @@ const Notification = _.create(Data, {
         if (criteria.older_than !== undefined) {
             conds.push(`ctime < $${params.push(criteria.older_than)}`);
         }
-        if (criteria.search) {
-            // TODO
-            //return this.applyTextSearch(db, schema, criteria.search, query);
-        }
-        return Promise.resolve();
-    },
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -157,30 +150,29 @@ const Notification = _.create(Data, {
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array<Object>>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.ctime = row.ctime;
-                object.type = row.type;
-                object.details = row.details;
-                object.seen = row.seen;
-                if (row.story_id) {
-                    object.story_id = row.story_id;
-                }
-                if (row.reaction_id) {
-                    object.reaction_id = row.reaction_id;
-                }
-                if (row.user_id) {
-                    object.user_id = row.user_id;
-                }
-                object.target_user_id = row.target_user_id;
-            });
-            return objects;
-        });
-    },
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            object.ctime = row.ctime;
+            object.type = row.type;
+            object.details = row.details;
+            object.seen = row.seen;
+            if (row.story_id) {
+                object.story_id = row.story_id;
+            }
+            if (row.reaction_id) {
+                object.reaction_id = row.reaction_id;
+            }
+            if (row.user_id) {
+                object.user_id = row.user_id;
+            }
+            object.target_user_id = row.target_user_id;
+        }
+        return objects;
+    }
 
     /**
      * See if a database change event is relevant to a given user
@@ -191,14 +183,14 @@ const Notification = _.create(Data, {
      *
      * @return {Boolean}
      */
-    isRelevantTo: function(event, user, subscription) {
-        if (Data.isRelevantTo.call(this, event, user, subscription)) {
+    isRelevantTo(event, user, subscription) {
+        if (super.isRelevantTo(event, user, subscription)) {
             if (event.current.target_user_id === user.id) {
                 return true;
             }
         }
         return false;
-    },
+    }
 
     /**
      * Throw an exception if modifications aren't permitted
@@ -207,12 +199,12 @@ const Notification = _.create(Data, {
      * @param  {Object} notificationBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(notificationReceived, notificationBefore, credentials) {
+    checkWritePermission(notificationReceived, notificationBefore, credentials) {
         if (notificationBefore.target_user_id !== credentials.user.id) {
             // can't modify an object that doesn't belong to the user
             throw new HTTPError(400);
         }
-    },
+    }
 
     /**
      * Mark notifications associated with stories or reactions as deleted
@@ -223,27 +215,26 @@ const Notification = _.create(Data, {
      *
      * @return {Promise}
      */
-    deleteAssociated: function(db, schema, associations) {
-        var promises = _.mapValues(associations, (objects, type) => {
+    async deleteAssociated(db, schema, associations) {
+        for (let [ type, objects ] of _.entries(associations)) {
             if (_.isEmpty(objects)) {
-                return;
+                continue;
             }
             if (type === 'story') {
-                var criteria = {
+                let criteria = {
                     story_id: _.map(objects, 'id'),
                     deleted: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: true });
+                await this.updateMatching(db, schema, criteria, { deleted: true });
             } else if (type === 'reaction') {
-                var criteria = {
+                let criteria = {
                     reaction_id: _.map(objects, 'id'),
                     deleted: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: true });
+                await this.updateMatching(db, schema, criteria, { deleted: true });
             }
-        });
-        return Promise.props(promises);
-    },
+        }
+    }
 
     /**
      * Mark notifications associated with stories or reactions as deleted
@@ -254,32 +245,33 @@ const Notification = _.create(Data, {
      *
      * @return {Promise}
      */
-    restoreAssociated: function(db, schema, associations) {
-        var promises = _.mapValues(associations, (objects, type) => {
+    async restoreAssociated(db, schema, associations) {
+        for (let [ type, objects ] of _.entries(associations)) {
             if (_.isEmpty(objects)) {
                 return;
             }
             if (type === 'story') {
-                var criteria = {
+                let criteria = {
                     story_id: _.map(objects, 'id'),
                     deleted: true,
                     suppressed: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: false });
+                await this.updateMatching(db, schema, criteria, { deleted: false });
             } else if (type === 'reaction') {
-                var criteria = {
+                let criteria = {
                     reaction_id: _.map(objects, 'id'),
                     deleted: true,
                     suppressed: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: false });
+                await this.updateMatching(db, schema, criteria, { deleted: false });
             }
-        });
-        return Promise.props(promises);
-    },
-});
+        }
+    }
+}
+
+const instance = new Notification;
 
 export {
-    Notification as default,
+    instance as default,
     Notification,
 };
