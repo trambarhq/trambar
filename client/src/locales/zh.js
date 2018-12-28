@@ -143,6 +143,7 @@ let traditionalPhrases = {
 
     'empty-currently-offline': '你目前離線',
 
+    'image-editor-image-transfer-in-progress': '正在複製網站圖像⋯⋯',
     'image-editor-page-rendering-in-progress': '正在制作網站預覽⋯⋯',
     'image-editor-poster-extraction-in-progress': '正在從影片中提取預覽⋯⋯',
     'image-editor-upload-in-progress': '正在上傳⋯⋯',
@@ -868,6 +869,7 @@ let simplifiedPhrases = {
 
     'empty-currently-offline': '你目前离线',
 
+    'image-editor-image-transfer-in-progress': '正在复制网站图像⋯⋯',
     'image-editor-page-rendering-in-progress': '正在制作网站预览⋯⋯',
     'image-editor-poster-extraction-in-progress': '正在从影片中提取预览⋯⋯',
     'image-editor-upload-in-progress': '正在上传⋯⋯',

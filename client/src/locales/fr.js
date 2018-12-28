@@ -90,6 +90,7 @@ const phrases = {
 
     'empty-currently-offline': "Vous êtes actuellement hors ligne",
 
+    'image-editor-image-transfer-in-progress': "Copier l'image du site web...",
     'image-editor-page-rendering-in-progress': "Rendu de l'aperçu du site Web...",
     'image-editor-poster-extraction-in-progress': "Extraire l'aperçu de la vidéo...",
     'image-editor-upload-in-progress': "Télécharger en cours...",

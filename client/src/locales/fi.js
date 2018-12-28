@@ -90,6 +90,7 @@ const phrases = {
 
     'empty-currently-offline': 'Olet offline-tilassa',
 
+    'image-editor-image-transfer-in-progress': 'Kuvan kopiointi verkkosivustosta...',
     'image-editor-page-rendering-in-progress': 'Sivuston esikatselun luominen...',
     'image-editor-poster-extraction-in-progress': 'Esikatselun poistaminen videosta...',
     'image-editor-upload-in-progress': 'Lataus käynnissä...',

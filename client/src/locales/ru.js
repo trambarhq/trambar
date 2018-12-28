@@ -97,6 +97,7 @@ let phrases = {
 
     'empty-currently-offline': 'Вы не подключены к Интернету',
 
+    'image-editor-image-transfer-in-progress': 'Копирование изображения с веб-сайта...',
     'image-editor-page-rendering-in-progress': 'Создание предварительного просмотра веб-сайта...',
     'image-editor-poster-extraction-in-progress': 'Извлечение предварительного просмотра из видео...',
     'image-editor-upload-in-progress': 'Загрузка выполняется...',

@@ -162,6 +162,10 @@ class ImageEditor extends PureComponent {
                     // web-site preview is being generated
                     message = t('image-editor-page-rendering-in-progress');
                     icon = 'file-image-o';
+                } else if (resource.type === 'image') {
+                    // image is being copied in the backend
+                    message = t('image-editor-image-transfer-in-progress');
+                    icon = 'file-image-o';
                 }
             }
         }
