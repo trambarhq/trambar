@@ -269,7 +269,7 @@ class NewNotificationsBadge extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, env } = this.props;
         if (!database.context.schema) {
             return null;
@@ -278,27 +278,24 @@ class NewNotificationsBadge extends AsyncComponent {
             return null;
         }
         let db = database.use({ by: this });
-        return db.start().then((currentUserID) => {
-            return UserFinder.findUser(db, currentUserID).then((user) => {
-                return NotificationFinder.findNotificationsUnseenByUser(db, user).then((notifications) => {
-                    let count = notifications.length;
-                    if (env.platform === 'browser') {
-                        changeFavIcon(count);
-                        changeDocumentTitle(count);
-                    } else if (env.platform === 'cordova') {
-                        setApplicationIconBadgeNumber(count);
-                    }
-                    if (!count) {
-                        return null;
-                    }
-                    return (
-                        <span className="badge">
-                            <span className="number">{count}</span>
-                        </span>
-                    )
-                });
-            });
-        });
+        let currentUserID = await db.start();
+        let currentUser = await UserFinder.findUser(db, currentUserID);
+        let notifications = await NotificationFinder.findNotificationsUnseenByUser(db, currentUser);
+        let count = notifications.length;
+        if (env.platform === 'browser') {
+            changeFavIcon(count);
+            changeDocumentTitle(count);
+        } else if (env.platform === 'cordova') {
+            setApplicationIconBadgeNumber(count);
+        }
+        if (!count) {
+            return null;
+        }
+        return (
+            <span className="badge">
+                <span className="number">{count}</span>
+            </span>
+        );
     }
 }
 

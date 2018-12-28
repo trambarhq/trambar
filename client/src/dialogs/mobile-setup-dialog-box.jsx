@@ -46,7 +46,7 @@ class MobileSetupForm extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, env, system, onClose } = this.props;
         let db = database.use({ by: this });
         let props = {
@@ -60,22 +60,12 @@ class MobileSetupForm extends AsyncComponent {
             onClose,
         };
         meanwhile.show(<MobileSetupFormSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return UserFinder.findUser(db, currentUserID).then((user) => {
-                props.currentUser = user;
-            });
-        }).then(() => {
-            return db.beginMobileSession('client').then((code) => {
-                props.activationCode = code;
-            });
-            meanwhile.show(<MobileSetupFormSync {...props} />);
-        }).then(() => {
-            return DeviceFinder.findUserDevices(db, props.currentUser).then((devices) => {
-                props.devices = devices;
-            });
-        }).then(() => {
-            return <MobileSetupFormSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.currentUser = await UserFinder.findUser(db, currentUserID);
+        props.activationCode = await db.beginMobileSession('client')
+        meanwhile.show(<MobileSetupFormSync {...props} />);
+        props.devices = await DeviceFinder.findUserDevices(db, props.currentUser);
+        return <MobileSetupFormSync {...props} />;
     }
 
     /**

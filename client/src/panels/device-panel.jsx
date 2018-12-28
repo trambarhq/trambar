@@ -128,16 +128,17 @@ class DevicePanel extends PureComponent {
      *
      * @param  {Object} evt
      */
-    handleRevokeConfirm = (evt) => {
+    handleRevokeConfirm = async (evt) => {
         let { database, devices } = this.props;
         let { selectedDeviceID } = this.state;
         let device = _.find(devices, { id: selectedDeviceID });
         let db = database.use({ schema: 'global', by: this });
-        db.removeOne({ table: 'device' }, device).then(() => {
-            return db.endMobileSession(device.session_handle);
-        }).finally(() => {
+        try {
+            await db.removeOne({ table: 'device' }, device);
+            await db.endMobileSession(device.session_handle);
+        } finally {
             this.handleDialogClose();
-        });
+        }
     }
 
     /**
