@@ -34,20 +34,12 @@ class NotificationList extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
-        let {
-            database,
-            route,
-            env,
-            currentUser,
-            notifications,
-            scrollToNotificationID,
-        } = this.props;
+    async renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let { currentUser, notifications } = this.props;
+        let { scrollToNotificationID } = this.props;
         let db = database.use({ by: this });
         let props = {
-            users: undefined,
-            stories: undefined,
-
             currentUser,
             notifications,
             database,
@@ -56,18 +48,11 @@ class NotificationList extends AsyncComponent {
             scrollToNotificationID,
         };
         meanwhile.show(<NotificationListSync {...props} />);
-        return db.start().then((userID) => {
-            return UserFinder.findNotificationTriggerers(db, props.notifications).then((users) => {
-                props.users = users;
-            });
-        }).then(() => {
-            meanwhile.show(<NotificationListSync {...props} />);
-            return StoryFinder.findStoriesOfNotifications(db, props.notifications, props.currentUser).then((stories) => {
-                props.stories = stories;
-            });
-        }).then(() => {
-            return <NotificationListSync {...props} />;
-        })
+        let currentUserID = await db.start();
+        props.users = await UserFinder.findNotificationTriggerers(db, props.notifications);
+        meanwhile.show(<NotificationListSync {...props} />);
+        props.stories = await StoryFinder.findStoriesOfNotifications(db, props.notifications, props.currentUser);
+        return <NotificationListSync {...props} />;
     }
 }
 

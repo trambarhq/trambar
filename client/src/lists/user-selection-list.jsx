@@ -21,7 +21,7 @@ class UserSelectionList extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let {
             database,
             route,
@@ -40,15 +40,10 @@ class UserSelectionList extends AsyncComponent {
             onSelect,
         };
         meanwhile.show(<UserSelectionListSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return ProjectFinder.findCurrentProject(db).then((project) => {
-                return UserFinder.findProjectMembers(db, project).then((users) => {
-                    props.users = users;
-                });
-            });
-        }).then(() => {
-            return <UserSelectionListSync {...props} />
-        });
+        let currentUserID = await db.start();
+        let project = await ProjectFinder.findCurrentProject(db);
+        props.users = await UserFinder.findProjectMembers(db, project);
+        return <UserSelectionListSync {...props} />
     }
 }
 

@@ -32,12 +32,8 @@ class ReactionList extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let {
-            reactions,
-            currentUser,
-            highlightReactionID,
-            scrollToReactionID,
-        } = this.props;
+        let { reactions, currentUser } = this.props;
+        let { highlightReactionID, scrollToReactionID } = this.props;
         let anchorReactionID = scrollToReactionID || highlightReactionID;
         let props = {
             items: sortReactions(reactions, currentUser),
@@ -104,19 +100,10 @@ class ReactionList extends PureComponent {
      * @return {ReactElement}
      */
     handleReactionRender = (evt) => {
-        let {
-            database,
-            route,
-            payloads,
-            env,
-            currentUser,
-            story,
-            respondents,
-            repo,
-            access,
-            highlightReactionID,
-            onFinish,
-        } = this.props;
+        let { database, route, payloads, env } = this.props;
+        let { currentUser, story, respondents, repo } = this.props;
+        let { access, highlightReactionID } = this.props;
+        let { onFinish } = this.props;
         let reaction = evt.item;
         let isUserDraft = false;
         let isNewComment = false;

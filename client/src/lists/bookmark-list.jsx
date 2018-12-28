@@ -36,31 +36,12 @@ class BookmarkList extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
-        let {
-            database,
-            route,
-            payloads,
-            env,
-            access,
-            bookmarks,
-            currentUser,
-            project,
-            highlightStoryID,
-            scrollToStoryID,
-        } = this.props;
+    async renderAsync(meanwhile) {
+        let { database, route, payloads, env } = this.props;
+        let { access, bookmarks, currentUser, project } = this.props;
+        let { highlightStoryID, scrollToStoryID } = this.props;
         let db = database.use({ by: this });
         let props = {
-            stories: undefined,
-            draftStories: undefined,
-            authors: undefined,
-            senders: undefined,
-            reactions: undefined,
-            respondents: undefined,
-            recommendations: undefined,
-            recipients: undefined,
-            repos: undefined,
-
             access,
             bookmarks,
             currentUser,
@@ -73,53 +54,25 @@ class BookmarkList extends AsyncComponent {
             env,
         };
         meanwhile.show(<BookmarkListSync {...props} />);
-        return db.start().then((userID) => {
-            return RepoFinder.findProjectRepos(db, props.project).then((repos) => {
-                props.repos = repos;
-            });
-        }).then(() => {
-            return StoryFinder.findStoriesOfBookmarks(db, props.bookmarks, props.currentUser).then((stories) => {
-                props.stories = stories
-            });
-        }).then(() => {
-            meanwhile.show(<BookmarkListSync {...props} />);
-            return StoryFinder.findDraftStories(db, props.currentUser).then((stories) => {
-                props.draftStories = stories;
-            });
-        }).then(() => {
-            meanwhile.show(<BookmarkListSync {...props} />);
-            let stories = _.filter(_.concat(props.draftStories, props.stories));
-            return UserFinder.findStoryAuthors(db, stories).then((users) => {
-                props.authors = users;
-            });
-        }).then(() => {
-            meanwhile.show(<BookmarkListSync {...props} />);
-            return UserFinder.findBookmarkSenders(db, props.bookmarks).then((users) => {
-                props.senders = users;
-            });
-        }).then(() => {
-            meanwhile.show(<BookmarkListSync {...props} />);
-            return ReactionFinder.findReactionsToStories(db, props.stories, props.currentUser).then((reactions) => {
-                props.reactions = reactions;
-            });
-        }).then(() => {
-            meanwhile.show(<BookmarkListSync {...props} />);
-            return UserFinder.findReactionAuthors(db, props.reactions).then((users) => {
-                props.respondents = users;
-            });
-        }).then(() => {
-            meanwhile.show(<BookmarkListSync {...props} />);
-            return BookmarkFinder.findBookmarksByUser(db, props.currentUser).then((bookmarks) => {
-                props.recommendations = bookmarks;
-            });
-        }).then(() => {
-            meanwhile.show(<BookmarkListSync {...props} />);
-            return UserFinder.findBookmarkRecipients(db, props.recommendations).then((users) => {
-                props.recipients = users;
-            });
-        }).then(() => {
-            return <BookmarkListSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.repos = await RepoFinder.findProjectRepos(db, props.project);
+        props.stories = await StoryFinder.findStoriesOfBookmarks(db, props.bookmarks, props.currentUser)
+        meanwhile.show(<BookmarkListSync {...props} />);
+        props.draftStories = await StoryFinder.findDraftStories(db, props.currentUser)
+        meanwhile.show(<BookmarkListSync {...props} />);
+        let stories = _.filter(_.concat(props.draftStories, props.stories));
+        props.authors = await UserFinder.findStoryAuthors(db, stories);
+        meanwhile.show(<BookmarkListSync {...props} />);
+        props.senders = await UserFinder.findBookmarkSenders(db, props.bookmarks);
+        meanwhile.show(<BookmarkListSync {...props} />);
+        props.reactions = await ReactionFinder.findReactionsToStories(db, props.stories, props.currentUser);
+        meanwhile.show(<BookmarkListSync {...props} />);
+        props.respondents = await UserFinder.findReactionAuthors(db, props.reactions);
+        meanwhile.show(<BookmarkListSync {...props} />);
+        props.recommendations = await BookmarkFinder.findBookmarksByUser(db, props.currentUser);
+        meanwhile.show(<BookmarkListSync {...props} />);
+        props.recipients = await UserFinder.findBookmarkRecipients(db, props.recommendations);
+        return <BookmarkListSync {...props} />;
     }
 }
 
@@ -225,24 +178,10 @@ class BookmarkListSync extends PureComponent {
      * @return {ReactElement|null}
      */
     handleBookmarkRender = (evt) => {
-        let {
-            database,
-            route,
-            env,
-            payloads,
-            currentUser,
-            stories,
-            reactions,
-            respondents,
-            draftStories,
-            authors,
-            recommendations,
-            senders,
-            recipients,
-            repos,
-            access,
-            highlightStoryID,
-        } = this.props;
+        let { database, route, env, payloads } = this.props;
+        let { stories, draftStories, reactions, recommendations } = this.props;
+        let { currentUser, authors, senders, recipients, respondents } = this.props;
+        let { repos, access, highlightStoryID } = this.props;
         let bookmark = evt.item;
         let story = findStory(stories, bookmark);
         if (!story) {
