@@ -310,11 +310,10 @@ class ReactionEditor extends PureComponent {
      *
      * @return {Promise<Reaction>}
      */
-    saveDraft(draft, immediate, resourceIndex) {
-        return this.changeDraft(draft, resourceIndex).then((reaction) => {
-            this.saveReaction(reaction, immediate);
-            return reaction;
-        });
+    async saveDraft(draft, immediate, resourceIndex) {
+        let reaction = await this.changeDraft(draft, resourceIndex);
+        this.saveReaction(reaction, immediate);
+        return reaction;
     }
 
     /**
@@ -325,7 +324,7 @@ class ReactionEditor extends PureComponent {
      *
      * @return {Promise<Reaction>}
      */
-    saveReaction(reaction, immediate) {
+    async saveReaction(reaction, immediate) {
         let { database, payloads } = this.props;
         let { original } = this.state;
         // send images and videos to server
@@ -340,13 +339,11 @@ class ReactionEditor extends PureComponent {
             },
         };
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.saveOne({ table: 'reaction' }, reaction, options).then((reaction) => {
-                // start file upload
-                payloads.dispatch(reaction);
-                return reaction;
-            });
-        });
+        let currentUserID = await db.start();
+        let reactionAfter = await db.saveOne({ table: 'reaction' }, reaction, options);
+        // start file upload
+        payloads.dispatch(reactionAfter);
+        return reactionAfter;
     }
 
     /**
@@ -356,9 +353,10 @@ class ReactionEditor extends PureComponent {
      *
      * @return {Promise<Reaction>}
      */
-    removeReaction(reaction) {
+    async removeReaction(reaction) {
         let { database } = this.props;
         let db = database.use({ by: this });
+        let currentUserID = await db.start();
         return db.removeOne({ table: 'reaction' }, reaction);
     }
 
@@ -447,7 +445,7 @@ class ReactionEditor extends PureComponent {
      *
      * @return {Promise<Reaction>}
      */
-    handlePublishClick = (evt) => {
+    handlePublishClick = async (evt) => {
         let { env } = this.props;
         let { draft } = this.state;
         this.triggerFinishEvent();
@@ -456,36 +454,30 @@ class ReactionEditor extends PureComponent {
         draft.published = true;
 
         let resources = draft.details.resources;
-        return ResourceUtils.attachMosaic(resources, env).then(() => {
-            return this.saveDraft(draft, true);
-        });
+        await ResourceUtils.attachMosaic(resources, env);
+        await this.saveDraft(draft, true);
     }
 
     /**
      * Called when user click Cancel button
      *
      * @param  {Event} evt
-     *
-     * @return {Promise<Reaction>}
      */
-    handleCancelClick = (evt) => {
+    handleCancelClick = async (evt) => {
         let { reaction } = this.props;
-        return Promise.try(() => {
-            this.triggerFinishEvent();
+        this.triggerFinishEvent();
 
-            if (reaction) {
-                if (reaction.ptime) {
-                    // reaction was published before--publish it again
-                    reaction = _.clone(reaction);
-                    reaction.published = true;
-                    return this.saveReaction(reaction);
-                } else {
-                    // delete saved unpublished reaction
-                    return this.removeReaction(reaction);
-                }
+        if (reaction) {
+            if (reaction.ptime) {
+                // reaction was published before--publish it again
+                reaction = _.clone(reaction);
+                reaction.published = true;
+                await this.saveReaction(reaction);
+            } else {
+                // delete saved unpublished reaction
+                await this.removeReaction(reaction);
             }
-            return reaction;
-        });
+        }
     }
 
     /**
@@ -495,7 +487,7 @@ class ReactionEditor extends PureComponent {
      *
      * @return {Promise}
      */
-    handleResourcesChange = (evt) => {
+    handleResourcesChange = async (evt) => {
         let { draft } = this.state;
         let resourcesBefore = _.get(draft, 'details.resources');
         let resourcesAfter = evt.resources;
@@ -503,7 +495,7 @@ class ReactionEditor extends PureComponent {
         if (resourcesBefore !== resourcesAfter) {
             let immediate = hasUnsentFiles(resourcesAfter);
             draft = _.decoupleSet(draft, 'details.resources', resourcesAfter);
-            return this.saveDraft(draft, immediate, selectedResourceIndex);
+            await this.saveDraft(draft, immediate, selectedResourceIndex);
         } else {
             this.setState({ selectedResourceIndex });
         }

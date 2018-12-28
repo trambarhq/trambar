@@ -81,7 +81,7 @@ class MediaImporter extends PureComponent {
      *
      * @return {Promise<Number|null>}
      */
-    importFiles(files) {
+    async importFiles(files) {
         // create a copy of the array so it doesn't disappear during
         // asynchronous operation
         files = _.filter(files, (file) => {
@@ -92,16 +92,15 @@ class MediaImporter extends PureComponent {
             return this.getResourceType(file.type);
         });
         let placeholders = this.addResourcePlaceholders(types);
-        return Promise.each(files, (file, index) => {
+        for (let [ index, file ] of files.entries()) {
             // import the file then replace the placeholder
-            return this.importFile(file).then((res) => {
+            try {
+                let res = await this.importFile(file);
                 this.updateResource(placeholders[index], res);
-                return null;
-            }).catch((err) => {
+            } catch (err) {
                 this.removeResource(placeholders[index]);
-                return null;
-            });
-        });
+            }
+        }
     }
 
     /**
@@ -111,7 +110,7 @@ class MediaImporter extends PureComponent {
      *
      * @return {Promise<Object>}
      */
-    importFile(file) {
+    async importFile(file) {
         switch (this.getResourceType(file.type)) {
             case 'image':
                 return this.importImageFile(file);
@@ -129,10 +128,11 @@ class MediaImporter extends PureComponent {
      *
      * @return {Promise<Object>}
      */
-    importImageFile(file) {
+    async importImageFile(file) {
         let { payloads } = this.props;
         let payload = payloads.add('image').attachFile(file);
-        return MediaLoader.getImageMetadata(file).then((meta) => {
+        try {
+            let meta = await MediaLoader.getImageMetadata(file);
             return {
                 type: 'image',
                 payload_token: payload.id,
@@ -142,7 +142,7 @@ class MediaImporter extends PureComponent {
                 filename: file.name,
                 imported: true,
             };
-        }).catch((err) => {
+        } catch (err) {
             // not a format that the browser recognizes
             return {
                 type: 'image',
@@ -151,7 +151,7 @@ class MediaImporter extends PureComponent {
                 filename: file.name,
                 imported: true,
             };
-        });
+        }
     }
 
     /**
@@ -161,47 +161,47 @@ class MediaImporter extends PureComponent {
      *
      * @return {Promise<Object>}
      */
-    importVideoFile(file) {
+    async importVideoFile(file) {
         let { payloads } = this.props;
         // if file is in a QuickTime container, make sure metadata is
         // at the beginning of the file
-        return QuickStart.process(file).then((blob) => {
-            if (!blob) {
-                // if video wasn't processed, use the original file
-                blob = file;
-            }
-            let payload = payloads.add('video');
-            if (USE_STREAM) {
-                // upload file in small chunks
-                let stream = payloads.stream().pipe(blob);
-                payload.attachStream(stream);
-            } else {
-                payload.attachFile(blob);
-            }
-            return MediaLoader.getVideoMetadata(blob).then((meta) => {
-                payload.attachFile(meta.poster, 'poster')
-                return {
-                    type: 'video',
-                    payload_token: payload.id,
-                    width: meta.width,
-                    height: meta.height,
-                    format: meta.format,
-                    duration: meta.duration,
-                    filename: file.name,
-                    imported: true,
-                };
-            }).catch((err) => {
-                // not MP4--poster needs to be generated on server side
-                payload.attachStep('main', 'poster')
-                return {
-                    type: 'video',
-                    payload_token: payload.id,
-                    format: MediaLoader.extractFileFormat(file.type),
-                    filename: file.name,
-                    imported: true,
-                };
-            });
-        });
+        let blob = await QuickStart.process(file);
+        if (!blob) {
+            // if video wasn't processed, use the original file
+            blob = file;
+        }
+        let payload = payloads.add('video');
+        if (USE_STREAM) {
+            // upload file in small chunks
+            let stream = payloads.stream().pipe(blob);
+            payload.attachStream(stream);
+        } else {
+            payload.attachFile(blob);
+        }
+        try {
+            let meta = await MediaLoader.getVideoMetadata(blob);
+            payload.attachFile(meta.poster, 'poster')
+            return {
+                type: 'video',
+                payload_token: payload.id,
+                width: meta.width,
+                height: meta.height,
+                format: meta.format,
+                duration: meta.duration,
+                filename: file.name,
+                imported: true,
+            };
+        } catch (err) {
+            // not MP4--poster needs to be generated on server side
+            payload.attachStep('main', 'poster')
+            return {
+                type: 'video',
+                payload_token: payload.id,
+                format: MediaLoader.extractFileFormat(file.type),
+                filename: file.name,
+                imported: true,
+            };
+        }
     }
 
     /**
@@ -211,7 +211,7 @@ class MediaImporter extends PureComponent {
      *
      * @return {Promise<Object>}
      */
-    importAudioFile(file) {
+    async importAudioFile(file) {
         let { payloads } = this.props;
         let payload = payloads.add('audio');
         if (USE_STREAM) {
@@ -220,7 +220,8 @@ class MediaImporter extends PureComponent {
         } else {
             payload.attachFile(file);
         }
-        return MediaLoader.getAudioMetadata(file).then((meta) => {
+        try {
+            let meta = await MediaLoader.getAudioMetadata(file);
             let audio = {
                 type: 'audio',
                 payload_token: payload.id,
@@ -229,18 +230,14 @@ class MediaImporter extends PureComponent {
                 filename: file.name,
                 imported: true,
             };
-            return MediaTagReader.extractAlbumArt(file).then((imageBlob) => {
-                if (!imageBlob) {
-                    return audio;
-                }
-                payload.attachFile(imageBlob, 'poster');
-                return MediaLoader.getImageMetadata(imageBlob).then((meta) => {
-                    audio.width = meta.width;
-                    audio.height = meta.height;
-                    return audio;
-                });
-            });
-        }).catch((err) => {
+            let imageBlob = await MediaTagReader.extractAlbumArt(file);
+            if (imageBlob) {
+                let meta = await MediaLoader.getImageMetadata(imageBlob);
+                audio.width = meta.width;
+                audio.height = meta.height;
+            }
+            payload.attachFile(imageBlob, 'poster');
+        } catch (err) {
             return {
                 type: 'audio',
                 payload_token: payload.id,
@@ -248,7 +245,7 @@ class MediaImporter extends PureComponent {
                 filename: file.name,
                 imported: true,
             };
-        });
+        }
     }
 
     /**
@@ -258,31 +255,25 @@ class MediaImporter extends PureComponent {
      *
      * @return {Promise<Number>}
      */
-    importDataItems(items) {
+    async importDataItems(items) {
         let { payloads } = this.props;
-        return retrieveDataItemTexts(items).then((strings) => {
-            let html = strings['text/html'];
-            // see if it's an image being dropped
-            if (/<img\b/i.test(html) && this.isAcceptable('image')) {
-                let m = /<img\b.*?\bsrc="(.*?)"/.exec(html);
-                if (m) {
-                    let url = _.unescape(m[1]);
-                    let filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
-                    let payload = payloads.add('image').attachURL(url);
-                    return {
-                        type: 'image',
-                        payload_token: payload.id,
-                        filename: filename,
-                    };
-                }
+        let strings = await retrieveDataItemTexts(items);
+        let html = strings['text/html'];
+        // see if it's an image being dropped
+        if (/<img\b/i.test(html) && this.isAcceptable('image')) {
+            let m = /<img\b.*?\bsrc="(.*?)"/.exec(html);
+            if (m) {
+                let url = _.unescape(m[1]);
+                let filename = url.replace(/.*\/([^\?#]*).*/, '$1') || undefined;
+                let payload = payloads.add('image').attachURL(url);
+                let res = {
+                    type: 'image',
+                    payload_token: payload.id,
+                    filename: filename,
+                };
+                this.addResources([ res ]);
             }
-        }).then((res) => {
-            if (!res) {
-                return 0;
-            }
-            this.addResources([ res ]);
-            return null;
-        });
+        }
     }
 
     /**

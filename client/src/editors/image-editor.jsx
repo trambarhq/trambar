@@ -195,16 +195,15 @@ class ImageEditor extends PureComponent {
      * @param  {Object} prevProps
      * @param  {Object} prevState
      */
-    componentDidUpdate(prevProps, prevState) {
+    async componentDidUpdate(prevProps, prevState) {
         let { loadingFullImage } = this.state;
         let localURL = this.getLocalImageURL();
         let remoteURL = this.getRemoteImageURL();
         if (!localURL && remoteURL) {
             if (loadingFullImage !== remoteURL) {
                 this.setState({ loadingFullImage: remoteURL });
-                BlobManager.fetch(remoteURL).then(() => {
-                    this.setState({ fullImageLoaded: remoteURL });
-                });
+                await BlobManager.fetch(remoteURL);
+                this.setState({ fullImageLoaded: remoteURL });
             }
         }
     }
