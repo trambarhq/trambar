@@ -195,6 +195,17 @@ class Payload {
         });
         return _.sum(remainingBytes);
     }
+
+    /**
+     * Cancel a payload
+     */
+    cancel() {
+        _.each(this.parts, (part, key) => {
+            if (part.promise && part.promise.cancel) {
+                part.promise.cancel();
+            }
+        });
+    }
 }
 
 export {
