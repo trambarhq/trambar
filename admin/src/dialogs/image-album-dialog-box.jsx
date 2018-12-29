@@ -67,12 +67,12 @@ class ImageAlbum extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
-        let { database, env, payloads, image, show, purpose, onSelect, onCancel } = this.props;
+    async renderAsync(meanwhile) {
+        let { database, env, payloads } = this.props;
+        let { image, show, purpose } = this.props;
+        let { onSelect, onCancel } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            pictures: undefined,
-
             show,
             purpose,
             image,
@@ -83,13 +83,9 @@ class ImageAlbum extends AsyncComponent {
             onCancel,
         };
         meanwhile.show(<ImageAlbumSync {...props} />);
-        return db.start().then((userID) => {
-            return PictureFinder.findPictures(db, purpose).then((pictures) => {
-                props.pictures = pictures;
-            });
-        }).then(() => {
-            return <ImageAlbumSync {...props} />
-        });
+        let currentUserID = await db.start();
+        props.pictures = await PictureFinder.findPictures(db, purpose);
+        return <ImageAlbumSync {...props} />
     }
 }
 
@@ -283,37 +279,35 @@ class ImageAlbumSync extends PureComponent {
      *
      * @return {Promise<Picture>}
      */
-    uploadPictures(files) {
+    async uploadPictures(files) {
         let { database, payloads, purpose } = this.props;
         files = _.filter(files, (file) => {
             return /^image\//.test(file.type);
         });
         let db = database.use({ schema: 'global', by: this });
-        return db.start().then((currentUserID) => {
-            // create a picture object for each file, attaching payloads to them
-            return Promise.mapSeries(files, (file, index) => {
-                let payload = payloads.add('image').attachFile(file);
-                return MediaLoader.getImageMetadata(file).then((meta) => {
-                    return {
-                        purpose,
-                        user_id: currentUserID,
-                        details: {
-                            payload_token: payload.id,
-                            width: meta.width,
-                            height: meta.height,
-                            format: meta.format,
-                        },
-                    };
-                });
-            }).then((pictures) => {
-                // save picture objects
-                return db.save({ table: 'picture' }, pictures).each((picture) => {
-                    // send the payload
-                    payloads.dispatch(picture);
-                    return null;
-                });
+        let currentUserID = await db.start();
+        let pictures = [];
+        // create a picture object for each file, attaching payloads to them
+        for (let file of files) {
+            let payload = payloads.add('image').attachFile(file);
+            let meta = await MediaLoader.getImageMetadata(file);
+            pictures.push({
+                purpose,
+                user_id: currentUserID,
+                details: {
+                    payload_token: payload.id,
+                    width: meta.width,
+                    height: meta.height,
+                    format: meta.format,
+                },
             });
-        });
+        }
+        // save picture objects
+        let picturesAfter = await db.save({ table: 'picture' }, pictures);
+        for (let pictureAfter of picturesAfter) {
+            // send the payload
+            payloads.dispatch(pictureAfter);
+        }
     }
 
     /**
@@ -323,7 +317,7 @@ class ImageAlbumSync extends PureComponent {
      *
      * @return {Promise<Array>}
      */
-    removePictures(pictureIDs) {
+    async removePictures(pictureIDs) {
         let { database, pictures } = this.props;
         let hash = _.keyBy(pictures, 'id');
         pictures = _.filter(_.map(pictureIDs, (id) => {
@@ -333,15 +327,14 @@ class ImageAlbumSync extends PureComponent {
             return;
         }
         let db = database.use({ schema: 'global', by: this });
-        return db.start().then((userID) => {
-            let changes = _.map(pictures, (picture) => {
-                return {
-                    id: picture.id,
-                    deleted: true,
-                };
-            });
-            return db.save({ table: 'picture' }, changes);
+        let currentUserID = await db.start();
+        let changes = _.map(pictures, (picture) => {
+            return {
+                id: picture.id,
+                deleted: true,
+            };
         });
+        return db.save({ table: 'picture' }, changes);
     }
 
     /**

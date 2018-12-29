@@ -27,25 +27,20 @@ class TaskList extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, env, server, scrollToTaskID } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            tasks: undefined,
             server,
             env,
             scrollToTaskID,
         };
         meanwhile.show(<TaskListSync {...props} />);
-        return db.start().then((currentUserID) => {
-            if (server) {
-                return TaskFinder.findServerTasks(db, server).then((tasks) => {
-                    props.tasks = tasks;
-                });
-            }
-        }).then(() => {
-            return <TaskListSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        if (server) {
+            props.tasks = await TaskFinder.findServerTasks(db, server);
+        }
+        return <TaskListSync {...props} />;
     }
 }
 

@@ -7,7 +7,7 @@ if (typeof(cordova) === 'object') {
     window.addEventListener('load', initialize);
 }
 
-function initialize(evt) {
+async function initialize(evt) {
     let appContainer = document.getElementById('app-container');
     if (!appContainer) {
         throw new Error('Unable to find app element in DOM');
@@ -19,18 +19,15 @@ function initialize(evt) {
         importFuncs[key] = libraries[key];
     }
     importFuncs['app'] = () => import('application' /* webpackChunkName: "app" */);
-    BootstrapLoader.load(importFuncs, showProgress).then((modules) => {
-        let AppCore = modules['app'].AppCore;
-        let Application = modules['app'].default;
-        let React = modules['react'];
-        let ReactDOM = modules['react-dom'];
-
-        AppCore(Application.coreConfiguration).then((appProps) => {
-            let appElement = React.createElement(Application, appProps);
-            ReactDOM.render(appElement, appContainer);
-            hideSplashScreen();
-        });
-    });
+    let modules = await BootstrapLoader.load(importFuncs, showProgress);
+    let AppCore = modules['app'].AppCore;
+    let Application = modules['app'].default;
+    let React = modules['react'];
+    let ReactDOM = modules['react-dom'];
+    let appProps = await AppCore(Application.coreConfiguration);
+    let appElement = React.createElement(Application, appProps);
+    ReactDOM.render(appElement, appContainer);
+    hideSplashScreen();
 }
 
 function hideSplashScreen() {
