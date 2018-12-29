@@ -43,15 +43,12 @@ class ServerSummaryPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
-        let { database, route, env, serverID, editing, scrollToTaskID } = this.props;
+    async renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let { serverID, editing, scrollToTaskID } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let creating = (serverID === 'new');
         let props = {
-            system: undefined,
-            server: undefined,
-            roles: undefined,
-
             database,
             route,
             env,
@@ -60,24 +57,14 @@ class ServerSummaryPage extends AsyncComponent {
             scrollToTaskID,
         };
         meanwhile.show(<ServerSummaryPageSync {...props} />);
-        return db.start().then((userID) => {
-            return SystemFinder.findSystem(db).then((system) => {
-                props.system = system;
-            });
-        }).then(() => {
-            if (!creating) {
-                return ServerFinder.findServer(db, serverID).then((server) => {
-                    props.server = server;
-                });
-            }
-        }).then(() => {
-            meanwhile.show(<ServerSummaryPageSync {...props} />);
-            return RoleFinder.findActiveRoles(db).then((roles) => {
-                props.roles = roles;
-            });
-        }).then(() => {
-            return <ServerSummaryPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.system = await SystemFinder.findSystem(db);
+        if (!creating) {
+            props.server = await ServerFinder.findServer(db, serverID)
+        }
+        meanwhile.show(<ServerSummaryPageSync {...props} />);
+        props.roles = await RoleFinder.findActiveRoles(db);
+        return <ServerSummaryPageSync {...props} />;
     }
 }
 
@@ -1134,20 +1121,18 @@ class ServerSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDisableClick = (evt) => {
+    handleDisableClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('server-summary-confirm-disable');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ disabled: true }).then((server) => {
-                    if (server) {
-                        return this.returnToList();
-                    }
-                });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            let serverAfter = await this.changeFlags({ disabled: true });
+            if (serverAfter) {
+                await this.returnToList();
             }
-        });
+        }
     }
 
     /**
@@ -1155,20 +1140,18 @@ class ServerSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDeleteClick = (evt) => {
+    handleDeleteClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('server-summary-confirm-delete');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ deleted: true }).then((server) => {
-                    if (server) {
-                        return this.returnToList();
-                    }
-                });
+        let confirmd = await confirmation.ask(message);
+        if (confirmed) {
+            let serverAfter = await this.changeFlags({ deleted: true });
+            if (serverAfter) {
+                await this.returnToList();
             }
-        });
+        }
     }
 
     /**
@@ -1176,16 +1159,15 @@ class ServerSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleReactivateClick = (evt) => {
+    handleReactivateClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('server-summary-confirm-reactivate');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ disabled: false, deleted: false });
-            }
-        });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            await this.changeFlags({ disabled: false, deleted: false });
+        }
     }
 
     /**
@@ -1289,16 +1271,15 @@ class ServerSummaryPageSync extends PureComponent {
         let oauthBefore = this.getServerProperty('settings.oauth', 'original');
         let oauthAfter = this.getServerProperty('settings.oauth', 'current');
         let credentialsChanged = !_.isEqual(oauthBefore, oauthAfter);
-        this.setState({ saving: true, adding: !server.id, credentialsChanged, problems: {} }, () => {
-            let db = database.use({ schema: 'global', by: this });
-            return db.start().then((serverID) => {
-                return db.saveOne({ table: 'server' }, server).then((server) => {
-                    this.setState({ hasChanges: false, saving: false }, () => {
-                        return this.setEditability(false, server);
-                    });
-                    return null;
+        this.setState({ saving: true, adding: !server.id, credentialsChanged, problems: {} }, async () => {
+            try {
+                let db = database.use({ schema: 'global', by: this });
+                let currentUserID = await db.start();
+                let serverAfter = await db.saveOne({ table: 'server' }, server);
+                this.setState({ hasChanges: false, saving: false }, () => {
+                    return this.setEditability(false, serverAfter);
                 });
-            }).catch((err) => {
+            } catch (err) {
                 let problems;
                 if (err.statusCode === 409) {
                     problems = { name: 'validation-duplicate-server-name' };
@@ -1306,7 +1287,7 @@ class ServerSummaryPageSync extends PureComponent {
                     problems = { unexpected: err.message };
                 }
                 this.setState({ problems, saving: false });
-            });
+            }
         });
     }
 

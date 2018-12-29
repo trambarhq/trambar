@@ -39,36 +39,24 @@ class UserListPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
-        let { database, route, env, editing } = this.props;
+    async renderAsync(meanwhile) {
+        let { database, route, env } = this.props;
+        let { editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            users: undefined,
-            projects: undefined,
-
             database,
             route,
             env,
             editing,
         };
         meanwhile.show(<UserListPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return UserFinder.findAllUsers(db).then((users) => {
-                props.users = users;
-            });
-        }).then(() => {
-            meanwhile.show(<UserListPageSync {...props} />);
-            return ProjectFinder.findProjectsWithMembers(db, props.users).then((projects) => {
-                props.projects = projects;
-            });
-        }).then(() => {
-            meanwhile.show(<UserListPageSync {...props} />);
-            return RoleFinder.findRolesOfUsers(db, props.users).then((roles) => {
-                props.roles = roles;
-            });
-        }).then((roles) => {
-            return <UserListPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.users = await UserFinder.findAllUsers(db);
+        meanwhile.show(<UserListPageSync {...props} />);
+        props.projects = await ProjectFinder.findProjectsWithMembers(db, props.users);
+        meanwhile.show(<UserListPageSync {...props} />);
+        props.roles = await RoleFinder.findRolesOfUsers(db, props.users);
+        return <UserListPageSync {...props} />;
     }
 }
 
@@ -558,7 +546,7 @@ class UserListPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleSaveClick = (evt) => {
+    handleSaveClick = async (evt) => {
         let { database, env, users } = this.props;
         let { disablingUserIDs, restoringUserIDs } = this.state;
         let { confirmation } = this.components;
@@ -571,37 +559,34 @@ class UserListPageSync extends PureComponent {
             _.isEmpty(disablingUserIDs) ? true : undefined,
             _.isEmpty(restoringUserIDs) ? true : undefined,
         ];
-        return confirmation.askSeries(messages, bypass).then((confirmed) => {
-            if (!confirmed) {
-                return;
-            }
+        let confirmed = await confirmation.askSeries(messages, bypass);
+        if (confirmed) {
             this.setState({ problems: {} });
             let db = database.use({ schema: 'global', by: this });
-            return db.start().then((currentUserID) => {
-                let usersAfter = [];
-                _.each(users, (user) => {
-                    let flags = {};
-                    if (_.includes(disablingUserIDs, user.id)) {
-                        flags.disabled = true;
-                    } else if (_.includes(restoringUserIDs, user.id)) {
-                        flags.disabled = flags.deleted = false;
-                    } else {
-                        return;
-                    }
-                    let userAfter = _.assign({}, user, flags);
-                    usersAfter.push(userAfter);
-                });
-                return db.save({ table: 'user' }, usersAfter).then((users) => {
-                    this.setState({ hasChanges: false }, () => {
-                        this.setEditability(false);
-                    });
-                    return null;
-                }).catch((err) => {
-                    let problems = { unexpected: err.message };
-                    this.setState({ problems });
-                });
+            let currentUserID = await db.start();
+            let usersAfter = [];
+            _.each(users, (user) => {
+                let flags = {};
+                if (_.includes(disablingUserIDs, user.id)) {
+                    flags.disabled = true;
+                } else if (_.includes(restoringUserIDs, user.id)) {
+                    flags.disabled = flags.deleted = false;
+                } else {
+                    return;
+                }
+                let userAfter = _.assign({}, user, flags);
+                usersAfter.push(userAfter);
             });
-        });
+            try {
+                await db.save({ table: 'user' }, usersAfter);
+                this.setState({ hasChanges: false }, () => {
+                    this.setEditability(false);
+                });
+            } catch (err) {
+                let problems = { unexpected: err.message };
+                this.setState({ problems });
+            }
+        }
     }
 
     /**

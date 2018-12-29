@@ -45,17 +45,12 @@ class UserSummaryPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
-        let { database, route, env, payloads, projectID, userID, editing } = this.props;
+    async renderAsync(meanwhile) {
+        let { database, route, env, payloads } = this.props;
+        let { projectID, userID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let creating = (userID === 'new');
         let props = {
-            system: undefined,
-            user: undefined,
-            roles: undefined,
-            project: undefined,
-            statistics: undefined,
-
             database,
             route,
             env,
@@ -65,40 +60,24 @@ class UserSummaryPage extends AsyncComponent {
             creating,
         };
         meanwhile.show(<UserSummaryPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return SystemFinder.findSystem(db).then((system) => {
-                props.system = system;
-            });
-        }).then(() => {
-            // load selected user
-            if (!creating) {
-                return UserFinder.findUser(db, userID).then((user) => {
-                    props.user = user;
-                });
-            }
-        }).then(() => {
+        let currentUserID = await db.start();
+        props.system = await SystemFinder.findSystem(db);
+        // load selected user
+        if (!creating) {
+            props.user = await UserFinder.findUser(db, userID);
+        }
+        meanwhile.show(<UserSummaryPageSync {...props} />);
+        props.roles = await RoleFinder.findActiveRoles(db)
+        // load project if project id is provided (i.e. member summary)
+        if (projectID) {
             meanwhile.show(<UserSummaryPageSync {...props} />);
-            return RoleFinder.findActiveRoles(db).then((roles) => {
-                props.roles = roles;
-            })
-        }).then(() => {
-            // load project if project id is provided (i.e. member summary)
-            if (projectID) {
-                meanwhile.show(<UserSummaryPageSync {...props} />);
-                return ProjectFinder.findProject(db, projectID).then((project) => {
-                    props.project = project;
-                });
-            }
-        }).then(() => {
-            meanwhile.show(<UserSummaryPageSync {...props} />);
-            if (props.project && props.user) {
-                return StatisticsFinder.findDailyActivitiesOfUser(db, props.project, props.user).then((statistics) => {
-                    props.statistics = statistics;
-                });
-            }
-        }).then(() => {
-            return <UserSummaryPageSync {...props} />;
-        });
+            props.project = await ProjectFinder.findProject(db, projectID);
+        }
+        meanwhile.show(<UserSummaryPageSync {...props} />);
+        if (props.project && props.user) {
+            props.statistics = await StatisticsFinder.findDailyActivitiesOfUser(db, props.project, props.user);
+        }
+        return <UserSummaryPageSync {...props} />;
     }
 }
 
@@ -835,20 +814,18 @@ class UserSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDisableClick = (evt) => {
+    handleDisableClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('user-summary-confirm-disable');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ disabled: true }).then((user) => {
-                    if (user) {
-                        return this.returnToList();
-                    }
-                });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            let userAfter = this.changeFlags({ disabled: true });
+            if (userAfter) {
+                return this.returnToList();
             }
-        });
+        }
     }
 
     /**
@@ -856,20 +833,18 @@ class UserSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDeleteClick = (evt) => {
+    handleDeleteClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('user-summary-confirm-delete');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ deleted: true }).then((user) => {
-                    if (user) {
-                        return this.returnToList();
-                    }
-                });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            let userAfter = await this.changeFlags({ deleted: true });
+            if (userAfter) {
+                return this.returnToList();
             }
-        });
+        }
     }
 
     /**
@@ -877,16 +852,15 @@ class UserSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleReactivateClick = (evt) => {
+    handleReactivateClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('user-summary-confirm-reactivate');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ disabled: false, deleted: false });
-            }
-        });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            await this.changeFlags({ disabled: false, deleted: false });
+        }
     }
 
     /**
@@ -894,8 +868,8 @@ class UserSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleReturnClick = (evt) => {
-        return this.returnToList();
+    handleReturnClick = async (evt) => {
+        await this.returnToList();
     }
 
     /**
@@ -903,8 +877,8 @@ class UserSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleAddClick = (evt) => {
-        return this.startNew();
+    handleAddClick = async (evt) => {
+        await this.startNew();
     }
 
     /**
@@ -912,8 +886,8 @@ class UserSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleEditClick = (evt) => {
-        return this.setEditability(true);
+    handleEditClick = async (evt) => {
+        await this.setEditability(true);
     }
 
     /**
@@ -921,8 +895,8 @@ class UserSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleCancelClick = (evt) => {
-        return this.setEditability(false);
+    handleCancelClick = async (evt) => {
+        await this.setEditability(false);
     }
 
     /**
@@ -942,30 +916,29 @@ class UserSummaryPageSync extends PureComponent {
             return;
         }
         let user = this.getUser();
-        this.setState({ saving: true, adding: !user.id, problems: {} }, () => {
-            let schema = 'global';
-            let db = database.use({ schema, by: this });
-            return db.start().then((currentUserID) => {
-                return db.saveOne({ table: 'user' }, user).then((user) => {
-                    payloads.dispatch(user);
-                    this.setState({ hasChanges: false, saving: false }, () => {
-                        return this.setEditability(false, user);
-                    });
-                    if (project) {
-                        // add user to member list if he's not there yet
-                        let userIDs = project.user_ids;
-                        if (!_.includes(userIDs, user.id)) {
-                            let userIDsAfter = _.union(userIDs, [ user.id ]);
-                            let columns = {
-                                id: project.id,
-                                user_ids: userIDsAfter
-                            };
-                            return db.saveOne({ table: 'project' }, columns);
-                        }
-                    }
-                    return null;
+        this.setState({ saving: true, adding: !user.id, problems: {} }, async () => {
+            try {
+                let schema = 'global';
+                let db = database.use({ schema, by: this });
+                let currentUserID = await db.start();
+                let userAfter = await db.saveOne({ table: 'user' }, user);
+                payloads.dispatch(userAfter);
+                this.setState({ hasChanges: false, saving: false }, () => {
+                    return this.setEditability(false, user);
                 });
-            }).catch((err) => {
+                if (project) {
+                    // add user to member list if he's not there yet
+                    let userIDs = project.user_ids;
+                    if (!_.includes(userIDs, userAfter.id)) {
+                        let userIDsAfter = _.union(userIDs, [ userAfter.id ]);
+                        let columns = {
+                            id: project.id,
+                            user_ids: userIDsAfter
+                        };
+                        return db.saveOne({ table: 'project' }, columns);
+                    }
+                }
+            } catch (err) {
                 let problems;
                 if (err.statusCode === 409) {
                     problems = { username: 'validation-duplicate-user-name' };
@@ -973,7 +946,7 @@ class UserSummaryPageSync extends PureComponent {
                     problems = { unexpected: err.message };
                 }
                 this.setState({ problems, saving: false });
-            });
+            }
         });
     }
 

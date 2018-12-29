@@ -35,31 +35,21 @@ class ServerListPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            servers: undefined,
-            users: undefined,
-
             database,
             route,
             env,
             editing,
         };
         meanwhile.show(<ServerListPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return ServerFinder.findAllServers(db).then((servers) => {
-                props.servers = servers;
-            });
-        }).then(() => {
-            meanwhile.show(<ServerListPageSync {...props} />);
-            return UserFinder.findActiveUsers(db).then((users) => {
-                props.users = users;
-            });
-        }).then(() => {
-            return <ServerListPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.servers = await ServerFinder.findAllServers(db);
+        meanwhile.show(<ServerListPageSync {...props} />);
+        props.users = await UserFinder.findActiveUsers(db);
+        return <ServerListPageSync {...props} />;
     }
 }
 
@@ -509,7 +499,7 @@ class ServerListPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleSaveClick = (evt) => {
+    handleSaveClick = async (evt) => {
         let { database, env, servers } = this.props;
         let { disablingServerIDs, restoringServerIDs } = this.state;
         let { confirmation } = this.components;
@@ -522,37 +512,34 @@ class ServerListPageSync extends PureComponent {
             _.isEmpty(disablingServerIDs) ? true : undefined,
             _.isEmpty(restoringServerIDs) ? true : undefined,
         ];
-        return confirmation.askSeries(messages, bypass).then((confirmed) => {
-            if (!confirmed) {
-                return;
-            }
+        let confirmed = await confirmation.askSeries(messages, bypass);
+        if (confirmed) {
             this.setState({ problems: {} });
             let db = database.use({ schema: 'global', by: this });
-            return db.start().then((currentUserID) => {
-                let serversAfter = [];
-                _.each(servers, (server) => {
-                    let flags = {};
-                    if (_.includes(disablingServerIDs, server.id)) {
-                        flags.disabled = true;
-                    } else if (_.includes(restoringServerIDs, server.id)) {
-                        flags.disabled = flags.deleted = false;
-                    } else {
-                        return;
-                    }
-                    let serverAfter = _.assign({}, server, flags);
-                    serversAfter.push(serverAfter);
-                });
-                return db.save({ table: 'server' }, serversAfter).then((servers) => {
-                    this.setState({ hasChanges: false }, () => {
-                        this.setEditability(false);
-                    });
-                    return null;
-                }).catch((err) => {
-                    let problems = { unexpected: err.message };
-                    this.setState({ problems });
-                });
+            let currentUserID = await db.start();
+            let serversAfter = [];
+            _.each(servers, (server) => {
+                let flags = {};
+                if (_.includes(disablingServerIDs, server.id)) {
+                    flags.disabled = true;
+                } else if (_.includes(restoringServerIDs, server.id)) {
+                    flags.disabled = flags.deleted = false;
+                } else {
+                    return;
+                }
+                let serverAfter = _.assign({}, server, flags);
+                serversAfter.push(serverAfter);
             });
-        });
+            try {
+                await db.save({ table: 'server' }, serversAfter);
+                this.setState({ hasChanges: false }, () => {
+                    this.setEditability(false);
+                });
+            } catch (err) {
+                let problems = { unexpected: err.message };
+                this.setState({ problems });
+            }
+        }
     }
 
     /**
