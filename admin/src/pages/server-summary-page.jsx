@@ -92,6 +92,24 @@ class ServerSummaryPageSync extends PureComponent {
     }
 
     /**
+     * Reset edit state when edit ends
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        if (!editing) {
+            return {
+                newServer: null,
+                hasChanges: false,
+                problems: {},
+            };
+        }
+        return null;
+    }
+
+    /**
      * Return edited copy of server object or the original object
      *
      * @param  {String} state
@@ -99,9 +117,9 @@ class ServerSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getServer(state) {
-        let { server, editing } = this.props;
+        let { server } = this.props;
         let { newServer } = this.state;
-        if (editing && (!state || state === 'current')) {
+        if (!state || state === 'current') {
             return newServer || server || emptyServer;
         } else {
             return server || emptyServer;
@@ -250,25 +268,6 @@ class ServerSummaryPageSync extends PureComponent {
     getInputLanguages() {
         let { system } = this.props;
         return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Reset edit state when edit starts
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                this.setState({
-                    newServer: null,
-                    hasChanges: false,
-                });
-            } else {
-                this.setState({ problems: {} });
-            }
-        }
     }
 
     /**

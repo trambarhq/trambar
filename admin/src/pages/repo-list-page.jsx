@@ -98,11 +98,11 @@ class RepoListPageSync extends PureComponent {
             return {
                 renderingFullList: true,
                 selectedRepoIDs: _.get(nextProps.project, 'repo_ids', []),
-                hasChanges: false,
             };
         } else if (!editing && renderingFullList) {
             return {
                 renderingFullList: false,
+                hasChanges: false,
                 problems: {},
             };
         }

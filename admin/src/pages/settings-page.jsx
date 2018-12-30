@@ -71,6 +71,24 @@ class SettingsPageSync extends PureComponent {
     }
 
     /**
+     * Reset edit state when edit starts
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        if (!editing) {
+            return {
+                newSystem: null,
+                hasChanges: false,
+                problems: {},
+            };
+        }
+        return null;
+    }
+
+    /**
      * Return edited copy of system object or the original object
      *
      * @param  {String} state
@@ -140,25 +158,6 @@ class SettingsPageSync extends PureComponent {
     getInputLanguages() {
         let system = this.getSystem();
         return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Reset edit state when edit starts
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                this.setState({
-                    newSystem: null,
-                    hasChanges: false,
-                });
-            } else {
-                this.setState({ problems: {} });
-            }
-        }
     }
 
     /**

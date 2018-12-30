@@ -105,6 +105,23 @@ class UserSummaryPageSync extends PureComponent {
     }
 
     /**
+     * Reset the edit state when edit ends
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        if (!editing) {
+            return {
+                newUser: null,
+                hasChanges: false,
+                problems: {}
+            };
+        }
+    }
+
+    /**
      * Return edited copy of user object or the original object
      *
      * @param  {String} state
@@ -112,9 +129,9 @@ class UserSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getUser(state) {
-        let { user, editing } = this.props;
+        let { user } = this.props;
         let { newUser } = this.state;
-        if (editing && (!state || state === 'current')) {
+        if (!state || state === 'current') {
             return newUser || user || emptyUser;
         } else {
             return user || emptyUser;
@@ -238,25 +255,6 @@ class UserSummaryPageSync extends PureComponent {
     getInputLanguages() {
         let { system } = this.props;
         return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Reset the edit state when edit starts
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                this.setState({
-                    newUser: null,
-                    hasChanges: false,
-                });
-            } else {
-                this.setState({ problems: {} });
-            }
-        }
     }
 
     /**

@@ -79,6 +79,24 @@ class RepoSummaryPageSync extends PureComponent {
     }
 
     /**
+     * Reset edit state when edit ends
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        if (!editing) {
+            return {
+                newRepo: null,
+                hasChanges: false,
+                problems: {},
+            };
+        }
+        return null;
+    }
+
+    /**
      * Return edited copy of repo object or the original object
      *
      * @param  {String} state
@@ -86,9 +104,9 @@ class RepoSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getRepo(state) {
-        let { repo, editing } = this.props;
+        let { repo } = this.props;
         let { newRepo } = this.state;
-        if (editing && (!state || state === 'current')) {
+        if (!state || state === 'current') {
             return newRepo || repo || emptyRepo;
         } else {
             return repo || emptyRepo;
@@ -159,25 +177,6 @@ class RepoSummaryPageSync extends PureComponent {
     getInputLanguages() {
         let { system } = this.props;
         return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Reset edit state when edit starts
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                this.setState({
-                    newRepo: null,
-                    hasChanges: false,
-                });
-            } else {
-                this.setState({ problems: {} });
-            }
-        }
     }
 
     /**

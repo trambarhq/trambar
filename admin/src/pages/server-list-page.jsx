@@ -92,13 +92,13 @@ class ServerListPageSync extends PureComponent {
         if (editing && !renderingFullList) {
             return {
                 renderingFullList: true,
-                restoringServerIDs: [],
-                disablingServerIDs: [],
-                hasChanges: false,
             };
         } else if (!editing && renderingFullList) {
             return {
                 renderingFullList: false,
+                restoringServerIDs: [],
+                disablingServerIDs: [],
+                hasChanges: false,
                 problems: {},
             };
         }

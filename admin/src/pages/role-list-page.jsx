@@ -91,13 +91,13 @@ class RoleListPageSync extends PureComponent {
         if (editing && !renderingFullList) {
             return {
                 renderingFullList: true,
-                restoringRoleIDs: [],
-                disablingRoleIDs: [],
-                hasChanges: false,
             };
         } else if (!editing && renderingFullList) {
             return {
                 renderingFullList: false,
+                restoringRoleIDs: [],
+                disablingRoleIDs: [],
+                hasChanges: false,
                 problems: {},
             };
         }

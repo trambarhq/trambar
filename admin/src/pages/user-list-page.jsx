@@ -86,6 +86,32 @@ class UserListPageSync extends PureComponent {
     }
 
     /**
+     * Toggle rendering of full list when entering and exiting edit mode
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     *
+     * @return {Object|null}
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        let { renderingFullList } = state;
+        if (editing && !renderingFullList) {
+            return {
+                renderingFullList: true,
+            };
+        } else if (!editing && renderingFullList) {
+            return {
+                renderingFullList: false,
+                restoringUserIDs: [],
+                disablingUserIDs: [],
+                hasChanges: false,
+                problems: {},
+            };
+        }
+    }
+
+    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -96,28 +122,6 @@ class UserListPageSync extends PureComponent {
         let { route } = this.props;
         let params = { editing: edit };
         return route.replace(route.name, params);
-    }
-
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                this.setState({
-                    renderingFullList: true,
-                    restoringUserIDs: [],
-                    disablingUserIDs: [],
-                    hasChanges: false,
-                });
-            } else {
-                // wait for animation to finish
-                setTimeout(() => {
-                    let { editing } = this.props;
-                    if (!editing) {
-                        this.setState({ renderingFullList: false, problems: {} });
-                    }
-                }, 500);
-            }
-        }
     }
 
     /**

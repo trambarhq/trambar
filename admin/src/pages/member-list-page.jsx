@@ -99,13 +99,13 @@ class MemberListPageSync extends PureComponent {
         if (editing && !renderingFullList) {
             return {
                 renderingFullList: true,
-                removingUserIDs: [],
-                addingUserIDs: [],
-                changes: false,
             };
         } else if (!editing && renderingFullList) {
             return {
                 renderingFullList: false,
+                removingUserIDs: [],
+                addingUserIDs: [],
+                changes: false,
                 problems: {},
             };
         }

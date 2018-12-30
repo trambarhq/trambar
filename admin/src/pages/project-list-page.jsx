@@ -98,13 +98,13 @@ class ProjectListPageSync extends PureComponent {
         if (editing && !renderingFullList) {
             return {
                 renderingFullList: true,
-                restoringProjectIDs: [],
-                archivingProjectIDs: [],
-                hasChanges: false,
             };
         } else if (!editing && renderingFullList) {
             return {
                 renderingFullList: false,
+                restoringProjectIDs: [],
+                archivingProjectIDs: [],
+                hasChanges: false,
                 problems: {},
             };
         }

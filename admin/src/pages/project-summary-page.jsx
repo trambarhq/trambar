@@ -86,6 +86,23 @@ class ProjectSummaryPageSync extends PureComponent {
     }
 
     /**
+     * Reset edit state when edit ends
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        if (!editing) {
+            return {
+                newProject: null,
+                hasChanges: false,
+                problems: {},
+            };
+        }
+    }
+
+    /**
      * Return edited copy of project object or the original object
      *
      * @param  {String} state
@@ -93,9 +110,9 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getProject(state) {
-        let { project, editing } = this.props;
+        let { project } = this.props;
         let { newProject } = this.state;
-        if (editing && (!state || state === 'current')) {
+        if (!state || state === 'current') {
             return newProject || project || emptyProject;
         } else {
             return project || emptyProject;
@@ -220,25 +237,6 @@ class ProjectSummaryPageSync extends PureComponent {
     getInputLanguages() {
         let { system } = this.props;
         return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Reset edit state when edit starts
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                this.setState({
-                    newProject: null,
-                    hasChanges: false,
-                });
-            } else {
-                this.setState({ problems: {} });
-            }
-        }
     }
 
     /**
