@@ -20,22 +20,6 @@ class DataLossWarning extends PureComponent {
     }
 
     /**
-     * Put a hook on the current route when there're changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { changes } = this.props;
-        if (nextProps.changes !== changes) {
-            if (nextProps.changes) {
-                nextProps.route.keep(this.confirmRouteChange);
-            } else {
-                nextProps.route.free(this.confirmRouteChange);
-            }
-        }
-    }
-
-    /**
      * Render component
      *
      * @return  {ReactElement|null}
@@ -48,6 +32,23 @@ class DataLossWarning extends PureComponent {
             env,
         };
         return <ActionConfirmation {...props} />
+    }
+
+    /**
+     * Put a hook on the current route when there're changes
+     *
+     * @param  {Object} prevProps
+     * @param  {Object} prevState
+     */
+    componentDidUpdate(prevProps, prevState) {
+        let { route, changes } = this.props;
+        if (prevProps.changes !== changes) {
+            if (changes) {
+                route.keep(this.confirmRouteChange);
+            } else {
+                route.free(this.confirmRouteChange);
+            }
+        }
     }
 
     /**
