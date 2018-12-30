@@ -39,31 +39,27 @@ class TaskAlertBar extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env } = this.props;
         let { searchStartTime } = this.state;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            tasks: undefined,
-
             route,
             env,
         };
         meanwhile.show(<TaskAlertBarSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return TaskFinder.findActiveTasks(db, searchStartTime).then((tasks) => {
-                props.tasks = tasks;
-            });
-        }).then(() => {
+        try {
+            let currentUserID = await db.start();
+            props.tasks = await TaskFinder.findActiveTasks(db, searchStartTime)
             return <TaskAlertBarSync {...props} />;
-        }).catch((err) => {
+        } catch (err) {
             if (err.statusCode === 401) {
                 // user is logging out, presumably
                 return null;
             } else {
                 throw err;
             }
-        });
+        }
     }
 
     /**
