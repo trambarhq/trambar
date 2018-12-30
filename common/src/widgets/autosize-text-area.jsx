@@ -34,40 +34,29 @@ class AutosizeTextArea extends PureComponent {
     }
 
     /**
-     * Save caret position when we receive new text
-     *
-     * @param  {Object}
-     */
-    componentWillReceiveProps(nextProps) {
-        let { value } = this.props;
-        let { actual } = this.components;
-        if (nextProps.value !== value) {
-            if (actual && actual === document.activeElement) {
-                if (actual.value !== nextProps.value) {
-                    this.caretPosition = {
-                        selectionStart: actual.selectionStart,
-                        selectionEnd: actual.selectionEnd,
-                        text: actual.value,
-                    };
-                }
-            }
-        }
-    }
-
-    /**
      * Render component
      *
      * @return {ReactElement}
      */
     render() {
-        let { style } = this.props;
+        let { value, style } = this.props;
         let { requiredHeight } = this.state;
-        let { setters } = this.components;
+        let { setters, actual } = this.components;
+        if (actual && actual === document.activeElement) {
+            // save caret position when text is different
+            if (actual.value !== value) {
+                this.caretPosition = {
+                    selectionStart: actual.selectionStart,
+                    selectionEnd: actual.selectionEnd,
+                    text: actual.value,
+                };
+            }
+        }
         style = _.extend({ height: requiredHeight }, style);
         let props = _.omit(this.props, 'style');
         return (
             <div className="autosize-text-area">
-                <textarea ref={setters.shadow} style={style} className="shadow" value={props.value} readOnly />
+                <textarea ref={setters.shadow} style={style} className="shadow" value={value} readOnly />
                 <textarea ref={setters.actual} style={style} {...props} />
             </div>
         );

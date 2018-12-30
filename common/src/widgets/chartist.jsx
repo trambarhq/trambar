@@ -23,21 +23,6 @@ class Chartist extends PureComponent {
     }
 
     /**
-     * Attach onDraw handler to Chartist instance
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { onDraw } = this.props;
-        if (nextProps.onDraw !== onDraw) {
-            if (this.chartist) {
-                this.chartist.off('draw', onDraw);
-                this.chartist.on('draw', nextProps.onDraw);
-            }
-        }
-    }
-
-    /**
      * Render component
      *
      * @return {ReactElement}
@@ -66,6 +51,13 @@ class Chartist extends PureComponent {
      */
     componentDidUpdate(prevProps, prevState) {
         let { type, data, options, responsiveOptions } = this.props;
+        let { onDraw } = this.props;
+        if (prevProps.onDraw !== onDraw) {
+            if (this.chartist) {
+                this.chartist.off('draw', prevProps.onDraw);
+                this.chartist.on('draw', onDraw);
+            }
+        }
         if (prevProps.type !== type) {
             this.destroyChart();
             this.createChart();
