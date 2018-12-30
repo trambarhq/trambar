@@ -85,6 +85,33 @@ class ProjectListPageSync extends PureComponent {
     }
 
     /**
+     * Toggle rendering of full list when entering and exiting edit mode
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     *
+     * @return {Object|null}
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        let { renderingFullList } = state;
+        if (editing && !renderingFullList) {
+            return {
+                renderingFullList: true,
+                restoringProjectIDs: [],
+                archivingProjectIDs: [],
+                hasChanges: false,
+            };
+        } else if (!editing && renderingFullList) {
+            return {
+                renderingFullList: false,
+                problems: {},
+            };
+        }
+        return null;
+    }
+
+    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -96,33 +123,6 @@ class ProjectListPageSync extends PureComponent {
         let params = _.clone(route.params);
         params.editing = edit || undefined;
         return route.replace(route.name, params);
-    }
-
-    /**
-     * Check if we're switching into edit mode
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                // initial list of ids to the current list
-                this.setState({
-                    renderingFullList: true,
-                    restoringProjectIDs: [],
-                    archivingProjectIDs: [],
-                    hasChanges: false,
-                });
-            } else {
-                setTimeout(() => {
-                    let { editing } = this.props;
-                    if (!editing) {
-                        this.setState({ renderingFullList: false, problems: {} });
-                    }
-                }, 500);
-            }
-        }
     }
 
     /**
