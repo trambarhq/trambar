@@ -119,6 +119,7 @@ class UserSummaryPageSync extends PureComponent {
                 problems: {}
             };
         }
+        return null;
     }
 
     /**

@@ -109,6 +109,7 @@ class UserListPageSync extends PureComponent {
                 problems: {},
             };
         }
+        return null;
     }
 
     /**

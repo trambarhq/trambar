@@ -100,6 +100,7 @@ class ProjectSummaryPageSync extends PureComponent {
                 problems: {},
             };
         }
+        return null;
     }
 
     /**
