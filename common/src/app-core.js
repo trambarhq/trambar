@@ -40,7 +40,7 @@ let currentLocation = {};
 let currentConnection = {};
 let currentSubscription = {};
 
-function start(cfg) {
+async function start(cfg) {
     applicationArea = cfg.area;
 
     // create data sources
@@ -119,20 +119,20 @@ function start(cfg) {
                 if (!dataSource.hasAuthorization(location)) {
                     // nope, we need to postpone the page switch
                     // first, see if there's a saved session
-                    let promise = loadSession(address).then((session) => {
+                    let f = async () => {
+                        let session = await loadSession(address);
                         if (!dataSource.restoreAuthorization(location, session)) {
                             // there was none or it's expired--show the sign-in page
                             if (!route.signIn) {
                                 let signInPageName = _.findKey(routeManager.routes, { signIn: true });
-                                return evt.substitute(signInPageName).then(() => {
-                                    // ask the data-source to request authentication
-                                    return dataSource.requestAuthentication(location);
-                                });
+                                await evt.substitute(signInPageName);
+                                // ask the data-source to request authentication
+                                await dataSource.requestAuthentication(location);
                             }
                         }
                         return true;
-                    });
-                    evt.postponeDefault(promise);
+                    };
+                    evt.postponeDefault(f());
                 }
             }
         }
@@ -156,13 +156,12 @@ function start(cfg) {
         // save the session
         saveSession(evt.session);
     });
-    dataSource.addEventListener('expiration', (evt) => {
+    dataSource.addEventListener('expiration', async (evt) => {
         // remove the expired session
-        removeSession(evt.session).then(() => {
-            // redirect to start page
-            let startPageName = _.findKey(routeManager.routes, { start: true });
-            return routeManager.push(startPageName, {}, { schema: undefined });
-        });
+        await removeSession(evt.session);
+        // redirect to start page
+        let startPageName = _.findKey(routeManager.routes, { start: true });
+        await routeManager.push(startPageName, {}, { schema: undefined });
     });
     notifier.addEventListener('connection', (evt) => {
         currentConnection = evt.connection;
@@ -245,33 +244,29 @@ function start(cfg) {
     }
 
     // get saved local then load the initial page
-    return loadSetting('language').then((savedLocale) => {
-        return localeManager.start(savedLocale);
-    }).then(() => {
-        if (envMonitor.platform === 'cordova') {
-            // get the last visited page
-            return loadSetting('location').then((url) => {
-                // make sure the URL is still valid
-                if (!url || !routeManager.match(url)) {
-                    url = '/';
-                }
-                return routeManager.start(url);
-            });
-        } else {
-            // on the browser the URL will be obtained from window.location
-            return routeManager.start();
+    let savedLocale = await loadSetting('language');
+    await localeManager.start(savedLocale);
+    if (envMonitor.platform === 'cordova') {
+        // get the last visited page
+        let url = await loadSetting('location');
+        // make sure the URL is still valid
+        if (!url || !routeManager.match(url)) {
+            url = '/';
         }
-    }).then(() => {
-        return {
-            envMonitor,
-            routeManager,
-            localeManager,
-            payloadManager,
-            dataSource,
-            notifier,
-            codePush,
-        };
-    });
+        await routeManager.start(url);
+    } else {
+        // on the browser the URL will be obtained from window.location
+        await routeManager.start();
+    }
+    return {
+        envMonitor,
+        routeManager,
+        localeManager,
+        payloadManager,
+        dataSource,
+        notifier,
+        codePush,
+    };
 }
 
 /**
@@ -281,15 +276,14 @@ function start(cfg) {
  *
  * @return {Promise<*>}
  */
-function loadSetting(key) {
+async function loadSetting(key) {
     let criteria = { key };
     let query = Object.assign({ criteria }, settingsLocation);
-    return dataSource.find(query).then((records) => {
-        let record = records[0];
-        if (record) {
-            return record.value;
-        }
-    });
+    let records = await dataSource.find(query);
+    let record = records[0];
+    if (record) {
+        return record.value;
+    }
 }
 
 /**
@@ -300,9 +294,9 @@ function loadSetting(key) {
  *
  * @return {Promise}
  */
-function saveSetting(key, value) {
-    var record = { key, value };
-    return dataSource.save(settingsLocation, [ record ]).return();
+async function saveSetting(key, value) {
+    let record = { key, value };
+    await dataSource.save(settingsLocation, [ record ]);
 }
 
 /**
@@ -312,9 +306,9 @@ function saveSetting(key, value) {
  *
  * @return {Promise}
  */
-function removeSetting(key) {
-    var record = { key };
-    return dataSource.remove(settingsLocation, [ record ]).return();
+async function removeSetting(key) {
+    let record = { key };
+    await dataSource.remove(settingsLocation, [ record ]);
 }
 
 /**
@@ -324,23 +318,22 @@ function removeSetting(key) {
  *
  * @return {Promise<Object|undefined>}
  */
-function loadSession(address) {
+async function loadSession(address) {
     let criteria = { key: address };
     let query = Object.assign({ criteria }, sessionLocation);
-    return dataSource.find(query).then((records) => {
-        var record = records[0];
-        if (record) {
-            return {
-                address: record.key,
-                area: record.area,
-                handle: record.handle,
-                token: record.token,
-                user_id: record.user_id,
-                etime: record.etime,
-                atime: record.atime,
-            };
-        }
-    });
+    let records = await dataSource.find(query);
+    var record = records[0];
+    if (record) {
+        return {
+            address: record.key,
+            area: record.area,
+            handle: record.handle,
+            token: record.token,
+            user_id: record.user_id,
+            etime: record.etime,
+            atime: record.atime,
+        };
+    }
 }
 
 /**
@@ -350,7 +343,7 @@ function loadSession(address) {
  *
  * @return {Promise}
  */
-function saveSession(session) {
+async function saveSession(session) {
     let now = Moment().toISOString();
     let record = {
         key: session.address,
@@ -361,7 +354,7 @@ function saveSession(session) {
         etime: session.etime,
         atime: now,
     };
-    return dataSource.save(sessionLocation, [ record ]).return();
+    await dataSource.save(sessionLocation, [ record ]);
 }
 
 /**
@@ -371,17 +364,17 @@ function saveSession(session) {
  *
  * @return {Promise}
  */
-function removeSession(session) {
+async function removeSession(session) {
     let record = {
         key: session.address,
     };
-    return dataSource.remove(sessionLocation, [ record ]).return();
+    await dataSource.remove(sessionLocation, [ record ]);
 }
 
 /**
  * Ask notifier to listen to the current location after that has changed
  */
-function changeNotification() {
+async function changeNotification() {
     let { address } = currentLocation;
     if (currentConnection.address === address) {
         return;
@@ -398,10 +391,9 @@ function changeNotification() {
                 table: 'system',
                 criteria: {}
             };
-            dataSource.find(query).get(0).then((system) => {
-                let relayURL = _.get(system, 'settings.push_relay', '');
-                notifier.connect(address, relayURL);
-            });
+            let systems = await dataSource.find(query);
+            let relayURL = _.get(systems, '0.settings.push_relay', '');
+            notifier.connect(address, relayURL);
         }
     }
 }
@@ -410,7 +402,7 @@ function changeNotification() {
  * Change the change-notification subscription match the current location after
  * that has changed
  */
-function changeSubscription() {
+async function changeSubscription() {
     let { address, schema } = currentLocation;
     let watch = (applicationArea === 'admin') ? '*' : (schema || 'global');
     let { localeCode } = localeManager;
@@ -423,50 +415,47 @@ function changeSubscription() {
         // we don't have access yet
         return;
     }
-    dataSource.start(currentLocation).then((currentUserID) => {
-        if (!watch) {
-            // not watching anything
+    if (!watch) {
+        // not watching anything
+        return;
+    }
+    let currentUserID = await dataSource.start(currentLocation);
+    let record = {
+        user_id: currentUserID,
+        area: applicationArea,
+        locale: localeCode,
+        schema: watch,
+        method,
+        token,
+        relay: relay || null,
+        details,
+    };
+    if (currentSubscription.record) {
+        let oldRecord = _.pick(currentSubscription.record, _.keys(record));
+        if (_.isEqual(oldRecord, record)) {
+            // no need to update
             return;
         }
+        // update the existing record instead of creating a new one
+        record.id = currentSubscription.record.id;
+    }
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`Updating data-change subscription -> ${address}/${watch}`);
+    }
+    let subscriptionLocation = {
+        address,
+        schema: 'global',
+        table: 'subscription'
+    };
+    let recordsSaved = await dataSource.save(subscriptionLocation, [ record ]);
+    if (recordsSaved[0]) {
+        currentSubscription = { address, record: recordsSaved };
 
-        let record = {
-            user_id: currentUserID,
-            area: applicationArea,
-            locale: localeCode,
-            schema: watch,
-            method,
-            token,
-            relay: relay || null,
-            details,
-        };
-        if (currentSubscription.record) {
-            let oldRecord = _.pick(currentSubscription.record, _.keys(record));
-            if (_.isEqual(oldRecord, record)) {
-                // no need to update
-                return;
-            }
-            // update the existing record instead of creating a new one
-            record.id = currentSubscription.record.id;
-        }
-        if (process.env.NODE_ENV !== 'production') {
-            console.log(`Updating data-change subscription -> ${address}/${watch}`);
-        }
-        let subscriptionLocation = {
-            address,
-            schema: 'global',
-            table: 'subscription'
-        };
-        return dataSource.save(subscriptionLocation, [ record ]).get(0).then((record) => {
-            if (record) {
-                currentSubscription = { address, record };
-
-                // dispatch items in change queue once subscription is
-                // reestablished, so that we don't miss the notification
-                // caused by the changes
-                dataSource.dispatchPending();
-            }
-        });
-    });
+        // dispatch items in change queue once subscription is
+        // reestablished, so that we don't miss the notification
+        // caused by the changes
+        dataSource.dispatchPending();
+    }
 }
 
 /**
@@ -527,11 +516,12 @@ function getStreamURL(destination, id) {
  *
  * @return {Promise}
  */
-function addPayloadTasks(destination, payloads) {
+async function addPayloadTasks(destination, payloads) {
     let { address, schema } = destination;
-    return dataSource.start(destination).then((currentUserID) => {
-        let location = { address, schema, table: 'task' };
-        return Promise.each(payloads, (payload) => {
+    let currentUserID = await dataSource.start(destination);
+    let location = { address, schema, table: 'task' };
+    for (let payload of payloads) {
+        try {
             let status = {}
             _.each(payload.parts, (part) => {
                 status[part.name] = false;
@@ -542,16 +532,16 @@ function addPayloadTasks(destination, payloads) {
                 options: status,
                 user_id: currentUserID,
             };
-            return dataSource.save(location, [ task ]).catch((err) => {
-                if (process.env.NODE_ENV !== 'production') {
-                    console.error(err);
-                }
-                if (err.statusCode !== 409) {
-                    throw err;
-                }
-            });
-        });
-    });
+            await dataSource.save(location, [ task ]);
+        } catch (err) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.error(err);
+            }
+            if (err.statusCode !== 409) {
+                throw err;
+            }
+        }
+    }
 }
 
 /**
@@ -563,7 +553,7 @@ function addPayloadTasks(destination, payloads) {
  *
  * @return {Promise<Boolean>}
  */
-function updateBackendProgress(destination, payloads) {
+async function updateBackendProgress(destination, payloads) {
     let query = {
         address: destination.address,
         schema: destination.schema,
@@ -572,37 +562,36 @@ function updateBackendProgress(destination, payloads) {
             token: _.map(payloads, 'id'),
         }
     };
-    return dataSource.find(query).then((tasks) => {
-        let changed = false;
-        _.each(tasks, (task) => {
-            let payload = _.find(payloads, { id: task.token });
-            if (payload) {
-                if (payload.type === 'unknown') {
-                    // this is a payload from another session
-                    // restore its type
-                    payload.type = _.replace(this.action, /^add\-/, '');
-                    payload.sent = (task.completion > 0);
-                    changed = true;
-                }
-                if (payload.processed !== payload.completion) {
-                    payload.processed = task.completion;
-                    changed = true;
-                }
-                if (payload.processEndTime !== task.etime) {
-                    payload.processEndTime = task.etime;
-                    if (task.etime && !task.failed) {
-                        payload.completed = true;
-                    }
-                    changed = true;
-                }
-                if (task.failed && !payload.failed) {
-                    payload.failed = true;
-                    changed = true;
-                }
+    let tasks = await dataSource.find(query);
+    let changed = false;
+    for (let task of tasks) {
+        let payload = _.find(payloads, { id: task.token });
+        if (payload) {
+            if (payload.type === 'unknown') {
+                // this is a payload from another session
+                // restore its type
+                payload.type = _.replace(this.action, /^add\-/, '');
+                payload.sent = (task.completion > 0);
+                changed = true;
             }
-        });
-        return changed;
-    });
+            if (payload.processed !== payload.completion) {
+                payload.processed = task.completion;
+                changed = true;
+            }
+            if (payload.processEndTime !== task.etime) {
+                payload.processEndTime = task.etime;
+                if (task.etime && !task.failed) {
+                    payload.completed = true;
+                }
+                changed = true;
+            }
+            if (task.failed && !payload.failed) {
+                payload.failed = true;
+                changed = true;
+            }
+        }
+    }
+    return changed;
 }
 
 export {
