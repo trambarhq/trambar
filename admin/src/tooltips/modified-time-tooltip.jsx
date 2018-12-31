@@ -15,6 +15,14 @@ import Tooltip from 'widgets/tooltip';
 class ModifiedTimeTooltip extends PureComponent {
     static displayName = 'ModifiedTimeTooltip';
 
+    constructor(props) {
+        super(props);
+        this.state = {
+            relativeTime: null,
+            absoluteTime: null,
+        };
+    }
+
     static getDerivedStateFromProps(props) {
         let { env, time } = props;
         let { localeCode } = env.locale;

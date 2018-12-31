@@ -92,12 +92,12 @@ class RepoListPageSync extends PureComponent {
      * @return {Object|null}
      */
     static getDerivedStateFromProps(props, state) {
-        let { editing } = props;
+        let { editing, project } = props;
         let { renderingFullList } = state;
         if (editing && !renderingFullList) {
             return {
                 renderingFullList: true,
-                selectedRepoIDs: _.get(nextProps.project, 'repo_ids', []),
+                selectedRepoIDs: _.get(project, 'repo_ids', []),
             };
         } else if (!editing && renderingFullList) {
             return {
