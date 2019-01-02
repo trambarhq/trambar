@@ -201,7 +201,9 @@ class Payload {
      */
     cancel() {
         _.each(this.parts, (part, key) => {
-            if (part.promise && part.promise.cancel) {
+            if (part.stream) {
+                part.stream.cancel();
+            } else if (part.promise && part.promise.cancel) {
                 part.promise.cancel();
             }
         });
