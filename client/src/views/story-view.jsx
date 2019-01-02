@@ -598,14 +598,13 @@ class StoryView extends PureComponent {
      *
      * @param  {Story} story
      *
-     * @return {Promise<Story>}
+     * @return {Promise}
      */
     removeStory(story) {
         let { database, payloads } = this.props;
         let db = database.use({ by: this });
-        return db.removeOne({ table: 'story' }, story).then(() => {
-            return payloads.abandon(story);
-        });
+        await db.removeOne({ table: 'story' }, story);
+        await return payloads.abandon(story);
     }
 
     /**
