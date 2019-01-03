@@ -128,7 +128,7 @@ class ResourceView extends PureComponent {
                 // the image has just become available on the remote server
                 // pre-cache it before switching from the local copy
                 this.setState({ loadingRemoteImage: remoteURL });
-                let remoteURL = await BlobManager.fetch(remoteURL);
+                await BlobManager.fetch(remoteURL);
                 this.setState({ remoteImageLoaded: remoteURL });
             }
         }
