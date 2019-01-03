@@ -907,7 +907,7 @@ class StoryEditor extends PureComponent {
      *
      * @return {Promise}
      */
-    removeStory(story) {
+    async removeStory(story) {
         let { database, payloads } = this.props;
         let db = database.use({ by: this });
         await db.removeOne({ table: 'story' }, story);
