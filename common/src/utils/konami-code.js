@@ -25,12 +25,12 @@ function handleKeydown(evt) {
         currentSequence.splice(0, currentSequence.length - correctSequence.length);
     }
     if (_.isEqual(currentSequence, correctSequence)) {
-        _.each(listeners, (f) => {
+        for (let f of listeners) {
             f({
                 type: 'cheat',
                 target: exports,
             });
-        });
+        }
     }
 }
 
