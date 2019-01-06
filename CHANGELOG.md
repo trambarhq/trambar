@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.2.1
+
+* Fixed camera selection
+* Fixed skin-tone emojis on Android 6
+* Fixed image drag-and-drop
+* Reduced appearances of spinner
+* Ensured cancellation of file uploads
+
 ## 1.2.0
 
 * Implemented user registration whitelisting.
