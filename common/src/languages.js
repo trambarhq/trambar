@@ -162,6 +162,16 @@ const directory = [
         module: () => import('locales/it' /* webpackChunkName: "locale-it" */),
     },
     {
+        name: 'Lietuvių',
+        code: 'lt',
+        script: 'latin',
+        countries: {
+            lt: 'Lietuva',
+        },
+        defaultCountry: 'lt',
+        module: () => import('locales/lt' /* webpackChunkName: "locale-lt" */),
+    },
+    {
         name: 'Magyar',
         code: 'hu',
         script: 'latin',

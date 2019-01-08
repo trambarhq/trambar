@@ -92,6 +92,7 @@ const phrases = {
 
     'empty-currently-offline': 'Jūs esate atjungtas nuo tinklo',
 
+    'image-editor-image-transfer-in-progress': 'Vaizdo kopijavimas iš svetainės...',
     'image-editor-page-rendering-in-progress': 'Atvaizdavimas tinklalapio peržiūrą...',
     'image-editor-poster-extraction-in-progress': 'Ištraukimas video peržiūrą...',
     'image-editor-upload-in-progress': 'Siuntimas vykdomas...',
@@ -185,8 +186,12 @@ const phrases = {
     'notification-$name-completed-task': (name) => {
         return `${name} baigė užduotį iš tavo sąrašo`;
     },
-    'notification-$name-is-assigned-to-your-issue': (name) => {
-        return `${name} yra priskirtas tavo klaidos ataskaitai`;
+    'notification-$name-is-assigned-to-your-$story': (name, story) => {
+        switch (story) {
+            case 'issue': story = 'tavo klaidos ataskaitai'; break;
+            case 'merge-request': story = 'tavo prašymui sujungti'; break;
+        }
+        return `${name} yra priskirtas ${story}`;
     },
     'notification-$name-likes-your-$story': (name, story) => {
         switch (story) {
@@ -247,21 +252,21 @@ const phrases = {
     'notification-$name-voted-in-your-survey': (name) => {
         return `${name} atsakė į tavo anketą`;
     },
-    'notification-option-assignment': 'Po przydzieleniu do Twojego zgłoszenia błędu',
-    'notification-option-bookmark': 'Po otrzymaniu zakładki',
-    'notification-option-coauthor': 'Po zaproszeniu do wspólnej edycji posta',
-    'notification-option-comment': 'Po komentowaniu Twojego wiadomości',
-    'notification-option-issue': 'Po zgłoszeniu błędu',
-    'notification-option-join-request': 'Po prośbie o dołączenie do projektu',
-    'notification-option-like': 'Po upodobaniu Twojej wiadomości',
-    'notification-option-mention': 'Po wspomnieniach o Tobie w wiadomości lub komentarzu',
-    'notification-option-merge': 'Po scalaniu kodu w gałąź master',
-    'notification-option-note': 'Po komentowaniu zmian kodu ablo złoszenia błedu',
-    'notification-option-push': 'Po wgrywaniu zmian do repozytorium Gita',
-    'notification-option-survey': 'Po opublikowaniu ankiety',
-    'notification-option-task-completion': 'Po wykonaniu zadania na Twojej liście przez innego',
-    'notification-option-vote': 'Po odpowiadaniu Twojej ankiety przez innego',
-    'notification-option-web-session': 'Gdy jest aktywna sesja przeglądarki',
+    'notification-option-assignment': 'Kai kas nors priskiriamas tavo problemai',
+    'notification-option-bookmark': 'Kai kas nors atsiunčia tau žymą',
+    'notification-option-coauthor': 'Kai kas nors kviečia tave bendrai redaguoti įrašą',
+    'notification-option-comment': 'Kai kas nors komentuoja tavo istoriją',
+    'notification-option-issue': 'Kai kas nors atveria problemą',
+    'notification-option-join-request': 'Kai kas nors nori prisijungti prie šio projekto',
+    'notification-option-like': 'Kai kas nors mėgsta tavo istoriją',
+    'notification-option-mention': 'Kai kas nors tave paminėja įraše ar komentare',
+    'notification-option-merge': 'Kai kas nors sujungia kodą į šaką „master”',
+    'notification-option-note': 'Kai kas nors skelbia pastabą apie reviziją ar problemą',
+    'notification-option-push': 'Kai kas nors įkelia kodą į Git',
+    'notification-option-survey': 'Kai kas nors skelbia anketą',
+    'notification-option-task-completion': 'Kai kas nors baigia užduotį tavo sąraše',
+    'notification-option-vote': 'Kai kas nors atsako į tavo anketą',
+    'notification-option-web-session': 'Kai naršyklės sesija yra aktyvi',
 
     'notifications-no-notifications-on-date': 'Nėra pranešimų apie šią datą',
     'notifications-no-notifications-yet': 'Nėra pranešimų',
@@ -278,25 +283,25 @@ const phrases = {
     'option-remove-story': 'Ištrinti istoriją',
     'option-send-bookmarks': 'Siųsti žymes kitiems',
     'option-send-bookmarks-to-$count-users': (count) => {
-        let users = (count === 1) ? `${count} osoby` : `${count} osób`;
-        let bookmarks = (count === 1) ? `zakładkę` : `zakładki`;
-        return `Wyślij ${bookmarks} do ${users}`;
+        let users = cardinal(count, '1 asmeniui', '2 asmenims', '10 asmenų');
+        let bookmarks = cardinal(count, 'žymę', 'žymes')
+        return `Siųsti ${bookmarks} ${users}`;
     },
-    'option-show-media-preview': 'Pokaź dołączone pliki medialne',
-    'option-show-text-preview': 'Pokaź podgląd tekstu',
-    'option-statistics-14-days': 'Pokaż działania z ostatnich 14 dni',
-    'option-statistics-biweekly': 'Pokaż działania dwutygodniowe',
-    'option-statistics-monthly': 'Pokaż działania miesięczne',
-    'option-statistics-to-date': 'Pokaż działania do tej pory',
+    'option-show-media-preview': 'Rodyti pridėtą laikmeną',
+    'option-show-text-preview': 'Rodyti teksto peržiūrą',
+    'option-statistics-14-days': 'Rodyti paskutinių 14 dienų veiklą',
+    'option-statistics-biweekly': 'Rodyti dviejų savaičių veiklą',
+    'option-statistics-monthly': 'Rodyti mėnesio veiklą',
+    'option-statistics-to-date': 'Rodyti veiklą iki šiol',
 
-    'people-no-stories-found': 'Nie znaleziono pasujących wiadomości',
-    'people-no-stories-on-date': 'Żadnych działań w tym dniu',
-    'people-no-users-by-role': 'Żaden członek projektu nie ma takiej roli',
-    'people-no-users-yet': 'Żadnych członków projektu',
+    'people-no-stories-found': 'Nėra jokių tinkamų istorijų',
+    'people-no-stories-on-date': 'Nėra jokios veiklos tą dieną',
+    'people-no-users-by-role': 'Nėra projektas narys turi tą vaidmenį',
+    'people-no-users-yet': 'Dar nėra projekto narių',
 
-    'person-no-stories-found': 'Nie znaleziono pasujących wiadomości',
-    'person-no-stories-on-date': 'Żadnych wiadomości w tym dniu',
-    'person-no-stories-yet': 'Żadnych wiadomości',
+    'person-no-stories-found': 'Nėra jokių tinkamų istorijų',
+    'person-no-stories-on-date': 'Nėra istorijų tą dieną',
+    'person-no-stories-yet': 'Dar nėra istorijų',
 
     'photo-capture-accept': 'Priimti',
     'photo-capture-cancel': 'Atšaukti',
@@ -322,62 +327,49 @@ const phrases = {
     'qr-scanner-code-used': 'Pasenęs QR kodas',
 
     'reaction-$name-added-story-to-issue-tracker': (name) => {
-        let e = pastTenseEnding(name, 3);
-        return `${name} dodał tego posta do issue-trackera`;
+        return `${name} pridėjo šį įrašą į klaidų sekimo priemonė`;
     },
     'reaction-$name-cast-a-vote': (name) => {
-        let e = pastTenseEnding(name, 3);
-        return `${name} głosował`;
+        return `${name} balsavo`;
     },
     'reaction-$name-commented-on-branch': (name) => {
-        let e = pastTenseEnding(name, 3);
-        return `${name} skomentował tę gałąź`;
+        return `${name} pakomentavo šią šaką`;
     },
     'reaction-$name-commented-on-issue': (name) => {
-        let e = pastTenseEnding(name, 3);
-        return `${name} skomentował to zgłoszenie`;
+        return `${name} pakomentavo šią problemą`;
     },
     'reaction-$name-commented-on-merge': (name) => {
-        let e = pastTenseEnding(name, 3);
-        return `${name} skomentował to połączenie`;
+        return `${name} pakomentavo šį susijungimą`;
     },
     'reaction-$name-commented-on-merge-request': (name) => {
-        let e = pastTenseEnding(name, 3);
-        return `${name} skomentował tę prośbę o połączenie`;
+        return `${name} pakomentavo šį prašymą sujungti`;
     },
     'reaction-$name-commented-on-push': (name) => {
-        let e = pastTenseEnding(name, 3);
-        return `${name} skomentował zmiany w tym wgrywaniu`;
+        return `${name} pakomentavo šiuos kodų pakeitimus`;
     },
     'reaction-$name-commented-on-tag': (name) => {
-        let e = pastTenseEnding(name, 3);
-        return `${name} skomentował ten tag`;
+        return `${name} pakomentavo šią žymą`;
     },
     'reaction-$name-completed-a-task': (name) => {
-        let e = pastTenseEnding(name, 3);
-        return `${name} wykonał zadanie`;
+        return `${name} baigė užduotį`;
     },
     'reaction-$name-is-assigned-to-issue': (name) => {
-        let ve = pastTenseEnding(name, 3);
-        let ae = (ve === 'ła') ? 'a' : 'y';
-        return `${name} został${ve} przydzielon${ae} do tego problemu`;
+        return `${name} buvo priskirtas šiai problemai`;
     },
     'reaction-$name-is-assigned-to-merge-request': (name) => {
-        let ve = pastTenseEnding(name, 3);
-        let ae = (ve === 'ła') ? 'a' : 'y';
-        return `${name} został${ve} przydzielon${ae} do tej prośby o połączenie`;
+        return `${name} buvo priskirtas šiam prašymui sujungti`;
     },
     'reaction-$name-is-editing': (name) => {
-        return `${name} edytuje komentarz...`;
+        return `${name} redaguoja komentarą...`;
     },
     'reaction-$name-is-sending': (name) => {
-        return `${name} wysyła komentarz...`;
+        return `${name} siunčia komentarą...`;
     },
     'reaction-$name-is-writing': (name) => {
-        return `${name} pisze komentarz...`;
+        return `${name} rašo komentarą...`;
     },
     'reaction-$name-likes-this': (name) => {
-        return `${name} lubi to`;
+        return `${name} mėgsta tai`;
     },
     'reaction-status-storage-pending': 'Laukiamas',
     'reaction-status-transcoding': 'Perkodavimas',
@@ -409,49 +401,49 @@ const phrases = {
     'settings-user-information': 'Asmeninė informacija',
     'settings-web-alert': 'Naršyklės įspėjimas',
 
-    'social-network-github': 'URL profilu na GitHubie',
-    'social-network-gitlab': 'URL profilu na GitLabie',
-    'social-network-ichat': 'Nazwa użytkownika iChat',
-    'social-network-linkedin': 'URL profilu na LinkedInie',
-    'social-network-skype': 'Nazwa użytkownika Skype',
-    'social-network-slack': 'Identyfikator użytkownika na Slacku',
-    'social-network-slack-team': 'Identyfikator zespołu na Slacku',
-    'social-network-stackoverflow': 'URL profilu na StackOverflow',
-    'social-network-twitter': 'Nazwa użytkownika na Twitterze',
+    'social-network-github': 'GitHub profilio URL',
+    'social-network-gitlab': 'GitLab profilio URL',
+    'social-network-ichat': 'iChat vardas',
+    'social-network-linkedin': 'LinkedIn profilio URL',
+    'social-network-skype': 'Skype vardas',
+    'social-network-slack': 'Slack vartotojo identifikatorius',
+    'social-network-slack-team': 'Slack komandos identifikatorius',
+    'social-network-stackoverflow': 'Stack Overflow profilio URL',
+    'social-network-twitter': 'Twitter vartotojo vardas',
 
-    'start-activation-add-server': 'Add project from another server',
+    'start-activation-add-server': 'Pridėti projektą iš kito serverio',
     'start-activation-instructions': (ui) => {
         return [
-            'Aby uzyskać dostęp do serwera Trambar na tym urządzeniu, najpierw zaloguj się do serwera za pomocą przeglądarki internetowej. Wybierz projekt, a następnie przejdź do strony ',
+            'Norėdami prieiti prie Trambar serverio šiame įrenginyje, pirmiausia prisijunkite prie serverio naudodami žiniatinklio naršyklę. Pasirinkite projektą, tada eikite į puslapį ',
             ui.settings,
-            '. W panelu ',
+            '. Skydelyje ',
             ui.projects,
-            ' kliknij ',
+            ' paspauskite mygtuką ',
             ui.mobileSetup,
-            '. Kod QR pojawi się na ekranie. Następnie—na tym urządzeniu—naciśnij przycisk poniżej i zeskanuj kod. Alternatywnie możesz ręcznie wprowadzić kod aktywacyjny.'
+            '. Ekrane pasirodys QR kodas. Šiame įrenginyje paspauskite žemiau esantį mygtuką ir nuskaitykite kodą. Arba galite rankiniu būdu įvesti aktyvinimo kodą.'
         ];
     },
     'start-activation-instructions-short': (ui) => {
         return [
-            'Zaloguj się za pomocą przeglądarki internetowej, a następnie zeskanuj wyświetlony kod QR na stronie ',
+            'Prisijunkite naudodami žiniatinklio naršyklę, tada nuskaitykite QR kodą, rodomą puslapyje',
             ui.settings,
             ' > ',
             ui.mobileSetup,
         ];
     },
-    'start-activation-manual': 'Ręcznie',
-    'start-activation-new-server': 'Nowy serwer',
-    'start-activation-others-servers': 'Dostępne serwery',
-    'start-activation-return': 'Powrót',
-    'start-activation-scan-code': 'Zeskanuj kod QR',
-    'start-error-access-denied': 'Wniosek o dostęp odrzucono',
-    'start-error-account-disabled': 'Konto jest obecnie wyłączone',
-    'start-error-existing-users-only': 'Tylko upoważniony personel może uzyskać dostęp do tego systemu',
-    'start-error-undefined': 'Niespodziewany błąd',
-    'start-no-projects': 'Żadnych projektów',
-    'start-no-servers': 'Żadnych dostawców OAuth',
-    'start-projects': 'Projekty',
-    'start-social-login': 'Logowanie społecznościowe',
+    'start-activation-manual': 'Rankiniu',
+    'start-activation-new-server': 'Naujas serveris',
+    'start-activation-others-servers': 'Galimi serveriai',
+    'start-activation-return': 'Grįžti',
+    'start-activation-scan-code': 'Nuskaityti QR kodą',
+    'start-error-access-denied': 'Prašymas suteikti prieigą atmestas',
+    'start-error-account-disabled': 'Vartotojo paskyra šiuo metu išjungta',
+    'start-error-existing-users-only': 'Prie šios sistemos gali prisijungti tik įgalioti darbuotojai',
+    'start-error-undefined': 'Netikėta klaida',
+    'start-no-projects': 'Nėra projektų',
+    'start-no-servers': 'Nėra OAuth paslaugų teikėjų',
+    'start-projects': 'Projektai',
+    'start-social-login': 'Socialinis prisijungimas',
     'start-system-title-default': 'Trambar',
     'start-welcome': 'Sveiki!',
     'start-welcome-again': 'Sveiki vėl',
@@ -464,112 +456,100 @@ const phrases = {
         return cardinal(count, '1 atsakymas', '2 atsakymai', '10 atsakymų');
     },
     'story-$name-created-$branch-in-$repo': (name, branch, repo) => {
-        let e = pastTenseEnding(name, 3);
-        return `Stworzył gałąź „${branch}” w projektcie „${repo}”`;
+        return `Sukūrė šaką „${branch}” projekte „${repo}”`;
     },
     'story-$name-created-$milestone': (name, milestone) => {
-        let e = pastTenseEnding(name, 3);
-        return `Stworzył kamień milowy „${milestone}”`;
+        return `Sukūrė etapą „${milestone}”`;
     },
     'story-$name-created-$page': (name, page) => {
-        let e = pastTenseEnding(name, 3);
-        return `Stworzył stronę wiki „${page}”`;
+        return `Sukūrė wiki puslapį „${page}”`;
     },
     'story-$name-created-$repo': (name, repo) => {
-        let e = pastTenseEnding(name, 3);
-        let text = `Stworzył projekt`;
+        let text = `Sukūrė projektą`;
         if (repo) {
             text += ` „${repo}”`;
         }
         return text;
     },
     'story-$name-created-$tag-in-$repo': (name, tag, repo) => {
-        let e = pastTenseEnding(name, 3);
-        return `Stworzył tag „${tag}” w projektcie „${repo}”`;
+        return `sukūrė žymę „${tag}” projekte „${repo}”`;
     },
     'story-$name-deleted-$page': (name, page) => {
-        let e = pastTenseEnding(name, 3);
-        let a = (e === 'ła') ? 'ę' : 'ą';
-        return `Usunął stronę wiki „${page}”`;
+        return `Ištrino wiki puslapį „${page}”`;
     },
     'story-$name-deleted-$repo': (name, repo) => {
-        let e = pastTenseEnding(name, 3);
-        let a = (e === 'ła') ? 'ę' : 'ą';
-        let text = `Usunął projekt`;
+        let text = `Ištrino projektą`;
         if (repo) {
             text += ` „${repo}”`;
         }
         return text;
     },
     'story-$name-imported-$repo': (name, repo) => {
-        let e = pastTenseEnding(name, 3);
-        let text = `Zaimportował projekt`;
+        let text = `Importavo projektą`;
         if (repo) {
             text += ` „${repo}”`;
         }
         return text;
     },
     'story-$name-joined-$repo': (name, repo) => {
-        let e = pastTenseEnding(name, 3);
-        let text = `Dołączył do projektu`;
+        let text = `Prisijungė prie projekto`;
         if (repo) {
             text += ` „${repo}”`;
         }
         return text;
     },
     'story-$name-left-$repo': (name, repo) => {
-        let e = pastTenseEnding(name, 3);
-        let text = `Opuścił projekt`;
+        let text = `Paliko projektą`;
         if (repo) {
             text += ` „${repo}”`;
         }
         return text;
     },
     'story-$name-merged-$branches-into-$branch-of-$repo': (name, branches, branch, repo) => {
-        let e = pastTenseEnding(name, 3);
-        let text = `Scalił zmiany`;
+        let text = `Sujungė kodą`;
         if (branches && branches.length > 0) {
             let sources = branches.map((branch) => {
                 return `„${branch}”`;
             });
-            text += ` z gałęzi ${sources.join(', ')}`;
+            if (sources.length === 1) {
+                text += ` iš šakos ${sources[0]}`;
+            } else {
+                text += ` iš šakų ${sources.join(', ')}`;
+            }
         }
-        text += ` do gałęzi „${branch}”`;
+        text += ` į`;
         if (repo) {
-            text += ` projekta „${repo}”`;
+            text += ` projekto „${repo}”`;
         }
+        text += ` šaką „${branch}”`;
         return text;
     },
     'story-$name-opened-issue-$number-$title': (name, number, title) => {
-        let e = pastTenseEnding(name, 3);
-        let text = `Napisał zgłoszenie błędu #${number}`;
+        let text = `Atidarė problemą ${number}`;
         if (title) {
             text += `: ${title}`;
         }
         return text;
     },
     'story-$name-pushed-to-$branch-of-$repo': (name, branch, repo) => {
-        let e = pastTenseEnding(name, 3);
-        let a = (e === 'ła') ? 'ę' : 'ą';
-        let text = `Wypchnął zmiany gałęzi „${branch}”`;
+        let text = `Išsiuntė pakeitimus į`;
         if (repo) {
-            text += ` projektu „${repo}”`;
+            text += ` projekto „${repo}”`;
         }
+        text += ` šaką „${branch}”`;
         return text;
     },
     'story-$name-requested-merge-$branch1-into-$branch2': (name, branch1, branch2) => {
-        let e = pastTenseEnding(name, 3);
-        return `Poprosił o scalanie zmian z gałęzi „${branch1}” do gałęzi „${branch2}”`;
+        return `Oaprašė sujungti šaką „${branch1}” į šaką „${branch2}”`;
     },
     'story-$name-updated-$page': (name, page) => {
-        let e = pastTenseEnding(name, 3);
-        return `Redagował wiki page „${page}”`;
+        return `Atnaujino wiki puslapį „${page}”`;
     },
-    'story-add-coauthor': 'Dodaj współautora',
-    'story-add-remove-coauthor': 'Dodaj/Usuń współautora',
+    'story-add-coauthor': 'Pridėti bendrininką',
+    'story-add-remove-coauthor': 'Pridėti/šalinti bendrininką',
     'story-audio': 'Audio',
     'story-author-$count-others': (count) => {
-        return cardinal(count, 'inna osoba', 'inne osoby', 'innych osób');
+        return cardinal(count, '1 kitas', '2 kiti', '10 kitų');
     },
     'story-author-$name1-and-$name2': (name1, name2) => {
         return [ name1, ` ir `, name2 ];
@@ -583,6 +563,7 @@ const phrases = {
     'story-file': 'Failas',
     'story-issue-current-status': 'Dabartinis statusas:',
     'story-issue-status-closed': 'Uždaras',
+    'story-issue-status-merged': 'Sujungtas',
     'story-issue-status-opened': 'Atviras',
     'story-issue-status-reopened': 'Atviras vėl',
     'story-like': 'Patinka',

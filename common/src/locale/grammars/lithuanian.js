@@ -31,7 +31,7 @@ function list(items) {
     });
     if (items.length >= 2) {
         var lastItem = items.pop();
-        items[items.length - 1] += ` i ${lastItem}`;
+        items[items.length - 1] += ` ir ${lastItem}`;
     }
     return items.join(', ');
 }

@@ -26,6 +26,9 @@ const phrases = {
     'activity-chart-legend-task-list': 'Užduočių sąrašai',
     'activity-chart-legend-wiki': 'Wiki redagavimai',
 
+    'activity-tooltip-$count': (count) => {
+        return cardinal(count, '1 istorija', '2 istorijos', '10 istorijų');
+    },
     'activity-tooltip-$count-branch': (count) => {
         return cardinal(count, '1 šaka', '2 šakos', '10 šakų');
     },
@@ -142,7 +145,6 @@ const phrases = {
         let projects = cardinal(count, 'pasirinktą projektą', 'šiuos 2 pasirinktus projektus', 'šiuos 10 pasirinktų projektų');
         return `Ar tikrai norite atkurti ${projects}?`;
     },
-    'project-list-deleted': 'Ištrintas',
     'project-list-edit': 'Redaguoti projektų sąrašą',
     'project-list-save': 'Išsaugoti projektų sąrašą',
     'project-list-status-archived': 'Archyvuotas',
