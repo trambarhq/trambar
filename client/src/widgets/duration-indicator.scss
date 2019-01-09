@@ -1,8 +1,9 @@
 @import '../colors';
 
-.duration-indiactor {
+.duration-indicator {
     .icon {
-        color: $duration-indiactor-text-color;
+        margin-left: 0.5em;
+        color: $duration-indicator-text-color;
 
         &.blinking {
             color: $duration-indicator-blinker-color;
@@ -15,7 +16,6 @@
     }
 
     .duration {
-        margin-left: 0.5em;
-        color: $duration-indiactor-text-color;
+        color: $duration-indicator-text-color;
     }
 }

@@ -1,0 +1,27 @@
+@import '../colors';
+
+.volume-indicator {
+    .fa {
+        display: inline-block;
+        width: 1.25em;
+        vertical-align: middle;
+        text-align: left;
+        color: $volume-indicator-icon-color
+    }
+
+    .volume-bar-frame {
+        display: inline-block;
+        border: 1px solid $volume-indicator-border-color;
+        width: 5em;
+        vertical-align: middle;
+
+        .volume-bar {
+            height: 0.5em;
+            background-color: $volume-indicator-bar-color;
+
+            &.recording {
+                background-color: $volume-indicator-recording-bar-color;
+            }
+        }
+    }
+}
