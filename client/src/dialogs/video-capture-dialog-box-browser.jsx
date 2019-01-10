@@ -129,23 +129,29 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
     }
 
     handleAccept = (evt) => {
-        let { onCapture } = this.props;
+        let { payloads, onCapture } = this.props;
         if (onCapture) {
             let media = this.capture.extract();
-            let evt = {
+            let payload = payloads.add('video');
+            payload.attachStream(this.stream);
+            payload.attachFile(media.image.blob, 'poster');
+            let resource = {
+                type: 'video',
+                payload_token: payload.id,
+                width: media.video.width,
+                height: media.video.height,
+                duration: media.video.duration,
+                format: this.capture.options.videoMIMEType,
+                bitrates: {
+                    audio: this.capture.options.audioBitsPerSecond,
+                    video: this.capture.options.videoBitsPerSecond,
+                }
+            };
+            onCapture({
                 type: 'capture',
                 target: this,
-            };
-            if (media.video) {
-                evt.video = media.video;
-                evt.video.stream = this.stream;
-            } else if (media.audio) {
-                evt.audio = media.audio;
-            }
-            if (media.image) {
-                evt.image = media.image;
-            }
-            onCapture(evt);
+                resource
+            });
         }
         this.capture.deactivate();
         this.handleCancel();
@@ -153,7 +159,6 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
 
     handleCaptureChunk = (evt) => {
         if (this.stream) {
-            console.log(evt.blob);
             this.stream.push(evt.blob);
         }
     }
