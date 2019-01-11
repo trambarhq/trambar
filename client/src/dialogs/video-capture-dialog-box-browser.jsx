@@ -3,13 +3,11 @@ import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import RelaksMediaCapture from 'relaks-media-capture';
-import * as FrameGrabber from 'media/frame-grabber';
-import * as MediaStreamUtils from 'media/media-stream-utils';
-import * as BlobManager from 'transport/blob-manager';
 
 // widgets
 import Overlay from 'widgets/overlay';
 import PushButton from 'widgets/push-button';
+import LiveVideo from 'widgets/live-video';
 import DeviceSelector from 'widgets/device-selector';
 import DevicePlaceholder from 'widgets/device-placeholder';
 import DurationIndicator from 'widgets/duration-indicator';
@@ -141,7 +139,7 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
                 width: media.video.width,
                 height: media.video.height,
                 duration: media.video.duration,
-                format: this.capture.options.videoMIMEType,
+                format: _.last(_.split(this.capture.options.videoMIMEType, '/')),
                 bitrates: {
                     audio: this.capture.options.audioBitsPerSecond,
                     video: this.capture.options.videoBitsPerSecond,
@@ -226,7 +224,7 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
             case 'initiating':
                 return <LiveVideo muted />;
             case 'previewing':
-            case 'recording':
+            case 'capturing':
             case 'paused':
                 let liveVideoProps = {
                     srcObject: liveVideo.stream,
@@ -235,7 +233,7 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
                     muted: true,
                 };
                 return <LiveVideo  {...liveVideoProps} />;
-            case 'recorded':
+            case 'captured':
                 let previewVideoProps = {
                     className: 'preview',
                     src: capturedVideo.url,
@@ -254,13 +252,13 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDeviceSelector() {
-        let { env, devices, selectedDeviceID } = this.props;
+        let { env, devices, selectedDeviceID, onChoose } = this.props;
         let props = {
             type: 'video',
             selectedDeviceID,
             devices,
             env,
-            onSelect: this.handleDeviceSelect,
+            onSelect: onChoose,
         };
         return <DeviceSelector {...props} />;
     }
@@ -275,7 +273,7 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
         if (typeof(duration) !== 'number') {
             return null;
         }
-        let durationProps = { duration, recording: (status === 'recording') };
+        let durationProps = { duration, recording: (status === 'capturing') };
         return <DurationIndicator {...durationProps} />
     }
 
@@ -286,10 +284,10 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
      */
     renderVolume() {
         let { status, volume } = this.props;
-        if (typeof(volume) !== 'number' || status === 'recorded') {
+        if (typeof(volume) !== 'number' || status === 'captured') {
             return null;
         }
-        let volumeProps = { volume, recording: (status === 'recording') };
+        let volumeProps = { volume, recording: (status === 'capturing') };
         return <VolumeIndicator {...volumeProps} />;
     }
 
@@ -315,7 +313,7 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
                     label: t('video-capture-start'),
                     onClick: onStart,
                     disabled: (status !== 'previewing'),
-                    emphasized: true,
+                    emphasized: (status === 'previewing'),
                 };
                 return (
                     <div className="buttons">
@@ -323,7 +321,7 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
                         <PushButton {...startButtonProps} />
                     </div>
                 );
-            case 'recording':
+            case 'capturing':
                 let pauseButtonProps = {
                     label: t('video-capture-pause'),
                     onClick: onPause,
@@ -355,7 +353,7 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
                         <PushButton {...stopButton2Props} />
                     </div>
                 );
-            case 'recorded':
+            case 'captured':
                 let retakeButtonProps = {
                     label: t('video-capture-retake'),
                     onClick: onClear,
@@ -371,49 +369,6 @@ class VideoCaptureDialogBoxBrowserSync extends PureComponent {
                         <PushButton {...acceptButtonProps} />
                     </div>
                 );
-        }
-    }
-}
-
-class LiveVideo extends PureComponent {
-    render() {
-        let { srcObject, ...props } = this.props;
-        if (srcObject instanceof Blob) {
-            // srcObject is supposed to accept a blob but that's not
-            // currently supported by the browsers
-            props.src = this.blobURL = URL.createObjectURL(srcObject);
-        }
-        return <video ref={this.setNode} {...props} />
-    }
-
-    setNode = (node) => {
-        this.node = node;
-    }
-
-    setSrcObject() {
-        let { srcObject } = this.props;
-        if (srcObject) {
-            if (!(srcObject instanceof Blob)) {
-                this.node.srcObject = srcObject;
-            }
-            this.node.play();
-        }
-    }
-
-    componentDidMount() {
-        this.setSrcObject();
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        let { srcObject } = this.props;
-        if (prevProps.srcObject !== srcObject) {
-            this.setSrcObject();
-        }
-    }
-
-    componentWillUnmount() {
-        if (this.blobURL) {
-            URL.revokeObjectURL(this.blobURL);
         }
     }
 }
@@ -440,15 +395,16 @@ if (process.env.NODE_ENV !== 'production') {
     };
     VideoCaptureDialogBoxBrowserSync.propTypes = {
         show: PropTypes.bool,
+        env: PropTypes.instanceOf(Environment).isRequired,
 
         status: PropTypes.oneOf([
             'acquiring',
             'denied',
             'initiating',
             'previewing',
-            'recording',
+            'capturing',
             'paused',
-            'recorded',
+            'captured',
         ]),
         liveVideo: PropTypes.shape({
             stream: PropTypes.instanceOf(Object).isRequired,

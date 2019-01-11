@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import * as FrameGrabber from 'media/frame-grabber';
-import * as MediaStreamUtils from 'media/media-stream-utils';
-import * as BlobManager from 'transport/blob-manager';
+import { AsyncComponent } from 'relaks';
+import RelaksMediaCapture from 'relaks-media-capture';
 
 // widgets
 import Overlay from 'widgets/overlay';
 import PushButton from 'widgets/push-button';
+import LiveVideo from 'widgets/live-video';
 import DeviceSelector from 'widgets/device-selector';
 import DevicePlaceholder from 'widgets/device-placeholder';
 
@@ -16,120 +16,116 @@ import './photo-capture-dialog-box-browser.scss';
 /**
  * Dialog box for taking a picture in the web browser.
  *
+ * @extends AsyncComponent
+ */
+class PhotoCaptureDialogBoxBrowser extends AsyncComponent {
+    constructor(props) {
+        super(props);
+        let options = {
+            video: true,
+            audio: false,
+            preferredDevice: 'front',
+            watchVolume: false,
+            captureImageOnly: true,
+        };
+        this.capture = new RelaksMediaCapture(options);
+    }
+
+    async renderAsync(meanwhile) {
+        let { env, show } = this.props;
+        meanwhile.delay(50, 50);
+        let props = {
+            env,
+            show,
+            onSnap: this.handleSnap,
+            onClear: this.handleClear,
+            onChoose: this.handleChoose,
+            onAccept: this.handleAccept,
+            onCancel: this.handleCancel,
+        };
+        if (show) {
+            meanwhile.show(<PhotoCaptureDialogBoxBrowserSync {...props} />);
+            this.capture.activate();
+            do {
+                props.status = this.capture.status;
+                props.devices = this.capture.devices;
+                props.selectedDeviceID = this.capture.selectedDeviceID;
+                props.liveVideo = this.capture.liveVideo;
+                props.capturedImage = this.capture.capturedImage;
+                meanwhile.show(<PhotoCaptureDialogBoxBrowserSync {...props} />);
+                await this.capture.change();
+            } while (this.capture.active);
+        }
+        return <PhotoCaptureDialogBoxBrowserSync {...props} />;
+    }
+
+    componentDidUpdate() {
+        setTimeout(() => {
+            let { show } = this.props;
+            if (!show) {
+                this.capture.deactivate();
+                this.capture.clear();
+            }
+        }, 500);
+    }
+
+    componentWillUnmount() {
+        this.capture.deactivate();
+    }
+
+    handleSnap = (evt) => {
+        this.capture.snap();
+    }
+
+    handleClear = (evt) => {
+        this.capture.clear();
+    }
+
+    handleChoose = (evt) => {
+        this.capture.choose(evt.id);
+    }
+
+    handleCancel = (evt) => {
+        let { onClose } = this.props;
+        if (onClose) {
+            onClose({
+                type: 'cancel',
+                target: this,
+            });
+        }
+    }
+
+    handleAccept = (evt) => {
+        let { payloads, onCapture } = this.props;
+        if (onCapture) {
+            let media = this.capture.extract();
+            let payload = payloads.add('image');
+            payload.attachFile(media.image.blob);
+            let resource = {
+                type: 'image',
+                payload_token: payload.id,
+                width: media.image.width,
+                height: media.image.height,
+                format: _.last(_.split(this.capture.options.imageMIMEType, '/')),
+            };
+            onCapture({
+                type: 'capture',
+                target: this,
+                resource
+            });
+        }
+        this.capture.deactivate();
+        this.handleCancel();
+    }
+}
+
+/**
+ * Synchronous component that actually draws the interface
+ *
  * @extends PureComponent
  */
-class PhotoCaptureDialogBoxBrowser extends PureComponent {
-    static displayName = 'PhotoCaptureDialogBoxBrowser';
-
-    constructor(props) {
-        let { env, cameraDirection } = props;
-        super(props);
-        let preferredDevice = DeviceSelector.choose(env.devices, 'video', cameraDirection);
-        this.state = {
-            liveVideoStream: null,
-            liveVideoError : null,
-            liveVideoWidth: 640,
-            liveVideoHeight: 480,
-            capturedImage: null,
-            selectedDeviceID: (preferredDevice) ? preferredDevice.deviceId : null,
-        };
-    }
-
-    /**
-     * Initialize camera if component is mounted as shown (probably not)
-     */
-    componentWillMount() {
-        let { show } = this.props;
-        if (show) {
-            this.initializeCamera();
-        }
-    }
-
-    /**
-     * Initialize camera when component becomes visible
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { show } = this.props;
-        if (nextProps.show !== show) {
-            if (nextProps.show) {
-                this.setState({ capturedImage: null });
-                this.initializeCamera();
-            } else {
-                setTimeout(() => {
-                    this.shutdownCamera();
-                    this.setState({ capturedImage: null });
-                }, 500);
-            }
-        }
-    }
-
-    /**
-     * Create live video stream, asking user for permission if necessary
-     */
-    initializeCamera() {
-        this.createLiveVideoStream().then((stream) => {
-            let dim = MediaStreamUtils.getVideoDimensions(stream);
-            this.setState({
-                liveVideoStream: stream,
-                liveVideoError: null,
-                liveVideoWidth: dim.width,
-                liveVideoHeight: dim.height,
-            });
-        }).catch((err) => {
-            console.error(err);
-            this.setState({
-                liveVideoStream: null,
-                liveVideoError: err,
-            });
-        });
-    }
-
-    /**
-     * Release live video stream
-     */
-    shutdownCamera() {
-        this.destroyLiveVideoStream().then(() => {
-            this.setState({
-                liveVideoStream: null,
-                liveVideoError: null,
-            });
-        });
-    }
-
-    /**
-     * Recreate live video stream after a different camera is selected
-     */
-    reinitializeCamera() {
-        this.destroyLiveVideoStream().then(() => {
-            this.initializeCamera();
-        });
-    }
-
-    /**
-     * Set the video node and apply live video stream to it
-     *
-     * @param  {HTMLVideoElement} node
-     */
-    setLiveVideoNode = (node) => {
-        let { liveVideoStream, liveVideoWidth, liveVideoHeight } = this.state;
-        this.videoNode = node;
-        if (this.videoNode) {
-            this.videoNode.srcObject = liveVideoStream;
-            this.videoNode.play();
-
-            // fix the video dimensions if they're wrong
-            MediaStreamUtils.getActualVideoDimensions(node, (dim) => {
-                if (liveVideoWidth !== dim.width || liveVideoHeight !== dim.height) {
-                    this.setState({
-                        liveVideoWidth: dim.width,
-                        liveVideoHeight: dim.height,
-                    });
-                }
-            });
-        }
-    }
+class PhotoCaptureDialogBoxBrowserSync extends PureComponent {
+    static displayName = 'PhotoCaptureDialogBoxBrowserSync';
 
     /**
      * Render component
@@ -137,8 +133,8 @@ class PhotoCaptureDialogBoxBrowser extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { show } = this.props;
-        let overlayProps = { show, onBackgroundClick: this.handleCancelClick };
+        let { show, onCancel } = this.props;
+        let overlayProps = { show, onBackgroundClick: onCancel };
         return (
             <Overlay {...overlayProps}>
                 <div className="photo-capture-dialog-box">
@@ -146,8 +142,12 @@ class PhotoCaptureDialogBoxBrowser extends PureComponent {
                         {this.renderView()}
                     </div>
                     <div className="controls">
-                        {this.renderDeviceSelector()}
-                        {this.renderButtons()}
+                        <div className="left">
+                            {this.renderDeviceSelector()}
+                        </div>
+                        <div className="right">
+                            {this.renderButtons()}
+                        </div>
                     </div>
                 </div>
             </Overlay>
@@ -160,81 +160,34 @@ class PhotoCaptureDialogBoxBrowser extends PureComponent {
      * @return {ReactElement}
      */
     renderView() {
-        let { capturedImage, liveVideoStream } = this.state;
-        if (capturedImage) {
-            return this.renderCapturedImage();
-        } else if (liveVideoStream) {
-            return this.renderLiveVideo();
-        } else {
-            return this.renderPlaceholder();
+        let { status, liveVideo, capturedImage } = this.props;
+        switch (status) {
+            case 'acquiring':
+            case 'denied':
+                let placeholderProps = {
+                    blocked: (status === 'denied'),
+                    icon: 'camera',
+                };
+                return <DevicePlaceholder {...placeholderProps} />;
+            case 'initiating':
+                return <LiveVideo muted />;
+            case 'previewing':
+                let liveVideoProps = {
+                    srcObject: liveVideo.stream,
+                    width: liveVideo.width,
+                    height: liveVideo.height,
+                    muted: true,
+                };
+                return <LiveVideo  {...liveVideoProps} />;
+            case 'captured':
+                let previewImageProps = {
+                    className: 'preview',
+                    src: capturedImage.url,
+                    width: capturedImage.width,
+                    height: capturedImage.height,
+                };
+                return <img {...previewImageProps} />;
         }
-    }
-
-    /**
-     * Render placeholder graphic when camera isn't available
-     *
-     * @return {ReactElement}
-     */
-    renderPlaceholder() {
-        let { liveVideoError } = this.state;
-        let props = {
-            blocked: !!liveVideoError,
-            icon: 'camera',
-        };
-        return <DevicePlaceholder {...props} />;
-    }
-
-    /**
-     * Render view of live video stream
-     *
-     * @return {ReactElement}
-     */
-    renderLiveVideo() {
-        let videoProps = {
-            ref: this.setLiveVideoNode,
-            className: 'live-video',
-            muted: true,
-        };
-        return (
-            <div>
-                {this.renderSpacer()}
-                <video {...videoProps} />
-            </div>
-        );
-    }
-
-    /**
-     * Render a spacer element
-     *
-     * @return {ReactElement}
-     */
-    renderSpacer() {
-        let { liveVideoWidth, liveVideoHeight } = this.state;
-        let spacerProps = {
-            className: 'spacer',
-            width: liveVideoWidth,
-            height: liveVideoHeight,
-        };
-        return <canvas {...spacerProps} />;
-    }
-
-    /**
-     * Render video captured previously
-     *
-     * @return {ReactElement}
-     */
-    renderCapturedImage() {
-        let { capturedImage } = this.state;
-        let imageProps = {
-            className: 'preview',
-            src: capturedImage.url
-        };
-        return (
-            <div>
-                {this.renderSpacer()}
-                <img {...imageProps} />
-            </div>
-        );
     }
 
     /**
@@ -243,16 +196,13 @@ class PhotoCaptureDialogBoxBrowser extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDeviceSelector() {
-        let { env } = this.props;
-        let { capturedImage, selectedDeviceID } = this.state;
-        if (capturedImage) {
-            return null;
-        }
+        let { env, devices, selectedDeviceID, onChoose } = this.props;
         let props = {
             type: 'video',
             selectedDeviceID,
+            devices,
             env,
-            onSelect: this.handleDeviceSelect,
+            onSelect: onChoose,
         };
         return <DeviceSelector {...props} />;
     }
@@ -263,222 +213,54 @@ class PhotoCaptureDialogBoxBrowser extends PureComponent {
      * @return {ReactElement}
      */
     renderButtons() {
-        let { env } = this.props;
-        let { capturedImage, liveVideoStream } = this.state;
+        let { env, status } = this.props;
+        let { onCancel, onSnap, onClear, onAccept } = this.props;
         let { t } = env.locale;
-        if (!capturedImage) {
-            let cancelButtonProps = {
-                label: t('photo-capture-cancel'),
-                onClick: this.handleCancelClick,
-            };
-            let snapButtonProps = {
-                label: t('photo-capture-snap'),
-                onClick: this.handleSnapClick,
-                disabled: !liveVideoStream,
-                emphasized: true,
-            };
-            return (
-                <div className="buttons">
-                    <PushButton {...cancelButtonProps} />
-                    <PushButton {...snapButtonProps} />
-                </div>
-            );
-        } else {
-            let retakeButtonProps = {
-                label: t('photo-capture-retake'),
-                onClick: this.handleRetakeClick,
-            };
-            let acceptButtonProps = {
-                label: t('photo-capture-accept'),
-                onClick: this.handleAcceptClick,
-                emphasized: true,
-            };
-            return (
-                <div className="buttons">
-                    <PushButton {...retakeButtonProps} />
-                    <PushButton {...acceptButtonProps} />
-                </div>
-            );
+        switch (status) {
+            case 'acquiring':
+            case 'denied':
+            case 'initiating':
+            case 'previewing':
+                let cancelButtonProps = {
+                    label: t('photo-capture-cancel'),
+                    onClick: onCancel,
+                };
+                let snapButtonProps = {
+                    label: t('photo-capture-snap'),
+                    onClick: onSnap,
+                    disabled: (status !== 'previewing'),
+                    emphasized: (status === 'previewing'),
+                };
+                return (
+                    <div className="buttons">
+                        <PushButton {...cancelButtonProps} />
+                        <PushButton {...snapButtonProps} />
+                    </div>
+                );
+            case 'captured':
+                let retakeButtonProps = {
+                    label: t('photo-capture-retake'),
+                    onClick: onClear,
+                };
+                let acceptButtonProps = {
+                    label: t('photo-capture-accept'),
+                    onClick: onAccept,
+                    emphasized: true,
+                };
+                return (
+                    <div className="buttons">
+                        <PushButton {...retakeButtonProps} />
+                        <PushButton {...acceptButtonProps} />
+                    </div>
+                );
         }
-    }
-
-    /**
-     * Change the video's source object when user changes camera
-     */
-    componentDidUpdate(prevProps, prevState) {
-        let { env } = this.props;
-        let { liveVideoStream, selectedDeviceID } = this.state;
-        if (this.videoNode) {
-            if (prevState.liveVideoStream !== liveVideoStream) {
-                this.setLiveVideoNode(this.videoNode);
-            }
-        }
-        if (env.devices !== prevProps.env.devices) {
-            if (selectedDeviceID) {
-                if (!_.some(env.devices, { deviceId: selectedDeviceID })) {
-                    // reinitialize the camera when the one we were using disappears
-                    this.setState({ selectedDeviceID: null }, () => {
-                        this.reinitializeCamera();
-                    });
-                }
-            }
-        }
-    }
-
-    /**
-     * Destroy live video stream when component unmounts
-     */
-    componentWillUnmount() {
-        this.destroyLiveVideoStream();
-    }
-
-    /**
-     * Create a live video stream
-     *
-     * @return {Promise<MediaStream>}
-     */
-    createLiveVideoStream() {
-        let { selectedDeviceID } = this.state;
-        if (!this.videoStreamPromise) {
-            this.videoStreamPromise = MediaStreamUtils.getSilentVideoStream(selectedDeviceID);
-        }
-        return this.videoStreamPromise;
-    }
-
-    /**
-     * Destroy live video stream created previously
-     *
-     * @return {Promise}
-     */
-    destroyLiveVideoStream() {
-        if (!this.videoStreamPromise) {
-            return Promise.resolve();
-        }
-        let promise = this.videoStreamPromise;
-        this.videoStreamPromise = null;
-        return promise.then((stream) => {
-            MediaStreamUtils.stopAllTracks(stream);
-        });
-    }
-
-    /**
-     * Capture a frame from camera
-     *
-     * @return {Promise<Object>}
-     */
-    captureImage() {
-        let video = this.videoNode;
-        return FrameGrabber.capture(video).then((blob) => {
-            let localURL = BlobManager.manage(blob);
-            return {
-                url: localURL,
-                blob: blob,
-                width: video.videoWidth,
-                height: video.videoHeight,
-            };
-        });
-    }
-
-    /**
-     * Report back to parent component that an image has been captured and
-     * accepted by user
-     *
-     * @param  {Object} resource
-     */
-    triggerCaptureEvent(resource) {
-        let { onCapture } = this.props;
-        if (onCapture) {
-            onCapture({
-                type: 'capture',
-                target: this,
-                resource,
-            });
-        }
-    }
-
-    /**
-     * Inform parent component that dialog box should be closed
-     */
-    triggerCloseEvent() {
-        let { onClose } = this.props;
-        if (onClose) {
-            onClose({
-                type: 'close',
-                target: this,
-            });
-        }
-    }
-
-    /**
-     * Called when user clicks snap button
-     *
-     * @param  {Event} evt
-     */
-    handleSnapClick = (evt) => {
-        this.captureImage().then((image) => {
-            this.setState({ capturedImage: image });
-        }).catch((err) => {
-            console.error(err);
-        });
-    }
-
-    /**
-     * Called when user clicks retake button
-     *
-     * @param  {Event} evt
-     */
-    handleRetakeClick = (evt) => {
-        let { capturedImage } = this.state;
-        BlobManager.release(capturedImage.blob);
-        this.setState({ capturedImage: null });
-    }
-
-    /**
-     * Called when user clicks accept button
-     *
-     * @param  {Event} evt
-     */
-    handleAcceptClick = (evt) => {
-        let { payloads } = this.props;
-        let { capturedImage } = this.state;
-        let payload = payloads.add('image');
-        payload.attachFile(capturedImage.blob);
-        let res = {
-            type: 'image',
-            payload_token: payload.id,
-            width: capturedImage.width,
-            height: capturedImage.height,
-            format: 'jpeg'
-        };
-        this.triggerCloseEvent(true);
-        this.triggerCaptureEvent(res);
-    }
-
-    /**
-     * Called when user clicks cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        this.triggerCloseEvent(false);
-    }
-
-    /**
-     * Called when user selects a different device
-     *
-     * @param  {Event} evt
-     */
-    handleDeviceSelect = (evt) => {
-        let selectedDeviceID = evt.currentTarget.value;
-        this.setState({ selectedDeviceID }, () => {
-            this.reinitializeCamera();
-        });
     }
 }
 
 export {
     PhotoCaptureDialogBoxBrowser as default,
     PhotoCaptureDialogBoxBrowser,
+    PhotoCaptureDialogBoxBrowserSync,
 };
 
 import Payloads from 'transport/payloads';
@@ -489,14 +271,44 @@ if (process.env.NODE_ENV !== 'production') {
 
     PhotoCaptureDialogBoxBrowser.propTypes = {
         show: PropTypes.bool,
-        cameraDirection: PropTypes.oneOf([ 'front', 'back' ]),
-
         payloads: PropTypes.instanceOf(Payloads).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
 
         onClose: PropTypes.func,
-        onCapturePending: PropTypes.func,
-        onCaptureError: PropTypes.func,
         onCapture: PropTypes.func,
+    };
+    PhotoCaptureDialogBoxBrowserSync.propTypes = {
+        show: PropTypes.bool,
+        env: PropTypes.instanceOf(Environment).isRequired,
+
+        status: PropTypes.oneOf([
+            'acquiring',
+            'denied',
+            'initiating',
+            'previewing',
+            'captured',
+        ]),
+        liveVideo: PropTypes.shape({
+            stream: PropTypes.instanceOf(Object).isRequired,
+            width: PropTypes.number.isRequired,
+            height: PropTypes.number.isRequired,
+        }),
+        capturedImage: PropTypes.shape({
+            url: PropTypes.string.isRequired,
+            blob: PropTypes.instanceOf(Blob).isRequired,
+            width: PropTypes.number.isRequired,
+            height: PropTypes.number.isRequired,
+        }),
+        devices: PropTypes.arrayOf(PropTypes.shape({
+            id: PropTypes.string,
+            label: PropTypes.string,
+        })),
+        selectedDeviceID: PropTypes.string,
+
+        onChoose: PropTypes.func,
+        onCancel: PropTypes.func,
+        onSnap: PropTypes.func,
+        onClear: PropTypes.func,
+        onAccept: PropTypes.func,
     };
 }
