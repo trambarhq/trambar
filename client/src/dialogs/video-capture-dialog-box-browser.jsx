@@ -36,6 +36,13 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
         this.stream = null;
     }
 
+    /**
+     * Render component asynchronously
+     *
+     * @param  {Meanwhile}  meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     async renderAsync(meanwhile) {
         let { env, show } = this.props;
         meanwhile.delay(50, 50);
@@ -70,6 +77,9 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
         return <VideoCaptureDialogBoxBrowserSync {...props} />;
     }
 
+    /**
+     * Deactivate media capture object when dialog box is hidden
+     */
     componentDidUpdate() {
         setTimeout(() => {
             let { show } = this.props;
@@ -80,10 +90,18 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
         }, 500);
     }
 
+    /**
+     * Deactivate media capture object when component unmounts
+     */
     componentWillUnmount() {
         this.capture.deactivate();
     }
 
+    /**
+     * Called when user wants to start recording
+     *
+     * @param  {Event} evt
+     */
     handleStart = (evt) => {
         let { payloads } = this.props;
         this.stream = payloads.stream();
@@ -92,18 +110,38 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
         this.capture.snap();
     }
 
+    /**
+     * Called when user wants to stop recording
+     *
+     * @param  {Event} evt
+     */
     handleStop = (evt) => {
         this.capture.stop();
     }
 
+    /**
+     * Called when user wants to pause recording
+     *
+     * @param  {Event} evt
+     */
     handlePause = (evt) => {
         this.capture.pause();
     }
 
+    /**
+     * Called when user wants to resume recording
+     *
+     * @param  {Event} evt
+     */
     handleResume = (evt) => {
         this.capture.resume();
     }
 
+    /**
+     * Called when user wants to start over
+     *
+     * @param  {Event} evt
+     */
     handleClear = (evt) => {
         this.capture.clear();
         if (this.stream) {
@@ -112,10 +150,20 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
         }
     }
 
+    /**
+     * Called when user selects a different input device
+     *
+     * @param  {Object} evt
+     */
     handleChoose = (evt) => {
         this.capture.choose(evt.id);
     }
 
+    /**
+     * Called when user closes the dialog box
+     *
+     * @param  {Event} evt
+     */
     handleCancel = (evt) => {
         let { onClose } = this.props;
         if (onClose) {
@@ -126,6 +174,11 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
         }
     }
 
+    /**
+     * Called when user accepts the recorded audio
+     *
+     * @param  {Event} evt
+     */
     handleAccept = (evt) => {
         let { payloads, onCapture } = this.props;
         if (onCapture) {
@@ -155,12 +208,22 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
         this.handleCancel();
     }
 
+    /**
+     * Called after a chunk of video has been recorded
+     *
+     * @param  {Object} evt
+     */
     handleCaptureChunk = (evt) => {
         if (this.stream) {
             this.stream.push(evt.blob);
         }
     }
 
+    /**
+     * Called when recording endeds, after the last chunk was received
+     *
+     * @param  {Object} evt
+     */
     handleCaptureEnd = (evt) => {
         if (this.stream) {
             this.stream.close();

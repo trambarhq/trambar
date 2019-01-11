@@ -31,6 +31,13 @@ class PhotoCaptureDialogBoxBrowser extends AsyncComponent {
         this.capture = new RelaksMediaCapture(options);
     }
 
+    /**
+     * Render component asynchronously
+     *
+     * @param  {Meanwhile}  meanwhile
+     *
+     * @return {Promise<ReactElement>}
+     */
     async renderAsync(meanwhile) {
         let { env, show } = this.props;
         meanwhile.delay(50, 50);
@@ -59,6 +66,9 @@ class PhotoCaptureDialogBoxBrowser extends AsyncComponent {
         return <PhotoCaptureDialogBoxBrowserSync {...props} />;
     }
 
+    /**
+     * Deactivate media capture object when dialog box is hidden
+     */
     componentDidUpdate() {
         setTimeout(() => {
             let { show } = this.props;
@@ -69,22 +79,45 @@ class PhotoCaptureDialogBoxBrowser extends AsyncComponent {
         }, 500);
     }
 
+    /**
+     * Deactivate media capture object when component unmounts
+     */
     componentWillUnmount() {
         this.capture.deactivate();
     }
 
+    /**
+     * Called when user wants to capture the camera input
+     *
+     * @param  {Event} evt
+     */
     handleSnap = (evt) => {
         this.capture.snap();
     }
 
+    /**
+     * Called when user wants to start over
+     *
+     * @param  {Event} evt
+     */
     handleClear = (evt) => {
         this.capture.clear();
     }
 
+    /**
+     * Called when user selects a different input device
+     *
+     * @param  {Object} evt
+     */
     handleChoose = (evt) => {
         this.capture.choose(evt.id);
     }
 
+    /**
+     * Called when user closes the dialog box
+     *
+     * @param  {Event} evt
+     */
     handleCancel = (evt) => {
         let { onClose } = this.props;
         if (onClose) {
@@ -95,6 +128,11 @@ class PhotoCaptureDialogBoxBrowser extends AsyncComponent {
         }
     }
 
+    /**
+     * Called when user accepts the captured image
+     *
+     * @param  {Event} evt
+     */
     handleAccept = (evt) => {
         let { payloads, onCapture } = this.props;
         if (onCapture) {
