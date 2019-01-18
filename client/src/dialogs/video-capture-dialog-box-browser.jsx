@@ -79,14 +79,16 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
     /**
      * Deactivate media capture object when dialog box is hidden
      */
-    componentDidUpdate() {
-        setTimeout(() => {
-            let { show } = this.props;
-            if (!show) {
-                this.capture.deactivate();
-                this.capture.clear();
-            }
-        }, 500);
+    componentDidUpdate(prevProps, prevState) {
+        if (prevProps.show) {
+            setTimeout(() => {
+                let { show } = this.props;
+                if (!show) {
+                    this.capture.deactivate();
+                    this.capture.clear();
+                }
+            }, 500);
+        }
     }
 
     /**
