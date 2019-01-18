@@ -326,9 +326,6 @@ class AudioCaptureDialogBoxBrowserSync extends PureComponent {
      */
     renderVolume() {
         let { status, volume } = this.props;
-        if (typeof(volume) !== 'number' || status === 'captured') {
-            return null;
-        }
         let volumeProps = {
             type: 'gauge',
             volume,

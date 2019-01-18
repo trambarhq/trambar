@@ -21,6 +21,14 @@
         .device-placeholder {
             padding-left: 0;
             padding-right: 0;
+            width: 300px;
+            height: 150px;
+            margin: 20px;
+            font-size: 60px;
+
+            .fa-stack {
+                height: 150px;
+            }
         }
 
         .volume-indicator {
@@ -29,7 +37,8 @@
 
         AUDIO {
             display: block;
-            width: 100%;
+            width: 300px;
+            margin: 20px;
         }
     }
 
@@ -40,24 +49,15 @@
         border-top: 1px solid $separator-color;
 
         .left {
-            flex: 1 0 0;
+            flex: 1 0 auto;
 
             .duration-indicator {
                 margin-top: 0.65em;
             }
         }
 
-        .center {
-            flex: 1 0 0;
-            text-align: center;
-
-            .volume-indicator {
-                margin-top: 0.5em;
-            }
-        }
-
         .right {
-            flex: 1 0 0;
+            flex: 1 0 auto;
             text-align: right;
         }
     }
