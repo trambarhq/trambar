@@ -59,7 +59,6 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
             onCancel: this.handleCancel,
         };
         if (show) {
-            meanwhile.show(<VideoCaptureDialogBoxBrowserSync {...props} />);
             this.capture.activate();
             do {
                 props.status = this.capture.status;

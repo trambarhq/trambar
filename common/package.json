@@ -59,7 +59,7 @@
     "react-dom": "^16.5.2",
     "react-easy-emoji": "^1.2.0",
     "relaks": "^1.1.6",
-    "relaks-event-emitter": "^0.0.1",
+    "relaks-event-emitter": "^0.0.6",
     "relaks-route-manager": "^0.0.18",
     "sass-loader": "^6.0.6",
     "setimmediate": "^1.0.5",

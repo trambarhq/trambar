@@ -56,7 +56,6 @@ class AudioCaptureDialogBoxBrowser extends AsyncComponent {
             onCancel: this.handleCancel,
         };
         if (show) {
-            meanwhile.show(<AudioCaptureDialogBoxBrowserSync {...props} />);
             this.capture.activate();
             do {
                 props.status = this.capture.status;
@@ -328,7 +327,11 @@ class AudioCaptureDialogBoxBrowserSync extends PureComponent {
         if (typeof(volume) !== 'number' || status === 'captured') {
             return null;
         }
-        let volumeProps = { volume, recording: (status === 'capturing') };
+        let volumeProps = {
+            type: 'gauge',
+            volume,
+            recording: (status === 'capturing')
+        };
         return <VolumeIndicator {...volumeProps} />;
     }
 

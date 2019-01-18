@@ -51,7 +51,6 @@ class PhotoCaptureDialogBoxBrowser extends AsyncComponent {
             onCancel: this.handleCancel,
         };
         if (show) {
-            meanwhile.show(<PhotoCaptureDialogBoxBrowserSync {...props} />);
             this.capture.activate();
             do {
                 props.status = this.capture.status;

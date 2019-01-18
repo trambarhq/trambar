@@ -3,9 +3,6 @@
 .audio-capture-dialog-box {
     display: flex;
     flex-direction: column;
-    max-height: 100%;
-    max-width: 24em;
-    width: 80%;
 
     background-color: $dialog-box-background-color;
     box-shadow: 2px 2px 2px $dialog-box-shadow-color;
@@ -14,7 +11,9 @@
     padding: 0.4em 0.4em 0.4em 0.4em;
 
     .container {
+        display: flex;
         flex: 1 1 auto;
+        justify-content: center;
         overflow: hidden;
         padding-bottom: 0.2em;
         width: 100%;
