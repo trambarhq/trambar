@@ -55,7 +55,7 @@ class PhotoCaptureDialogBoxBrowser extends AsyncComponent {
             do {
                 props.status = this.capture.status;
                 props.devices = this.capture.devices;
-                props.selectedDeviceID = this.capture.selectedDeviceID;
+                props.chosenDeviceID = this.capture.chosenDeviceID;
                 props.liveVideo = this.capture.liveVideo;
                 props.capturedImage = this.capture.capturedImage;
                 meanwhile.show(<PhotoCaptureDialogBoxBrowserSync {...props} />);
@@ -235,10 +235,10 @@ class PhotoCaptureDialogBoxBrowserSync extends PureComponent {
      * @return {ReactElement|null}
      */
     renderDeviceSelector() {
-        let { env, devices, selectedDeviceID, onChoose } = this.props;
+        let { env, devices, chosenDeviceID, onChoose } = this.props;
         let props = {
             type: 'video',
-            selectedDeviceID,
+            chosenDeviceID,
             devices,
             env,
             onSelect: onChoose,
@@ -342,7 +342,7 @@ if (process.env.NODE_ENV !== 'production') {
             id: PropTypes.string,
             label: PropTypes.string,
         })),
-        selectedDeviceID: PropTypes.string,
+        chosenDeviceID: PropTypes.string,
 
         onChoose: PropTypes.func,
         onCancel: PropTypes.func,

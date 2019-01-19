@@ -115,7 +115,7 @@ $reaction-status-text-color: $gray;
 
 $transfer-progress-text-color: #aaaaaa;
 
-$separator-color: $gray;
+$separator-color: transparentize($gray, 0.5);
 
 $app-component-border-color: #211a1a;
 $app-component-background-color: #cccccc;
