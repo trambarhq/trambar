@@ -152,12 +152,12 @@ async function handleDiscovery(req, res) {
         if (criteria.order) {
             // check clause for potential SQL injection
             let clauses = _.split(criteria.order, /\s,\s/);
-            _.each(clauses, (clause) => {
+            for (let clause of clauses) {
                 let m = /^(\w+)\s+(asc|desc)/i.exec(clause);
                 if (!m) {
                     throw new HTTPError(400);
                 }
-            });
+            }
         } else {
             criteria.order = 'id DESC';
         }

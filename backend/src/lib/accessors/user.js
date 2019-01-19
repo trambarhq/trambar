@@ -385,13 +385,13 @@ class User extends ExternalData {
             // can be joined automatically (or can't be joined at all)
             let userAfter = usersAfter[index];
             let projectIDs = _.difference(userReceived.requested_project_ids, userAfter.requested_project_ids);
-            _.each(projectIDs, (projectID) => {
+            for (let projectID of projectIDs) {
                 let members = newMembers[projectID];
                 if (!members) {
                     members = newMembers[projectID] = [];
                 }
                 members.push(userAfter);
-            });
+            }
         }
         if (_.isEmpty(newMembers)) {
             return;

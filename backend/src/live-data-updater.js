@@ -71,7 +71,7 @@ function handleCleanRequests(events) {
         });
     }
     let now = new Date;
-    _.each(events, (event) => {
+    for (let event of events) {
         switch (event.table) {
             case 'statistics':
                 addToStatisticsQueue(event.schema, event.id, event.atime);
@@ -80,7 +80,7 @@ function handleCleanRequests(events) {
                 addToListingQueue(event.schema, event.id, event.atime);
                 break;
         }
-    })
+    }
 }
 
 /**
@@ -89,13 +89,13 @@ function handleCleanRequests(events) {
  * @param  {Array<Object>} events
  */
 function handleRatingDependencyChanges(events) {
-    _.each(events, (event) => {
-        _.each(StoryRaters, (rater) => {
+    for (let event of events) {
+        for (let rater of StoryRaters) {
             if (_.includes(rater.monitoring, event.table)) {
                 rater.handleEvent(event);
             }
-        });
-    });
+        }
+    }
 }
 
 /**
@@ -106,14 +106,15 @@ function handleRatingDependencyChanges(events) {
 function handleStoryChanges(events) {
     // invalidate story cache
     Story.clearCache((search) => {
-        return !_.some(events, (event) => {
+        for (let event of events) {
             if (event.table === 'story' && search.schema === event.schema) {
                 // don't clear cache unless change is made to a published story
                 if (event.current.published === true || event.diff.published) {
-                    return true;
+                    return false;
                 }
             }
-        });
+        }
+        return true;
     });
 }
 
@@ -195,14 +196,14 @@ function addToStatisticsQueue(schema, id, atime) {
     }
 
     // remove it from the other queues
-    _.forIn(statisticsUpdateQueues, (otherQueue, priority) => {
+    for (let [ priority, otherQueue ] of _.entries(statisticsUpdateQueues)) {
         if (otherQueue !== queue) {
             let index = _.findIndex(otherQueue, item);
             if (index !== -1) {
                 otherQueue.splice(index, 1);
             }
         }
-    });
+    }
     processNextInStatisticsQueue();
 }
 
@@ -307,14 +308,14 @@ function addToListingQueue(schema, id, atime) {
     }
 
     // remove it from the other queues
-    _.forIn(listingUpdateQueues, (otherQueue) => {
+    for (let [ priority, otherQueue ] of _.entries(listingUpdateQueues)) {
         if (otherQueue !== queue) {
             let index = _.findIndex(otherQueue, item);
             if (index !== -1) {
                 otherQueue.splice(index, 1);
             }
         }
-    });
+    }
     processNextInListingQueue();
 }
 

@@ -64,20 +64,19 @@ class ExternalData extends Data {
             // use the same function as the database to generate the id strings
             let external = [ criteria.external_object ];
             let serverType = criteria.external_object.type || '';
-            let objectNames = _.transform(criteria.external_object, (names, object, name) => {
-                if (object.id != null || object.ids instanceof Array) {
-                    names.push(name);
-                }
-            }, []);
-            let idStrings = StoredProcs.externalIdStrings(external, serverType, objectNames);
             if (serverType && !/^\w+$/.test(serverType)) {
                 throw new Error(`Invalid type: "${serverType}"`);
             }
-            _.each(objectNames, (name) => {
+            let objectNames = [];
+            for (let [ name, object ] of _.entries(criteria.external_object)) {
                 if (!/^\w+$/.test(name)) {
                     throw new Error(`Invalid property name: "${name}"`);
                 }
-            });
+                if (object.id != null || object.ids instanceof Array) {
+                    objectNames.push(name);
+                }
+            }
+            let idStrings = StoredProcs.externalIdStrings(external, serverType, objectNames);
             conds.push(`"externalIdStrings"(external, '${serverType}', '{${objectNames}}'::text[]) && $${params.push(idStrings)}`);
         }
     }

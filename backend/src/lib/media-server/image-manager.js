@@ -242,11 +242,11 @@ async function applyFiltersToSVGDocument(path, filters) {
  * Find functions for filters and call them on target
  *
  * @param  {Object} target
- * @param  {Array<Function>} operators
+ * @param  {Object<Function>} operators
  * @param  {String} filters
  */
 function applyOperators(target, operators, filters) {
-    _.each(_.split(filters, /[ +]/), (filter) => {
+    for (let filter of _.split(filters, /[ +]/)) {
         let cmd = '', args = [];
         let regExp = /(\D+)(\d*)/g, m;
         while(m = regExp.exec(filter)) {
@@ -261,15 +261,15 @@ function applyOperators(target, operators, filters) {
             }
         }
         if (cmd) {
-            _.each(operators, (operator, name) => {
+            for (let [ name, operator ] of _.entries(operators)) {
                 // see which operator's name start with the letter(s)
                 if (name.substr(0, cmd.length) === cmd) {
                     operator.apply(target, args);
-                    return false;
+                    return break;
                 }
-            });
+            }
         }
-    });
+    }
 }
 
 /**

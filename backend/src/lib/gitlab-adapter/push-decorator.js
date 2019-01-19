@@ -147,15 +147,15 @@ function findMatchingComponents(cxt, push) {
         _.map(push.files.renamed, 'after')
     ));
     let matching = [];
-    _.each(fileChanges, (path) => {
-        _.each(cxt.descriptors, (descriptor) => {
+    for (let path of fileChanges) {
+        for (let descriptor of cxt.descriptors) {
             if (!_.includes(matching, descriptor)) {
                 if (matchDescriptor(path, descriptor)) {
                     matching.push(descriptor);
                 }
             }
-        });
-    });
+        }
+    }
     return _.map(matching, 'component');
 }
 

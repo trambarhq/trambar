@@ -1245,13 +1245,13 @@ function extractQueryVariables(query) {
 function parseQueryString(queryString) {
     let values = {};
     let pairs = _.split(queryString, '&');
-    _.each(pairs, (pair) => {
+    for (let pair of pairs) {
         let parts = _.split(pair, '=');
         let name = decodeURIComponent(parts[0]);
         let value = decodeURIComponent(parts[1] || '');
         value = _.replace(value, /\+/g, ' ');
         values[name] = value;
-    });
+    }
     return values;
 }
 

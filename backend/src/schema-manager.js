@@ -72,21 +72,17 @@ async function start() {
 
     if (process.env.NODE_ENV !== 'production') {
         // listen for console messages from stored procs
-        let events = [
-            'info',
-            'log',
-            'warn',
-            'error',
-            'debug',
-        ];
-        for (let event of events) {
-            let f = function(events) {
-                _.each(events, (args) => {
-                    console[event].apply(console, args);
-                });
-            };
-            await db.listen([ 'console' ], event, f, 0);
-        }
+        let f = function(method, evts) {
+            for (let args in evts) {
+                console[method].apply(console, args);
+            }
+        };
+        let tbl = [ 'console' ];
+        await db.listen(tbl, 'info', (evts) => { f('info', evts) }, 0);
+        await db.listen(tbl, 'log', (evts) => { f('log', evts) }, 0);
+        await db.listen(tbl, 'warn', (evts) => { f('warn', evts) }, 0);
+        await db.listen(tbl, 'error', (evts) => { f('error', evts) }, 0);
+        await db.listen(tbl, 'debug', (evts) => { f('debug', evts) }, 0);
     }
 
     messageQueueInterval = setInterval(() => {

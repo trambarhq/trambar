@@ -274,7 +274,7 @@ function packagePushMessage(message) {
     var push = {
         tokens: message.tokens
     };
-    _.each(message.methods, (method) => {
+    for (let method of message.methods) {
         switch (method) {
             case 'fcm':
                 push['fcm'] = packageFirebaseMessage(message);
@@ -289,7 +289,7 @@ function packagePushMessage(message) {
                 push['wns'] = packageWindowsMessage(message);
                 break;
         }
-    });
+    }
     return push;
 }
 
@@ -303,7 +303,7 @@ function packagePushMessage(message) {
 function packageFirebaseMessage(message) {
     var data = { address: message.address };
     if (message.body.alert) {
-        _.each(message.body.alert, (value, name) => {
+        for (let [ name, value ] of _.entries(message.body.alert)) {
             switch (name) {
                 case 'title':
                     data.title = value;
@@ -317,11 +317,11 @@ function packageFirebaseMessage(message) {
                 default:
                     data[name] = value;
             }
-        });
+        }
     } else {
-        _.each(message.body, (value, name) => {
+        for (let [ name, value ] of _.entries(message.body)) {
             data[name] = value;
-        });
+        }
         data['content-available'] = 1;
     }
     return {
@@ -342,7 +342,7 @@ let apnsNotID = 1;
 function packageAppleMessage(message) {
     let aps = { address: message.address };
     if (message.body.alert) {
-        let alert = _.transform(message.body.alert, (alert, value, key) => {
+        for (let [ key, value ] of _.entries(message.body.alert)) {
             switch (key) {
                 case 'message':
                     aps.alert = value;
@@ -354,10 +354,12 @@ function packageAppleMessage(message) {
                 default:
                     aps[key] = value;
             }
-        });
-        _.assign(aps, alert);
+        }
     } else {
-        _.assign(aps, message.body, { 'content-available': 1 });
+        aps['content-available'] = 1;
+        for (let [ key, value ] of _.entries(message.body)) {
+            aps[key] = value;
+        }
     }
     let notID = apnsNotID++;
     if (apnsNotID >= 2147483647) {

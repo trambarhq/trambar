@@ -186,11 +186,11 @@ class Statistics extends LiveData {
  * @return {String}
  */
 function hash(filters) {
-    let values = {};
     let keys = _.sortBy(_.keys(filters));
-    _.each(keys, (key) => {
+    let values = {};
+    for (let key of keys) {
         values[key] = filters[key];
-    });
+    }
     let text = JSON.stringify(values);
     let hash = Crypto.createHash('md5').update(text);
     return hash.digest("hex");

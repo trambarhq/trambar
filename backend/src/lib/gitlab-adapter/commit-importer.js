@@ -177,7 +177,7 @@ function countChanges(glDiff) {
         deleted: 0,
         modified: 0,
     };
-    _.each(glDiff, (file) => {
+    for (let file of glDiff) {
         // parse diff if there's one
         try {
             let diff = parseFileDiff(file);
@@ -210,7 +210,7 @@ function countChanges(glDiff) {
                 if (diff.additions > 0 && diff.deletions > 0) {
                     let changes = _.flatten(_.map(diff.chunks, 'changes'));
                     let deleted = 0;
-                    _.each(changes, (change) => {
+                    for (let change of changes) {
                         if (change.type === 'del') {
                             // remember how many lines were deleted in this run
                             cl.deleted++;
@@ -229,7 +229,7 @@ function countChanges(glDiff) {
                             // we've reached unchanged code--reset the counter
                             deleted = 0;
                         }
-                    });
+                    }
                 } else if (diff.additions > 0) {
                     cl.added += diff.additions;
                 } else if (diff.deletions > 0) {
@@ -239,7 +239,7 @@ function countChanges(glDiff) {
         } catch (err) {
             console.log('Error encounter processing diff: ' + err.message);
         }
-    });
+    }
     return {
         files: cf,
         lines: cl,

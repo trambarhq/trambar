@@ -150,7 +150,7 @@ async function startTranscodingJob(srcPath, type, jobID) {
         job.totalDuration = job.inputFile.duration;
 
         let re = /out_time_ms=(.*)/;
-        _.each(job.outputFiles, (outputFile) => {
+        for (let outputFile of job.outputFiles) {
             if (outputFile.ffmpeg) {
                 outputFile.processedDuration = 0;
 
@@ -164,7 +164,7 @@ async function startTranscodingJob(srcPath, type, jobID) {
                     }
                 });
             }
-        });
+        }
     }
 
     transcodingJobs.push(job);
@@ -361,11 +361,11 @@ function processNextStreamSegment(job) {
         inputStream.pipe(job.md5Hash, { end: false });
         // pipe stream to stdin of FFmpeg, leaving stdin open afterward
         // (so FFmpeg doesn't exit)
-        _.each(job.outputFiles, (outputFile) => {
+        for (let outputFile of job.outputFiles) {
             if (outputFile.ffmpeg) {
                 inputStream.pipe(outputFile.ffmpeg.stdin, { end: false });
             }
-        });
+        }
         // calculate progress based on how much data has been pulled from
         // input stream
         inputStream.on('data', (chunk) => {
@@ -383,12 +383,12 @@ function processNextStreamSegment(job) {
             job.writeStream.end();
             job.md5Hash.end();
             // close stdin of FFmpeg so it'd exit after processing remaining data
-            _.each(job.outputFiles, (outputFile) => {
+            for (let outputFile of job.outputFiles) {
                 if (outputFile.ffmpeg) {
                     outputFile.ffmpeg.stdin.end();
                     outputFile.ffmpeg = null;
                 }
-            });
+            }
             calculateProgress(job);
         }
     }
@@ -430,11 +430,11 @@ function calculateProgress(job) {
         }
     } else {
         let durations = [];
-        _.each(job.outputFiles, (outputFile) => {
+        for (let outputFile of job.outputFiles) {
             if (outputFile.ffmpeg) {
                 durations.push(outputFile.processedDuration);
             }
-        });
+        }
         progress = Math.round(_.min(durations) / job.totalDuration * 100);
     }
     if (progress) {
@@ -603,11 +603,11 @@ async function probeMediaFile(srcPath) {
         let audioStream = _.find(dump.streams, { codec_type: 'audio' });
         if (videoStream) {
             let rotation = 0;
-            _.each(videoStream.side_data_list, (item) => {
+            for (let item of videoStream.side_data_list) {
                 if (typeof(item.rotation) === 'number') {
                     rotation = (item.rotation + 360) % 360;
                 }
-            });
+            }
             switch (rotation) {
                 case 90:
                 case 270:
@@ -629,7 +629,7 @@ async function probeMediaFile(srcPath) {
 
 // cancel a stream if nothing is received after a while
 setInterval(() => {
-    _.each(transcodingJobs, (job) => {
+    for (let job of transcodingJobs) {
         if (job.streaming && !job.closed) {
             let now = new Date;
             let elapsed = now - job.lastSegmentTime;
@@ -637,7 +637,7 @@ setInterval(() => {
                 endTranscodingJob(job, true);
             }
         }
-    });
+    }
 }, 30 * 1000);
 
 export {
