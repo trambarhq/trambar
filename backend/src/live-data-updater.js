@@ -1,8 +1,10 @@
 import _ from 'lodash';
 import Moment from 'moment';
+import Bluebird from 'bluebird';
 import FS from 'fs';
 import Database from 'database';
 import * as Shutdown from 'shutdown';
+import AsyncQueue from 'utils/async-queue';
 
 // accessors
 import Statistics from 'accessors/statistics';
@@ -47,9 +49,15 @@ async function start() {
 
     // listen for changes to stories so we can invalidate cache
     await db.listen([ 'story' ], 'change', handleStoryChanges, 0);
+
+    processStatisticsQueue();
+    processListingQueue();
 }
 
 async function stop() {
+    processStatisticsQueue();
+    haltListingQueue();
+
     if (database) {
         await Statistics.relinquish(database);
         await Listing.relinquish(database);
@@ -162,11 +170,11 @@ async function queueDirtyListings(db) {
     }
 }
 
-let statisticsUpdateQueues = {
-    high: [],
-    medium: [],
-    low: []
-};
+const HIGH = 10;
+const MEDIUM = 5;
+const LOW = 1;
+
+let statisticsUpdateQueue = new AsyncQueue('priority', 'desc');
 
 /**
  * Add statistics row to update queue, with priority based on how recently
@@ -179,71 +187,46 @@ let statisticsUpdateQueues = {
 function addToStatisticsQueue(schema, id, atime) {
     // use access time to determine priority of update
     let elapsed = getTimeElapsed(atime, new Date);
-    let priority = 'low';
+    let priority = LOW;
     if (elapsed < 10 * 1000) {
         // last accessed within 10 sec
-        priority = 'high';
+        priority = HIGH;
     } else if (elapsed < 15 * 60 * 1000) {
         // last accessed within 15 min
-        priority = 'medium';
+        priority = MEDIUM;
     }
 
-    // push item onto queue unless it's already there
-    let item = { schema, id };
-    let queue = statisticsUpdateQueues[priority];
-    if (!_.some(queue, item)) {
-        queue.push(item);
-    }
-
-    // remove it from the other queues
-    for (let [ priority, otherQueue ] of _.entries(statisticsUpdateQueues)) {
-        if (otherQueue !== queue) {
-            let index = _.findIndex(otherQueue, item);
-            if (index !== -1) {
-                otherQueue.splice(index, 1);
-            }
-        }
-    }
-    processNextInStatisticsQueue();
+    statisticsUpdateQueue.remove({ schema, id });
+    statisticsUpdateQueue.push({ schema, id, priority });
 }
 
-let updatingStatistics = false;
+async function processStatisticsQueue() {
+    statisticsUpdateQueue.start();
+    for (;;) {
+        let item = await statisticsUpdateQueue.pull();
+        if (!item) {
+            break;
+        }
+        try {
+            await updateStatistics(item.schema, item.id);
 
-/**
- * Process the next item in the statistics queues
- */
-function processNextInStatisticsQueue() {
-    if (updatingStatistics) {
-        // already in the middle of something
-        return;
-    }
-    for (let priority in statisticsUpdateQueues) {
-        let queue = statisticsUpdateQueues[priority];
-        let nextItem = queue.shift();
-        if (nextItem) {
-            updatingStatistics = true;
-            updateStatistics(nextItem.schema, nextItem.id).then(() => {
-                updatingStatistics = false;
-
-                // delay the process of the next row depending on priority
-                let delay = 0;
-                switch (priority) {
-                    case 'high': delay = 0; break;
-                    case 'medium': delay = 100; break;
-                    case 'low': delay = 500; break;
-                }
-                if (delay) {
-                    setTimeout(processNextInStatisticsQueue, delay);
-                } else {
-                    setImmediate(processNextInStatisticsQueue);
-                }
-            }).catch((err) => {
-                console.error(err)
-                setImmediate(processNextInStatisticsQueue);
-            });
-            return;
+            let delay;
+            switch (item.priority) {
+                case HIGH: delay = 0; break;
+                case MEDIUM: delay = 100; break;
+                case LOW: delay = 500; break;
+            }
+            if (delay) {
+                await Bluebird.delay(delay);
+            }
+        } catch (err) {
+            console.error(err);
         }
     }
+}
+
+function haltStatisticsQueue() {
+    statisticsUpdateQueue.stop();
 }
 
 /**
@@ -278,12 +261,7 @@ async function updateStatistics(schema, id) {
     }
 }
 
-let listingUpdateQueues = {
-    high: [],
-    medium: [],
-    low: []
-};
-
+let listingUpdateQueue = new AsyncQueue('priority', 'desc');
 /**
  * Add listing row to update queue, with priority based on how recently
  * it was accessed
@@ -299,63 +277,37 @@ function addToListingQueue(schema, id, atime) {
         // last accessed within 1 min
         priority = 'high';
     }
-
-    // push item onto queue unless it's already there
-    let item = { schema, id };
-    let queue = listingUpdateQueues[priority];
-    if (!_.some(queue, item)) {
-        queue.push(item);
-    }
-
-    // remove it from the other queues
-    for (let [ priority, otherQueue ] of _.entries(listingUpdateQueues)) {
-        if (otherQueue !== queue) {
-            let index = _.findIndex(otherQueue, item);
-            if (index !== -1) {
-                otherQueue.splice(index, 1);
-            }
-        }
-    }
-    processNextInListingQueue();
+    listingUpdateQueue.remove({ schema, id });
+    listingUpdateQueue.push({ schema, id, priority });
 }
 
-let updatingListing = false;
+async function processListingQueue() {
+    listingUpdateQueue.start();
+    for (;;) {
+        let item = await listingUpdateQueue.pull();
+        if !(item) {
+            break;
+        }
+        try {
+            await updateListing(item.schema, item.id);
 
-/**
- * Process the next item in the listing queues
- */
-function processNextInListingQueue() {
-    if (updatingListing) {
-        // already in the middle of something
-        return;
-    }
-    for (let priority in listingUpdateQueues) {
-        let queue = listingUpdateQueues[priority];
-        let nextItem = queue.shift();
-        if (nextItem) {
-            updatingListing = true;
-            updateListing(nextItem.schema, nextItem.id).then(() => {
-                updatingListing = false;
-
-                // delay the process of the next row depending on priority
-                let delay = 0;
-                switch (priority) {
-                    case 'high': delay = 0; break;
-                    case 'medium': delay = 100; break;
-                    case 'low': delay = 500; break;
-                }
-                if (delay) {
-                    setTimeout(processNextInListingQueue, delay);
-                } else {
-                    setImmediate(processNextInListingQueue);
-                }
-            }).catch((err) => {
-                console.error(err)
-                setImmediate(processNextInListingQueue);
-            });
-            return;
+            let delay;
+            switch (item.priority) {
+                case HIGH: delay = 0; break;
+                case MEDIUM: delay = 100; break;
+                case LOW: delay = 500; break;
+            }
+            if (delay) {
+                await Bluebird.delay(delay);
+            }
+        } catch (err) {
+            console.error(err);
         }
     }
+}
+
+function haltListingQueue() {
+    listingUpdateQueue.stop();
 }
 
 /**
@@ -518,11 +470,12 @@ async function prepareStoryRaterContexts(db, schema, stories, listing) {
  * @return {Number}
  */
 function calculateStoryRating(contexts, story) {
-    let rating = _.reduce(StoryRaters, (total, rater) => {
+    let total = 0;
+    for (let rater of StoryRaters) {
         let rating = rater.calculateRating(contexts[rater.type], story);
-        return total + rating;
-    }, 0);
-    return rating;
+        total += rating;
+    }
+    return total;
 }
 
 /**
