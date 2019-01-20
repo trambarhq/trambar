@@ -17,7 +17,7 @@ function on(callback) {
 function off(callback) {
     let index = listeners.indexOf(callback);
     if (index !== -1) {
-        listeners.split(index, 1);
+        listeners.splice(index, 1);
     }
 }
 

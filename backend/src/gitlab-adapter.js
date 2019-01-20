@@ -32,40 +32,32 @@ let database;
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
-function start() {
-    return Database.open(true).then((db) => {
-        database = db;
-        return db.need('global').then(() => {
-            return new Promise((resolve, reject) => {
-                // listen for Webhook invocation
-                let app = Express();
-                app.use(BodyParser.json());
-                app.set('json spaces', 2);
-                app.post('/srv/gitlab/hook/:serverId', handleSystemHookCallback);
-                app.post('/srv/gitlab/hook/:serverId/:repoId/:projectId', handleProjectHookCallback);
-                server = app.listen(80, () => {
-                    resolve();
-                });
-            });
-        }).then(() => {
-            // listen for database change events
-            let tables = [
-                'project',
-                'server',
-                'story',
-                'system',
-                'task',
-            ];
-            return db.listen(tables, 'change', handleDatabaseChanges, 100);
-        }).then(() => {
-            if (process.env.NODE_ENV !== 'production') {
-                // reduce the chance that operations will overlap on nodemon restart
-                return Promise.delay(3000);
-            }
-        }).then(() => {
-            return startPeriodicTasks();
-        });
-    });
+async function start() {
+    let db = database = await Database.open(true);
+    await db.need('global');
+
+    // listen for Webhook invocation
+    let app = Express();
+    app.use(BodyParser.json());
+    app.set('json spaces', 2);
+    app.post('/srv/gitlab/hook/:serverId', handleSystemHookCallback);
+    app.post('/srv/gitlab/hook/:serverId/:repoId/:projectId', handleProjectHookCallback);
+    server = app.listen(80);
+
+    // listen for database change events
+    let tables = [
+        'project',
+        'server',
+        'story',
+        'system',
+        'task',
+    ];
+    await db.listen(tables, 'change', handleDatabaseChanges, 100);
+    if (process.env.NODE_ENV !== 'production') {
+        // reduce the chance that operations will overlap on nodemon restart
+        await Promise.delay(3000);
+    }
+    startPeriodicTasks();
 }
 
 async function stop() {
