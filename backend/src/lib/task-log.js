@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Database from 'database';
 import * as Shutdown from 'shutdown';
 import TaskQueue from 'utils/task-queue';

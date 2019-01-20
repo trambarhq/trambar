@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import * as Localization from 'localization';
 import * as TagScanner from 'utils/tag-scanner';

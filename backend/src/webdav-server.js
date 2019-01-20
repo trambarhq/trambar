@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import JsDAV from 'jsDAV';
 import JsDAVLocksBackendFS from 'jsDAV/lib/DAV/plugins/locks/fs';
 import { File, Collection, Conflict } from 'jsdav-promise/es6';

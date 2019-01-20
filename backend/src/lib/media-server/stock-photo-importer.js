@@ -1,5 +1,5 @@
-import Promise from 'bluebird';
-import FS from 'fs'; Promise.promisifyAll(FS);
+import Bluebird from 'bluebird';
+import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Path from 'path';
 import Database from 'database';
 

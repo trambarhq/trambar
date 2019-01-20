@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import Moment from 'moment';
 import Express from 'express';
 import BodyParser from 'body-parser';
@@ -55,7 +55,7 @@ async function start() {
     await db.listen(tables, 'change', handleDatabaseChanges, 100);
     if (process.env.NODE_ENV !== 'production') {
         // reduce the chance that operations will overlap on nodemon restart
-        await Promise.delay(3000);
+        await Bluebird.delay(3000);
     }
     startPeriodicTasks();
 }
