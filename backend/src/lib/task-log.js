@@ -122,7 +122,7 @@ TaskLog.prototype.finish = function() {
 TaskLog.prototype.abort = function(err) {
     this.error = err;
     this.details = _.clone(this.details) || {};
-    this.details.error = _.pick(err, 'message', 'stack', 'code', 'statusCode');
+    this.details.error = _.pick(err, 'message', 'stack', 'code', 'statusCode', 'reason');
     this.failed = true;
     this.saved = false;
     Shutdown.off(this.shutdownListener);

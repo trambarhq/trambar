@@ -34,7 +34,7 @@ class Session extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName();
+        let table = this.getTableName(schema);
         let sql = `
             CREATE TABLE ${table} (
                 id serial,

@@ -265,7 +265,7 @@ function applyOperators(target, operators, filters) {
                 // see which operator's name start with the letter(s)
                 if (name.substr(0, cmd.length) === cmd) {
                     operator.apply(target, args);
-                    return break;
+                    break;
                 }
             }
         }

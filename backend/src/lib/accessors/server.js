@@ -131,7 +131,7 @@ class Server extends Data {
      * @return {Promise<Object>}
      */
     async importOne(db, schema, serverReceived, serverBefore, credentials, options) {
-        let row = await super.import(db, schema, objects, originals, credentials, options);
+        let row = await super.importOne(db, schema, serverReceived, serverBefore, credentials, options);
         if (serverReceived.settings instanceof Object) {
             for (let path of sensitiveSettings) {
                 // restore the original values if these fields are all x's

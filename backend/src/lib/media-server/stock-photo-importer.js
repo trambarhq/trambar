@@ -26,7 +26,7 @@ async function importPhotos() {
 
             // assume the files are already named as their MD5 hash
             let srcPath = `${folder}/${file}`;
-            let metadata = ImageManager.getImageMetadata(srcPath);
+            let metadata = await ImageManager.getImageMetadata(srcPath);
 
             let details = {
                 url,

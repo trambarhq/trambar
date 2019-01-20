@@ -285,7 +285,7 @@ async function processListingQueue() {
     listingUpdateQueue.start();
     for (;;) {
         let item = await listingUpdateQueue.pull();
-        if !(item) {
+        if (!item) {
             break;
         }
         try {

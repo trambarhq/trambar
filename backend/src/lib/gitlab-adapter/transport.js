@@ -145,7 +145,7 @@ async function put(server, uri, payload, userID) {
  */
 async function remove(server, uri, userID) {
     let token = await impersonate(server, userID);
-    return request(server, uri, 'delete', undefined, payload, token);
+    return request(server, uri, 'delete', undefined, undefined, token);
 }
 
 let userImpersonations = {};
@@ -156,25 +156,28 @@ let userImpersonations = {};
  * @param  {Server} server
  * @param  {String} userID
  *
- * @return {Promise<String>}
+ * @return {Promise<String|undefined>}
  */
 async function impersonate(server, userID) {
+    if (!userID) {
+        return;
+    }
     let ui = userImpersonations[userID];
-    if (ui) {
-        return ui.token;
+    if (!ui) {
+        // delete old impersonation tokens first
+        let existingUIs = await getImpersonations(server, userID);
+        for (let existingUI of existingUIs) {
+            if (existingUI.name === 'trambar') {
+                await deleteImpersonations(server, userID, old);
+            }
+        }
+        let impersonationProps = {
+            name: 'trambar',
+            scopes: [ 'api' ],
+        };
+        ui = await createImpersonation(server, userID, impersonationProps);
+        userImpersonations[userID] = ui;
     }
-    // delete old impersonation tokens first
-    let impersonations = await getImpersonations(server, userID);
-    let matching = _.filter(impersonations, { name: 'trambar' });
-    for (let ui of matching) {
-        await deleteImpersonations(server, userID, ui);
-    }
-    let impersonationProps = {
-        name: 'trambar',
-        scopes: [ 'api' ],
-    };
-    let ui = await createImpersonation(server, userID, impersonationProps);
-    userImpersonations[userID] = ui;
     return ui.token;
 }
 
@@ -350,8 +353,10 @@ async function request(server, uri, method, query, payload, userToken) {
 async function attempt(options) {
     return new Promise((resolve, reject) => {
         Request(options, (err, resp, body) => {
-            if (!err && resp && resp.statusCode >= 400) {
-                err = new HTTPError(resp.statusCode);
+            if (resp && resp.statusCode >= 400) {
+                let reason = (body) ? body.error : undefined;
+                err = new HTTPError(resp.statusCode, { reason });
+                console.log(resp.statusCode, options);
             }
             if (!err) {
                 resolve(body);
