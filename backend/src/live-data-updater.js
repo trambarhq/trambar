@@ -197,7 +197,7 @@ function addToStatisticsQueue(schema, id, atime) {
     }
 
     statisticsUpdateQueue.remove({ schema, id });
-    statisticsUpdateQueue.push({ schema, id, priority });
+    statisticsUpdateQueue.add({ schema, id, priority });
 }
 
 async function processStatisticsQueue() {
@@ -278,7 +278,7 @@ function addToListingQueue(schema, id, atime) {
         priority = 'high';
     }
     listingUpdateQueue.remove({ schema, id });
-    listingUpdateQueue.push({ schema, id, priority });
+    listingUpdateQueue.add({ schema, id, priority });
 }
 
 async function processListingQueue() {
