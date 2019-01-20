@@ -119,6 +119,7 @@ async function importRepositories(db, server) {
 
         let added = [];
         let modified = [];
+        let index = 0;
         for (let glRepo of glRepos) {
             let glLabels = await fetchLabels(server, glRepo.id);
             let glUsers = await fetchMembers(server, glRepo.id);
@@ -139,14 +140,14 @@ async function importRepositories(db, server) {
                 }
             }
 
-            let repo = findExistingRepo(db, server, repos, glRepo);
+            let repo = await findExistingRepo(db, server, repos, glRepo);
             let repoAfter = copyRepoDetails(repo, server, members, glRepo, glLabels);
             if (repoAfter !== repo) {
                 if (repo) {
-                    repo = await Repo.updateOne(db, 'global', repoAfter);
+                    repoAfter = await Repo.updateOne(db, 'global', repoAfter);
                     modified.push(repoAfter.name);
                 } else {
-                    repo = await Repo.insertOne(db, 'global', repoAfter);
+                    repoAfter = await Repo.insertOne(db, 'global', repoAfter);
                     added.push(repoAfter.name);
                 }
 
@@ -155,15 +156,16 @@ async function importRepositories(db, server) {
                     // exclude root user
                     if (user.username !== 'root') {
                         if (!user.disabled && !user.deleted) {
-                            return !_.includes(repo.user_ids);
+                            return !repo || !_.includes(repo.user_ids);
                         }
                     }
                 });
                 await addProjectMembers(db, repoAfter, newMembers);
             }
             if (added.length + deleted.length + modified.length > 0) {
-                taskLog.report(index + 1, count, { added, deleted, modified });
+                taskLog.report(index + 1, glRepos.length, { added, deleted, modified });
             }
+            index++;
         }
         await taskLog.finish();
     } catch (err) {

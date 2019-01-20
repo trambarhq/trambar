@@ -525,11 +525,13 @@ async function performPeriodicRepoImport() {
         disabled: false,
         deleted: false
     };
-    let server = await Server.find(db, 'global', criteria, '*');
-    if (hasAccessToken(server)) {
-        taskQueue.schedule(`import_server_repos:${server.id}`, async () => {
-            return RepoImporter.importRepositories(db, server);
-        });
+    let servers = await Server.find(db, 'global', criteria, '*');
+    for (let server of servers) {
+        if (hasAccessToken(server)) {
+            taskQueue.schedule(`import_server_repos:${server.id}`, async () => {
+                return RepoImporter.importRepositories(db, server);
+            });
+        }
     }
 }
 

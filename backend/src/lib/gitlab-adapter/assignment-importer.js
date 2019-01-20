@@ -52,7 +52,7 @@ async function importAssignments(db, server, project, repo, story, assignments) 
 async function findIssueAssignments(db, server, glIssue) {
     let glIssueNumber = glIssue.iid;
     let glProjectID = glIssue.project_id;
-    let glNotes = fetchIssueNotes(server, glProjectID, glIssueNumber);
+    let glNotes = await fetchIssueNotes(server, glProjectID, glIssueNumber);
     return findAssignmentsFromNotes(db, server, glIssue, glNotes);
 }
 
@@ -68,7 +68,7 @@ async function findIssueAssignments(db, server, glIssue) {
 async function findMergeRequestAssignments(db, server, glMergeRequest) {
     let glMergeRequestNumber = glMergeRequest.iid;
     let glProjectID = glMergeRequest.project_id;
-    let glNotes = fetchMergeRequestNotes(server, glProjectID, glMergeRequestNumber);
+    let glNotes = await fetchMergeRequestNotes(server, glProjectID, glMergeRequestNumber);
     return findAssignmentsFromNotes(db, server, glMergeRequest, glNotes);
 }
 

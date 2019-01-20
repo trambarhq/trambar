@@ -126,6 +126,7 @@ TaskLog.prototype.abort = function(err) {
     this.failed = true;
     this.saved = false;
     Shutdown.off(this.shutdownListener);
+    console.error(err);
     return this.save();
 };
 

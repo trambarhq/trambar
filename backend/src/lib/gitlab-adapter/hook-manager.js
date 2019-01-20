@@ -178,7 +178,7 @@ async function installSystemHook(host, server) {
         throw HTTPError(400, 'Unable to install hook due to missing server address')
     }
     console.log(`Installing web-hook on server: ${server.name}`);
-    let glHooks = fetchSystemHooks(server);
+    let glHooks = await fetchSystemHooks(server);
     let url = getSystemHookEndpoint(host, server);
     let hookProps = getSystemHookProps(url);
     for (let glHook of glHooks) {
@@ -206,6 +206,9 @@ async function installProjectHook(host, server, repo, project) {
     }
     console.log(`Installing web-hook on repo for project: ${repo.name} -> ${project.name}`);
     let repoLink = ExternalDataUtils.findLink(repo, server);
+    if (!repoLink) {
+        console.log(repo);
+    }
     let glHooks = await fetchProjectHooks(server, repoLink.project.id);
 
     // remove existing hooks
