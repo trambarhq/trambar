@@ -213,9 +213,6 @@ class Change {
         if (this.canceled) {
             return;
         }
-        if (!_.isMatch(search, this.location)) {
-            return;
-        }
         _.each(this.objects, (uncommittedObject, i) => {
             if (this.removed[i]) {
                 return;

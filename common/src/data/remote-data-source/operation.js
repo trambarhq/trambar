@@ -6,6 +6,7 @@ class Operation {
         if (location.schema !== 'local') {
             this.address =  location.address;
         }
+        this.local = (location.schema === 'local');
         this.schema = location.schema;
         this.table = location.table;
         this.startTime = null;
@@ -21,7 +22,7 @@ class Operation {
      * @return {Object}
      */
     getLocation() {
-        if (this.isLocal()) {
+        if (this.local) {
             return _.pick(this, 'schema', 'table');
         } else {
             return _.pick(this, 'address', 'schema', 'table');
@@ -46,15 +47,6 @@ class Operation {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Return true if the operation is concerns only locally stored data
-     *
-     * @return {Boolean}
-     */
-    isLocal() {
-        return (this.schema === 'local');
     }
 
     /**
