@@ -137,14 +137,14 @@ class PhotoCaptureDialogBoxBrowser extends AsyncComponent {
     handleAccept = (evt) => {
         let { payloads, onCapture } = this.props;
         if (onCapture) {
-            let media = this.capture.extract();
+            let { capturedImage } = this.capture;
             let payload = payloads.add('image');
-            payload.attachFile(media.image.blob);
+            payload.attachFile(capturedImage.blob);
             let resource = {
                 type: 'image',
                 payload_token: payload.id,
-                width: media.image.width,
-                height: media.image.height,
+                width: capturedImage.width,
+                height: capturedImage.height,
                 format: _.last(_.split(this.capture.options.imageMIMEType, '/')),
             };
             onCapture({

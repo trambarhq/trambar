@@ -183,16 +183,16 @@ class VideoCaptureDialogBoxBrowser extends AsyncComponent {
     handleAccept = (evt) => {
         let { payloads, onCapture } = this.props;
         if (onCapture) {
-            let media = this.capture.extract();
+            let { capturedVideo, capturedImage } = this.capture;
             let payload = payloads.add('video');
             payload.attachStream(this.stream);
-            payload.attachFile(media.image.blob, 'poster');
+            payload.attachFile(capturedImage.blob, 'poster');
             let resource = {
                 type: 'video',
                 payload_token: payload.id,
-                width: media.video.width,
-                height: media.video.height,
-                duration: media.video.duration,
+                width: capturedVideo.width,
+                height: capturedVideo.height,
+                duration: capturedVideo.duration,
                 format: _.last(_.split(this.capture.options.videoMIMEType, '/')),
                 bitrates: {
                     audio: this.capture.options.audioBitsPerSecond,

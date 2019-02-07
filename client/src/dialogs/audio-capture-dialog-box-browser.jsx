@@ -178,13 +178,13 @@ class AudioCaptureDialogBoxBrowser extends AsyncComponent {
     handleAccept = (evt) => {
         let { payloads, onCapture } = this.props;
         if (onCapture) {
-            let media = this.capture.extract();
+            let { capturedAudio } = this.capture;
             let payload = payloads.add('audio');
             payload.attachStream(this.stream);
             let resource = {
                 type: 'audio',
                 payload_token: payload.id,
-                duration: media.audio.duration,
+                duration: capturedAudio.duration,
                 format: _.last(_.split(this.capture.options.audioMIMEType, '/')),
                 bitrates: {
                     audio: this.capture.options.audioBitsPerSecond,
