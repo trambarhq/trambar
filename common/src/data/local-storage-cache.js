@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import * as LocalSearch from 'data/local-search';
 
 const defaultOptions = {
@@ -63,7 +62,7 @@ class LocalStorageCache {
      *
      * @return {Promise<Array<Object>>}
      */
-    find(query) {
+    async find(query) {
         let { server ,schema, table, criteria } = query;
         if (server == undefined) {
             server = 'localhost';
@@ -86,7 +85,7 @@ class LocalStorageCache {
             });
         }
         LocalSearch.limit(table, objects, criteria);
-        return Promise.resolve(objects);
+        return objects;
     }
 
     /**
@@ -97,18 +96,18 @@ class LocalStorageCache {
      *
      * @return {Promise<Array<Object>>}
      */
-    save(location, objects) {
+    async save(location, objects) {
         let { server, schema, table } = location;
         if (server == undefined) {
             server = 'localhost';
         }
         let rows = this.getRows(server, schema, table);
         let keyName = this.getKeyName(schema);
-        _.each(objects, (object) => {
+        for (let object of objects) {
             replaceByKey(rows, _.cloneDeep(object), keyName);
-        });
+        }
         this.saveRows(server, schema, table);
-        return Promise.resolve(objects);
+        return objects;
     }
 
     /**
@@ -119,18 +118,18 @@ class LocalStorageCache {
      *
      * @return {Promise<Array<Object>>}
      */
-    remove(location, objects) {
+    async remove(location, objects) {
         let { server, schema, table } = location;
         if (server == undefined) {
             server = 'localhost';
         }
         let rows = this.getRows(server, schema, table);
         let keyName = this.getKeyName(schema);
-        _.each(objects, (object) => {
+        for (let object of objects) {
             removeByKey(rows, object, keyName);
-        });
+        }
         this.saveRows(server, schema, table);
-        return Promise.resolve(objects);
+        return objects;
     }
 
     /**

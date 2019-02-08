@@ -404,7 +404,7 @@ class MediaImporter extends PureComponent {
     addResources(newResources) {
         let { resources, limit } = this.props;
         if (_.isEmpty(newResources)) {
-            return Promise.resolve(0);
+            return;
         }
         let path = 'details.resources'
         let firstIndex = resources.length;
@@ -570,22 +570,25 @@ let captureCount = 0;
  *
  * @return {Promise<Object<String>>}
  */
-function retrieveDataItemTexts(items) {
-    let stringItems = _.filter(items, (item) => {
+async function retrieveDataItemTexts(items) {
+    // since the items are ephemeral (they only exist within the event handler),
+    // we need to call getAsString() on all of them synchronously and not in
+    // a callback (i.e. no await between calls)
+    let strings = {};
+    let promises = _.map(items, (item) => {
         if (item.kind === 'string') {
-            return /^text\/(html|uri-list)/.test(item.type);
+            if (/^text\/(html|uri-list)/.test(item.type)) {
+                return new Promise((resolve, reject) => {
+                    item.getAsString((s) => {
+                        strings[item.type] = s;
+                        resolve();
+                    });
+                });
+            }
         }
     });
-    // since items are ephemeral, we need to call getAsString() on all of them
-    // synchronously and not in a callback (i.e. can't use Promise.map)
-    let stringPromises = {};
-    _.each(stringItems, (item) => {
-        // keyed by mime type
-        stringPromises[item.type] = new Promise((resolve, reject) => {
-            item.getAsString(resolve);
-        });
-    });
-    return Promise.props(stringPromises);
+    await Promise.all(promises);
+    return strings;
 }
 
 /**

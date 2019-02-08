@@ -12,7 +12,7 @@ import * as TagScanner from 'utils/tag-scanner';
  * @return {Object|null}
  */
 function extractIssueDetails(story, repos) {
-    if (!story) {
+    if (!story || !repos) {
         return null;
     }
     // find the repo in whose tracker the issue resides

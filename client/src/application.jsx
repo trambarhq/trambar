@@ -424,13 +424,15 @@ class Application extends PureComponent {
         if (!_.isEmpty(route.callbacks)) {
             // postpone the route change until each callbacks has been called;
             // if one returns false, then cancel the change
-            let promise = Promise.reduce(route.callbacks, (proceed, callback) => {
-                if (proceed === false) {
-                    return false;
+            let f = async () => {
+                for (let callback of route.callbacks) {
+                    let proceed = await callback();
+                    if (proceed === false ){
+                        break;
+                    }
                 }
-                return callback();
-            }, true);
-            evt.postponeDefault(promise);
+            };
+            evt.postponeDefault(f());
         }
     }
 

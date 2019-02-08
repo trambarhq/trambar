@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import React, { PureComponent, Children } from 'react';
 import ReactDOM from 'react-dom';
 
@@ -323,7 +323,7 @@ function initializeQRScanner() {
         if (!window.QRScanner) {
             return false;
         }
-        QRScanner = Promise.promisifyAll(window.QRScanner, {
+        QRScanner = Bluebird.promisifyAll(window.QRScanner, {
             promisifier: (originalFunction, defaultPromisifier, something) => {
                 switch (originalFunction.name) {
                     case 'cancelScan':

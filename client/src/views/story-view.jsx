@@ -645,7 +645,7 @@ class StoryView extends PureComponent {
     async saveBookmarks(bookmarks) {
         let { database } = this.props;
         if (_.isEmpty(bookmarks)) {
-            return Promise.resolve([]);
+            return [];
         }
         let db = database.use({ by: this });
         let currentUserID = await db.start();
@@ -662,7 +662,7 @@ class StoryView extends PureComponent {
     async removeBookmarks(bookmarks) {
         let { database } = this.props;
         if (_.isEmpty(bookmarks)) {
-            return Promise.resolve([]);
+            return [];
         }
         let db = database.use({ by: this });
         let currentUserID = await db.start();

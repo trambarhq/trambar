@@ -45,45 +45,41 @@ class IndexedDBCache {
      *
      * @return {Promise<Array<Object>>}
      */
-    find(query) {
+    async find(query) {
         let { address, schema, table, criteria } = query;
         if (address == undefined) {
             address = '';
         }
-        return this.fetchTable(address, schema, table).then((objects) => {
-            let keyName = this.getObjectKeyName(schema);
-            let results = [];
-            if (_.isEqual(_.keys(criteria), [ keyName ])) {
-                let keys = criteria[keyName];
-                if (keys instanceof Array) {
-                    keys = _.sortBy(_.slice(keys));
-                } else {
-                    keys = [ keys ];
-                }
-                // look up by sorted key
-                _.each(keys, (key) => {
-                    let keyObj = {};
-                    keyObj[keyName] = key;
-                    let index = _.sortedIndexBy(objects, keyObj, keyName);
-                    let object = objects[index];
-                    if (object && object[keyName] === key) {
-                        results.push(object);
-                    }
-                });
-                return results;
+        let objects = await this.fetchTable(address, schema, table);
+        let keyName = this.getObjectKeyName(schema);
+        let results = [];
+        if (_.isEqual(_.keys(criteria), [ keyName ])) {
+            let keys = criteria[keyName];
+            if (keys instanceof Array) {
+                keys = _.sortBy(_.slice(keys));
             } else {
-                _.each(objects, (object) => {
-                    if (LocalSearch.match(table, object, criteria)) {
-                        results.push(object);
-                    }
-                });
+                keys = [ keys ];
             }
-            return results;
-        }).then((objects) => {
-            LocalSearch.limit(table, objects, query.criteria);
-            this.readCount += objects.length;
-            return objects;
-        });
+            // look up by sorted key
+            for (let key of keys) {
+                let keyObj = {};
+                keyObj[keyName] = key;
+                let index = _.sortedIndexBy(objects, keyObj, keyName);
+                let object = objects[index];
+                if (object && object[keyName] === key) {
+                    results.push(object);
+                }
+            }
+        } else {
+            for (let object of objects) {
+                if (LocalSearch.match(table, object, criteria)) {
+                    results.push(object);
+                }
+            }
+        }
+        LocalSearch.limit(table, results, query.criteria);
+        this.readCount += results.length;
+        return results;
     }
 
     /**
@@ -94,40 +90,38 @@ class IndexedDBCache {
      *
      * @return {Promise<Array<Object>>}
      */
-    save(location, objects) {
+    async save(location, objects) {
         let { address, schema, table } = location;
         if (address == undefined) {
             address = '';
         }
-        return this.open().then((db) => {
-            return new Promise((resolve, reject) => {
-                let path = this.getTablePath(address, schema, table);
-                let pk = this.getPrimaryKeyGenerator(address, schema, table);
-                let storeName = this.getObjectStoreName(schema);
-                let transaction = db.transaction(storeName, 'readwrite');
-                let objectStore = transaction.objectStore(storeName);
-                transaction.oncomplete = (evt) => {
-                    resolve(objects);
+        let db = await this.open();
+        await new Promise((resolve, reject) => {
+            let path = this.getTablePath(address, schema, table);
+            let pk = this.getPrimaryKeyGenerator(address, schema, table);
+            let storeName = this.getObjectStoreName(schema);
+            let transaction = db.transaction(storeName, 'readwrite');
+            let objectStore = transaction.objectStore(storeName);
+            transaction.oncomplete = (evt) => {
+                resolve(objects);
+            };
+            transaction.onerror = (evt) => {
+                reject(new Error(evt.message));
+            };
+            for (let object of objects) {
+                let key = pk(object);
+                let record = {
+                    address: address,
+                    location: path,
+                    data: object,
                 };
-                transaction.onerror = (evt) => {
-                    reject(new Error(evt.message));
-                };
-                _.each(objects, (object) => {
-                    let key = pk(object);
-                    let record = {
-                        address: address,
-                        location: path,
-                        data: object,
-                    };
-                    objectStore.put(record, key);
-                });
-            });
-        }).then((objects) => {
-            this.writeCount += objects.length;
-            this.updateTableEntry(address, schema, table, objects, false);
-            this.updateRecordCount(schema, 500);
-            return objects;
+                objectStore.put(record, key);
+            }
         });
+        this.writeCount += objects.length;
+        this.updateTableEntry(address, schema, table, objects, false);
+        this.updateRecordCount(schema, 500);
+        return objects;
     }
 
     /**
@@ -138,35 +132,33 @@ class IndexedDBCache {
      *
      * @return {Promise<Array<Object>>}
      */
-    remove(location, objects) {
+    async remove(location, objects) {
         let { address, schema, table } = location;
         if (address == undefined) {
             address = '';
         }
-        return this.open().then((db) => {
-            return new Promise((resolve, reject) => {
-                let pk = this.getPrimaryKeyGenerator(address, schema, table);
-                let path = this.getTablePath(address, schema, table);
-                let storeName = this.getObjectStoreName(schema);
-                let transaction = db.transaction(storeName, 'readwrite');
-                let objectStore = transaction.objectStore(storeName);
-                transaction.oncomplete = (evt) => {
-                    resolve(objects);
-                };
-                transaction.onerror = (evt) => {
-                    reject(new Error(evt.message));
-                };
-                _.each(objects, (object) => {
-                    let key = pk(object);
-                    objectStore.delete(key);
-                });
-            });
-        }).then((objects) => {
-            this.deleteCount += objects.length;
-            this.updateTableEntry(address, schema, table, objects, true);
-            this.updateRecordCount(schema, 500);
-            return objects;
+        let db = await this.open();
+        await new Promise((resolve, reject) => {
+            let pk = this.getPrimaryKeyGenerator(address, schema, table);
+            let path = this.getTablePath(address, schema, table);
+            let storeName = this.getObjectStoreName(schema);
+            let transaction = db.transaction(storeName, 'readwrite');
+            let objectStore = transaction.objectStore(storeName);
+            transaction.oncomplete = (evt) => {
+                resolve(objects);
+            };
+            transaction.onerror = (evt) => {
+                reject(new Error(evt.message));
+            };
+            for (let object of objects) {
+                let key = pk(object);
+                objectStore.delete(key);
+            }
         });
+        this.deleteCount += objects.length;
+        this.updateTableEntry(address, schema, table, objects, true);
+        this.updateRecordCount(schema, 500);
+        return objects;
     }
 
     /**
@@ -182,9 +174,10 @@ class IndexedDBCache {
      *
      * @return {Promise<Number>}
      */
-    clean(criteria) {
-        return this.open().then((db) => {
-            return new Promise((resolve, reject) => {
+    async clean(criteria) {
+        try {
+            let db = await this.open();
+            let records = await new Promise((resolve, reject) => {
                 let storeName = this.getObjectStoreName('remote');
                 let transaction = db.transaction(storeName, 'readwrite');
                 let objectStore = transaction.objectStore(storeName);
@@ -213,9 +206,9 @@ class IndexedDBCache {
                             done = false;
                         }
                         if (done) {
-                            _.each(primaryKeys, (key) => {
+                            for (let key of primaryKeys) {
                                 objectStore.delete(key);
-                            });
+                            }
                             resolve(records);
                         }
                     };
@@ -238,9 +231,9 @@ class IndexedDBCache {
                             }
                         }
                         if (done) {
-                            _.each(primaryKeys, (key) => {
+                            for (let key of primaryKeys) {
                                 objectStore.delete(key);
-                            });
+                            }
                             resolve(records);
                         }
                     };
@@ -264,9 +257,9 @@ class IndexedDBCache {
                             }
                         }
                         if (done) {
-                            _.each(primaryKeys, (key) => {
+                            for (let key of primaryKeys) {
                                 objectStore.delete(key);
-                            });
+                            }
                             resolve(records);
                         }
                     };
@@ -277,13 +270,13 @@ class IndexedDBCache {
                     return [];
                 }
             });
-        }).then((records) => {
+
             let count = records.length;
             this.deleteCount += records.length;
             this.updateRecordCount('remote', 500);
 
             let changes = [];
-            _.each(records, (record) => {
+            for (let record of records) {
                 let address = record.address || '';
                 let [ schema, table ] = record.location.substr(address.length + 1).split('/');
                 let change = _.find(changes, { address, schema, table });
@@ -292,14 +285,14 @@ class IndexedDBCache {
                     changes.push(change);
                 }
                 change.objects.push(record.data);
-            });
-            _.each(changes, (c) => {
+            }
+            for (let c of changes) {
                 this.updateTableEntry(c.address, c.schema, c.table, c.objects, true);
-            });
+            }
             return count;
-        }).catch((err) => {
+        } catch (err) {
             return this.destroy();
-        });
+        }
     }
 
     /**
@@ -307,32 +300,31 @@ class IndexedDBCache {
      *
      * @return {Promise<IDBDatabase>}
      */
-    open() {
-        if (this.databasePromise) {
-            return this.databasePromise;
-        }
-        this.databasePromise = new Promise((resolve, reject) => {
-            let { databaseName } = this.options;
-            let openRequest = indexedDB.open(databaseName, 1);
-            openRequest.onsuccess = (evt) => {
-                resolve(evt.target.result);
-            };
-            openRequest.onerror = (evt) => {
-                reject(new Error(evt.message));
-            };
-            openRequest.onupgradeneeded = (evt) => {
-                let db = evt.target.result;
-                db.onerror = (evt) => {
+    async open() {
+        if (!this.databasePromise) {
+            this.databasePromise = new Promise((resolve, reject) => {
+                let { databaseName } = this.options;
+                let openRequest = indexedDB.open(databaseName, 1);
+                openRequest.onsuccess = (evt) => {
+                    resolve(evt.target.result);
+                };
+                openRequest.onerror = (evt) => {
                     reject(new Error(evt.message));
                 };
-                let localStore = db.createObjectStore('local-data');
-                localStore.createIndex('location', 'location', { unique: false });
-                let remoteStore = db.createObjectStore('remote-data');
-                remoteStore.createIndex('location', 'location', { unique: false });
-                remoteStore.createIndex('address', 'address', { unique: false });
-                remoteStore.createIndex('rtime', 'data.rtime', { unique: false });
-            };
-        });
+                openRequest.onupgradeneeded = (evt) => {
+                    let db = evt.target.result;
+                    db.onerror = (evt) => {
+                        reject(new Error(evt.message));
+                    };
+                    let localStore = db.createObjectStore('local-data');
+                    localStore.createIndex('location', 'location', { unique: false });
+                    let remoteStore = db.createObjectStore('remote-data');
+                    remoteStore.createIndex('location', 'location', { unique: false });
+                    remoteStore.createIndex('address', 'address', { unique: false });
+                    remoteStore.createIndex('rtime', 'data.rtime', { unique: false });
+                };
+            });
+        }
         return this.databasePromise;
     }
 
@@ -341,7 +333,7 @@ class IndexedDBCache {
      *
      * @return {Promise<Boolean>}
      */
-    destroy() {
+    async destroy() {
         return new Promise((resolve, reject) => {
             let { databaseName } = this.options;
             let deleteRequest = indexedDB.deleteDatabase(databaseName);
@@ -480,7 +472,7 @@ class IndexedDBCache {
         let tbl = this.getTableEntry(address, schema, table);
         if (tbl.objects) {
             let keyName = this.getObjectKeyName(schema);
-            _.each(objects, (object) => {
+            for (let object of objects) {
                 let index = _.sortedIndexBy(tbl.objects, object, keyName);
                 let target = tbl.objects[index];
                 if (target && target[keyName] === object[keyName]) {
@@ -494,7 +486,7 @@ class IndexedDBCache {
                         tbl.objects.splice(index, 0, object);
                     }
                 }
-            });
+            }
         }
     }
 
@@ -507,13 +499,10 @@ class IndexedDBCache {
      *
      * @return {Promise<Array<Object>>}
      */
-    fetchTable(address, schema, table) {
+    async fetchTable(address, schema, table) {
         let tbl = this.getTableEntry(address, schema, table);
         if (!tbl.promise) {
-            tbl.promise = this.loadTable(address, schema, table).then((objects) => {
-                tbl.objects = objects;
-                return tbl.objects;
-            });
+            tbl.promise = this.loadTable(address, schema, table, tbl);
         }
         return tbl.promise;
     }
@@ -524,34 +513,36 @@ class IndexedDBCache {
      * @param  {String} address
      * @param  {String} schema
      * @param  {String} table
+     * @param  {Object} tbl
      *
      * @return {Promise<Object>}
      */
-    loadTable(address, schema, table) {
-        return this.open().then((db) => {
-            return new Promise((resolve, reject) => {
-                let storeName = this.getObjectStoreName(schema);
-                let keyName = this.getObjectKeyName(schema);
-                let transaction = db.transaction(storeName, 'readonly');
-                let objectStore = transaction.objectStore(storeName);
-                let index = objectStore.index('location');
-                let path = this.getTablePath(address, schema, table);
-                let req = index.openCursor(path);
-                let results = [];
-                req.onsuccess = (evt) => {
-                    let cursor = evt.target.result;
-                    if(cursor) {
-                        let record = cursor.value;
-                        let object = record.data;
-                        let index = _.sortedIndexBy(results, object, keyName);
-                        results.splice(index, 0, object);
-                        cursor.continue();
-                    } else {
-                        resolve(results);
-                    }
-                };
-            });
+    async loadTable(address, schema, table, tbl) {
+        let db = await this.open();
+        let objects = await new Promise((resolve, reject) => {
+            let storeName = this.getObjectStoreName(schema);
+            let keyName = this.getObjectKeyName(schema);
+            let transaction = db.transaction(storeName, 'readonly');
+            let objectStore = transaction.objectStore(storeName);
+            let index = objectStore.index('location');
+            let path = this.getTablePath(address, schema, table);
+            let req = index.openCursor(path);
+            let results = [];
+            req.onsuccess = (evt) => {
+                let cursor = evt.target.result;
+                if(cursor) {
+                    let record = cursor.value;
+                    let object = record.data;
+                    let index = _.sortedIndexBy(results, object, keyName);
+                    results.splice(index, 0, object);
+                    cursor.continue();
+                } else {
+                    resolve(results);
+                }
+            };
         });
+        tbl.objects = objects;
+        return objects;
     }
 
     /**
@@ -567,16 +558,17 @@ class IndexedDBCache {
         if (timeout) {
             clearTimeout(timeout);
         }
-        timeout = setTimeout(() => {
-            this.open().then((db) => {
+        timeout = setTimeout(async () => {
+            try {
+                let db = await this.open();
                 let transaction = db.transaction(storeName, 'readonly');
                 let objectStore = transaction.objectStore(storeName);
                 let req = objectStore.count();
                 req.onsuccess = (evt) => {
                     this.recordCounts[storeName] = evt.target.result;
                 };
-            }).catch((err) => {
-            });
+            } catch (err) {
+            }
             _.set(this, timeoutPath, 0);
         }, delay || 0);
         _.set(this, timeoutPath, timeout);
