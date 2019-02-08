@@ -30,7 +30,7 @@ class Route {
         this.pageParams = _.pick(this.params, _.keys(routeManager.route.params), 'key');
     }
 
-    change(url, options) {
+    async change(url, options) {
         return this.routeManager.change(url, options);
     }
 
@@ -38,11 +38,11 @@ class Route {
         return this.routeManager.find(name, params, context);
     }
 
-    push(name, params, context) {
+    async push(name, params, context) {
         return this.routeManager.push(name, params, context);
     }
 
-    replace(name, params, context) {
+    async replace(name, params, context) {
         return this.routeManager.replace(name, params, context);
     }
 

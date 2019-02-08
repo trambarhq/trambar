@@ -1,7 +1,6 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import ManualPromise from 'utils/manual-promise';
-import Async from 'async-do-while';
 import Notifier, { NotifierEvent } from 'transport/notifier';
 import * as HTTPRequest from 'transport/http-request';
 
@@ -75,10 +74,9 @@ class PushNotifier extends Notifier {
      *
      * @return {Promise<Boolean>}
      */
-    connect(address, relayAddress) {
-        return this.registerAtPushNetwork().then(() => {
-            return this.registerAtPushRelay(address, relayAddress);
-        });
+    async connect(address, relayAddress) {
+        await this.registerAtPushNetwork();
+        return this.registerAtPushRelay(address, relayAddress);
     }
 
     /**
@@ -99,72 +97,55 @@ class PushNotifier extends Notifier {
      *
      * @return {Promise<Boolean>}
      */
-    registerAtPushRelay(address, relayAddress) {
-        if (this.address !== address && this.relayAddress !== relayAddress) {
-            if (this.relayRegistrationPromise) {
-                this.relayRegistrationPromise = null;
-            }
-        }
-        if (this.relayRegistrationPromise) {
-            return this.relayRegistrationPromise;
-        }
-        this.address = address;
-        this.relayAddress = relayAddress;
-
-        let registered = false;
+    async registerAtPushRelay(address, relayAddress) {
         let delay = this.options.initialReconnectionDelay;
         let maximumDelay = this.options.maximumReconnectionDelay;
 
+        this.address = address;
+        this.relayAddress = relayAddress;
         relayAddress = _.trimEnd(relayAddress, '/');
+
         // keep trying to connect until the effort is abandoned (i.e. user
         // goes to a different server)
-        Async.do(() => {
-            let url = `${relayAddress}/register`;
-            let details = getDeviceDetails();
-            let payload = {
-                network: this.registrationType,
-                registration_id: this.registrationID,
-                address,
-                details,
-            };
-            return this.sendRegistration(url, payload).then((result) => {
-                if (this.address === address && this.relayAddress === relayAddress) {
-                    this.relayToken = result.token;
-                    let event = new NotifierEvent('connection', this, {
-                        connection: {
-                            method: this.registrationType,
-                            relay: this.relayAddress,
-                            token: this.relayToken,
-                            address,
-                            details,
-                        }
-                    });
-                    this.triggerEvent(event);
+        for (;;) {
+            try {
+                let url = `${relayAddress}/register`;
+                let details = getDeviceDetails();
+                let payload = {
+                    network: this.registrationType,
+                    registration_id: this.registrationID,
+                    address,
+                    details,
+                };
+                let result = await this.sendRegistration(url, payload);
+                if (this.address !== address || this.relayAddress !== relayAddress) {
+                    return false;
                 }
-                registered = true;
-                return null;
-            }).catch((err) => {
+                this.relayToken = result.token;
+                let event = new NotifierEvent('connection', this, {
+                    connection: {
+                        method: this.registrationType,
+                        relay: this.relayAddress,
+                        token: this.relayToken,
+                        address,
+                        details,
+                    }
+                });
+                this.triggerEvent(event);
+                return true;
+            } catch (err) {
                 console.error(err);
                 delay *= 2;
                 if (delay > maximumDelay) {
                     delay = maximumDelay;
                 }
                 console.log(`Connection attempt in ${delay}ms: ${relayAddress}`);
-                return Promise.delay(delay, null);
-            });
-        });
-        Async.while(() => {
-            if (this.address === address && this.relayAddress === relayAddress) {
-                return !registered;
-            } else {
-                return false;
+                await Bluebird.delay(delay, null);
+                if (this.address !== address || this.relayAddress !== relayAddress) {
+                    return false;
+                }
             }
-        });
-        Async.return(() => {
-            return registered;
-        });
-        this.relayRegistrationPromise = Async.end();
-        return this.relayRegistrationPromise;
+        }
     }
 
     /**
@@ -188,7 +169,7 @@ class PushNotifier extends Notifier {
      *
      * @param  {Object} data
      */
-    handleRegistration = (data) => {
+    handleRegistration = async (data) => {
         let id = data.registrationId;
         let type = _.toLower(data.registrationType);
         if (!type) {
@@ -197,14 +178,13 @@ class PushNotifier extends Notifier {
                 type = 'wns';
             }
         }
-        isDebugMode().then((debug) => {
-            if (type === 'apns' && debug) {
-                type += '-sb';  // use sandbox
-            }
-            this.registrationID = id;
-            this.registrationType = type;
-            this.networkRegistrationPromise.resolve();
-        });
+        let debug = await isDebugMode();
+        if (type === 'apns' && debug) {
+            type += '-sb';  // use sandbox
+        }
+        this.registrationID = id;
+        this.registrationType = type;
+        this.networkRegistrationPromise.resolve();
     }
 
     /**
