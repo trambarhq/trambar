@@ -1,23 +1,22 @@
-var _ = require('lodash');
-var Chai = require('chai'), expect = Chai.expect;
+import { expect } from 'chai';
 
-var Markdown = require('utils/markdown');
+import * as Markdown from '../markdown';
 
 describe('Markdown', function() {
     describe('#detect()', function() {
         it('should detect that text contains Markdown formatting', function() {
-            var text = `_hello_ world`;
-            var result = Markdown.detect(text);
+            let text = `_hello_ world`;
+            let result = Markdown.detect(text);
             expect(result).to.be.true;
         })
         it('should detect that text does not contain Markdown formatting', function() {
-            var text = `This is a test`;
-            var result = Markdown.detect(text);
+            let text = `This is a test`;
+            let result = Markdown.detect(text);
             expect(result).to.be.false;
         })
     });
     describe('#findReferencedResource()', function() {
-        var resources = [
+        let resources = [
             { type: 'image' },
             { type: 'video' },
             { type: 'audio' },

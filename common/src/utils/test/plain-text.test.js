@@ -1,29 +1,28 @@
-var _ = require('lodash');
-var Chai = require('chai'), expect = Chai.expect;
+import { expect } from 'chai';
 
-var PlainText = require('utils/plain-text');
+import * as PlainText from 'utils/plain-text';
 
 describe('PlainText', function() {
     describe('#hasEmojiSupport()', function() {
         it ('should execute without throwing', function() {
-            var result = PlainText.hasEmojiSupport();
+            let result = PlainText.hasEmojiSupport();
             expect(result).to.be.a('boolean');
         })
     })
     describe('#renderEmoji', function() {
         it ('should return a list containing strings and ReactElement', function() {
-            var text = 'Hello 😀😃😉😍😚 🤩😑😣😁😄😊😘☺ 🤔😶😥😂😅😋😗🙂 🤨🙄😮 🤣😆😎😙 🤗😐😏 🤐🍔🍕🍿🍳 🥖🥪🍖 🥟🍘 🥓🍞 🧀🌮🍗 🥠🍙🍚 🥡🥩🌯 🥗🥐🥚🌭 🥞🥨🥙🥫🍠🍱🍛🚛🛵🚄🚝💓💘 world';
-            var result = PlainText.renderEmoji(text);
-            var stringCount = _.size(_.filter(result, (t) => {
+            let text = 'Hello 😀😃😉😍😚 🤩😑😣😁😄😊😘☺ 🤔😶😥😂😅😋😗🙂 🤨🙄😮 🤣😆😎😙 🤗😐😏 🤐🍔🍕🍿🍳 🥖🥪🍖 🥟🍘 🥓🍞 🧀🌮🍗 🥠🍙🍚 🥡🥩🌯 🥗🥐🥚🌭 🥞🥨🥙🥫🍠🍱🍛🚛🛵🚄🚝💓💘 world';
+            let result = PlainText.renderEmoji(text);
+            let stringCount = result.filter((t) => {
                 if (typeof(t) === 'string') {
                     return true;
                 }
-            }));
-            var elementCount = _.size(_.filter(result, (t) => {
+            }).length;
+            let elementCount = result.filter((t) => {
                 if (typeof(t) === 'object') {
                     return true;
                 }
-            }));
+            }).length;
             expect(stringCount).to.be.above(0);
             expect(elementCount).to.be.above(0);
         })

@@ -120,7 +120,7 @@ function set(tokens, list, key, checked, clearOthers) {
 function find(tokens, list, key) {
     for (let token of tokens) {
         if (token instanceof Array) {
-            result = _.find(token, (item) => {
+            let result = _.find(token, (item) => {
                 if (item.list == list && item.key == key) {
                     return true;
                 }

@@ -1,30 +1,29 @@
-var _ = require('lodash');
-var Chai = require('chai'), expect = Chai.expect;
+import { expect } from 'chai';
 
-var MarkdownExporter = require('utils/markdown-exporter');
+import * as MarkdownExporter from '../markdown-exporter';
 
 describe('MarkdownExporter', function() {
     describe('#escape()', function() {
         it('should escape Markdown characters with slashes', function() {
-            var text1 = '_hello_ world';
-            var text2 = '* This is a [test]';
-            var result1 = MarkdownExporter.escape(text1);
-            var result2 = MarkdownExporter.escape(text2);
+            let text1 = '_hello_ world';
+            let text2 = '* This is a [test]';
+            let result1 = MarkdownExporter.escape(text1);
+            let result2 = MarkdownExporter.escape(text2);
             expect(result1).to.equal('\\_hello\\_ world');
             expect(result2).to.equal('\\* This is a \\[test\\]');
         });
     })
     describe('#attachResources()', function() {
         it('should attach resources as thumbnails', function() {
-            var resources = [
+            let resources = [
                 { type: 'image', url: '/images/0', clip: { left: 5, top: 5, width: 100, height: 100 } },
                 { type: 'video', url: '/videos/0', poster_url: '/images/1', clip: { left: 5, top: 5, width: 100, height: 100 } },
                 { type: 'image', url: '/images/2', clip: { left: 5, top: 5, width: 100, height: 100 } },
             ];
-            var address = 'https://example.net';
-            var text = 'Hello world';
-            var result = MarkdownExporter.attachResources(text, resources, address);
-            var expected = `\
+            let address = 'https://example.net';
+            let text = 'Hello world';
+            let result = MarkdownExporter.attachResources(text, resources, address);
+            let expected = `\
 Hello world
 
 [![image-1-thumb]][image-1] [![video-1-thumb]][video-1] [![image-2-thumb]][image-2]
@@ -38,19 +37,19 @@ Hello world
             expect(result).to.equal(expected);
         })
         it('should replace embedded image tag with ones utililizing icon', function() {
-            var resources = [
+            let resources = [
                 { type: 'image', url: '/images/0', clip: { left: 5, top: 5, width: 100, height: 100 } },
                 { type: 'video', url: '/videos/0', poster_url: '/images/1', clip: { left: 5, top: 5, width: 100, height: 100 } },
                 { type: 'image', url: '/images/2', clip: { left: 5, top: 5, width: 100, height: 100 } },
             ];
-            var address = 'https://example.net';
-            var text = `\
+            let address = 'https://example.net';
+            let text = `\
 Image 1: ![picture-1]
 Image 2: ![photo-2]
 Video 1: ![video-1]
 `;
-            var result = MarkdownExporter.attachResources(text, resources, address);
-            var expected = `\
+            let result = MarkdownExporter.attachResources(text, resources, address);
+            let expected = `\
 Image 1: [![image-1-icon]][image-1]
 Image 2: [![image-2-icon]][image-2]
 Video 1: [![video-1-icon]][video-1]
@@ -64,17 +63,17 @@ Video 1: [![video-1-icon]][video-1]
             expect(result).to.equal(expected);
         })
         it('should add thumbnail to unreferenced resources', function() {
-            var resources = [
+            let resources = [
                 { type: 'image', url: '/images/0', clip: { left: 5, top: 5, width: 100, height: 100 } },
                 { type: 'video', url: '/videos/0', poster_url: '/images/1', clip: { left: 5, top: 5, width: 100, height: 100 } },
                 { type: 'image', url: '/images/2', clip: { left: 5, top: 5, width: 100, height: 100 } },
             ];
-            var address = 'https://example.net';
-            var text = `\
+            let address = 'https://example.net';
+            let text = `\
 Image 1: ![picture-1]
 `;
-            var result = MarkdownExporter.attachResources(text, resources, address);
-            var expected = `\
+            let result = MarkdownExporter.attachResources(text, resources, address);
+            let expected = `\
 Image 1: [![image-1-icon]][image-1]
 
 [![video-1-thumb]][video-1] [![image-2-thumb]][image-2]
@@ -88,15 +87,15 @@ Image 1: [![image-1-icon]][image-1]
             expect(result).to.equal(expected);
         })
         it('should use special clipart for audio resource', function() {
-            var resources = [
+            let resources = [
                 { type: 'audio', url: '/audios/0' },
             ];
-            var address = 'https://example.net';
-            var text = `\
+            let address = 'https://example.net';
+            let text = `\
 Listen to this: ![audio-1]
 `;
-            var result = MarkdownExporter.attachResources(text, resources, address);
-            var expected = `\
+            let result = MarkdownExporter.attachResources(text, resources, address);
+            let expected = `\
 Listen to this: [![audio-1-icon]][audio-1]
 
 [audio-1]: https://example.net/audios/0
