@@ -54,7 +54,7 @@ class RemoteDataSource extends EventEmitter {
             this.active = true;
             this.startTime = Moment();
             // force validation of schema signatures
-            //this.revalidate();
+            this.revalidate();
         }
     }
 
@@ -415,6 +415,24 @@ class RemoteDataSource extends EventEmitter {
     }
 
     /**
+     * Force cache revalidation
+     *
+     * @param  {Object|null} revalidation
+     */
+    async revalidate(revalidation) {
+        this.cacheSignatures = _.filter(this.cacheSignatures, (cacheSignature) => {
+            if (!revalidation) {
+                return false;
+            } else if (revalidation.address === cacheSignature.address) {
+                if (revalidation.schema === '*' || revalidation.schema === cacheSignature.schema) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }
+
+    /**
      * Filter out notification about changes made by this browser instance
      *
      * @param  {Array<Object>|null} changes
@@ -561,7 +579,7 @@ class RemoteDataSource extends EventEmitter {
         let includeDeleted = _.get(this.options.discoveryFlags, 'include_deleted');
         for (let change of this.changeQueue) {
             if (change.matchLocation(search)) {
-                if (!change.comitted && !change.canceled && !change.error) {
+                if (!change.committed && !change.canceled && !change.error) {
                     if (!newSearch) {
                         newSearch = _.clone(search);
                         newSearch.results = _.slice(search.results);

@@ -449,7 +449,7 @@ async function changeSubscription() {
     };
     let recordsSaved = await dataSource.save(subscriptionLocation, [ record ]);
     if (recordsSaved[0]) {
-        currentSubscription = { address, record: recordsSaved };
+        currentSubscription = { address, record: recordsSaved[0] };
 
         // dispatch items in change queue once subscription is
         // reestablished, so that we don't miss the notification
