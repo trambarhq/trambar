@@ -1,34 +1,28 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import HTTPError from 'errors/http-error';
-import Data from 'accessors/data';
+import { Data } from 'accessors/data';
 
-const Bookmark = _.create(Data, {
-    schema: 'project',
-    table: 'bookmark',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        story_id: Number,
-        user_ids: Array(Number),
-        target_user_id: Number,
-        hidden: Boolean,
-        suppresed: Boolean,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        story_id: Number,
-        user_ids: Array(Number),
-        target_user_id: Number,
-        hidden: Boolean,
-        suppressed: Boolean,
-    },
-    version: 2,
+class Bookmark extends Data {
+    constructor() {
+        super();
+        this.schema = 'project';
+        this.table = 'bookmark';
+        _.extend(this.columns, {
+            story_id: Number,
+            user_ids: Array(Number),
+            target_user_id: Number,
+            hidden: Boolean,
+            suppresed: Boolean,
+        });
+        _.extend(this.criteria, {
+            story_id: Number,
+            user_ids: Array(Number),
+            target_user_id: Number,
+            hidden: Boolean,
+            suppressed: Boolean,
+        });
+        this.version = 2;
+    }
 
     /**
      * Create table in schema
@@ -36,11 +30,11 @@ const Bookmark = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -59,8 +53,8 @@ const Bookmark = _.create(Data, {
             CREATE INDEX ON ${table} (story_id) WHERE deleted = false;
             CREATE INDEX ON ${table} (target_user_id) WHERE deleted = false;
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Upgrade table in schema to given DB version (from one version prior)
@@ -71,11 +65,11 @@ const Bookmark = _.create(Data, {
      *
      * @return {Promise<Boolean>}
      */
-    upgrade: function(db, schema, version) {
+    async upgrade(db, schema, version) {
         if (version === 2) {
             // adding: hidden, suppressed
-            var table = this.getTableName(schema);
-            var sql = `
+            let table = this.getTableName(schema);
+            let sql = `
                 ALTER TABLE ${table}
                 ADD COLUMN IF NOT EXISTS
                 hidden boolean NOT NULL DEFAULT false;
@@ -83,10 +77,11 @@ const Bookmark = _.create(Data, {
                 ADD COLUMN IF NOT EXISTS
                 suppressed boolean NOT NULL DEFAULT false;
             `;
-            return db.execute(sql).return(true);
+            await db.execute(sql)
+            return true;
         }
-        return Promise.resolve(false);
-    },
+        return false;
+    }
 
     /**
      * Attach triggers to the table.
@@ -94,14 +89,18 @@ const Bookmark = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'story_id', 'user_ids', 'target_user_id', 'hidden', 'public' ];
-            return this.createNotificationTriggers(db, schema, propNames);
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'story_id',
+            'user_ids',
+            'target_user_id',
+            'hidden','public'
+        ]);
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -113,74 +112,66 @@ const Bookmark = _.create(Data, {
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array<Object>>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.story_id = row.story_id;
-                object.user_ids = row.user_ids;
-                object.target_user_id = row.target_user_id;
-                object.hidden = row.hidden;
-            });
-            return objects;
-        });
-    },
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            object.story_id = row.story_id;
+            object.user_ids = row.user_ids;
+            object.target_user_id = row.target_user_id;
+            object.hidden = row.hidden;
+        }
+        return objects;
+    }
 
     /**
      * Import objects sent by client-side code, applying access control
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
+     * @param  {Object} bookmarkReceived
+     * @param  {Object} bookmarkBefore
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Array>}
+     * @return {Promise<Object>}
      */
-    import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials).mapSeries((bookmarkReceived, index) => {
-            var bookmarkBefore = originals[index];
-            this.checkWritePermission(bookmarkReceived, bookmarkBefore, credentials);
-
-            if (bookmarkBefore) {
-                if (bookmarkReceived.deleted) {
-                    // remove the current user id from list of senders
-                    // delete the bookmark only if no one else is
-                    var senderIDs = _.without(bookmarkBefore.user_ids, credentials.user.id);
-                    bookmarkReceived = {
-                        id: bookmarkBefore.id,
-                        user_ids: senderIDs,
-                        deleted: _.isEmpty(senderIDs),
-                        suppressed: _.isEmpty(senderIDs),
-                    };
-                }
-                return bookmarkReceived;
-            } else {
-                // see if there's a existing bookmark already
-                var criteria = {
-                    story_id: bookmarkReceived.story_id,
-                    target_user_id: bookmarkReceived.target_user_id,
-                    deleted: false,
-                };
-                return this.findOne(db, schema, criteria, 'id, user_ids, hidden').then((row) => {
-                    if (row) {
-                        // add the user to the list
-                        row.user_ids = _.union(row.user_ids, bookmarkReceived.user_ids);
-                        if (bookmarkReceived.target_user_id === credentials.user.id) {
-                            // reset the hidden flag if it's the target user himself
-                            // creating the bookmark
-                            row.hidden = false;
-                        }
-                        bookmarkReceived = row;
-                    }
-                    return bookmarkReceived;
-                });
+    async importOne(db, schema, bookmarkReceived, bookmarkBefore, credentials, options) {
+        let row = await super.importOne(db, schema, bookmarkReceived, bookmarkBefore, credentials);
+        if (bookmarkBefore) {
+            if (bookmarkReceived.deleted) {
+                // remove the current user id from list of senders
+                // delete the bookmark only if no one else is
+                let senderIDs = _.without(bookmarkBefore.user_ids, credentials.user.id);
+                row.user_ids = senderIDs;
+                row.deleted = _.isEmpty(senderIDs);
+                row.suppressed = _.isEmpty(senderIDs);
             }
-        });
-    },
+        } else {
+            // see if there's a existing bookmark already
+            let criteria = {
+                story_id: bookmarkReceived.story_id,
+                target_user_id: bookmarkReceived.target_user_id,
+                deleted: false,
+            };
+            let existingRow = await this.findOne(db, schema, criteria, 'id, user_ids, hidden');
+            if (existingRow) {
+                // add the user to the list
+                existingRow.user_ids = _.union(existingRow.user_ids, bookmarkReceived.user_ids);
+                if (existingRow.hidden) {
+                    if (bookmarkReceived.target_user_id === credentials.user.id) {
+                        // reset the hidden flag if it's the target user himself
+                        // recreating the bookmark
+                        existingRow.hidden = false;
+                    }
+                }
+                row = existingRow;
+            }
+        }
+        return row;
+    }
 
     /**
      * See if a database change event is relevant to a given user
@@ -191,12 +182,12 @@ const Bookmark = _.create(Data, {
      *
      * @return {Boolean}
      */
-    isRelevantTo: function(event, user, subscription) {
+    isRelevantTo(event, user, subscription) {
         if (subscription.area === 'admin') {
             // admin console doesn't use this object currently
             return false;
         }
-        if (Data.isRelevantTo.call(this, event, user, subscription)) {
+        if (super.isRelevantTo(event, user, subscription)) {
             if (event.current.target_user_id === user.id) {
                 return true;
             }
@@ -205,7 +196,7 @@ const Bookmark = _.create(Data, {
             }
         }
         return false;
-    },
+    }
 
     /**
      * Throw an exception if modifications aren't permitted
@@ -214,7 +205,7 @@ const Bookmark = _.create(Data, {
      * @param  {Object} bookmarkBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(bookmarkReceived, bookmarkBefore, credentials) {
+    checkWritePermission(bookmarkReceived, bookmarkBefore, credentials) {
         if (bookmarkBefore) {
             // the only operation permitted is the removal of the bookmark
             if (bookmarkReceived.deleted) {
@@ -231,7 +222,6 @@ const Bookmark = _.create(Data, {
             } else {
                 throw new HTTPError(400);
             }
-            return bookmarkReceived;
         } else {
             // must be the current user
             if (!_.isEqual(bookmarkReceived.user_ids, [ credentials.user.id ])) {
@@ -242,7 +232,7 @@ const Bookmark = _.create(Data, {
                 throw new HTTPError(400);
             }
         }
-    },
+    }
 
     /**
      * Mark bookmarks associated with stories as deleted
@@ -253,23 +243,22 @@ const Bookmark = _.create(Data, {
      *
      * @return {Promise}
      */
-    deleteAssociated: function(db, schema, associations) {
-        var promises = _.mapValues(associations, (objects, type) => {
+    async deleteAssociated(db, schema, associations) {
+        for (let [ type, objects ] of _.entries(associations)) {
             if (_.isEmpty(objects)) {
-                return;
+                continue;
             }
             if (type === 'story') {
-                var storyIds = _.map(objects, 'id');
-                var criteria = {
-                    story_id: storyIds,
+                let storyIDs = _.map(objects, 'id');
+                let criteria = {
+                    story_id: storyIDs,
                     deleted: false,
                     suppressed: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: true });
+                await this.updateMatching(db, schema, criteria, { deleted: true });
             }
-        });
-        return Promise.props(promises);
-    },
+        }
+    }
 
     /**
      * Clear deleted flag of bookmarks to specified stories
@@ -280,27 +269,28 @@ const Bookmark = _.create(Data, {
      *
      * @return {Promise}
      */
-    restoreAssociated: function(db, schema, associations) {
-        var promises = _.mapValues(associations, (objects, type) => {
+    async restoreAssociated(db, schema, associations) {
+        for (let [ type, objects ] of _.entries(associations)) {
             if (_.isEmpty(objects)) {
-                return;
+                continue;
             }
             if (type === 'story') {
-                var storyIds = _.map(objects, 'id');
-                var criteria = {
+                let storyIds = _.map(objects, 'id');
+                let criteria = {
                     story_id: storyIds,
                     deleted: true,
                     // don't restore bookmarks that were manually deleted
                     suppressed: false,
                 };
-                return this.updateMatching(db, schema, criteria, { deleted: false });
+                await this.updateMatching(db, schema, criteria, { deleted: false });
             }
-        });
-        return Promise.props(promises);
-    },
-});
+        }
+    }
+}
+
+const instance = new Bookmark;
 
 export {
-    Bookmark as default,
+    instance as default,
     Bookmark,
 };

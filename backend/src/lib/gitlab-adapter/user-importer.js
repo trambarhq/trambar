@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import Request from 'request';
 import * as TaskLog from 'task-log';
@@ -29,21 +28,19 @@ import User from 'accessors/user';
  *
  * @return {Promise<Story>}
  */
-function importEvent(db, system, server, repo, project, author, glEvent) {
-    var schema = project.name;
-    var storyNew = copyEventProperties(null, system, server, repo, author, glEvent);
-    return Story.insertOne(db, schema, storyNew).then((story) => {
-        if (glEvent.action_name === 'joined') {
-            if (!_.includes(project.user_ids, author.id)) {
-                project.user_ids.push(author.id);
-            }
-        } else if (glEvent.action_name === 'left') {
-            _.pull(project.user_ids, author.id);
+async function importEvent(db, system, server, repo, project, author, glEvent) {
+    let schema = project.name;
+    let storyNew = copyEventProperties(null, system, server, repo, author, glEvent);
+    let story = await Story.insertOne(db, schema, storyNew);
+    if (glEvent.action_name === 'joined') {
+        if (!_.includes(project.user_ids, author.id)) {
+            project.user_ids.push(author.id);
         }
-        return Project.updateOne(db, 'global', _.pick(project, 'id', 'user_ids')).then((project) => {
-            return story;
-        });
-    });
+    } else if (glEvent.action_name === 'left') {
+        _.pull(project.user_ids, author.id);
+    }
+    await Project.updateOne(db, 'global', _.pick(project, 'id', 'user_ids'));
+    return story;
 }
 
 /**
@@ -59,9 +56,9 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
  * @return {Story}
  */
 function copyEventProperties(story, system, server, repo, author, glEvent) {
-    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
 
-    var storyAfter = _.cloneDeep(story) || {};
+    let storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         user: { id: glEvent.author_id }
     });
@@ -112,64 +109,66 @@ function copyEventProperties(story, system, server, repo, author, glEvent) {
  *
  * @return {Promise<Array<User>>}
  */
-function importUsers(db, server) {
-    var taskLog = TaskLog.start('gitlab-user-import', {
+async function importUsers(db, server) {
+    let userList = [];
+    let taskLog = TaskLog.start('gitlab-user-import', {
         server_id: server.id,
         server: server.name,
     });
-    // find existing users connected with server (including disabled ones)
-    var criteria = {
-        external_object: ExternalDataUtils.createLink(server),
-    };
-    return User.find(db, 'global', criteria, '*').then((users) => {
-        var added = [];
-        var disabled = [];
-        var modified = [];
-        // fetch list of users from Gitlab
-        return fetchUsers(server).then((glUsers) => {
-            // disable ones that no longer exists
-            return Promise.each(users, (user) => {
-                var userLink = ExternalDataUtils.findLink(user, server);
-                var glUserId = _.get(userLink, 'user.id');
-                if (!_.some(glUsers, { id: glUserId })) {
-                    var userAfter = _.cloneDeep(user);
-                    ExternalDataUtils.removeLink(userAfter, server);
-                    // remove user unless he's associated with another server
-                    if (ExternalDataUtils.countLinks(userAfter) === 0) {
-                        userAfter.disabled = true;
-                        disabled.push(userAfter.username);
-                    }
-                    return User.updateOne(db, 'global', userAfter);
+    try {
+        // find existing users connected with server (including disabled ones)
+        let criteria = {
+            external_object: ExternalDataUtils.createLink(server),
+        };
+        let users = await User.find(db, 'global', criteria, '*');
+        let glUsers = await fetchUsers(server);
+
+        // disable users that no longer exists at GitLab
+        let disabled = [];
+        for (let user of users) {
+            let userLink = ExternalDataUtils.findLink(user, server);
+            let glUserId = _.get(userLink, 'user.id');
+            if (!_.some(glUsers, { id: glUserId })) {
+                let userAfter = _.cloneDeep(user);
+                ExternalDataUtils.removeLink(userAfter, server);
+                // remove user unless he's associated with another server
+                if (ExternalDataUtils.countLinks(userAfter) === 0) {
+                    userAfter.disabled = true;
+                    disabled.push(userAfter.username);
                 }
-            }).return(glUsers);
-        }).mapSeries((glUser, index, count) => {
+                await User.updateOne(db, 'global', userAfter);
+            }
+        }
+
+        let added = [];
+        let modified = [];
+        let index = 0, count = _.size(glUsers);
+        for (let glUser of glUsers) {
             // import profile image
-            return importProfileImage(glUser).then((image) => {
-                // find existing user
-                return findExistingUser(db, server, users, glUser).then((user) => {
-                    var userAfter = copyUserProperties(user, server, image, glUser);
-                    if (userAfter === user) {
-                        return user;
-                    }
-                    if (user) {
-                        modified.push(userAfter.username);
-                        return User.updateOne(db, 'global', userAfter);
-                    } else {
-                        added.push(userAfter.username);
-                        return User.insertUnique(db, 'global', userAfter);
-                    }
-                });
-            }).tap(() => {
-                if (!_.isEmpty(added) || !_.isEmpty(disabled) || !_.isEmpty(modified)) {
-                    taskLog.report(index + 1, count, { added, disabled, modified });
+            let image = await importProfileImage(glUser);
+            // find existing user
+            let user = await findExistingUser(db, server, users, glUser);
+            let userAfter = copyUserProperties(user, server, image, glUser);
+            if (userAfter !== user) {
+                if (user) {
+                    modified.push(userAfter.username);
+                    user = await User.updateOne(db, 'global', userAfter);
+                } else {
+                    added.push(userAfter.username);
+                    user = await User.insertUnique(db, 'global', userAfter);
                 }
-            });
-        });
-    }).tap(() => {
-        return taskLog.finish();
-    }).tapCatch((err) => {
-        return taskLog.abort(err);
-    });
+            }
+            userList.push(user);
+            if (added.length + disabled.length + modified.length > 0) {
+                taskLog.report(index + 1, count, { added, disabled, modified });
+            }
+            index++;
+        }
+        await taskLog.finish();
+    } catch (err) {
+        await taskLog.abort(err);
+    }
+    return userList;
 }
 
 /**
@@ -179,44 +178,34 @@ function importUsers(db, server) {
  * @param  {Server} server
  * @param  {Object} glUser
  *
- * @return {Promise<User>}
+ * @return {Promise<User|null>}
  */
-function findExistingUser(db, server, users, glUser) {
-    var user = _.find(users, (user) => {
-        var userLink = ExternalDataUtils.findLink(user, server, {
+async function findExistingUser(db, server, users, glUser) {
+    // look for matching id among users imported from server previously
+    let user = _.find(users, (user) => {
+        return !!ExternalDataUtils.findLink(user, server, {
             user: { id: glUser.id }
         });
-        if (userLink) {
-            return true;
-        }
     });
-    if (user) {
-        return Promise.resolve(user);
+    // match by username ("root" only)
+    if (!user && glUser.username === 'root') {
+        let criteria = {
+            username: glUser.username,
+            deleted: false,
+            order: 'id',
+        }
+        user = await User.findOne(db, 'global', criteria, '*');
     }
-    // match by username ("root" only) or email
-    var strategies = [ 'username', 'email' ];
-    return Promise.reduce(strategies, (matching, strategy) => {
-        if (matching) {
-            return matching;
-        }
-        if (strategy === 'email' && glUser.email) {
-            var criteria = {
-                email: glUser.email,
-                deleted: false,
-                order: 'id',
-            };
-            return User.findOne(db, 'global', criteria, '*');
-        } else if (strategy === 'username' && glUser.username === 'root') {
-            var criteria = {
-                username: glUser.username,
-                deleted: false,
-                order: 'id',
-            }
-            return User.findOne(db, 'global', criteria, '*');
-        } else {
-            return null;
-        }
-    }, null);
+    // match by email
+    if (!user && glUser.email) {
+        let criteria = {
+            email: glUser.email,
+            deleted: false,
+            order: 'id',
+        };
+        user = await User.findOne(db, 'global', criteria, '*');
+    }
+    return user || null;
 }
 
 /**
@@ -228,30 +217,25 @@ function findExistingUser(db, server, users, glUser) {
  *
  * @return {Promise<User|null>}
  */
-function findUser(db, server, glUser) {
+async function findUser(db, server, glUser) {
     if (!glUser.id) {
         return findUserByName(db, server, glUser.username);
     }
-    var criteria = {
+    let criteria = {
         external_object: ExternalDataUtils.createLink(server, {
             user: { id: glUser.id }
         })
     };
-    return User.findOne(db, 'global', criteria, '*').then((user) => {
-        if (user) {
-            return user;
-        }
-        return importUsers(db, server).then((users) => {
-            return _.find(users, (user) => {
-                var userLink = ExternalDataUtils.findLink(user, server, {
-                    user: { id: glUser.id }
-                });
-                if (userLink) {
-                    return true;
-                }
+    let user = await User.findOne(db, 'global', criteria, '*');
+    if (!user) {
+        let users = await importUsers(db, server);
+        user = _.find(users, (user) => {
+            return !!ExternalDataUtils.findLink(user, server, {
+                user: { id: glUser.id }
             });
         });
-    });
+    }
+    return user || null;
 }
 
 /**
@@ -263,37 +247,35 @@ function findUser(db, server, glUser) {
  *
  * @return {Promise<Array<User|null>>}
  */
-function findUsersByName(db, server, glUsernames) {
+async function findUsersByName(db, server, glUsernames) {
+    let userList = [];
     // first, load all users from server
-    var criteria = {
+    let criteria = {
         external_object: ExternalDataUtils.createLink(server)
     };
-    return User.find(db, 'global', criteria, '*').then((users) => {
-        return Promise.mapSeries(glUsernames, (glUsername) => {
-            // try to find an user imported with that name
-            var user = _.find(users, (user) => {
-                var userLink = ExternalDataUtils.findLink(user, server);
-                var username = _.get(userLink, 'user.username');
-                if (username === glUsername) {
-                    return true;
-                }
-            });
-            if (user) {
-                return user;
-            } else {
-                return fetchUserByName(server, glUsername).then((glUser) => {
-                    if (!glUser) {
-                        return null;
-                    }
-                    return findUser(db, server, glUser);
-                });
+    let users = await User.find(db, 'global', criteria, '*');
+    for (let glUsername of glUsernames) {
+        // try to find an user imported with that name
+        let user = _.find(users, (user) => {
+            let userLink = ExternalDataUtils.findLink(user, server);
+            let username = _.get(userLink, 'user.username');
+            if (username === glUsername) {
+                return true;
             }
         });
-    });
+        if (!user) {
+            let glUser = await fetchUserByName(server, glUsername);
+            if (glUser) {
+                user = await findUser(db, server, glUser);
+            }
+        }
+        userList.push(user || null);
+    }
+    return userList;
 }
 
 /**
- * Look for a user when Gitlab doesn't give us only the username and not the id.
+ * Look for a user when Gitlab gives us only the username and not the id.
  *
  * @param  {Database} db
  * @param  {Server} server
@@ -301,10 +283,9 @@ function findUsersByName(db, server, glUsernames) {
  *
  * @return {Promise<User|null>}
  */
-function findUserByName(db, server, glUsername) {
-    return findUsersByName(db, server, [ glUsername ]).then((users) => {
-        return users[0];
-    });
+async function findUserByName(db, server, glUsername) {
+    let users = await findUsersByName(db, server, [ glUsername ]);
+    return users[0] || null;
 }
 
 /**
@@ -318,8 +299,8 @@ function findUserByName(db, server, glUsername) {
  * @return {User}
  */
 function copyUserProperties(user, server, image, glUser) {
-    var mapping = _.get(server, 'settings.user.mapping', {});
-    var userType;
+    let mapping = _.get(server, 'settings.user.mapping', {});
+    let userType;
     if (glUser.is_admin) {
         userType = mapping.admin;
     } else if (glUser.external) {
@@ -327,13 +308,13 @@ function copyUserProperties(user, server, image, glUser) {
     } else {
         userType = mapping.user;
     }
-    var disabled = false;
+    let disabled = false;
     if (!userType) {
         // create as disabled if user import is disabled
         userType = 'guest';
         disabled = true;
     }
-    var userAfter = _.cloneDeep(user);
+    let userAfter = _.cloneDeep(user);
     if (!userAfter) {
         userAfter = {
             role_ids: _.get(server, 'settings.user.role_ids', []),
@@ -402,7 +383,7 @@ function copyUserProperties(user, server, image, glUser) {
  * @return {Promise<Array<Object>>}
  */
 function fetchUsers(server) {
-    var url = `/users`;
+    let url = `/users`;
     return Transport.fetchAll(server, url);
 }
 
@@ -414,16 +395,11 @@ function fetchUsers(server) {
  *
  * @return {Promise<Object>}
  */
-function fetchUserByName(server, username) {
-    var url = `/users`;
-    var query = { username };
-    return Transport.fetch(server, url, query).then((users) => {
-        if (_.size(users) === 1) {
-            return users[0];
-        } else {
-            return null;
-        }
-    });
+async function fetchUserByName(server, username) {
+    let url = `/users`;
+    let query = { username };
+    let users = await Transport.fetch(server, url, query);
+    return users[0] || null;
 }
 
 /**
@@ -431,15 +407,15 @@ function fetchUserByName(server, username) {
  *
  * @param  {Object} glUser
  *
- * @return {Promise<Object>}
+ * @return {Promise<Object|null>}
  */
-function importProfileImage(glUser) {
-    var url = glUser.avatar_url;
+async function importProfileImage(glUser) {
+    let url = glUser.avatar_url;
     if (!url) {
-        return Promise.resolve(null);
+        return null;
     }
     console.log(`Retrieving profile image: ${url}`);
-    var options = {
+    let options = {
         json: true,
         url: 'http://media_server/srv/internal/import',
         body: { url },

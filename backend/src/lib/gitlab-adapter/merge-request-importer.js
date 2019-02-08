@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
+import HTTPError from 'errors/http-error';
 import * as TagScanner from 'utils/tag-scanner';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
@@ -24,31 +24,25 @@ import Story from 'accessors/story';
  *
  * @return {Promise<Story>}
  */
-function importEvent(db, system, server, repo, project, author, glEvent) {
-    var schema = project.name;
-    var repoLink = ExternalDataUtils.findLink(repo, server);
-    return fetchMergeRequest(server, repoLink.project.id, glEvent.target_id).then((glMergeRequest) => {
-        // the story is linked to both the merge request and the repo
-        var criteria = {
-            external_object: ExternalDataUtils.extendLink(server, repo, {
-                merge_request: { id: glMergeRequest.id }
-            })
-        };
-        return Story.findOne(db, schema, criteria, '*').then((story) => {
-            return AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest).then((assignments) => {
-                var opener = (glEvent.action_name === 'opened') ? author : null;
-                var storyAfter = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
-                if (storyAfter === story) {
-                    return story;
-                }
-                return Story.saveOne(db, schema, storyAfter).then((story) => {
-                    return AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
-                }).then((reactions) => {
-                    return story;
-                });
-            });
-        });
-    });
+async function importEvent(db, system, server, repo, project, author, glEvent) {
+    let schema = project.name;
+    let repoLink = ExternalDataUtils.findLink(repo, server);
+    let glMergeRequest = await fetchMergeRequest(server, repoLink.project.id, glEvent.target_id);
+    // the story is linked to both the merge request and the repo
+    let criteria = {
+        external_object: ExternalDataUtils.extendLink(server, repo, {
+            merge_request: { id: glMergeRequest.id }
+        })
+    };
+    let story = await Story.findOne(db, schema, criteria, '*');
+    let assignments = await AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest);
+    let opener = (glEvent.action_name === 'opened') ? author : null;
+    let storyAfter = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
+    if (storyAfter !== story) {
+        story = await Story.saveOne(db, schema, storyAfter);
+    }
+    let reactions = await AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
+    return story;
 }
 
 /**
@@ -62,51 +56,43 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
  * @param  {User} author
  * @param  {Object} glEvent
  *
- * @return {Promise<Story|false>}
+ * @return {Promise<Story|null>}
  */
-function importHookEvent(db, system, server, repo, project, author, glHookEvent) {
-    if (glHookEvent.object_attributes.action === 'update') {
-        // construct a glMergeRequest object from data in hook event
-        var repoLink = ExternalDataUtils.findLink(repo, server);
-        var glMergeRequest = _.omit(glHookEvent.object_attributes, 'action');
-        glMergeRequest.project_id = repoLink.project.id;
-        glMergeRequest.labels = _.map(glHookEvent.labels, 'title');
-        if (glHookEvent.assignee) {
-            glMergeRequest.assignee = _.clone(glHookEvent.assignee);
-            glMergeRequest.assignee.id = glHookEvent.object_attributes.assignee_id;
-        }
-
-        // find existing story
-        var schema = project.name;
-        var criteria = {
-            external_object: ExternalDataUtils.extendLink(server, repo, {
-                merge_request: { id: glMergeRequest.id }
-            }),
-        };
-        return Story.findOne(db, schema, criteria, '*').then((story) => {
-            if (!story) {
-                throw new Error('Story not found')
-            }
-            return AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest).then((assignments) => {
-                // the author of the hook event isn't the merge request's author,
-                // hence we're passing null here
-                var opener = null;
-                var storyAfter = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
-                if (storyAfter === story) {
-                    return story;
-                }
-                return Story.updateOne(db, schema, storyAfter).then((story) => {
-                    return AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
-                }).then((reactions) => {
-                    return story;
-                });
-            });
-        }).catch((err) => {
-            return null;
-        });
-    } else {
-        return Promise.resolve(false);
+async function importHookEvent(db, system, server, repo, project, author, glHookEvent) {
+    if (glHookEvent.object_attributes.action !== 'update') {
+        return null;
     }
+    // construct a glMergeRequest object from data in hook event
+    let repoLink = ExternalDataUtils.findLink(repo, server);
+    let glMergeRequest = _.omit(glHookEvent.object_attributes, 'action');
+    glMergeRequest.project_id = repoLink.project.id;
+    glMergeRequest.labels = _.map(glHookEvent.labels, 'title');
+    if (glHookEvent.assignee) {
+        glMergeRequest.assignee = _.clone(glHookEvent.assignee);
+        glMergeRequest.assignee.id = glHookEvent.object_attributes.assignee_id;
+    }
+
+    // find existing story
+    let schema = project.name;
+    let criteria = {
+        external_object: ExternalDataUtils.extendLink(server, repo, {
+            merge_request: { id: glMergeRequest.id }
+        }),
+    };
+    let story = Story.findOne(db, schema, criteria, '*');
+    if (!story) {
+        throw new HTTPError(404, 'Story not found');
+    }
+    let assignments = await AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest);
+    // the author of the hook event isn't the merge request's author,
+    // hence we're passing null here
+    let opener = null;
+    let storyAfter = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
+    if (storyAfter !== story) {
+        story = await Story.updateOne(db, schema, storyAfter);
+    }
+    let reactions = AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
+    return story;
 }
 
 /**
@@ -128,14 +114,14 @@ function importHookEvent(db, system, server, repo, project, author, glHookEvent)
  * @return {Story}
  */
 function copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest) {
-    var descriptionTags = TagScanner.findTags(glMergeRequest.description);
-    var labelTags = _.map(glMergeRequest.labels, (label) => {
+    let descriptionTags = TagScanner.findTags(glMergeRequest.description);
+    let labelTags = _.map(glMergeRequest.labels, (label) => {
         return `#${_.replace(label, /\s+/g, '-')}`;
     });
-    var tags = _.union(descriptionTags, labelTags);
-    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let tags = _.union(descriptionTags, labelTags);
+    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
 
-    var storyAfter = _.cloneDeep(story) || {};
+    let storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         merge_request: {
             id: glMergeRequest.id,
@@ -216,8 +202,8 @@ function copyMergeRequestProperties(story, system, server, repo, opener, assignm
  *
  * @return {Object}
  */
-function fetchMergeRequest(server, glProjectId, glMergeRequestNumber) {
-    var url = `/projects/${glProjectId}/merge_requests/${glMergeRequestNumber}`;
+async function fetchMergeRequest(server, glProjectId, glMergeRequestNumber) {
+    let url = `/projects/${glProjectId}/merge_requests/${glMergeRequestNumber}`;
     return Transport.fetch(server, url);
 }
 

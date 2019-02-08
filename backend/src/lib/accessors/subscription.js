@@ -1,38 +1,32 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import Data from 'accessors/data';
+import { Data } from 'accessors/data';
 import Project from 'accessors/project';
 import HTTPError from 'errors/http-error';
 import * as ProjectUtils from 'objects/utils/project-utils';
 
-const Subscription = _.create(Data, {
-    schema: 'global',
-    table: 'subscription',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        user_id: Number,
-        area: String,
-        method: String,
-        relay: String,
-        token: String,
-        schema: String,
-        locale: String,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        user_id: Number,
-        area: String,
-        method: String,
-        relay: String,
-        token: String,
-        schema: String,
-    },
+class Subscription extends Data {
+    constructor() {
+        super();
+        this.schema = 'global';
+        this.table = 'subscription';
+        _.extend(this.columns, {
+            user_id: Number,
+            area: String,
+            method: String,
+            relay: String,
+            token: String,
+            schema: String,
+            locale: String,
+        });
+        _.extend(this.criteria, {
+            user_id: Number,
+            area: String,
+            method: String,
+            relay: String,
+            token: String,
+            schema: String,
+        });
+    }
 
     /**
      * Create table in schema
@@ -40,11 +34,11 @@ const Subscription = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -63,8 +57,8 @@ const Subscription = _.create(Data, {
             );
             CREATE INDEX ON ${table} (token);
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -72,14 +66,15 @@ const Subscription = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'user_id' ];
-            return this.createNotificationTriggers(db, schema, propNames);
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'user_id'
+        ]);
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -91,69 +86,59 @@ const Subscription = _.create(Data, {
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Array>}
+     * @return {Promise<Array<Object>>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.user_id = row.user_id;
-                object.area = row.area;
-                object.method = row.method;
-                object.token = row.token;
-                object.relay = row.relay;
-                object.schema = row.schema;
-                object.locale = row.locale;
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            object.user_id = row.user_id;
+            object.area = row.area;
+            object.method = row.method;
+            object.token = row.token;
+            object.relay = row.relay;
+            object.schema = row.schema;
+            object.locale = row.locale;
 
-                if (row.user_id !== credentials.user.id) {
-                    throw new HTTPError(403);
-                }
-            });
-            return objects;
-        });
-    },
-
+            if (row.user_id !== credentials.user.id) {
+                throw new HTTPError(403);
+            }
+        }
+        return objects;
+    }
 
     /**
-     * Import objects sent by client-side code, applying access control
+     * Import object sent by client-side code, applying access control
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
+     * @param  {Object} subscriptionReceived
+     * @param  {Object} subscriptionBefore
      * @param  {Object} credentials
      * @param  {Object} options
      *
      * @return {Promise<Array>}
      */
-    import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials, options).mapSeries((subscriptionReceived, index) => {
-            var subscriptionBefore = originals[index];
-            this.checkWritePermission(subscriptionReceived, subscriptionBefore, credentials);
-
-            if (subscriptionBefore && subscriptionBefore.deleted) {
-                // restore it
-                subscriptionReceived.deleted = false;
+    async importOne(db, schema, subscriptionReceived, subscriptionBefore, credentials, options) {
+        let row = await super.importOne(db, schema, subscriptionReceived, subscriptionBefore, credentials, options);
+        if (subscriptionBefore && subscriptionBefore.deleted) {
+            // restore it
+            row.deleted = false;
+        }
+        if (subscriptionReceived.schema !== 'global' && subscriptionReceived.schema !== '*') {
+            // don't allow user to subscribe to a project that he has no access to
+            let criteria = {
+                name: subscriptionReceived.schema,
+                deleted: false,
+            };
+            let project = await Project.findOne(db, schema, criteria, 'user_ids, settings');
+            let access = ProjectUtils.getUserAccessLevel(project, credentials.user);
+            if (!access) {
+                throw new HTTPError(400);
             }
-
-            if (subscriptionReceived.schema !== 'global' && subscriptionReceived.schema !== '*') {
-                // don't allow user to subscribe to a project that he has no access to
-                var criteria = {
-                    name: subscriptionReceived.schema,
-                    deleted: false,
-                };
-                return Project.findOne(db, schema, criteria, 'user_ids, settings').then((project) => {
-                    var access = ProjectUtils.getUserAccessLevel(project, credentials.user);
-                    if (!access) {
-                        throw new HTTPError(400);
-                    }
-                    return subscriptionReceived;
-                });
-            } else {
-                return subscriptionReceived;
-            }
-        });
-    },
+        }
+        return row;
+    }
 
     /**
      * See if a database change event is relevant to a given user
@@ -164,15 +149,15 @@ const Subscription = _.create(Data, {
      *
      * @return {Boolean}
      */
-    isRelevantTo: function(event, user, subscription) {
-        if (Data.isRelevantTo.call(this, event, user, subscription)) {
+    isRelevantTo(event, user, subscription) {
+        if (super.isRelevantTo(event, user, subscription)) {
             // subscriptions aren't read by client app
             if (subscription.area === 'admin') {
                 return true;
             }
         }
         return false;
-    },
+    }
 
     /**
      * Throw an exception if modifications aren't permitted
@@ -181,7 +166,7 @@ const Subscription = _.create(Data, {
      * @param  {Object} subscriptionBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(subscriptionReceived, subscriptionBefore, credentials) {
+    checkWritePermission(subscriptionReceived, subscriptionBefore, credentials) {
         if (subscriptionReceived.area !== credentials.area) {
             throw new HTTPError(400);
         }
@@ -192,9 +177,11 @@ const Subscription = _.create(Data, {
             }
         }
     }
-});
+}
+
+const instance = new Subscription;
 
 export {
-    Subscription as default,
+    instance as default,
     Subscription,
 };

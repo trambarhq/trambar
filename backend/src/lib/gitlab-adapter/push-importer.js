@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import * as Localization from 'localization';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
@@ -23,38 +22,36 @@ import Story from 'accessors/story';
  *
  * @return {Promise<Story>}
  */
-function importEvent(db, system, server, repo, project, author, glEvent) {
-    var schema = project.name;
-    var branch, headId, tailId, type, count;
+async function importEvent(db, system, server, repo, project, author, glEvent) {
+    let schema = project.name;
+    let branch, headID, tailID, type, count;
     if (glEvent.push_data) {
         // version 10
         branch = glEvent.push_data.ref;
         type = glEvent.push_data.ref_type;
-        headId = glEvent.push_data.commit_to;
-        tailId = glEvent.push_data.commit_from;
+        headID = glEvent.push_data.commit_to;
+        tailID = glEvent.push_data.commit_from;
         count = glEvent.push_data.commit_count;
     } else if (glEvent.data) {
         // version 9
-        var refParts = _.split(glEvent.data.ref, '/');
+        let refParts = _.split(glEvent.data.ref, '/');
         branch = _.last(refParts);
         type = /^tags$/.test(refParts[1]) ? 'tag' : 'branch';
-        headId = glEvent.data.after;
-        tailId = glEvent.data.before;
-        if (/^0+$/.test(tailId)) {
+        headID = glEvent.data.after;
+        tailID = glEvent.data.before;
+        if (/^0+$/.test(tailID)) {
             // all zeros
-            tailId = null;
+            tailID = null;
         }
         count = glEvent.data.total_commits_count;
     }
     // retrieve all commits in the push
-    return PushReconstructor.reconstructPush(db, server, repo, type, branch, headId, tailId, count).then((push) => {
-        // look for component descriptions
-        var languageCode = Localization.getDefaultLanguageCode(system);
-        return PushDecorator.retrieveDescriptions(server, repo, push, languageCode).then((components) => {
-            var storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
-            return Story.insertOne(db, schema, storyNew);
-        });
-    });
+    let push = await PushReconstructor.reconstructPush(db, server, repo, type, branch, headID, tailID, count);
+    // look for component descriptions
+    let languageCode = Localization.getDefaultLanguageCode(system);
+    let components = await PushDecorator.retrieveDescriptions(server, repo, push, languageCode);
+    let storyNew = copyPushProperties(null, system, server, repo, author, push, components, glEvent);
+    return Story.insertOne(db, schema, storyNew);
 }
 
 /**
@@ -72,9 +69,9 @@ function importEvent(db, system, server, repo, project, author, glEvent) {
  * @return {Story}
  */
 function copyPushProperties(story, system, server, repo, author, push, components, glEvent) {
-    var storyType;
-    var isBranching = false;
-    if (!push.tailId) {
+    let storyType;
+    let isBranching = false;
+    if (!push.tailID) {
         if (glEvent.push_data) {
             // GL 10+
             if (glEvent.push_data.action === 'created') {
@@ -94,11 +91,11 @@ function copyPushProperties(story, system, server, repo, author, push, component
     } else {
         storyType = 'push';
     }
-    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
 
-    var storyAfter = _.cloneDeep(story) || {};
+    let storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
-        commit: { ids: push.commitIds }
+        commit: { ids: push.commitIDs }
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'type', {
         value: storyType,
@@ -117,11 +114,11 @@ function copyPushProperties(story, system, server, repo, author, push, component
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.commit_before', {
-        value: push.tailId || undefined,
+        value: push.tailID || undefined,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.commit_after', {
-        value: push.headId,
+        value: push.headID,
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'details.lines', {

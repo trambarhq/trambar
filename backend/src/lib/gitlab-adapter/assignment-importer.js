@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
@@ -21,23 +20,24 @@ import Reaction from 'accessors/reaction';
  *
  * @return {Promise<Array<Reaction>>}
  */
-function importAssignments(db, server, project, repo, story, assignments) {
-    var schema = project.name;
+async function importAssignments(db, server, project, repo, story, assignments) {
+    let schema = project.name;
     // find existing assignments
-    var criteria = {
+    let criteria = {
         story_id: story.id,
         type: 'assignment',
     };
-    return Reaction.find(db, schema, criteria, 'user_id').then((existingReactions) => {
-        var reactions = [];
-        _.each(assignments, (assignment) => {
-            if (!_.some(existingReactions, { user_id: assignment.user.id })) {
-                var reactionNew = copyAssignmentProperties(null, server, story, assignment);
-                reactions.push(reactionNew);
-            }
-        });
-        return Reaction.save(db, schema, reactions);
-    });
+    let existingReactions = await Reaction.find(db, schema, criteria, 'user_id');
+    let reactionList = [];
+    for (let assignment of assignments) {
+        let reaction = _.find(existingReactions, { user_id: assignment.user.id });
+        if (!reaction) {
+            let reactionNew = copyAssignmentProperties(null, server, story, assignment);
+            reaction = await Reaction.insertOne(db, schema, reactionNew);
+        }
+        reactionList.push(reaction);
+    }
+    return reactionList;
 }
 
 /**
@@ -49,12 +49,11 @@ function importAssignments(db, server, project, repo, story, assignments) {
  *
  * @return {Promise<Array<Object>>}
  */
-function findIssueAssignments(db, server, glIssue) {
-    var glIssueNumber = glIssue.iid;
-    var glProjectId = glIssue.project_id;
-    return fetchIssueNotes(server, glProjectId, glIssueNumber).then((glNotes) => {
-        return findAssignmentsFromNotes(db, server, glIssue, glNotes);
-    });
+async function findIssueAssignments(db, server, glIssue) {
+    let glIssueNumber = glIssue.iid;
+    let glProjectID = glIssue.project_id;
+    let glNotes = await fetchIssueNotes(server, glProjectID, glIssueNumber);
+    return findAssignmentsFromNotes(db, server, glIssue, glNotes);
 }
 
 /**
@@ -66,12 +65,11 @@ function findIssueAssignments(db, server, glIssue) {
  *
  * @return {Promise<Array<Object>>}
  */
-function findMergeRequestAssignments(db, server, glMergeRequest) {
-    var glMergeRequestNumber = glMergeRequest.iid;
-    var glProjectId = glMergeRequest.project_id;
-    return fetchMergeRequestNotes(server, glProjectId, glMergeRequestNumber).then((glNotes) => {
-        return findAssignmentsFromNotes(db, server, glMergeRequest, glNotes);
-    });
+async function findMergeRequestAssignments(db, server, glMergeRequest) {
+    let glMergeRequestNumber = glMergeRequest.iid;
+    let glProjectID = glMergeRequest.project_id;
+    let glNotes = await fetchMergeRequestNotes(server, glProjectID, glMergeRequestNumber);
+    return findAssignmentsFromNotes(db, server, glMergeRequest, glNotes);
 }
 
 /**
@@ -84,15 +82,15 @@ function findMergeRequestAssignments(db, server, glMergeRequest) {
  *
  * @return {Promise<Array<Object>>}
  */
-function findAssignmentsFromNotes(db, server, glObject, glNotes) {
-    var assignments = [];
-    _.each(glNotes, (glNote) => {
+async function findAssignmentsFromNotes(db, server, glObject, glNotes) {
+    let assignments = [];
+    for (let glNote of glNotes) {
         if (glNote.system) {
             // have to rely on the username since the user id isn't provided
-            var m1 = /^assigned to @(\S+)/.exec(glNote.body);
+            let m1 = /^assigned to @(\S+)/.exec(glNote.body);
             if (m1) {
                 if (_.isEmpty(assignments)) {
-                    var m2 = /unassigned @(\S+)/.exec(glNote.body);
+                    let m2 = /unassigned @(\S+)/.exec(glNote.body);
                     if (m2) {
                         // issue (or merge-request) was created with an assignee
                         assignments.push({
@@ -116,7 +114,7 @@ function findAssignmentsFromNotes(db, server, glObject, glNotes) {
                 throw new ObjectMovedError;
             }
         }
-    });
+    }
 
     // if an issue (or merge-request) was created with an assignee and
     // no change in assignment has occurred, there would be no notes
@@ -124,33 +122,32 @@ function findAssignmentsFromNotes(db, server, glObject, glNotes) {
     //
     // need to look at the current assignees instead
     if (_.isEmpty(assignments)) {
-        var assignees = glObject.assignees;
+        let assignees = glObject.assignees;
         if (!assignees && glObject.assignee) {
             assignees = [ glObject.assignee ];
         }
-        _.each(assignees, (assignee) => {
+        for (let assignee of assignees) {
             assignments.push({
                 username: assignee.username,
                 user: null,
                 ctime: new Date(glObject.created_at).toISOString()
             });
-        });
+        }
     }
 
     // find and attach user objects
-    var usernames = _.uniq(_.map(assignments, 'username'));
-    return UserImporter.findUsersByName(db, server, usernames).then((users) => {
-        _.each(assignments, (assignment) => {
-            var usernameIndex = _.indexOf(usernames, assignment.username);
-            assignment.user = users[usernameIndex];
-        });
+    let usernames = _.uniq(_.map(assignments, 'username'));
+    let users = await UserImporter.findUsersByName(db, server, usernames);
+    for (let assignment of assignments) {
+        let usernameIndex = _.indexOf(usernames, assignment.username);
+        assignment.user = users[usernameIndex];
+    }
 
-        // take out the ones whose user cannot be found
-        _.remove(assignments, (assignment) => {
-            return !assignment.user;
-        })
-        return assignments;
+    // take out the ones whose user cannot be found
+    _.remove(assignments, (assignment) => {
+        return !assignment.user;
     });
+    return assignments;
 }
 
 /**
@@ -164,7 +161,7 @@ function findAssignmentsFromNotes(db, server, glObject, glNotes) {
  * @return {Reaction}
  */
 function copyAssignmentProperties(reaction, server, story, assignment) {
-    var reactionAfter = _.cloneDeep(reaction) || {};
+    let reactionAfter = _.cloneDeep(reaction) || {};
     ExternalDataUtils.inheritLink(reactionAfter, server, story, {
         note: { id: assignment.id }
     });
@@ -203,13 +200,13 @@ function copyAssignmentProperties(reaction, server, story, assignment) {
  * Retrieve system notes from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
- * @param  {Number} glIssueId
+ * @param  {Number} glProjectID
+ * @param  {Number} glIssueID
  *
  * @return {Object}
  */
-function fetchIssueNotes(server, glProjectId, glIssueNumber) {
-    var url = `/projects/${glProjectId}/issues/${glIssueNumber}/notes`;
+async function fetchIssueNotes(server, glProjectID, glIssueNumber) {
+    let url = `/projects/${glProjectID}/issues/${glIssueNumber}/notes`;
     return Transport.fetch(server, url);
 }
 
@@ -217,21 +214,21 @@ function fetchIssueNotes(server, glProjectId, glIssueNumber) {
  * Retrieve system notes from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
+ * @param  {Number} glProjectID
  * @param  {Number} glMergeRequestNumber
  *
  * @return {Object}
  */
-function fetchMergeRequestNotes(server, glProjectId, glMergeRequestNumber) {
-    var url = `/projects/${glProjectId}/merge_requests/${glMergeRequestNumber}/notes`;
+async function fetchMergeRequestNotes(server, glProjectID, glMergeRequestNumber) {
+    let url = `/projects/${glProjectID}/merge_requests/${glMergeRequestNumber}/notes`;
     return Transport.fetch(server, url);
 }
 
-function ObjectMovedError() {
-    this.message = 'Object moved';
-};
-
-ObjectMovedError.prototype = Object.create(Error.prototype)
+class ObjectMovedError extends Error {
+    constructor() {
+        this.message = 'Object moved';
+    }
+}
 
 export {
     findIssueAssignments,

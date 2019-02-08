@@ -1,15 +1,13 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import Request from 'request';
-import FS from 'fs'; Promise.promisifyAll(FS);
 import Path from 'path';
-import Async from 'async-do-while';
 import HTTPError from 'errors/http-error';
 import Database from 'database';
 import Server from 'accessors/server';
 
-var PAGE_SIZE = 50;
-var PAGE_LIMIT = 1000;
+const PAGE_SIZE = 50;
+const PAGE_LIMIT = 5000;
 
 /**
  * Fetch data from Gitlab server
@@ -20,7 +18,7 @@ var PAGE_LIMIT = 1000;
  *
  * @return {Promise<Object>}
  */
-function fetch(server, uri, query) {
+async function fetch(server, uri, query) {
     return request(server, uri, 'get', query);
 }
 
@@ -33,30 +31,29 @@ function fetch(server, uri, query) {
  *
  * @return {Promise<Object>}
  */
-function fetchAll(server, uri, query) {
-    var objectLists = [];
-    var pageQuery = _.extend({
+async function fetchAll(server, uri, query) {
+    let objectList = [];
+    let pageQuery = _.extend({
         page: 1,
         per_page: PAGE_SIZE
     }, query);
-    var done = false;
-    Async.do(() => {
-        return fetch(server, uri, pageQuery).then((objects) => {
-            if (objects instanceof Array) {
-                objectLists.push(objects);
-                if (objects.length === pageQuery.per_page && pageQuery.page < PAGE_LIMIT) {
-                    pageQuery.page++;
-                } else {
-                    done = true;
-                }
+    let done = false;
+    do {
+        let objects = await fetch(server, uri, pageQuery);
+        if (objects instanceof Array) {
+            for (let object of objects) {
+                objectList.push(object);
+            }
+            if (objects.length === pageQuery.per_page && pageQuery.page < PAGE_LIMIT) {
+                pageQuery.page++;
             } else {
                 done = true;
             }
-        });
-    });
-    Async.while(() => { return !done });
-    Async.return(() => { return _.flatten(objectLists) });
-    return Async.end();
+        } else {
+            done = true;
+        }
+    } while (!done);
+    return objectList;
 }
 
 /**
@@ -71,33 +68,38 @@ function fetchAll(server, uri, query) {
  *
  * @return {Promise}
  */
-function fetchEach(server, uri, query, callback) {
-    var pageQuery = _.extend({
+async function fetchEach(server, uri, query, callback) {
+    let pageQuery = _.extend({
         page: 1,
         per_page: PAGE_SIZE
     }, query);
-    var done = false;
-    var total = undefined;
-    var index = 0;
-    Async.do(() => {
-        return fetch(server, uri, pageQuery).then((objects) => {
+    let done = false;
+    let total = undefined;
+    let index = 0;
+    do {
+        let objects = await fetch(server, uri, pageQuery);
+        if (objects instanceof Array) {
             if (objects.length < pageQuery.per_page) {
                 // we know the total at the last page
                 total = index + objects.length;
             }
-            return Promise.each(objects, (object) => {
-                return callback(object, index++, total);
-            }).then(() => {
+            for (let object of objects) {
+                let cont = await callback(object, index++, total);
+                if (cont === false) {
+                    done = true;
+                }
+            }
+            if (!done) {
                 if (objects.length === pageQuery.per_page && pageQuery.page < PAGE_LIMIT) {
                     pageQuery.page++;
                 } else {
                     done = true;
                 }
-            });
-        });
-    });
-    Async.while(() => { return !done });
-    return Async.end();
+            }
+        } else {
+            done = true;
+        }
+    } while (!done);
 }
 
 /**
@@ -107,18 +109,13 @@ function fetchEach(server, uri, query, callback) {
  * @param  {Server} server
  * @param  {String} uri
  * @param  {Object} payload
- * @param  {Number|undefined} userId
+ * @param  {Number|undefined} userID
  *
  * @return {Promise<Object>}
  */
-function post(server, uri, payload, userId) {
-    if (userId) {
-        return impersonate(server, userId).then((token) => {
-            return request(server, uri, 'post', undefined, payload, token);
-        });
-    } else {
-        return request(server, uri, 'post', undefined, payload);
-    }
+async function post(server, uri, payload, userID) {
+    let token = await impersonate(server, userID);
+    return request(server, uri, 'post', undefined, payload, token);
 }
 
 /**
@@ -128,18 +125,13 @@ function post(server, uri, payload, userId) {
  * @param  {Server} server
  * @param  {String} uri
  * @param  {Object} payload
- * @param  {Number|undefined} userId
+ * @param  {Number|undefined} userID
  *
  * @return {Promise<Object>}
  */
-function put(server, uri, payload, userId) {
-    if (userId) {
-        return impersonate(server, userId).then((token) => {
-            return request(server, uri, 'put', undefined, payload, token);
-        });
-    } else {
-        return request(server, uri, 'put', undefined, payload);
-    }
+async function put(server, uri, payload, userID) {
+    let token = await impersonate(server, userID);
+    return request(server, uri, 'put', undefined, payload, token);
 }
 
 /**
@@ -147,57 +139,59 @@ function put(server, uri, payload, userId) {
  *
  * @param  {Server} server
  * @param  {String} uri
+ * @param  {Number|undefined} userID
  *
  * @return {Promise}
  */
-function remove(server, uri, userId) {
-    return request(server, uri, 'delete');
+async function remove(server, uri, userID) {
+    let token = await impersonate(server, userID);
+    return request(server, uri, 'delete', undefined, undefined, token);
 }
 
-var userImpersonations = {};
+let userImpersonations = {};
 
 /**
  * Obtain impersonation token for give user
  *
  * @param  {Server} server
- * @param  {String} userId
+ * @param  {String} userID
  *
- * @return {Promise<String>}
+ * @return {Promise<String|undefined>}
  */
-function impersonate(server, userId) {
-    var ui = userImpersonations[userId];
-    if (ui) {
-        return Promise.resolve(ui.token);
+async function impersonate(server, userID) {
+    if (!userID) {
+        return;
     }
-    // delete old impersonation tokens first
-    return getImpersonations(server, userId).then((impersonations) => {
-        var matching = _.filter(impersonations, { name: 'trambar' });
-        return Promise.each(matching, (ui) => {
-            return deleteImpersonations(server, userId, ui);
-        });
-    }).then(() => {
-        var impersonationProps = {
+    let ui = userImpersonations[userID];
+    if (!ui) {
+        // delete old impersonation tokens first
+        let existingUIs = await getImpersonations(server, userID);
+        for (let existingUI of existingUIs) {
+            if (existingUI.name === 'trambar') {
+                await deleteImpersonations(server, userID, old);
+            }
+        }
+        let impersonationProps = {
             name: 'trambar',
             scopes: [ 'api' ],
         };
-        return createImpersonation(server, userId, impersonationProps).then((ui) => {
-            userImpersonations[userId] = ui;
-            return ui.token;
-        });
-    });
+        ui = await createImpersonation(server, userID, impersonationProps);
+        userImpersonations[userID] = ui;
+    }
+    return ui.token;
 }
 
 /**
  * Get a list of impersonation tokens
  *
  * @param  {Server} server
- * @param  {Number} userId
+ * @param  {Number} userID
  *
  * @return {Promise<Array<Object>>}
  */
-function getImpersonations(server, userId) {
-    var url = `/users/${userId}/impersonation_tokens`;
-    var query = { state: 'active' };
+async function getImpersonations(server, userID) {
+    let url = `/users/${userID}/impersonation_tokens`;
+    let query = { state: 'active' };
     return fetch(server, url, query);
 }
 
@@ -205,13 +199,13 @@ function getImpersonations(server, userId) {
  * Revoke an impersonation token
  *
  * @param  {Server} server
- * @param  {Number} userId
+ * @param  {Number} userID
  * @param  {Object} ui
  *
  * @return {Promise}
  */
-function deleteImpersonations(server, userId, ui) {
-    var url = `/users/${userId}/impersonation_tokens/${ui.id}`;
+async function deleteImpersonations(server, userID, ui) {
+    let url = `/users/${userID}/impersonation_tokens/${ui.id}`;
     return remove(server, url);
 }
 
@@ -219,13 +213,13 @@ function deleteImpersonations(server, userId, ui) {
  * Create an impersonation token for given user
  *
  * @param  {Server} server
- * @param  {Number} userId
+ * @param  {Number} userID
  * @param  {Object} props
  *
  * @return {Promise<Object>}
  */
-function createImpersonation(server, userId, props) {
-    var url = `/users/${userId}/impersonation_tokens`;
+async function createImpersonation(server, userID, props) {
+    let url = `/users/${userID}/impersonation_tokens`;
     return post(server, url, props);
 }
 
@@ -236,33 +230,24 @@ function createImpersonation(server, userId, props) {
  *
  * @return {Promise<server>}
  */
-function refresh(server) {
-    var payload = {
+async function refresh(server) {
+    let payload = {
         grant_type: 'refresh_token',
         refresh_token: server.settings.api.refresh_token,
         client_id: server.settings.oauth.client_id,
         client_secret: server.settings.oauth.client_secret,
     };
-    var options = {
+    let options = {
         json: true,
         body: payload,
         baseURL: server.settings.oauth.base_url,
         uri: '/oauth/token',
         method: 'post',
     };
-    return attempt(options).then((response) => {
-        if (response) {
-            return updateAccessTokens(server, response);
-        }
-    }).catch((err) => {
-        if (err instanceof HTTPError) {
-            if (err.statusCode === 401) {
-                // TODO: reactivate this after more testing
-                //return updateAccessTokens(server, {}).throw(err);
-            }
-        }
-        throw err;
-    });
+    let response = await attempt(options);
+    if (response) {
+        await updateAccessTokens(server, response);
+    }
 }
 
 /**
@@ -273,17 +258,17 @@ function refresh(server) {
  *
  * @return {Promise<Server>}
  */
-function updateAccessTokens(server, response) {
+async function updateAccessTokens(server, response) {
     // modifying server so any code reusing the object would have the updated
     // avalues
+    let db = await Database.open();
     server.settings.api.access_token = response.access_token;
     server.settings.api.refresh_token = response.refresh_token;
-    return Database.open().then((db) => {
-        return Server.updateOne(db, 'global', server).return(server);
-    });
+    await Server.updateOne(db, 'global', server)
+    return server;
 }
 
-var unreachableLocations = [];
+let unreachableLocations = [];
 
 /**
  * Perform a HTTP request, using either a user impersonation token or the OAuth
@@ -300,18 +285,18 @@ var unreachableLocations = [];
  *
  * @return {Promise<Object>}
  */
-function request(server, uri, method, query, payload, userToken) {
-    var baseURL = _.trimEnd(server.settings.oauth.base_url, '/') + '/api/v4';
-    var oauthToken = server.settings.api.access_token;
-    var headers;
+async function request(server, uri, method, query, payload, userToken) {
+    let baseURL = _.trimEnd(server.settings.oauth.base_url, '/') + '/api/v4';
+    let oauthToken = server.settings.api.access_token;
+    let headers;
     if (userToken) {
         headers = { 'Private-Token': userToken };
     } else if (oauthToken) {
         headers = { Authorization: `Bearer ${oauthToken}` };
     } else {
-        return Promise.reject(new HTTPError(401));
+        throw new HTTPError(401);
     }
-    var options = {
+    let options = {
         json: true,
         qs: query,
         body: payload,
@@ -320,62 +305,42 @@ function request(server, uri, method, query, payload, userToken) {
         method,
         headers,
     };
-    var succeeded = false;
-    var attempts = 1;
-    var result = null;
-    var delayInterval = 500;
-    var lastError;
-    Async.do(() => {
-        return attempt(options).then((body) => {
-            result = body;
-            succeeded = true;
+    let attempts = 1;
+    let delayInterval = 500;
+    while(true) {
+        try {
+            let body = await attempt(options);
             _.pull(unreachableLocations, baseURL);
-        }).catch((err) => {
-            // throw the error if it's HTTP 4xx
-            lastError = err;
+            return body;
+        } catch (err) {
             if (err instanceof HTTPError) {
                 if (err.statusCode >= 400 && err.statusCode <= 499) {
+                    if (err.statusCode === 401 || err.statusCode === 467) {
+                        if (!userToken) {
+                            // refresh access token
+                            server = await refresh(server, err);
+                            // then try the request again
+                            return request(serverAfter, uri, method, query, payload);
+                        }
+                    }
                     throw err;
                 }
             }
-        });
-    });
-    Async.while(() => {
-        if (!succeeded) {
-            var unreachable = _.includes(unreachableLocations, baseURL);
-            if (attempts < 5 && !unreachable) {
-                // try again after a delay
-                return Promise.delay(delayInterval).then(() => {
-                    attempts++;
-                    console.log(`Attempting to access ${uri} at ${baseURL} (${attempts}/5)...`);
-                    delayInterval *= 2;
-                    return true;
-                });
+            let unreachable = _.includes(unreachableLocations, baseURL);
+            if (unreachable) {
+                throw err;
+            } else if (attempts >= 5) {
+                unreachableLocations.push(baseURL);
+                throw err;
             } else {
-                if (!unreachable) {
-                    unreachableLocations.push(baseURL);
-                }
-                throw lastError;
+                // try again after a delay
+                await Bluebird.delay(delayInterval);
+                attempts++;
+                console.log(`Attempting to access ${uri} at ${baseURL} (${attempts}/5)...`);
+                delayInterval *= 2;
             }
         }
-    });
-    Async.return(() => {
-        return result;
-    });
-    return Async.end().catch((err) => {
-        if (err instanceof HTTPError) {
-            if (err.statusCode === 401 || err.statusCode === 467) {
-                if (!userToken) {
-                    // refresh access token
-                    return refresh(server, err).then((serverAfter) => {
-                        // then try the request again
-                        return request(serverAfter, uri, method, query, payload);
-                    });
-                }
-            }
-        }
-        throw err;
-    });
+    }
 }
 
 /**
@@ -385,11 +350,13 @@ function request(server, uri, method, query, payload, userToken) {
  *
  * @return {Promise<Object>}
  */
-function attempt(options) {
+async function attempt(options) {
     return new Promise((resolve, reject) => {
         Request(options, (err, resp, body) => {
-            if (!err && resp && resp.statusCode >= 400) {
-                err = new HTTPError(resp.statusCode);
+            if (resp && resp.statusCode >= 400) {
+                let reason = (body) ? body.error : undefined;
+                err = new HTTPError(resp.statusCode, { reason });
+                console.log(resp.statusCode, options);
             }
             if (!err) {
                 resolve(body);
@@ -398,80 +365,6 @@ function attempt(options) {
             }
         });
     });
-}
-
-var CACHE_FOLDER = process.env.CACHE_FOLDER;
-if (CACHE_FOLDER) {
-    console.log('**** USING GIT CACHE ****');
-    var dynamicURLs = [
-        /\/projects\/\d+\/hooks/,
-    ];
-
-    Request = function(options, callback) {
-        var Request = require('request');
-        var cacheable = true;
-        if (options.method !== 'get') {
-            cacheable = false
-        } else if (_.some(dynamicURLs, (re) => { return re.test(options.uri) })) {
-            cacheable = false;
-        }
-        if (!cacheable) {
-            return Request(options, callback);
-        }
-        var cacheFilePath = getCachePath(options.baseURL, options.uri, options.qs);
-        FS.readFileAsync(cacheFilePath, 'utf-8').then((json) => {
-            var data = JSON.parse(json);
-            callback(null, null, data);
-        }).catch((err) => {
-            Request(options, (err, resp, data) => {
-                if (!err) {
-                    var json = JSON.stringify(data, undefined, 2);
-                    var folderPath = Path.dirname(cacheFilePath);
-                    createFolder(folderPath).then(() => {
-                        return FS.writeFileAsync(cacheFilePath, json);
-                    });
-                }
-                callback(err, resp, data);
-            });
-        });
-    }
-
-    function createFolder(folderPath) {
-        return FS.statAsync(folderPath).catch((err) => {
-            var parentPath = Path.dirname(folderPath);
-            if (parentPath === folderPath) {
-                throw err;
-            }
-            return createFolder(parentPath).then(() => {
-                return FS.mkdirAsync(folderPath);
-            });
-        });
-    }
-
-    function getCachePath(baseURL, uri, query) {
-        var m = /^https?:\/\/([^\/:]+)/.exec(baseURL);
-        var domain = m[1];
-        var path = _.trimEnd(uri, '/');
-        if (!_.startsWith(path, '/')) {
-            path = '/' + path;
-        }
-        if (_.isEmpty(query)) {
-            path += '.json';
-        } else {
-            var filename = '';
-            _.forIn(query, (value, name) => {
-                if (filename) {
-                    filename += '&';
-                }
-                filename += name;
-                filename += '=';
-                filename += encodeURIComponent(value);
-            });
-            filename += '.json';
-            path += '/' + filename;
-        }
-        return `${CACHE_FOLDER}/${domain}${path}`;
-    }
 }
 
 export {

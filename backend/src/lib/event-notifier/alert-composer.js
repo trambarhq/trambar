@@ -1,9 +1,8 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import * as Localization from 'localization';
 
 function format(system, schema, user, notification, locale) {
-    var title = Localization.pick(locale, system.details.title);
+    let title = Localization.pick(locale, system.details.title);
     if (!title) {
         title = Localization.translate(locale, 'app-name');
     }
@@ -22,9 +21,9 @@ function format(system, schema, user, notification, locale) {
 }
 
 function getNotificationText(user, notification, locale) {
-    var name = Localization.name(locale, user);
-    var t = function() {
-        var args = _.concat(locale, arguments);
+    let name = Localization.name(locale, user);
+    let t = function() {
+        let args = _.concat(locale, arguments);
         return Localization.translate.apply(null, args);
     };
     switch (notification.type) {
@@ -75,8 +74,8 @@ function getNotificationText(user, notification, locale) {
  * @return {String|undefined}
  */
 function getProfileImageURL(user) {
-    var image = _.find(user.details.resources, { type: 'image' });
-    var imageURL;
+    let image = _.find(user.details.resources, { type: 'image' });
+    let imageURL;
     if (image && image.url) {
         // form the URL
         return applyClippingRectangle(image.url, image.clip, 192, 192, 75);
@@ -91,9 +90,9 @@ function getProfileImageURL(user) {
  * @return {String|undefined}
  */
 function getReactionImageURL(reaction) {
-    var res = _.first(reaction.details.resources);
+    let res = _.first(reaction.details.resources);
     if (res) {
-        var url;
+        let url;
         switch (res.type) {
             case 'image':
                 url = res.url;
@@ -122,9 +121,9 @@ function getReactionImageURL(reaction) {
  * @return {String}
  */
 function applyClippingRectangle(url, clip, width, height, quality) {
-    var filters = [];
+    let filters = [];
     if (clip) {
-        var rect = [
+        let rect = [
             clip.left,
             clip.top,
             clip.width,

@@ -1,38 +1,28 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import HTTPError from 'errors/http-error';
-import ExternalData from 'accessors/external-data';
+import { ExternalData } from 'accessors/external-data';
 import Task from 'accessors/task';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
-const Repo = _.create(ExternalData, {
-    schema: 'global',
-    table: 'repo',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        type: String,
-        name: String,
-        user_ids: Array(Number),
-        external: Array(Object),
-        exchange: Array(Object),
-        itime: String,
-        etime: String,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        type: String,
-        name: String,
-        user_ids: Array(Number),
-
-        server_id: Number,
-        external_object: Object,
-    },
+class Repo extends ExternalData {
+    constructor() {
+        super();
+        this.schema = 'global';
+        this.table = 'repo';
+        _.extend(this.columns, {
+            type: String,
+            name: String,
+            user_ids: Array(Number),
+        });
+        _.extend(this.criteria, {
+            id: Number,
+            deleted: Boolean,
+            type: String,
+            name: String,
+            user_ids: Array(Number),
+            server_id: Number,
+        });
+    }
 
     /**
      * Create table in schema
@@ -40,11 +30,11 @@ const Repo = _.create(ExternalData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -62,8 +52,8 @@ const Repo = _.create(ExternalData, {
                 PRIMARY KEY (id)
             );
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Grant privileges to table to appropriate Postgres users
@@ -71,16 +61,16 @@ const Repo = _.create(ExternalData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    grant: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async grant(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT ON ${table} TO client_role;
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -88,17 +78,20 @@ const Repo = _.create(ExternalData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'external', 'mtime', 'itime', 'etime' ];
-            return this.createNotificationTriggers(db, schema, propNames).then(() => {
-                // completion of tasks will automatically update details->resources
-                return Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table ]);
-            });
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'external',
+            'mtime',
+            'itime',
+            'etime'
+        ]);
+        // completion of tasks will automatically update details->resources
+        await Task.createUpdateTrigger(db, schema, 'updateReaction', 'updateResource', [ this.table ]);
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -112,17 +105,16 @@ const Repo = _.create(ExternalData, {
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return ExternalData.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.type = row.type;
-                object.name = row.name;
-                object.user_ids = row.user_ids;
-            });
-            return objects;
-        });
-    },
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            object.type = row.type;
+            object.name = row.name;
+            object.user_ids = row.user_ids;
+        }
+        return objects;
+    }
 
     /**
      * Throw an exception if modifications aren't permitted
@@ -131,15 +123,15 @@ const Repo = _.create(ExternalData, {
      * @param  {Object} repoBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(repoReceived, repoBefore, credentials) {
+    checkWritePermission(repoReceived, repoBefore, credentials) {
         if (credentials.unrestricted) {
             return;
         }
         throw new HTTPError(403);
-    },
+    }
 
     /**
-     * Mark repos as deleted if they're associated with the provided server id
+     * Mark repos as deleted if they're associated with the deleted server
      *
      * @param  {Database} db
      * @param  {String} schema
@@ -147,23 +139,22 @@ const Repo = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-    deleteAssociated: function(db, schema, associations) {
-        var promises = _.mapValues(associations, (objects, type) => {
+    async deleteAssociated(db, schema, associations) {
+        for (let [ type, objects ] of _.entries(associations)) {
             if (_.isEmpty(objects)) {
-                return;
+                continue;
             }
             if (type === 'server') {
-                return Promise.each(objects, (server) => {
-                    var criteria = {
+                for (let server of objects) {
+                    let criteria = {
                         external_object: ExternalDataUtils.createLink(server),
                         deleted: false,
                     };
-                    return this.updateMatching(db, schema, criteria, { deleted: true });
-                });
+                    await this.updateMatching(db, schema, criteria, { deleted: true });
+                }
             }
-        });
-        return Promise.props(promises);
-    },
+        }
+    }
 
     /**
      * Clear deleted flag of repos associated with to specified servers
@@ -174,26 +165,27 @@ const Repo = _.create(ExternalData, {
      *
      * @return {Promise}
      */
-    restoreAssociated: function(db, schema, associations) {
-        var promises = _.mapValues(associations, (objects, type) => {
+    async restoreAssociated(db, schema, associations) {
+        for (let [ type, objects ] of _.entries(associations)) {
             if (_.isEmpty(objects)) {
-                return;
+                continue;
             }
             if (type === 'server') {
-                return Promise.each(objects, (server) => {
-                    var criteria = {
+                for (let server of objects) {
+                    let criteria = {
                         external_object: ExternalDataUtils.createLink(server),
                         deleted: true,
                     };
-                    return this.updateMatching(db, schema, criteria, { deleted: false });
-                });
+                    await this.updateMatching(db, schema, criteria, { deleted: false });
+                }
             }
-        });
-        return Promise.props(promises);
-    },
-});
+        }
+    }
+}
+
+const instance = new Repo;
 
 export {
-    Repo as default,
+    instance as default,
     Repo
 };

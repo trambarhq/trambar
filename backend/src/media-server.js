@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import FS from 'fs'; Promise.promisifyAll(FS);
+import Bluebird from 'bluebird';
+import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Path from 'path';
 import Express from 'express';
 import CORS from 'cors';
@@ -21,8 +21,8 @@ import * as ImageManager from 'media-server/image-manager';
 import * as VideoManager from 'media-server/video-manager';
 import * as StockPhotoImporter from 'media-server/stock-photo-importer';
 
-var server;
-var cacheControl = {
+let server;
+let cacheControl = {
     image: 'max-age=2592000, immutable',
     video: 'max-age=86400',
     audio: 'max-age=86400',
@@ -30,32 +30,33 @@ var cacheControl = {
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
-function start() {
-    return new Promise((resolve, reject) => {
-        var app = Express();
-        var upload = Multer({ dest: '/var/tmp' });
-        app.use(CORS());
-        app.use(BodyParser.json());
-        app.set('json spaces', 2);
-        app.get('/srv/media/images/:filename/original/:alias', handleImageOriginalRequest);
-        app.get('/srv/media/images/:hash/:filename', handleImageFiltersRequest);
-        app.get('/srv/media/images/:filename', handleImageOriginalRequest);
-        app.get('/srv/media/videos/:filename/original/:alias', handleVideoRequest);
-        app.get('/srv/media/videos/:filename', handleVideoRequest);
-        app.get('/srv/media/audios/:filename/original/:alias', handleAudioRequest);
-        app.get('/srv/media/audios/:filename', handleAudioRequest);
-        app.get('/srv/media/cliparts/:filename', handleClipartRequest);
-        app.post('/srv/media/images/upload/:schema/', upload.single('file'), handleImageUpload);
-        app.post('/srv/media/videos/upload/:schema/', upload.single('file'), handleVideoUpload);
-        app.post('/srv/media/videos/poster/:schema/', upload.single('file'), handleVideoPoster);
-        app.post('/srv/media/audios/upload/:schema/', upload.single('file'), handleAudioUpload);
-        app.post('/srv/media/audios/poster/:schema/', upload.single('file'), handleAudioPoster);
-        app.post('/srv/media/stream/', upload.single('file'), handleStream);
-        app.post('/srv/internal/import', upload.single('file'), handleImageImport);
+async function start() {
+    // make sure cache folders exist and stock photos are linked
+    await CacheFolders.create();
+    await StockPhotoImporter.importPhotos();
 
-        CacheFolders.create();
-        StockPhotoImporter.importPhotos();
-
+    // start up Express
+    let app = Express();
+    let upload = Multer({ dest: '/var/tmp' });
+    app.use(CORS());
+    app.use(BodyParser.json());
+    app.set('json spaces', 2);
+    app.get('/srv/media/images/:filename/original/:alias', handleImageOriginalRequest);
+    app.get('/srv/media/images/:hash/:filename', handleImageFiltersRequest);
+    app.get('/srv/media/images/:filename', handleImageOriginalRequest);
+    app.get('/srv/media/videos/:filename/original/:alias', handleVideoRequest);
+    app.get('/srv/media/videos/:filename', handleVideoRequest);
+    app.get('/srv/media/audios/:filename/original/:alias', handleAudioRequest);
+    app.get('/srv/media/audios/:filename', handleAudioRequest);
+    app.get('/srv/media/cliparts/:filename', handleClipartRequest);
+    app.post('/srv/media/images/upload/:schema/', upload.single('file'), handleImageUpload);
+    app.post('/srv/media/videos/upload/:schema/', upload.single('file'), handleVideoUpload);
+    app.post('/srv/media/videos/poster/:schema/', upload.single('file'), handleVideoPoster);
+    app.post('/srv/media/audios/upload/:schema/', upload.single('file'), handleAudioUpload);
+    app.post('/srv/media/audios/poster/:schema/', upload.single('file'), handleAudioPoster);
+    app.post('/srv/media/stream/', upload.single('file'), handleStream);
+    app.post('/srv/internal/import', upload.single('file'), handleImageImport);
+    await new Promise((resolve, reject) => {
         server = app.listen(80, () => {
             resolve();
             reject = null;
@@ -68,8 +69,8 @@ function start() {
     });
 }
 
-function stop() {
-    return Shutdown.close(server);
+async function stop() {
+    await Shutdown.close(server);
 }
 
 /**
@@ -105,31 +106,33 @@ function sendFile(res, buffer, mimeType, cc) {
  * @param  {String} path
  * @param  {String|undefined} cc
  * @param  {String|undefined} filename
+ *
+ * @return {Promise}
  */
-function sendStaticFile(res, path, cc, filename) {
-    getFileType(path).then((info) => {
-        res.type(info.mime);
-        if (cc) {
-            res.set('Cache-Control', cc);
+async function sendStaticFile(res, path, cc, filename) {
+    let info = await getFileType(path);
+    res.type(info.mime);
+    if (cc) {
+        res.set('Cache-Control', cc);
+    }
+    if (filename) {
+        res.set('Content-disposition', `attachment; filename=${filename}`);
+    }
+    try {
+        let stat = await FS.lstatAsync(path);
+        if (stat.isSymbolicLink()) {
+            // serve file through Express if it's a symlink, since it's probably
+            // pointing to a file that only exist in this Docker container
+            res.sendFile(path);
+        } else {
+            // ask Nginx to server the file
+            let relPath = path.substr(CacheFolders.root.length + 1);
+            let uri = `/srv/static_media/${relPath}`;
+            res.set('X-Accel-Redirect', uri).end();
         }
-        if (filename) {
-            res.set('Content-disposition', `attachment; filename=${filename}`);
-        }
-        return FS.lstatAsync(path).then((stat) => {
-            if (stat.isSymbolicLink()) {
-                // serve file through Express if it's a symlink, since it's probably
-                // pointing to a file that only exist in this Docker container
-                res.sendFile(path);
-            } else {
-                // ask Nginx to server the file
-                var relPath = path.substr(CacheFolders.root.length + 1);
-                var uri = `/srv/static_media/${relPath}`;
-                res.set('X-Accel-Redirect', uri).end();
-            }
-        });
-    }).catch((err) => {
+    } catch (err) {
         sendError(res, new HTTPError(404));
-    });
+    }
 }
 
 /**
@@ -139,8 +142,8 @@ function sendStaticFile(res, path, cc, filename) {
  * @param  {Object} err
  */
 function sendError(res, err) {
-    var statusCode = err.statusCode;
-    var message = err.message;
+    let statusCode = err.statusCode;
+    let message = err.message;
     if (!statusCode) {
         // not an expected error
         statusCode = 500;
@@ -157,23 +160,24 @@ function sendError(res, err) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleImageFiltersRequest(req, res) {
-    var hash = req.params.hash;
-    var filename = req.params.filename;
-    var m = /([^.]*?)(\.(.+))?$/i.exec(filename);
-    if (!m) {
-        res.status(400).json({ message: 'Invalid filename' });
-    }
-    var filters = m[1], format = m[3];
-    if (!format || format === 'jpg') {
-        format = 'jpeg';
-    }
-    var path = `${CacheFolders.image}/${hash}`;
-    return ImageManager.applyFilters(path, filters, format).then((buffer) => {
+async function handleImageFiltersRequest(req, res) {
+    try {
+        let hash = req.params.hash;
+        let filename = req.params.filename;
+        var m = /([^.]*?)(\.(.+))?$/i.exec(filename);
+        if (!m) {
+            throw new HTTPError(400, 'Invalid filename');
+        }
+        let filters = m[1], format = m[3];
+        if (!format || format === 'jpg') {
+            format = 'jpeg';
+        }
+        let path = `${CacheFolders.image}/${hash}`;
+        let buffer = await ImageManager.applyFilters(path, filters, format);
         sendFile(res, buffer, format, cacheControl.image);
-    }).catch((err) => {
+    } catch (err) {
         sendError(res, err);
-    });
+    }
 }
 
 /**
@@ -182,9 +186,9 @@ function handleImageFiltersRequest(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleImageOriginalRequest(req, res) {
-    var path = `${CacheFolders.image}/${req.params.filename}`;
-    sendStaticFile(res, path, cacheControl.video);
+async function handleImageOriginalRequest(req, res) {
+    let path = `${CacheFolders.image}/${req.params.filename}`;
+    await sendStaticFile(res, path, cacheControl.video);
 }
 
 /**
@@ -193,9 +197,9 @@ function handleImageOriginalRequest(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleVideoRequest(req, res) {
-    var path = `${CacheFolders.video}/${req.params.filename}`;
-    sendStaticFile(res, path, cacheControl.video);
+async function handleVideoRequest(req, res) {
+    let path = `${CacheFolders.video}/${req.params.filename}`;
+    await sendStaticFile(res, path, cacheControl.video);
 }
 
 /**
@@ -204,9 +208,9 @@ function handleVideoRequest(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleAudioRequest(req, res) {
-    var path = `${CacheFolders.audio}/${req.params.filename}`;
-    sendStaticFile(res, path, cacheControl.audio);
+async function handleAudioRequest(req, res) {
+    let path = `${CacheFolders.audio}/${req.params.filename}`;
+    await sendStaticFile(res, path, cacheControl.audio);
 }
 
 /**
@@ -215,15 +219,16 @@ function handleAudioRequest(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleClipartRequest(req, res) {
-    var path = Path.resolve(`../media/cliparts/${req.params.filename}`);
-    getFileType(path).then((info) => {
+async function handleClipartRequest(req, res) {
+    try {
+        let path = Path.resolve(`../media/cliparts/${req.params.filename}`);
+        let info = await getFileType(path);
         res.type(info.mime);
         res.set('Cache-Control', 'max-age=86400');
         res.sendFile(path);
-    }).catch((err) => {
+    } catch (err) {
         sendError(res, new HTTPError(404));
-    });
+    }
 }
 
 /**
@@ -232,35 +237,37 @@ function handleClipartRequest(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleImageUpload(req, res) {
-    var schema = req.params.schema;
-    var token = req.query.token;
-    var file = req.file;
-    var url = req.body.url;
-    return checkTaskToken(schema, token, 'add-image').then((taskId) => {
-        return FileManager.preserveFile(file, url, CacheFolders.image).then((imagePath) => {
-            if (!imagePath) {
-                throw new HTTPError(400);
-            }
-            //
-            var url = getFileURL(imagePath);
-            ImageManager.getImageMetadata(imagePath).then((metadata) => {
-                var details = {
-                    url: url,
-                    format: metadata.format,
-                    width: metadata.width,
-                    height: metadata.height,
-                    title: metadata.title,
-                };
-                return saveTaskOutcome(schema, taskId, 'main', details);
-            });
-            return { url };
-        });
-    }).then((results) => {
-        sendJSON(res, results);
-    }).catch((err) => {
+async function handleImageUpload(req, res) {
+    try {
+        let schema = req.params.schema;
+        let token = req.query.token;
+        let file = req.file;
+        let sourceURL = req.body.url;
+        let taskID = await checkTaskToken(schema, token, 'add-image');
+        let imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+        if (!imagePath) {
+            throw new HTTPError(400);
+        }
+
+        // save image metadata into the task object
+        // a PostgreSQL stored-proc will then transfer that into objects
+        // that contains the token
+        let metadata = ImageManager.getImageMetadata(imagePath);
+        let url = getFileURL(imagePath);
+        let details = {
+            url: url,
+            format: metadata.format,
+            width: metadata.width,
+            height: metadata.height,
+            title: metadata.title,
+        };
+        await saveTaskOutcome(schema, taskID, 'main', details);
+
+        let result = { url };
+        sendJSON(res, result);
+    } catch (err) {
         sendError(res, err);
-    });
+    }
 }
 
 /**
@@ -269,28 +276,27 @@ function handleImageUpload(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleImageImport(req, res) {
-    var file = req.file;
-    var url = req.body.url;
-    return FileManager.preserveFile(file, url, CacheFolders.image).then((imagePath) => {
+async function handleImageImport(req, res) {
+    try {
+        let file = req.file;
+        let url = req.body.url;
+        let imagePath = await FileManager.preserveFile(file, url, CacheFolders.image);
         if (!imagePath) {
             throw new HTTPError(400);
         }
-        return ImageManager.getImageMetadata(imagePath).then((metadata) => {
-            var details = {
-                type: 'image',
-                url: getFileURL(imagePath),
-                format: metadata.format,
-                width: metadata.width,
-                height: metadata.height,
-            };
-            return details;
-        });
-    }).then((results) => {
-        sendJSON(res, results);
-    }).catch((err) => {
+
+        let metadata = await ImageManager.getImageMetadata(imagePath);
+        let result = {
+            type: 'image',
+            url: getFileURL(imagePath),
+            format: metadata.format,
+            width: metadata.width,
+            height: metadata.height,
+        };
+        sendJSON(res, result);
+    } catch (err) {
         sendError(res, err);
-    });
+    }
 }
 
 /**
@@ -299,7 +305,7 @@ function handleImageImport(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleVideoUpload(req, res) {
+async function handleVideoUpload(req, res) {
     return handleMediaUpload(req, res, 'video');
 }
 
@@ -309,7 +315,7 @@ function handleVideoUpload(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleVideoPoster(req, res) {
+async function handleVideoPoster(req, res) {
     return handleMediaPoster(req, res, 'video');
 }
 
@@ -319,7 +325,7 @@ function handleVideoPoster(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleAudioUpload(req, res) {
+async function handleAudioUpload(req, res) {
     return handleMediaUpload(req, res, 'audio');
 }
 
@@ -329,7 +335,7 @@ function handleAudioUpload(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleAudioPoster(req, res) {
+async function handleAudioPoster(req, res) {
     return handleMediaPoster(req, res, 'audio');
 }
 
@@ -339,90 +345,77 @@ function handleAudioPoster(req, res) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleMediaUpload(req, res, type) {
-    var schema = req.params.schema;
-    var token = req.query.token;
-    var streamId = req.body.stream;
-    var file = req.file;
-    var url = req.body.url;
-    return checkTaskToken(schema, token, `add-${type}`).then((taskId) => {
-        if (streamId) {
+async function handleMediaUpload(req, res, type) {
+    try {
+        let schema = req.params.schema;
+        let token = req.query.token;
+        let streamID = req.body.stream;
+        let file = req.file;
+        let url = req.body.url;
+        let generatePoster = !!req.body.generate_poster;
+        let taskID = await checkTaskToken(schema, token, `add-${type}`);
+        let result;
+
+        if (streamID) {
             // handle streaming upload--transcoding job has been created already
-            var job = VideoManager.findTranscodingJob(streamId);
+            let job = VideoManager.findTranscodingJob(streamID);
             if (!job) {
                 throw new HTTPError(404);
             }
-            monitorTranscodingJob(schema, taskId, job);
-            return {};
+            monitorTranscodingJob(schema, taskID, job);
+            result = {};
         } else {
             // transcode an uploaded file--move it into cache folder first
-            var dstFolder = CacheFolders[type];
-            return FileManager.preserveFile(file, url, dstFolder).then((mediaPath) => {
-                if (!mediaPath) {
-                    throw new HTTPError(400);
+            let dstFolder = CacheFolders[type];
+            let mediaPath = await FileManager.preserveFile(file, url, dstFolder);
+            if (!mediaPath) {
+                throw new HTTPError(400);
+            }
+
+            let url = getFileURL(mediaPath);
+            // create the transcoding job, checking if it exists already on
+            // the off-chance the same file is uploaded twice at the same time
+            var jobID = Path.basename(mediaPath);
+            if (!VideoManager.findTranscodingJob(jobID)) {
+                let job = await VideoManager.startTranscodingJob(mediaPath, type, jobID);
+                if (generatePoster) {
+                    await VideoManager.requestPosterGeneration(job);
                 }
-                var url = getFileURL(mediaPath);
-                // create the transcoding job, checking if it exists already on
-                // the off-chance the same file is uploaded twice at the same time
-                var jobId = Path.basename(mediaPath);
-                if (VideoManager.findTranscodingJob(jobId)) {
-                    return { url };
-                }
-                return VideoManager.startTranscodingJob(mediaPath, type, jobId).then((job) => {
-                    if (req.body.generate_poster) {
-                        return VideoManager.requestPosterGeneration(job).then(() => {
-                            monitorTranscodingJob(schema, taskId, job);
-                            return { url };
-                        });
-                    } else {
-                        monitorTranscodingJob(schema, taskId, job);
-                        return { url };
-                    }
-                });
-            });
+                monitorTranscodingJob(schema, taskID, job);
+            }
+            result = { url };
         }
-    }).then((results) => {
-        sendJSON(res, results);
-    }).catch((err) => {
+        sendJSON(res, result);
+    } catch (err) {
         sendError(res, err);
-    });
+    }
 }
 
 /**
  * Monitor a transcoding job, saving progress into a task object
  *
  * @param  {String} schema
- * @param  {Number} taskId
+ * @param  {Number} taskID
  * @param  {Object} job
  */
-function monitorTranscodingJob(schema, taskId, job) {
+function monitorTranscodingJob(schema, taskID, job) {
     // monitor transcoding progress
     job.onProgress = (evt) => {
         var progress = evt.target.progress;
         console.log('Progress: ', progress + '%');
-        saveTaskProgress(schema, taskId, progress);
+        saveTaskProgress(schema, taskID, progress);
     };
-    if (job.posterFile) {
-        // wait for poster to be generated
-        VideoManager.awaitPosterGeneration(job).then(() => {
-            var details = {
-                poster_url: getFileURL(job.posterFile.path),
-                width: job.posterFile.width,
-                height: job.posterFile.height,
-            };
-            return saveTaskOutcome(schema, taskId, 'poster', details);
-        });
-    }
 
     // wait for transcoding to finish
-    VideoManager.awaitTranscodingJob(job).then(() => {
+    let monitorMedia = async () => {
+        await VideoManager.awaitTranscodingJob(job);
         if (job.aborted) {
             return;
         }
         // save URL and information about available version to task object
         // (doing so transfer these properties into details.resources of
         // object that has the Task object's token as payload_token)
-        var details = {
+        let details = {
             url: getFileURL(job.inputFile.path),
             duration: job.inputFile.duration,
             width: job.inputFile.width,
@@ -444,8 +437,26 @@ function monitorTranscodingJob(schema, taskId, job) {
                 };
             }),
         };
-        return saveTaskOutcome(schema, taskId, 'main', details);
-    });
+        await saveTaskOutcome(schema, taskID, 'main', details);
+    };
+    // wait for poster to be generated
+    let monitorPoster = async () => {
+        if (job.posterFile) {
+            await VideoManager.awaitPosterGeneration(job);
+            if (job.aborted) {
+                return;
+            }
+            let details = {
+                poster_url: getFileURL(job.posterFile.path),
+                width: job.posterFile.width,
+                height: job.posterFile.height,
+            };
+            await saveTaskOutcome(schema, taskID, 'poster', details);
+        }
+    };
+
+    monitorMedia();
+    monitorPoster();
 }
 
 /**
@@ -454,33 +465,32 @@ function monitorTranscodingJob(schema, taskId, job) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleMediaPoster(req, res, type) {
-    var schema = req.params.schema;
-    var token = req.query.token;
-    var streamId = req.body.stream;
-    var file = req.file;
-    var url = req.body.url;
-    return checkTaskToken(schema, token, `add-${type}`).then((taskId) => {
-        return FileManager.preserveFile(file, url, CacheFolders.image).then((imagePath) => {
-            if (!imagePath) {
-                throw new HTTPError(400);
-            }
-            var posterURL = getFileURL(imagePath);
-            ImageManager.getImageMetadata(imagePath).then((metadata) => {
-                var details = {
-                    poster_url: posterURL,
-                    width: metadata.width,
-                    height: metadata.height,
-                };
-                return saveTaskOutcome(schema, taskId, 'poster', details);
-            });
-            return { url: posterURL };
-        });
-    }).then((results) => {
-        sendJSON(res, results);
-    }).catch((err) => {
+async function handleMediaPoster(req, res, type) {
+    try {
+        let schema = req.params.schema;
+        let token = req.query.token;
+        let streamID = req.body.stream;
+        let file = req.file;
+        let sourceURL = req.body.url;
+        let taskID = await checkTaskToken(schema, token, `add-${type}`);
+        let imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+        if (!imagePath) {
+            throw new HTTPError(400);
+        }
+
+        let url = getFileURL(imagePath);
+        let metadata = await ImageManager.getImageMetadata(imagePath);
+        let details = {
+            poster_url: url,
+            width: metadata.width,
+            height: metadata.height,
+        };
+        await saveTaskOutcome(schema, taskID, 'poster', details);
+
+        sendJSON(res, { url });
+    } catch (err) {
         sendError(res, err);
-    });
+    }
 }
 
 /**
@@ -489,13 +499,15 @@ function handleMediaPoster(req, res, type) {
  * @param  {Request} req
  * @param  {Response} res
  */
-function handleStream(req, res) {
-    var jobId = req.query.id;
-    var file = req.file;
-    var abort = !!req.body.abort;
-    var chunk = parseInt(req.body.chunk);
-    return Promise.try(() => {
-        var job = VideoManager.findTranscodingJob(jobId);
+async function handleStream(req, res) {
+    try {
+        let jobID = req.query.id;
+        let file = req.file;
+        let abort = !!req.body.abort;
+        let chunk = parseInt(req.body.chunk);
+        let generatePoster = !!req.body.generate_poster;
+
+        let job = VideoManager.findTranscodingJob(jobID);
         if (chunk === 0) {
             if (job) {
                 throw new HTTPError(409);
@@ -504,36 +516,28 @@ function handleStream(req, res) {
                 throw new HTTPError(400);
             }
             // create the job
-            var type = _.first(_.split(file.mimetype, '/'));
+            let type = _.first(_.split(file.mimetype, '/'));
             if (type !== 'video' && type !== 'audio') {
                 throw new HTTPError(400);
             }
-            return VideoManager.startTranscodingJob(null, type, jobId).then((job) => {
-                if (req.body.generate_poster) {
-                    return VideoManager.requestPosterGeneration(job).then(() => {
-                        return job;
-                    });
-                }
-                return job;
-            });
+            job = await VideoManager.startTranscodingJob(null, type, jobID);
+            if (generatePoster) {
+                await VideoManager.requestPosterGeneration(job);
+            }
         } else {
             if (!job) {
                 throw new HTTPError(404);
             }
-            return job;
         }
-    }).then((job) => {
         if (file) {
             VideoManager.transcodeSegment(job, file);
         } else {
             VideoManager.endTranscodingJob(job, abort);
         }
-        return null;
-    }).then(() => {
         sendJSON(res, { status: 'OK' });
-    }).catch((err) => {
+    } catch (err) {
         sendError(res, err);
-    });
+    }
 }
 
 /**
@@ -545,15 +549,13 @@ function handleStream(req, res) {
  *
  * @return {Promise<Number>}
  */
-function checkTaskToken(schema, token, action) {
-    return Database.open().then((db) => {
-        return Task.findOne(db, schema, { token }, 'id, action').then((task) => {
-            if (!task || task.action !== action) {
-                throw new HTTPError(403);
-            }
-            return task.id;
-        });
-    });
+async function checkTaskToken(schema, token, action) {
+    let db = await Database.open();
+    let task = await Task.findOne(db, schema, { token }, 'id, action');
+    if (!task || task.action !== action) {
+        throw new HTTPError(403);
+    }
+    return task.id;
 }
 
 /**
@@ -561,55 +563,53 @@ function checkTaskToken(schema, token, action) {
  * database triggers
  *
  * @param  {String} schema
- * @param  {Number} taskId
+ * @param  {Number} taskID
  * @param  {Number} completion
  *
  * @return {Promise}
  */
-function saveTaskProgress(schema, taskId, completion) {
-    return Database.open().then((db) => {
-        var params = [ completion, taskId ];
-        var table = Task.getTableName(schema);
-        var sql = `
-            UPDATE ${table} SET
-            completion = $1
-            WHERE id = $2
-        `;
-        return db.execute(sql, params);
-    });
+async function saveTaskProgress(schema, taskID, completion) {
+    let db = await Database.open();
+    let params = [ completion, taskID ];
+    let table = Task.getTableName(schema);
+    let sql = `
+        UPDATE ${table} SET
+        completion = $1
+        WHERE id = $2
+    `;
+    await db.execute(sql, params);
 }
 
 /**
  * Update task object with results when it's done
  *
  * @param  {String} schema
- * @param  {Number} taskId
+ * @param  {Number} taskID
  * @param  {Object} details
  *
  * @return {Promise}
  */
-function saveTaskOutcome(schema, taskId, part, details) {
-    return Database.open().then((db) => {
-        var params = [ details, taskId ];
-        var table = Task.getTableName(schema);
-        // merge in new details
-        var detailsAfter = `details || $1`;
-        // set the part to true
-        var optionsAfter = `options || '{ "${part}": true }'`;
-        // set etime to NOW() when there're no more false value
-        var etimeAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN null ELSE NOW() END`;
-        // set completion to 100 when there're no more false value in options
-        var completionAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN completion ELSE 100 END`;
-        var sql = `
-            UPDATE ${table} SET
-            details = ${detailsAfter},
-            options = ${optionsAfter},
-            etime = ${etimeAfter},
-            completion = ${completionAfter}
-            WHERE id = $2
-        `;
-        return db.execute(sql, params);
-    });
+async function saveTaskOutcome(schema, taskID, part, details) {
+    let db = await Database.open();
+    let params = [ details, taskID ];
+    let table = Task.getTableName(schema);
+    // merge in new details
+    let detailsAfter = `details || $1`;
+    // set the part to true
+    let optionsAfter = `options || '{ "${part}": true }'`;
+    // set etime to NOW() when there're no more false value
+    let etimeAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN null ELSE NOW() END`;
+    // set completion to 100 when there're no more false value in options
+    let completionAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN completion ELSE 100 END`;
+    let sql = `
+        UPDATE ${table} SET
+        details = ${detailsAfter},
+        options = ${optionsAfter},
+        etime = ${etimeAfter},
+        completion = ${completionAfter}
+        WHERE id = $2
+    `;
+    await db.execute(sql, params);
 }
 
 /**
@@ -619,23 +619,23 @@ function saveTaskOutcome(schema, taskId, part, details) {
  *
  * @return {Promise<Object>}
  */
-function getFileType(path) {
-    var len = 1024;
-    var buffer = Buffer.alloc(len);
-    return FS.openAsync(path, 'r').then((fd) => {
-        return FS.readAsync(fd, buffer, 0, len, 0).then(() => {
-            var info = FileType(buffer);
-            if (!info) {
-                info = {
-                    ext: undefined,
-                    mime: 'application/octet-stream'
-                };
-            }
-            return info;
-        }).finally(() => {
-            return FS.closeAsync(fd);
-        });
-    });
+async function getFileType(path) {
+    let fd = await FS.openAsync(path, 'r');
+    try {
+        let len = 1024;
+        let buffer = Buffer.alloc(len);
+        await FS.readAsync(fd, buffer, 0, len, 0);
+        let info = FileType(buffer);
+        if (!info) {
+            info = {
+                ext: undefined,
+                mime: 'application/octet-stream'
+            };
+        }
+        return info;
+    } finally {
+        FS.closeAsync(fd);
+    }
 }
 
 /**

@@ -1,34 +1,24 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Crypto from 'crypto'
-import LiveData from 'accessors/live-data';
+import { LiveData } from 'accessors/live-data';
 
-const Statistics = _.create(LiveData, {
-    schema: 'project',
-    table: 'statistics',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        atime: String,
-        ltime: String,
-        dirty: Boolean,
-        type: String,
-        filters: Object,
-        filters_hash: String,
-        sample_count: Number,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        dirty: Boolean,
-        type: String,
-        filters_hash: String,
-        match_any: Array(Object),
-    },
+class Statistics extends LiveData {
+    constructor() {
+        super();
+        this.schema = 'project';
+        this.table = 'statistics';
+        _.extend(this.columns, {
+            type: String,
+            filters: Object,
+            filters_hash: String,
+            sample_count: Number,
+        });
+        _.extend(this.criteria, {
+            type: String,
+            filters_hash: String,
+            match_any: Array(Object),
+        });
+    }
 
     /**
      * Create table in schemaroot
@@ -36,11 +26,11 @@ const Statistics = _.create(LiveData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -60,8 +50,8 @@ const Statistics = _.create(LiveData, {
             CREATE INDEX ON ${table} (filters_hash, type) WHERE deleted = false;
             CREATE UNIQUE INDEX ON ${table} (id) WHERE dirty = true;
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -69,14 +59,17 @@ const Statistics = _.create(LiveData, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'dirty', 'type', 'filters' ];
-            return this.createNotificationTriggers(db, schema, propNames);
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'dirty',
+            'type',
+            'filters'
+        ]);
+    }
 
     /**
      * Add conditions to SQL query based on criteria object
@@ -84,46 +77,57 @@ const Statistics = _.create(LiveData, {
      * @param  {Object} criteria
      * @param  {Object} query
      */
-    apply: function(criteria, query) {
-        var special = [ 'filters', 'match_any' ];
-        LiveData.apply.call(this, _.omit(criteria, special), query);
+    apply(criteria, query) {
+        let special = [ 'filters', 'match_any' ];
+        super.apply(_.omit(criteria, special), query);
 
-        var params = query.parameters;
-        var conds = query.conditions;
+        let params = query.parameters;
+        let conds = query.conditions;
         if (criteria.match_any) {
-            var objects = `$${params.push(criteria.match_any)}`;
+            let objects = `$${params.push(criteria.match_any)}`;
             conds.push(`"matchAny"(filters, ${objects})`);
         }
-    },
+    }
 
-    find: function(db, schema, criteria, columns) {
+    /**
+     * Look for rows matching type and filters, creating empty rows if they're
+     * not yet there
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object|null} criteria
+     * @param  {String} columns
+     *
+     * @return {Promise<Array>}
+     */
+    async find(db, schema, criteria, columns) {
         // autovivify rows when type and filters are specified
-        var type = criteria.type;
-        var filters = criteria.filters;
+        let type = criteria.type;
+        let filters = criteria.filters;
         if (type && filters) {
-            // calculate hash of filters for quicker look-up
             if (!(filters instanceof Array)) {
                 filters = [ filters ];
             }
-            var hashes = _.map(filters, hash);
+            // calculate hash of filters for quicker look-up
+            let hashes = _.map(filters, hash);
             // key columns
-            var keys = {
+            let keys = {
                 type: type,
                 filters_hash: hashes,
             };
             // properties of rows that are expected
-            var expectedRows = _.map(hashes, (hash, index) => {
+            let expectedRows = _.map(hashes, (hash, index) => {
                 return {
                     type: type,
                     filters_hash: hash,
                     filters: filters[index]
                 };
-            }) ;
+            });
             return this.vivify(db, schema, keys, expectedRows, columns);
         } else {
-            return LiveData.find.call(this, db, schema, criteria, columns);
+            return super.find(db, schema, criteria, columns);
         }
-    },
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -135,18 +139,17 @@ const Statistics = _.create(LiveData, {
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array<Object>>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return LiveData.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.type = row.type;
-                object.filters = row.filters;
-            });
-            return objects;
-        });
-    },
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            object.type = row.type;
+            object.filters = row.filters;
+        }
+        return objects;
+    }
 
     /**
      * See if a database change event is relevant to a given user
@@ -157,8 +160,8 @@ const Statistics = _.create(LiveData, {
      *
      * @return {Boolean}
      */
-    isRelevantTo: function(event, user, subscription) {
-        if (LiveData.isRelevantTo.call(this, event, user, subscription)) {
+    isRelevantTo(event, user, subscription) {
+        if (super.isRelevantTo(event, user, subscription)) {
             switch (event.current.type) {
                 case 'story-popularity':
                     // used for ranking stories only
@@ -172,8 +175,8 @@ const Statistics = _.create(LiveData, {
             }
         }
         return false;
-    },
-});
+    }
+}
 
 /**
  * Generate MD5 hash of filters object
@@ -183,17 +186,19 @@ const Statistics = _.create(LiveData, {
  * @return {String}
  */
 function hash(filters) {
-    var values = {};
-    var keys = _.sortBy(_.keys(filters));
-    _.each(keys, (key) => {
+    let keys = _.sortBy(_.keys(filters));
+    let values = {};
+    for (let key of keys) {
         values[key] = filters[key];
-    });
-    var text = JSON.stringify(values);
-    var hash = Crypto.createHash('md5').update(text);
+    }
+    let text = JSON.stringify(values);
+    let hash = Crypto.createHash('md5').update(text);
     return hash.digest("hex");
 }
 
+const instance = new Statistics;
+
 export {
-    Statistics as default,
+    instance as default,
     Statistics,
 };

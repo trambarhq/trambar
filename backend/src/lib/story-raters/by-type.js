@@ -1,28 +1,31 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 
 import StoryTypeRatings from 'story-raters/ratings/story-type-ratings';
 
-const ByType = {
-    type: 'by-type',
-    calculation: 'immediate',
-    columns: [ 'type' ],
-    monitoring: [],
+class ByType {
+    constructor() {
+        this.type = 'by-type';
+        this.calculation = 'immediate';
+        this.columns = [ 'type' ];
+        this.monitoring = [];
+    }
 
-    prepareContext: function(db, schema, stories, listing) {
-        return Promise.resolve({});
-    },
+    async prepareContext(db, schema, stories, listing) {
+        return {};
+    }
 
-    calculateRating: function(context, story) {
-        var rating = StoryTypeRatings[story.type] || 0;
+    calculateRating(context, story) {
+        let rating = StoryTypeRatings[story.type] || 0;
         return rating;
-    },
+    }
 
-    handleEvent: function(evt) {
-    },
+    handleEvent(evt) {
+    }
 };
 
+const instance = new ByType;
+
 export {
-    ByType as default,
+    instance as default,
     ByType,
 };

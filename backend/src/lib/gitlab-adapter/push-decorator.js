@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Path from 'path';
 import Request from 'request';
 import Ignore from 'ignore';
@@ -9,8 +8,8 @@ import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
 import * as Transport from 'gitlab-adapter/transport';
 
-var isRelative = /^\s*\.\.\//;
-var isTrambar = /(^|\/).trambar\//;
+const isRelative = /^\s*\.\.\//;
+const isTrambar = /(^|\/).trambar\//;
 
 /**
  * Retrieve component descriptions about a push
@@ -22,20 +21,20 @@ var isTrambar = /(^|\/).trambar\//;
  *
  * @return {Promise<Array<Object>>}
  */
-function retrieveDescriptions(server, repo, push, defLang) {
-    return createDescriptionContext(server, repo, push, defLang).then((cxt) => {
-        return findMatchingComponents(cxt, push);
-    }).then((components) => {
+async function retrieveDescriptions(server, repo, push, defLang) {
+    try {
+        let cxt = await createDescriptionContext(server, repo, push, defLang);
+        let components = await findMatchingComponents(cxt, push);
         return _.map(components, (component) => {
             return _.pick(component, 'text', 'image', 'icon')
         });
-    }).catch((err) => {
+    } catch (err) {
         console.log(`Unable to retrieve descriptions: ${err.message}`);
         return [];
-    });
+    }
 }
 
-var descriptionContexts = [];
+let descriptionContexts = [];
 
 /**
  * Create a description context, retrieving descriptions from server if
@@ -48,12 +47,12 @@ var descriptionContexts = [];
  *
  * @return {Promise<Context>}
  */
-function createDescriptionContext(server, repo, push, defLang) {
-    var cxt = _.find(descriptionContexts, (cxt) => {
+async function createDescriptionContext(server, repo, push, defLang) {
+    let cxt = _.find(descriptionContexts, (cxt) => {
         if (cxt.server.id === server.id) {
             if (cxt.repo.id === repo.id) {
                 if (cxt.defaultLanguageCode === defLang) {
-                    if (cxt.headId === push.headId) {
+                    if (cxt.headID === push.headID) {
                         return true;
                     }
                 }
@@ -63,17 +62,16 @@ function createDescriptionContext(server, repo, push, defLang) {
     if (cxt) {
         cxt.server = server;
         cxt.repo = repo;
-        return Promise.resolve(cxt);
-    }
-    cxt = new Context(server, repo, push.headId, defLang);
-    inheritPreviousContext(cxt, push);
-    return loadDescriptors(cxt, '').then(() => {
-        descriptionContexts.unshift(cxt);
-        if (descriptionContexts.length > 1000) {
-            descriptionContexts.splice(1000);
-        }
         return cxt;
-    });
+    }
+    cxt = new Context(server, repo, push.headID, defLang);
+    inheritPreviousContext(cxt, push);
+    await loadDescriptors(cxt, '');
+    descriptionContexts.unshift(cxt);
+    if (descriptionContexts.length > 1000) {
+        descriptionContexts.splice(1000);
+    }
+    return cxt;
 }
 
 /**
@@ -83,11 +81,11 @@ function createDescriptionContext(server, repo, push, defLang) {
  * @param  {Push} push
  */
 function inheritPreviousContext(cxt, push) {
-    var prev = _.find(descriptionContexts, (prev) => {
+    let prev = _.find(descriptionContexts, (prev) => {
         if (prev.server.id === cxt.server.id) {
             if (prev.repo.id === cxt.repo.id) {
                 if (prev.defaultLanguageCode === cxt.defaultLanguageCode) {
-                    if (prev.headId === push.tailId) {
+                    if (prev.headID === push.tailID) {
                         return true;
                     }
                 }
@@ -99,12 +97,12 @@ function inheritPreviousContext(cxt, push) {
     }
 
     // copy descriptors from previous context unless files has changed
-    var fileChanges = _.filter(_.concat(
+    let fileChanges = _.filter(_.concat(
         push.files.deleted,
         push.files.modified,
         _.map(push.files.renamed, 'before')
     ));
-    for (var filePath in prev.descriptors) {
+    for (let filePath in prev.descriptors) {
         if (!_.includes(fileChanges, filePath)) {
             cxt.descriptors[filePath] = prev.descriptors[filePath];
         }
@@ -112,20 +110,20 @@ function inheritPreviousContext(cxt, push) {
 
     // copy folder listing from previous context unless files in them have
     // been added, removed, or renamed
-    var fileMovements = _.filter(_.concat(
+    let fileMovements = _.filter(_.concat(
         push.files.added,
         push.files.deleted,
         _.map(push.files.renamed, 'before'),
         _.map(push.files.renamed, 'after')
     ));
-    var folderChanges = _.uniq(_.map(fileMovements, (path) => {
-        var dir = Path.dirname(path);
+    let folderChanges = _.uniq(_.map(fileMovements, (path) => {
+        let dir = Path.dirname(path);
         if (dir === '.') {
             dir = '';
         }
         return dir;
     }));
-    for (var folderPath in prev.folders) {
+    for (let folderPath in prev.folders) {
         if (!_.includes(folderChanges, folderPath)) {
             cxt.folders[folderPath] = prev.folders[folderPath];
         }
@@ -141,23 +139,23 @@ function inheritPreviousContext(cxt, push) {
  * @return {Array<Component>}
  */
 function findMatchingComponents(cxt, push) {
-    var fileChanges = _.filter(_.concat(
+    let fileChanges = _.filter(_.concat(
         push.files.added,
         push.files.deleted,
         push.files.modified,
         _.map(push.files.renamed, 'before'),
         _.map(push.files.renamed, 'after')
     ));
-    var matching = [];
-    _.each(fileChanges, (path) => {
-        _.each(cxt.descriptors, (descriptor) => {
+    let matching = [];
+    for (let path of fileChanges) {
+        for (let descriptor of cxt.descriptors) {
             if (!_.includes(matching, descriptor)) {
                 if (matchDescriptor(path, descriptor)) {
                     matching.push(descriptor);
                 }
             }
-        });
-    });
+        }
+    }
     return _.map(matching, 'component');
 }
 
@@ -173,7 +171,7 @@ function matchDescriptor(path, descriptor) {
     if (descriptor.matching) {
         if (isInFolder(path, descriptor.folderPath)) {
             if (!isTrambar.test(path)) {
-                var relativePath = Path.relative(descriptor.folderPath, path);
+                let relativePath = Path.relative(descriptor.folderPath, path);
                 if (descriptor.matching(relativePath)) {
                     return true;
                 }
@@ -182,7 +180,7 @@ function matchDescriptor(path, descriptor) {
     }
     if (descriptor.matchingRelative) {
         if (!isTrambar.test(path)) {
-            var relativePath = Path.relative(descriptor.folderPath, path);
+            let relativePath = Path.relative(descriptor.folderPath, path);
             if (descriptor.matchingRelative(relativePath)) {
                 return true;
             }
@@ -190,7 +188,7 @@ function matchDescriptor(path, descriptor) {
     }
     if (descriptor.matchingTrambar) {
         if (isTrambar.test(path)) {
-            var relativePath = Path.relative(descriptor.folderPath, path);
+            let relativePath = Path.relative(descriptor.folderPath, path);
             if (descriptor.matchingTrambar(relativePath)) {
                 return true;
             }
@@ -200,7 +198,7 @@ function matchDescriptor(path, descriptor) {
 }
 
 function isInFolder(filePath, folderPath) {
-    var len = folderPath.length;
+    let len = folderPath.length;
     if (len === 0) {
         return true;
     }
@@ -221,25 +219,23 @@ function isInFolder(filePath, folderPath) {
  *
  * @return {Promise}
  */
-function loadDescriptor(cxt, folderPath, filePath) {
-    var descriptor = cxt.descriptors[filePath];
+async function loadDescriptor(cxt, folderPath, filePath) {
+    let descriptor = cxt.descriptors[filePath];
     if (descriptor) {
-        return Promise.resolve();
+        return;
     }
-    return parseDescriptorFile(cxt, filePath).then((info) => {
-        var rules = info.rules;
-        var name = _.replace(Path.basename(filePath), /\.\w+$/, '');
-        if (!rules) {
-            // implict rule: match <filename>.*
-            rules = [ `${name}.*` ];
-        }
-        var id = `${folderPath}/${name}`;
-        return importImage(cxt, folderPath, info.icon).then((image) => {
-            var component = new Component(id, info.descriptions, image);
-            var descriptor = new Descriptor(name, folderPath, rules, component);
-            cxt.descriptors[filePath] = descriptor;
-        });
-    });
+    let info = await parseDescriptorFile(cxt, filePath);
+    let rules = info.rules;
+    let name = _.replace(Path.basename(filePath), /\.\w+$/, '');
+    if (!rules) {
+        // implict rule: match <filename>.*
+        rules = [ `${name}.*` ];
+    }
+    let image = await importImage(cxt, folderPath, info.icon);
+    let id = `${folderPath}/${name}`;
+    let component = new Component(id, info.descriptions, image);
+    let descriptor = new Descriptor(name, folderPath, rules, component);
+    cxt.descriptors[filePath] = descriptor;
 }
 
 /**
@@ -250,30 +246,27 @@ function loadDescriptor(cxt, folderPath, filePath) {
  *
  * @return {Promise}
  */
-function loadDescriptors(cxt, folderPath) {
+async function loadDescriptors(cxt, folderPath) {
     // scan .trambar folder
-    var tfPath = (folderPath) ? `${folderPath}/.trambar` : '.trambar';
-    return scanFolder(cxt, tfPath).filter((fileRecord) => {
-        if (fileRecord.type === 'blob') {
-            return /\.md$/.test(fileRecord.name);
-        } else {
-            return false;
-        }
-    }).mapSeries((fileRecord) => {
-        return loadDescriptor(cxt, folderPath, fileRecord.path);
-    }).then((descriptors) => {
-        // recurse into subfolders
-        return scanFolder(cxt, folderPath).filter((fileRecord) => {
-            if (fileRecord.type === 'tree') {
-                // .trambar folder cannot be nested
-                if (fileRecord.name !== '.trambar') {
-                    return true;
-                }
+    let tfPath = Path.join(folderPath, '.trambar');
+    let tfRecords = await scanFolder(cxt, tfPath);
+    for (let record of tfRecords) {
+        if (record.type === 'blob') {
+            if (/\.md$/.test(record.name)) {
+                await loadDescriptor(cxt, folderPath, fileRecord.path);
             }
-        }).each((subfolderRecord) => {
-            return loadDescriptors(cxt, subfolderRecord.path);
-        });
-    });
+        }
+    }
+    // recurse into subfolders
+    let records = await scanFolder(cxt, folderPath);
+    for (let record of records) {
+        if (record.type === 'tree') {
+            // .trambar folder cannot be nested
+            if (record.name !== '.trambar') {
+                await loadDescriptors(cxt, record.path);
+            }
+        }
+    }
 }
 
 /**
@@ -285,55 +278,52 @@ function loadDescriptors(cxt, folderPath) {
  *
  * @return {Promise<Object>}
  */
-function parseDescriptorFile(cxt, path) {
-    return retrieveFile(cxt, path).then((file) => {
-        var text = getFileContents(file, 'utf-8');
-        var parser = new MarkGor.Parser;
-        var tokens = parser.parse(text);
+async function parseDescriptorFile(cxt, path) {
+    let file = await retrieveFile(cxt, path);
+    let text = getFileContents(file, 'utf-8');
+    let parser = new MarkGor.Parser;
+    let tokens = parser.parse(text);
 
-        var languageTokens = {};
-        var defaultLanguageTokens = [];
-        var currentLanguageTokens = defaultLanguageTokens;
-        var fileMatchDefinitions = [];
-        var icon = null;
-        _.each(tokens, (token) => {
-            if (token.type === 'heading') {
-                var cap = _.trim(token.captured);
-                var m = /^#\s*([a-z]{2})\b/.exec(cap);
-                if (m) {
-                    var code = m[1];
-                    languageTokens[code] = currentLanguageTokens = [];
-                    return;
-                }
-            } else if (token.type === 'code') {
-                if (token.lang === 'fnmatch' || token.lang === 'match') {
-                    fileMatchDefinitions.push(token.text);
-                    return;
-                }
-            } else if (token.type === 'def') {
-                if (token.name === 'icon') {
-                    icon = token.href;
-                    return;
-                }
+    let languageTokens = {};
+    let defaultLanguageTokens = [];
+    let currentLanguageTokens = defaultLanguageTokens;
+    let fileMatchDefinitions = [];
+    let icon = null;
+
+    for (let token of tokens) {
+        if (token.type === 'heading') {
+            let cap = _.trim(token.captured);
+            let m = /^#\s*([a-z]{2})\b/.exec(cap);
+            if (m) {
+                let code = m[1];
+                languageTokens[code] = currentLanguageTokens = [];
             }
-            currentLanguageTokens.push(token);
-        });
-        if (!languageTokens[cxt.defaultLanguageCode]) {
-            languageTokens[cxt.defaultLanguageCode] = defaultLanguageTokens;
+        } else if (token.type === 'code') {
+            if (token.lang === 'fnmatch' || token.lang === 'match') {
+                fileMatchDefinitions.push(token.text);
+            }
+        } else if (token.type === 'def') {
+            if (token.name === 'icon') {
+                icon = token.href;
+            }
         }
-        var descriptions = _.mapValues(languageTokens, (tokens) => {
-            var fragments = _.map(tokens, 'captured');
-            var text = fragments.join('');
-            return _.trim(text);
-        });
-        var rules = null;
-        if (!_.isEmpty(fileMatchDefinitions)) {
-            rules = _.flatten(_.map(fileMatchDefinitions, (patterns) => {
-                return _.filter(_.split(patterns, /[\r\n]+/));
-            }));
-        }
-        return { descriptions, rules, icon };
+        currentLanguageTokens.push(token);
+    }
+    if (!languageTokens[cxt.defaultLanguageCode]) {
+        languageTokens[cxt.defaultLanguageCode] = defaultLanguageTokens;
+    }
+    let descriptions = _.mapValues(languageTokens, (tokens) => {
+        let fragments = _.map(tokens, 'captured');
+        let text = fragments.join('');
+        return _.trim(text);
     });
+    let rules = null;
+    if (!_.isEmpty(fileMatchDefinitions)) {
+        rules = _.flatten(_.map(fileMatchDefinitions, (patterns) => {
+            return _.filter(_.split(patterns, /[\r\n]+/));
+        }));
+    }
+    return { descriptions, rules, icon };
 }
 
 /**
@@ -344,32 +334,30 @@ function parseDescriptorFile(cxt, path) {
  *
  * @return {Promise<Array<Object>>}
  */
-function scanFolder(cxt, folderPath) {
-    var listing = cxt.folders[folderPath];
+async function scanFolder(cxt, folderPath) {
+    let listing = cxt.folders[folderPath];
     if (listing) {
-        return Promise.resolve(listing);
+        return listing;
     }
-    return Promise.try(() => {
+    try {
         console.log(`Scanning ${folderPath || '[ROOT]'}`);
-        var repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
-        var projectId = repoLink.project.id;
-        var url = `projects/${projectId}/repository/tree`;
-        var query = {
+        let repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
+        let projectID = repoLink.project.id;
+        let url = `projects/${projectID}/repository/tree`;
+        let query = {
             path: folderPath,
-            ref: cxt.headId,
+            ref: cxt.headID,
         };
-        return Transport.fetchAll(cxt.server, url, query).catch((err) => {
-            if (err instanceof HTTPError) {
-                if (err.statusCode === 404) {
-                    return [];
-                }
-            }
+        list = await Transport.fetchAll(cxt.server, url, query);
+    } catch (err) {
+        if (err instanceof HTTPError && err.statusCode === 404) {
+            list = [];
+        } else {
             throw err;
-        }).then((listing) => {
-            cxt.folders[folderPath] = listing;
-            return listing;
-        });
-    });
+        }
+    }
+    cxt.folders[folderPath] = listing;
+    return listing;
 }
 
 /**
@@ -380,20 +368,18 @@ function scanFolder(cxt, folderPath) {
  *
  * @return {Promise<Object>}
  */
-function retrieveFile(cxt, filePath) {
-    return Promise.try(() => {
-        // only files in a .trambar folder is ever retrieved
-        if (!isTrambar.test(filePath)) {
-            throw new Error(`Not in .trambar folder: ${filePath}`);
-        }
-        console.log(`Retrieving file: ${filePath}`);
-        var repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
-        var projectId = repoLink.project.id;
-        var pathEncoded = encodeURIComponent(filePath);
-        var url = `/projects/${projectId}/repository/files/${pathEncoded}`;
-        var query = { ref: cxt.headId };
-        return Transport.fetch(cxt.server, url, query);
-    });
+async function retrieveFile(cxt, filePath) {
+    // only files in a .trambar folder is ever retrieved
+    if (!isTrambar.test(filePath)) {
+        throw new Error(`Not in .trambar folder: ${filePath}`);
+    }
+    console.log(`Retrieving file: ${filePath}`);
+    let repoLink = ExternalDataUtils.findLink(cxt.repo, cxt.server);
+    let projectID = repoLink.project.id;
+    let pathEncoded = encodeURIComponent(filePath);
+    let url = `/projects/${projectID}/repository/files/${pathEncoded}`;
+    let query = { ref: cxt.headID };
+    return Transport.fetch(cxt.server, url, query);
 }
 
 /**
@@ -404,11 +390,11 @@ function retrieveFile(cxt, filePath) {
  * @return {Buffer|String}
  */
 function getFileContents(file, encoding) {
-    var buffer = Buffer.from(file.content, 'base64');
+    let buffer = Buffer.from(file.content, 'base64');
     if (encoding) {
-        var text = buffer.toString(encoding);
+        let text = buffer.toString(encoding);
         if (text.indexOf('<<<<<<<') !== -1) {
-            // fix conflicts accidentally checked in
+            // fix accidentally checked-in git conflicts
             text = text.replace(gitConflicts, '$2');
         }
         return text;
@@ -417,7 +403,7 @@ function getFileContents(file, encoding) {
     }
 }
 
-var gitConflicts = /<{7}\s\w+\r?\n([\s\S]*?\r?\n)={7}\r?\n([\s\S]*?\r?\n)>{7}\s\w+\r?\n/g;
+const gitConflicts = /<{7}\s\w+\r?\n([\s\S]*?\r?\n)={7}\r?\n([\s\S]*?\r?\n)>{7}\s\w+\r?\n/g;
 
 /**
  * Upload file to media server
@@ -426,24 +412,25 @@ var gitConflicts = /<{7}\s\w+\r?\n([\s\S]*?\r?\n)={7}\r?\n([\s\S]*?\r?\n)>{7}\s\
  * @param  {String} folderPath
  * @param  {String} url
  *
- * @return {Promise<Object|undefined>}
+ * @return {Promise<String|Object|undefined>}
  */
-function importImage(cxt, folderPath, url) {
-    if (/^\w+:/.test(url)) {
-        // absolute URL
-        return Promise.resolve(url);
-    }
-    var tfPath = (folderPath) ? `${folderPath}/.trambar` : '.trambar';
-    var imageName = url;
-    if (/^\.\//.test(imageName)) {
-        imageName = imageName.substr(2);
-    }
-    var imagePath = `${tfPath}/${imageName}`;
-    return retrieveFile(cxt, imagePath).then((file) => {
-        return updateImage(file);
-    }).catch((err) => {
+async function importImage(cxt, folderPath, url) {
+    try {
+        if (/^\w+:/.test(url)) {
+            // absolute URL
+            return url;
+        }
+        let tfPath = Path.join(folderPath, '.trambar');
+        let imageName = url;
+        if (/^\.\//.test(imageName)) {
+            imageName = imageName.substr(2);
+        }
+        let imagePath = `${tfPath}/${imageName}`;
+        let file = await retrieveFile(cxt, imagePath);
+        return file;
+    } catch (err) {
         return;
-    });
+    }
 }
 
 /**
@@ -453,10 +440,10 @@ function importImage(cxt, folderPath, url) {
  *
  * @return {Promise<Object|undefined>}
  */
-function updateImage(file) {
+async function updateImage(file) {
     return new Promise((resolve, reject) => {
-        var buffer = getFileContents(file);
-        var options = {
+        let buffer = getFileContents(file);
+        let options = {
             json: true,
             url: 'http://media_server/srv/internal/import',
             formData: {
@@ -493,70 +480,76 @@ function parseFnmatchRules(rules) {
     if (_.isEmpty(rules)) {
         return null;
     }
-    var ignoreEngine = Ignore().add(rules);
+    let ignoreEngine = Ignore().add(rules);
     return (path) => {
         return ignoreEngine.ignores(path);
     };
 }
 
-function Descriptor(name, folderPath, rules, component) {
-    this.name = name;
-    this.folderPath = folderPath;
-    this.component = component;
-    this.rules = rules;
+class Descriptor {
+    constructor(name, folderPath, rules, component) {
+        this.name = name;
+        this.folderPath = folderPath;
+        this.component = component;
+        this.rules = rules;
 
-    var hierarchicalRules = [];
-    var relativeRules = [];
-    var trambarRules = [];
-    _.each(rules, (rule) => {
-        if (!rule) {
-            return;
+        let hierarchicalRules = [];
+        let relativeRules = [];
+        let trambarRules = [];
+        for (let rule of rules) {
+            if (rule) {
+                if (isTrambar.test(rule)) {
+                    trambarRules.push(rule);
+                } else if (isRelative.test(rule)) {
+                    // a rule that requires a relative path
+                    relativeRules.push(rule);
+                } else {
+                    // a normal rule
+                    hierarchicalRules.push(rule);
+                }
+            }
         }
-        if (isTrambar.test(rule)) {
-            trambarRules.push(rule);
-        } else if (isRelative.test(rule)) {
-            // a rule that requires a relative path
-            relativeRules.push(rule);
-        } else {
-            // a normal rule
-            hierarchicalRules.push(rule);
-        }
-    });
-    this.matching = parseFnmatchRules(hierarchicalRules);
-    this.matchingRelative = parseFnmatchRules(relativeRules);
-    this.matchingTrambar = parseFnmatchRules(trambarRules);
+
+        this.matching = parseFnmatchRules(hierarchicalRules);
+        this.matchingRelative = parseFnmatchRules(relativeRules);
+        this.matchingTrambar = parseFnmatchRules(trambarRules);
+    }
 }
 
-function Component(id, text, image) {
-    this.id = id;
-    this.text = text;
-    if (typeof(image) === 'object') {
-        this.image = image;
-    } else if (typeof(image) === 'string' && image) {
-        if (/^fa:\/\//.test(image)) {
-            // special Font-Awesome URL fa://
-            var parts = _.split(image.substr(5), '/');
-            this.icon = {
-                class: parts[0],
-                backgroundColor: parts[1] || null,
-                color: parts[2] || null,
-            };
-        } else {
-            this.image = {
-                url: image
-            };
+class Component {
+    constructor(id, text, image) {
+        this.id = id;
+        this.text = text;
+        if (typeof(image) === 'object') {
+            this.image = image;
+        } else if (typeof(image) === 'string' && image) {
+            if (/^fa:\/\//.test(image)) {
+                // special Font-Awesome URL fa://
+                let parts = _.split(image.substr(5), '/');
+                this.icon = {
+                    class: parts[0],
+                    backgroundColor: parts[1] || null,
+                    color: parts[2] || null,
+                };
+            } else {
+                this.image = {
+                    url: image
+                };
+            }
         }
     }
 }
 
-function Context(server, repo, headId, defaultLanguageCode) {
-    this.server = server;
-    this.repo = repo;
-    this.headId = headId;
-    this.defaultLanguageCode = defaultLanguageCode;
-    this.folders = {};
-    this.descriptors = {};
-    this.removalTimeout = 0;
+class Context {
+    constructor(server, repo, headID, defaultLanguageCode) {
+        this.server = server;
+        this.repo = repo;
+        this.headID = headID;
+        this.defaultLanguageCode = defaultLanguageCode;
+        this.folders = {};
+        this.descriptors = {};
+        this.removalTimeout = 0;
+    }
 }
 
 export {

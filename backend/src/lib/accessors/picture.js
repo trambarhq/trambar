@@ -1,29 +1,23 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import HTTPError from 'errors/http-error';
-import Data from 'accessors/data';
+import { Data } from 'accessors/data';
 import Task from 'accessors/task';
 
-const Picture = _.create(Data, {
-    schema: 'global',
-    table: 'picture',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        purpose: String,
-        user_id: Number,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        purpose: String,
-        user_id: Number,
-        url: String,
-    },
+class Picture extends Data {
+    constructor() {
+        super();
+        this.schema = 'global';
+        this.table = 'picture';
+        _.extend(this.columns, {
+            purpose: String,
+            user_id: Number,
+        });
+        _.extend(this.criteria, {
+            purpose: String,
+            user_id: Number,
+            url: String,
+        });
+    }
 
     /**
      * Create table in schema
@@ -31,11 +25,11 @@ const Picture = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -49,8 +43,8 @@ const Picture = _.create(Data, {
             );
             CREATE INDEX ON ${table} ((details->'url'));
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to this table, also add trigger on task so details
@@ -59,18 +53,18 @@ const Picture = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'purpose', 'user_id' ];
-            return this.createNotificationTriggers(db, schema, propNames).then(() => {
-                return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
-                    return Task.createUpdateTrigger(db, schema, 'updatePicture', 'updateResource', [ this.table ]);
-                });
-            });
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'purpose',
+            'user_id'
+        ]);
+        await this.createResourceCoalescenceTrigger(db, schema, []);
+        await Task.createUpdateTrigger(db, schema, 'updatePicture', 'updateResource', [ this.table ]);
+    }
 
     /**
      * Add conditions to SQL query based on criteria object
@@ -78,16 +72,16 @@ const Picture = _.create(Data, {
      * @param  {Object} criteria
      * @param  {Object} query
      */
-    apply: function(criteria, query) {
-        var special = [ 'url' ];
-        Data.apply.call(this, _.omit(criteria, special), query);
+    apply(criteria, query) {
+        let special = [ 'url' ];
+        super.apply(_.omit(criteria, special), query);
 
-        var params = query.parameters;
-        var conds = query.conditions;
+        let params = query.parameters;
+        let conds = query.conditions;
         if (criteria.url !== undefined) {
             conds.push(`details->>'url' = $${params.push(criteria.url)}`);
         }
-    },
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -99,18 +93,17 @@ const Picture = _.create(Data, {
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array<Object>>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.purpose = row.purpose;
-                object.user_id = row.user_id;
-            });
-            return objects;
-        });
-    },
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            object.purpose = row.purpose;
+            object.user_id = row.user_id;
+        }
+        return objects;
+    }
 
     /**
      * Throw an exception if modifications aren't permitted
@@ -119,15 +112,17 @@ const Picture = _.create(Data, {
      * @param  {Object} pictureBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(pictureReceived, pictureBefore, credentials) {
+    checkWritePermission(pictureReceived, pictureBefore, credentials) {
         if (credentials.unrestricted) {
             return;
         }
         throw new HTTPError(403);
-    },
-});
+    }
+}
+
+const instance = new Picture;
 
 export {
-    Picture as default,
+    instance as default,
     Picture,
 };

@@ -1,25 +1,17 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import HTTPError from 'errors/http-error';
-import Data from 'accessors/data';
+import { Data } from 'accessors/data';
 import Task from 'accessors/task';
 
-const System = _.create(Data, {
-    schema: 'global',
-    table: 'system',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        settings: Object,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-    },
+class System extends Data {
+    constructor() {
+        super();
+        this.schema = 'global';
+        this.table = 'system';
+        _.extend(this.columns, {
+            settings: Object,
+        });
+    }
 
     /**
      * Create table in schema
@@ -27,11 +19,11 @@ const System = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -43,8 +35,8 @@ const System = _.create(Data, {
                 PRIMARY KEY (id)
             );
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Grant privileges to table to appropriate Postgres users
@@ -52,17 +44,17 @@ const System = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    grant: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async grant(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             GRANT SELECT ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT ON ${table} TO client_role;
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -70,21 +62,17 @@ const System = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            // we need to know the previous settings when address changes, in
-            // order to remove hook created previously
-            var propNames = [ 'settings' ];
-            return this.createNotificationTriggers(db, schema, propNames).then(() => {
-                return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
-                    // completion of tasks will automatically update details->resources
-                    return Task.createUpdateTrigger(db, schema, 'updateSystem', 'updateResource', [ this.table ]);
-                });
-            });
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        // we need to know the previous settings when address changes, in
+        // order to remove hook created previously
+        await this.createNotificationTriggers(db, schema, [ 'settings' ]);
+        await this.createResourceCoalescenceTrigger(db, schema, []);
+        // completion of tasks will automatically update details->resources
+        await Task.createUpdateTrigger(db, schema, 'updateSystem', 'updateResource', [ this.table ]);
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -96,24 +84,23 @@ const System = _.create(Data, {
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array<Object>>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                if (credentials.unrestricted) {
-                    object.settings = row.settings;
-                } else {
-                    object.settings = _.pick(row.settings, [
-                        'address',
-                        'push_relay',
-                    ]);
-                }
-            });
-            return objects;
-        });
-    },
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object] of objects.entries()) {
+            let row = rows[index];
+            if (credentials.unrestricted) {
+                object.settings = row.settings;
+            } else {
+                object.settings = _.pick(row.settings, [
+                    'address',
+                    'push_relay',
+                ]);
+            }
+        }
+        return objects;
+    }
 
     /**
      * Throw an exception if modifications aren't permitted
@@ -122,15 +109,17 @@ const System = _.create(Data, {
      * @param  {Object} systemBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(systemReceived, systemBefore, credentials) {
+    checkWritePermission(systemReceived, systemBefore, credentials) {
         if (credentials.unrestricted) {
             return;
         }
         throw new HTTPError(403);
-    },
-});
+    }
+}
+
+const instance = new System;
 
 export {
-    System as default,
+    instance as default,
     System,
 };

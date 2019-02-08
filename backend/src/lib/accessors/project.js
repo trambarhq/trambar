@@ -1,41 +1,37 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import Async from 'async-do-while';
-import Data from 'accessors/data';
+import Bluebird from 'bluebird';
+import { Data } from 'accessors/data';
 import Task from 'accessors/task';
 import Repo from 'accessors/repo';
 import User from 'accessors/user';
 import HTTPError from 'errors/http-error';
 import * as ProjectUtils from 'objects/utils/project-utils';
 
-const Project = _.create(Data, {
-    schema: 'global',
-    table: 'project',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        name: String,
-        repo_ids: Array(Number),
-        user_ids: Array(Number),
-        settings: Object,
-        archived: Boolean,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-        name: String,
-        repo_ids: Array(Number),
-        user_ids: Array(Number),
-        archived: Boolean,
-    },
-    accessControlColumns: {
-        user_ids: Array(Number),
-        settings: Object,
-    },
+const illegalProjectNames = [ 'global', 'admin', 'public', 'srv' ];
+
+class Project extends Data {
+    constructor() {
+        super();
+        this.schema = 'global';
+        this.table = 'project';
+        _.extend(this.columns, {
+            name: String,
+            repo_ids: Array(Number),
+            user_ids: Array(Number),
+            settings: Object,
+            archived: Boolean,
+        });
+        _.extend(this.criteria, {
+            name: String,
+            repo_ids: Array(Number),
+            user_ids: Array(Number),
+            archived: Boolean,
+        });
+        this.accessControlColumns = {
+            user_ids: Array(Number),
+            settings: Object,
+        };
+    }
 
     /**
      * Create table in schema
@@ -43,11 +39,11 @@ const Project = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -66,8 +62,8 @@ const Project = _.create(Data, {
             CREATE UNIQUE INDEX ON ${table} (name) WHERE deleted = false;
             CREATE INDEX ON ${table} USING gin(("payloadTokens"(details))) WHERE "payloadTokens"(details) IS NOT NULL;
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Grant privileges to table to appropriate Postgres users
@@ -75,17 +71,17 @@ const Project = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    grant: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async grant(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             GRANT SELECT ON ${table} TO auth_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT, UPDATE ON ${table} TO client_role;
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -95,17 +91,19 @@ const Project = _.create(Data, {
      *
      * @return {Promise<Boolean>}
      */
-    watch: function(db, schema) {
-        return this.createChangeTrigger(db, schema).then(() => {
-            var propNames = [ 'deleted', 'name', 'repo_ids', 'user_ids', 'archived' ];
-            return this.createNotificationTriggers(db, schema, propNames).then(() => {
-                return this.createResourceCoalescenceTrigger(db, schema, []).then(() => {
-                    // completion of tasks will automatically update details->resources
-                    return Task.createUpdateTrigger(db, schema, 'updateProject', 'updateResource', [ this.table ]);
-                });
-            });
-        });
-    },
+    async watch(db, schema) {
+        await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'name',
+            'repo_ids',
+            'user_ids',
+            'archived',
+        ]);
+        await this.createResourceCoalescenceTrigger(db, schema, []);
+        // completion of tasks will automatically update details->resources
+        await Task.createUpdateTrigger(db, schema, 'updateProject', 'updateResource', [ this.table ]);
+    }
 
     /**
      * Filter out rows that user doesn't have access to
@@ -117,14 +115,14 @@ const Project = _.create(Data, {
      *
      * @return {Promise<Array<Object>>}
      */
-    filter: function(db, schema, rows, credentials) {
+    async filter(db, schema, rows, credentials) {
         if (!credentials.unrestricted) {
             rows = _.filter(rows, (row) => {
                 return ProjectUtils.isVisibleToUser(row, credentials.user);
             });
         }
-        return Promise.resolve(rows);
-    },
+        return rows;
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -136,75 +134,62 @@ const Project = _.create(Data, {
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Array<Object>>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                object.name = row.name;
-                object.repo_ids = row.repo_ids;
-                object.user_ids = row.user_ids;
-                if (credentials.unrestricted) {
-                    object.settings = row.settings;
-                } else {
-                    object.settings = _.pick(row.settings, 'membership', 'access_control');
-                }
-                if (row.archived) {
-                    object.archived = row.archived;
-                }
-            });
-            return objects;
-        });
-    },
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            object.name = row.name;
+            object.repo_ids = row.repo_ids;
+            object.user_ids = row.user_ids;
+            if (credentials.unrestricted) {
+                object.settings = row.settings;
+            } else {
+                object.settings = _.pick(row.settings, 'membership', 'access_control');
+            }
+            if (row.archived) {
+                object.archived = row.archived;
+            }
+        }
+        return objects;
+    }
 
     /**
-     * Import objects sent by client-side code, applying access control
+     * Import object sent by client-side code
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
+     * @param  {Object} projectReceived
+     * @param  {Object} projectBefore
      * @param  {Object} credentials
      * @param  {Object} options
      *
-     * @return {Promise<Array>}
+     * @return {Promise<Object>}
      */
-    import: function(db, schema, objects, originals, credentials, options) {
-        return Data.import.call(this, db, schema, objects, originals, credentials).mapSeries((projectReceived, index) => {
-            var projectBefore = originals[index];
-            if (projectReceived.name === 'global' || projectReceived.name === 'admin') {
-                throw new HTTPError(409); // 409 conflict
+    async importOne(db, schema, projectReceived, projectBefore, credentials, options) {
+        let row = await super.importOne(db, schema, projectReceived, projectBefore, credentials, options);
+        if (projectReceived.repo_ids) {
+            let newRepoIds = _.difference(projectReceived.repo_ids, projectBefore.repo_ids);
+            if (!_.isEmpty(newRepoIds)) {
+                // add users with access to repos to project
+                let repoCriteria = { id: newRepoIds, deleted: false };
+                let repos = await Repo.find(db, schema, repoCriteria, 'user_ids');
+                let userIds = _.uniq(_.flatten(_.map(repos, 'user_ids')));
+                let userCriteria = {
+                    id: userIds,
+                    disabled: false,
+                    deleted: false,
+                };
+                let users = await User.find(db, schema, userCriteria, 'id');
+                let newUserIds = _.map(users, 'id');
+                let existingUserIds = projectReceived.user_ids || projectBefore.user_ids;
+                row.user_ids = _.union(existingUserIds, newUserIds);
             }
-            if (!/^[\w\-]+$/.test(projectReceived.name)) {
-                return new HTTPError(400);
-            }
-            this.checkWritePermission(projectReceived, projectBefore, credentials);
-
-            if (projectReceived.repo_ids) {
-                var newRepoIds = _.difference(projectReceived.repo_ids, projectBefore.repo_ids);
-                if (!_.isEmpty(newRepoIds)) {
-                    // add users with access to repos to project
-                    var criteria = { id: newRepoIds, deleted: false };
-                    return Repo.find(db, schema, criteria, 'user_ids').then((repos) => {
-                        var userIds = _.uniq(_.flatten(_.map(repos, 'user_ids')));
-                        var criteria = {
-                            id: userIds,
-                            disabled: false,
-                            deleted: false,
-                        };
-                        return User.find(db, schema, criteria, 'id').then((users) => {
-                            var newUserIds = _.map(users, 'id');
-                            var existingUserIds = projectReceived.user_ids || projectBefore.user_ids;
-                            projectReceived.user_ids = _.union(existingUserIds, newUserIds);
-                            return projectReceived;
-                        });
-                    });
-                }
-            }
-            return this.ensureUniqueName(db, schema, projectBefore, projectReceived);
-        });
-    },
+        }
+        await this.ensureUniqueName(db, schema, projectBefore, row);
+        return row;
+    }
 
     /**
      * Throw an exception if modifications aren't permitted
@@ -213,12 +198,18 @@ const Project = _.create(Data, {
      * @param  {Object} projectBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(projectReceived, projectBefore, credentials) {
+    checkWritePermission(projectReceived, projectBefore, credentials) {
+        if (_.includes(illegalProjectNames, projectReceived.name)) {
+            throw new HTTPError(409); // 409 conflict
+        }
+        if (!/^[\w\-]+$/.test(projectReceived.name)) {
+            return new HTTPError(400);
+        }
         if (credentials.unrestricted) {
             return;
         }
         throw new HTTPError(403);
-    },
+    }
 
     /**
      * Create associations between newly created or modified rows with
@@ -226,16 +217,16 @@ const Project = _.create(Data, {
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
-     * @param  {Array<Object>} rows
+     * @param  {Array<Object>} projectsReceived
+     * @param  {Array<Object>} projectsBefore
+     * @param  {Array<Object>} projectsAfter
      * @param  {Object} credentials
      *
-     * @return {Promise<Array>}
+     * @return {Promise}
      */
-    associate: function(db, schema, objects, originals, rows, credentials) {
-        return this.updateNewMembers(db, schema, objects, originals, rows);
-    },
+    async associate(db, schema, projectsReceived, projectsBefore, projectsAfter, credentials) {
+        await this.updateNewMembers(db, schema, projectsReceived, projectsBefore, projectsAfter);
+    }
 
     /**
      * Remove ids from requested_project_ids of users who've just joined
@@ -248,43 +239,42 @@ const Project = _.create(Data, {
      *
      * @return {Promise}
      */
-    updateNewMembers: function(db, schema, projectsReceived, projectsBefore, projectsAfter) {
+    async updateNewMembers(db, schema, projectsReceived, projectsBefore, projectsAfter) {
         // first, obtain ids of projects that new members are added to
-        var newUserMemberships = {}, newMemberIds = [];
-        _.each(projectsReceived, (projectReceived, index) => {
-            var projectBefore = projectsBefore[index];
-            var projectAfter = projectsAfter[index];
+        let newUserMemberships = {}, newMemberIds = [];
+        for (let [ index, projectReceived ] of projectsReceived.entries()) {
+            let projectBefore = projectsBefore[index];
+            let projectAfter = projectsAfter[index];
             if (projectReceived.user_ids) {
-                var newUserIds = projectAfter.user_ids;
+                let newUserIds = projectAfter.user_ids;
                 if (projectBefore) {
                     newUserIds = _.difference(projectAfter.user_ids, projectBefore.user_ids);
                 }
-                _.each(newUserIds, (userId) => {
-                    var ids = newUserMemberships[userId];
+                for (let userId of newUserIds) {
+                    let ids = newUserMemberships[userId];
                     if (ids) {
                         ids.push(projectAfter.id);
                     } else {
                         newUserMemberships[userId] = [ projectAfter.id ];
                         newMemberIds.push(userId);
                     }
-                });
+                }
             }
-        });
-        if (_.isEmpty(newUserMemberships)) {
-            return Promise.resolve();
+        }
+        if (_.isEmpty(newMemberIds)) {
+            return;
         }
         // load the users and update requested_project_ids column
-        var criteria = { id: newMemberIds };
-        return User.find(db, schema, criteria, 'id, requested_project_ids').then((users) => {
-            _.each(users, (user) => {
-                user.requested_project_ids = _.difference(user.requested_project_ids, newUserMemberships[user.id]);
-                if (_.isEmpty(user.requested_project_ids)) {
-                    user.requested_project_ids = null;
-                }
-            });
-            return User.update(db, schema, users);
-        }).return();
-    },
+        let criteria = { id: newMemberIds };
+        let users = await User.find(db, schema, criteria, 'id, requested_project_ids');
+        for (let user of users) {
+            user.requested_project_ids = _.difference(user.requested_project_ids, newUserMemberships[user.id]);
+            if (_.isEmpty(user.requested_project_ids)) {
+                user.requested_project_ids = null;
+            }
+        }
+        await User.update(db, schema, users);
+    }
 
     /**
      * Add members to a project atomically
@@ -296,63 +286,62 @@ const Project = _.create(Data, {
      *
      * @return {Promise<Object>}
      */
-    addMembers: function(db, schema, projectId, userIds) {
-        var table = this.getTableName(schema);
-        var params = [];
-        var sql = `
+    async addMembers(db, schema, projectId, userIds) {
+        let table = this.getTableName(schema);
+        let params = [];
+        let sql = `
             UPDATE ${table} SET user_ids = user_ids || $${params.push(userIds)}
             WHERE id = $${params.push(projectId)}
             RETURNING *
         `;
-        return db.execute(sql, params);
-    },
+        await db.execute(sql, params);
+    }
 
-    getSiganture: function(db, schema, credentials) {
-        var signature;
-        var attempts = 0;
-        Async.do(() => {
-            if (!/^[\w\-]+$/.test(schema)) {
-                return Promise.resolve(new HTTPError(404));
-            }
-            var table = `"${schema}"."meta"`;
-            var sql = `SELECT signature FROM ${table} LIMIT 1`;
-            return db.query(sql).then((rows) => {
-                if (_.isEmpty(rows)) {
-                    throw new HTTPError(404);
-                }
-                var tokens = [];
-                tokens.push(rows[0].signature);
-                tokens.push(credentials.user.type);
-                if (credentials.project) {
-                    if (_.includes(credentials.project.user_ids, credentials.user.id)) {
-                        tokens.push('member')
+    /**
+     * Return cache signature of project schema
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} credentials
+     *
+     * @return {[type]}
+     */
+    async getSignature(db, schema, credentials) {
+        if (!/^[\w\-]+$/.test(schema)) {
+            throw new HTTPError(404);
+        }
+        for (let attempts = 0; attempts < 20; attempts++) {
+            try {
+                let table = `"${schema}"."meta"`;
+                let sql = `SELECT signature FROM ${table} LIMIT 1`;
+                let rows = await db.query(sql);
+                if (rows[0]) {
+                    let tokens = [];
+                    tokens.push(rows[0].signature);
+                    tokens.push(credentials.user.type);
+                    if (credentials.project) {
+                        if (_.includes(credentials.project.user_ids, credentials.user.id)) {
+                            tokens.push('member')
+                        }
                     }
+                    return _.join(tokens, ':');
                 }
-                signature = _.join(tokens, ':');
-            }).catch((err) => {
+            } catch (err) {
                 if (err.code === '42P01') {
-                    // wait for schema has not been created yet
-                    attempts++;
-                    return Promise.delay(500);
+                    // schema has not been created yet, perhaps
+                    await Bluebird.delay(500);
                 } else {
                     throw err;
                 }
-            });
-        });
-        Async.while(() => {
-            return !signature && attempts < 20;
-        });
-        Async.return(() => {
-            if (!signature) {
-                throw new HTTPError(404);
             }
-            return signature;
-        });
-        return Async.end();
+        }
+        throw new HTTPError(404);
     }
-});
+}
+
+const instance = new Project;
 
 export {
-    Project as default,
+    instance as default,
     Project
 };

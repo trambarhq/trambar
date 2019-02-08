@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import FS from 'fs';
 import Database from 'database';
 import * as Shutdown from 'shutdown';
@@ -10,16 +9,16 @@ import Listing from 'accessors/listing';
 import Story from 'accessors/story';
 
 // load available analysers
-var Analysers = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/analysers`), (filename) => {
+const Analysers = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/analysers`), (filename) => {
     if (/\.js$/.test(filename)) {
-        var module = require(`analysers/${filename}`).default;
+        let module = require(`analysers/${filename}`).default;
         return module;
     }
 }));
 // load available story raters
-var StoryRaters = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/story-raters`), (filename) => {
+const StoryRaters = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/story-raters`), (filename) => {
     if (/\.js$/.test(filename)) {
-        var module = require(`story-raters/${filename}`).default;
+        let module = require(`story-raters/${filename}`).default;
         // certain ratings cannot be applied until the listing is being retrieved
         // (e.g. by retrieval time)
         if (module.calculation !== 'deferred') {
@@ -28,33 +27,30 @@ var StoryRaters = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/story-raters`)
     }
 }));
 
-var database;
+let database;
 
-function start() {
-    return Database.open(true).then((db) => {
-        database = db;
-        return db.need('global').then(() => {
-            // get list of tables that the analyers make use of and listen
-            // for changes in them
-            var tables = _.uniq(_.flatten(_.map(Analysers, 'sourceTables')));
-            return db.listen(tables, 'change', handleDatabaseChangesAffectingStatistics).then(() => {
-                // listings, meanwhile, are derived from story and statistics
-                var tables = [ 'story', 'statistics' ];
-                return db.listen(tables, 'change', handleDatabaseChangesAffectingListings);
-            });
-        });
-    });
+async function start() {
+    // use persistent connection since we need to listen to events
+    let db = database = await Database.open(true);
+    await db.need('global');
+    // get list of tables that the analyers make use of and listen for
+    // changes in them
+    let statsSources = _.uniq(_.flatten(_.map(Analysers, 'sourceTables')));
+    await db.listen(statsSources, 'change', handleDatabaseChangesAffectingStatistics);
+
+    // listings, meanwhile, are derived from story and statistics
+    let listingSources = [ 'story', 'statistics' ];
+    await db.listen(listingSources, 'change', handleDatabaseChangesAffectingListings);
 }
 
-function stop() {
+async function stop() {
     if (database) {
         database.close();
         database = null;
     }
-    return Promise.resolve();
 };
 
-function handleDatabaseChangesAffectingStatistics(events) {
+async function handleDatabaseChangesAffectingStatistics(events) {
     // filter out events from other tests
     if (process.env.DOCKER_MOCHA) {
         events = _.filter(events, (event) => {
@@ -62,16 +58,14 @@ function handleDatabaseChangesAffectingStatistics(events) {
         });
     }
     // process the events for each schema separately
-    var db = this;
-    var eventGroups = _.groupBy(events, 'schema');
-    var schemas = _.keys(eventGroups);
-    return Promise.each(schemas, (schema) => {
-        var schemaEvents = eventGroups[schema];
-        return invalidateStatistics(db, schema, schemaEvents);
-    });
+    let db = this;
+    let eventsBySchema = _.entries(_.groupBy(events, 'schema'));
+    for (let [ schema, schemaEvents ] of eventsBySchema) {
+        await invalidateStatistics(db, schema, schemaEvents);
+    }
 }
 
-function handleDatabaseChangesAffectingListings(events) {
+async function handleDatabaseChangesAffectingListings(events) {
     // filter out events from other tests
     if (process.env.DOCKER_MOCHA) {
         events = _.filter(events, (event) => {
@@ -79,30 +73,55 @@ function handleDatabaseChangesAffectingListings(events) {
         });
     }
     // process the events for each schema separately
-    var db = this;
-    var eventGroups = _.groupBy(events, 'schema');
-    var schemas = _.keys(eventGroups);
-    return Promise.each(schemas, (schema) => {
-        var schemaEvents = eventGroups[schema];
-        return invalidateListings(db, schema, schemaEvents);
-    });
+    let db = this;
+    let eventsBySchema = _.entries(_.groupBy(events, 'schema'));
+    for (let [ schema, schemaEvents ] of eventsBySchema) {
+        await invalidateListings(db, schema, schemaEvents);
+    }
 }
 
-function invalidateStatistics(db, schema, events) {
-    return Promise.each(Analysers, (analyser) => {
-        // process events for each source table
-        return Promise.map(analyser.sourceTables, (table) => {
-            var filteredColumnMappings = analyser.filteredColumns[table];
-            var filteredColumns = _.values(filteredColumnMappings);
-            var depedentColumns = analyser.depedentColumns[table];
-            var fixedFilterValues = analyser.fixedFilters[table];
+/**
+ * Mark statistics impacted by database changes as dirty
+ *
+ * @param  {[type]} db
+ * @param  {[type]} schema
+ * @param  {[type]} events
+ *
+ * @return {[type]}
+ */
+async function invalidateStatistics(db, schema, events) {
+    let ids = await findStatisticsImpactedByDatabaseChanges(db, schema, events);
+    let idChunks = _.chunk(ids, 20);
+    for (let idChunk of idChunks) {
+        console.log(`Invalidating statistics in ${schema}: ${idChunk.join(', ')}`)
+        await Statistics.invalidate(db, schema, idChunk);
+    }
+}
+
+/**
+ * Find statistics impacted by database changes
+ *
+ * @param  {Database} db
+ * @param  {String} schema
+ * @param  {Array<Object>} events
+ *
+ * @return {Promise<Array<Number>>}
+ */
+async function findStatisticsImpactedByDatabaseChanges(db, schema, events) {
+    let impactedRows = [];
+    for (let analyser of Analysers) {
+        for (let table of analyser.sourceTables) {
+            let filteredColumnMappings = analyser.filteredColumns[table];
+            let filteredColumns = _.values(filteredColumnMappings);
+            let depedentColumns = analyser.depedentColumns[table];
+            let fixedFilterValues = analyser.fixedFilters[table];
 
             // filter out events that won't cause a change in the stats
-            var relevantEvents = _.filter(events, (event) => {
+            let relevantEvents = _.filter(events, (event) => {
                 if (event.table !== table) {
                     return false;
                 }
-                var changedColumns = _.keys(event.diff);
+                let changedColumns = _.keys(event.diff);
                 return _.some(changedColumns, (column) => {
                     if (_.includes(filteredColumns, column)) {
                         // the change could affect whether the object is included or not
@@ -115,14 +134,14 @@ function invalidateStatistics(db, schema, events) {
                     if (!fixedFilterValues) {
                         return true;
                     }
-                    var requiredValue = fixedFilterValues[column];
+                    let requiredValue = fixedFilterValues[column];
                     if (requiredValue !== undefined) {
                         // see if there's a change in whether the object meets the
                         // fixed filter's condition
-                        var valueBefore = event.previous[column];
-                        var valueAfter = event.current[column];
-                        var conditionMetBefore = (valueBefore === requiredValue);
-                        var conditionMetAfter = (valueAfter === requiredValue);
+                        let valueBefore = event.previous[column];
+                        let valueAfter = event.current[column];
+                        let conditionMetBefore = (valueBefore === requiredValue);
+                        let conditionMetAfter = (valueAfter === requiredValue);
                         if (conditionMetBefore !== conditionMetAfter) {
                             return true;
                         }
@@ -131,40 +150,35 @@ function invalidateStatistics(db, schema, events) {
             });
 
             // extract the before and after values of the rows
-            var sourceRowsBefore = extractPreviousValues(relevantEvents, filteredColumns);
-            var sourceRowsAfter = extractCurrentValues(relevantEvents, filteredColumns);
-            var sourceRows = _.concat(sourceRowsBefore, sourceRowsAfter);
-            if (_.isEmpty(sourceRows)) {
-                return [];
-            }
-            // stored the value under the filter name, as required by the
-            // stored proc matchAny()
-            var matchingObjects = _.map(sourceRows, (row) => {
-                return _.mapValues(filteredColumnMappings, (column, filter) => {
-                    return row[column];
+            let sourceRowsBefore = extractPreviousValues(relevantEvents, filteredColumns);
+            let sourceRowsAfter = extractCurrentValues(relevantEvents, filteredColumns);
+            let sourceRows = _.concat(sourceRowsBefore, sourceRowsAfter);
+            if (!_.isEmpty(sourceRows)) {
+                // stored the value under the filter name, as required by the
+                // stored proc matchAny()
+                let matchingObjects = _.map(sourceRows, (row) => {
+                    return _.mapValues(filteredColumnMappings, (column, filter) => {
+                        return row[column];
+                    });
                 });
-            });
 
-            // find statistics rows that cover these objects
-            var criteria = {
-                type: analyser.type,
-                match_any: matchingObjects,
-                dirty: false,
-            };
-            return Statistics.find(db, schema, criteria, 'id, sample_count').then((rows) => {
-                // invalidate those stats with fewer data points first
-                var orderedRows = _.orderBy(rows, [ 'sample_count', 'atime' ], [ 'asc', 'desc' ]);
-                var ids = _.map(orderedRows, 'id');
-                var chunks = _.chunk(ids, 20);
-                if (!_.isEmpty(ids)) {
-                    console.log(`Invalidating statistics in ${schema}: ${ids.join(', ')}`)
+                // find statistics rows that cover these objects
+                let criteria = {
+                    type: analyser.type,
+                    match_any: matchingObjects,
+                    dirty: false,
+                };
+                let rows = await Statistics.find(db, schema, criteria, 'id, sample_count, atime');
+                for (let row of rows) {
+                    impactedRows.push(row);
                 }
-                return Promise.each(chunks, (ids) => {
-                    return Statistics.invalidate(db, schema, ids);
-                });
-            });
-        });
-    });
+            }
+        }
+    }
+    // return stats with fewer data points first, since they change more rapidly
+    let orderedRows = _.orderBy(impactedRows, [ 'sample_count', 'atime' ], [ 'asc', 'desc' ]);
+    let ids = _.map(orderedRows, 'id');
+    return ids;
 }
 
 /**
@@ -176,34 +190,29 @@ function invalidateStatistics(db, schema, events) {
  *
  * @return {Promise}
  */
-function invalidateListings(db, schema, events) {
-    return Promise.all([
-        findListingsImpactedByStoryChanges(db, schema, events),
-        findListingsImpactedByStatisticsChange(db, schema, events),
-    ]).then((idLists) => {
-        var ids = _.flatten(idLists);
-        var chunks = _.chunk(ids, 20);
-        if (!_.isEmpty(ids)) {
-            console.log(`Invalidating story listings in ${schema}: ${ids.join(', ')}`)
-        }
-        return Promise.each(chunks, (ids) => {
-            return Listing.invalidate(db, schema, ids);
-        });
-    });
+async function invalidateListings(db, schema, events) {
+    let ids1 = await findListingsImpactedByStoryChanges(db, schema, events);
+    let ids2 = await findListingsImpactedByStatisticsChange(db, schema, events);
+    let ids = _.concat(ids1, ids2);
+    let idChunks = _.chunk(ids, 20);
+    for (let idChunk of idChunks) {
+        console.log(`Invalidating story listings in ${schema}: ${idChunk.join(', ')}`)
+        await Listing.invalidate(db, schema, idChunk);
+    }
 }
 
 /**
- * Mark listings impacted by story changes as dirty
+ * Find listings impacted by story changes
  *
  * @param  {Database} db
  * @param  {String} schema
  * @param  {Array<Object>} events
  *
- * @return {Promise}
+ * @return {Promise<Array<Number>>}
  */
-function findListingsImpactedByStoryChanges(db, schema, events) {
+async function findListingsImpactedByStoryChanges(db, schema, events) {
     // these columns determines whether a story is included in a listing or not
-    var filteredColumnMappings = {
+    let filteredColumnMappings = {
         published: 'published',
         ready: 'ready',
         public: 'public',
@@ -211,17 +220,17 @@ function findListingsImpactedByStoryChanges(db, schema, events) {
         user_ids: 'user_ids',
         role_ids: 'role_ids',
     };
-    var filteredColumns = _.values(filteredColumnMappings);
+    let filteredColumns = _.values(filteredColumnMappings);
     // columns that affects rating
-    var ratingColumns = _.uniq(_.flatten(_.map(StoryRaters, 'columns')));
+    let ratingColumns = _.uniq(_.flatten(_.map(StoryRaters, 'columns')));
     // columns that affects order (hence whether it'd be excluded by the LIMIT clause)
-    var orderingColumns = [ 'btime' ];
-    var relevantEvents = _.filter(events, (event) => {
+    let orderingColumns = [ 'btime' ];
+    let relevantEvents = _.filter(events, (event) => {
         if (event.table === 'story') {
             // only stories that are published (or have just been unpublished)
             // can impact listings
             if (event.current.published || event.diff.pubished) {
-                var changedColumns = _.keys(event.diff);
+                let changedColumns = _.keys(event.diff);
                 return _.some(changedColumns, (column) => {
                     if (_.includes(filteredColumns, column)) {
                         return true;
@@ -236,39 +245,41 @@ function findListingsImpactedByStoryChanges(db, schema, events) {
     });
     // a listing gets updated if a changed row matches its criteria currently
     // or previously
-    var storiesBefore = extractPreviousValues(relevantEvents, filteredColumns);
-    var storiesAfter = extractCurrentValues(relevantEvents, filteredColumns);
-    var stories = _.concat(storiesBefore, storiesAfter);
+    let storiesBefore = extractPreviousValues(relevantEvents, filteredColumns);
+    let storiesAfter = extractCurrentValues(relevantEvents, filteredColumns);
+    let stories = _.concat(storiesBefore, storiesAfter);
     if (_.isEmpty(stories)) {
         return [];
     }
-    var matchingObjects = _.map(stories, (row) => {
+    let matchingObjects = _.map(stories, (row) => {
         return _.mapValues(filteredColumnMappings, (column, filter) => {
             return row[column];
         });
     });
     // find listing rows that cover these stories
-    var listingCriteria = {
+    let listingCriteria = {
         match_any: matchingObjects,
         dirty: false,
     };
-    return Listing.find(db, schema, listingCriteria, 'id').then((rows) => {
-        return _.map(rows, 'id');
-    });
+    let rows = await Listing.find(db, schema, listingCriteria, 'id, atime');
+    // return listings that have been accessed recently first
+    let orderedRows = _.orderBy(rows, [ 'atime' ], [ 'desc' ]);
+    let ids = _.map(orderedRows, 'id');
+    return ids;
 }
 
 /**
- * Mark listings impacted by statistic changes as dirty
+ * Find listings impacted by statistic changes
  *
  * @param  {Database} db
  * @param  {String} schema
  * @param  {Array<Object>} events
  *
- * @return {Promise}
+ * @return {Promise<Array<Number>>}
  */
-function findListingsImpactedByStatisticsChange(db, schema, events) {
+async function findListingsImpactedByStatisticsChange(db, schema, events) {
     // only story-popularity is used
-    var relevantEvents = _.filter(events, (event) => {
+    let relevantEvents = _.filter(events, (event) => {
         if (event.table === 'statistics') {
             if (event.current.type === 'story-popularity') {
                 return true;
@@ -276,19 +287,20 @@ function findListingsImpactedByStatisticsChange(db, schema, events) {
         }
     });
     // change object for Statistics contains the row's filters
-    var storyIds = _.map(relevantEvents, (event) => {
+    let storyIDs = _.map(relevantEvents, (event) => {
         return event.current.filters.story_id;
     });
-    if (_.isEmpty(storyIds)) {
+    if (_.isEmpty(storyIDs)) {
         return [];
     }
-    var listingCriteria = {
-        has_candidates: storyIds,
+    let listingCriteria = {
+        has_candidates: storyIDs,
         dirty: false,
     };
-    return Listing.find(db, schema, listingCriteria, 'id').then((rows) => {
-        return _.map(rows, 'id');
-    });
+    let rows = await Listing.find(db, schema, listingCriteria, 'id, atime');
+    let orderedRows = _.orderBy(rows, [ 'atime' ], [ 'desc' ]);
+    let ids = _.map(orderedRows, 'id');
+    return ids;
 }
 
 /**
@@ -304,7 +316,7 @@ function findListingsImpactedByStatisticsChange(db, schema, events) {
 function extractCurrentValues(events, columns) {
     return _.filter(_.map(events, (event) => {
         if (event.op !== 'DELETE') {
-            var row = event.current;
+            let row = event.current;
             return _.pick(row, columns);
         }
     }));
@@ -321,13 +333,13 @@ function extractPreviousValues(events, columns) {
     return _.filter(_.map(events, (event) => {
         if (event.op !== 'INSERT') {
             // include row only when the request columns have changed
-            var changed = _.some(columns, (column) => {
+            let changed = _.some(columns, (column) => {
                 return event.diff[column];
             });
             if (changed) {
                 // event.previous only contains properties that differ from the
                 // current values--reconstruct the row
-                var row = _.assign({}, event.current, event.previous);
+                let row = _.assign({}, event.current, event.previous);
                 return _.pick(row, columns);
             }
         }

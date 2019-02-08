@@ -1,7 +1,4 @@
-import _ from 'lodash';
-import Promise from 'bluebird';
-
-var listeners = [];
+let listeners = [];
 
 /**
  * Add shutdown listener
@@ -18,7 +15,10 @@ function on(callback) {
  * @param  {Function} callback
  */
 function off(callback) {
-    _.pull(listeners, callback);
+    let index = listeners.indexOf(callback);
+    if (index !== -1) {
+        listeners.splice(index, 1);
+    }
 }
 
 /**
@@ -29,43 +29,39 @@ function off(callback) {
  *
  * @return {Promise}
  */
-function close(server, maxWait) {
+async function close(server, maxWait) {
     if (maxWait === undefined) {
         maxWait = 1000;
     }
-    return new Promise((resolve, reject) => {
-        if (server) {
-            var resolved = false;
-            server.on('close', () => {
-                if (!resolved) {
-                    resolved = true;
-                    resolve();
-                }
-            });
-            server.close();
-            setTimeout(() => {
-                // just in case close isn't firing
-                if (!resolved) {
-                    resolved = true;
-                    resolve();
-                }
-            }, maxWait);
-        } else {
-            resolve();
-        }
+    if (!server) {
+        return;
+    }
+    await new Promise((resolve, reject) => {
+        var resolved = false;
+        server.on('close', () => {
+            if (!resolved) {
+                resolved = true;
+                resolve();
+            }
+        });
+        server.close();
+        setTimeout(() => {
+            // just in case close isn't firing
+            if (!resolved) {
+                resolved = true;
+                resolve();
+            }
+        }, maxWait);
     });
 }
 
 /**
  * Start shutting down system
  */
-function initiate() {
+async function initiate() {
     console.log('Shutting down...');
-    broadcast().catch((err) => {
-        console.error(err);
-    }).finally(() => {
-        process.exit(0);
-    });
+    await broadcast();
+    process.exit(0);
 }
 
 /**
@@ -74,19 +70,18 @@ function initiate() {
  *
  * @return {Promise}
  */
-function broadcast() {
-    var rounds = [ 1, 2 ];
-    return Promise.reduce(rounds, (a, v) => {
-        var list = listeners;
+async function broadcast() {
+    while (listeners.length > 0) {
+        let list = listeners;
         listeners = [];
-        return Promise.each(list, (callback) => {
-            return Promise.try(() => {
-                return callback();
-            }).catch((err) => {
+        for (let callback of list) {
+            try {
+                await callback();
+            } catch (err) {
                 console.error(err);
-            });
-        });
-    }, null)
+            }
+        }
+    }
 }
 
 process.on('SIGTERM', initiate);

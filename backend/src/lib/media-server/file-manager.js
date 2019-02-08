@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import Promise from 'bluebird'
-import FS from 'fs'; Promise.promisifyAll(FS);
+import Bluebird from 'bluebird'
+import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Request from 'request';
 import Crypto from 'crypto';
 
@@ -12,19 +12,20 @@ import Crypto from 'crypto';
  *
  * @return {String}
  */
-function saveFile(srcPath, dstFolder) {
-    return hashFile(srcPath).then((hash) => {
-        var dstPath = `${dstFolder}/${hash}`;
-        return FS.statAsync(dstPath).catch((err) => {
-            return new Promise((resolve, reject) => {
-                var inputStream = FS.createReadStream(srcPath);
-                var outputStream = FS.createWriteStream(dstPath);
-                inputStream.once('error', reject);
-                outputStream.once('finish', resolve);
-                inputStream.pipe(outputStream);
-            });
-        }).return(hash);
-    });
+async function saveFile(srcPath, dstFolder) {
+    let hash = await hashFile(srcPath);
+    try {
+        await FS.statAsync(dstPath);
+    } catch (err) {
+        let inputStream = FS.createReadStream(srcPath);
+        let outputStream = FS.createWriteStream(dstPath);
+        await new Promise((resolve, reject) => {
+            inputStream.once('error', reject);
+            outputStream.once('finish', resolve);
+            inputStream.pipe(outputStream);
+        });
+    }
+    return hash;
 }
 
 /**
@@ -35,28 +36,32 @@ function saveFile(srcPath, dstFolder) {
  *
  * @return {Promise}
  */
-function moveFile(srcPath, dstPath) {
+async function moveFile(srcPath, dstPath) {
     if (srcPath === dstPath) {
-        return Promise.resolve();
+        return;
     }
-    return FS.statAsync(dstPath).then(() => {
-        // delete if it exists already
-        return FS.unlinkAsync(srcPath);
-    }).catch(() => {
-        return FS.renameAsync(srcPath, dstPath).catch(() => {
-            return new Promise((resolve, reject) => {
-                var readStream = FS.createReadStream(srcPath);
-                var writeStream = FS.createWriteStream(dstPath);
-                writeStream.on('error', reject);
-                writeStream.on('finish', resolve);
-                readStream.on('error', reject);
-                readStream.on('close', () => {
-                    FS.unlink(srcPath);
+    try {
+        // delete source file if dest file exists already
+        await FS.statAsync(dstPath);
+        await FS.unlinkAsync(srcPath);
+    } catch (err) {
+        try {
+            await FS.renameAsync(srcPath, dstPath);
+        } catch (err) {
+            // can't rename accross volumes
+            let readStream = FS.createReadStream(srcPath);
+            let writeStream = FS.createWriteStream(dstPath);
+            await new Promise((resolve, reject) => {
+                writeStream.once('error', reject);
+                writeStream.once('finish', resolve);
+                readStream.once('error', reject);
+                readStream.once('close', async () => {
+                    await FS.unlinkAsync(srcPath);
                 });
                 readStream.pipe(writeStream);
             });
-        });
-    });
+        }
+    }
 }
 
 /**
@@ -66,17 +71,17 @@ function moveFile(srcPath, dstPath) {
  *
  * @return {Promise<String>}
  */
-function hashFile(srcPath) {
-    return new Promise((resolve, reject) => {
-        var hash = Crypto.createHash('md5');
-        var stream = FS.createReadStream(srcPath);
+async function hashFile(srcPath) {
+    let hash = Crypto.createHash('md5');
+    let stream = FS.createReadStream(srcPath);
+    await new Promise((resolve, reject) => {
         stream.once('error', reject);
-        hash.once('readable', () => {
-            resolve(hash.read().toString('hex'));
-        });
+        hash.once('readable', resolve);
         stream.pipe(hash);
     });
+    return hash.read().toString('hex');
 }
+
 
 /**
  * Download file file off the Internet
@@ -86,19 +91,17 @@ function hashFile(srcPath) {
  *
  * @return {Promise<String>}
  */
-function downloadFile(url, dstFolder) {
-    url = _.replace(url, 'localhost', '172.18.0.1');
-    return new Promise((resolve, reject) => {
-        var tempPath = makeTempPath(dstFolder, url);
-        var writeStream = FS.createWriteStream(tempPath);
-        var readStream = Request.get(url);
-        writeStream.on('error', reject);
-        writeStream.on('finish', () => {
-            resolve(tempPath);
-        });
-        readStream.on('error', reject);
+async function downloadFile(url, dstFolder) {
+    let tempPath = makeTempPath(dstFolder, url);
+    let writeStream = FS.createWriteStream(tempPath);
+    let readStream = Request.get(url);
+    await new Promise((resolve, reject) => {
+        writeStream.once('error', reject);
+        writeStream.once('finish', resolve);
+        readStream.once('error', reject);
         readStream.pipe(writeStream);
     });
+    return tempPath;
 }
 
 /**
@@ -110,25 +113,20 @@ function downloadFile(url, dstFolder) {
  *
  * @return {Promise<String>}
  */
-function preserveFile(file, url, dstFolder) {
-    return Promise.try(() => {
-        if (file) {
-            return file.path;
-        } else if (url) {
-            return downloadFile(url, dstFolder);
-        }
-    }).then((srcPath) => {
-        if (srcPath) {
-            return hashFile(srcPath).then((hash) => {
-                var dstPath = `${dstFolder}/${hash}`;
-                return moveFile(srcPath, dstPath).then(() => {
-                    return dstPath;
-                });
-            });
-        } else {
-            return null;
-        }
-    });
+async function preserveFile(file, url, dstFolder) {
+    let srcPath;
+    if (file) {
+        srcPath = file.path;
+    } else if (url) {
+        srcPath = await downloadFile(url, dstFolder);
+    }
+    if (!srcPath) {
+        return null;
+    }
+    let hash = await hashFile(srcPath);
+    let dstPath = `${dstFolder}/${hash}`;
+    await moveFile(srcPath, dstPath);
+    return dstPath;
 }
 
 /**
@@ -139,7 +137,7 @@ function preserveFile(file, url, dstFolder) {
  * @return {String}
  */
 function md5(data) {
-    var hash = Crypto.createHash('md5').update(data);
+    let hash = Crypto.createHash('md5').update(data);
     return hash.digest('hex');
 }
 
@@ -153,8 +151,8 @@ function md5(data) {
  * @return {String}
  */
 function makeTempPath(dstFolder, url, ext) {
-    var date = (new Date).toISOString();
-    var hash = md5(`${url} ${date}`);
+    let date = (new Date).toISOString();
+    let hash = md5(`${url} ${date}`);
     if (!ext) {
         ext = '';
     }

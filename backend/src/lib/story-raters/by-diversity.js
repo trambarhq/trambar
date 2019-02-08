@@ -1,44 +1,43 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 
 import TypeDiversityRatings from 'story-raters/ratings/type-diversity-ratings';
 import UserDiversityRatings from 'story-raters/ratings/user-diversity-ratings';
 
-const ByDiversity = {
-    type: 'by-diversity',
-    calculation: 'immediate',
-    columns: [ 'type', 'user_ids' ],
-    monitoring: [],
+class ByDiversity {
+    constructor() {
+        this.type = 'by-diversity';
+        this.calculation = 'immediate';
+        this.columns = [ 'type', 'user_ids' ];
+        this.monitoring = [];
+    }
 
-    prepareContext: function(db, schema, stories, listing) {
-        return Promise.try(() => {
-            var userCounts = {};
-            var typeCounts = {};
-            _.each(stories, (story) => {
-                var userId = story.user_ids[0];
-                var type = story.type;
-                var userCount = userCounts[userId] || 0;
-                var typeCount = typeCounts[type] || 0;
-                userCounts[userId] = userCount + 1;
-                typeCounts[type] = typeCount + 1;
-            });
-            var userPercentages = _.mapValues(userCounts, (count) => {
-                return _.round(count * 100 / stories.length);
-            });
-            var typePercentages = _.mapValues(typeCounts, (count) => {
-                return _.round(count * 100 / stories.length);
-            });
-            return { userPercentages, typePercentages };
+    async prepareContext(db, schema, stories, listing) {
+        let userCounts = {};
+        let typeCounts = {};
+        for (let story of stories) {
+            let userId = story.user_ids[0];
+            let type = story.type;
+            let userCount = userCounts[userId] || 0;
+            let typeCount = typeCounts[type] || 0;
+            userCounts[userId] = userCount + 1;
+            typeCounts[type] = typeCount + 1;
+        }
+        let userPercentages = _.mapValues(userCounts, (count) => {
+            return _.round(count * 100 / stories.length);
         });
-    },
+        let typePercentages = _.mapValues(typeCounts, (count) => {
+            return _.round(count * 100 / stories.length);
+        });
+        return { userPercentages, typePercentages };
+    }
 
-    calculateRating: function(context, story) {
-        var userId = story.user_ids[0];
-        var type = story.type;
-        var rating = 0;
-        var typePercentage = context.typePercentages[type];
-        var typeDiversityBonus = _.find(TypeDiversityRatings, (value, key) => {
+    calculateRating(context, story) {
+        let userId = story.user_ids[0];
+        let type = story.type;
+        let rating = 0;
+        let typePercentage = context.typePercentages[type];
+        let typeDiversityBonus = _.find(TypeDiversityRatings, (value, key) => {
             if (typePercentage <= parseInt(key)) {
                 return true;
             }
@@ -46,8 +45,8 @@ const ByDiversity = {
         if (typeDiversityBonus) {
             rating += typeDiversityBonus;
         }
-        var userPercentage = context.userPercentages[userId];
-        var userDiversityBonus = _.find(UserDiversityRatings, (value, key) => {
+        let userPercentage = context.userPercentages[userId];
+        let userDiversityBonus = _.find(UserDiversityRatings, (value, key) => {
             if (userPercentage <= parseInt(key)) {
                 return true;
             }
@@ -56,10 +55,12 @@ const ByDiversity = {
             rating += userDiversityBonus;
         }
         return rating;
-    },
-};
+    }
+}
+
+const instance = new ByDiversity;
 
 export {
-    ByDiversity as default,
+    instance as default,
     ByDiversity,
 };

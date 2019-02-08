@@ -1,26 +1,27 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import HTTPError from 'errors/http-error';
 import * as TagScanner from 'utils/tag-scanner';
 
-const Data = {
-    schema: '?',
-    table: '?',
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-    },
-    accessControlColumns: {
-    },
-    version: 1,
+class Data {
+    constructor() {
+        this.schema = '?';
+        this.table = '?';
+        this.columns = {
+            id: Number,
+            gn: Number,
+            deleted: Boolean,
+            ctime: String,
+            mtime: String,
+            details: Object,
+        };
+        this.criteria = {
+            id: Number,
+            deleted: Boolean,
+        };
+        this.accessControlColumns = {
+        };
+        this.version = 1;
+    }
 
     /**
      * Return fully-qualify name of table
@@ -29,7 +30,7 @@ const Data = {
      *
      * @return {String}
      */
-    getTableName: function(schema) {
+    getTableName(schema) {
         // allow non-alphanumeric schema name during testing
         if (!process.env.DOCKER_MOCHA) {
             if (!/^[\w\-]+$/.test(schema)) {
@@ -45,7 +46,7 @@ const Data = {
             }
         }
         return `"${schema}"."${this.table}"`;
-    },
+    }
 
     /**
      * Create table in schema
@@ -55,11 +56,11 @@ const Data = {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -70,8 +71,8 @@ const Data = {
                 PRIMARY KEY (id)
             );
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql)
+    }
 
     /**
      * Grant privileges to table to appropriate Postgres users
@@ -79,16 +80,16 @@ const Data = {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    grant: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async grant(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO client_role;
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Attach triggers to the table.
@@ -96,11 +97,10 @@ const Data = {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    watch: function(db, schema) {
-        return Promise.resolve(false);
-    },
+    async watch(db, schema) {
+    }
 
     /**
      * Attach a trigger to the table that increment the gn (generation number)
@@ -109,18 +109,18 @@ const Data = {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    createChangeTrigger: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async createChangeTrigger(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TRIGGER "indicateDataChangeOnUpdate"
             BEFORE UPDATE ON ${table}
             FOR EACH ROW
             EXECUTE PROCEDURE "indicateDataChange"();
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Add triggers that send notification messages, bundled with values of
@@ -130,15 +130,15 @@ const Data = {
      * @param  {String} schema
      * @param  {Array<String>} propNames
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    createNotificationTriggers: function(db, schema, propNames) {
-        var table = this.getTableName(schema);
-        var args = _.map(propNames, (propName) => {
+    async createNotificationTriggers(db, schema, propNames) {
+        let table = this.getTableName(schema);
+        let args = _.map(propNames, (propName) => {
             // use quotes just in case the name is mixed case
             return `"${propName}"`;
         }).join(', ');
-        var sql = `
+        let sql = `
             CREATE CONSTRAINT TRIGGER "notifyDataChangeOnInsert"
             AFTER INSERT ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
@@ -152,8 +152,8 @@ const Data = {
             FOR EACH ROW
             EXECUTE PROCEDURE "notifyDataChange"(${args});
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * See if a database change event is relevant to a given user
@@ -164,7 +164,7 @@ const Data = {
      *
      * @return {Boolean}
      */
-    isRelevantTo: function(event, user, subscription) {
+    isRelevantTo(event, user, subscription) {
         if (this.schema === 'global') {
             return true;
         }
@@ -172,7 +172,7 @@ const Data = {
             return true;
         }
         return false;
-    },
+    }
 
     /**
      * Throw if current user cannot make modifications
@@ -181,8 +181,8 @@ const Data = {
      * @param  {Object} objectBefore
      * @param  {Object} credentials
      */
-    checkWritePermission: function(objectReceived, objectBefore, credentials) {
-    },
+    checkWritePermission(objectReceived, objectBefore, credentials) {
+    }
 
     /**
      * Upgrade table in schema to given DB version (from one version prior)
@@ -193,9 +193,9 @@ const Data = {
      *
      * @return {Promise<Boolean>}
      */
-    upgrade: function(db, schema, version) {
-        return Promise.resolve(false);
-    },
+    async upgrade(db, schema, version) {
+        return false;
+    }
 
     /**
      * Add conditions to SQL query based on criteria object
@@ -203,10 +203,10 @@ const Data = {
      * @param  {Object} criteria
      * @param  {Object} query
      */
-    apply: function(criteria, query) {
-        var params = query.parameters;
-        var conds = query.conditions;
-        _.forIn(this.criteria, (type, name) => {
+    apply(criteria, query) {
+        let params = query.parameters;
+        let conds = query.conditions;
+        for (let [ name, type ] of _.entries(this.criteria)) {
             if (criteria.hasOwnProperty(name)) {
                 if (name === 'exclude') {
                     if (criteria.exclude) {
@@ -214,7 +214,7 @@ const Data = {
                     }
                 } else {
                     // assume that none of the column names requires double quotes
-                    var value = criteria[name];
+                    let value = criteria[name];
                     if (type === Array || type instanceof Array) {
                         if (value instanceof Array) {
                             // overlaps
@@ -236,15 +236,14 @@ const Data = {
                     }
                 }
             }
-        });
-
+        }
         if (typeof(criteria.limit) === 'number') {
             query.limit = criteria.limit;
         }
         if (typeof(criteria.order) === 'string') {
-            var parts = _.split(criteria.order, /\s+/);
-            var column = parts[0];
-            var dir = _.toUpper(parts[1]);
+            let parts = _.split(criteria.order, /\s+/);
+            let column = parts[0];
+            let dir = _.toUpper(parts[1]);
             if (/^\w+$/.test(column)) {
                 query.order = column;
                 if (dir === 'ASC' || dir === 'DESC') {
@@ -252,7 +251,7 @@ const Data = {
                 }
             }
         }
-    },
+    }
 
     /**
      * Look for rows matching criteria
@@ -264,38 +263,35 @@ const Data = {
      *
      * @return {Promise<Array>}
      */
-    find: function(db, schema, criteria, columns) {
+    async find(db, schema, criteria, columns) {
         if (!criteria) {
-            return Promise.resolve([]);
+            return [];
         }
-        var table = this.getTableName(schema);
-        var query = {
+        let table = this.getTableName(schema);
+        let query = {
             conditions: [],
             parameters: [],
             columns: columns,
             table: table,
         };
-        var select = function() {
-            var sql = `SELECT ${query.columns} FROM ${query.table}`;
-            if (!_.isEmpty(query.conditions)) {
-                sql += ` WHERE ${query.conditions.join(' AND ')}`;
-            }
-            if (query.order !== undefined) {
-                sql += ` ORDER BY ${query.order}`;
-            }
-            if (query.limit !== undefined) {
-                sql += ` LIMIT ${query.limit}`;
-            }
-            return db.query(sql, query.parameters);
-        };
         if (this.apply.length === 4) {
             // the four-argument form of the function works asynchronously
-            return this.apply(db, schema, criteria, query).then(select);
+            await this.apply(db, schema, criteria, query);
         } else {
             this.apply(criteria, query);
-            return select();
         }
-    },
+        let sql = `SELECT ${query.columns} FROM ${query.table}`;
+        if (!_.isEmpty(query.conditions)) {
+            sql += ` WHERE ${query.conditions.join(' AND ')}`;
+        }
+        if (query.order !== undefined) {
+            sql += ` ORDER BY ${query.order}`;
+        }
+        if (query.limit !== undefined) {
+            sql += ` LIMIT ${query.limit}`;
+        }
+        return db.query(sql, query.parameters);
+    }
 
     /**
      * Look for one row
@@ -307,16 +303,15 @@ const Data = {
      *
      * @return {Promise<Object>}
      */
-    findOne: function(db, schema, criteria, columns) {
+    async findOne(db, schema, criteria, columns) {
         if (!criteria) {
-            return Promise.resolve(null);
+            return null;
         }
         criteria = _.clone(criteria);
         criteria.limit = 1;
-        return this.find(db, schema, criteria, columns).get(0).then((row) => {
-            return row || null;
-        });
-    },
+        let rows = await this.find(db, schema, criteria, columns);
+        return rows[0] || null;
+    }
 
     /**
      * Update multiple rows
@@ -327,11 +322,14 @@ const Data = {
      *
      * @return {Promise<Array>}
      */
-    update: function(db, schema, rows) {
-        return Promise.mapSeries(rows, (row) => {
-            return this.updateOne(db, schema, row);
-        });
-    },
+    async update(db, schema, rows) {
+        let results = [];
+        for (let row of rows) {
+            let result = await this.updateOne(db, schema, row);
+            results.push(result);
+        }
+        return results;
+    }
 
     /**
      * Update one row
@@ -342,18 +340,18 @@ const Data = {
      *
      * @return {Promise<Object>}
      */
-    updateOne: function(db, schema, row) {
+    async updateOne(db, schema, row) {
         if (!row) {
-            return Promise.resolve(null);
+            return null;
         }
-        var table = this.getTableName(schema);
-        var assignments = [];
-        var columns = _.keys(this.columns);
-        var parameters = [];
-        var id = 0;
-        _.each(columns, (name) => {
+        let table = this.getTableName(schema);
+        let assignments = [];
+        let columns = _.keys(this.columns);
+        let parameters = [];
+        let id = 0;
+        for (let name of columns) {
             if (row.hasOwnProperty(name)) {
-                var value = row[name];
+                let value = row[name];
                 if (value !== undefined) {
                     if (name !== 'id') {
                         if (value instanceof String) {
@@ -369,17 +367,16 @@ const Data = {
                     }
                 }
             }
-        });
-        var sql = `
+        }
+        let sql = `
             UPDATE ${table}
             SET ${assignments.join(', ')}
             WHERE id = $${parameters.push(id)}
             RETURNING *
         `;
-        return db.query(sql, parameters).get(0).then((row) => {
-            return row || null;
-        });
-    },
+        let rows = await db.query(sql, parameters);
+        return rows[0] || null;
+    }
 
     /**
      * Update one row
@@ -391,17 +388,17 @@ const Data = {
      *
      * @return {Promise<Array<Object>>}
      */
-    updateMatching: function(db, schema, criteria, values) {
+    async updateMatching(db, schema, criteria, values) {
         if (!criteria) {
-            return Promise.resolve([]);
+            return [];
         }
-        var table = this.getTableName(schema);
-        var columns = _.keys(this.columns);
-        var assignments = [];
-        var parameters = [];
-        _.each(columns, (name) => {
+        let table = this.getTableName(schema);
+        let columns = _.keys(this.columns);
+        let assignments = [];
+        let parameters = [];
+        for (let name of columns) {
             if (values.hasOwnProperty(name)) {
-                var value = values[name];
+                let value = values[name];
                 if (value !== undefined) {
                     if (value instanceof String) {
                         // a boxed string--just insert it into the query
@@ -411,30 +408,27 @@ const Data = {
                     }
                 }
             }
-        });
-        var query = {
+        }
+        let query = {
             conditions: [],
             parameters: parameters,
             columns: '*',
             table: table,
         };
-        var update = function() {
-            var sql = `
-                UPDATE ${query.table}
-                SET ${assignments.join(', ')}
-                WHERE ${query.conditions.join(' AND ')}
-                RETURNING *
-            `;
-            return db.query(sql, query.parameters);
-        };
         if (this.apply.length === 4) {
             // the four-argument form of the function works asynchronously
-            return this.apply(db, schema, criteria, query).then(update);
+            await this.apply(db, schema, criteria, query);
         } else {
             this.apply(criteria, query);
-            return update();
         }
-    },
+        let sql = `
+            UPDATE ${query.table}
+            SET ${assignments.join(', ')}
+            WHERE ${query.conditions.join(' AND ')}
+            RETURNING *
+        `;
+        return db.query(sql, query.parameters);
+    }
 
     /**
      * Insert rows into table
@@ -445,34 +439,35 @@ const Data = {
      *
      * @return {Promise<Array<Object>>}
      */
-    insert: function(db, schema, rows) {
+    async insert(db, schema, rows) {
         if (_.isEmpty(rows)) {
-            return Promise.resolve([]);
+            return [];
         }
-        var table = this.getTableName(schema);
-        var valueSets = [];
-        var parameters = [];
-        var columns = _.keys(this.columns);
-        var columnsPresent = [];
-        var manualId = false;
+        let table = this.getTableName(schema);
+        let valueSets = [];
+        let parameters = [];
+        let columns = _.keys(this.columns);
+        let columnsPresent = [];
+        let manualID = false;
         // see which columns are being set
-        _.each(rows, (row) => {
-            _.each(columns, (name) => {
-                var value = row[name];
+        for (let row of rows) {
+            for (let name of columns) {
+                let value = row[name];
                 if (value !== undefined) {
                     if (columnsPresent.indexOf(name) === -1) {
                         columnsPresent.push(name);
                         if (name === 'id') {
-                            manualId = true;
+                            // inserting primary key
+                            manualID = true;
                         }
                     }
                 }
-            });
-        });
-        _.each(rows, (row) => {
-            var values = [];
-            _.each(columnsPresent, (name) => {
-                var value = row[name];
+            }
+        }
+        for (let row of rows) {
+            let values = [];
+            for (let name of columnsPresent) {
+                let value = row[name];
                 if (value !== undefined) {
                     if (value instanceof String) {
                         // a boxed string--just insert it into the query
@@ -485,26 +480,25 @@ const Data = {
                 } else {
                     values.push('DEFAULT');
                 }
-            });
+            }
             valueSets.push(`(${values.join(',')})`);
-        });
-        var sql = `
+        }
+        let sql = `
             INSERT INTO ${table} (${columnsPresent.join(', ')})
             VALUES ${valueSets.join(',')}
             RETURNING *
         `;
-        return db.query(sql, parameters).then((rows) => {
-            if (manualId) {
-                var sequence = `"${schema}"."${this.table}_id_seq"`;
-                var sql = `
-                    SELECT setval('${sequence}', COALESCE((SELECT MAX(id) FROM ${table}), 0));
-                `;
-                return db.query(sql).return(rows);
-            } else {
-                return rows;
-            }
-        });
-    },
+        let results = await db.query(sql, parameters);
+        if (manualID) {
+            // update the sequence used for auto-increment primary key
+            let sequence = `"${schema}"."${this.table}_id_seq"`;
+            let sql = `
+                SELECT setval('${sequence}', COALESCE((SELECT MAX(id) FROM ${table}), 0));
+            `;
+            await db.query(sql);
+        }
+        return results;
+    }
 
     /**
      * Insert one row into table
@@ -515,14 +509,13 @@ const Data = {
      *
      * @return {Promise<Object>}
      */
-    insertOne: function(db, schema, row) {
+    async insertOne(db, schema, row) {
         if (!row) {
-            return Promise.resolve(null);
+            return null;
         }
-        return this.insert(db, schema, [ row ]).get(0).then((row) => {
-            return row || null;
-        });
-    },
+        let rows = await this.insert(db, schema, [ row ]);
+        return rows[0] || null;
+    }
 
     /**
      * Insert or update rows depending on whether id is present
@@ -533,22 +526,27 @@ const Data = {
      *
      * @return {Promise<Array<Object>>}
      */
-    save: function(db, schema, rows) {
+    async save(db, schema, rows) {
         if (_.isEmpty(rows)) {
-            return Promise.resolve([]);
+            return [];
         }
-        var updates = _.filter(rows, (row) => {
+        let updates = _.filter(rows, (row) => {
             return row.id > 0;
         });
-        var inserts = _.filter(rows, (row) => {
+        let inserts = _.filter(rows, (row) => {
             return !(row.id > 0);
         });
-        return this.update(db, schema, updates).then((updatedObjects) => {
-            return this.insert(db, schema, inserts).then((insertedObjects) => {
-                return _.concat(updatedObjects, insertedObjects);
-            });
+        let updatedObjects = await this.update(db, schema, updates);
+        let insertedObjects = await this.insert(db, schema, inserts);
+        let updatedIndex = 0, insertedIndex = 0;
+        return _.map(rows, (row) => {
+            if (row.id > 0) {
+                return updatedObjects[updatedIndex++];
+            } else {
+                return insertedObjects[insertedIndex++];
+            }
         });
-    },
+    }
 
     /**
      * Insert or update a row
@@ -559,16 +557,16 @@ const Data = {
      *
      * @return {Promise<Object>}
      */
-    saveOne: function(db, schema, row) {
+    async saveOne(db, schema, row) {
         if (!row) {
-            return Promise.resolve(null);
+            return null;
         }
         if (row.id > 0) {
             return this.updateOne(db, schema, row);
         } else {
             return this.insertOne(db, schema, row);
         }
-    },
+    }
 
     /**
      * Delete rows by their ids
@@ -579,21 +577,21 @@ const Data = {
      *
      * @return {Promise<Array<Object>>}
      */
-    remove: function(db, schema, rows) {
+    async remove(db, schema, rows) {
         if (!_.isEmpty(rows)) {
-            return Promise.resolve([]);
+            return [];
         }
-        var table = this.getTableName(schema);
-        var ids = _.map(rows, 'id');
-        var parameters = [ ids ];
-        var bound = '$1';
-        var sql = `
+        let table = this.getTableName(schema);
+        let ids = _.map(rows, 'id');
+        let parameters = [ ids ];
+        let bound = '$1';
+        let sql = `
             DELETE FROM ${table}
             WHERE id = ANY(${bound})
             RETURNING *
         `;
         return db.query(sql, parameters);
-    },
+    }
 
     /**
      * Delete one row
@@ -604,14 +602,13 @@ const Data = {
      *
      * @return {Promise<Object>}
      */
-    removeOne: function(db, schema, row) {
+    async removeOne(db, schema, row) {
         if (!row) {
-            return Promise.resolve(null);
+            return null;
         }
-        return this.remove(db, schema, [ row ]).get(0).then((row) => {
-            return row || null;
-        });
-    },
+        let rows = await this.remove(db, schema, [ row ]);
+        return rows[0] || null;
+    }
 
     /**
      * Remove matching rows
@@ -622,33 +619,30 @@ const Data = {
      *
      * @return {Promise<Array<Object>>}
      */
-    removeMatching: function(db, schema, criteria) {
+    async removeMatching(db, schema, criteria) {
         if (!criteria) {
-            return Promise.resolve([]);
+            return [];
         }
-        var table = this.getTableName(schema);
-        var query = {
+        let table = this.getTableName(schema);
+        let query = {
             conditions: [],
             parameters: [],
             columns: '*',
             table: table,
         };
-        var remove = function() {
-            var sql = `
-                DELETE FROM ${query.table}
-                WHERE ${query.conditions.join(' AND ')}
-                RETURNING *
-            `;
-            return db.query(sql, query.parameters);
-        };
         if (this.apply.length === 4) {
             // the four-argument form of the function works asynchronously
-            return this.apply(db, schema, criteria, query).then(remove);
+            await this.apply(db, schema, criteria, query);
         } else {
             this.apply(criteria, query);
-            return remove();
         }
-    },
+        let sql = `
+            DELETE FROM ${query.table}
+            WHERE ${query.conditions.join(' AND ')}
+            RETURNING *
+        `;
+        return db.query(sql, query.parameters);
+    }
 
     /**
      * Filter out rows that user doesn't have access to
@@ -660,9 +654,9 @@ const Data = {
      *
      * @return {Promise<Array>}
      */
-    filter: function(db, schema, rows, credentials) {
-        return Promise.resolve(rows);
-    },
+    async filter(db, schema, rows, credentials) {
+        return rows;
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -676,9 +670,9 @@ const Data = {
      *
      * @return {Promise<Array>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        var objects = _.map(rows, (row) => {
-            var object = {
+    async export(db, schema, rows, credentials, options) {
+        return _.map(rows, (row) => {
+            let object = {
                 id: row.id,
                 gn: row.gn,
                 details: row.details,
@@ -694,29 +688,47 @@ const Data = {
             }
             return object;
         });
-        return Promise.resolve(objects);
-    },
+    }
 
     /**
      * Import objects sent by client-side code, applying access control
      *
      * @param  {Database} db
      * @param  {String} schema
-     * @param  {Array<Object>} objects
-     * @param  {Array<Object>} originals
+     * @param  {Array<Object>} objectsReceived
+     * @param  {Array<Object>} objectsBefore
      * @param  {Object} credentials
      * @param  {Object} options
      *
      * @return {Promise<Array>}
      */
-    import: function(db, schema, objects, originals, credentials, options) {
-        return Promise.mapSeries(objects, (objectReceived, index) => {
-            var objectBefore = originals[index];
+    async import(db, schema, objectsReceived, objectsBefore, credentials, options) {
+        let rows = [];
+        for (let [ index, objectReceived ] of objectsReceived.entries()) {
+            let objectBefore = objectsBefore[index];
             this.checkWritePermission(objectReceived, objectBefore, credentials);
-            // these properties cannot be modified from the client side
-            return _.omit(objectReceived, 'gn', 'ctime', 'mtime');
-        });
-    },
+            let row = await this.importOne(db, schema, objectReceived, objectBefore, credentials, options);
+            rows.push(row);
+        }
+        return rows;
+    }
+
+    /**
+     * Import object sent by client-side code
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Object} objectReceived
+     * @param  {Object} objectBefore
+     * @param  {Object} credentials
+     * @param  {Object} options
+     *
+     * @return {Promise<Array>}
+     */
+    async importOne(db, schema, object, original, credentials, options) {
+        // these properties cannot be modified from the client side
+        return _.omit(object, 'gn', 'ctime', 'mtime');
+    }
 
     /**
      * [description]
@@ -730,9 +742,8 @@ const Data = {
      *
      * @return {Promise}
      */
-    associate: function(db, schema, objects, originals, rows, credentials) {
-        return Promise.resolve();
-    },
+    async associate(db, schema, objects, originals, rows, credentials) {
+    }
 
     /**
      * Delete rows that are marked deleted for long enough time (as indicated
@@ -744,25 +755,23 @@ const Data = {
      *
      * @return {Promise<Number>}
      */
-    clean: function(db, schema, interval) {
-        var table = this.getTableName(schema);
-        var params = [ interval ];
-        var sql = `
+    async clean(db, schema, interval) {
+        let table = this.getTableName(schema);
+        let params = [ interval ];
+        let sql = `
             SELECT id FROM ${table}
             WHERE deleted = true
             AND mtime + CAST($1 AS INTERVAL) < NOW()
         `;
-        return db.query(sql, params).then((rows) => {
-            if (_.isEmpty(rows)) {
-                return 0;
-            }
-            var params = [ _.map(rows, 'id') ];
-            var sql = `DELETE FROM ${table} WHERE id = ANY($1)`;
-            return db.execute(sql, params).then((result) => {
-                return result.rowCount;
-            });
-        });
-    },
+        let rows = await db.query(sql, params);
+        if (_.isEmpty(rows)) {
+            return 0;
+        }
+        let params = [ _.map(rows, 'id') ];
+        let sql = `DELETE FROM ${table} WHERE id = ANY($1)`;
+        let result = await db.execute(sql, params);
+        return result.rowCount;
+    }
 
     /**
      * Add text search to query
@@ -774,55 +783,54 @@ const Data = {
      *
      * @return {Promise}
      */
-    applyTextSearch(db, schema, search, query) {
-        var ts = parseSearchQuery(search.text);
+    async applyTextSearch(db, schema, search, query) {
+        let ts = parseSearchQuery(search.text);
         if (!_.isEmpty(ts.tags)) {
             query.conditions.push(`cardinality(tags) <> 0`);
             query.conditions.push(`"lowerCase"(tags) @> $${query.parameters.push(ts.tags)}`);
         }
         if (!ts.query) {
-            return Promise.resolve();
+            return;
         }
         // obtain languages for which we have indices
-        return this.getTextSearchLanguages(db, schema).then((languageCodes) => {
-            if (_.isEmpty(languageCodes)) {
-                query.conditions.push('false');
-                return;
-            }
-            var lang = search.lang;
-            var searchText = search.text;
-            var queryText = `$${query.parameters.push(ts.query)}`;
+        let languageCodes = await this.getTextSearchLanguages(db, schema);
+        if (_.isEmpty(languageCodes)) {
+            query.conditions.push('false');
+            return;
+        }
+        let lang = search.lang;
+        let searchText = search.text;
+        let queryText = `$${query.parameters.push(ts.query)}`;
 
-            // search query in each language
-            var tsQueries = _.map(languageCodes, (code) => {
-                return `to_tsquery('search_${code}', ${queryText}) AS query_${code}`;
-            });
-            // text vector in each language
-            var tsVectors = _.map(languageCodes, (code) => {
-                var text = this.getSearchableText(code);
-                var vector = `to_tsvector('search_${code}', ${text})`;
-                // give results in the user's language a higher weight
-                // A = 1.0, B = 0.4 by default
-                var weight = (code === lang) ? 'A' : 'B';
-                vector = `setweight(${vector}, '${weight}') AS vector_${code}`;
-                return vector;
-            });
-            // conditions
-            var tsConds = _.map(languageCodes, (code) => {
-                return `vector_${code} @@ query_${code}`;
-            });
-            // search result rankings
-            var tsRanks = _.map(languageCodes, (code) => {
-                return `ts_rank_cd(vector_${code}, query_${code})`;
-            });
-            var tsRank = (tsRanks.length > 1) ? `GREATEST(${tsRanks.join(', ')})` : tsRanks[0];
-            query.columns += `, ${tsRank} AS relevance`;
-            query.table += `, ${tsVectors.join(', ')}`;
-            query.table += `, ${tsQueries.join(', ')}`;
-            query.conditions.push(`(${tsConds.join(' OR ')})`);
-            query.order = `relevance DESC`;
+        // search query in each language
+        let tsQueries = _.map(languageCodes, (code) => {
+            return `to_tsquery('search_${code}', ${queryText}) AS query_${code}`;
         });
-    },
+        // text vector in each language
+        let tsVectors = _.map(languageCodes, (code) => {
+            let text = this.getSearchableText(code);
+            let vector = `to_tsvector('search_${code}', ${text})`;
+            // give results in the user's language a higher weight
+            // A = 1.0, B = 0.4 by default
+            let weight = (code === lang) ? 'A' : 'B';
+            vector = `setweight(${vector}, '${weight}') AS vector_${code}`;
+            return vector;
+        });
+        // conditions
+        let tsConds = _.map(languageCodes, (code) => {
+            return `vector_${code} @@ query_${code}`;
+        });
+        // search result rankings
+        let tsRanks = _.map(languageCodes, (code) => {
+            return `ts_rank_cd(vector_${code}, query_${code})`;
+        });
+        let tsRank = (tsRanks.length > 1) ? `GREATEST(${tsRanks.join(', ')})` : tsRanks[0];
+        query.columns += `, ${tsRank} AS relevance`;
+        query.table += `, ${tsVectors.join(', ')}`;
+        query.table += `, ${tsQueries.join(', ')}`;
+        query.conditions.push(`(${tsConds.join(' OR ')})`);
+        query.order = `relevance DESC`;
+    }
 
     /**
      * Return SQL expression that yield searchable text
@@ -831,9 +839,9 @@ const Data = {
      *
      * @return {String}
      */
-    getSearchableText: function(languageCode) {
+    getSearchableText(languageCode) {
         return `"extractText"(details, '${languageCode}')`;
-    },
+    }
 
     /**
      * Return languages for which there're text search indices
@@ -843,24 +851,23 @@ const Data = {
      *
      * @return {Promise<Array<String>>}
      */
-    getTextSearchLanguages: function(db, schema) {
-        var promise = _.get(searchLanguagesPromises, [ schema, this.table ]);
-        if (!promise) {
-            var prefix = `${this.table}_search_`;
-            var sql = `
+    async getTextSearchLanguages(db, schema) {
+        let languages = _.get(searchLanguages, [ schema, this.table ]);
+        if (!languages) {
+            let prefix = `${this.table}_search_`;
+            let sql = `
                 SELECT indexname FROM pg_indexes
                 WHERE indexname LIKE '${prefix}%'
             `;
-            promise = db.query(sql).then((rows) => {
-                return _.map(rows, (row) => {
-                    var name = row['indexname'];
-                    return name.substr(prefix.length);
-                });
+            let rows = await db.query(sql);
+            languages = _.map(rows, (row) => {
+                let name = row['indexname'];
+                return name.substr(prefix.length);
             });
-            _.set(searchLanguagesPromises, [ schema, this.table ], promise);
+            _.set(searchLanguages, [ schema, this.table ], languages);
         }
-        return promise;
-    },
+        return languages;
+    }
 
     /**
      * Add indices for text search in specified languages
@@ -871,28 +878,28 @@ const Data = {
      *
      * @return {Promise}
      */
-    addTextSearchLanguages: function(db, schema, codes) {
-        return Promise.each(codes, (code) => {
+    async addTextSearchLanguages(db, schema, codes) {
+        for (let code of codes) {
             // create language
-            return this.createSearchConfigure(db, code).then(() => {
-                var text = this.getSearchableText(code);
-                var vector = `to_tsvector('search_${code}', ${text})`;
-                var sql = `
-                    CREATE INDEX CONCURRENTLY ${this.table}_search_${code}
-                    ON "${schema}"."${this.table}"
-                    USING gin((${vector}))
-                `;
-                return db.execute(sql).then(() => {
-                    _.set(searchLanguagesPromises, [ schema, this.table ], null);
-                }).catch((err) => {
-                    // "index already exists"
-                    if (err.code !== '42P07') {
-                        throw err;
-                    }
-                });
-            });
-        });
-    },
+            await this.createSearchConfigure(db, code);
+            let text = this.getSearchableText(code);
+            let vector = `to_tsvector('search_${code}', ${text})`;
+            let sql = `
+                CREATE INDEX CONCURRENTLY ${this.table}_search_${code}
+                ON "${schema}"."${this.table}"
+                USING gin((${vector}))
+            `;
+            try {
+                await db.execute(sql);
+                _.set(searchLanguages, [ schema, this.table ], null);
+            } catch (err) {
+                // "index already exists"
+                if (err.code !== '42P07') {
+                    throw err;
+                }
+            }
+        }
+    }
 
     /**
      * Create search configure for searching text of given language
@@ -902,37 +909,36 @@ const Data = {
      *
      * @return {Promise}
      */
-    createSearchConfigure: function(db, code) {
+    async createSearchConfigure(db, code) {
         if (!/^[a-z]{2}$/.test(code)) {
-            return Promise.reject(new Error(`Invalid language code: ${code}`));
+            throw new Error(`Invalid language code: ${code}`);
         }
         // see if configuration exists already
-        var configName = `search_${code}`;
-        var sql = `
+        let configName = `search_${code}`;
+        let sql1 = `
             SELECT cfgname FROM pg_catalog.pg_ts_config
             WHERE cfgname = 'search_${code}';
         `;
-        return db.query(sql).then((rows) => {
-            if (!_.isEmpty(rows)) {
-                return;
+        let rows = await db.query(sql1);
+        if (!_.isEmpty(rows)) {
+            return;
+        }
+        // create dictionaries for language first
+        let dicts = await db.createDictionaries(code);
+        let sql2 = `
+            CREATE TEXT SEARCH CONFIGURATION search_${code} (COPY = pg_catalog.english);
+            ALTER TEXT SEARCH CONFIGURATION search_${code}
+            ALTER MAPPING FOR asciiword, asciihword, hword_asciipart, word, hword, hword_part
+            WITH ${dicts.join(', ')};
+        `;
+        try {
+            db.execute(sql2);
+        } catch (err) {
+            if (err.code !== '23505') {
+                throw err;
             }
-            // create dictionaries for language first
-            return db.createDictionaries(code).then((dicts) => {
-                var sql = `
-                    CREATE TEXT SEARCH CONFIGURATION search_${code}
-                    (COPY = pg_catalog.english);
-                    ALTER TEXT SEARCH CONFIGURATION search_${code}
-                    ALTER MAPPING FOR asciiword, asciihword, hword_asciipart, word, hword, hword_part
-                    WITH ${dicts.join(', ')};
-                `;
-                return db.execute(sql);
-            }).catch((err) => {
-                if (err.code !== '23505') {
-                    throw err;
-                }
-            });
-        });
-    },
+        }
+    }
 
     /**
      * Create a trigger that reconcile locally-made changes to details.resources
@@ -944,10 +950,10 @@ const Data = {
      *
      * @return {Promise}
      */
-    createResourceCoalescenceTrigger: function(db, schema, args) {
-        var table = this.getTableName(schema);
+    async createResourceCoalescenceTrigger(db, schema, args) {
+        let table = this.getTableName(schema);
         // trigger name needs to be smaller than "indicateDataChange" so it runs first
-        var sql = [
+        let sql = [
             `
                 CREATE TRIGGER "coalesceResourcesOnInsert"
                 BEFORE INSERT ON ${table}
@@ -961,8 +967,8 @@ const Data = {
                 EXECUTE PROCEDURE "coalesceResources"(${args.join(', ')});
             `
         ];
-        return db.execute(sql.join('\n')).return(true);
-    },
+        await db.execute(sql.join('\n'));
+    }
 
     /**
      * Ensure that an object has a unique name when undeleting
@@ -973,29 +979,26 @@ const Data = {
      * @param  {Object} objectReceived
      * @param  {String|undefined} propName
      *
-     * @return {Object|Promise<Object>}
+     * @return {Promise}
      */
-    ensureUniqueName: function(db, schema, objectBefore, objectReceived, propName) {
+    async ensureUniqueName(db, schema, objectBefore, objectReceived, propName) {
         if (objectBefore) {
             if (objectBefore.deleted === true && objectReceived.deleted === false) {
                 if (!propName) {
                     propName = 'name';
                 }
-                var criteria = {
+                let criteria = {
                     deleted: false
                 };
                 criteria[propName] = objectBefore[propName];
-                return this.findOne(db, schema, criteria, 'id').then((row) => {
-                    if (row && row.id !== objectBefore.id) {
-                        // change the name to avoid conflict
-                        objectReceived[propName] = `old_${this.table}_${objectBefore[propName]}`;
-                    }
-                    return objectReceived;
-                });
+                let row = await this.findOne(db, schema, criteria, 'id');
+                if (row && row.id !== objectBefore.id) {
+                    // change the name to avoid conflict
+                    objectReceived[propName] = `old_${this.table}_${objectBefore[propName]}`;
+                }
             }
         }
-        return objectReceived;
-    },
+    }
 
     /**
      * Find matching rows, retrieving from earlier searches if possible
@@ -1007,16 +1010,16 @@ const Data = {
      *
      * @return {Promise<Array<Object>>}
      */
-    findCached: function(db, schema, criteria, columns) {
+    async findCached(db, schema, criteria, columns) {
         // remove old ones
-        var time = new Date;
+        let time = new Date;
         _.remove(this.cachedSearches, (search) => {
-            var elapsed = time - search.time;
+            let elapsed = time - search.time;
             if (elapsed > 5 * 60 * 1000) {
                 return true;
             }
         });
-        var matchingSearch = _.find(this.cachedSearches, (search) => {
+        let matchingSearch = _.find(this.cachedSearches, (search) => {
             if (search.schema === schema) {
                 if (_.isEqual(search.criteria, criteria)) {
                     if (search.columns === search.columns) {
@@ -1026,68 +1029,62 @@ const Data = {
             }
         });
         if (matchingSearch) {
-            return Promise.resolve(matchingSearch.results);
+            return matchingSearch.results;
         } else {
-            return this.find(db, schema, criteria, columns).then((results) => {
-                var time = new Date;
-                if (!this.cachedSearches) {
-                    this.cachedSearches = [];
-                }
-                this.cachedSearches.push({ schema, criteria, columns, time, results });
-                return results;
-            });
+            let results = await this.find(db, schema, criteria, columns);
+            let time = new Date;
+            if (!this.cachedSearches) {
+                this.cachedSearches = [];
+            }
+            this.cachedSearches.push({ schema, criteria, columns, time, results });
+            return results;
         }
-    },
+    }
 
     /**
      * Clear cached searching
      *
      * @param  {Function|undefined} cb
      */
-    clearCache: function(cb) {
+    clearCache(cb) {
         this.cachedSearches = _.filter(this.cachedSearches, cb || false);
-    },
+    }
 };
 
-var searchLanguagesPromises = {};
+let searchLanguages = {};
 
 function parseSearchQuery(text) {
-    var tags = [];
-    var searchWords = [];
-    var tokens = _.split(_.trim(text), /\s+/);
-    _.each(tokens, (token, index, list) => {
+    let tags = [];
+    let searchWords = [];
+    let tokens = _.split(_.trim(text), /\s+/);
+    for (let token of tokens) {
         if (TagScanner.isTag(token)) {
             tags.push(_.toLower(token));
         } else {
-            var prefix = '';
+            let prefix = '';
             if (/^[-!]/.test(token)) {
                 prefix = '!';
             }
-            var suffix = '';
+            let suffix = '';
             if (/\*$/.test(token)) {
                 suffix = ':*';
             }
-            var searchWord = removePunctuations(token);
+            let searchWord = removePunctuations(token);
             if (searchWord) {
                 searchWords.push(prefix + searchWord + suffix);
             }
         }
-    });
-    var query = searchWords.join(' & ');
+    }
+    let query = searchWords.join(' & ');
     return { tags, query };
 }
 
-var punctRE = /[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]/g;
-var characters = 'a-zA-Z';
-var digits = '0-9';
-
-var regExp = new RegExp(`[@#][${characters}][${digits}${characters}]*`, 'g');
+const punctRE = /[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]/g;
 
 function removePunctuations(s) {
     return s.replace(punctRE, '');
 }
 
 export {
-    Data as default,
     Data,
 };

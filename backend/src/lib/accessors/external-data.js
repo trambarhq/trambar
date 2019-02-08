@@ -1,28 +1,21 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import HTTPError from 'errors/http-error';
-import Data from 'accessors/data';
+import { Data } from 'accessors/data';
 import StoredProcs from 'stored-procs/functions';
 
-const ExternalData = _.create(Data, {
-    columns: {
-        id: Number,
-        gn: Number,
-        deleted: Boolean,
-        ctime: String,
-        mtime: String,
-        details: Object,
-        external: Array(Object),
-        exchange: Array(Object),
-        itime: String,
-        etime: String,
-    },
-    criteria: {
-        id: Number,
-        deleted: Boolean,
-
-        external_object: Object,
-    },
+class ExternalData extends Data {
+    constructor() {
+        super();
+        _.extend(this.columns, {
+            external: Array(Object),
+            exchange: Array(Object),
+            itime: String,
+            etime: String,
+        });
+        _.extend(this.criteria, {
+            external_object: Object,
+        });
+    }
 
     /**
      * Create table in schema
@@ -32,11 +25,11 @@ const ExternalData = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Result>}
+     * @return {Promise}
      */
-    create: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async create(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -51,8 +44,8 @@ const ExternalData = _.create(Data, {
                 PRIMARY KEY (id)
             );
         `;
-        return db.execute(sql);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Add conditions to SQL query based on criteria object
@@ -60,34 +53,33 @@ const ExternalData = _.create(Data, {
      * @param  {Object} criteria
      * @param  {Object} query
      */
-    apply: function(criteria, query) {
-        var special = [
+    apply(criteria, query) {
+        let special = [
             'external_object',
         ];
-        Data.apply.call(this, _.omit(criteria, special), query);
-        var params = query.parameters;
-        var conds = query.conditions;
+        super.apply(_.omit(criteria, special), query);
+        let params = query.parameters;
+        let conds = query.conditions;
         if (criteria.external_object !== undefined) {
             // use the same function as the database to generate the id strings
-            var external = [ criteria.external_object ];
-            var serverType = criteria.external_object.type || '';
-            var objectNames = _.transform(criteria.external_object, (names, object, name) => {
-                if (object.id != null || object.ids instanceof Array) {
-                    names.push(name);
-                }
-            }, []);
-            var idStrings = StoredProcs.externalIdStrings(external, serverType, objectNames);
+            let external = [ criteria.external_object ];
+            let serverType = criteria.external_object.type || '';
             if (serverType && !/^\w+$/.test(serverType)) {
                 throw new Error(`Invalid type: "${serverType}"`);
             }
-            _.each(objectNames, (name) => {
+            let objectNames = [];
+            for (let [ name, object ] of _.entries(criteria.external_object)) {
                 if (!/^\w+$/.test(name)) {
                     throw new Error(`Invalid property name: "${name}"`);
                 }
-            });
+                if (object.id != null || object.ids instanceof Array) {
+                    objectNames.push(name);
+                }
+            }
+            let idStrings = StoredProcs.externalIdStrings(external, serverType, objectNames);
             conds.push(`"externalIdStrings"(external, '${serverType}', '{${objectNames}}'::text[]) && $${params.push(idStrings)}`);
         }
-    },
+    }
 
     /**
      * Export database row to client-side code, omitting sensitive or
@@ -101,17 +93,16 @@ const ExternalData = _.create(Data, {
      *
      * @return {Promise<Object>}
      */
-    export: function(db, schema, rows, credentials, options) {
-        return Data.export.call(this, db, schema, rows, credentials, options).then((objects) => {
-            _.each(objects, (object, index) => {
-                var row = rows[index];
-                if (row.external.length > 0) {
-                    object.external = row.external;
-                }
-            });
-            return objects;
-        });
-    },
+    async export(db, schema, rows, credentials, options) {
+        let objects = await super.export(db, schema, rows, credentials, options);
+        for (let [ index, object ] of objects.entries()) {
+            let row = rows[index];
+            if (row.external.length > 0) {
+                object.external = row.external;
+            }
+        }
+        return objects;
+    }
 
     /**
      * Attach a trigger to the table that increment the gn (generation number)
@@ -120,18 +111,18 @@ const ExternalData = _.create(Data, {
      * @param  {Database} db
      * @param  {String} schema
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    createChangeTrigger: function(db, schema) {
-        var table = this.getTableName(schema);
-        var sql = `
+    async createChangeTrigger(db, schema) {
+        let table = this.getTableName(schema);
+        let sql = `
             CREATE TRIGGER "indicateDataChangeOnUpdate"
             BEFORE UPDATE ON ${table}
             FOR EACH ROW
             EXECUTE PROCEDURE "indicateDataChangeEx"();
         `;
-        return db.execute(sql).return(true);
-    },
+        await db.execute(sql);
+    }
 
     /**
      * Add triggers that send notification messages, bundled with values of
@@ -141,15 +132,15 @@ const ExternalData = _.create(Data, {
      * @param  {String} schema
      * @param  {Array<String>} propNames
      *
-     * @return {Promise<Boolean>}
+     * @return {Promise}
      */
-    createNotificationTriggers: function(db, schema, propNames) {
-        var table = this.getTableName(schema);
-        var args = _.map(propNames, (propName) => {
+    async createNotificationTriggers(db, schema, propNames) {
+        let table = this.getTableName(schema);
+        let args = _.map(propNames, (propName) => {
             // use quotes just in case the name is mixed case
             return `"${propName}"`;
         }).join(', ');
-        var sql = `
+        let sql = `
             CREATE CONSTRAINT TRIGGER "notifyDataChangeOnInsert"
             AFTER INSERT ON ${table} INITIALLY DEFERRED
             FOR EACH ROW
@@ -163,11 +154,10 @@ const ExternalData = _.create(Data, {
             FOR EACH ROW
             EXECUTE PROCEDURE "notifyDataChangeEx"(${args});
         `;
-        return db.execute(sql).return(true);
-    },
-});
+        await db.execute(sql);
+    }
+}
 
 export {
-    ExternalData as default,
     ExternalData,
 };

@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import Crypto from 'crypto';
 import ParseDiff from 'parse-diff';
@@ -17,31 +16,29 @@ import Commit from '../accessors/commit';
  * @param  {Server} server
  * @param  {Repo} repo
  * @param  {String} glBranch
- * @param  {String} glCommitId
+ * @param  {String} glCommitID
  *
  * @return {Promise<Commit>}
  */
-function importCommit(db, server, repo, glBranch, glCommitId) {
+async function importCommit(db, server, repo, glBranch, glCommitID) {
     // first, check if the commit was previously imported
-    var criteria = {
+    let criteria = {
         external_object: ExternalDataUtils.extendLink(server, repo, {
-            commit: { id: glCommitId }
+            commit: { id: glCommitID }
         })
     };
-    return Commit.findOne(db, 'global', criteria, '*').then((commit) => {
-        if (commit) {
-            return commit;
-        }
-        var repoLink = ExternalDataUtils.findLink(repo, server);
-        var glProjectId = repoLink.project.id;
-        console.log(`Retriving commit ${glCommitId}`);
-        return fetchCommit(server, glProjectId, glCommitId).then((glCommit) => {
-            return fetchDiff(server, glProjectId, glCommit.id).then((glDiff) => {
-                var commitNew = copyCommitProperties(null, server, repo, glBranch, glCommit, glDiff);
-                return Commit.insertOne(db, 'global', commitNew);
-            });
-        });
-    });
+    let commit = await Commit.findOne(db, 'global', criteria, '*');
+    if (!commit) {
+        let repoLink = ExternalDataUtils.findLink(repo, server);
+        let glProjectID = repoLink.project.id;
+
+        console.log(`Retriving commit ${glCommitID}`);
+        let glCommit = await fetchCommit(server, glProjectID, glCommitID);
+        let glDiff = await fetchDiff(server, glProjectID, glCommit.id);
+        let commitNew = copyCommitProperties(null, server, repo, glBranch, glCommit, glDiff);
+        commit = await Commit.insertOne(db, 'global', commitNew);
+    }
+    return commit;
 };
 
 /**
@@ -57,9 +54,9 @@ function importCommit(db, server, repo, glBranch, glCommitId) {
  * @return {Commit}
  */
 function copyCommitProperties(commit, server, repo, glBranch, glCommit, glDiff) {
-    var changes = countChanges(glDiff);
+    let changes = countChanges(glDiff);
 
-    var commitAfter = _.cloneDeep(commit) || {};
+    let commitAfter = _.cloneDeep(commit) || {};
     ExternalDataUtils.inheritLink(commitAfter, server, repo, {
         commit: {
             id: glCommit.id,
@@ -109,13 +106,13 @@ function copyCommitProperties(commit, server, repo, glBranch, glCommit, glDiff) 
  * Retrieve commit info from Gitlab
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
- * @param  {String} glCommitId
+ * @param  {Number} glProjectID
+ * @param  {String} glCommitID
  *
  * @return {Promise<Object>}
  */
-function fetchCommit(server, glProjectId, glCommitId) {
-    var url = `/projects/${glProjectId}/repository/commits/${glCommitId}`;
+async function fetchCommit(server, glProjectID, glCommitID) {
+    let url = `/projects/${glProjectID}/repository/commits/${glCommitID}`;
     return Transport.fetch(server, url);
 }
 
@@ -123,13 +120,13 @@ function fetchCommit(server, glProjectId, glCommitId) {
  * Retrieve the diff of a commit with its parent
  *
  * @param  {Server} server
- * @param  {Number} glProjectId
- * @param  {String} glCommitId
+ * @param  {Number} glProjectID
+ * @param  {String} glCommitID
  *
  * @return {Promise<Object>}
  */
-function fetchDiff(server, glProjectId, glCommitId) {
-    var url = `/projects/${glProjectId}/repository/commits/${glCommitId}/diff`;
+async function fetchDiff(server, glProjectID, glCommitID) {
+    let url = `/projects/${glProjectID}/repository/commits/${glCommitID}/diff`;
     return Transport.fetch(server, url);
 }
 
@@ -141,13 +138,13 @@ function fetchDiff(server, glProjectId, glCommitId) {
  * @return {Object|null}
  */
 function parseFileDiff(file) {
-    var diff = file.diff;
+    let diff = file.diff;
     if (!diff) {
         return null;
     }
     if (diff.substr(0, 2) === '@@') {
         // context is missing (GitLab 11)
-        var header1, header2;
+        let header1, header2;
         if (file.new_file) {
             header1 = `--- /dev/null\n`;
         } else {
@@ -169,28 +166,28 @@ function parseFileDiff(file) {
  * @param  {Object} glDiff
  */
 function countChanges(glDiff) {
-    var cf = {
+    let cf = {
         added: [],
         deleted: [],
         renamed: [],
         modified: [],
     };
-    var cl = {
+    let cl = {
         added: 0,
         deleted: 0,
         modified: 0,
     };
-    _.each(glDiff, (file) => {
+    for (let file of glDiff) {
         // parse diff if there's one
         try {
-            var diff = parseFileDiff(file);
+            let diff = parseFileDiff(file);
             // record file disposition
             if (file.new_file) {
                 cf.added.push(file.new_path);
             } else if (file.deleted_file) {
                 cf.deleted.push(file.old_path);
             } else {
-                var modified = false;
+                let modified = false;
                 // check if the file was renamed and modified
                 if (diff) {
                     if (diff.additions > 0 || diff.deletions > 0) {
@@ -211,10 +208,9 @@ function countChanges(glDiff) {
             // count lines added, removed, or modified
             if (diff) {
                 if (diff.additions > 0 && diff.deletions > 0) {
-                    var changes = _.flatten(_.map(diff.chunks, 'changes'));
-                    var changes = _.flatten(_.map(diff.chunks, 'changes'));
-                    var deleted = 0;
-                    _.each(changes, (change) => {
+                    let changes = _.flatten(_.map(diff.chunks, 'changes'));
+                    let deleted = 0;
+                    for (let change of changes) {
                         if (change.type === 'del') {
                             // remember how many lines were deleted in this run
                             cl.deleted++;
@@ -233,7 +229,7 @@ function countChanges(glDiff) {
                             // we've reached unchanged code--reset the counter
                             deleted = 0;
                         }
-                    });
+                    }
                 } else if (diff.additions > 0) {
                     cl.added += diff.additions;
                 } else if (diff.deletions > 0) {
@@ -243,7 +239,7 @@ function countChanges(glDiff) {
         } catch (err) {
             console.log('Error encounter processing diff: ' + err.message);
         }
-    });
+    }
     return {
         files: cf,
         lines: cl,
@@ -258,7 +254,7 @@ function countChanges(glDiff) {
  * @return {String}
  */
 function hash(text) {
-    var hash = Crypto.createHash('md5').update(text);
+    let hash = Crypto.createHash('md5').update(text);
     return hash.digest("hex");
 }
 
