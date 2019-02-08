@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import * as BlobManager from 'transport/blob-manager';
 import * as ImageCropping from 'media/image-cropping';
 import * as MediaLoader from 'media/media-loader';
@@ -470,19 +469,20 @@ function getMarkdownIconURL(res, forImage, env) {
  *
  * @return {Promise}
  */
-function attachMosaic(resources, env) {
+async function attachMosaic(resources, env) {
     if (!(resources instanceof Array)) {
-        return Promise.resolve();
+        return;
     }
-    return Promise.each(resources, (res) => {
+    for (let res of resources) {
         let url = getLocalImageURL(res, { original: true }, env);
         if (url) {
             let clippingRect = getClippingRect(res);
-            return MediaLoader.extractMosaic(url, clippingRect).then((mosaic) => {
+            let mosaic = await MediaLoader.extractMosaic(url, clippingRect);
+            if (mosaic) {
                 res.mosaic = mosaic;
-            });
+            }
         }
-    });
+    }
 }
 
 /**

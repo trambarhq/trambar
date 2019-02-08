@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import Promise from 'bluebird';
 import EnvironmentMonitor from 'env/environment-monitor';
 import LocaleManager from 'locale/locale-manager';
 import RouteManager from 'relaks-route-manager';

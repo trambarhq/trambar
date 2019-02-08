@@ -1,6 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import HTTPERror from 'errors/http-error';
 
 class Database {
     constructor(remoteDataSource, context) {

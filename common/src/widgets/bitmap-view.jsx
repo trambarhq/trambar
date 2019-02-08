@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import * as BlobManager from 'transport/blob-manager';
 import * as BlobReader from 'transport/blob-reader';

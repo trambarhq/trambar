@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import FileError from 'errors/file-error';
 import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
@@ -139,30 +138,28 @@ class CodePush extends EventEmitter {
      *
      * @return {Promise<String>}
      */
-    synchronize(deploymentKey) {
-        return Promise.try(() => {
-            if (typeof(codePush) !== 'object') {
-                return 'NO_PLUGIN';
-            }
-            if (!deploymentKey) {
-                return 'NO_DEPLOYMENT_KEY';
-            }
-            return new Promise((resolve, reject) => {
-                let callback = (status) => {
-                    switch (status) {
-                        case SyncStatus.UPDATE_INSTALLED:
-                            resolve('UPDATE_INSTALLED');
-                            break;
-                        case SyncStatus.UP_TO_DATE:
-                            resolve('UP_TO_DATE');
-                            break;
-                        case SyncStatus.ERROR:
-                            resolve('ERROR');
-                            break;
-                    }
-                };
-                codePush.sync(callback, { deploymentKey });
-            });
+    async synchronize(deploymentKey) {
+        if (typeof(codePush) !== 'object') {
+            return 'NO_PLUGIN';
+        }
+        if (!deploymentKey) {
+            return 'NO_DEPLOYMENT_KEY';
+        }
+        return new Promise((resolve, reject) => {
+            let callback = (status) => {
+                switch (status) {
+                    case SyncStatus.UPDATE_INSTALLED:
+                        resolve('UPDATE_INSTALLED');
+                        break;
+                    case SyncStatus.UP_TO_DATE:
+                        resolve('UP_TO_DATE');
+                        break;
+                    case SyncStatus.ERROR:
+                        resolve('ERROR');
+                        break;
+                }
+            };
+            codePush.sync(callback, { deploymentKey });
         });
     }
 }

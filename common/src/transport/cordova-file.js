@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import FileError from 'errors/file-error';
 
 class CordovaFile {

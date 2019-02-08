@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Operation from 'data/remote-data-source/operation';
 
 class Search extends Operation {

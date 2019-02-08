@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 
 class EnvironmentMonitor extends EventEmitter {
@@ -283,11 +282,9 @@ function getNetworkAPI() {
     return navigator.connection || navigator.mozConnection || navigator.webkitConnection;
 }
 
-function getBattery() {
+async function getBattery() {
     if (navigator.getBattery) {
         return navigator.getBattery()
-    } else {
-        return Promise.resolve();
     }
 }
 

@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import * as MediaLoader from 'media/media-loader';
 import ComponentRefs from 'utils/component-refs';
