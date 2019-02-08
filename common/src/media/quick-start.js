@@ -1,6 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import Async from 'async-do-while';
 
 /**
  * Move the MOOV atom in a QuickTime container to the beginning of the file
@@ -9,8 +7,9 @@ import Async from 'async-do-while';
  *
  * @return {Promise<Blob|null>}
  */
-function process(file) {
-    return loadPreambles(file).then((preambles) => {
+async function process(file) {
+    try {
+        let preambles = await loadPreambles(file);
         let ftypIndex = _.findIndex(preambles, { name: 'ftyp' });
         let moovIndex = _.findIndex(preambles, { name: 'moov' });
         // process the file only if ftyp is the first atom and
@@ -20,29 +19,27 @@ function process(file) {
         }
         let ftyp = preambles[ftypIndex];
         let moov = preambles[moovIndex];
-        return loadAtom(file, ftyp).then((ftypData) => {
-            return loadAtom(file, moov).then((moovData) => {
-                // shift offsets inside moov that reference data between ftyp
-                // and moov by size of moov
-                let bytes = new Uint8Array(moovData);
-                shiftOffsets(bytes, 8, bytes.length, ftyp.offset + ftyp.size, moov.offset, moov.size);
+        let ftypData = await loadAtom(file, ftyp);
+        let moovData = await loadAtom(file, moov);
+        // shift offsets inside moov that reference data between ftyp
+        // and moov by size of moov
+        let bytes = new Uint8Array(moovData);
+        shiftOffsets(bytes, 8, bytes.length, ftyp.offset + ftyp.size, moov.offset, moov.size);
 
-                // build a new blob
-                let dataBeforeMoov = file.slice(ftyp.offset + ftyp.size, moov.offset);
-                let dataAfterMoov = file.slice(moov.offset + moov.size);
-                let blobParts = [
-                    ftypData,
-                    moovData,
-                    dataBeforeMoov,
-                    dataAfterMoov,
-                ];
-                let output = new Blob(blobParts, { type: file.type });
-                return output;
-            });
-        });
-    }).catch((err) => {
+        // build a new blob
+        let dataBeforeMoov = file.slice(ftyp.offset + ftyp.size, moov.offset);
+        let dataAfterMoov = file.slice(moov.offset + moov.size);
+        let blobParts = [
+            ftypData,
+            moovData,
+            dataBeforeMoov,
+            dataAfterMoov,
+        ];
+        let output = new Blob(blobParts, { type: file.type });
+        return output;
+    } catch (err) {
         return null;
-    });
+    }
 }
 
 /**
@@ -114,44 +111,38 @@ function shiftOffsets(bytes, offset, end, rangeStart, rangeEnd, shift) {
  *
  * @return {Promise<Array<Object>>}
  */
-function loadPreambles(file) {
+async function loadPreambles(file) {
     let preambles = [];
     let offset = 0;
     let size = file.size;
     let hasFtyp = false;
     let hasMoov = false;
-    Async.do(() => {
-        return loadPreamble(file, offset).then((p) => {
-            let bogus = false;
-            if (!hasFtyp) {
-                if (p.name === 'ftyp') {
-                    hasFtyp = true;
-                } else {
-                    bogus = true;
-                }
+
+    // keep scanning until we have ftype and moov
+    while (!hasFtyp || !hasMoov) {
+        let p = await loadPreamble(file, offset);
+        let bogus = false;
+        if (!hasFtyp) {
+            if (p.name === 'ftyp') {
+                hasFtyp = true;
             } else {
-                if (p.name === 'moov') {
-                    hasMoov = true;
-                }
-            }
-            offset += p.size;
-            if (offset > size) {
                 bogus = true;
             }
-            if (bogus) {
-                throw new Error('File does not appear to a QuickTime container');
+        } else {
+            if (p.name === 'moov') {
+                hasMoov = true;
             }
-            preambles.push(p);
-        });
-    });
-    Async.while(() => {
-        // stop scanning once we have ftype and moov
-        return !(hasFtyp && hasMoov);
-    });
-    Async.return(() => {
-        return preambles;
-    });
-    return Async.end();
+        }
+        offset += p.size;
+        if (offset > size) {
+            bogus = true;
+        }
+        if (bogus) {
+            throw new Error('File does not appear to a QuickTime container');
+        }
+        preambles.push(p);
+    }
+    return preambles;
 }
 
 /**
@@ -162,7 +153,7 @@ function loadPreambles(file) {
  *
  * @return {Promise<Object>}
  */
-function loadPreamble(blob, offset) {
+async function loadPreamble(blob, offset) {
     return new Promise((resolve, reject) => {
         // load 16 bytes, just in case we need the 64-bit size
         let preambleSize = 16;
@@ -199,7 +190,7 @@ function loadPreamble(blob, offset) {
  *
  * @return {Promise<ArrayBuffer>}
  */
-function loadAtom(blob, preamble) {
+async function loadAtom(blob, preamble) {
     return new Promise((resolve, reject) => {
         let slice = blob.slice(preamble.offset, preamble.offset + preamble.size);
         let fr = new FileReader();

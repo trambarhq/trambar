@@ -1,17 +1,13 @@
-import Promise from 'bluebird';
-
 /**
  * Obtain an audio stream
  *
  * @return {Promise<MediaStream>}
  */
-function getAudioStream() {
-    return Promise.try(() => {
-        let constraints = {
-            audio: true
-        };
-        return navigator.mediaDevices.getUserMedia(constraints);
-    });
+async function getAudioStream() {
+    let constraints = {
+        audio: true
+    };
+    return navigator.mediaDevices.getUserMedia(constraints);
 }
 
 /**
@@ -21,14 +17,12 @@ function getAudioStream() {
  *
  * @return {Promise<MediaStream>}
  */
-function getVideoStream(deviceID) {
-    return Promise.try(() => {
-        let constraints = {
-            video: (deviceID) ? { deviceId: deviceID } : true,
-            audio: true
-        };
-        return navigator.mediaDevices.getUserMedia(constraints);
-    });
+async function getVideoStream(deviceID) {
+    let constraints = {
+        video: (deviceID) ? { deviceId: deviceID } : true,
+        audio: true
+    };
+    return navigator.mediaDevices.getUserMedia(constraints);
 }
 
 /**
@@ -38,13 +32,11 @@ function getVideoStream(deviceID) {
  *
  * @return {Promise<MediaStream>}
  */
-function getSilentVideoStream(deviceID) {
-    return Promise.try(() => {
-        let constraints = {
-            video: (deviceID) ? { deviceId: deviceID } : true
-        };
-        return navigator.mediaDevices.getUserMedia(constraints);
-    });
+async function getSilentVideoStream(deviceID) {
+    let constraints = {
+        video: (deviceID) ? { deviceId: deviceID } : true
+    };
+    return navigator.mediaDevices.getUserMedia(constraints);
 }
 
 /**
