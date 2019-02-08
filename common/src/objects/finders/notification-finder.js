@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import * as DateUtils from 'utils/date-utils';
 
 const emptyArray = [];
@@ -13,9 +12,9 @@ const emptyArray = [];
  *
  * @return {Promise<Array<Notification>>}
  */
-function findNotificationsForUser(db, user, minimum) {
+async function findNotificationsForUser(db, user, minimum) {
     if (!user) {
-        return Promise.resolve(emptyArray)
+        return emptyArray;
     }
     return db.find({
         table: 'notification',
@@ -38,9 +37,9 @@ function findNotificationsForUser(db, user, minimum) {
  *
  * @return {Promise<Array<Notification>>}
  */
-function findNotificationsForUserOnDate(db, user, date, minimum) {
+async function findNotificationsForUserOnDate(db, user, date, minimum) {
     if (!user) {
-        return Promise.resolve(emptyArray)
+        return emptyArray;
     }
     return db.find({
         table: 'notification',
@@ -49,7 +48,7 @@ function findNotificationsForUserOnDate(db, user, date, minimum) {
             time_range: DateUtils.getDayRange(date),
         },
         minimum,
-    })
+    });
 }
 
 /**
@@ -61,9 +60,9 @@ function findNotificationsForUserOnDate(db, user, date, minimum) {
  *
  * @return {Promise<Array<Notification>>}
  */
-function findNotificationsUnseenByUser(db, user, minimum) {
+async function findNotificationsUnseenByUser(db, user, minimum) {
     if (!user) {
-        return Promise.resolve(emptyArray)
+        return emptyArray;
     }
     return db.find({
         table: 'notification',

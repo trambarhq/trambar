@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 
 const emptyArray = [];
 
@@ -11,7 +10,7 @@ const emptyArray = [];
  *
  * @return {Promise<User>}
  */
-function findUser(db, id) {
+async function findUser(db, id) {
     return db.findOne({
         schema: 'global',
         table: 'user',
@@ -28,9 +27,9 @@ function findUser(db, id) {
  *
  * @return {Promise<User>}
  */
-function findUsers(db, ids) {
+async function findUsers(db, ids) {
     if (_.isEmpty(ids)) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -48,7 +47,7 @@ function findUsers(db, ids) {
  *
  * @return {Promise<User>}
  */
-function findAllUsers(db, minimum) {
+async function findAllUsers(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'user',
@@ -65,7 +64,7 @@ function findAllUsers(db, minimum) {
  *
  * @return {Promise<User>}
  */
-function findProjectMembers(db, projects) {
+async function findProjectMembers(db, projects) {
     let userIDs;
     if (projects instanceof Array) {
         userIDs = _.flatten(_.map(projects, 'user_ids'));
@@ -84,7 +83,7 @@ function findProjectMembers(db, projects) {
  *
  * @return {Promise<User>}
  */
-function findExistingUsers(db, minimum) {
+async function findExistingUsers(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'user',
@@ -101,7 +100,7 @@ function findExistingUsers(db, minimum) {
  *
  * @return {Promise<User>}
  */
-function findActiveUsers(db, minimum) {
+async function findActiveUsers(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'user',
@@ -122,7 +121,7 @@ function findActiveUsers(db, minimum) {
  *
  * @return {Promise<User>}
  */
-function findUsersWithRoles(db, roles, minimum) {
+async function findUsersWithRoles(db, roles, minimum) {
     let ids = _.map(roles, 'id');
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -141,7 +140,7 @@ function findUsersWithRoles(db, roles, minimum) {
  *
  * @return {Promise<User>}
  */
-function findStoryAuthors(db, stories) {
+async function findStoryAuthors(db, stories) {
     let userIDs = _.flatten(_.map(stories, 'user_ids'));
     return findUsers(db, userIDs);
 }
@@ -154,7 +153,7 @@ function findStoryAuthors(db, stories) {
  *
  * @return {Promise<User>}
  */
-function findReactionAuthors(db, reactions) {
+async function findReactionAuthors(db, reactions) {
     let userIDs = _.map(reactions, 'user_id');
     return findUsers(db, userIDs);
 }
@@ -167,7 +166,7 @@ function findReactionAuthors(db, reactions) {
  *
  * @return {Promise<User>}
  */
-function findBookmarkRecipients(db, bookmarks) {
+async function findBookmarkRecipients(db, bookmarks) {
     let userIDs = _.map(bookmarks, 'target_user_id');
     return findUsers(db, userIDs);
 }
@@ -180,7 +179,7 @@ function findBookmarkRecipients(db, bookmarks) {
  *
  * @return {Promise<User>}
  */
-function findBookmarkSenders(db, bookmarks) {
+async function findBookmarkSenders(db, bookmarks) {
     let userIDs = _.flatten(_.map(bookmarks, 'user_ids'));
     return findUsers(db, userIDs);
 }
@@ -193,7 +192,7 @@ function findBookmarkSenders(db, bookmarks) {
  *
  * @return {Promise<User>}
  */
-function findNotificationTriggerers(db, notifications) {
+async function findNotificationTriggerers(db, notifications) {
     let userIDs = _.map(notifications, 'user_id');
     return findUsers(db, userIDs);
 }

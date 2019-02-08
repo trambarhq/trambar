@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import * as ProjectFinder from 'objects/finders/project-finder';
 
 /**
@@ -9,7 +8,7 @@ import * as ProjectFinder from 'objects/finders/project-finder';
  *
  * @return {Promise<Array<ProjectLink>>}
  */
-function findAllLinks(db) {
+async function findAllLinks(db) {
     return db.find({
         schema: 'local',
         table: 'project_link',
@@ -24,20 +23,19 @@ function findAllLinks(db) {
  *
  * @return {Boolean}
  */
-function hasUnexpiredSession(db, link) {
-    return db.findOne({
+async function hasUnexpiredSession(db, link) {
+    let record = await db.findOne({
         schema: 'local',
         table: 'session',
         criteria: { key: link.address },
-    }).then((record) => {
-        if (record) {
-            let now = (new Date).toISOString();
-            if (now < record.etime) {
-                return true;
-            }
-        }
-        return false;
     });
+    if (record) {
+        let now = (new Date).toISOString();
+        if (now < record.etime) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -48,7 +46,7 @@ function hasUnexpiredSession(db, link) {
  *
  * @return {Promise<Array<ProjectLink>>}
  */
-function findLinksToServer(db, address) {
+async function findLinksToServer(db, address) {
     return db.find({
         schema: 'local',
         table: 'project_link',
@@ -63,10 +61,16 @@ function findLinksToServer(db, address) {
  *
  * @return {Promise<Array<ProjectLink>>}
  */
-function findActiveLinks(db) {
-    return findAllLinks(db).filter((link) => {
-        return hasUnexpiredSession(db, link);
-    });
+async function findActiveLinks(db) {
+    let results = [];
+    let links = await findAllLinks(db);
+    for (let link of links) {
+        let active = await hasUnexpiredSession(db, link);
+        if (active) {
+            results.push(link);
+        }
+    }
+    return results;
 }
 
 /**
@@ -76,13 +80,17 @@ function findActiveLinks(db) {
  *
  * @return {Promise<Array<ProjectLink>>}
  */
-function findDefunctLinks(db) {
+async function findDefunctLinks(db) {
+    let results = [];
     let { address } = db.context;
-    return ProjectFinder.findAllProjects(db).then((projects) => {
-        return findLinksToServer(db, address).filter((link) => {
-            return !_.some(projects, { name: link.schema });
-        });
-    });
+    let projects = await ProjectFinder.findAllProjects(db);
+    let links = await findLinksToServer(db, address);
+    for (let link of links) {
+        if (!_.some(projects, { name: link.schema })) {
+            results.push(link);
+        }
+    }
+    return results;
 }
 
 /**
@@ -93,9 +101,9 @@ function findDefunctLinks(db) {
  *
  * @return {Promise<Project|null>}
  */
-function findProjectLink(db, project) {
+async function findProjectLink(db, project) {
     if (!project) {
-        return Promise.resolve(null);
+        return null;
     }
     let { address } = db.context;
     let schema = project.name;

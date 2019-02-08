@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 
 const emptyArray = [];
 
@@ -11,7 +10,7 @@ const emptyArray = [];
  *
  * @return {Promise<Role>}
  */
-function findRole(db, id) {
+async function findRole(db, id) {
     return db.findOne({
         schema: 'global',
         table: 'role',
@@ -28,7 +27,7 @@ function findRole(db, id) {
  *
  * @return {Promise<Array<Role>>}
  */
-function findAllRoles(db, minimum) {
+async function findAllRoles(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'role',
@@ -45,7 +44,7 @@ function findAllRoles(db, minimum) {
  *
  * @return {Promise<Array<Role>>}
  */
-function findActiveRoles(db, minimum) {
+async function findActiveRoles(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'role',
@@ -65,11 +64,11 @@ function findActiveRoles(db, minimum) {
  *
  * @return {Promise<Array<Role>>}
  */
-function findRolesOfUsers(db, users) {
+async function findRolesOfUsers(db, users) {
     // load roles that members have
     let roleIDs = _.flatten(_.map(users, 'role_ids'));
     if (_.isEmpty(roleIDs)) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     roleIDs = _.sortBy(_.uniq(roleIDs));
     return db.find({

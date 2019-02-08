@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 
 const emptyArray = [];
 
@@ -10,15 +9,14 @@ const emptyArray = [];
  *
  * @return {Promise<System>}
  */
-function findSystem(db) {
-    return db.findOne({
+async function findSystem(db) {
+    let system = await db.findOne({
         schema: 'global',
         table: 'system',
         criteria: {},
         prefetch: true,
-    }).then((system) => {
-        return system || {};
     });
+    return system || {};
 }
 
 export {

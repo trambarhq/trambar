@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 
 const emptyArray = [];
 
@@ -13,11 +12,11 @@ const emptyArray = [];
  *
  * @return {Promise<Array<Bookmark>>}
  */
-function findBookmarksByUser(db, user, stories, minimum) {
+async function findBookmarksByUser(db, user, stories, minimum) {
     let storyIds = _.map(stories, 'id');
     storyIds = _.sortBy(_.uniq(storyIds));
     if (_.isEmpty(storyIds) || !user) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     return db.find({
         table: 'bookmark',
@@ -38,7 +37,7 @@ function findBookmarksByUser(db, user, stories, minimum) {
  *
  * @return {Promise<Array<Bookmark>>}
  */
-function findBookmarksForUser(db, user, minimum) {
+async function findBookmarksForUser(db, user, minimum) {
     return db.find({
         table: 'bookmark',
         criteria: {

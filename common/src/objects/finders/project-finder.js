@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 
 const emptyArray = [];
 
@@ -11,7 +10,7 @@ const emptyArray = [];
  *
  * @return {Promise<Project>}
  */
-function findProject(db, id) {
+async function findProject(db, id) {
     return db.findOne({
         schema: 'global',
         table: 'project',
@@ -28,7 +27,7 @@ function findProject(db, id) {
  *
  * @return {Promise<Project>}
  */
-function findProjectByName(db, name) {
+async function findProjectByName(db, name) {
     return db.findOne({
         schema: 'global',
         table: 'project',
@@ -45,7 +44,7 @@ function findProjectByName(db, name) {
  *
  * @return {Promise<Array<Project>>}
  */
-function findAllProjects(db, minimum) {
+async function findAllProjects(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'project',
@@ -61,7 +60,7 @@ function findAllProjects(db, minimum) {
  *
  * @return {Promise<Project>}
  */
-function findCurrentProject(db) {
+async function findCurrentProject(db) {
     return db.findOne({
         schema: 'global',
         table: 'project',
@@ -78,7 +77,7 @@ function findCurrentProject(db) {
  *
  * @return {Promise<Array<Project>>}
  */
-function findActiveProjects(db, minimum) {
+async function findActiveProjects(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'project',
@@ -99,10 +98,10 @@ function findActiveProjects(db, minimum) {
  *
  * @return {Promise<Array<Project>>}
  */
-function findProjectsWithMembers(db, users, minimum) {
+async function findProjectsWithMembers(db, users, minimum) {
     let ids = _.map(users, 'id');
     if (_.isEmpty(ids)) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
