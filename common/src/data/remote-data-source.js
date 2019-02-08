@@ -173,6 +173,22 @@ class RemoteDataSource extends EventEmitter {
     }
 
     /**
+     * Return true if the current user has access to the specified server
+     *
+     * @param  {Object} location
+     *
+     * @return {Boolean}
+     */
+    hasAuthorization(location) {
+        try {
+            let session = this.obtainSession(location);
+            return (session.token) ? true : false;
+        } catch (err) {
+            return false;
+        }
+    }
+
+    /**
      * Create a login session and retrieve information about the remote server,
      * including a list of OAuth providers
      *
@@ -923,18 +939,6 @@ class RemoteDataSource extends EventEmitter {
             this.discardSession(session);
             return false;
         }
-    }
-
-    /**
-     * Return true if the current user has access to the specified server
-     *
-     * @param  {Object} location
-     *
-     * @return {Boolean}
-     */
-    hasAuthorization(location) {
-        let session = this.obtainSession(location);
-        return (session && session.token) ? true : false;
     }
 
     async performSearch(search) {

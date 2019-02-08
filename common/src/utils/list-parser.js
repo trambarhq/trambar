@@ -88,9 +88,9 @@ function detect(text) {
  * @param  {Boolean} clearOthers
  */
 function set(tokens, list, key, checked, clearOthers) {
-    _.each(tokens, (token) => {
+    for (let token of tokens) {
         if (token instanceof Array) {
-            _.each(token, (item) => {
+            for (let item of token) {
                 if (item.list == list) {
                     // update .checked then .answer of item
                     if (item.key == key) {
@@ -103,9 +103,9 @@ function set(tokens, list, key, checked, clearOthers) {
                         }
                     }
                 }
-            });
+            }
         }
-    });
+    }
 }
 
 /**
@@ -118,18 +118,19 @@ function set(tokens, list, key, checked, clearOthers) {
  * @return {Object|null}
  */
 function find(tokens, list, key) {
-    return _.reduce(tokens, (result, token) => {
-        if (!result) {
-            if (token instanceof Array) {
-                result = _.find(token, (item) => {
-                    if (item.list == list && item.key == key) {
-                        return true;
-                    }
-                });
+    for (let token of tokens) {
+        if (token instanceof Array) {
+            result = _.find(token, (item) => {
+                if (item.list == list && item.key == key) {
+                    return true;
+                }
+            });
+            if (result) {
+                return result;
             }
         }
-        return result;
-    }, null);
+    }
+    return null;
 }
 
 /**
@@ -141,16 +142,17 @@ function find(tokens, list, key) {
  * @return {Number}
  */
 function count(tokens, checked) {
-    return _.reduce(tokens, (total, token) => {
+    let total = 0;
+    for (let token of tokens) {
         if (token instanceof Array) {
-            _.each(token, (item) => {
+            for (let item of token) {
                 if (checked === undefined || item.checked === checked) {
                     total++;
                 }
-            });
+            }
         }
-        return total;
-    }, 0);
+    }
+    return total;
 }
 
 /**
@@ -163,13 +165,15 @@ function count(tokens, checked) {
 function join(tokens) {
     // concatenate tokens into a string again
     tokens = _.flattenDeep(tokens);
-    return _.reduce(tokens, (result, token) => {
+    let lines = [];
+    for (let token of tokens) {
         if (token instanceof Object) {
-            return result + token.before + '* [' + token.answer + ']' + token.between + token.label + token.after;
+            lines.push(token.before + '* [' + token.answer + ']' + token.between + token.label + token.after);
         } else {
-            return result + token;
+            lines.push(token);
         }
-    }, '');
+    }
+    return lines.join('');
 }
 
 function updateAnswerText(item) {

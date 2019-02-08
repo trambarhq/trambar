@@ -172,19 +172,19 @@ async function start(cfg) {
     });
     notifier.addEventListener('notify', (evt) => {
         if (process.env.NODE_ENV !== 'production') {
-            _.each(evt.changes, (change) => {
+            for (let change of evt.changes) {
                 console.log(`Change notification: ${change.schema}.${change.table} ${change.id}`);
-            });
+            }
         }
 
         // invalidate database queries
         dataSource.invalidate(evt.changes);
 
         let taskChanges = _.filter(evt.changes, { table: 'task' });
-        _.each(taskChanges, (change) => {
+        for (let change of taskChanges) {
             let destination = _.pick(change, 'address', 'schema');
             payloadManager.updatePayloadsBackendProgress(destination);
-        });
+        }
     });
     notifier.addEventListener('revalidation', (evt) => {
         dataSource.revalidate(evt.revalidation);
@@ -523,9 +523,9 @@ async function addPayloadTasks(destination, payloads) {
     for (let payload of payloads) {
         try {
             let status = {}
-            _.each(payload.parts, (part) => {
+            for (let part of payload.parts) {
                 status[part.name] = false;
-            });
+            }
             let task = {
                 token: payload.id,
                 action: `add-${payload.type}`,
