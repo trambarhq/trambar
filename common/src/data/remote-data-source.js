@@ -877,7 +877,7 @@ class RemoteDataSource extends EventEmitter {
      */
     waitForAuthorization(session) {
         if (!session.authorizationPromise) {
-            session.authorizationPromise = new ManualPromise;
+            session.authorizationPromise = ManualPromise();
         }
         return session.authorizationPromise;
     }

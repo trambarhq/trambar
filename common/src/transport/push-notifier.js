@@ -26,7 +26,7 @@ class PushNotifier extends Notifier {
         this.registrationType = null;
         this.relayAddress = '';
         this.relayToken = '';
-        this.networkRegistrationPromise = new ManualPromise;
+        this.networkRegistrationPromise = ManualPromise();
     }
 
     activate() {
