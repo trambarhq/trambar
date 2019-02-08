@@ -497,7 +497,7 @@ class ProjectPanel extends PureComponent {
      *
      * @param  {Object} evt
      */
-    handleProjectDelete = (evt) => {
+    handleProjectDelete = async (evt) => {
         this.handleProjectManagementDialogClose();
 
         // redirect to start page if the current project was removed
@@ -506,11 +506,10 @@ class ProjectPanel extends PureComponent {
         let removingCurrent = _.includes(evt.selection, `${context.address}/${context.schema}`);
         let links = _.map(evt.selection, (key) => { return { key } });
         let db = database.use({ by: this });
-        db.remove({ schema: 'local', table: 'project_link' }, links).then(() => {
-            if (removingCurrent) {
-                return route.replace('start-page', {}, { schema: null });
-            }
-        });
+        await db.remove({ schema: 'local', table: 'project_link' }, links);
+        if (removingCurrent) {
+            return route.replace('start-page', {}, { schema: null });
+        }
     }
 
     /**
@@ -518,15 +517,14 @@ class ProjectPanel extends PureComponent {
      *
      * @param {Object} evt
      */
-    handleSignOutConfirm = (evt) => {
+    handleSignOutConfirm = async (evt) => {
         let { database, route, projectLinks } = this.props;
         let context = route.context;
         let db = database.use({ by: this });
-        db.endSession().then(() => {
-            // delete links of all projects on server
-            let serverLinks = _.filter(projectLinks, { address: context.address });
-            return db.remove({ schema: 'local', table: 'project_link' }, serverLinks);
-        });
+        await db.endSession();
+        // delete links of all projects on server
+        let serverLinks = _.filter(projectLinks, { address: context.address });
+        await db.remove({ schema: 'local', table: 'project_link' }, serverLinks);
     }
 }
 

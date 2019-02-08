@@ -1,7 +1,5 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import SockJS from 'sockjs-client';
-import Async from 'async-do-while';
 import Notifier, { NotifierEvent } from 'transport/notifier';
 
 const defaultOptions = {
@@ -15,7 +13,6 @@ class WebsocketNotifier extends Notifier {
         this.options = _.defaults({}, options, defaultOptions);
         this.socket = null;
         this.notificationPermitted = false;
-        this.connectionPromise = null;
         this.reconnectionCount = 0;
         this.recentMessages = [];
     }
@@ -23,10 +20,7 @@ class WebsocketNotifier extends Notifier {
     activate() {
         if (!this.notificationPermitted) {
             // ask user for permission to show notification
-            requestNotificationPermission().then(() => {
-                this.notificationPermitted = true;
-            }).catch((err) => {
-            })
+            this.requestNotificationPermission();
         }
     }
 
@@ -41,24 +35,23 @@ class WebsocketNotifier extends Notifier {
      *
      * @return {Promise<Boolean>}
      */
-    connect(address) {
-        if (this.address !== address) {
-            this.disconnect();
+    async connect(address) {
+        let { reconnectionDelay } = this.options;
+
+        if (this.address === address) {
+            return false;
         }
-        if (this.connectionPromise) {
-            return this.connectionPromise;
-        }
+        this.disconnect();
+        this.address = address;
 
         // keep trying to connect until the effort is abandoned (i.e. user
         // goes to a different server)
-        let connected = false;
-        let { reconnectionDelay } = this.options;
-        let promise;
-        Async.do(() => {
-            return this.createSocket(address).then((socket) => {
-                if (this.connectionPromise !== promise) {
-                    // superceded by another call
-                    return;
+        for (;;) {
+            try {
+                let socket = await this.createSocket(address);
+                if (this.address !== address) {
+                    socket.close();
+                    return false;
                 }
                 socket.onmessage = (evt) => {
                     if (this.socket !== socket) {
@@ -85,45 +78,36 @@ class WebsocketNotifier extends Notifier {
                     }
                     this.saveMessage(msg);
                 };
-                socket.onclose = () => {
+                socket.onclose = async () => {
                     if (this.socket !== socket) {
                         return;
                     }
-                    // we're still supposed to be connected
-                    // try to reestablish connection
-                    this.socket = null;
-                    this.address = '';
-                    this.connectionPromise = null;
-                    this.connect(address).then((connected) => {
-                        if (connected) {
-                            this.reconnectionCount += 1;
-                            console.log('Connection reestablished');
-                        }
-                    });
 
                     console.log('Disconnect');
                     let event = new NotifierEvent('disconnect', this);
                     this.triggerEvent(event);
+
+                    // we're still supposed to be connected
+                    // try to reestablish connection
+                    this.socket = null;
+                    this.address = '';
+                    let connected = await this.connect(address);
+                    if (connected) {
+                        this.reconnectionCount += 1;
+                        console.log('Connection reestablished');
+                    }
                 };
                 this.socket = socket;
-                this.address = address;
-                connected = true;
-            }).catch((err) => {
-                return Promise.delay(reconnectionDelay);
-            });
-        });
-        Async.while(() => {
-            if (promise === this.connectionPromise) {
-                return !connected;
-            } else {
-                return false;
+                return true;
+            } catch (err) {
+                console.error(err);
+                await Bluebird.delay(reconnectionDelay);
+                if (this.address !== address) {
+                    return false;
+                }
             }
-        });
-        Async.return(() => {
-            return connected;
-        });
-        promise = this.connectionPromise = Async.end();
-        return promise;
+        }
+        return true;
     }
 
     /**
@@ -139,7 +123,6 @@ class WebsocketNotifier extends Notifier {
             let event = new NotifierEvent('disconnect', this);
             this.triggerEvent(event);
         }
-        this.connectionPromise = null;
         this.address = '';
     }
 
@@ -204,19 +187,19 @@ class WebsocketNotifier extends Notifier {
             });
         }
     }
+
+    requestNotificationPermission() {
+        try {
+            Notification.requestPermission((status) => {
+                if (status === 'granted') {
+                    this.notificationPermitted = true;
+                }
+            });
+        } catch (err) {
+        }
+    }
 }
 
-function requestNotificationPermission() {
-    return new Promise((resolve, reject) => {
-        Notification.requestPermission((status) => {
-            if (status === 'granted') {
-                resolve();
-            } else {
-                reject(new Error('Unable to gain permission'))
-            }
-        })
-    });
-}
 
 function parseJSON(text) {
     try {

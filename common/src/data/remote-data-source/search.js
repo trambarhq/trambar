@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Operation from 'data/remote-data-source/operation';
 
 class Search extends Operation {
@@ -8,8 +7,8 @@ class Search extends Operation {
         this.criteria = query.criteria || {};
         this.remote = query.remote || false;
         this.dirty = false;
-        this.cacheSignatureBefore = '';
-        this.cacheSignatureAfter = '';
+        this.invalid = false;
+        this.signature = '';
         this.updating = false;
         this.scheduled = false;
         this.lastRetrieved = 0;
@@ -105,7 +104,7 @@ class Search extends Operation {
      * @return {Boolean}
      */
     isSufficientlyRecent(refreshInterval) {
-        if (this.isLocal()) {
+        if (this.local) {
             return true;
         }
         let rtimes = _.map(this.results, 'rtime');
@@ -176,16 +175,6 @@ class Search extends Operation {
     }
 
     /**
-     * Remember the current cache signature so we know whether the results we
-     * obtained earlier are valid or not
-     *
-     * @param  {String} signature
-     */
-    validateResults(signature) {
-        this.cacheSignatureAfter = signature;
-    }
-
-    /**
      * Given lists of ids and gns (generation numbers), return the ids that
      * either are missing from the current results or the objects' gns are
      * different from the ones provided
@@ -196,23 +185,16 @@ class Search extends Operation {
      * @return {Array<Number>}
      */
     getUpdateList(ids, gns) {
-        if (this.cacheSignatureBefore) {
-            if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
-                // the current results aren't valid
-                // fetch everything anew
-                return _.slice(ids);
-            }
-        }
-        let objects = this.results;
+        let objects = (this.invalid) ? [] : this.results;
         let updated = [];
-        _.each(ids, (id, i) => {
+        for (let [ i, id ] of ids.entries()) {
             let gn = gns[i];
             let index = _.sortedIndexBy(objects, { id }, 'id');
             let object = (objects) ? objects[index] : null;
             if (!object || object.id !== id || object.gn !== gn) {
                 updated.push(id);
             }
-        });
+        }
         return updated;
     }
 
@@ -224,13 +206,9 @@ class Search extends Operation {
      * @return {Array<Number>}
      */
     getRemovalList(ids) {
-        if (this.cacheSignatureBefore) {
-            if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
-                return [];
-            }
-        }
+        let objects = this.results;
         let removal = [];
-        _.each(this.results, (object) => {
+        _.each(objects, (object) => {
             if (!_.includes(ids, object.id)) {
                 removal.push(object.id);
             }
@@ -246,20 +224,15 @@ class Search extends Operation {
      * @return {Array<Number>}
      */
     getFetchList(ids) {
-        if (this.cacheSignatureBefore) {
-            if (this.cacheSignatureBefore !== this.cacheSignatureAfter) {
-                return [];
-            }
-        }
-        let objects = this.results;
+        let objects = (this.invalid) ? [] : this.results;
         let updated = [];
-        _.each(ids, (id, i) => {
+        for (let id of ids) {
             let index = _.sortedIndexBy(objects, { id }, 'id');
             let object = (objects) ? objects[index] : null;
             if (!object || object.id !== id) {
                 updated.push(id);
             }
-        });
+        }
         return updated;
     }
 
@@ -270,7 +243,7 @@ class Search extends Operation {
         Operation.prototype.finish.call(this, results);
 
         this.dirty = false;
-        this.cacheSignatureBefore = this.cacheSignatureAfter;
+        this.invalid = false;
         if (results) {
             this.promise = Promise.resolve(this.results);
 

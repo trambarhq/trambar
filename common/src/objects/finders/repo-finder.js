@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 
 const emptyArray = [];
 
@@ -11,7 +10,7 @@ const emptyArray = [];
  *
  * @return {Promise<Repo>}
  */
-function findRepo(db, id) {
+async function findRepo(db, id) {
     return db.findOne({
         schema: 'global',
         table: 'repo',
@@ -28,7 +27,7 @@ function findRepo(db, id) {
  *
  * @return {Promise<Array<Repo>>}
  */
-function findAllRepos(db, minimum) {
+async function findAllRepos(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'repo',
@@ -45,7 +44,7 @@ function findAllRepos(db, minimum) {
  *
  * @return {Promise<Array<Repo>>}
  */
-function findExistingRepos(db, minimum) {
+async function findExistingRepos(db, minimum) {
     return db.find({
         schema: 'global',
         table: 'repo',
@@ -64,11 +63,11 @@ function findExistingRepos(db, minimum) {
  *
  * @return {Promise<Array<Repo>>}
  */
-function findProjectRepos(db, projects) {
+async function findProjectRepos(db, projects) {
     if (projects instanceof Array) {
         var ids = _.flatten(_.map(projects, 'repo_ids'));
         if (_.isEmpty(ids)) {
-            return Promise.resolve(emptyArray);
+            return emptyArray;
         }
         ids = _.sortBy(_.uniq(ids));
         return db.find({
@@ -82,7 +81,7 @@ function findProjectRepos(db, projects) {
     } else {
         var project = projects;
         if (!project) {
-            return Promise.resolve(emptyArray);
+            return emptyArray;
         }
         return db.find({
             schema: 'global',

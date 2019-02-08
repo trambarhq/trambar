@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import Hammer from 'hammerjs';

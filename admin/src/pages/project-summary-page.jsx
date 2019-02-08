@@ -40,15 +40,11 @@ class ProjectSummaryPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, payloads, projectID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let creating = (projectID === 'new');
         let props = {
-            system: undefined,
-            project: undefined,
-            statistics: undefined,
-
             database,
             route,
             env,
@@ -57,26 +53,14 @@ class ProjectSummaryPage extends AsyncComponent {
             creating,
         };
         meanwhile.show(<ProjectSummaryPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return SystemFinder.findSystem(db).then((system) => {
-                props.system = system;
-            });
-        }).then(() => {
-            if (!creating) {
-                return ProjectFinder.findProject(db, projectID).then((project) => {
-                    props.project = project;
-                });
-            }
-        }).then(() => {
-            if (!creating) {
-                meanwhile.show(<ProjectSummaryPageSync {...props} />);
-                return StatisticsFinder.findDailyActivitiesOfProject(db, props.project).then((statistics) => {
-                    props.statistics = statistics;
-                });
-            }
-        }).then(() => {
-            return <ProjectSummaryPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.system = await SystemFinder.findSystem(db)
+        if (!creating) {
+            props.project = await ProjectFinder.findProject(db, projectID);
+            meanwhile.show(<ProjectSummaryPageSync {...props} />);
+            props.statistics = await StatisticsFinder.findDailyActivitiesOfProject(db, props.project);
+        }
+        return <ProjectSummaryPageSync {...props} />;
     }
 }
 
@@ -102,6 +86,24 @@ class ProjectSummaryPageSync extends PureComponent {
     }
 
     /**
+     * Reset edit state when edit ends
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        if (!editing) {
+            return {
+                newProject: null,
+                hasChanges: false,
+                problems: {},
+            };
+        }
+        return null;
+    }
+
+    /**
      * Return edited copy of project object or the original object
      *
      * @param  {String} state
@@ -109,9 +111,9 @@ class ProjectSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getProject(state) {
-        let { project, editing } = this.props;
+        let { project } = this.props;
         let { newProject } = this.state;
-        if (editing && (!state || state === 'current')) {
+        if (!state || state === 'current') {
             return newProject || project || emptyProject;
         } else {
             return project || emptyProject;
@@ -187,7 +189,7 @@ class ProjectSummaryPageSync extends PureComponent {
      *
      * @return {Promise}
      */
-    setEditability(edit, newProject) {
+    async setEditability(edit, newProject) {
         let { route, creating } = this.props;
         if (creating && !edit && !newProject) {
             // return to list when cancelling project creation
@@ -199,11 +201,10 @@ class ProjectSummaryPageSync extends PureComponent {
                 // use id of newly created project
                 params.projectID = newProject.id;
             }
-            return route.replace(route.name, params).then((replaced) => {
-                if (replaced) {
-                    this.setState({ problems: {} });
-                }
-            });
+            let replaced = await route.replace(route.name, params);
+            if (replaced) {
+                this.setState({ problems: {} });
+            }
         }
     }
 
@@ -237,25 +238,6 @@ class ProjectSummaryPageSync extends PureComponent {
     getInputLanguages() {
         let { system } = this.props;
         return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Reset edit state when edit starts
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                this.setState({
-                    newProject: null,
-                    hasChanges: false,
-                });
-            } else {
-                this.setState({ problems: {} });
-            }
-        }
     }
 
     /**
@@ -628,20 +610,18 @@ class ProjectSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleArchiveClick = (evt) => {
+    handleArchiveClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('project-summary-confirm-archive');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ archived: true }).then((project) => {
-                    if (project) {
-                        return this.returnToList();
-                    }
-                });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            let projectAfter = await this.changeFlags({ archived: true });
+            if (projectAfter) {
+                await this.returnToList();
             }
-        });
+        }
     }
 
     /**
@@ -649,20 +629,18 @@ class ProjectSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDeleteClick = (evt) => {
+    handleDeleteClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('project-summary-confirm-delete');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ deleted: true }).then((project) => {
-                    if (project)  {
-                        return this.returnToList();
-                    }
-                });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            let projectAfter = await this.changeFlags({ deleted: true });
+            if (projectAfter)  {
+                await this.returnToList();
             }
-        });
+        }
     }
 
     /**
@@ -670,16 +648,15 @@ class ProjectSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleRestoreClick = (evt) => {
+    handleRestoreClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('project-summary-confirm-restore');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ archived: false, deleted: false });
-            }
-        });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            await this.changeFlags({ archived: false, deleted: false });
+        }
     }
 
     /**
@@ -687,8 +664,8 @@ class ProjectSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleReturnClick = (evt) => {
-        return this.returnToList();
+    handleReturnClick = async (evt) => {
+        await this.returnToList();
     }
 
     /**
@@ -696,8 +673,8 @@ class ProjectSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleAddClick = (evt) => {
-        return this.startNew();
+    handleAddClick = async (evt) => {
+        await this.startNew();
     }
 
     /**
@@ -705,8 +682,8 @@ class ProjectSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleEditClick = (evt) => {
-        return this.setEditability(true);
+    handleEditClick = async (evt) => {
+        await this.setEditability(true);
     }
 
     /**
@@ -714,8 +691,8 @@ class ProjectSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleCancelClick = (evt) => {
-        return this.setEditability(false);
+    handleCancelClick = async (evt) => {
+        await this.setEditability(false);
     }
 
     /**
@@ -735,18 +712,17 @@ class ProjectSummaryPageSync extends PureComponent {
             return;
         }
         let newProject = _.omit(this.getProject(), 'user_ids', 'repo_ids');
-        this.setState({ saving: true, adding: !newProject.id, problems: {} }, () => {
+        this.setState({ saving: true, adding: !newProject.id, problems: {} }, async () => {
             let schema = 'global';
             let db = database.use({ schema, by: this });
-            return db.start().then((currentUserID) => {
-                return db.saveOne({ table: 'project' }, newProject).then((project) => {
-                    payloads.dispatch(project);
-                    this.setState({ hasChanges: false, saving: false }, () => {
-                        this.setEditability(false, project);
-                    });
-                    return null;
+            try {
+                let currentUserID = await db.start();
+                let projectAfter = await db.saveOne({ table: 'project' }, newProject);
+                payloads.dispatch(projectAfter);
+                this.setState({ hasChanges: false, saving: false }, () => {
+                    this.setEditability(false, projectAfter);
                 });
-            }).catch((err) => {
+            } catch (err) {
                 let problems = {};
                 if (err.statusCode === 409) {
                     problems = { name: 'validation-duplicate-project-name' };
@@ -754,7 +730,7 @@ class ProjectSummaryPageSync extends PureComponent {
                     problems = { unexpected: err.message };
                 }
                 this.setState({ problems, saving: false });
-            });
+            }
         });
     }
 

@@ -31,7 +31,7 @@ class NewsPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let {
             database,
             route,
@@ -58,12 +58,6 @@ class NewsPage extends AsyncComponent {
             filtering = true;
         }
         let props = {
-            stories: undefined,
-            draftStories: undefined,
-            pendingStories: undefined,
-            project: undefined,
-            currentUser: undefined,
-
             acceptNewStory: !filtering,
             search,
             roleIDs,
@@ -80,64 +74,40 @@ class NewsPage extends AsyncComponent {
         // wait for retrieval of fresh story listing on initial render
         let freshListing = meanwhile.revising() ? false : true;
         meanwhile.show(<NewsPageSync {...props} />);
-        return db.start().then((userId) => {
-            return UserFinder.findUser(db, userId).then((user) => {
-                props.currentUser = user;
-            });
-        }).then(() => {
-            return ProjectFinder.findCurrentProject(db).then((project) => {
-                props.project = project;
-            });
-        }).then(() => {
+        let currentUserID = await db.start();
+        props.currentUser = await UserFinder.findUser(db, currentUserID);
+        props.project = await ProjectFinder.findCurrentProject(db);
+        meanwhile.show(<NewsPageSync {...props} />);
+        if (tags) {
+            props.stories = await StoryFinder.findStoriesWithTags(db, tags, props.currentUser);
+        } else if (search) {
+            props.stories = await StoryFinder.findStoriesMatchingText(db, search, env, props.currentUser);
+        } else if (date) {
+            props.stories = await StoryFinder.findStoriesOnDate(db, date, props.currentUser);
+        } else if (!_.isEmpty(roleIDs)) {
+            props.stories = await StoryFinder.findStoriesWithRolesInListing(db, 'news', roleIDs, props.currentUser, freshListing);
+        } else {
+            props.stories = await StoryFinder.findStoriesInListing(db, 'news', props.currentUser, freshListing);
             meanwhile.show(<NewsPageSync {...props} />);
-            if (tags) {
-                return StoryFinder.findStoriesWithTags(db, tags, props.currentUser).then((stories) => {
-                    props.stories = stories;
-                });
-            } else if (search) {
-                return StoryFinder.findStoriesMatchingText(db, search, env, props.currentUser).then((stories) => {
-                    props.stories = stories;
-                });
-            } else if (date) {
-                return StoryFinder.findStoriesOnDate(db, date, props.currentUser).then((stories) => {
-                    props.stories = stories;
-                });
-            } else if (!_.isEmpty(roleIDs)) {
-                return StoryFinder.findStoriesWithRolesInListing(db, 'news', roleIDs, props.currentUser, freshListing).then((stories) => {
-                    props.stories = stories;
-                });
-            } else {
-                return StoryFinder.findStoriesInListing(db, 'news', props.currentUser, freshListing).then((stories) => {
-                    props.stories = stories;
-                }).then(() => {
-                    meanwhile.show(<NewsPageSync {...props} />);
-                    return StoryFinder.findDraftStories(db, props.currentUser).then((stories) => {
-                        props.draftStories = stories;
-                    });
-                }).then(() => {
-                    let limit = env.getRelativeDate(-1, 'date');
-                    return StoryFinder.findUnlistedStories(db, props.currentUser, props.stories, limit).then((stories) => {
-                        props.pendingStories = stories;
-                    });
-                });
-            }
-        }).then(() => {
-            // when we're highlighting a story, make sure the story is actually there
-            if (!date) {
-                let storyID = highlightStoryID;
-                if (storyID) {
-                    let allStories = _.concat(props.stories, props.draftStories, props.pendingStories);
-                    if (!_.find(allStories, { id: storyID })) {
-                        return StoryFinder.findStory(db, storyID).then((story) => {
-                            return this.redirectToStory(route.params.schema, story);
-                        }).catch((err) => {
-                        });
+            props.draftStories = await StoryFinder.findDraftStories(db, props.currentUser);
+            let limit = env.getRelativeDate(-1, 'date');
+            props.pendingStories = await StoryFinder.findUnlistedStories(db, props.currentUser, props.stories, limit);
+        }
+        // when we're highlighting a story, make sure the story is actually there
+        if (!date) {
+            let storyID = highlightStoryID;
+            if (storyID) {
+                let allStories = _.concat(props.stories, props.draftStories, props.pendingStories);
+                if (!_.find(allStories, { id: storyID })) {
+                    try {
+                        let story = await StoryFinder.findStory(db, storyID);
+                        await this.redirectToStory(route.params.schema, story);
+                    } catch (err) {
                     }
                 }
             }
-        }).then(() => {
-            return <NewsPageSync {...props} />;
-        });
+        }
+        return <NewsPageSync {...props} />;
     }
 
     /**

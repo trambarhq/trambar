@@ -37,7 +37,7 @@ class MemberListPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, projectID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
@@ -51,28 +51,15 @@ class MemberListPage extends AsyncComponent {
             editing,
         };
         meanwhile.show(<MemberListPageSync {...props} />);
-        return db.start().then((userID) => {
-            return ProjectFinder.findProject(db, projectID).then((project) => {
-                props.project = project;
-            });
-        }).then(() => {
-            return UserFinder.findExistingUsers(db).then((users) => {
-                props.users = users;
-            });
-        }).then(() => {
-            meanwhile.show(<MemberListPageSync {...props} />);
-            return RoleFinder.findRolesOfUsers(db, props.users).then((roles) => {
-                props.roles = roles;
-            });
-        }).then(() => {
-            meanwhile.show(<MemberListPageSync {...props} />);
-            let users = findUsers(props.users, props.project)
-            return StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, users).then((statistics) => {
-                props.statistics = statistics;
-            });
-        }).then(() => {
-            return <MemberListPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.project = await ProjectFinder.findProject(db, projectID);
+        props.users = await UserFinder.findExistingUsers(db);
+        meanwhile.show(<MemberListPageSync {...props} />);
+        props.roles = await RoleFinder.findRolesOfUsers(db, props.users);
+        meanwhile.show(<MemberListPageSync {...props} />);
+        let users = findUsers(props.users, props.project);
+        props.statistics = await StatisticsFinder.findDailyActivitiesOfUsers(db, props.project, users);
+        return <MemberListPageSync {...props} />;
     }
 }
 
@@ -99,6 +86,33 @@ class MemberListPageSync extends PureComponent {
     }
 
     /**
+     * Toggle rendering of full list when entering and exiting edit mode
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     *
+     * @return {Object|null}
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        let { renderingFullList } = state;
+        if (editing && !renderingFullList) {
+            return {
+                renderingFullList: true,
+            };
+        } else if (!editing && renderingFullList) {
+            return {
+                renderingFullList: false,
+                removingUserIDs: [],
+                addingUserIDs: [],
+                changes: false,
+                problems: {},
+            };
+        }
+        return null;
+    }
+
+    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -110,32 +124,6 @@ class MemberListPageSync extends PureComponent {
         let params = _.clone(route.params);
         params.editing = edit || undefined;
         return route.replace(route.name, params);
-    }
-
-    /**
-     * Update state on prop changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                this.setState({
-                    renderingFullList: true,
-                    removingUserIDs: [],
-                    addingUserIDs: [],
-                    changes: false,
-                });
-            } else {
-                setTimeout(() => {
-                    let { editing } = this.props;
-                    if (!editing) {
-                        this.setState({ renderingFullList: false, problems: {} });
-                    }
-                }, 500);
-            }
-        }
     }
 
     /**
@@ -640,27 +628,26 @@ class MemberListPageSync extends PureComponent {
      *
      * @return {Promise}
      */
-    handleSaveClick = (evt) => {
+    handleSaveClick = async (evt) => {
         let { database, project } = this.props;
         let { removingUserIDs, addingUserIDs } = this.state;
         let db = database.use({ schema: 'global', by: this });
-        return db.start().then((currentUserID) => {
-            let userIDs = project.user_ids;
-            let userIDsAfter = _.union(_.difference(userIDs, removingUserIDs), addingUserIDs);
-            let columns = {
-                id: project.id,
-                user_ids: userIDsAfter,
-            };
-            return db.saveOne({ table: 'project' }, columns).then((project) => {
-                this.setState({ hasChanges: false }, () => {
-                    return this.setEditability(false);
-                });
-                return null;
-            }).catch((err) => {
-                let problems = { unexpected: err.message };
-                this.setState({ problems });
+        let currentUserID = await db.start();
+        let userIDs = project.user_ids;
+        let userIDsAfter = _.union(_.difference(userIDs, removingUserIDs), addingUserIDs);
+        let columns = {
+            id: project.id,
+            user_ids: userIDsAfter,
+        };
+        try {
+            let projectAfter = await db.saveOne({ table: 'project' }, columns);
+            this.setState({ hasChanges: false }, () => {
+                this.setEditability(false);
             });
-        });
+        } catch (err) {
+            let problems = { unexpected: err.message };
+            this.setState({ problems });
+        }
     }
 
     /**
@@ -670,24 +657,23 @@ class MemberListPageSync extends PureComponent {
      *
      * @return {Promise}
      */
-    handleApproveClick = (evt) => {
+    handleApproveClick = async (evt) => {
         let { database, project, users } = this.props;
         let db = database.use({ schema: 'global', by: this });
-        return db.start().then((userID) => {
-            let pendingUsers = _.filter(users, (user) => {
-                if (_.includes(user.requested_project_ids, project.id)) {
-                    return true;
-                }
-            });
-            let adding = _.map(pendingUsers, 'id');
-            let userIDs = project.user_ids;
-            let userIDsAfter = _.union(userIDs, adding);
-            let columns = {
-                id: project.id,
-                user_ids: userIDsAfter,
-            };
-            return db.saveOne({ table: 'project' }, columns);
+        let currentUserID = await db.start();
+        let pendingUsers = _.filter(users, (user) => {
+            if (_.includes(user.requested_project_ids, project.id)) {
+                return true;
+            }
         });
+        let adding = _.map(pendingUsers, 'id');
+        let userIDs = project.user_ids;
+        let userIDsAfter = _.union(userIDs, adding);
+        let columns = {
+            id: project.id,
+            user_ids: userIDsAfter,
+        };
+        return db.saveOne({ table: 'project' }, columns);
     }
 
     /**
@@ -697,23 +683,22 @@ class MemberListPageSync extends PureComponent {
      *
      * @return {Promise}
      */
-    handleRejectClick = (evt) => {
+    handleRejectClick = async (evt) => {
         let { database, project, users } = this.props;
         let db = database.use({ schema: 'global', by: this });
-        return db.start().then((userID) => {
-            let pendingUsers = _.filter(users, (user) => {
-                if (_.includes(user.requested_project_ids, project.id)) {
-                    return true;
-                }
-            });
-            let changes = _.map(pendingUsers, (user) => {
-                return {
-                    id: user.id,
-                    requested_project_ids: _.without(user.requested_project_ids, project.id),
-                };
-            });
-            return db.save({ table: 'user' }, changes);
+        let currentUserID = await db.start();
+        let pendingUsers = _.filter(users, (user) => {
+            if (_.includes(user.requested_project_ids, project.id)) {
+                return true;
+            }
         });
+        let changes = _.map(pendingUsers, (user) => {
+            return {
+                id: user.id,
+                requested_project_ids: _.without(user.requested_project_ids, project.id),
+            };
+        });
+        return db.save({ table: 'user' }, changes);
     }
 
     /**

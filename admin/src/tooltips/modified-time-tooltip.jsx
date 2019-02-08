@@ -15,42 +15,26 @@ import Tooltip from 'widgets/tooltip';
 class ModifiedTimeTooltip extends PureComponent {
     static displayName = 'ModifiedTimeTooltip';
 
-    /**
-     * Set the text labels on mount
-     */
-    componentWillMount() {
-        this.updateLabels();
+    constructor(props) {
+        super(props);
+        this.state = {
+            relativeTime: null,
+            absoluteTime: null,
+        };
     }
 
-    /**
-     * Update text labels on receiving new props
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        this.updateLabels(nextProps);
-    }
-
-    /**
-     * Parse time string and format relative and absolute dates
-     *
-     * @param  {Object} props
-     */
-    updateLabels(props) {
-        let { env, time } = props || this.props;
+    static getDerivedStateFromProps(props) {
+        let { env, time } = props;
         let { localeCode } = env.locale;
         let m;
         if (time) {
             m = Moment(time);
             m.locale(localeCode);
         };
-        let state = {
+        return {
             relativeTime: m ? m.fromNow() : null,
             absoluteTime: m ? m.format('lll') : null,
         };
-        if (!_.isEqual(state, this.state)) {
-            this.setState(state);
-        }
     }
 
     render() {
@@ -78,7 +62,7 @@ let instances = [];
 // refresh the labels every minute
 setInterval(() => {
     _.each(instances, (instance) => {
-        instance.updateLabels();
+        instance.forceUpdate();
     });
 }, 30 * 1000);
 

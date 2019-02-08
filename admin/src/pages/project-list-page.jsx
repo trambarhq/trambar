@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
@@ -40,41 +39,23 @@ class ProjectListPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            projects: undefined,
-            repos: undefined,
-            users: undefined,
-            statistics: undefined,
-
             database,
             route,
             env,
             editing,
         };
         meanwhile.show(<ProjectListPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return ProjectFinder.findAllProjects(db).then((projects) => {
-                props.projects = projects;
-            });
-        }).then((projects) => {
-            meanwhile.show(<ProjectListPageSync {...props} />);
-            return RepoFinder.findProjectRepos(db, props.projects).then((repos) => {
-                props.repos = repos;
-            });
-        }).then(() => {
-            return UserFinder.findProjectMembers(db, props.projects).then((users) => {
-                props.users = users;
-            });
-        }).then(() => {
-            return StatisticsFinder.findDailyActivitiesOfProjects(db, props.projects).then((statistics) => {
-                props.statistics = statistics;
-            });
-        }).then(() => {
-            return <ProjectListPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.projects = await ProjectFinder.findAllProjects(db);
+        meanwhile.show(<ProjectListPageSync {...props} />);
+        props.repos = await RepoFinder.findProjectRepos(db, props.projects)
+        props.users = await UserFinder.findProjectMembers(db, props.projects)
+        props.statistics = await StatisticsFinder.findDailyActivitiesOfProjects(db, props.projects)
+        return <ProjectListPageSync {...props} />;
     }
 }
 
@@ -104,6 +85,33 @@ class ProjectListPageSync extends PureComponent {
     }
 
     /**
+     * Toggle rendering of full list when entering and exiting edit mode
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     *
+     * @return {Object|null}
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        let { renderingFullList } = state;
+        if (editing && !renderingFullList) {
+            return {
+                renderingFullList: true,
+            };
+        } else if (!editing && renderingFullList) {
+            return {
+                renderingFullList: false,
+                restoringProjectIDs: [],
+                archivingProjectIDs: [],
+                hasChanges: false,
+                problems: {},
+            };
+        }
+        return null;
+    }
+
+    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -115,33 +123,6 @@ class ProjectListPageSync extends PureComponent {
         let params = _.clone(route.params);
         params.editing = edit || undefined;
         return route.replace(route.name, params);
-    }
-
-    /**
-     * Check if we're switching into edit mode
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                // initial list of ids to the current list
-                this.setState({
-                    renderingFullList: true,
-                    restoringProjectIDs: [],
-                    archivingProjectIDs: [],
-                    hasChanges: false,
-                });
-            } else {
-                setTimeout(() => {
-                    let { editing } = this.props;
-                    if (!editing) {
-                        this.setState({ renderingFullList: false, problems: {} });
-                    }
-                }, 500);
-            }
-        }
     }
 
     /**
@@ -599,7 +580,7 @@ class ProjectListPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleSaveClick = (evt) => {
+    handleSaveClick = async (evt) => {
         let { database, env, projects } = this.props;
         let { archivingProjectIDs, restoringProjectIDs } = this.state;
         let { confirmation } = this.components;
@@ -612,37 +593,35 @@ class ProjectListPageSync extends PureComponent {
             _.isEmpty(archivingProjectIDs) ? true : undefined,
             _.isEmpty(restoringProjectIDs) ? true : undefined,
         ];
-        return confirmation.askSeries(messages, bypass).then((confirmed) => {
-            if (!confirmed) {
+        let confirmed = await confirmation.askSeries(messages, bypass);
+        if (!confirmed) {
+            return;
+        }
+        this.setState({ problems: {} });
+        let db = database.use({ schema: 'global', by: this });
+        let currentUserID = await db.start();
+        let projectsAfter = [];
+        _.each(projects, (project) => {
+            let flags = {};
+            if (_.includes(archivingProjectIDs, project.id)) {
+                flags.archived = true;
+            } else if (_.includes(restoringProjectIDs, project.id)) {
+                flags.archived = flags.deleted = false;
+            } else {
                 return;
             }
-            this.setState({ problems: {} });
-            let db = database.use({ schema: 'global', by: this });
-            return db.start().then((userID) => {
-                let projectsAfter = [];
-                _.each(projects, (project) => {
-                    let flags = {};
-                    if (_.includes(archivingProjectIDs, project.id)) {
-                        flags.archived = true;
-                    } else if (_.includes(restoringProjectIDs, project.id)) {
-                        flags.archived = flags.deleted = false;
-                    } else {
-                        return;
-                    }
-                    let projectAfter = _.assign({}, project, flags);
-                    projectsAfter.push(projectAfter);
-                });
-                return db.save({ table: 'project' }, projectsAfter).then((projects) => {
-                    this.setState({ hasChanges: false }, () => {
-                        this.setEditability(false);
-                    });
-                    return null;
-                }).catch((err) => {
-                    let problems = { unexpected: err.message };
-                    this.setState({ problems });
-                });
-            });
+            let projectAfter = _.assign({}, project, flags);
+            projectsAfter.push(projectAfter);
         });
+        try {
+            await db.save({ table: 'project' }, projectsAfter);
+            this.setState({ hasChanges: false }, () => {
+                this.setEditability(false);
+            });
+        } catch (err) {
+            let problems = { unexpected: err.message };
+            this.setState({ problems });
+        }
     }
 
     /**

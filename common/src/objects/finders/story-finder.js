@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import * as DateUtils from 'utils/date-utils';
 
 const emptyArray = [];
@@ -12,7 +11,7 @@ const emptyArray = [];
  *
  * @return {Promise<Story>}
  */
-function findStory(db, id) {
+async function findStory(db, id) {
     return db.findOne({
         table: 'story',
         criteria: { id },
@@ -28,9 +27,9 @@ function findStory(db, id) {
  *
  * @return {Promise<Story>}
  */
-function findStories(db, ids) {
+async function findStories(db, ids) {
     if (_.isEmpty(ids)) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -48,9 +47,9 @@ function findStories(db, ids) {
  *
  * @return {Promise<Story>}
  */
-function findViewableStories(db, ids, currentUser) {
+async function findViewableStories(db, ids, currentUser) {
     if (_.isEmpty(ids) || !currentUser) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
@@ -72,9 +71,9 @@ function findViewableStories(db, ids, currentUser) {
  *
  * @return {Promise<Array<Story>>}
  */
-function findDraftStories(db, user) {
+async function findDraftStories(db, user) {
     if (!user) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     return db.find({
         table: 'story',
@@ -95,12 +94,12 @@ function findDraftStories(db, user) {
  *
  * @return {Promise<Array<Story>>}
  */
-function findUnlistedStories(db, user, listedStories, limit) {
+async function findUnlistedStories(db, user, listedStories, limit) {
     if (!user) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     if (!listedStories) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     let recentStories = _.filter(listedStories, (story) => {
         if (_.includes(story.user_ids, user.id)) {
@@ -132,7 +131,7 @@ function findUnlistedStories(db, user, listedStories, limit) {
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesMatchingText(db, text, locale, currentUser, perUserLimit) {
+async function findStoriesMatchingText(db, text, locale, currentUser, perUserLimit) {
     return db.find({
         table: 'story',
         criteria: {
@@ -161,7 +160,7 @@ function findStoriesMatchingText(db, text, locale, currentUser, perUserLimit) {
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesWithTags(db, tags, currentUser, perUserLimit, minimum) {
+async function findStoriesWithTags(db, tags, currentUser, perUserLimit, minimum) {
     return db.find({
         table: 'story',
         criteria: {
@@ -187,7 +186,7 @@ function findStoriesWithTags(db, tags, currentUser, perUserLimit, minimum) {
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
+async function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
     return db.find({
         table: 'story',
         criteria: {
@@ -212,9 +211,9 @@ function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
  *
  * @return {Promise<Array<Story>|null>}
  */
-function findStoriesInListing(db, type, currentUser, blockIfStale) {
+async function findStoriesInListing(db, type, currentUser, blockIfStale) {
     if (!currentUser) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     let query = {
         table: 'listing',
@@ -230,23 +229,21 @@ function findStoriesInListing(db, type, currentUser, blockIfStale) {
     if (blockIfStale) {
         query.blocking = 'stale';
     }
-    return db.findOne(query).then((listing) => {
-        if (!listing) {
-            // shouldn't happen, since listings are created on demand
-            return null;
+    let listing = await db.findOne(query);
+    if (!listing) {
+        // shouldn't happen, since listings are created on demand
+        return null;
+    }
+    if (_.isEmpty(listing.story_ids) && listing.dirty) {
+        // wait for the listing to become populated then try again
+        let changed = await db.await({ table: 'listing' }, listing, 5000);
+        if (!changed) {
+            // force remote check
+            db.refresh({ table: 'listing' }, listing);
         }
-        if (_.isEmpty(listing.story_ids) && listing.dirty) {
-            // wait for the listing to become populated then try again
-            return db.await({ table: 'listing' }, listing, 5000).then((changed) => {
-                if (!changed) {
-                    // force remote check
-                    db.refresh({ table: 'listing' }, listing);
-                }
-                return findStoriesInListing(db, type, currentUser);
-            });
-        }
-        return findViewableStories(db, listing.story_ids, currentUser);
-    });
+        return findStoriesInListing(db, type, currentUser);
+    }
+    return findViewableStories(db, listing.story_ids, currentUser);
 }
 
 /**
@@ -260,7 +257,7 @@ function findStoriesInListing(db, type, currentUser, blockIfStale) {
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesByUserMatchingText(db, user, text, locale, currentUser) {
+async function findStoriesByUserMatchingText(db, user, text, locale, currentUser) {
     return db.find({
         table: 'story',
         criteria: {
@@ -289,7 +286,7 @@ function findStoriesByUserMatchingText(db, user, text, locale, currentUser) {
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesByUserWithTags(db, user, tags, currentUser, minimum) {
+async function findStoriesByUserWithTags(db, user, tags, currentUser, minimum) {
     return db.find({
         table: 'story',
         criteria: {
@@ -315,7 +312,7 @@ function findStoriesByUserWithTags(db, user, tags, currentUser, minimum) {
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
+async function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
     return db.find({
         table: 'story',
         criteria: {
@@ -341,9 +338,9 @@ function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
  *
  * @return {Promise<Array<Story>|null>}
  */
-function findStoriesByUserInListing(db, type, user, currentUser, blockIfStale) {
+async function findStoriesByUserInListing(db, type, user, currentUser, blockIfStale) {
     if (!currentUser) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     let query = {
         table: 'listing',
@@ -360,22 +357,20 @@ function findStoriesByUserInListing(db, type, user, currentUser, blockIfStale) {
     if (blockIfStale) {
         query.blocking = 'stale';
     }
-    return db.findOne(query).then((listing) => {
-        if (!listing) {
-            return null;
+    let listing = await db.findOne(query);
+    if (!listing) {
+        return null;
+    }
+    if (_.isEmpty(listing.story_ids) && listing.dirty) {
+        // wait for the listing to become populated then try again
+        let changed = await db.await({ table: 'listing' }, listing, 5000);
+        if (!changed) {
+            // force remote check
+            db.refresh({ table: 'listing' }, listing);
         }
-        if (_.isEmpty(listing.story_ids) && listing.dirty) {
-            // wait for the listing to become populated then try again
-            return db.await({ table: 'listing' }, listing, 5000).then((changed) => {
-                if (!changed) {
-                    // force remote check
-                    db.refresh({ table: 'listing' }, listing);
-                }
-                return findStoriesByUserInListing(db, type, user, currentUser);
-            });
-        }
-        return findViewableStories(db, listing.story_ids, currentUser);
-    });
+        return findStoriesByUserInListing(db, type, user, currentUser);
+    }
+    return findViewableStories(db, listing.story_ids, currentUser);
 }
 
 /**
@@ -390,7 +385,7 @@ function findStoriesByUserInListing(db, type, user, currentUser, blockIfStale) {
  *
  * @return {Promise<Array<Story>|null>}
  */
-function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit, blockIfStale) {
+async function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit, blockIfStale) {
     let query = {
         table: 'listing',
         criteria: {
@@ -408,17 +403,16 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
     if (blockIfStale) {
         query.blocking = 'stale';
     }
-    return db.find(query).then((listings) => {
-        let storyIDs = _.flatten(_.map(listings, (listing) => {
-            return _.slice(listing.story_ids, - perUserLimit);
-        }));
-        if (_.isEmpty(storyIDs)) {
-            if (_.some(listings, { dirty: true })) {
-                return null;
-            }
+    let listings = await db.find(query);
+    let storyIDs = _.flatten(_.map(listings, (listing) => {
+        return _.slice(listing.story_ids, - perUserLimit);
+    }));
+    if (_.isEmpty(storyIDs)) {
+        if (_.some(listings, { dirty: true })) {
+            return null;
         }
-        return findViewableStories(db, storyIDs, currentUser);
-    });
+    }
+    return findViewableStories(db, storyIDs, currentUser);
 }
 
 /**
@@ -432,9 +426,9 @@ function findStoriesByUsersInListings(db, type, users, currentUser, perUserLimit
  *
  * @return {Promise<Array<Story>|null>}
  */
-function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blockIfStale) {
+async function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blockIfStale) {
     if (!currentUser) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     let query = {
         table: 'listing',
@@ -451,15 +445,14 @@ function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blockIfSt
     if (blockIfStale) {
         query.blocking = 'stale';
     }
-    return db.findOne(query).then((listing) => {
-        if (!listing) {
-            return null;
-        }
-        if (_.isEmpty(listing.story_ids) && listing.dirty) {
-            return null;
-        }
-        return findViewableStories(db, listing.story_ids, currentUser);
-    });
+    let listing = await db.findOne(query);
+    if (!listing) {
+        return null;
+    }
+    if (_.isEmpty(listing.story_ids) && listing.dirty) {
+        return null;
+    }
+    return findViewableStories(db, listing.story_ids, currentUser);
 }
 
 /**
@@ -471,7 +464,7 @@ function findStoriesWithRolesInListing(db, type, roleIDs, currentUser, blockIfSt
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesOfNotifications(db, notifications, currentUser) {
+async function findStoriesOfNotifications(db, notifications, currentUser) {
     let ids = _.filter(_.map(notifications, 'story_id'));
     return findViewableStories(db, ids, currentUser);
 }
@@ -485,7 +478,7 @@ function findStoriesOfNotifications(db, notifications, currentUser) {
  *
  * @return {Promise<Array<Story>>}
  */
-function findStoriesOfBookmarks(db, bookmarks, currentUser) {
+async function findStoriesOfBookmarks(db, bookmarks, currentUser) {
     let ids = _.map(bookmarks, 'story_id');
     return findViewableStories(db, ids, currentUser);
 }

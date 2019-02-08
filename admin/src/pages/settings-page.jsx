@@ -31,12 +31,10 @@ class SettingsPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, payloads, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            system: undefined,
-
             database,
             route,
             env,
@@ -44,13 +42,9 @@ class SettingsPage extends AsyncComponent {
             editing,
         };
         meanwhile.show(<SettingsPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return SystemFinder.findSystem(db).then((system) => {
-                props.system = _.isEmpty(system) ? null : system;
-            });
-        }).then(() => {
-            return <SettingsPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.system = await SystemFinder.findSystem(db);
+        return <SettingsPageSync {...props} />;
     }
 }
 
@@ -74,6 +68,24 @@ class SettingsPageSync extends PureComponent {
             saving: false,
             problems: {},
         };
+    }
+
+    /**
+     * Reset edit state when edit starts
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        if (!editing) {
+            return {
+                newSystem: null,
+                hasChanges: false,
+                problems: {},
+            };
+        }
+        return null;
     }
 
     /**
@@ -146,25 +158,6 @@ class SettingsPageSync extends PureComponent {
     getInputLanguages() {
         let system = this.getSystem();
         return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Reset edit state when edit starts
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                this.setState({
-                    newSystem: null,
-                    hasChanges: false,
-                });
-            } else {
-                this.setState({ problems: {} });
-            }
-        }
     }
 
     /**
@@ -461,28 +454,27 @@ class SettingsPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleSaveClick = (evt) => {
+    handleSaveClick = async (evt) => {
         let { database, payloads } = this.props;
         let { saving } = this.state;
         if (saving) {
             return;
         }
-        this.setState({ saving: true }, () => {
-            let schema = 'global';
-            let db = database.use({ schema, by: this });
-            let system = this.getSystem();
-            return db.start().then((currentUserID) => {
-                return db.saveOne({ table: 'system' }, system).then((system) => {
-                    payloads.dispatch(system);
-                    this.setState({ hasChanges: false, saving: false, problems: {} }, () => {
-                        this.setEditability(false);
-                    });
-                    return null;
+        this.setState({ saving: true }, async () => {
+            try {
+                let schema = 'global';
+                let db = database.use({ schema, by: this });
+                let system = this.getSystem();
+                let currentUserID = await db.start();
+                let systemAfter = await db.saveOne({ table: 'system' }, system);
+                payloads.dispatch(systemAfter);
+                this.setState({ hasChanges: false, saving: false, problems: {} }, () => {
+                    this.setEditability(false);
                 });
-            }).catch((err) => {
+            } catch (err) {
                 let problems = { unexpected: err.message };
                 this.setState({ problems, saving: false });
-            });
+            }
         });
     }
 

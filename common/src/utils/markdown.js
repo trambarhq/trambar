@@ -246,16 +246,16 @@ function renderListTokens(listTokens, onReference) {
     });
 
     // process at the inline level
-    _.each(listTokens, (listToken, index) => {
+    for (let [ index, listToken ] of listTokens.entries()) {
         let blockTokens = blockTokenLists[index];
         if (listToken instanceof Array) {
-            _.each(blockTokens, (blockTokens) => {
-                parser.processInline(blockTokens);
-            });
+            for (let tokens of blockTokens) {
+                parser.processInline(tokens);
+            }
         } else {
             parser.processInline(blockTokens);
         }
-    });
+    }
 
     // render tokens
     let renderer = createRenderer();

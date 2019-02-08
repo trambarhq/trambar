@@ -7,7 +7,7 @@
  *
  * @return {Promise<Array<Picture>>}
  */
-function findPictures(db, purpose, minimum) {
+async function findPictures(db, purpose, minimum) {
     return db.find({
         table: 'picture',
         criteria: {

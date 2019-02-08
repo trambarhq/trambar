@@ -22,18 +22,6 @@ class ComboButton extends PureComponent {
     }
 
     /**
-     * Change selection when preselection prop changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { preselected } = this.props;
-        if (nextProps.preselected !== preselected) {
-            this.setState({ selected: nextProps.preselected });
-        }
-    }
-
-    /**
      * Render component
      *
      * @return {ReactElement}
@@ -159,7 +147,12 @@ class ComboButton extends PureComponent {
      * @param  {Object} prevState
      */
     componentDidUpdate(prevProps, prevState) {
+        let { preselected } = this.props;
         let { open } = this.state;
+        if (prevProps.preselected !== preselected) {
+            this.setState({ selected: preselected });
+        }
+
         let appContainer = document.getElementById('app-container');
         if (!prevState.open && open) {
             appContainer.addEventListener('mousedown', this.handleBodyMouseDown);

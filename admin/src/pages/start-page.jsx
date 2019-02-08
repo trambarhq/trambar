@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import * as SystemFinder from 'objects/finders/system-finder';
@@ -21,26 +20,23 @@ class StartPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env } = this.props;
         let db = database.use({ by: this });
         let props = {
             env,
         };
-        return db.start().then((currentUserID) => {
-            return SystemFinder.findSystem(db).then((system) => {
-                if (_.isEmpty(system)) {
-                    // wait for welcome message to transition out
-                    props.onAnimationEnd = (evt) => {
-                        route.replace('settings-page', { editing: true });
-                    };
-                } else {
-                    return route.replace('project-list-page');
-                }
-            });
-        }).then(() => {
-            return <StartPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        let system = await SystemFinder.findSystem(db);
+        if (_.isEmpty(system)) {
+            // wait for welcome message to transition out
+            props.onAnimationEnd = async (evt) => {
+                await route.replace('settings-page', { editing: true });
+            };
+        } else {
+            await route.replace('project-list-page');
+        }
+        return <StartPageSync {...props} />;
     }
 }
 

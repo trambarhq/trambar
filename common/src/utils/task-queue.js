@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 
 class TaskQueue {
@@ -81,20 +80,18 @@ class TaskQueue {
         let task = this.tasks.shift();
         if (task) {
             this.current = task;
-            setImmediate(() => {
-                Promise.try(() => {
-                    return task.func();
-                }).then(() => {
+            setImmediate(async () => {
+                try {
+                    await task.func();
                     if (task.name) {
                         this.startTimes[task.name] = Moment().toISOString();
                     }
-                }).catch((err) => {
+                } catch (err) {
                     console.log(`Error encountered performing task: ${task.name}`);
                     console.error(err);
-                }).finally(() => {
-                    this.current = null;
-                    this.next();
-                });
+                }
+                this.current = null;
+                this.next();
             });
         }
     }

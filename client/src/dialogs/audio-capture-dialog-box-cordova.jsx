@@ -21,16 +21,7 @@ class AudioCaptureDialogBoxCordova extends PureComponent {
     componentWillReceiveProps(nextProps) {
         let { show } = this.props;
         if (!show && nextProps.show) {
-            let capture = navigator.device.capture;
-            if (capture) {
-                requestPermissions().then(() => {
-                    let options = {
-                        duration: 15 * 60 * 60,
-                        limit: 1,
-                    };
-                    capture.captureAudio(this.handleCaptureSuccess, this.handleCaptureFailure, options);
-                });
-            }
+            this.startCapture();
         }
     }
 
@@ -41,6 +32,18 @@ class AudioCaptureDialogBoxCordova extends PureComponent {
      */
     render() {
         return null;
+    }
+
+    async startCapture() {
+        let capture = navigator.device.capture;
+        if (capture) {
+            await requestPermissions();
+            let options = {
+                duration: 15 * 60 * 60,
+                limit: 1,
+            };
+            capture.captureAudio(this.handleCaptureSuccess, this.handleCaptureFailure, options);
+        }
     }
 
     /**
@@ -108,13 +111,14 @@ class AudioCaptureDialogBoxCordova extends PureComponent {
      *
      * @param  {Array<MediaFiles>} mediaFiles
      */
-    handleCaptureSuccess(mediaFiles) {
+    handleCaptureSuccess = async (mediaFiles) => {
         let { payloads } = this.props;
         this.triggerCloseEvent();
         let mediaFile = mediaFiles[0];
         if (mediaFile) {
-            this.triggerCapturePendingEvent();
-            MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
+            try {
+                this.triggerCapturePendingEvent();
+                let mediaFileData = await MediaLoader.getFormatData(mediaFile);
                 let file = new CordovaFile(mediaFile.fullPath);
                 let [ type, format ] = _.split(mediaFile.type, '/');
                 let payload = payloads.add('audio');
@@ -129,27 +133,25 @@ class AudioCaptureDialogBoxCordova extends PureComponent {
                     duration: mediaFileData.duration * 1000,
                 };
                 this.triggerCaptureEvent(res);
-                return null;
-            }).catch((err) => {
+            } catch (err) {
                 this.triggerCaptureErrorEvent(err);
-                return null;
-            });
+            }
         }
     }
 
     /**
      * Called when the operation failed for some reason
      */
-    handleCaptureFailure(err) {
+    handleCaptureFailure = (err) => {
         this.triggerCloseEvent();
         this.triggerCaptureErrorEvent(err);
     }
 }
 
-function requestPermissions() {
+async function requestPermissions() {
     let permissions = cordova.plugins.permissions;
     if (!permissions || cordova.platformId !== 'android') {
-        return Promise.resolve();
+        return;
     }
     return new Promise((resolve, reject) => {
         let successCB = () => {

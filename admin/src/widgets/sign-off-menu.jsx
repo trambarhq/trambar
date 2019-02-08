@@ -3,6 +3,7 @@ import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import * as UserFinder from 'objects/finders/user-finder';
+import * as UserUtils from 'objects/utils/user-utils';
 
 // widgets
 import ProfileImage from 'widgets/profile-image';
@@ -25,32 +26,22 @@ class SignOffMenu extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env } = this.props;
         let { t, p } = env.locale;
         let db = database.use({ schema: 'global', by: this });
-        if (!db.authorized) {
-            return null;
+        let props = {
+            show: db.authorized,
+            route,
+            env,
+            onSignOff: this.handleSignOff,
+        };
+        if (db.authorized) {
+            meanwhile.show(<SignOffMenuSync {...props} />);
+            let currentUserID = await db.start();
+            props.user = await UserFinder.findUser(db, currentUserID);
         }
-        meanwhile.show(<div className="sign-off-menu" />);
-        return db.start().then((currentUserID) => {
-            return UserFinder.findUser(db, currentUserID).then((user) => {
-                let url = route.find('user-summary-page', { user: user.id });
-                return (
-                    <div className="sign-off-menu">
-                        <a href={url}>
-                            <ProfileImage user={user} env={env} size="large" />
-                            <div className="name">
-                                {p(user.details.name)}
-                            </div>
-                        </a>
-                        <div className="sign-off" onClick={this.handleSignOffClick}>
-                            {t('sign-off-menu-sign-off')}
-                        </div>
-                    </div>
-                );
-            })
-        });
+        return <SignOffMenuSync {...props} />;
     }
 
     /**
@@ -58,15 +49,47 @@ class SignOffMenu extends AsyncComponent {
      *
      * @return {Event}
      */
-    handleSignOffClick = (evt) => {
+    handleSignOff = (evt) => {
         let { database, route } = this.props;
         database.endSession();
+    }
+}
+
+class SignOffMenuSync extends AsyncComponent {
+    static displayName = 'SignOffMenuSync';
+
+    /**
+     * Render component
+     *
+     * @return {ReactElement}
+     */
+    render() {
+        let { route, show, user, env } = this.props;
+        let { onSignOff } = this.props;
+        let { t } = env.locale;
+        let url = (user) ? route.find('user-summary-page', { user: user.id }) : undefined;
+        let name = UserUtils.getDisplayName(user, env);
+        if (!show) {
+            return null;
+        }
+        return (
+            <div className="sign-off-menu">
+                <a href={url}>
+                    <ProfileImage user={user} env={env} size="large" />
+                    <div className="name">{name}</div>
+                </a>
+                <div className="sign-off" onClick={onSignOff}>
+                    {t('sign-off-menu-sign-off')}
+                </div>
+            </div>
+        );
     }
 }
 
 export {
     SignOffMenu as default,
     SignOffMenu,
+    SignOffMenuSync,
 };
 
 import Database from 'data/database';
@@ -78,6 +101,12 @@ if (process.env.NODE_ENV !== 'production') {
 
     SignOffMenu.propTypes = {
         database: PropTypes.instanceOf(Database).isRequired,
+        route: PropTypes.instanceOf(Route).isRequired,
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    SignOffMenuSync.propTypes = {
+        show: PropTypes.bool,
+        user: PropTypes.object,
         route: PropTypes.instanceOf(Route).isRequired,
         env: PropTypes.instanceOf(Environment).isRequired,
     };

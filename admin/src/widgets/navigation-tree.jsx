@@ -22,7 +22,7 @@ import './navigation-tree.scss';
 class NavigationTree extends AsyncComponent {
     static displayName = 'NavigationTree';
 
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, disabled } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
@@ -41,39 +41,24 @@ class NavigationTree extends AsyncComponent {
             return <NavigationTreeSync {...props} />;
         }
         meanwhile.show(<NavigationTreeSync {...props} />);
-        return db.start().then((currentUserID) => {
-            let params = route.params;
-            let promises = {};
-            if (typeof(params.projectID) === 'number') {
-                promises.project = ProjectFinder.findProject(db, params.projectID);
-            }
-            if (typeof(params.userID) === 'number') {
-                promises.user = UserFinder.findUser(db, params.userID);
-            }
-            if (typeof(params.roleID) === 'number') {
-                promises.role = RoleFinder.findRole(db, params.roleID);
-            }
-            if (typeof(params.repoID) === 'number') {
-                promises.repo = RepoFinder.findRepo(db, params.repoID);
-            }
-            if (typeof(params.serverID) === 'number') {
-                promises.server = ServerFinder.findServer(db, params.serverID);
-            }
-            return Promise.props(promises).then((objects) => {
-                _.assign(props, objects);
-            }).catch((err) => {
-            });
-        }).then(() => {
-            return <NavigationTreeSync {...props} />;
-        }).catch((err) => {
-            if (err.statusCode === 401) {
-                // render the component even when we don't have access yet
-                // --for appearance sake
-                return <NavigationTreeSync {...props} />;
-            } else {
-                throw err;
-            }
-        });
+        let currentUserID = await db.start();
+        let params = route.params;
+        if (typeof(params.projectID) === 'number') {
+            props.project = await ProjectFinder.findProject(db, params.projectID);
+        }
+        if (typeof(params.userID) === 'number') {
+            props.user = await UserFinder.findUser(db, params.userID);
+        }
+        if (typeof(params.roleID) === 'number') {
+            props.role = await RoleFinder.findRole(db, params.roleID);
+        }
+        if (typeof(params.repoID) === 'number') {
+            props.repo = await RepoFinder.findRepo(db, params.repoID);
+        }
+        if (typeof(params.serverID) === 'number') {
+            props.server = await ServerFinder.findServer(db, params.serverID);
+        }
+        return <NavigationTreeSync {...props} />;
     }
 }
 

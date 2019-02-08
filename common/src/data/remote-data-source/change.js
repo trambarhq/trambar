@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import * as Async from 'async-do-while';
 
 import * as LocalSearch from 'data/local-search';
@@ -58,7 +57,7 @@ class Change {
      * Send a pending change to remote server by triggering the attached
      * onDispatch handler
      */
-    dispatch() {
+    async dispatch() {
         if (this.dispatched || this.canceled) {
             // already sent or canceled
             return;
@@ -68,45 +67,40 @@ class Change {
             this.dispatching = true;
             return;
         }
-        Promise.all(this.dependentPromises).then(() => {
-            let attempt = 1;
-            let delay = 1000;
-            Async.while(() => {
-                return !this.committed && !this.canceled && !this.dispatched;
-            });
-            Async.do(() => {
-                this.dispatched = true;
-                return this.onDispatch(this).then((objects) => {
-                    this.committed = true;
-                    this.received = objects;
-                    this.time = new Date;
-                    if (!this.canceled) {
-                        this.resolvePromise(objects);
-                    } else {
-                        // ignore the results
+        await Promise.all(this.dependentPromises);
+        let delay = 1000;
+        for (;;) {
+            this.dispatched = true;
+
+            try {
+                let objects = await this.onDispatch(this);
+                this.committed = true;
+                this.received = objects;
+                this.time = new Date;
+                if (!this.canceled) {
+                    this.resolvePromise(objects);
+                } else {
+                    // ignore the results
+                    this.resolvePromise([]);
+                }
+                return;
+            } catch (err) {
+                if (err.statusCode >= 400 && err.statusCode <= 499) {
+                    this.error = err;
+                    this.rejectPromise(err);
+                    this.canceled = true;
+                } else {
+                    this.dispatched = false;
+                    // wait a bit then try again
+                    delay = Math.min(delay * 2, 10 * 1000);
+                    await Bluebird.delay(delay);
+                    if (this.canceled) {
                         this.resolvePromise([]);
+                        return;
                     }
-                }).catch((err) => {
-                    if (err.statusCode >= 400 && err.statusCode <= 499) {
-                        this.error = err;
-                        this.rejectPromise(err);
-                        this.canceled = true;
-                    } else {
-                        this.dispatched = false;
-                        // wait a bit then try again
-                        delay = Math.min(delay * 2, 10 * 1000);
-                        return Promise.delay(delay).then(() => {
-                            if (!this.canceled) {
-                                attempt++;
-                            } else {
-                                this.resolvePromise([]);
-                            }
-                        });
-                    }
-                });
-            });
-            return Async.end();
-        });
+                }
+            }
+        }
     }
 
     /**
@@ -138,7 +132,7 @@ class Change {
             return;
         }
         let dependent = false;
-        _.each(this.objects, (object, i) => {
+        for (let object of this.objects) {
             let index = _.findIndex(earlierOp.objects, { id: object.id });
             if (index !== -1 && !earlierOp.removed[index]) {
                 if (!earlierOp.dispatched || object.id >= 1) {
@@ -156,31 +150,44 @@ class Change {
                     // to yield a permanent database id, then this operation
                     // needs to wait for it to resolve first
                     dependent = true;
+                    break;
                 }
             }
-        });
+        }
         if (dependent) {
             // we need to replace the temporary ID with a permanent one before
             // this change is dispatch; otherwise multiple objects would be created
-            let dependentPromise = earlierOp.promise.then(() => {
-                _.each(this.objects, (object) => {
-                    if (object.id < 1) {
-                        let id = earlierOp.findPermanentID(object.id);
-                        if (id) {
-                            object.id = id;
-                        }
-                    }
-                });
-            }).catch((err) => {
-                // if earlierOp failed, then presumably no new database row was
-                // created; we could proceed as if the operation didn't happen
-            });
+            let dependentPromise = this.acquirePermanentIDs(earlierOp);
             this.dependentPromises.push(dependentPromise);
         } else {
             // cancel the earlier op if everything was removed from it
             if (_.every(earlierOp.removed)) {
                 earlierOp.cancel();
             }
+        }
+    }
+
+    /**
+     * Wait for earlier op to finish and obtain permanent IDs from its results
+     *
+     * @param  {Change}  earlierOp
+     *
+     * @return {Promise}
+     */
+    async acquirePermanentIDs(earlierOp) {
+        try {
+            await earlierOp.promise;
+            for (let object of this.objects) {
+                if (object.id < 1) {
+                    let id = earlierOp.findPermanentID(object.id);
+                    if (id) {
+                        object.id = id;
+                    }
+                }
+            }
+        } catch (err) {
+            // if earlierOp failed, then presumably no new database row was
+            // created; we could proceed as if the operation didn't happen
         }
     }
 
@@ -213,12 +220,9 @@ class Change {
         if (this.canceled) {
             return;
         }
-        if (!_.isMatch(search, this.location)) {
-            return;
-        }
-        _.each(this.objects, (uncommittedObject, i) => {
+        for (let [ i, uncommittedObject ] of this.objects.entries()) {
             if (this.removed[i]) {
-                return;
+                continue;
             }
             let index = _.findIndex(search.results, { id: uncommittedObject.id });
             if (index !== -1) {
@@ -254,7 +258,7 @@ class Change {
                     }
                 }
             }
-        });
+        }
     }
 
     /**

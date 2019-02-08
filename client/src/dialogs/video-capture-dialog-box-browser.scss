@@ -16,13 +16,8 @@
         flex: 1 1 auto;
         overflow: hidden;
         margin-bottom: 0.2em;
-        position: relative;
 
-        .live-video, .preview {
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            right: 0;
+        VIDEO {
             display: block;
         }
 
@@ -37,40 +32,34 @@
                 }
             }
         }
-
-        .spacer {
-            display: block;
-            visibility: hidden;
-
-            .single-col & {
-                width: 100%;
-            }
-        }
     }
 
     .controls {
-        display: block;
+        display: flex;
         flex: 1 0 auto;
         padding: 0.4em 0 0.2em 0.2em;
         border-top: 1px solid $separator-color;
 
-        .device-selector {
-            float: left;
+        .left {
+            flex: 1 0 0;
+
+            .duration-indicator {
+                margin-top: 0.65em;
+            }
         }
 
-        .buttons {
-            float: right;
+        .center {
+            flex: 1 0 0;
+            text-align: center;
+
+            .volume-indicator {
+                margin-top: 0.5em;
+            }
         }
 
-        .duration-indiactor {
-            float: left;
-            margin-top: 0.65em;
-        }
-
-        &:after {
-            content: "";
-            display: table;
-            clear: both;
+        .right {
+            flex: 1 0 0;
+            text-align: right;
         }
     }
 

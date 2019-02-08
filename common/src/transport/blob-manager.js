@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import Moment from 'moment';
 import * as HTTPRequest from 'transport/http-request';
 import CordovaFile from 'transport/cordova-file';
@@ -75,21 +74,18 @@ function associate(target, url) {
  *
  * @return {Promise<Blob>}
  */
-function fetch(remoteURL) {
+async function fetch(remoteURL) {
     if (!remoteURL) {
-        throw Promise.reject(new Error('Invalid argument'));
+        throw new Error('Invalid argument');
     }
     let blob = find(remoteURL);
-    if (blob) {
-        // we downloaded the file before (or we had uploaded it earlier)
-        return Promise.resolve(blob);
-    }
-    let options = { responseType: 'blob' };
-    return HTTPRequest.fetch('GET', remoteURL, null, options).then((blob) => {
+    if (!blob) {
+        let options = { responseType: 'blob' };
+        blob = await HTTPRequest.fetch('GET', remoteURL, null, options);
         let localURL = manage(blob);
         associate(blob, remoteURL);
-        return blob;
-    });
+    }
+    return blob;
 }
 
 /**
@@ -132,9 +128,9 @@ function clearBlobs() {
             }
         }
     });
-    _.each(removed, (entry) => {
+    for (let entry of removed) {
         releaseEntry(entry);
-    });
+    }
 }
 
 setInterval(clearBlobs, 60 * 1000);

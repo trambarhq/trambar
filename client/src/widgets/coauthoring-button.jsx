@@ -44,9 +44,11 @@ class CoauthoringButton extends PureComponent {
             }
         }
         return (
-            <span className="coauthoring-button" onClick={this.handleClick}>
-                <i className={`fa fa-${icon}`} />
-                <span className="label">{label}</span>
+            <span className="coauthoring-button">
+                <span onClick={this.handleClick}>
+                    <i className={`fa fa-${icon}`} />
+                    <span className="label">{label}</span>
+                </span>
                 {this.renderDialogBox()}
             </span>
         );

@@ -27,35 +27,21 @@ class RoleFilterBar extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, settings } = this.props;
         let db = database.use({ by: this });
         let props = {
-            roles: undefined,
-            users: undefined,
-            project: undefined,
-
             settings,
             route,
             env,
         };
         // don't let the component be empty initially
         meanwhile.show(<RoleFilterBarSync {...props} />, 'initial');
-        return db.start().then((currentUserID) => {
-            return ProjectFinder.findCurrentProject(db).then((project) => {
-                props.project = project;
-            });
-        }).then(() => {
-            return UserFinder.findProjectMembers(db, props.project).then((users) => {
-                props.users = users;
-            });
-        }).then(() => {
-            return RoleFinder.findRolesOfUsers(db, props.users).then((roles) => {
-                props.roles = roles;
-            });
-        }).then((roles) => {
-            return <RoleFilterBarSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.project = await ProjectFinder.findCurrentProject(db);
+        props.users = await UserFinder.findProjectMembers(db, props.project);
+        props.roles = await RoleFinder.findRolesOfUsers(db, props.users);
+        return <RoleFilterBarSync {...props} />;
     }
 }
 

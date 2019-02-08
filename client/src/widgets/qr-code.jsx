@@ -46,13 +46,12 @@ class QRCode extends PureComponent {
     /**
      * Draw QR code into canvas
      */
-    redraw() {
-        import('qrcode' /* webpackChunkName: "qrcode" */).then((module) => {
-            let { text, scale } = this.props;
-            let { canvas } = this.components;
-            let options = { scale };
-            module.toCanvas(canvas, text, options, (err) => {});
-        });
+    async redraw() {
+        let module = await import('qrcode' /* webpackChunkName: "qrcode" */);
+        let { text, scale } = this.props;
+        let { canvas } = this.components;
+        let options = { scale };
+        module.toCanvas(canvas, text, options, (err) => {});
     }
 }
 

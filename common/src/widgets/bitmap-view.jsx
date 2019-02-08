@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import * as BlobManager from 'transport/blob-manager';
 import * as BlobReader from 'transport/blob-reader';
@@ -97,38 +96,34 @@ class BitmapView extends PureComponent {
      *
      * @return {Promise}
      */
-    load() {
+    async load() {
         let { url } = this.props;
         if (url) {
-            return BlobManager.fetch(url).then((blob) => {
+            try {
+                let blob = await BlobManager.fetch(url);
                 // load the image and its bytes
-                let imageP = MediaLoader.loadImage(blob);
-                let bytesP = BlobReader.loadUint8Array(blob);
-                return Promise.join(imageP, bytesP, (image, bytes) => {
-                    let orientation = JPEGAnalyser.getOrientation(bytes) || 1;
+                let image = await MediaLoader.loadImage(blob);
+                let bytes = await BlobReader.loadUint8Array(blob);
+                let orientation = JPEGAnalyser.getOrientation(bytes) || 1;
 
-                    this.image = image;
-                    this.orientation = orientation;
-                    if (orientation < 5) {
-                        this.naturalWidth = image.naturalWidth;
-                        this.naturalHeight = image.naturalHeight;
-                    } else {
-                        this.naturalWidth = image.naturalHeight;
-                        this.naturalHeight = image.naturalWidth;
-                    }
+                this.image = image;
+                this.orientation = orientation;
+                if (orientation < 5) {
+                    this.naturalWidth = image.naturalWidth;
+                    this.naturalHeight = image.naturalHeight;
+                } else {
+                    this.naturalWidth = image.naturalHeight;
+                    this.naturalHeight = image.naturalWidth;
+                }
 
-                    this.drawImage();
-                    this.triggerLoadEvent();
-                    return null;
-                });
-            }).catch((err) => {
+                this.drawImage();
+                this.triggerLoadEvent();
+            } catch (err) {
                 console.error(err)
                 this.triggerErrorEvent(err);
-                return null;
-            });
+            }
         } else {
             this.clearCanvas();
-            return Promise.resolve();
         }
     }
 

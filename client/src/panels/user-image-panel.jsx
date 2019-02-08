@@ -326,12 +326,9 @@ class UserImagePanel extends PureComponent {
      * Called when MediaImporter has imported or captured an image
      *
      * @param  {Object} evt
-     *
-     * @return {Promise}
      */
     handleChange = (evt) => {
         this.setState({ image: evt.resources[0], action: 'adjust' });
-        return Promise.resolve();
     }
 
     /**

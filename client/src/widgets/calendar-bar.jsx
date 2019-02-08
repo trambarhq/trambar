@@ -26,33 +26,27 @@ class CalendarBar extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, settings } = this.props;
         let db = database.use({ by: this });
         let props = {
-            dailyActivities: undefined,
-
             settings,
             route,
             env,
         };
         // don't let the component be empty initially
         meanwhile.show(<CalendarBarSync {...props} />, 'initial');
-        return db.start().then((currentUserID) => {
-            return UserFinder.findUser(db, currentUserID);
-        }).then((currentUser) => {
-            let params = _.clone(settings.statistics);
-            if (params.user_id === 'current') {
-                params.user_id = currentUser.id;
-            }
-            if (params.public === 'guest') {
-                params.public = (currentUser.type === 'guest');
-            }
-            return StatisticsFinder.find(db, params);
-        }).then((statistics) => {
-            props.dailyActivities = statistics;
-            return <CalendarBarSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        let currentUser = await  UserFinder.findUser(db, currentUserID);
+        let params = _.clone(settings.statistics);
+        if (params.user_id === 'current') {
+            params.user_id = currentUser.id;
+        }
+        if (params.public === 'guest') {
+            params.public = (currentUser.type === 'guest');
+        }
+        props.dailyActivities = await StatisticsFinder.find(db, params);
+        return <CalendarBarSync {...props} />;
     }
 }
 

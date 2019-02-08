@@ -42,7 +42,7 @@ class StartPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let {
             database,
             route,
@@ -53,12 +53,6 @@ class StartPage extends AsyncComponent {
         } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            currentUser: undefined,
-            system: undefined,
-            servers: undefined,
-            projects: undefined,
-            projectLinks: undefined,
-
             transitionOut,
             database,
             route,
@@ -70,24 +64,18 @@ class StartPage extends AsyncComponent {
                 // start authorization process--will receive system description
                 // and list of OAuth providers along with links
                 meanwhile.show(<StartPageSync {...props} />);
-                return db.beginSession('client').then((info) => {
-                    // we'll load the system object again, through the regular
-                    // data retrieval mechanism, once we have gain access
-                    //
-                    // save a copy so that we can keep displaying the
-                    // background image and project description while loading
-                    // occurs
-                    this.sessionStartSystem = info.system;
-
-                    props.system = info.system;
-                    props.servers = info.servers;
-                    return <StartPageSync {...props} />;
-                });
+                let info = await db.beginSession('client');
+                // we'll load the system object again, through the regular
+                // data retrieval mechanism, once we have gain access
+                //
+                // save a copy so that we can keep displaying the
+                // background image and project description while loading
+                // occurs
+                this.sessionStartSystem = info.system;
+                props.system = info.system;
+                props.servers = info.servers;
             } else if (env.platform === 'cordova') {
-                return ProjectLinkFinder.findActiveLinks(db).then((links) => {
-                    props.projectLinks = links;
-                    return <StartPageSync {...props} />;
-                });
+                props.projectLinks = await ProjectLinkFinder.findActiveLinks(db);
             }
         } else {
             // handle things normally after we've gained authorization
@@ -99,29 +87,16 @@ class StartPage extends AsyncComponent {
                 meanwhile.delay(undefined, 300);
             }
             meanwhile.show(<StartPageSync {...props} />);
-            return db.start().then((currentUserID) => {
-                return UserFinder.findUser(db, currentUserID).then((user) => {
-                    props.currentUser = user;
-                });
-            }).then(() => {
-                meanwhile.show(<StartPageSync {...props} />);
-                return SystemFinder.findSystem(db).then((system) => {
-                    props.system = system;
-                });
-            }).then(() => {
-                meanwhile.show(<StartPageSync {...props} />);
-                return ProjectFinder.findActiveProjects(db, 1).then((projects) => {
-                    props.projects = projects;
-                });
-            }).then(() => {
-                meanwhile.show(<StartPageSync {...props} />);
-                return ProjectLinkFinder.findActiveLinks(db).then((links) => {
-                    props.projectLinks = links;
-                });
-            }).then(() => {
-                return <StartPageSync {...props} />;
-            });
+            let currentUserID = await db.start();
+            props.currentUser = await UserFinder.findUser(db, currentUserID);
+            meanwhile.show(<StartPageSync {...props} />);
+            props.system = await SystemFinder.findSystem(db);
+            meanwhile.show(<StartPageSync {...props} />);
+            props.projects = await ProjectFinder.findActiveProjects(db, 1);
+            meanwhile.show(<StartPageSync {...props} />);
+            props.projectLinks = await ProjectLinkFinder.findActiveLinks(db);
         }
+        return <StartPageSync {...props} />;
     }
 }
 
@@ -790,12 +765,13 @@ class StartPageSync extends PureComponent {
      *
      * @return {Promise}
      */
-    activateMobileSession(params) {
+    async activateMobileSession(params) {
         let { database, route } = this.props;
         let { address, schema, activationCode } = params || {};
         let db = database.use({ address, schema });
         clearTimeout(this.invalidCodeTimeout);
-        return db.acquireMobileSession(activationCode).then((userID) => {
+        try {
+            let userID = await db.acquireMobileSession(activationCode);
             if (schema) {
                 this.navigateToProject(address, schema);
             }
@@ -809,14 +785,14 @@ class StartPageSync extends PureComponent {
                 session_handle: _.toLower(activationCode),
             };
             return db.saveOne({ schema: 'global', table: 'device' }, device);
-        }).catch((err) => {
+        } catch (err) {
             db.releaseMobileSession();
             this.setState({ activationError: err });
             this.invalidCodeTimeout = setTimeout(() => {
                 this.setState({ activationError: null });
             }, 5000);
             throw err;
-        });
+        }
     }
 
     /**
@@ -827,7 +803,7 @@ class StartPageSync extends PureComponent {
      *
      * @return {Promise<Boolean>}
      */
-    navigateToProject(address, schema) {
+    async navigateToProject(address, schema) {
         let { database, route, projectLinks } = this.props;
         let context = { schema };
         if (address) {
@@ -848,7 +824,7 @@ class StartPageSync extends PureComponent {
      *
      * @return {Promise}
      */
-    openPopUpWindow(url) {
+    async openPopUpWindow(url) {
         return new Promise((resolve, reject) => {
             let width = 800;
             let height = 600;
@@ -884,21 +860,22 @@ class StartPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleOAuthButtonClick = (evt) => {
+    handleOAuthButtonClick = async (evt) => {
         let { database } = this.props;
         let { oauthErrors } = this.state;
         evt.preventDefault();
         evt.stopPropagation();
         let url = evt.currentTarget.getAttribute('href');
         let providerID = evt.currentTarget.getAttribute('data-id');
-        return this.openPopUpWindow(url).then(() => {
-            let db = database.use({ by: this });
-            return db.checkAuthorization().catch((err) => {
-                oauthErrors = _.clone(oauthErrors);
-                oauthErrors[providerID] = err;
-                this.setState({ oauthErrors });
-            });
-        });
+        await this.openPopUpWindow(url);
+        let db = database.use({ by: this });
+        try {
+            await db.checkAuthorization();
+        } catch (err) {
+            oauthErrors = _.clone(oauthErrors);
+            oauthErrors[providerID] = err;
+            this.setState({ oauthErrors });
+        }
     }
 
     /**

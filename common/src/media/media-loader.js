@@ -1,4 +1,3 @@
-import Promise from 'bluebird';
 import * as BlobManager from 'transport/blob-manager';
 import * as BlobReader from 'transport/blob-reader';
 import * as JPEGAnalyser from 'media/jpeg-analyser';
@@ -13,7 +12,7 @@ import CordovaFile from 'transport/cordova-file';
  *
  * @return {Promise<HTMLImageElement}
  */
-function loadImage(blob) {
+async function loadImage(blob) {
     let url;
     if (typeof(blob) === 'string') {
         url = blob;
@@ -46,10 +45,10 @@ function loadImage(blob) {
  *
  * @return {Promise<HTMLVideoElement}
  */
-function loadVideo(blob) {
+async function loadVideo(blob) {
     if (/iPhone/i.test(navigator.userAgent)) {
         // iPhone doesn't allow loading of video programmatically
-        return Promise.reject('Cannot load video on iPhone');
+        return new Error('Cannot load video on iPhone');
     }
     let url;
     if (typeof(blob) === 'string') {
@@ -77,7 +76,7 @@ function loadVideo(blob) {
  *
  * @return {Promise<HTMLAudioElement}
  */
-function loadAudio(blob) {
+async function loadAudio(blob) {
     let url;
     if (typeof(blob) === 'string') {
         url = blob;
@@ -104,16 +103,15 @@ function loadAudio(blob) {
  *
  * @return {Promise<HTMLImageElement}
  */
-function loadSVG(blob) {
-    return BlobReader.loadText(blob).then((xml) => {
-        let parser = new DOMParser;
-        let doc = parser.parseFromString(xml, 'text/xml');
-        let svg = doc.getElementsByTagName('svg')[0];
-        if (!svg) {
-            throw new Error('Invalid SVG document');
-        }
-        return svg;
-    });
+async function loadSVG(blob) {
+    let xml = await BlobReader.loadText(blob);
+    let parser = new DOMParser;
+    let doc = parser.parseFromString(xml, 'text/xml');
+    let svg = doc.getElementsByTagName('svg')[0];
+    if (!svg) {
+        throw new Error('Invalid SVG document');
+    }
+    return svg;
 }
 
 /**
@@ -123,70 +121,65 @@ function loadSVG(blob) {
  *
  * @return {Promise<Object>}
  */
-function getImageMetadata(blob) {
+async function getImageMetadata(blob) {
     if (typeof(blob) === 'string') {
-        let url = blob;
-        return BlobManager.fetch(url).then((blob) => {
-            return getImageMetadata(blob);
-        }).catch((err) => {
+        try {
+            blob = await BlobManager.fetch(blob);
+        } catch (err) {
             // we might not be able to fetch the file as a blob
             // due to cross-site restriction
-            return loadImage(url).then((img) => {
-                return {
-                    width: img.naturalWidth,
-                    height: img.naturalHeight,
-                    format: guessFileFormat(url, 'image')
-                };
-            });
-        });
+            let img = await loadImage(blob);
+            return {
+                width: img.naturalWidth,
+                height: img.naturalHeight,
+                format: guessFileFormat(url, 'image')
+            };
+        }
     }
     let format = extractFileFormat(blob.type);
     if (format === 'svg') {
         // naturalWidth and naturalHeight aren't correct when the SVG file
         // doesn't have width and height set
-        return loadSVG(blob).then((svg) => {
-            let width = svg.width.baseVal.value;
-            let height = svg.height.baseVal.value;
-            let viewBox = svg.viewBox.baseVal;
-            if (!width) {
-                width = viewBox.width;
-            }
-            if (!height) {
-                height = viewBox.height;
-            }
-            if (!width) {
-                width = 1000;
-            }
-            if (!height) {
-                height = 1000;
-            }
-            return { width, height, format };
-        });
+        let svg = await loadSVG(blob);
+        let width = svg.width.baseVal.value;
+        let height = svg.height.baseVal.value;
+        let viewBox = svg.viewBox.baseVal;
+        if (!width) {
+            width = viewBox.width;
+        }
+        if (!height) {
+            height = viewBox.height;
+        }
+        if (!width) {
+            width = 1000;
+        }
+        if (!height) {
+            height = 1000;
+        }
+        return { width, height, format };
     } else if (format === 'jpeg') {
-        return BlobReader.loadUint8Array(blob).then((bytes) => {
-            let dimensions = JPEGAnalyser.getDimensions(bytes);
-            let orientation = JPEGAnalyser.getOrientation(bytes);
-            if (!dimensions) {
-                throw new Error('Invalid JPEG file');
-            }
-            let width, height;
-            if (orientation >= 5) {
-                width = dimensions.height;
-                height = dimensions.width;
-            } else {
-                width = dimensions.width;
-                height = dimensions.height;
-            }
-            return { width, height, format };
-        });
+        let bytes = await BlobReader.loadUint8Array(blob);
+        let dimensions = JPEGAnalyser.getDimensions(bytes);
+        let orientation = JPEGAnalyser.getOrientation(bytes);
+        if (!dimensions) {
+            throw new Error('Invalid JPEG file');
+        }
+        let width, height;
+        if (orientation >= 5) {
+            width = dimensions.height;
+            height = dimensions.width;
+        } else {
+            width = dimensions.width;
+            height = dimensions.height;
+        }
+        return { width, height, format };
     } else {
-        return loadImage(blob).then((img) => {
-            return {
-                width: img.naturalWidth,
-                height: img.naturalHeight,
-                format: format,
-            }
-        });
+        let img = await loadImage(blob);
+        return {
+            width: img.naturalWidth,
+            height: img.naturalHeight,
+            format: format,
+        }
     }
 }
 
@@ -197,38 +190,33 @@ function getImageMetadata(blob) {
  *
  * @return {Promise<Object>}
  */
-function getVideoMetadata(blob) {
+async function getVideoMetadata(blob) {
     if (typeof(blob) === 'string') {
-        let url = blob;
-        return BlobManager.fetch(url).then((blob) => {
-            return getVideoMetadata(blob);
-        }).catch((err) => {
+        try {
+            blob = await BlobManager.fetch(blob);
+        } catch (err) {
             // we might not be able to fetch the file as a blob
             // due to cross-site restriction
-            return loadVideo(url).then((video) => {
-                return FrameGrabber.capture(video).then((posterBlob) => {
-                    return {
-                        width: video.videoWidth,
-                        height: video.videoHeight,
-                        duration: Math.round(video.duration * 1000),
-                        format: guessFileFormat(url, 'video'),
-                        poster: posterBlob,
-                    };
-                });
-            });
-        });
-    }
-    return loadVideo(blob).then((video) => {
-        return FrameGrabber.capture(video).then((posterBlob) => {
+            let video = await loadVideo(blob);
+            let posterBlob = await FrameGrabber.capture(video);
             return {
                 width: video.videoWidth,
                 height: video.videoHeight,
                 duration: Math.round(video.duration * 1000),
-                format: extractFileFormat(blob.type),
+                format: guessFileFormat(url, 'video'),
                 poster: posterBlob,
             };
-        });
-    });
+        }
+    }
+    let video = await loadVideo(blob);
+    let posterBlob = await FrameGrabber.capture(video);
+    return {
+        width: video.videoWidth,
+        height: video.videoHeight,
+        duration: Math.round(video.duration * 1000),
+        format: extractFileFormat(blob.type),
+        poster: posterBlob,
+    };
 }
 
 /**
@@ -238,28 +226,25 @@ function getVideoMetadata(blob) {
  *
  * @return {Promise<Object>}
  */
-function getAudioMetadata(blob) {
+async function getAudioMetadata(blob) {
     if (typeof(blob) === 'string') {
-        let url = blob;
-        return BlobManager.fetch(url).then((blob) => {
-            return getAudioMetadata(blob);
-        }).catch((err) => {
+        try {
+            blob = await BlobManager.fetch(blob);
+        } catch (err) {
             // we might not be able to fetch the file as a blob
             // due to cross-site restriction
-            return loadAudio(url).then((audio) => {
-                return {
-                    duration: Math.round(audio.duration * 1000),
-                    format: guessFileFormat(url, 'image'),
-                };
-            });
-        });
+            let audio = await loadAudio(blob);
+            return {
+                duration: Math.round(audio.duration * 1000),
+                format: guessFileFormat(url, 'image'),
+            };
+        }
     }
-    return loadAudio(blob).then((audio) => {
-        return {
-            duration: Math.round(audio.duration * 1000),
-            format: extractFileFormat(blob.type),
-        };
-    });
+    let audio = await loadAudio(blob);
+    return {
+        duration: Math.round(audio.duration * 1000),
+        format: extractFileFormat(blob.type),
+    };
 }
 
 /**
@@ -327,18 +312,14 @@ function extractFileFormat(mimeType) {
  *
  * @return {Promise<Object>}
  */
-function extractMosaic(blob, rect) {
-    if (typeof(blob) === 'string') {
-        let url = blob;
-        return BlobManager.fetch(url).then((blob) => {
-            return extractMosaic(blob, rect);
-        }).catch((err) => {
-        });
-    }
-    // load the image and its bytes
-    let imageP = loadImage(blob);
-    let bytesP = BlobReader.loadUint8Array(blob);
-    return Promise.join(imageP, bytesP, (image, bytes) => {
+async function extractMosaic(blob, rect) {
+    try {
+        if (typeof(blob) === 'string') {
+            blob = await BlobManager.fetch(blob);
+        }
+        // load the image and its bytes
+        let image = await loadImage(blob);
+        let bytes = await BlobReader.loadUint8Array(blob);
         let orientation = JPEGAnalyser.getOrientation(bytes) || 1;
 
         // correct for orientation and apply clipping
@@ -378,9 +359,9 @@ function extractMosaic(blob, rect) {
             }
             return colors;
         }
-    }).catch((err) => {
-        console.log(err.message);
-    });
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 /**

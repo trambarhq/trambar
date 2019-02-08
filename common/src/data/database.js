@@ -1,6 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import HTTPERror from 'errors/http-error';
 
 class Database {
     constructor(remoteDataSource, context) {
@@ -17,7 +15,7 @@ class Database {
      *
      * @return {Promise<Array<Object>>}
      */
-    find(query) {
+    async find(query) {
         query = merge(this.context, query);
         return this.remoteDataSource.find(query);
     }
@@ -29,11 +27,10 @@ class Database {
      *
      * @return {Promise<Object>}
      */
-    findOne(query) {
+    async findOne(query) {
         query = _.extend({ expected: 1 }, query);
-        return this.find(query).then((objects) => {
-            return objects[0] || null;
-        });
+        let objects = await this.find(query);
+        return objects[0] || null;
     }
 
     /**
@@ -46,7 +43,7 @@ class Database {
      *
      * @return {Promise<Array<Object>>}
      */
-    save(location, objects, options) {
+    async save(location, objects, options) {
         if (process.env.NODE_ENV !== 'production') {
             if (!_.isArray(objects) || !_.every(objects, _.isObject)) {
                 throw new Error('save() expects an array of objects');
@@ -65,15 +62,14 @@ class Database {
      *
      * @return {Promise<Object>}
      */
-    saveOne(location, object, options) {
+    async saveOne(location, object, options) {
         if (process.env.NODE_ENV !== 'production') {
             if (!_.isObject(object)) {
                 throw new Error('saveOne() expects an object');
             }
         }
-        return this.save(location, [ object ], options).then((objects) => {
-            return (objects.length > 0) ? objects[0] : null;
-        });
+        let objects = await this.save(location, [ object ], options);
+        return objects[0] || null;
     }
 
     /**
@@ -84,7 +80,7 @@ class Database {
      *
      * @return {Promise<Array<Object>>}
      */
-    remove(location, objects) {
+    async remove(location, objects) {
         if (process.env.NODE_ENV !== 'production') {
             if (!_.isArray(objects) || !_.every(objects, _.isObject)) {
                 throw new Error('remove() expects an array of objects');
@@ -102,15 +98,14 @@ class Database {
      *
      * @return {Promise<Object>}
      */
-    removeOne(location, object) {
+    async removeOne(location, object) {
         if (process.env.NODE_ENV !== 'production') {
             if (!_.isObject(object)) {
                 throw new Error('removeOne() expects an object');
             }
         }
-        return this.remove(location, [ object ]).then((objects) => {
-            return (objects.length > 0) ? objects[0] : null;
-        });
+        let objects = await this.remove(location, [ object ]);
+        return objects[0] || null;
     }
 
     /**
@@ -122,7 +117,7 @@ class Database {
      *
      * @return {Promise<Boolean>}
      */
-    await(location, object, timeout) {
+    async await(location, object, timeout) {
         location = merge(this.context, location);
         return this.remoteDataSource.await(location, object, timeout);
     }
@@ -135,7 +130,7 @@ class Database {
      *
      * @return {Promise<Boolean>}
      */
-    refresh(location, object) {
+    async refresh(location, object) {
         location = merge(this.context, location);
         return this.remoteDataSource.refresh(location, object);
     }
@@ -151,9 +146,9 @@ class Database {
     use(...varSets) {
         var newContext = {};
         _.assign(newContext, this.context);
-        _.each(varSets, (varSet) => {
+        for (let varSet of varSets) {
             _.assign(newContext, varSet);
-        });
+        }
         return new Database(this.remoteDataSource, newContext);
     }
 
@@ -165,7 +160,7 @@ class Database {
      *
      * @return {Promise<Number>}
      */
-    start(location) {
+    async start(location) {
         location = merge(this.context, location);
         return this.remoteDataSource.start(location);
     }
@@ -178,7 +173,7 @@ class Database {
      *
      * @return {Promise<Object>}
      */
-    beginSession(area) {
+    async beginSession(area) {
         return this.remoteDataSource.beginSession(this.context, area);
     }
 
@@ -187,7 +182,7 @@ class Database {
      *
      * @return {Promise<Boolean>}
      */
-    checkAuthorization() {
+    async checkAuthorization() {
         return this.remoteDataSource.checkAuthorization(this.context);
     }
 
@@ -207,7 +202,7 @@ class Database {
      *
      * @return {Promise<Boolean>}
      */
-    authenticate(credentials) {
+    async authenticate(credentials) {
         return this.remoteDataSource.authenticate(this.context, credentials);
     }
 
@@ -216,7 +211,7 @@ class Database {
      *
      * @return {Promise<Boolean>}
      */
-    endSession() {
+    async endSession() {
         return this.remoteDataSource.endSession(this.context);
     }
 
@@ -225,7 +220,7 @@ class Database {
      *
      * @return {Promise<String>}
      */
-    beginMobileSession() {
+    async beginMobileSession() {
         return this.remoteDataSource.beginMobileSession(this.context);
     }
 
@@ -236,7 +231,7 @@ class Database {
      *
      * @return {Promise<Number>}
      */
-    acquireMobileSession(handle) {
+    async acquireMobileSession(handle) {
         return this.remoteDataSource.acquireMobileSession(this.context, handle);
     }
 
@@ -245,7 +240,7 @@ class Database {
      *
      * @return {Promise}
      */
-    releaseMobileSession() {
+    async releaseMobileSession() {
         return this.remoteDataSource.releaseMobileSession(this.context);
     }
 
@@ -253,8 +248,10 @@ class Database {
      * Remove authorization from mobile device
      *
      * @param  {String} handle
+     *
+     * @return {Promise}
      */
-    endMobileSession(handle) {
+    async endMobileSession(handle) {
         return this.remoteDataSource.endMobileSession(this.context, handle);
     }
 

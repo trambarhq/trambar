@@ -28,7 +28,7 @@ class NotificationsPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let {
             database,
             route,
@@ -38,9 +38,6 @@ class NotificationsPage extends AsyncComponent {
         } = this.props;
         let db = database.use({ by: this });
         let props = {
-            currentUser: undefined,
-            notifications: undefined,
-
             date,
             scrollToNotificationID,
             database,
@@ -48,23 +45,14 @@ class NotificationsPage extends AsyncComponent {
             env,
         };
         meanwhile.show(<NotificationsPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return UserFinder.findUser(db, currentUserID).then((user) => {
-                props.currentUser = user;
-            });
-        }).then(() => {
-            if (date) {
-                return NotificationFinder.findNotificationsForUserOnDate(db, props.currentUser, date).then((notifications) => {
-                    props.notifications = notifications;
-                });
-            } else {
-                return NotificationFinder.findNotificationsForUser(db, props.currentUser).then((notifications) => {
-                    props.notifications = notifications;
-                });
-            }
-        }).then(() => {
-            return <NotificationsPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.currentUser = await UserFinder.findUser(db, currentUserID);
+        if (date) {
+            props.notifications = await NotificationFinder.findNotificationsForUserOnDate(db, props.currentUser, date);
+        } else {
+            props.notifications = await NotificationFinder.findNotificationsForUser(db, props.currentUser);
+        }
+        return <NotificationsPageSync {...props} />;
     }
 }
 

@@ -103,10 +103,14 @@ module.exports = {
                 query: {
                     presets: [
                         'env',
-                        'stage-0',
                         'react',
+                        'stage-0',
                     ],
                     plugins: [
+                        'syntax-async-functions',
+                        'syntax-class-properties',
+                        'transform-regenerator',
+                        'transform-runtime',
                     ],
                 }
             },

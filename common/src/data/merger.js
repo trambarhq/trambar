@@ -4,7 +4,7 @@ let Diff = require('diff');
 function mergeObjects(a, b, c, resolveFns) {
     let d = {};
     let keys = _.union(_.keys(a), _.keys(b));
-    _.each(keys, (key) => {
+    for (let key of keys) {
         let valueA = a ? a[key] : undefined;
         let valueB = b ? b[key] : undefined;
         let valueC = c ? c[key] : undefined;
@@ -37,7 +37,7 @@ function mergeObjects(a, b, c, resolveFns) {
         if (valueD !== undefined) {
             d[key] = valueD;
         }
-    });
+    }
     return d;
 }
 

@@ -3,9 +3,6 @@
 .audio-capture-dialog-box {
     display: flex;
     flex-direction: column;
-    max-height: 100%;
-    max-width: 24em;
-    width: 80%;
 
     background-color: $dialog-box-background-color;
     box-shadow: 2px 2px 2px $dialog-box-shadow-color;
@@ -14,62 +11,54 @@
     padding: 0.4em 0.4em 0.4em 0.4em;
 
     .container {
+        display: flex;
         flex: 1 1 auto;
+        justify-content: center;
         overflow: hidden;
         padding-bottom: 0.2em;
         width: 100%;
 
-        .volume-meter {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-
-            .icon {
-                flex: 0 1 auto;
-                font-size: 2em;
-                width: 0.75em;
-                line-height: 100%;
-                margin: 0em 0.2em 0em 0.2em;
-            }
-
-            .bar-container {
-                flex: 1 1 auto;
-                margin: 0.2em 0 0.2em 0.2em;
-
-                .bar {
-                    padding: 2px 2px 2px 2px;
-                    border: 1px solid $audio-capture-volume-bar-color;
-
-                    .fill {
-                        height: 1em;
-                        background-color: $audio-capture-volume-bar-color;
-                    }
-                }
-            }
-        }
-
         .device-placeholder {
             padding-left: 0;
             padding-right: 0;
+            width: 300px;
+            height: 150px;
+            margin: 20px;
+            font-size: 60px;
+
+            .fa-stack {
+                height: 150px;
+            }
+        }
+
+        .volume-indicator {
+            font-size: 2em;
         }
 
         AUDIO {
-            width: 100%;
+            display: block;
+            width: 300px;
+            margin: 20px;
         }
     }
 
     .controls {
+        display: flex;
         flex: 1 0 auto;
         padding: 0.4em 0 0.2em 0.2em;
         border-top: 1px solid $separator-color;
 
-        .buttons {
-            float: right;
+        .left {
+            flex: 1 0 auto;
+
+            .duration-indicator {
+                margin-top: 0.65em;
+            }
         }
 
-        .duration-indiactor {
-            margin-top: 0.65em;
-            float: left;
+        .right {
+            flex: 1 0 auto;
+            text-align: right;
         }
     }
 

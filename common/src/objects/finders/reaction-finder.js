@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 
 const emptyArray = [];
 
@@ -13,12 +12,12 @@ const emptyArray = [];
  *
  * @return {Promise<Array<Reaction>>}
  */
-function findReactionsToStories(db, stories, currentUser, minimum) {
+async function findReactionsToStories(db, stories, currentUser, minimum) {
     var storyIDs = _.filter(_.uniq(_.map(stories, 'id')), (id) => {
         return (id >= 1);
     });
     if (_.isEmpty(storyIDs) || !currentUser) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     return db.find({
         table: 'reaction',

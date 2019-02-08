@@ -37,15 +37,11 @@ class RoleSummaryPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, roleID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let creating = (roleID === 'new');
         let props = {
-            system: undefined,
-            role: undefined,
-            users: undefined,
-
             database,
             route,
             env,
@@ -53,24 +49,14 @@ class RoleSummaryPage extends AsyncComponent {
             creating,
         };
         meanwhile.show(<RoleSummaryPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return SystemFinder.findSystem(db).then((system) => {
-                props.system = system;
-            });
-        }).then(() => {
-            if (!creating) {
-                return RoleFinder.findRole(db, roleID).then((role) => {
-                    props.role = role;
-                });
-            }
-        }).then(() => {
-            meanwhile.show(<RoleSummaryPageSync {...props} />);
-            return UserFinder.findActiveUsers(db).then((users) => {
-                props.users = users;
-            });
-        }).then(() => {
-            return <RoleSummaryPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.system = await SystemFinder.findSystem(db)
+        if (!creating) {
+            props.role = await RoleFinder.findRole(db, roleID)
+        }
+        meanwhile.show(<RoleSummaryPageSync {...props} />);
+        props.users = await UserFinder.findActiveUsers(db);
+        return <RoleSummaryPageSync {...props} />;
     }
 }
 
@@ -99,6 +85,26 @@ class RoleSummaryPageSync extends PureComponent {
     }
 
     /**
+     * Reset edit state when edit ends
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        if (!editing) {
+            return {
+                newRole: null,
+                hasChanges: false,
+                addingUserIDs: [],
+                removingUserIDs: [],
+                problems: {},
+            };
+        }
+        return null;
+    }
+
+    /**
      * Return edited copy of role object or the original object
      *
      * @param  {String} state
@@ -106,9 +112,9 @@ class RoleSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getRole(state) {
-        let { role, editing } = this.props;
+        let { role } = this.props;
         let { newRole } = this.state;
-        if (editing && (!state || state === 'current')) {
+        if (!state || state === 'current') {
             return newRole || role || emptyRole;
         } else {
             return role || emptyRole;
@@ -224,27 +230,6 @@ class RoleSummaryPageSync extends PureComponent {
     getInputLanguages() {
         let { system } = this.props;
         return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Reset edit state when edit starts
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                this.setState({
-                    newRole: null,
-                    hasChanges: false,
-                    addingUserIDs: [],
-                    removingUserIDs: [],
-                });
-            } else {
-                this.setState({ problems: {} });
-            }
-        }
     }
 
     /**
@@ -530,20 +515,18 @@ class RoleSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDisableClick = (evt) => {
+    handleDisableClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('role-summary-confirm-disable');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ disabled: true }).then((role) => {
-                    if (role) {
-                        return this.returnToList();
-                    }
-                });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            let roleAfter = await this.changeFlags({ disabled: true });
+            if (roleAfter) {
+                return this.returnToList();
             }
-        });
+        }
     }
 
     /**
@@ -551,20 +534,18 @@ class RoleSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleDeleteClick = (evt) => {
+    handleDeleteClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('role-summary-confirm-delete');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ deleted: true }).then((role) => {
-                    if (role) {
-                        return this.returnToList();
-                    }
-                });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            let roleAfter = await this.changeFlags({ deleted: true });
+            if (roleAfter) {
+                return this.returnToList();
             }
-        });
+        }
     }
 
     /**
@@ -572,16 +553,15 @@ class RoleSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleReactivateClick = (evt) => {
+    handleReactivateClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('role-summary-confirm-reactivate');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeFlags({ disabled: false, deleted: false });
-            }
-        });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            await this.changeFlags({ disabled: false, deleted: false });
+        }
     }
 
     /**
@@ -589,8 +569,8 @@ class RoleSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleReturnClick = (evt) => {
-        return this.returnToList();
+    handleReturnClick = async (evt) => {
+        await this.returnToList();
     }
 
     /**
@@ -598,8 +578,8 @@ class RoleSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleAddClick = (evt) => {
-        return this.startNew();
+    handleAddClick = async (evt) => {
+        await this.startNew();
     }
 
     /**
@@ -607,8 +587,8 @@ class RoleSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleEditClick = (evt) => {
-        return this.setEditability(true);
+    handleEditClick = async (evt) => {
+        await this.setEditability(true);
     }
 
     /**
@@ -616,8 +596,8 @@ class RoleSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleCancelClick = (evt) => {
-        return this.setEditability(false);
+    handleCancelClick = async (evt) => {
+        await this.setEditability(false);
     }
 
     /**
@@ -637,37 +617,34 @@ class RoleSummaryPageSync extends PureComponent {
             return;
         }
         let role = this.getRole();
-        this.setState({ saving: true, adding: !role.id, problems: {} }, () => {
-            let db = database.use({ schema: 'global', by: this });
-            return db.start().then((userID) => {
-                return db.saveOne({ table: 'role' }, role).then((role) => {
-                    // change role_ids of selected/deselected users
-                    let userChanges = [];
-                    _.each(addingUserIDs, (userID) => {
-                        let user = _.find(users, { id: userID });
-                        userChanges.push({
-                            id: user.id,
-                            role_ids: _.union(user.role_ids, [ role.id ]),
-                        });
+        this.setState({ saving: true, adding: !role.id, problems: {} }, async () => {
+            try {
+                let db = database.use({ schema: 'global', by: this });
+                let currentUserID = await db.start();
+                let roleAfter = await db.saveOne({ table: 'role' }, role);
+                // change role_ids of selected/deselected users
+                let userChanges = [];
+                _.each(addingUserIDs, (userID) => {
+                    let user = _.find(users, { id: userID });
+                    userChanges.push({
+                        id: user.id,
+                        role_ids: _.union(user.role_ids, [ roleAfter.id ]),
                     });
-                    _.each(removingUserIDs, (userID) => {
-                        let user = _.find(users, { id: userID });
-                        userChanges.push({
-                            id: user.id,
-                            role_ids: _.difference(user.role_ids, [ role.id ]),
-                        });
-                    });
-                    if (_.isEmpty(userChanges)) {
-                        return role;
-                    }
-                    return db.save({ table: 'user' }, userChanges).return(role);
-                }).then((role) => {
-                    this.setState({ hasChanges: false, saving: false }, () => {
-                        return this.setEditability(false, role);
-                    });
-                    return null;
                 });
-            }).catch((err) => {
+                _.each(removingUserIDs, (userID) => {
+                    let user = _.find(users, { id: userID });
+                    userChanges.push({
+                        id: user.id,
+                        role_ids: _.difference(user.role_ids, [ roleAfter.id ]),
+                    });
+                });
+                if (!_.isEmpty(userChanges)) {
+                    await db.save({ table: 'user' }, userChanges);
+                }
+                this.setState({ hasChanges: false, saving: false }, () => {
+                    return this.setEditability(false, role);
+                });
+            } catch (err) {
                 let problems;
                 if (err.statusCode === 409) {
                     problems = { name: 'validation-duplicate-role-name' };
@@ -675,7 +652,7 @@ class RoleSummaryPageSync extends PureComponent {
                     problems = { unexpected: err.message };
                 }
                 this.setState({ problems, saving: false });
-            });
+            }
         });
     }
 

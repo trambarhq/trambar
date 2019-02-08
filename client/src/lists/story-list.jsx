@@ -33,34 +33,15 @@ class StoryList extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
-        let {
-            database,
-            route,
-            payloads,
-            env,
-
-            stories,
-            draftStories,
-            pendingStories,
-            currentUser,
-            project,
-            access,
-            acceptNewStory,
-            highlightStoryID,
-            scrollToStoryID,
-            highlightReactionID,
-            scrollToReactionID,
-        } = this.props;
+    async renderAsync(meanwhile) {
+        let { database, route, payloads, env } = this.props;
+        let { stories, draftStories, pendingStories } = this.props;
+        let { currentUser, project } = this.props;
+        let { access, acceptNewStory } = this.props;
+        let { highlightStoryID, scrollToStoryID, highlightReactionID, scrollToReactionID } = this.props;
+        let allStories = _.filter(_.concat(pendingStories, draftStories, stories));
         let db = database.use({ by: this });
         let props = {
-            authors: undefined,
-            reactions: undefined,
-            respondents: undefined,
-            recommendations: undefined,
-            recipients: undefined,
-            repos: undefined,
-
             access,
             acceptNewStory,
             highlightStoryID,
@@ -78,43 +59,21 @@ class StoryList extends AsyncComponent {
             env,
         };
         meanwhile.show(<StoryListSync {...props} />);
-        return db.start().then((currentUserID) => {
-            // load repos first, so "add to issue tracker" option doesn't pop in
-            // suddenly in triple-column mode
-            return RepoFinder.findProjectRepos(db, props.project).then((repos) => {
-                props.repos = repos;
-            });
-        }).then(() => {
-            meanwhile.show(<StoryListSync {...props} />);
-            let stories = _.filter(_.concat(props.pendingStories, props.draftStories, props.stories));
-            return UserFinder.findStoryAuthors(db, stories).then((users) => {
-                props.authors = users;
-            });
-        }).then(() => {
-            meanwhile.show(<StoryListSync {...props} />);
-            let stories = _.filter(_.concat(props.pendingStories, props.stories));
-            return ReactionFinder.findReactionsToStories(db, stories, props.currentUser).then((reactions) => {
-                props.reactions = reactions;
-            });
-        }).then(() => {
-            meanwhile.show(<StoryListSync {...props} />);
-            return UserFinder.findReactionAuthors(db, props.reactions).then((users) => {
-                props.respondents = users;
-            })
-        }).then(() => {
-            meanwhile.show(<StoryListSync {...props} />);
-            let stories = _.filter(_.concat(props.pendingStories, props.stories));
-            return BookmarkFinder.findBookmarksByUser(db, props.currentUser, stories).then((bookmarks) => {
-                props.recommendations = bookmarks;
-            });
-        }).then(() => {
-            meanwhile.show(<StoryListSync {...props} />);
-            return UserFinder.findBookmarkRecipients(db, props.bookmarks).then((users) => {
-                props.recipients = users;
-            });
-        }).then(() => {
-            return <StoryListSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        // load repos first, so "add to issue tracker" option doesn't pop in
+        // suddenly in triple-column mode
+        props.repos = await RepoFinder.findProjectRepos(db, props.project);
+        meanwhile.show(<StoryListSync {...props} />);
+        props.authors = await UserFinder.findStoryAuthors(db, allStories);
+        meanwhile.show(<StoryListSync {...props} />);
+        props.reactions = await ReactionFinder.findReactionsToStories(db, allStories, props.currentUser)
+        meanwhile.show(<StoryListSync {...props} />);
+        props.respondents = await UserFinder.findReactionAuthors(db, props.reactions);
+        meanwhile.show(<StoryListSync {...props} />);
+        props.recommendations = await BookmarkFinder.findBookmarksByUser(db, props.currentUser, allStories);
+        meanwhile.show(<StoryListSync {...props} />);
+        props.recipients = await UserFinder.findBookmarkRecipients(db, props.bookmarks);
+        return <StoryListSync {...props} />;
     }
 }
 

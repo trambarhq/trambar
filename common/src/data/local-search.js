@@ -117,7 +117,8 @@ function limit(table, objects, criteria) {
             let limit = criteria.per_user_limit;
             let countsByUser = {};
             let excessObjects = [];
-            _.eachRight(objects, (object) => {
+            for (let i = objects.length - 1; i >= 0; i--) {
+                let object = objects[i];
                 let keep = false;
                 if (object.hasOwnProperty('user_id')) {
                     let userID = object.user_id;
@@ -127,18 +128,18 @@ function limit(table, objects, criteria) {
                         keep = true;
                     }
                 } else if (object.hasOwnProperty('user_ids')) {
-                    _.each(object.user_ids, (userID) => {
+                    for (let userID of object.user_ids) {
                         let count = countsByUser[userID] || 0;
                         if (count < limit) {
                             countsByUser[userID] = count + 1;
                             keep = true;
                         }
-                    });
+                    }
                 }
                 if (!keep) {
                     excessObjects.push(object);
                 }
-            });
+            }
             _.pullAll(objects, excessObjects);
         }
     }

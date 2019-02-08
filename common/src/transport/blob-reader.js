@@ -1,4 +1,3 @@
-import Promise from 'bluebird';
 import * as BlobManager from 'transport/blob-manager';
 import CordovaFile from 'transport/cordova-file';
 
@@ -9,10 +8,10 @@ import CordovaFile from 'transport/cordova-file';
  *
  * @return {Promise<Uint8Array>}
  */
-function loadUint8Array(blob) {
-    return loadArrayBuffer(blob).then((buffer) => {
-        return new Uint8Array(buffer);
-    });
+async function loadUint8Array(blob) {
+    let buffer = await loadArrayBuffer(blob);
+    let array = new Uint8Array(buffer);
+    return array;
 }
 
 /**
@@ -22,14 +21,11 @@ function loadUint8Array(blob) {
  *
  * @return {Promise<ArrayBuffer>}
  */
-function loadArrayBuffer(blob) {
-    if (typeof(blob) === 'string') {
-        var url = blob;
-        return BlobManager.fetch(url).then((blob) => {
-            return loadArrayBuffer(blob);
-        });
-    } else if (blob instanceof CordovaFile) {
+async function loadArrayBuffer(blob) {
+    if (blob instanceof CordovaFile) {
         return blob.getArrayBuffer();
+    } else if (typeof(blob) === 'string') {
+        blob = await BlobManager.fetch(blob);
     }
     return new Promise((resolve, reject) => {
         var reader = new FileReader();
@@ -50,16 +46,11 @@ function loadArrayBuffer(blob) {
  *
  * @return {Promise<String>}
  */
-function loadText(blob) {
-    if (typeof(blob) === 'string') {
-        var url = blob;
-        return BlobManager.fetch(url).then((blob) => {
-            return loadText(blob);
-        });
-    } else if (blob instanceof CordovaFile) {
-        return blob.getFileEntry((fileEntry) => {
-            return loadText(fileEntry);
-        });
+async function loadText(blob) {
+    if (blob instanceof CordovaFile) {
+        blob = await blob.getFileEntry();
+    } else if (typeof(blob) === 'string') {
+        blob = await BlobManager.fetch(blob);
     }
     return new Promise((resolve, reject) => {
         var reader = new FileReader();

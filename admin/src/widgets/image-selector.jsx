@@ -335,21 +335,20 @@ class ImageSelector extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleUploadChange = (evt) => {
+    handleUploadChange = async (evt) => {
         let { payloads } = this.props;
         let file = evt.target.files[0];
         if (file) {
             let payload = payloads.add('image').attachFile(file);
-            return MediaLoader.getImageMetadata(file).then((meta) => {
-                let image = {
-                    payload_token: payload.id,
-                    width: meta.width,
-                    height: meta.height,
-                    format: meta.format,
-                    type: 'image',
-                };
-                return this.setImage(image);
-            });
+            let meta = await MediaLoader.getImageMetadata(file);
+            let image = {
+                payload_token: payload.id,
+                width: meta.width,
+                height: meta.height,
+                format: meta.format,
+                type: 'image',
+            };
+            return this.setImage(image);
         }
     }
 

@@ -4,10 +4,8 @@ import './duration-indicator.scss';
 
 /**
  * A component that displays recording's duration. It shows a blinker when
- * given a start time, indicating that a device is actively capturing video
+ * recording is true, indicating that a device is actively capturing video
  * or audio.
- *
- * @extends PureComponent
  */
 class DurationIndicator extends PureComponent {
     static displayName = 'DurationIndicator';
@@ -16,50 +14,11 @@ class DurationIndicator extends PureComponent {
         if (typeof(ms) !== 'number') {
             return '';
         }
-        let hr = String(Math.floor(ms / 3600000));
-        let min = String(Math.floor(ms / 60000) % 60);
-        let sec = String(Math.round(ms / 1000) % 60);
-        if (min.length === 1) {
-            min = '0' + min;
-        }
-        if (sec.length === 1) {
-            sec = '0' + sec;
-        }
-        return `${hr}:${min}:${sec}`;
-    }
-
-    calculateDuration() {
-        let { duration, startTime } = this.props;
-        if (startTime) {
-            let now = new Date;
-            duration += (now - startTime);
-        }
-        return duration;
-    }
-
-    /**
-     * Start timer on mount if startTime is non-null
-     */
-    componentWillMount() {
-        let { startTime } = this.props;
-        if (startTime) {
-            this.startTimer();
-        }
-    }
-
-    /**
-     * Start timer when startTime becomes non-null, stopping it when it
-     * becomes null
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { startTime } = this.props;
-        if (!startTime && nextProps.startTime) {
-            this.startTimer();
-        } else if (startTime && !nextProps.startTime) {
-            this.stopTimer();
-        }
+        let seconds = ms / 1000;
+        let hh = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        let mm = Math.floor(seconds / 60 % 60).toString().padStart(2, '0');
+        let ss = Math.floor(seconds % 60).toString().padStart(2, '0');
+        return `${hh}:${mm}:${ss}`;
     }
 
     /**
@@ -68,52 +27,32 @@ class DurationIndicator extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { startTime } = this.props;
-        let millseconds = this.calculateDuration();
-        let iconClassName = 'icon';
-        if (startTime) {
-            iconClassName += ' blinking';
-        }
+        let { duration } = this.props;
         return (
-            <div className="duration-indiactor">
-                <span className={iconClassName}>
-                    <i className="fa fa-circle"/>
-                </span>
+            <div className="duration-indicator">
                 <span className="duration">
-                    {DurationIndicator.format(millseconds)}
+                    {DurationIndicator.format(duration)}
                 </span>
+                {this.renderBlinker()}
             </div>
         );
     }
 
-    /**
-     * Stop timer on unmount
-     */
-    componentWillUnmount() {
-        this.stopTimer();
-    }
-
-    /**
-     * Start refresh timer
-     */
-    startTimer() {
-        if (!this.interval) {
-            this.interval = setInterval(() => {
-                this.forceUpdate()
-            }, 500);
-        }
-    }
-
-    /**
-     * Stop refresh timer
-     */
-    stopTimer() {
-        if (this.interval) {
-            clearInterval(this.interval);
-            this.interval = null;
+    renderBlinker() {
+        let { recording } = this.props;
+        if (recording) {
+            return (
+                <span className="icon blinking">
+                    <i className="fa fa-circle"/>
+                </span>
+            )
         }
     }
 }
+
+DurationIndicator.defaultProps = {
+    recording: false,
+};
 
 export {
     DurationIndicator as default,
@@ -125,6 +64,6 @@ if (process.env.NODE_ENV !== 'production') {
 
     DurationIndicator.propTypes = {
         duration: PropTypes.number,
-        startTime: PropTypes.instanceOf(Date),
+        recording: PropTypes.bool,
     };
 }

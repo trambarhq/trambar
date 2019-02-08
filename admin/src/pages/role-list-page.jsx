@@ -34,31 +34,21 @@ class RoleListPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            roles: undefined,
-            users: undefined,
-
             database,
             route,
             env,
             editing,
         };
         meanwhile.show(<RoleListPageSync {...props} />);
-        return db.start().then((userID) => {
-            return RoleFinder.findAllRoles(db).then((roles) => {
-                props.roles = roles;
-            });
-        }).then(() => {
-            meanwhile.show(<RoleListPageSync {...props} />);
-            return UserFinder.findUsersWithRoles(db, props.roles).then((users) => {
-                props.users = users;
-            });
-        }).then((users) => {
-            return <RoleListPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.roles = await RoleFinder.findAllRoles(db);
+        meanwhile.show(<RoleListPageSync {...props} />);
+        props.users = await UserFinder.findUsersWithRoles(db, props.roles);
+        return <RoleListPageSync {...props} />;
     }
 }
 
@@ -88,6 +78,33 @@ class RoleListPageSync extends PureComponent {
     }
 
     /**
+     * Toggle rendering of full list when entering and exiting edit mode
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     *
+     * @return {Object|null}
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        let { renderingFullList } = state;
+        if (editing && !renderingFullList) {
+            return {
+                renderingFullList: true,
+            };
+        } else if (!editing && renderingFullList) {
+            return {
+                renderingFullList: false,
+                restoringRoleIDs: [],
+                disablingRoleIDs: [],
+                hasChanges: false,
+                problems: {},
+            };
+        }
+        return null;
+    }
+
+    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -99,33 +116,6 @@ class RoleListPageSync extends PureComponent {
         let params = _.clone(route.params);
         params.editing = edit || undefined;
         return route.replace(route.name, params);
-    }
-
-    /**
-     * Check if we're switching into edit mode
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                // initial list of ids to the current list
-                this.setState({
-                    renderingFullList: true,
-                    restoringRoleIDs: [],
-                    disablingRoleIDs: [],
-                    hasChanges: false,
-                });
-            } else {
-                setTimeout(() => {
-                    let { editing } = this.props;
-                    if (!editing) {
-                        this.setState({ renderingFullList: false, problems: {} });
-                    }
-                }, 500);
-            }
-        }
     }
 
     /**
@@ -441,7 +431,7 @@ class RoleListPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleSaveClick = (evt) => {
+    handleSaveClick = async (evt) => {
         let { database, env, roles } = this.props;
         let { disablingRoleIDs, restoringRoleIDs } = this.state;
         let { confirmation } = this.components;
@@ -454,37 +444,34 @@ class RoleListPageSync extends PureComponent {
             _.isEmpty(disablingRoleIDs) ? true : undefined,
             _.isEmpty(restoringRoleIDs) ? true : undefined,
         ];
-        return confirmation.askSeries(messages, bypass).then((confirmed) => {
-            if (!confirmed) {
-                return;
-            }
+        let confirmed = await confirmation.askSeries(messages, bypass);
+        if (confirmed) {
             this.setState({ problems: {} });
             let db = database.use({ schema: 'global', by: this });
-            return db.start().then((userID) => {
-                let rolesAfter = [];
-                _.each(roles, (role) => {
-                    let flags = {};
-                    if (_.includes(disablingRoleIDs, role.id)) {
-                        flags.disabled = true;
-                    } else if (_.includes(restoringRoleIDs, role.id)) {
-                        flags.disabled = flags.deleted = false;
-                    } else {
-                        return;
-                    }
-                    let roleAfter = _.assign({}, role, flags);
-                    rolesAfter.push(roleAfter);
-                });
-                return db.save({ table: 'role' }, rolesAfter).then((roles) => {
-                    this.setState({ hasChanges: false }, () => {
-                        this.setEditability(false);
-                    });
-                    return null;
-                }).catch((err) => {
-                    let problems = { unexpected: err.message };
-                    this.setState({ problems });
-                });
+            let currentUserID = await db.start();
+            let rolesAfter = [];
+            _.each(roles, (role) => {
+                let flags = {};
+                if (_.includes(disablingRoleIDs, role.id)) {
+                    flags.disabled = true;
+                } else if (_.includes(restoringRoleIDs, role.id)) {
+                    flags.disabled = flags.deleted = false;
+                } else {
+                    return;
+                }
+                let roleAfter = _.assign({}, role, flags);
+                rolesAfter.push(roleAfter);
             });
-        });
+            try {
+                await db.save({ table: 'role' }, rolesAfter);
+                this.setState({ hasChanges: false }, () => {
+                    this.setEditability(false);
+                });
+            } catch (err) {
+                let problems = { unexpected: err.message };
+                this.setState({ problems });
+            }
+        }
     }
 
     /**

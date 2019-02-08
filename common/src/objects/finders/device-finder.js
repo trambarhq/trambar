@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 
 const emptyArray = [];
 
@@ -12,9 +11,9 @@ const emptyArray = [];
  *
  * @return {Promise<Array<Object>>}
  */
-function findUserDevices(db, user, minimum) {
+async function findUserDevices(db, user, minimum) {
     if (!user) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     return db.find({
         schema: 'global',

@@ -24,7 +24,7 @@ class SearchBar extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, settings } = this.props;
         let db = database.use({ by: this });
         let props = {
@@ -36,21 +36,17 @@ class SearchBar extends AsyncComponent {
         };
         // don't let the component be empty initially
         meanwhile.show(<SearchBarSync {...props} />, 'initial');
-        return db.start().then((currentUserID) => {
-            return UserFinder.findUser(db, currentUserID);
-        }).then((user) => {
-            let params = _.clone(settings.statistics);
-            if (params.user_id === 'current') {
-                params.user_id = user.id;
-            }
-            if (params.public === 'guest') {
-                params.public = (user.type === 'guest');
-            }
-            return StatisticsFinder.find(db, params);
-        }).then((statistics) => {
-            props.dailyActivities = statistics;
-            return <SearchBarSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        let currentUser = await UserFinder.findUser(db, currentUserID);
+        let params = _.clone(settings.statistics);
+        if (params.user_id === 'current') {
+            params.user_id = currentUser.id;
+        }
+        if (params.public === 'guest') {
+            params.public = (currentUser.type === 'guest');
+        }
+        props.dailyActivities = await StatisticsFinder.find(db, params);
+        return <SearchBarSync {...props} />;
     }
 }
 

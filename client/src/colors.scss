@@ -115,7 +115,7 @@ $reaction-status-text-color: $gray;
 
 $transfer-progress-text-color: #aaaaaa;
 
-$separator-color: $gray;
+$separator-color: transparentize($gray, 0.5);
 
 $app-component-border-color: #211a1a;
 $app-component-background-color: #cccccc;
@@ -150,8 +150,13 @@ $pop-up-menu-shadow-color: rgba(0,0,0,0.75);
 $coauthoring-button-text-color: $gray;
 $coauthoring-button-hover-text-color: $off-white;
 
-$duration-indiactor-text-color: $off-white;
+$duration-indicator-text-color: $off-white;
 $duration-indicator-blinker-color: $bright-red;
+
+$volume-indicator-border-color: $light-gray;
+$volume-indicator-icon-color: $light-gray;
+$volume-indicator-bar-color: $dark-gray;
+$volume-indicator-recording-bar-color: $gray;
 
 $story-emblem-color: #211a1a;
 $story-reaction-link-text-color: $gray;
@@ -226,8 +231,6 @@ $alert-neutral-background-color: $bright-yellow;
 $alert-text-color: $black;
 
 $profile-image-placeholder-background-color: $light-gray;
-
-$audio-capture-volume-bar-color: $gray;
 
 $issue-label-default-text-color: #ffffff;
 $issue-label-default-background-color: $dark-gray;

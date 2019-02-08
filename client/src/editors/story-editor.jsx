@@ -860,15 +860,14 @@ class StoryEditor extends PureComponent {
      *
      * @return {Promise<Story>}
      */
-    saveDraft(draft, immediate, resourceIndex) {
+    async saveDraft(draft, immediate, resourceIndex) {
         let { options } = this.state;
         draft.public = !options.hidePost;
-        return this.changeDraft(draft, resourceIndex).then((story) => {
-            if (!hasPendingResources(story.details.resources)) {
-                this.saveStory(story, immediate);
-            }
-            return story;
-        });
+        let story = await this.changeDraft(draft, resourceIndex);
+        if (!hasPendingResources(story.details.resources)) {
+            this.saveStory(story, immediate);
+        }
+        return story;
     }
 
     /**
@@ -879,7 +878,7 @@ class StoryEditor extends PureComponent {
      *
      * @return {Promise<Story>}
      */
-    saveStory(story, immediate) {
+    async saveStory(story, immediate) {
         let { database, payloads } = this.props;
         let { original } = this.state;
         let resources = story.details.resources || [];
@@ -894,13 +893,11 @@ class StoryEditor extends PureComponent {
             },
         };
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.saveOne({ table: 'story' }, story, options).then((story) => {
-                // send images and videos to server
-                payloads.dispatch(story);
-                return story;
-            });
-        });
+        let currentUserID = await db.start();
+        let storyAfter = await db.saveOne({ table: 'story' }, story, options);
+        // send images and videos to server
+        payloads.dispatch(storyAfter);
+        return storyAfter;
     }
 
     /**
@@ -908,14 +905,13 @@ class StoryEditor extends PureComponent {
      *
      * @param  {Story} story
      *
-     * @return {Promise<Story>}
+     * @return {Promise}
      */
-    removeStory(story) {
+    async removeStory(story) {
         let { database, payloads } = this.props;
         let db = database.use({ by: this });
-        return db.removeOne({ table: 'story' }, story).then(() => {
-            return payloads.abandon(story);
-        });
+        await db.removeOne({ table: 'story' }, story);
+        await payloads.abandon(story);
     }
 
     /**
@@ -923,7 +919,7 @@ class StoryEditor extends PureComponent {
      *
      * @return {Promise<Story>}
      */
-    removeSelf() {
+    async removeSelf() {
         let { database, story, currentUser } = this.props;
         let userIDs = _.without(story.user_ids, currentUser.id);
         let columns = {
@@ -931,9 +927,8 @@ class StoryEditor extends PureComponent {
             user_ids: userIDs,
         };
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.saveOne({ table: 'story' }, columns);
-        });
+        let currentUserID = await db.start();
+        return db.saveOne({ table: 'story' }, columns);
     }
 
     /**
@@ -943,15 +938,14 @@ class StoryEditor extends PureComponent {
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    saveBookmarks(bookmarks) {
+    async saveBookmarks(bookmarks) {
         let { database } = this.props;
         if (_.isEmpty(bookmarks)) {
-            return Promise.resolve([]);
+            return [];
         }
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.save({ table: 'bookmark' }, bookmarks);
-        });
+        let currentUserID = await db.start();
+        return db.save({ table: 'bookmark' }, bookmarks);
     }
 
     /**
@@ -961,15 +955,14 @@ class StoryEditor extends PureComponent {
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    removeBookmarks(bookmarks) {
+    async removeBookmarks(bookmarks) {
         let { database } = this.props;
         if (_.isEmpty(bookmarks)) {
-            return Promise.resolve([]);
+            return [];
         }
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.remove({ table: 'bookmark' }, bookmarks);
-        });
+        let currentUserID = await db.start();
+        return db.remove({ table: 'bookmark' }, bookmarks);
     }
 
     /**
@@ -980,7 +973,7 @@ class StoryEditor extends PureComponent {
      *
      * @return {Promise<Array<Bookmark>>}
      */
-    sendBookmarks(story, recipientIDs) {
+    async sendBookmarks(story, recipientIDs) {
         let { bookmarks, currentUser } = this.props;
         let newBookmarks = [];
         // add bookmarks that don't exist yet
@@ -1002,11 +995,9 @@ class StoryEditor extends PureComponent {
                 redundantBookmarks.push(bookmark);
             }
         });
-        return this.saveBookmarks(newBookmarks).then((newBookmarks) => {
-            return this.removeBookmarks(redundantBookmarks).then((redundantBookmarks) => {
-                return _.concat(newBookmarks, redundantBookmarks);
-            });
-        });
+        let newBookmarksAfter = await this.saveBookmarks(newBookmarks);
+        let redundantBookmarksAfter = await this.removeBookmarks(redundantBookmarks);
+        return _.concat(newBookmarksAfter, redundantBookmarksAfter);
     }
 
     /**
@@ -1017,7 +1008,7 @@ class StoryEditor extends PureComponent {
      *
      * @return {Promise<Task>}
      */
-    sendTask(action, options) {
+    async sendTask(action, options) {
         let { database, currentUser } = this.props;
         let task = {
             action,
@@ -1026,17 +1017,16 @@ class StoryEditor extends PureComponent {
             token: RandomToken.generate(),
         };
         let db = database.use({ by: this });
-        return db.start().then(() => {
-            return db.saveOne({ table: 'task' }, task);
-        });
+        let currentUserID = await db.start();
+        return db.saveOne({ table: 'task' }, task);
     }
 
     /**
      * Publish the story
      *
-     * @return {[type]}
+     * @return {Promise}
      */
-    publishStory() {
+    async publishStory() {
         let { env, authors, repos } = this.props;
         let { draft, options } = this.state;
         draft = _.clone(draft);
@@ -1048,21 +1038,18 @@ class StoryEditor extends PureComponent {
         draft.published = true;
 
         let resources = draft.details.resources;
-        return ResourceUtils.attachMosaic(resources, env).then(() => {
-            return this.saveStory(draft, true).then((story) => {
-                return this.sendBookmarks(story, options.bookmarkRecipients).then(() => {
-                    let issueDetailsBefore = IssueUtils.extractIssueDetails(draft, repos);
-                    let issueDetailsAfter = options.issueDetails;
-                    if (!_.isEqual(issueDetailsAfter, issueDetailsBefore)) {
-                        if (issueDetailsAfter) {
-                            let params = _.clone(issueDetailsAfter);
-                            params.story_id = story.id;
-                            return this.sendTask('export-issue', params);
-                        }
-                    }
-                });
-            });
-        });
+        await ResourceUtils.attachMosaic(resources, env);
+        let story = await this.saveStory(draft, true);
+        await this.sendBookmarks(story, options.bookmarkRecipients);
+        let issueDetailsBefore = IssueUtils.extractIssueDetails(draft, repos);
+        let issueDetailsAfter = options.issueDetails;
+        if (!_.isEqual(issueDetailsAfter, issueDetailsBefore)) {
+            if (issueDetailsAfter) {
+                let params = _.clone(issueDetailsAfter);
+                params.story_id = story.id;
+                await this.sendTask('export-issue', params);
+            }
+        }
     }
 
     /**
@@ -1278,7 +1265,7 @@ class StoryEditor extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleCancelConfirm = (evt) => {
+    handleCancelConfirm = async (evt) => {
         let { currentUser, isStationary } = this.props;
         let { draft } = this.state;
         this.setState({ confirming: false });
@@ -1286,15 +1273,12 @@ class StoryEditor extends PureComponent {
             // when it's the top editor, create a blank story first, since this
             // instance of the component will be reused
             let blank = createBlankStory(currentUser);
-            this.changeDraft(blank).then(() => {
-                if (draft.id) {
-                    return this.removeStory(draft);
-                } else {
-                    return draft;
-                }
-            });
+            await this.changeDraft(blank);
+            if (draft.id) {
+                await this.removeStory(draft);
+            }
         } else {
-            this.removeStory(draft);
+            await this.removeStory(draft);
         }
     }
 
@@ -1447,7 +1431,7 @@ class StoryEditor extends PureComponent {
      *
      * @param  {Object} evt
      */
-    handleResourceEmbed = (evt) => {
+    handleResourceEmbed = async (evt) => {
         let { draft, options } = this.state;
         let { textArea } = this.components;
         let resource = evt.resource;
@@ -1459,17 +1443,15 @@ class StoryEditor extends PureComponent {
             // keep previewing media
             options = _.clone(options);
             options.preview = 'media';
-            this.changeOptions(options).then(() => {
-                _.set(draft, `details.markdown`, true);
-                this.changeDraft(draft).then(() => {
-                    textArea = textArea.getElement();
-                    textArea.focus();
-                    setTimeout(() => {
-                        let addition = `![${resource.type}-${index+1}]`;
-                        document.execCommand("insertText", false, addition);
-                    }, 10);
-                });
-            });
+            await this.changeOptions(options);
+            _.set(draft, `details.markdown`, true);
+            await this.changeDraft(draft);
+            textArea = textArea.getElement();
+            textArea.focus();
+            setTimeout(() => {
+                let addition = `![${resource.type}-${index+1}]`;
+                document.execCommand("insertText", false, addition);
+            }, 10);
         }
     }
 

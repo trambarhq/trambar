@@ -20,25 +20,7 @@ class PhotoCaptureDialogBoxCordova extends PureComponent {
     componentWillReceiveProps(nextProps) {
         let { show } = this.props;
         if (nextProps.show && !show) {
-            let camera = navigator.camera;
-            if (camera) {
-                let direction;
-                if (nextProps.cameraDirection === 'front') {
-                    direction = Camera.Direction.FRONT;
-                } else if (nextProps.cameraDirection === 'back') {
-                    direction = Camera.Direction.BACK;
-                }
-                let options = {
-                    quality: 50,
-                    destinationType: Camera.DestinationType.FILE_URI,
-                    sourceType: Camera.PictureSourceType.CAMERA,
-                    encodingType: Camera.EncodingType.JPEG,
-                    mediaType: Camera.MediaType.PICTURE,
-                    cameraDirection: direction,
-                    allowEdit: false,
-                };
-                camera.getPicture(this.handleCaptureSuccess, this.handleCaptureFailure, options);
-            }
+            this.startCapture();
         }
     }
 
@@ -49,6 +31,28 @@ class PhotoCaptureDialogBoxCordova extends PureComponent {
      */
     render() {
         return null;
+    }
+
+    async startCapture() {
+        let camera = navigator.camera;
+        if (camera) {
+            let direction;
+            if (nextProps.cameraDirection === 'front') {
+                direction = Camera.Direction.FRONT;
+            } else if (nextProps.cameraDirection === 'back') {
+                direction = Camera.Direction.BACK;
+            }
+            let options = {
+                quality: 50,
+                destinationType: Camera.DestinationType.FILE_URI,
+                sourceType: Camera.PictureSourceType.CAMERA,
+                encodingType: Camera.EncodingType.JPEG,
+                mediaType: Camera.MediaType.PICTURE,
+                cameraDirection: direction,
+                allowEdit: false,
+            };
+            camera.getPicture(this.handleCaptureSuccess, this.handleCaptureFailure, options);
+        }
     }
 
     /**
@@ -116,28 +120,26 @@ class PhotoCaptureDialogBoxCordova extends PureComponent {
      *
      * @param  {String} imageURL
      */
-    handleCaptureSuccess = (imageURL) => {
+    handleCaptureSuccess = async (imageURL) => {
         let { payloads } = this.props;
         let file = new CordovaFile(imageURL);
         this.triggerCloseEvent();
         this.triggerCapturePendingEvent();
-        file.obtainMetadata().then(() => {
-            return MediaLoader.getImageMetadata(file).then((meta) => {
-                let payload = payloads.add('image').attachFile(file);
-                let res = {
-                    type: 'image',
-                    payload_token: payload.id,
-                    format: meta.format,
-                    width: meta.width,
-                    height: meta.height,
-                };
-                this.triggerCaptureEvent(res);
-                return null;
-            });
-        }).catch((err) => {
+        try {
+            await file.obtainMetadata();
+            let meta = await MediaLoader.getImageMetadata(file);
+            let payload = payloads.add('image').attachFile(file);
+            let res = {
+                type: 'image',
+                payload_token: payload.id,
+                format: meta.format,
+                width: meta.width,
+                height: meta.height,
+            };
+            this.triggerCaptureEvent(res);
+        } catch (err) {
             this.triggerCaptureErrorEvent(err);
-            return null;
-        });
+        }
     }
 
     /**

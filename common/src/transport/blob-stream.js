@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import * as HTTPRequest from 'transport/http-request';
 import Async from 'async-do-while';
 
@@ -19,7 +19,7 @@ class BlobStream {
         this.finished = false;
         this.suspended = false;
         this.transferred = 0;
-        this.promise = null;
+        this.initialChunkPromise = null;
         this.onProgress = null;
         this.onComplete = null;
         this.onError = null;
@@ -94,13 +94,13 @@ class BlobStream {
      *
      * @return {Promise<Blob>}
      */
-    pull() {
+    async pull() {
         let unsent = _.find(this.parts, { sent: false });
         if (unsent) {
-            return Promise.resolve(unsent.blob);
+            return unsent.blob;
         } else {
             if (this.closed) {
-                return Promise.resolve(null);
+                return null;
             }
         }
         if (!this.pullResult) {
@@ -144,14 +144,14 @@ class BlobStream {
      *
      * @return {Promise}
      */
-    wait() {
+    async wait() {
         if (this.closed) {
             if (this.error) {
-                return Promise.reject(this.error);
+                throw this.error;
             }
             let unsent = _.find(this.parts, { sent: false });
             if (!unsent) {
-                return Promise.resolve();
+                return;
             }
         }
         if (!this.waitResult) {
@@ -201,6 +201,7 @@ class BlobStream {
             if (this.onConnectivity) {
                 let f = this.onConnectivity;
                 this.onConnectivity = null;
+                this.onConnectivityReject = null;
                 this.connectivityPromise = null;
                 f();
             }
@@ -220,6 +221,7 @@ class BlobStream {
         if (!this.connectivityPromise) {
             this.connectivityPromise = new Promise((resolve, reject) => {
                 this.onConnectivity = resolve;
+                this.onConnectivityReject = reject;
             });
         }
         return this.connectivityPromise;
@@ -227,112 +229,128 @@ class BlobStream {
 
     /**
      * Start streaming data to remote server
+     *
+     * @return {Promise<Object>}
      */
-    start() {
-        if (this.promise) {
-            return this.promise;
+    async start() {
+        if (!this.initialChunkPromise) {
+            // send the first chunk and return that promise
+            this.initialChunkPromise = this.sendNextChunk(0);
+
+            // send the remaining chunks without waiting for them to finish
+            this.sendRemainingChunks();
         }
-        this.promise = this.waitForConnectivity().then(() => {
-            this.started = true;
-            return new Promise((resolve, reject) => {
-                let attempts = 10;
-                let failureCount = 0;
-                let done = false;
-                let uploadedChunkSize = 0;
-                let chunkIndex = 0;
-                let delay = 1000;
-                Async.do(() => {
-                    // get the next unsent part and send it
-                    return this.waitForConnectivity().then(() => {
-                        return this.pull().then((blob) => {
-                            if (this.canceled) {
-                                throw new Error('Stream was canceled');
-                            }
-                            let formData = new FormData;
-                            if (blob) {
-                                formData.append('file', blob);
-                                formData.append('chunk', chunkIndex);
-                                if (chunkIndex === 0) {
-                                    _.each(this.options, (value, name) => {
-                                        formData.append(name, value);
-                                    });
-                                }
-                            } else {
-                                // the server recognize that an empty payload means we've
-                                // reached the end of the stream
-                                done = true;
-                            }
-                            let options = {
-                                responseType: 'json',
-                                onUploadProgress: (evt) => {
-                                    if (blob) {
-                                        // evt.loaded and evt.total are encoded sizes, which are slightly larger than the blob size
-                                        let bytesSentFromChunk = Math.round(blob.size * (evt.loaded / evt.total));
-                                        if (bytesSentFromChunk) {
-                                            this.updateProgress(uploadedChunkSize + bytesSentFromChunk);
-                                        }
-                                    }
-                                },
-                            };
-                            this.chunkPromise = HTTPRequest.fetch('POST', this.url, formData, options);
-                            return this.chunkPromise.then((response) => {
-                                if (blob) {
-                                    this.finalize(blob);
-                                    uploadedChunkSize += blob.size;
-                                }
-                                if (chunkIndex === 0) {
-                                    // resolve promsie after sending first chunk
-                                    resolve();
-                                }
-                                chunkIndex++;
-                            }).finally(() => {
-                                this.chunkPromise = null;
-                            });
-                        }).catch((err) => {
-                            if (!this.canceled) {
-                                // don't immediately fail unless it's a HTTP error
-                                if (!(err.statusCode >= 400 && err.statusCode <= 499 && err.statusCode !== 429)) {
-                                    if (++failureCount < attempts) {
-                                        // try again after a delay
-                                        delay = Math.min(delay * 2, 30 * 1000);
-                                        return Promise.delay(delay);
-                                    }
-                                }
-                            }
-                            throw err;
-                        });
-                    });
-                });
-                Async.while(() => { return !done });
-                Async.end().then(() => {
-                    this.finished = true;
-                    if (this.onComplete) {
-                        this.onComplete({
-                            type: 'complete',
-                            target: this,
-                        });
+        return this.initialChunkPromise;
+    }
+
+    /**
+     * Wait for initial chunk to get sent then send all chunks
+     *
+     * @return {Promise}
+     */
+    async sendRemainingChunks() {
+        await this.initialChunkPromise;
+        try {
+            let index = 1;
+            while (!this.finished) {
+                await this.sendNextChunk(index++);
+            }
+        } catch (err) {
+            // send abort request
+            let formData = new FormData;
+            formData.append('abort', 1);
+            try {
+                await HTTPRequest.fetch('POST', this.url, formData);
+            } catch (err) {
+                // ignore error
+            }
+            if (this.onError) {
+                this.onError(err);
+            }
+        }
+    }
+
+    /**
+     * Send the next chunk
+     *
+     * @param  {Number}  index
+     *
+     * @return {Promise<Object>}
+     */
+    async sendNextChunk(index) {
+        let transferredBefore = this.transferred;
+        let lastError = null;
+        let successful = false;
+        let unrecoverable = false;
+        let more = true;
+        let delay = 1000;
+        let result = null;
+        for (let attempt = 0; attempt < 10 && !successful && !unrecoverable; attempt++) {
+            try {
+                let blob = await this.pull();
+                await this.waitForConnectivity();
+                if (!this.started) {
+                    this.started = true;
+                }
+                let options = { responseType: 'json' };
+                let formData = new FormData;
+                if (blob) {
+                    formData.append('file', blob);
+                    formData.append('chunk', index);
+                    if (index === 0) {
+                        for (let [ name, value ] of _.entries(this.options)) {
+                            formData.append(name, value);
+                        }
                     }
-                }).catch((err) => {
-                    this.abandon(err);
-                    if (chunkIndex === 0) {
-                        // didn't manage to initiate a stream at all
-                        reject(err);
-                    } else {
-                        // send abort request
-                        let formData = new FormData;
-                        formData.append('abort', 1);
-                        return HTTPRequest.fetch('POST', this.url, formData).catch((err) => {
-                            // ignore error
-                        }).finally(() => {
-                            if (this.onError) {
-                                this.onError(err);
+                    options.onUploadProgress = (evt) => {
+                        // evt.loaded and evt.total are encoded sizes, which are slightly larger than the blob size
+                        let bytesSentFromChunk = Math.round(blob.size * (evt.loaded / evt.total));
+                        if (bytesSentFromChunk) {
+                            this.transferred = transferredBefore + bytesSentFromChunk;
+                            if (this.onProgress) {
+                                this.onProgress({
+                                    type: 'progress',
+                                    target: this,
+                                    loaded: this.transferred,
+                                    total: this.size,
+                                    lengthComputable: this.closed,
+                                });
                             }
-                        });
-                    }
-                });
-            });
-        });
-        return this.promise;
+                        }
+                    };
+                } else {
+                    // the server recognize that an empty payload means we've
+                    // reached the end of the stream
+                    more = false;
+                }
+                // save the promise so we can cancel
+                this.chunkPromise = HTTPRequest.fetch('POST', this.url, formData, options);
+                result = await this.chunkPromise;
+                this.finalize(blob);
+                successful = true;
+            } catch (err) {
+                lastError = err;
+
+                // fail immediately if it's a HTTP 4XX error
+                if (err.statusCode >= 400 && err.statusCode <= 499 && err.statusCode !== 429) {
+                    unrecoverable = true;
+                } else {
+                    // try again after a delay
+                    delay = Math.min(delay * 2, 30 * 1000);
+                    await Bluebird.delay(delay);
+                }
+            }
+            this.chunkPromise = null;
+        }
+        if (lastError) {
+            // restore the original amount
+            this.transferred = transferredBefore;
+            throw lastError;
+        }
+        if (!more) {
+            this.finished = true;
+        }
+        return result;
     }
 
     /**
@@ -346,24 +364,6 @@ class BlobStream {
                     this.chunkPromise.cancel();
                 }
             }
-        }
-    }
-
-    /**
-     * Report upload progress
-     *
-     * @param  {Number} transferred
-     */
-    updateProgress(transferred) {
-        this.transferred = transferred;
-        if (this.onProgress) {
-            this.onProgress({
-                type: 'progress',
-                target: this,
-                loaded: transferred,
-                total: this.size,
-                lengthComputable: this.closed,
-            });
         }
     }
 }

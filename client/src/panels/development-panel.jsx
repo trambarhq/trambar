@@ -169,12 +169,11 @@ class DevelopmentPanel extends PureComponent {
      *
      * @return {[type]}
      */
-    componentDidMount() {
+    async componentDidMount() {
         let { env } = this.props;
         if (env.codePush) {
-            env.codePush.loadDeploymentName().then((deploymentName) => {
-                this.setState({ deploymentName });
-            });
+            let deploymentName = await env.codePush.loadDeploymentName();
+            this.setState({ deploymentName });
         }
     }
 

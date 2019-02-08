@@ -37,43 +37,25 @@ class RepoListPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, projectID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            project: undefined,
-            repos: undefined,
-            servers: undefined,
-            statistics: undefined,
-
             database,
             route,
             env,
             editing,
         };
         meanwhile.show(<RepoListPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return ProjectFinder.findProject(db, projectID).then((project) => {
-                props.project = project;
-            });
-        }).then(() => {
-            return RepoFinder.findExistingRepos(db).then((repos) => {
-                props.repos = repos;
-            });
-        }).then(() => {
-            meanwhile.show(<RepoListPageSync {...props} />);
-            return ServerFinder.findServersOfRepos(db, props.repos).then((servers) => {
-                props.servers = servers;
-            });
-        }).then(() => {
-            meanwhile.show(<RepoListPageSync {...props} />);
-            let repos = findRepos(props.repos, props.project);
-            return StatisticsFinder.findDailyActivitiesOfRepos(db, props.project, repos).then((statistics) => {
-                props.statistics = statistics;
-            });
-        }).then(() => {
-            return <RepoListPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.project = await ProjectFinder.findProject(db, projectID);
+        props.repos = await RepoFinder.findExistingRepos(db);
+        meanwhile.show(<RepoListPageSync {...props} />);
+        props.servers = await ServerFinder.findServersOfRepos(db, props.repos);
+        meanwhile.show(<RepoListPageSync {...props} />);
+        let repos = findRepos(props.repos, props.project);
+        props.statistics = await StatisticsFinder.findDailyActivitiesOfRepos(db, props.project, repos);
+        return <RepoListPageSync {...props} />;
     }
 }
 
@@ -102,6 +84,32 @@ class RepoListPageSync extends PureComponent {
     }
 
     /**
+     * Toggle rendering of full list when entering and exiting edit mode
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     *
+     * @return {Object|null}
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing, project } = props;
+        let { renderingFullList } = state;
+        if (editing && !renderingFullList) {
+            return {
+                renderingFullList: true,
+                selectedRepoIDs: _.get(project, 'repo_ids', []),
+            };
+        } else if (!editing && renderingFullList) {
+            return {
+                renderingFullList: false,
+                hasChanges: false,
+                problems: {},
+            };
+        }
+        return null;
+    }
+
+    /**
      * Change editability of page
      *
      * @param  {Boolean} edit
@@ -113,47 +121,6 @@ class RepoListPageSync extends PureComponent {
         let params = _.clone(route.params);
         params.editing = edit || undefined;
         return route.replace(route.name, params);
-    }
-
-    /**
-     * Check if we're switching into edit mode
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { project, editing } = this.props;
-        let { selectedRepoIDs } = this.state;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                // initial list of ids to the current list
-                this.setState({
-                    renderingFullList: true,
-                    selectedRepoIDs: _.get(nextProps.project, 'repo_ids', []),
-                    hasChanges: false,
-                });
-            } else {
-                setTimeout(() => {
-                    let { editing } = this.props;
-                    if (!editing) {
-                        this.setState({ renderingFullList: false, problems: {} });
-                    }
-                }, 500);
-            }
-        }
-        if (nextProps.project !== project && nextProps.project) {
-            let originalRepoIDs = _.get(project, 'repo_ids', []);
-            let incomingRepoIDs = _.get(nextProps.project, 'repo_ids', []);
-            if (selectedRepoIDs === originalRepoIDs) {
-                // use the list from the incoming object if no change has been made yet
-                selectedRepoIDs = incomingRepoIDs;
-            } else {
-                if (!_.isEqual(originalRepoIDs, incomingRepoIDs)) {
-                    // merge the list when a change has been made (by someone else presumably)
-                    selectedRepoIDs = _.union(selectedRepoIDs, incomingRepoIDs);
-                }
-            }
-            this.setState({ selectedRepoIDs });
-        }
     }
 
     /**
@@ -567,7 +534,7 @@ class RepoListPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleSaveClick = (evt) => {
+    handleSaveClick = async (evt) => {
         let { database, env, project, repos } = this.props;
         let { selectedRepoIDs } = this.state;
         let { confirmation } = this.components;
@@ -576,29 +543,27 @@ class RepoListPageSync extends PureComponent {
         let removing = _.difference(originalRepoIDs, selectedRepoIDs);
         let message = t('repo-list-confirm-remove-$count', removing.length);
         let bypass = _.isEmpty(removing) ? true : undefined;
-        return confirmation.ask(message, bypass).then((confirmed) => {
-            if (!confirmed) {
-                return;
-            }
+        let confirmed = await confirmation.ask(message, bypass);
+        if (confirmed) {
             this.setState({ problems: {} });
-            let db = database.use({ schema: 'global', by: this });
-            return db.start().then((userID) => {
-                // remove ids of repo that no longer exist
-                let existingRepoIDs = _.map(repos, 'id');
-                let projectAfter = {
-                    id: project.id,
-                    repo_ids: _.intersection(selectedRepoIDs, existingRepoIDs)
-                };
-                return db.saveOne({ table: 'project' }, projectAfter).then((project) => {
-                    this.setState({ hasChanges: false }, () => {
-                        this.setEditability(false);
-                    });
-                }).catch((err) => {
-                    let problems = { unexpected: err.message };
-                    this.setState({ problems });
+            let currentUserID = await db.start();
+            // remove ids of repo that no longer exist
+            let existingRepoIDs = _.map(repos, 'id');
+            let projectAfter = {
+                id: project.id,
+                repo_ids: _.intersection(selectedRepoIDs, existingRepoIDs)
+            };
+            try {
+                let db = database.use({ schema: 'global', by: this });
+                await db.saveOne({ table: 'project' }, projectAfter);
+                this.setState({ hasChanges: false }, () => {
+                    this.setEditability(false);
                 });
-            });
-        });
+            } catch (err) {
+                let problems = { unexpected: err.message };
+                this.setState({ problems });
+            }
+        }
     }
 
     /**

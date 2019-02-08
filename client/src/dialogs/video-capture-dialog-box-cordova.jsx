@@ -21,16 +21,7 @@ class VideoCaptureDialogBoxCordova extends PureComponent {
     componentWillReceiveProps(nextProps) {
         let { show } = this.props;
         if (nextProps.show && !show) {
-            let capture = navigator.device.capture;
-            if (capture) {
-                requestPermissions().then(() => {
-                    let options = {
-                        duration: 5 * 60 * 60,
-                        limit: 1,
-                    };
-                    capture.captureVideo(this.handleCaptureSuccess, this.handleCaptureFailure, options);
-                });
-            }
+            this.startCapture();
         }
     }
 
@@ -41,6 +32,18 @@ class VideoCaptureDialogBoxCordova extends PureComponent {
      */
     render() {
         return null;
+    }
+
+    async startCapture() {
+        let capture = navigator.device.capture;
+        if (capture) {
+            await requestPermissions();
+            let options = {
+                duration: 5 * 60 * 60,
+                limit: 1,
+            };
+            capture.captureVideo(this.handleCaptureSuccess, this.handleCaptureFailure, options);
+        }
     }
 
     /**
@@ -108,13 +111,14 @@ class VideoCaptureDialogBoxCordova extends PureComponent {
      *
      * @param  {Array<MediaFiles>} mediaFiles
      */
-    handleCaptureSuccess = (mediaFiles) => {
+    handleCaptureSuccess = async (mediaFiles) => {
         let { payloads } = this.props;
         this.triggerCloseEvent();
         let mediaFile = mediaFiles[0];
         if (mediaFile) {
             this.triggerCapturePendingEvent();
-            MediaLoader.getFormatData(mediaFile).then((mediaFileData) => {
+            try {
+                let mediaFileData = await MediaLoader.getFormatData(mediaFile);
                 let fullPath;
                 if (cordova.platformId === 'windows') {
                     fullPath = mediaFile.localURL;
@@ -124,40 +128,31 @@ class VideoCaptureDialogBoxCordova extends PureComponent {
                 let file = new CordovaFile(fullPath, mediaFile.type, mediaFile.size);
                 let payload = payloads.add('video');
                 payload.attachFile(file);
-                return createThumbnail(file).then((thumbnailURL) => {
+
+                let res = {
+                    type: 'video',
+                    payload_token: payload.id,
+                    format: MediaLoader.extractFileFormat(mediaFile.type),
+                    filename: mediaFile.name,
+                    duration: mediaFileData.duration * 1000,
+                };
+                try {
+                    let thumbnailURL = await createThumbnail(file);
                     let posterFile = new CordovaFile(thumbnailURL);
-                    return MediaLoader.getImageMetadata(posterFile).then((poster) => {
-                        // use the poster's width and height, as they're
-                        // corrected for camera orientation
-                        payload.attachFile(posterFile, 'poster');
-                        return {
-                            type: 'video',
-                            payload_token: payload.id,
-                            format: MediaLoader.extractFileFormat(mediaFile.type),
-                            width: poster.width,
-                            height: poster.height,
-                            filename: mediaFile.name,
-                            duration: mediaFileData.duration * 1000,
-                        };
-                    });
-                }).catch((err) => {
+                    let poster = await MediaLoader.getImageMetadata(posterFile);
+                    payload.attachFile(posterFile, 'poster');
+                    // use the poster's width and height, as they're
+                    // corrected for camera orientation
+                    res.width = poster.width;
+                    res.height = poster.height;
+                } catch (err) {
                     // can't generate thumbnail--let the server do it
                     payload.attachStep('main', 'poster')
-                    return {
-                        type: 'video',
-                        payload_token: payload.id,
-                        format: MediaLoader.extractFileFormat(mediaFile.type),
-                        filename: mediaFile.name,
-                        duration: mediaFileData.duration * 1000,
-                    };
-                }).then((res) => {
-                    this.triggerCaptureEvent(res);
-                    return null;
-                });
-            }).catch((err) => {
+                }
+                this.triggerCaptureEvent(res);
+            } catch (err) {
                 this.triggerCaptureErrorEvent(err);
-                return null;
-            });
+            }
         }
     }
 
@@ -199,10 +194,10 @@ function createThumbnail(file) {
     });
 }
 
-function requestPermissions() {
+async function requestPermissions() {
     let permissions = cordova.plugins.permissions;
     if (!permissions || cordova.platformId !== 'android') {
-        return Promise.resolve();
+        return;
     }
     return new Promise((resolve, reject) => {
         let successCB = () => {

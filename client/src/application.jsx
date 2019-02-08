@@ -256,17 +256,16 @@ class Application extends PureComponent {
      *
      * @return {Promise<Object>}
      */
-    saveLocation(address, schema) {
+    async saveLocation(address, schema) {
         // get the project object so we have the project's display name
         let { database } = this.state;
         let db = database.use({ by: this });
-        return ProjectFinder.findProjectByName(db, schema).then((project) => {
-            let name = project.details.title;
-            let atime = (new Date).toISOString();
-            let key = `${address}/${schema}`;
-            let record = { key, address, schema, name, atime };
-            return db.saveOne({ schema: 'local', table: 'project_link' }, record);
-        });
+        let project = await ProjectFinder.findProjectByName(db, schema);
+        let name = project.details.title;
+        let atime = (new Date).toISOString();
+        let key = `${address}/${schema}`;
+        let record = { key, address, schema, name, atime };
+        return db.saveOne({ schema: 'local', table: 'project_link' }, record);
     }
 
     /**
@@ -276,12 +275,11 @@ class Application extends PureComponent {
      *
      * @return {Promise<Array>}
      */
-    removeLocations(address) {
+    async removeLocations(address) {
         let { database } = this.state;
         let db = database.use({ by: this });
-        return ProjectLinkFinder.findLinksToServer(db, address).then((links) => {
-            return db.remove({ schema: 'local', table: 'project_link' }, links);
-        });
+        let links = await ProjectLinkFinder.findLinksToServer(db, address);
+        return db.remove({ schema: 'local', table: 'project_link' }, links);
     }
 
     /**
@@ -291,12 +289,11 @@ class Application extends PureComponent {
      *
      * @return {Promise<Array>}
      */
-    removeDefunctLocations(address) {
+    async removeDefunctLocations(address) {
         let { database } = this.state;
         let db = database.use({ by: this });
-        return ProjectLinkFinder.findDefunctLinks(db).then((links) => {
-            return db.remove({ schema: 'local', table: 'project_link' }, links);
-        });
+        let links = await ProjectLinkFinder.findDefunctLinks(db);
+        return db.remove({ schema: 'local', table: 'project_link' }, links);
     }
 
     /**
@@ -427,13 +424,15 @@ class Application extends PureComponent {
         if (!_.isEmpty(route.callbacks)) {
             // postpone the route change until each callbacks has been called;
             // if one returns false, then cancel the change
-            let promise = Promise.reduce(route.callbacks, (proceed, callback) => {
-                if (proceed === false) {
-                    return false;
+            let f = async () => {
+                for (let callback of route.callbacks) {
+                    let proceed = await callback();
+                    if (proceed === false ){
+                        break;
+                    }
                 }
-                return callback();
-            }, true);
-            evt.postponeDefault(promise);
+            };
+            evt.postponeDefault(f());
         }
     }
 
@@ -475,7 +474,7 @@ class Application extends PureComponent {
      *
      * @param  {Object} evt
      */
-    handleAlertClick = (evt) => {
+    handleAlertClick = async (evt) => {
         let { database, route } = this.state;
         let alert = evt.alert;
         // create an object take has some of Notification's properties
@@ -502,13 +501,12 @@ class Application extends PureComponent {
 
         // mark as read
         let db = database.use({ by: this });
-        db.start().then((userId) => {
-            let columns = {
-                id: alert.notification_id,
-                seen: true
-            };
-            return db.saveOne({ table: 'notification' }, columns);
-        });
+        let currentUserID = await db.start();
+        let columns = {
+            id: alert.notification_id,
+            seen: true
+        };
+        return db.saveOne({ table: 'notification' }, columns);
     }
 
     /**

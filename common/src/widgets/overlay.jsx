@@ -9,89 +9,104 @@ import './overlay.scss';
  *
  * @extends {PureComponent}
  */
-class OverlayProxy extends PureComponent {
-    static displayName = 'OverlayProxy';
-    static active = false;
+class Overlay extends PureComponent {
+    static displayName = 'Overlay';
 
     constructor(props) {
         super(props);
-        this.state = {};
+        this.state = {
+            contents: null,
+            rendering: false,
+            transitioning: false,
+        };
     }
 
     static getDerivedStateFromProps(props, state) {
         // save contents in state if show = true, so that we don't need them
         // when show become false
         let { show, children } = props;
+        let { rendering } = state;
         if (show) {
-            return { contents: children };
+            return {
+                contents: children,
+                rendering: true,
+                transitioning: !rendering
+            };
         }
         return null;
+    }
+
+    getPortalDestination() {
+        let node = document.getElementById('overlay');
+        if (!node) {
+            let app = document.getElementById('application');
+            node = document.createElement('DIV');
+            node.id = 'overlay';
+            app.appendChild(node);
+        }
+        return node;
     }
 
     /**
      * Don't render anything
      */
     render() {
-        return null;
-    }
-
-    /**
-     * Insert overlay element into document body on mount
-     */
-    componentDidMount() {
-        let { show } = this.props;
-        if (show) {
-            this.show();
-        }
-    }
-
-    /**
-     * Redraw the overlay element when props change
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    componentDidUpdate(prevProps, prevState) {
-        let { show } = this.props;
-        let { contents } = this.state;
-        if (prevProps.show !== show) {
-            if (show) {
-                this.show();
+        let { contents, rendering, transitioning } = this.state;
+        let dest = this.getPortalDestination();
+        if (rendering) {
+            let { className, show, onBackgroundClick, ...containerProps } = this.props;
+            containerProps.className = 'overlay';
+            if (show && !transitioning) {
+                containerProps.className += ' show';
             } else {
-                this.hide();
+                containerProps.className += ' hide';
             }
-        } else if (prevState.contents !== contents) {
-            if (show) {
-                this.redraw(this.shown);
+            if (className) {
+                containerProps.className += ' ' + className;
             }
+            containerProps.onClick = this.handleClick;
+            containerProps.onKeyDown = this.handleKeyDown;
+            containerProps.onTouchMove = this.handleTouchMove;
+            containerProps.onTransitionEnd = this.handleTransitionEnd;
+            let overlay = (
+                <div {...containerProps}>
+                    <div className="background" />
+                    <div className="foreground">{contents}</div>
+                </div>
+            );
+            return ReactDOM.createPortal(overlay, dest);
+        } else {
+            return ReactDOM.createPortal(null, dest);
         }
     }
 
-    /**
-     * Remove overlay element on unmount
-     */
+    componentDidMount() {
+        let { rendering } = this.state;
+        if (rendering) {
+            this.preserveKeyboardFocus();
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        let { rendering, transitioning } = this.state;
+        if (rendering && !prevState.rendering) {
+            this.preserveKeyboardFocus();
+            if (transitioning) {
+                this.setState({ transitioning: false });
+            }
+        } else if (!rendering && prevState.rendering) {
+            this.restoreKeyboardFocus();
+        }
+    }
+
     componentWillUnmount() {
-        this.restorePreviousFocus();
-        this.removeContainer();
-        OverlayProxy.active = false;
+        this.restoreKeyboardFocus();
     }
 
     /**
-     * Insert overlay element into document body
+     * Remember which element had keyboard focus, then remove it
      */
-    show() {
-        // draw overlay as hidden initially, then change class to show to
-        // trigger CSS transition
-        this.createContainer();
-        this.redraw(false);
-        this.shown = false;
-        setTimeout(() => {
-            this.shown = true;
-            this.redraw(this.shown);
-        }, 10);
-        OverlayProxy.active = true;
-
-        // remember element that current has keyboard focus
+    preserveKeyboardFocus() {
         let el = document.activeElement;
         if (el && el !== document.body) {
             this.originalFocusElement = el;
@@ -102,64 +117,12 @@ class OverlayProxy extends PureComponent {
     }
 
     /**
-     * Redraw overlay element
-     *
-     * @param  {Boolean} shown
+     * Restore keyboard focus
      */
-    redraw(shown) {
-        if (!this.containerNode) {
-            return;
-        }
-        let { contents } = this.state;
-        let props = {
-            show: shown,
-            onClick: this.handleClick,
-            onTouchMove: this.handleTouchMove,
-            onTransitionEnd: this.handleTransitionEnd,
-            children: contents,
-        };
-        ReactDOM.render(<Overlay {...props} />, this.containerNode);
-    }
-
-    /**
-     * Transition out, then remove overlay element
-     */
-    hide() {
-        this.restorePreviousFocus();
-        this.shown = false;
-        this.redraw(this.shown);
-        OverlayProxy.active = false;
-    }
-
-    restorePreviousFocus() {
+    restoreKeyboardFocus() {
         if (this.originalFocusElement) {
             this.originalFocusElement.focus();
             this.originalFocusElement = null;
-        }
-    }
-
-    /**
-     * Create container node and attach keyboard handler.
-     */
-    createContainer() {
-        if (!this.containerNode) {
-            let app = document.getElementById('application');
-            this.containerNode = document.createElement('DIV');
-            app.appendChild(this.containerNode);
-            app.addEventListener('keydown', this.handleKeyDown);
-        }
-    }
-
-    /**
-     * Unmount contents and remove container node.
-     */
-    removeContainer() {
-        if (this.containerNode) {
-            let app = document.getElementById('application');
-            ReactDOM.unmountComponentAtNode(this.containerNode);
-            app.removeChild(this.containerNode);
-            app.removeEventListener('keydown', this.handleKeyDown);
-            this.containerNode = null;
         }
     }
 
@@ -227,39 +190,15 @@ class OverlayProxy extends PureComponent {
         let { show } = this.props;
         if (evt.propertyName === 'opacity') {
             if (!show) {
-                this.removeContainer();
-                this.setState({ contents: null });
+                this.setState({ contents: null, rendering: false });
             }
         }
     }
 }
 
-function Overlay(props) {
-    let containerProps = _.omit(props, 'className', 'children', 'show');
-    containerProps.className = 'overlay';
-    if (props.show) {
-        containerProps.className += ' show';
-    } else {
-        containerProps.className += ' hide';
-    }
-    if (props.className) {
-        containerProps.className += ' ' + props.className;
-    }
-    return (
-        <div {...containerProps}>
-            <div className="background" />
-            <div className="foreground">{props.children}</div>
-        </div>
-    );
-}
-
-OverlayProxy.defaultProps = {
-    show: false
-};
-
 export {
-    OverlayProxy as default,
-    OverlayProxy as Overlay,
+    Overlay as default,
+    Overlay,
 };
 
 import Environment from 'env/environment';
@@ -267,7 +206,7 @@ import Environment from 'env/environment';
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
-    OverlayProxy.propTypes = {
+    Overlay.propTypes = {
         className: PropTypes.string,
         show: PropTypes.bool,
         onBackgroundClick: PropTypes.func,

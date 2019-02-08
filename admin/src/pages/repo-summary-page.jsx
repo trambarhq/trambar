@@ -37,15 +37,10 @@ class RepoSummaryPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env, projectID, repoID, editing } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let props = {
-            system: undefined,
-            project: undefined,
-            repo: undefined,
-            statistics: undefined,
-
             projectID,
             database,
             route,
@@ -53,27 +48,13 @@ class RepoSummaryPage extends AsyncComponent {
             editing,
         };
         meanwhile.show(<RepoSummaryPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return SystemFinder.findSystem(db).then((system) => {
-                props.system = system;
-            });
-        }).then(() => {
-            return RepoFinder.findRepo(db, repoID).then((repo) => {
-                props.repo = repo;
-            });
-        }).then(() => {
-            meanwhile.show(<RepoSummaryPageSync {...props} />);
-            return ProjectFinder.findProject(db, projectID).then((project) => {
-                props.project = project;
-            });
-        }).then(() => {
-            meanwhile.show(<RepoSummaryPageSync {...props} />);
-            return StatisticsFinder.findDailyActivitiesOfRepo(db, props.project, props.repo).then((statistics) => {
-                props.statistics = statistics;
-            });
-        }).then(() => {
-            return <RepoSummaryPageSync {...props} />;
-        });
+        let currentUserID = await db.start()
+        props.repo = await RepoFinder.findRepo(db, repoID);
+        meanwhile.show(<RepoSummaryPageSync {...props} />);
+        props.project = await ProjectFinder.findProject(db, projectID);
+        meanwhile.show(<RepoSummaryPageSync {...props} />);
+        props.statistics = await StatisticsFinder.findDailyActivitiesOfRepo(db, props.project, props.repo);
+        return <RepoSummaryPageSync {...props} />;
     }
 }
 
@@ -98,6 +79,24 @@ class RepoSummaryPageSync extends PureComponent {
     }
 
     /**
+     * Reset edit state when edit ends
+     *
+     * @param  {Object} props
+     * @param  {Object} state
+     */
+    static getDerivedStateFromProps(props, state) {
+        let { editing } = props;
+        if (!editing) {
+            return {
+                newRepo: null,
+                hasChanges: false,
+                problems: {},
+            };
+        }
+        return null;
+    }
+
+    /**
      * Return edited copy of repo object or the original object
      *
      * @param  {String} state
@@ -105,9 +104,9 @@ class RepoSummaryPageSync extends PureComponent {
      * @return {Object}
      */
     getRepo(state) {
-        let { repo, editing } = this.props;
+        let { repo } = this.props;
         let { newRepo } = this.state;
-        if (editing && (!state || state === 'current')) {
+        if (!state || state === 'current') {
             return newRepo || repo || emptyRepo;
         } else {
             return repo || emptyRepo;
@@ -178,25 +177,6 @@ class RepoSummaryPageSync extends PureComponent {
     getInputLanguages() {
         let { system } = this.props;
         return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Reset edit state when edit starts
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { editing } = this.props;
-        if (nextProps.editing !== editing) {
-            if (nextProps.editing) {
-                this.setState({
-                    newRepo: null,
-                    hasChanges: false,
-                });
-            } else {
-                this.setState({ problems: {} });
-            }
-        }
     }
 
     /**
@@ -405,9 +385,9 @@ class RepoSummaryPageSync extends PureComponent {
      *
      * @param  {Boolean} include
      *
-     * @return {Promise<Project>}
+     * @return {Promise<Project|undefined>}
      */
-    changeInclusion(include) {
+    async changeInclusion(include) {
         let { database, project, repo } = this.props;
         let db = database.use({ schema: 'global', by: this });
         let repoIDs = project.repo_ids;
@@ -417,10 +397,12 @@ class RepoSummaryPageSync extends PureComponent {
             repoIDs = _.difference(repoIDs, [ repo.id ]);
         }
         let projectAfter = _.assign({}, project, { repo_ids: repoIDs });
-        return db.saveOne({ table: 'project' }, projectAfter).catch((err) => {
+        try {
+            db.saveOne({ table: 'project' }, projectAfter);
+        } catch (err) {
             let problems = { unexpected: err.message };
             this.setState({ problems });
-        });
+        }
     }
 
     /**
@@ -428,20 +410,18 @@ class RepoSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleRemoveClick = (evt) => {
+    handleRemoveClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('repo-summary-confirm-remove');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeInclusion(false).then((project) => {
-                    if (project) {
-                        return this.returnToList();
-                    }
-                });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            let projectAfter = await this.changeInclusion(false);
+            if (projectAfter) {
+                await this.returnToList();
             }
-        });
+        }
     }
 
     /**
@@ -449,16 +429,15 @@ class RepoSummaryPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleRestoreClick = (evt) => {
+    handleRestoreClick = async (evt) => {
         let { env } = this.props;
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('repo-summary-confirm-restore');
-        return confirmation.ask(message).then((confirmed) => {
-            if (confirmed) {
-                return this.changeInclusion(true);
-            }
-        });
+        let confirmed = await confirmation.ask(message);
+        if (confirmed) {
+            await this.changeInclusion(true);
+        }
     }
 
     /**
@@ -499,19 +478,19 @@ class RepoSummaryPageSync extends PureComponent {
         if (saving) {
             return;
         }
-        let db = database.use({ schema: 'global', by: this });
         let repo = this.getRepo();
-        this.setState({ saving: true, problems: {} }, () => {
-            return db.start().then((currentUserID) => {
-                return db.saveOne({ table: 'repo' }, repo).then((repo) => {
-                    this.setState({ hasChanges: false, saving: false }, () => {
-                        this.setEditability(false);
-                    });
+        this.setState({ saving: true, problems: {} }, async () => {
+            try {
+                let db = database.use({ schema: 'global', by: this });
+                let currentUserID = await db.start();
+                let repoAfter = await db.saveOne({ table: 'repo' }, repo);
+                this.setState({ hasChanges: false, saving: false }, () => {
+                    this.setEditability(false);
                 });
-            }).catch((err) => {
+            } catch (err) {
                 let problems = { unexpected: err.message };
                 this.setState({ problems, saving: false });
-            });
+            }
         });
     }
 

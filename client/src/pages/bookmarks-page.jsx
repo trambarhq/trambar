@@ -29,7 +29,7 @@ class BookmarksPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let {
             database,
             route,
@@ -40,10 +40,6 @@ class BookmarksPage extends AsyncComponent {
         } = this.props;
         let db = database.use({ by: this });
         let props = {
-            bookmarks: undefined,
-            currentUser: undefined,
-            project: undefined,
-
             highlightStoryID,
             scrollToStoryID,
             database,
@@ -52,21 +48,11 @@ class BookmarksPage extends AsyncComponent {
             env,
         };
         meanwhile.show(<BookmarksPageSync {...props} />);
-        return db.start().then((currentUserID) => {
-            return UserFinder.findUser(db, currentUserID).then((user) => {
-                props.currentUser = user;
-            });
-        }).then(() => {
-            return ProjectFinder.findCurrentProject(db).then((project) => {
-                props.project = project;
-            });
-        }).then((project) => {
-            return BookmarkFinder.findBookmarksForUser(db, props.currentUser).then((bookmarks) => {
-                props.bookmarks = bookmarks;
-            });
-        }).then(() => {
-            return <BookmarksPageSync {...props} />;
-        });
+        let currentUserID = await db.start();
+        props.currentUser = await UserFinder.findUser(db, currentUserID)
+        props.project = await ProjectFinder.findCurrentProject(db)
+        props.bookmarks = await BookmarkFinder.findBookmarksForUser(db, props.currentUser)
+        return <BookmarksPageSync {...props} />;
     }
 }
 

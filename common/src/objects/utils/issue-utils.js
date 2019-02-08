@@ -12,18 +12,18 @@ import * as TagScanner from 'utils/tag-scanner';
  * @return {Object|null}
  */
 function extractIssueDetails(story, repos) {
-    if (!story) {
+    if (!story || !repos) {
         return null;
     }
     // find the repo in whose tracker the issue resides
     let issueRepo, issueLink;
-    _.each(repos, (repo) => {
+    for (let repo of repos) {
         let link = ExternalDataUtils.findLinkByRelative(story, repo, 'project');
         if (link && link.issue) {
             issueRepo = repo;
             issueLink = link;
         }
-    });
+    }
     if (!issueRepo) {
         // either the repo has gone missing or it's not loaded yet
         return null;

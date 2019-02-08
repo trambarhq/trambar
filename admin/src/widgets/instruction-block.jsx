@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
+import { AsyncComponent } from 'relaks';
 import MarkGor from 'mark-gor/react';
 
 // widgets
@@ -8,51 +8,36 @@ import CollapsibleContainer from 'widgets/collapsible-container';
 
 import './instruction-block.scss';
 
+class InstructionBlock extends AsyncComponent {
+    static displayName = 'InstructionBlock';
+
+    /**
+     * Render component asynchronously
+     *
+     * @param  {Meanwhile}  meanwhile
+     *
+     * @return {Promise}
+     */
+    async renderAsync(meanwhile) {
+        let { env, topic, folder, hidden } = this.props;
+        let { languageCode } = env.locale;
+        let props = {
+            hidden,
+            env,
+        };
+        props.contents = await loadMarkdown(folder, topic, languageCode);
+        return <InstructionBlockSync {...props} />;
+    }
+}
+
 /**
  * A box with instructions in it. Instructions are Markdown files stored in
  * src/instructions.
  *
  * @extends PureComponent
  */
-class InstructionBlock extends PureComponent {
-    static displayName = 'InstructionBlock';
-
-    constructor(props) {
-        super(props);
-        this.state = {
-            contents: null,
-        };
-    }
-
-    /**
-     * Load instruction text on mount
-     */
-    componentWillMount() {
-        let { env, topic, folder } = this.props;
-        let { languageCode } = env.locale;
-        if (topic) {
-            loadMarkdown(folder, topic, languageCode).then((contents) => {
-                this.setState({ contents });
-            });
-        }
-    }
-
-    /**
-     * Reload text if topic or language changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { env, topic } = this.props;
-        if (nextProps.topic !== topic || nextProps.env.locale !== env.locale) {
-            let folder = nextProps.folder;
-            let topic = nextProps.topic;
-            let languageCode = nextProps.env.locale.languageCode;
-            loadMarkdown(folder, topic, languageCode).then((contents) => {
-                this.setState({ contents });
-            });
-        }
-    }
+class InstructionBlockSync extends PureComponent {
+    static displayName = 'InstructionBlockSync';
 
     /**
      * Render component
@@ -60,8 +45,7 @@ class InstructionBlock extends PureComponent {
      * @return {ReactElement|null}
      */
     render() {
-        let { hidden } = this.props;
-        let { contents } = this.state;
+        let { hidden, contents } = this.props;
         if (!contents) {
             return null;
         }
@@ -86,13 +70,12 @@ class InstructionBlock extends PureComponent {
  * @param  {String} topic
  * @param  {String} lang
  *
- * @return {Promise}
+ * @return {Promise<ReactElement>}
  */
-function loadMarkdown(folder, topic, lang) {
-    return loadText(folder, topic, lang).then((text) => {
-        let contents = MarkGor.parse(text);
-        return loadImages(contents, folder);
-    });
+async function loadMarkdown(folder, topic, lang) {
+    let text = await loadText(folder, topic, lang);
+    let contents = MarkGor.parse(text);
+    return loadImages(contents, folder);
 }
 
 /**
@@ -104,13 +87,15 @@ function loadMarkdown(folder, topic, lang) {
  *
  * @return {Promise}
  */
-function loadText(folder, topic, lang) {
-    return import(`instructions/${folder}/${topic}.${lang}.md`).catch(() => {
+async function loadText(folder, topic, lang) {
+    try {
+        return import(`instructions/${folder}/${topic}.${lang}.md`);
+    } catch (err) {
         if (process.env.NODE_ENV !== 'production') {
             console.log(`Missing instructions for topic "${topic}" in language "${lang}"`);
         }
         return import(`instructions/${folder}/${topic}.en.md`);
-    });
+    }
 }
 
 /**
@@ -121,31 +106,34 @@ function loadText(folder, topic, lang) {
  *
  * @return {ReactElement}
  */
-function loadImages(element, folder) {
+async function loadImages(element, folder) {
     if (typeof(element) === 'string') {
         return element;
     } else if (element instanceof Array) {
-        return Promise.map(element, (element) => {
-            return loadImages(element, folder);
-        });
+        let results = [];
+        for (let e of element) {
+            let result = await loadImages(e, folder);
+            results.push(result)
+        }
+        return results;
     } else if (element.type === 'img') {
-        let url = element.props.src;
-        if (url && !/^\w+:/.test(url)) {
-            return import(`instructions/${folder}/${url}`).then((url) => {
+        let filename = element.props.src;
+        if (filename && !/^\w+:/.test(filename)) {
+            try {
+                let url = await import(`instructions/${folder}/${filename}`);
                 return React.cloneElement(element, { src: url });
-            }).catch((err) => {
+            } catch (err) {
                 if (process.env.NODE_ENV !== 'production') {
                     console.log(`Unable to find image: ${url}`);
                 }
-                return element;
-            });
-        } else {
-            return element;
+            }
         }
+        return element;
     } else if (element.type === 'a') {
         let url = element.props.href;
         if (url && !/^\w+:/.test(url)) {
-            return import(`instructions/${folder}/${url}`).then((url) => {
+            try {
+                let fileURL = await import(`instructions/${folder}/${url}`);
                 let props = { href: url };
                 if (/\.html$/.test(url)) {
                     props.target = '_blank';
@@ -153,21 +141,22 @@ function loadImages(element, folder) {
                     props.download = url;
                 }
                 return React.cloneElement(element, props);
-            }).catch((err) => {
+            } catch (err) {
                 if (process.env.NODE_ENV !== 'production') {
                     console.log(`Unable to find link: ${url}`);
                 }
                 return element;
-            });
+            }
         } else {
             return React.cloneElement(element, { target: '_blank' });
         }
     } else if (element.props && !_.isEmpty(element.props.children)) {
-        return Promise.map(element.props.children, (element) => {
-            return loadImages(element, folder);
-        }).then((children) => {
-            return React.cloneElement(element, {}, children);
-        });
+        let newChildren = [];
+        for (let child of element.props.children) {
+            let newChild = await loadImages(child, folder);
+            newChildren.push(newChild);
+        }
+        return React.cloneElement(element, {}, newChildren);
     } else {
         return element;
     }
@@ -180,6 +169,7 @@ InstructionBlock.defaultProps = {
 export {
     InstructionBlock as default,
     InstructionBlock,
+    InstructionBlockSync,
 };
 
 import Environment from 'env/environment';
@@ -191,7 +181,14 @@ if (process.env.NODE_ENV !== 'production') {
         folder: PropTypes.string.isRequired,
         topic: PropTypes.string.isRequired,
         hidden: PropTypes.bool,
-
+        env: PropTypes.instanceOf(Environment).isRequired,
+    };
+    InstructionBlockSync.propTypes = {
+        hidden: PropTypes.bool,
+        contents: PropTypes.oneOfType([
+            PropTypes.arrayOf(PropTypes.node),
+            PropTypes.node
+        ]),
         env: PropTypes.instanceOf(Environment).isRequired,
     };
 }

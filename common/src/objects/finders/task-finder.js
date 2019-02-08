@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 
 const emptyArray = [];
 
@@ -12,7 +11,7 @@ const emptyArray = [];
  *
  * @return {Promise<Array<Task>>}
  */
-function findActiveTasks(db, startTime, minimum) {
+async function findActiveTasks(db, startTime, minimum) {
     return db.find({
         schema: 'global',
         table: 'task',
@@ -36,9 +35,9 @@ function findActiveTasks(db, startTime, minimum) {
  *
  * @return {Promise<Array<Task>>}
  */
-function findServerTasks(db, server, minimum) {
+async function findServerTasks(db, server, minimum) {
     if (!server) {
-        return Promise.resolve(emptyArray);
+        return emptyArray;
     }
     return db.find({
         schema: 'global',

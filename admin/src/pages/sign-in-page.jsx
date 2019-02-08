@@ -25,7 +25,7 @@ class SignInPage extends AsyncComponent {
      *
      * @return {Promise<ReactElement>}
      */
-    renderAsync(meanwhile) {
+    async renderAsync(meanwhile) {
         let { database, route, env } = this.props;
         let db = database.use({ by: this });
         let props = {
@@ -39,11 +39,10 @@ class SignInPage extends AsyncComponent {
         // start authorization process--will receive system description
         // and list of OAuth providers along with links
         meanwhile.show(<SignInPageSync {...props} />);
-        return db.beginSession('admin').then((info) => {
-            props.system = info.system;
-            props.servers = info.servers;
-            return <SignInPageSync {...props} />;
-        });
+        let info = await db.beginSession('admin');
+        props.system = info.system;
+        props.servers = info.servers;
+        return <SignInPageSync {...props} />;
     }
 }
 
@@ -284,21 +283,23 @@ class SignInPageSync extends PureComponent {
      *
      * @param  {Event} evt
      */
-    handleOAuthButtonClick = (evt) => {
+    handleOAuthButtonClick = async (evt) => {
         let { database } = this.props;
         let { errors } = this.state;
         let url = evt.currentTarget.getAttribute('href');
         let serverID = parseInt(evt.currentTarget.getAttribute('data-id'))
         evt.preventDefault();
-        return this.openPopUpWindow(url).then(() => {
-            // retrieve authorization object from server
+
+        try {
+            await this.openPopUpWindow(url);
             let db = database.use({ by: this });
-            return db.checkAuthorization().catch((err) => {
-                errors = _.clone(errors);
-                errors[serverID] = err;
-                this.setState({ errors });
-            });
-        });
+            // retrieve authorization object from server
+            await db.checkAuthorization();
+        } catch (err) {
+            errors = _.clone(errors);
+            errors[serverID] = err;
+            this.setState({ errors });
+        }
     }
 
     /**
@@ -343,14 +344,16 @@ class SignInPageSync extends PureComponent {
         if (!this.canSubmitForm()) {
             return;
         }
-        this.setState({ submitting: true }, () => {
-            let db = database.use({ by: this });
-            let credentials = {
-                type: 'password',
-                username,
-                password,
-            };
-            db.authenticate(credentials).catch((err) => {
+        this.setState({ submitting: true }, async () => {
+            try {
+                let db = database.use({ by: this });
+                let credentials = {
+                    type: 'password',
+                    username,
+                    password,
+                };
+                await db.authenticate(credentials);
+            } catch (err) {
                 let problem;
                 switch (err.statusCode) {
                     case 401: problem = 'incorrect-username-password'; break;
@@ -358,7 +361,7 @@ class SignInPageSync extends PureComponent {
                     default: problem = 'unexpected-error';
                 }
                 this.setState({ problem, submitting: false });
-            });
+            }
         });
     }
 }

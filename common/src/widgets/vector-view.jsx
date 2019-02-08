@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import * as MediaLoader from 'media/media-loader';
 import ComponentRefs from 'utils/component-refs';
@@ -93,10 +92,11 @@ class VectorView extends PureComponent {
      *
      * @return {Promise}
      */
-    load(url) {
+    async load(url) {
         let { title, clippingRect } = this.props;
         if (url) {
-            return MediaLoader.loadSVG(url).then((svgNew) => {
+            try {
+                let svgNew = await MediaLoader.loadSVG(url);
                 let { svg } = this.components;
                 if (!svg) {
                     throw new Error('Invalid missing container');
@@ -131,9 +131,9 @@ class VectorView extends PureComponent {
                 this.naturalHeight = height;
                 this.setViewBox(clippingRect);
                 this.triggerLoadEvent();
-            }).catch((err) => {
+            } catch (err) {
                 this.triggerErrorEvent(err);
-            });
+            }
         } else {
             this.clear();
             this.originX = 0;
@@ -143,7 +143,7 @@ class VectorView extends PureComponent {
             this.naturalWidth = 4;
             this.naturalHeight = 4;
             this.setViewBox();
-            return Promise.resolve();
+            return;
         }
     }
 

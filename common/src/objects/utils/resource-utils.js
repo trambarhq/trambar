@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import * as BlobManager from 'transport/blob-manager';
 import * as ImageCropping from 'media/image-cropping';
 import * as MediaLoader from 'media/media-loader';
@@ -20,7 +19,7 @@ function mergeLists(local, remote, common) {
     let commonToRemote = findIndexMapping(common, remote);
     let localToRemote = findIndexMapping(local, remote);
     let list = [];
-    _.each(common, (resC, indexC) => {
+    for (let [ indexC, resC ] of common.entries()) {
         let indexL = commonToLocal[indexC];
         let indexR = commonToRemote[indexC];
         let resL = local[indexL];
@@ -34,21 +33,21 @@ function mergeLists(local, remote, common) {
             let d = mergeObjects(a, b, c);
             list.push(d);
         }
-    });
-    _.each(remote, (resR, indexR) => {
+    }
+    for (let [ indexR, resR ] of common.entries()) {
         if (!_.includes(commonToRemote, indexR)) {
             // add resource that wasn't there before
             list.push({ resource: resR, index: indexR });
         }
-    });
-    _.each(local, (resL, indexL) => {
+    }
+    for (let [ indexL, resL ] of local.entries()) {
         let indexR = localToRemote[indexL];
         let resR = remote[indexR];
         if (!_.includes(commonToLocal, indexL) && !resR) {
             // add resource that wasn't there before or in the remote list
             list.push({ resource: resL, index: indexL });
         }
-    });
+    }
     // put the list into order then strip out indices
     list = _.sortBy(list, 'index');
     return _.map(list, 'resource');
@@ -65,7 +64,7 @@ function mergeLists(local, remote, common) {
 function findIndexMapping(listA, listB) {
     let map = [];
     let mapped = [];
-    _.each(listA, (a, indexA) => {
+    for (let [ indexA, a ] of listA.entries()) {
         let keyA = a.url || a.payload_token;
         let indexB = _.findIndex(listB, (b, indexB) => {
             let keyB = b.url || b.payload_token;
@@ -77,7 +76,7 @@ function findIndexMapping(listA, listB) {
             map[indexA] = indexB;
             mapped[indexB] = true;
         }
-    });
+    }
     return map;
 }
 
@@ -470,19 +469,20 @@ function getMarkdownIconURL(res, forImage, env) {
  *
  * @return {Promise}
  */
-function attachMosaic(resources, env) {
+async function attachMosaic(resources, env) {
     if (!(resources instanceof Array)) {
-        return Promise.resolve();
+        return;
     }
-    return Promise.each(resources, (res) => {
+    for (let res of resources) {
         let url = getLocalImageURL(res, { original: true }, env);
         if (url) {
             let clippingRect = getClippingRect(res);
-            return MediaLoader.extractMosaic(url, clippingRect).then((mosaic) => {
+            let mosaic = await MediaLoader.extractMosaic(url, clippingRect);
+            if (mosaic) {
                 res.mosaic = mosaic;
-            });
+            }
         }
-    });
+    }
 }
 
 /**
