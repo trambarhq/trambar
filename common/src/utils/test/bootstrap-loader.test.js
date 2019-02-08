@@ -1,30 +1,28 @@
-var _ = require('lodash');
-var Chai = require('chai'), expect = Chai.expect;
+import { expect } from 'chai';
 
-var BootstrapLoader = require('utils/bootstrap-loader');
+import * as BootstrapLoader from '../bootstrap-loader';
 
 describe('BootstrapLoader', function() {
-    it('should load the modules, reporting progress as each becomes available', function() {
-        var funcs = {
+    it('should load the modules, reporting progress as each becomes available', async function() {
+        let funcs = {
             a: () => import('./modules/a'),
             b: () => import('./modules/b'),
             c: () => import('./modules/c'),
         };
-        var ready = {
+        let ready = {
             a: false,
             b: false,
             c: false,
         };
-        var progress = (loaded, total, key) => {
+        let progress = (loaded, total, key) => {
             ready[key] = true;
         };
-        BootstrapLoader.load(funcs, progress).then((modules) => {
-            _.each(ready, (state) => {
-                expect(state).to.be.true;
-            });
-            _.each(modules, (module, name) => {
-                expect(module).to.have.property('name', name);
-            })
-        });
+        let modules = await BootstrapLoader.load(funcs, progress);
+        for (let state of Object.values(ready)) {
+            expect(state).to.be.true;
+        }
+        for (let [ name, module ] of Object.entries(modules)) {
+            expect(module).to.have.property('name', name);
+        }
     })
 })

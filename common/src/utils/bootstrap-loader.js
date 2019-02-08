@@ -4,7 +4,7 @@ async function load(importFuncs, progress) {
     let entries = Object.entries(importFuncs);
     for (let [ key, load ] of entries) {
         if (progress) {
-            progress(loaded, entries.length);
+            progress(loaded, entries.length, key);
         }
         try {
             let module = await load();

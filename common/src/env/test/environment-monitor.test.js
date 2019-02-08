@@ -1,5 +1,3 @@
-import _ from 'lodash';
-import Promise from 'bluebird';
 import { expect } from 'chai';
 import ManualPromise from 'utils/manual-promise';
 
@@ -26,28 +24,31 @@ describe('EnvironmentMonitor', function() {
         let envMonitor = new EnvironmentMonitor;
         expect(envMonitor.devicePixelRatio).to.be.a('number').that.equals(window.devicePixelRatio);
     })
-    it ('should emit change event when the window is resized', function() {
-        let changeEventPromise = new ManualPromise;
+    it ('should emit change event when the window is resized', async function() {
+        this.timeout(250);
+        let changeEventPromise = ManualPromise();
         let envMonitor = new EnvironmentMonitor;
         envMonitor.activate();
         envMonitor.addEventListener('change', changeEventPromise.resolve);
         let event = document.createEvent('Event');
         event.initEvent('resize', true, false);
         window.dispatchEvent(event);
-        return changeEventPromise.timeout(250);
+        return changeEventPromise;
     })
-    it ('should emit change event when visibility state changes', function() {
-        let changeEventPromise = new ManualPromise;
+    it ('should emit change event when visibility state changes', async function() {
+        this.timeout(250);
+        let changeEventPromise = ManualPromise();
         let envMonitor = new EnvironmentMonitor;
         envMonitor.activate();
         envMonitor.addEventListener('change', changeEventPromise.resolve);
         let event = document.createEvent('Event');
         event.initEvent('visibilitychange', true, false);
         window.dispatchEvent(event);
-        return changeEventPromise.timeout(250);
+        await changeEventPromise;
     })
-    it ('should indicate a touch screen is the pointing device when a touch event occurs', function() {
-        let changeEventPromise = new ManualPromise;
+    it ('should indicate a touch screen is the pointing device when a touch event occurs', async function() {
+        this.timeout(250);
+        let changeEventPromise = ManualPromise();
         let envMonitor = new EnvironmentMonitor;
         envMonitor.activate();
         envMonitor.addEventListener('change', changeEventPromise.resolve);
@@ -55,11 +56,9 @@ describe('EnvironmentMonitor', function() {
         let event = document.createEvent('Event');
         event.initEvent('touchstart', true, false);
         window.dispatchEvent(event);
-        return changeEventPromise.timeout(250).then(() => {
-            expect(envMonitor.pointingDevice).to.equal('touch');
-        });
+        await changeEventPromise;
+        expect(envMonitor.pointingDevice).to.equal('touch');
     })
-
 })
 
 function getOS() {

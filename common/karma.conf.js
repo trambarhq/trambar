@@ -39,7 +39,17 @@ module.exports = function(config) {
                         loader: 'babel-loader',
                         exclude: Path.resolve('./node_modules'),
                         query: {
-                            presets: [ 'env', 'stage-0', 'react' ],
+                            presets: [
+                                'env',
+                                'react',
+                                'stage-0',
+                            ],
+                            plugins: [
+                                'syntax-async-functions',
+                                'syntax-class-properties',
+                                'transform-regenerator',
+                                'transform-runtime',
+                            ],
                         },
                     },
                     {

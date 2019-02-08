@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { expect } from 'chai';
 
 import * as JPEGAnalyser from 'media/jpeg-analyser';
@@ -25,7 +24,7 @@ describe('JPEGAnalyser', function() {
     })
     describe('#getOrientation()', function() {
         it('should find orientation of JPEG files', function() {
-            let orientations = _.map(imagesWithOrientation, (image) => {
+            let orientations = imagesWithOrientation.map((image) => {
                 return JPEGAnalyser.getOrientation(image);
             });
             expect(orientations).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8]);

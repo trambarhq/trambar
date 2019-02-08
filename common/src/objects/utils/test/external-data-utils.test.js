@@ -1,17 +1,16 @@
-var _ = require('lodash');
-var Chai = require('chai'), expect = Chai.expect;
+import { expect } from 'chai';
 
-var ExternalDataUtils = require('objects/utils/external-data-utils.js');
+import * as ExternalDataUtils from '../external-data-utils.js';
 
 describe('ExternalDataUtils', function() {
     describe('#createLink()', function() {
         it('should create a link object', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var link = ExternalDataUtils.createLink(server, {
+            let link = ExternalDataUtils.createLink(server, {
                 project: { id: 1 }
             });
             expect(link).to.deep.equal({
@@ -23,12 +22,12 @@ describe('ExternalDataUtils', function() {
     })
     describe('#extendLink()', function() {
         it('should extend object\'s link with additional properties', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     ExternalDataUtils.createLink(server, {
@@ -36,7 +35,7 @@ describe('ExternalDataUtils', function() {
                     })
                 ]
             };
-            var link = ExternalDataUtils.extendLink(server, repo, {
+            let link = ExternalDataUtils.extendLink(server, repo, {
                 commit: { id: 'abcdefg' }
             });
             expect(link).to.deep.equal({
@@ -49,12 +48,12 @@ describe('ExternalDataUtils', function() {
     })
     describe('#addLink()', function() {
         it('should add link to an object', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {
+            let repo = {
                 id: 4,
             };
             ExternalDataUtils.addLink(repo, server, {
@@ -74,12 +73,12 @@ describe('ExternalDataUtils', function() {
     })
     describe('#inheritLink()', function() {
         it('should add link that inherits keys from another object', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -89,7 +88,7 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var commit = {
+            let commit = {
                 id: 45,
                 details: {},
             };
@@ -112,12 +111,12 @@ describe('ExternalDataUtils', function() {
     })
     describe('#findLink()', function() {
         it('should find a link', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -127,16 +126,16 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var link = ExternalDataUtils.findLink(repo, server);
+            let link = ExternalDataUtils.findLink(repo, server);
             expect(link).to.equal(repo.external[0]);
         })
         it('should find a link with a particular key', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -146,18 +145,18 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var link = ExternalDataUtils.findLink(repo, server, {
+            let link = ExternalDataUtils.findLink(repo, server, {
                 project: { id: 1 }
             });
             expect(link).to.equal(repo.external[0]);
         })
         it('should return null when key does not match', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -167,7 +166,7 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var link = ExternalDataUtils.findLink(repo, server, {
+            let link = ExternalDataUtils.findLink(repo, server, {
                 project: { id: 3 }
             });
             expect(link).to.be.null;
@@ -175,7 +174,7 @@ describe('ExternalDataUtils', function() {
     })
     describe('#findLinkByServerType()', function() {
         it('should find a link by type', function() {
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -185,11 +184,11 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var link = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+            let link = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
             expect(link).to.equal(repo.external[0]);
         })
         it('should return null when there is no link of specified type', function() {
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -199,13 +198,13 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var link = ExternalDataUtils.findLinkByServerType(repo, 'github');
+            let link = ExternalDataUtils.findLinkByServerType(repo, 'github');
             expect(link).to.be.null;
         })
     })
     describe('#findLinkByRelations()', function() {
         it('should find a link by type', function() {
-            var issue = {
+            let issue = {
                 id: 7,
                 external: [
                     {
@@ -216,11 +215,11 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var link = ExternalDataUtils.findLinkByRelations(issue, 'project', 'issue');
+            let link = ExternalDataUtils.findLinkByRelations(issue, 'project', 'issue');
             expect(link).to.equal(issue.external[0]);
         })
         it('should return null when there is no link with specified relations', function() {
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -230,13 +229,13 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var link = ExternalDataUtils.findLinkByServerType(repo, 'project', 'issue');
+            let link = ExternalDataUtils.findLinkByServerType(repo, 'project', 'issue');
             expect(link).to.be.null;
         })
     })
     describe('#findLinkByRelative()', function() {
         it('should find a link that is from the same server as another object', function() {
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -246,7 +245,7 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var issue = {
+            let issue = {
                 id: 7,
                 external: [
                     {
@@ -257,11 +256,11 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var link = ExternalDataUtils.findLinkByRelative(issue, repo);
+            let link = ExternalDataUtils.findLinkByRelative(issue, repo);
             expect(link).to.equal(issue.external[0]);
         })
         it('should find a match when provided with additional relations', function() {
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -271,7 +270,7 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var issue = {
+            let issue = {
                 id: 7,
                 external: [
                     {
@@ -282,11 +281,11 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var link = ExternalDataUtils.findLinkByRelative(issue, repo, 'project');
+            let link = ExternalDataUtils.findLinkByRelative(issue, repo, 'project');
             expect(link).to.equal(issue.external[0]);
         })
         it('should not find a match when the objects are from different servers', function() {
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -296,7 +295,7 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var issue = {
+            let issue = {
                 id: 7,
                 external: [
                     {
@@ -307,11 +306,11 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var link = ExternalDataUtils.findLinkByRelative(issue, repo);
+            let link = ExternalDataUtils.findLinkByRelative(issue, repo);
             expect(link).to.be.null;
         })
         it('should not find a match when the relations do not match', function() {
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -321,7 +320,7 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var issue = {
+            let issue = {
                 id: 7,
                 external: [
                     {
@@ -332,18 +331,18 @@ describe('ExternalDataUtils', function() {
                     }
                 ]
             };
-            var link = ExternalDataUtils.findLinkByRelative(issue, repo, 'project');
+            let link = ExternalDataUtils.findLinkByRelative(issue, repo, 'project');
             expect(link).to.be.null;
         })
     })
     describe('#removeLink()', function() {
         it('should add link that inherits keys from another object', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -359,12 +358,12 @@ describe('ExternalDataUtils', function() {
     })
     describe('#importProperty()', function() {
         it('should overwrite a value when overwrite = always', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {
+            let repo = {
                 name: 'evil',
             };
             ExternalDataUtils.addLink(repo, server);
@@ -375,12 +374,12 @@ describe('ExternalDataUtils', function() {
             expect(repo).to.have.property('name').that.equal('good');
         })
         it('should not overwrite a value when overwrite = never', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {
+            let repo = {
                 name: 'evil',
             };
             ExternalDataUtils.addLink(repo, server);
@@ -391,12 +390,12 @@ describe('ExternalDataUtils', function() {
             expect(repo).to.have.property('name').that.equal('evil');
         })
         it('should set an unassigned property when overwrite = never', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {};
+            let repo = {};
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importProperty(repo, server, 'name', {
                 value: 'good',
@@ -405,12 +404,12 @@ describe('ExternalDataUtils', function() {
             expect(repo).to.have.property('name').that.equal('good');
         })
         it('should set an unassigned property when overwrite = match-previous', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {};
+            let repo = {};
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importProperty(repo, server, 'name', {
                 value: 'good',
@@ -419,12 +418,12 @@ describe('ExternalDataUtils', function() {
             expect(repo).to.have.property('name').that.equal('good');
         })
         it('should set an property when it has not been changed', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {};
+            let repo = {};
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importProperty(repo, server, 'name', {
                 value: 'good',
@@ -443,12 +442,12 @@ describe('ExternalDataUtils', function() {
             expect(repo).to.have.property('name').that.equal('ugly');
         })
         it('should not set an property when it was changed', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var repo = {};
+            let repo = {};
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importProperty(repo, server, 'name', {
                 value: 'good',
@@ -465,18 +464,18 @@ describe('ExternalDataUtils', function() {
     })
     describe('#importResource()', function() {
         it('should insert a resource when replace = always there there was none before', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var res = {
+            let res = {
                 type: 'image',
                 url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
-            var repo = {};
+            let repo = {};
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
@@ -486,24 +485,24 @@ describe('ExternalDataUtils', function() {
             expect(repo).to.have.deep.property('details.resources').that.contains(res);
         })
         it('should replace a resource when replace = always', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var res1 = {
+            let res1 = {
                 type: 'image',
                 url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
-            var res2 = {
+            let res2 = {
                 type: 'image',
                 url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
-            var repo = {};
+            let repo = {};
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
@@ -519,24 +518,24 @@ describe('ExternalDataUtils', function() {
             expect(repo).to.have.deep.property('details.resources').to.have.lengthOf(1).that.contains(res2);
         })
         it('should remove a resource when replace = always', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var res1 = {
+            let res1 = {
                 type: 'image',
                 url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
-            var res2 = {
+            let res2 = {
                 type: 'image',
                 url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
-            var repo = {};
+            let repo = {};
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
@@ -552,24 +551,24 @@ describe('ExternalDataUtils', function() {
             expect(repo).to.not.have.deep.property('details.resources');
         })
         it('should not replace a resource when replace = never', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var res1 = {
+            let res1 = {
                 type: 'image',
                 url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
-            var res2 = {
+            let res2 = {
                 type: 'image',
                 url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
-            var repo = {};
+            let repo = {};
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
@@ -585,30 +584,30 @@ describe('ExternalDataUtils', function() {
             expect(repo).to.have.deep.property('details.resources').to.have.lengthOf(1).that.contains(res1);
         })
         it('should replace a resource when replace = match-previous', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var res1 = {
+            let res1 = {
                 type: 'image',
                 url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
-            var res2 = {
+            let res2 = {
                 type: 'image',
                 url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
-            var res3 = {
+            let res3 = {
                 type: 'image',
                 url: '/srv/media/images/qwerty',
                 width: 100,
                 height: 200,
             };
-            var repo = {};
+            let repo = {};
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
@@ -630,36 +629,36 @@ describe('ExternalDataUtils', function() {
             expect(repo).to.have.deep.property('details.resources').to.have.lengthOf(1).that.contains(res3);
         })
         it('should not replace a resource if it was changed', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var res1 = {
+            let res1 = {
                 type: 'image',
                 url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
-            var res2 = {
+            let res2 = {
                 type: 'image',
                 url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
-            var res3 = {
+            let res3 = {
                 type: 'image',
                 url: '/srv/media/images/qwerty',
                 width: 100,
                 height: 200,
             };
-            var resX = {
+            let resX = {
                 type: 'image',
                 url: '/srv/media/images/zxcvbn',
                 width: 30,
                 height: 30,
             };
-            var repo = {};
+            let repo = {};
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
@@ -682,30 +681,30 @@ describe('ExternalDataUtils', function() {
             expect(repo).to.have.deep.property('details.resources').to.have.lengthOf(1).that.contains(resX);
         })
         it('should not insert another resource if the previous one was removed', function() {
-            var server = {
+            let server = {
                 id: 3,
                 type: 'gitlab',
                 details: {}
             };
-            var res1 = {
+            let res1 = {
                 type: 'image',
                 url: '/srv/media/images/abcdefg',
                 width: 10,
                 height: 20,
             };
-            var res2 = {
+            let res2 = {
                 type: 'image',
                 url: '/srv/media/images/qwerty',
                 width: 10,
                 height: 20,
             };
-            var res3 = {
+            let res3 = {
                 type: 'image',
                 url: '/srv/media/images/qwerty',
                 width: 100,
                 height: 200,
             };
-            var repo = {};
+            let repo = {};
             ExternalDataUtils.addLink(repo, server);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
@@ -730,7 +729,7 @@ describe('ExternalDataUtils', function() {
     })
     describe('#findCommonServer()', function() {
         it('should find server common to multiple objects', function() {
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -745,7 +744,7 @@ describe('ExternalDataUtils', function() {
                     },
                 ]
             };
-            var issue = {
+            let issue = {
                 id: 7,
                 external: [
                     {
@@ -762,11 +761,11 @@ describe('ExternalDataUtils', function() {
                     },
                 ]
             };
-            var server = ExternalDataUtils.findCommonServer(issue, repo);
+            let server = ExternalDataUtils.findCommonServer(issue, repo);
             expect(server).to.deep.equal({ id: 3, type: 'gitlab' });
         })
         it('should return null when objects are not connected to the same server', function() {
-            var repo = {
+            let repo = {
                 id: 4,
                 external: [
                     {
@@ -776,7 +775,7 @@ describe('ExternalDataUtils', function() {
                     },
                 ]
             };
-            var issue = {
+            let issue = {
                 id: 7,
                 external: [
                     {
@@ -793,7 +792,7 @@ describe('ExternalDataUtils', function() {
                     },
                 ]
             };
-            var server = ExternalDataUtils.findCommonServer(issue, repo);
+            let server = ExternalDataUtils.findCommonServer(issue, repo);
             expect(server).to.be.null;
         })
     })

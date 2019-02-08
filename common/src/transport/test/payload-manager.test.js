@@ -53,7 +53,7 @@ describe('PayloadManager', function() {
             payloadManager.activate();
             let payload = payloadManager.add(null, 'image');
             payload.attachFile(testBlob1);
-            let completeEventPromise = new ManualPromise;
+            let completeEventPromise = ManualPromise();
             payload.onComplete = completeEventPromise.resolve;
             payloadManager.dispatch([ payload.id ]);
             return completeEventPromise.then(() => {
@@ -69,7 +69,7 @@ describe('PayloadManager', function() {
             let payload = payloadManager.add(null, 'image');
             payload.attachFile(testBlob1);
             payload.attachFile(testBlob2, 'second');
-            let completeEventPromise = new ManualPromise;
+            let completeEventPromise = ManualPromise();
             payload.onComplete = completeEventPromise.resolve;
             payloadManager.dispatch([ payload.id ]);
             return completeEventPromise.then(() => {
@@ -88,7 +88,7 @@ describe('PayloadManager', function() {
             let payloadManager = new PayloadManager(options);
             let payload = payloadManager.add(null, 'image');
             payload.attachFile(testBlob1);
-            let completeEventPromise = new ManualPromise;
+            let completeEventPromise = ManualPromise();
             payload.onComplete = completeEventPromise.resolve;
             payloadManager.dispatch([ payload.id ]);
             return expect(completeEventPromise.timeout(100))
@@ -98,12 +98,12 @@ describe('PayloadManager', function() {
             let payloadManager = new PayloadManager(options);
             let payload = payloadManager.add(null, 'image');
             payload.attachFile(testBlob1);
-            let completeEventPromise = new ManualPromise;
+            let completeEventPromise = ManualPromise();
             payload.onComplete = completeEventPromise.resolve;
             payloadManager.dispatch([ payload.id ]);
             setTimeout(() => {
                 payloadManager.activate();
-            }, 100);            
+            }, 100);
             return completeEventPromise.timeout(200).then(() => {
                 let url = `${baseURL}/download/${payload.id}/main`;
                 return HTTPRequest.fetch('GET', url).then((result) => {
@@ -120,7 +120,7 @@ describe('PayloadManager', function() {
             let payload = payloadManager.add(null, 'text');
             payload.attachStream(stream);
 
-            let streamCompleteEventPromise = new ManualPromise;
+            let streamCompleteEventPromise = ManualPromise();
             stream.onComplete = streamCompleteEventPromise.resolve;
             let chunks = chunkBlob(testBlob2, 1000);
             let interval = setInterval(() => {
@@ -133,7 +133,7 @@ describe('PayloadManager', function() {
                 }
             }, 50);
 
-            let payloadCompleteEventPromise = new ManualPromise;
+            let payloadCompleteEventPromise = ManualPromise();
             payload.onComplete = payloadCompleteEventPromise.resolve;
             payloadManager.dispatch([ payload.id ]);
 
@@ -152,7 +152,7 @@ describe('PayloadManager', function() {
             let payload = payloadManager.add(null, 'text');
             payload.attachStream(stream);
 
-            let completeEventPromise = new ManualPromise;
+            let completeEventPromise = ManualPromise();
             stream.onComplete = completeEventPromise.resolve;
 
             return expect(completeEventPromise.timeout(350))
@@ -164,10 +164,10 @@ describe('PayloadManager', function() {
             let payload = payloadManager.add(null, 'text');
             payload.attachStream(stream);
 
-            let streamCompleteEventPromise = new ManualPromise;
+            let streamCompleteEventPromise = ManualPromise();
             stream.onComplete = streamCompleteEventPromise.resolve;
 
-            let payloadCompleteEventPromise = new ManualPromise;
+            let payloadCompleteEventPromise = ManualPromise();
             payload.onComplete = payloadCompleteEventPromise.resolve;
             payloadManager.dispatch([ payload.id ]);
 
