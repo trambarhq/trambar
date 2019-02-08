@@ -1,7 +1,6 @@
-import _ from 'lodash';
 import { expect } from 'chai';
 
-import * as LocalSearch from 'data/local-search';
+import * as LocalSearch from '../local-search';
 
 describe('LocalSearch', function() {
     describe('#match()', function() {
@@ -205,7 +204,7 @@ describe('LocalSearch', function() {
             };
             LocalSearch.limit('table', list, criteria);
             expect(list.length).to.equal(3);
-            expect(_.first(list)).to.have.property('id', 3);
+            expect(list[0]).to.have.property('id', 3);
         })
         it('should apply limit on a per user basis', function() {
             let list = [
@@ -224,8 +223,8 @@ describe('LocalSearch', function() {
             };
             LocalSearch.limit('table', list, criteria);
             expect(list.length).to.equal(6);
-            expect(_.first(list)).to.have.property('id', 2);
-            expect(_.last(list)).to.have.property('id', 9);
+            expect(list[0]).to.have.property('id', 2);
+            expect(list[5]).to.have.property('id', 9);
         })
         it('should apply limit on a per user basis, when objects may belong to multiple users', function() {
             let list = [
@@ -244,8 +243,8 @@ describe('LocalSearch', function() {
             };
             LocalSearch.limit('table', list, criteria);
             expect(list.length).to.equal(8);
-            expect(_.first(list)).to.have.property('id', 2);
-            expect(_.last(list)).to.have.property('id', 9);
+            expect(list[0]).to.have.property('id', 2);
+            expect(list[7]).to.have.property('id', 9);
         })
     })
 })

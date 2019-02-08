@@ -1,14 +1,12 @@
-import _ from 'lodash';
-import Promise from 'bluebird';
 import { expect } from 'chai';
 
-import SQLiteCache from 'data/sqlite-cache';
+import SQLiteCache from '../sqlite-cache';
 
 describe('SQLiteCache', function() {
     let cache = new SQLiteCache({ databaseName: 'test' });
 
     describe('#save()', function() {
-        it('should save an object to SQLite', function() {
+        it('should save an object to SQLite', async function() {
             let location = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -24,9 +22,9 @@ describe('SQLiteCache', function() {
                 },
                 rtime: ISODate('2017-01-01'),
             };
-            return cache.save(location, [ object ]);
+            await cache.save(location, [ object ]);
         })
-        it('should overwrite an existing object', function() {
+        it('should overwrite an existing object', async function() {
             let location = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -42,9 +40,9 @@ describe('SQLiteCache', function() {
                 },
                 rtime: ISODate('2017-01-01'),
             };
-            return cache.save(location, [ object ]);
+            await cache.save(location, [ object ]);
         })
-        it('should save multiple objects', function() {
+        it('should save multiple objects', async function() {
             let location = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -70,9 +68,9 @@ describe('SQLiteCache', function() {
                 },
                 rtime: ISODate('2017-03-01'),
             };
-            return cache.save(location, [ object1, object2 ]);
+            await cache.save(location, [ object1, object2 ]);
         })
-        it('should save an object to local schema', function() {
+        it('should save an object to local schema', async function() {
             let location = {
                 schema: 'local',
                 table: 'settings',
@@ -81,11 +79,11 @@ describe('SQLiteCache', function() {
                 key: 'what',
                 something: 5
             };
-            return cache.save(location, [ object ]);
+            await cache.save(location, [ object ]);
         })
     })
     describe('#find()', function() {
-        it('should be able to find object saved earlier', function() {
+        it('should be able to find object saved earlier', async function() {
             let query = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -94,11 +92,10 @@ describe('SQLiteCache', function() {
                     id: 1
                 }
             };
-            return cache.find(query).then((objects) => {
-                expect(objects[0]).to.have.deep.property('details.name', 'John Doe');
-            });
+            let objects = await cache.find(query);
+            expect(objects[0]).to.have.deep.property('details.name', 'John Doe');
         })
-        it('should be able to find object by multiple ids', function() {
+        it('should be able to find object by multiple ids', async function() {
             let query = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -107,11 +104,10 @@ describe('SQLiteCache', function() {
                     id: [1, 3]
                 }
             };
-            return cache.find(query).then((objects) => {
-                expect(objects).to.have.lengthOf(2).to.have.deep.property('1.details.name', 'Jason Doe');
-            });
+            let objects = await cache.find(query);
+            expect(objects).to.have.lengthOf(2).to.have.deep.property('1.details.name', 'Jason Doe');
         })
-        it('should find object by other criteria', function() {
+        it('should find object by other criteria', async function() {
             let query = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -120,23 +116,21 @@ describe('SQLiteCache', function() {
                     type: 'member'
                 }
             };
-            return cache.find(query).then((objects) => {
-                expect(objects).to.have.lengthOf(2).to.have.deep.property('1.details.name', 'Jason Doe');
-            });
+            let objects = await cache.find(query);
+            expect(objects).to.have.lengthOf(2).to.have.deep.property('1.details.name', 'Jason Doe');
         })
-        it('should find object saved earlier to local schema', function() {
+        it('should find object saved earlier to local schema', async function() {
             let query = {
                 schema: 'local',
                 table: 'settings',
                 key: 'what'
             };
-            return cache.find(query).then((objects) => {
-                expect(objects[0]).to.have.deep.property('something', 5);
-            });
+            let objects = await cache.find(query);
+            expect(objects[0]).to.have.deep.property('something', 5);
         })
     })
     describe('#remove()', function() {
-        it('should remove an object saved earlier', function() {
+        it('should remove an object saved earlier', async function() {
             let location = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -152,21 +146,19 @@ describe('SQLiteCache', function() {
                 },
                 rtime: ISODate('2017-01-01'),
             };
-            return cache.remove(location, [ object ]).then((objects) => {
-                let query = {
-                    server: 'somewhere.net',
-                    schema: 'global',
-                    table: 'user',
-                    criteria: {
-                        id: 1
-                    }
-                };
-                return cache.find(query).then((objects) => {
-                    expect(objects).to.have.lengthOf(0);
-                });
-            })
+            await cache.remove(location, [ object ]);
+            let query = {
+                server: 'somewhere.net',
+                schema: 'global',
+                table: 'user',
+                criteria: {
+                    id: 1
+                }
+            };
+            let objects = await cache.find(query);
+            expect(objects).to.have.lengthOf(0);
         })
-        it('should remove an object saved to local schema earlier', function() {
+        it('should remove an object saved to local schema earlier', async function() {
             let location = {
                 schema: 'local',
                 table: 'settings',
@@ -175,20 +167,18 @@ describe('SQLiteCache', function() {
                 key: 'what',
                 something: 5
             };
-            return cache.remove(location, [ object ]).then((objects) => {
-                let query = {
-                    schema: 'local',
-                    table: 'settings',
-                    key: 'what'
-                };
-                return cache.find(query).then((objects) => {
-                    expect(objects).to.have.lengthOf(0);
-                });
-            });
+            await cache.remove(location, [ object ]);
+            let query = {
+                schema: 'local',
+                table: 'settings',
+                key: 'what'
+            };
+            let objects = await cache.find(query);
+            expect(objects).to.have.lengthOf(0);
         })
     })
     describe('#clean()', function() {
-        it('should remove objects by server name', function() {
+        it('should remove objects by server name', async function() {
             let location1 = {
                 schema: 'global',
                 table: 'comment',
@@ -198,28 +188,21 @@ describe('SQLiteCache', function() {
                 schema: 'global',
                 table: 'comment',
             };
-            let objects = _.map(_.range(1, 11), (num) => {
+            let objects = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
                 return {
                     id: num,
                     rtime: ISODate(`1990-01-${num}`),
                 };
             });
-            return Promise.resolve().then(() => {
-                return cache.save(location1, objects);
-            }).then(() => {
-                return cache.save(location2, objects);
-            }).then(() => {
-                return cache.clean({ address: 'http://mordor.me' });
-            }).then(() => {
-                return cache.find(location1).then((objects1) => {
-                    return cache.find(location2).then((objects2) => {
-                        expect(objects1).to.have.lengthOf(10);
-                        expect(objects2).to.have.lengthOf(0);
-                    });
-                });
-            });
+            await cache.save(location1, objects);
+            await cache.save(location2, objects);
+            await cache.clean({ address: 'http://mordor.me' });
+            let objects1 = await cache.find(location1);
+            let objects2 = await cache.find(location2);
+            expect(objects1).to.have.lengthOf(10);
+            expect(objects2).to.have.lengthOf(0);
         })
-        it('should remove certain number of old objects', function() {
+        it('should remove certain number of old objects', async function() {
             let location1 = {
                 schema: 'global',
                 table: 'comment',
@@ -229,28 +212,21 @@ describe('SQLiteCache', function() {
                 schema: 'global',
                 table: 'comment',
             };
-            let objects = _.map(_.range(1, 11), (num) => {
+            let objects = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
                 return {
                     id: num,
                     rtime: ISODate(`1990-01-${num}`),
                 };
             });
-            return Promise.resolve().then(() => {
-                return cache.save(location1, objects);
-            }).then(() => {
-                return cache.save(location2, objects);
-            }).then(() => {
-                return cache.clean({ count: 4 });
-            }).then(() => {
-                return cache.find(location1).then((objects1) => {
-                    return cache.find(location2).then((objects2) => {
-                        expect(objects1).to.have.lengthOf(8);
-                        expect(objects2).to.have.lengthOf(8);
-                    });
-                });
-            });
+            await cache.save(location1, objects);
+            await cache.save(location2, objects);
+            await cache.clean({ count: 4 });
+            let objects1 = await cache.find(location1);
+            let objects2 = await cache.find(location2);
+            expect(objects1).to.have.lengthOf(8);
+            expect(objects2).to.have.lengthOf(8);
         })
-        it('should remove objects older than a certain date', function() {
+        it('should remove objects older than a certain date', async function() {
             let location1 = {
                 schema: 'global',
                 table: 'comment',
@@ -260,26 +236,19 @@ describe('SQLiteCache', function() {
                 schema: 'global',
                 table: 'comment',
             };
-            let objects = _.map(_.range(1, 11), (num) => {
+            let objects = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
                 return {
                     id: num,
                     rtime: ISODate(`1990-01-${num}`),
                 };
             });
-            return Promise.resolve().then(() => {
-                return cache.save(location1, objects);
-            }).then(() => {
-                return cache.save(location2, objects);
-            }).then(() => {
-                return cache.clean({ before: ISODate('1990-01-5') });
-            }).then(() => {
-                return cache.find(location1).then((objects1) => {
-                    return cache.find(location2).then((objects2) => {
-                        expect(objects1).to.have.lengthOf(6);
-                        expect(objects2).to.have.lengthOf(6);
-                    });
-                });
-            });
+            await cache.save(location1, objects);
+            await cache.save(location2, objects);
+            await cache.clean({ before: ISODate('1990-01-5') });
+            let objects1 = await cache.find(location1);
+            let objects2 = await cache.find(location2);
+            expect(objects1).to.have.lengthOf(6);
+            expect(objects2).to.have.lengthOf(6);
         })
     })
 })

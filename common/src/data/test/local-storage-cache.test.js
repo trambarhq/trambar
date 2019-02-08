@@ -1,8 +1,7 @@
-import _ from 'lodash';
 import Promise from 'bluebird';
 import { expect } from 'chai';
 
-import LocalStorageCache from 'data/local-storage-cache';
+import LocalStorageCache from '../local-storage-cache';
 
 describe('LocalStorageCache', function() {
     let cache = new LocalStorageCache({ databaseName: 'test' });
@@ -190,7 +189,7 @@ describe('LocalStorageCache', function() {
         })
     })
     describe('#clean()', function() {
-        it('should remove objects by server name', function() {
+        it('should remove objects by server name', async function() {
             let location1 = {
                 schema: 'global',
                 table: 'comment',
@@ -200,28 +199,21 @@ describe('LocalStorageCache', function() {
                 schema: 'global',
                 table: 'comment',
             };
-            let objects = _.map(_.range(1, 11), (num) => {
+            let objects = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
                 return {
                     id: num,
                     rtime: ISODate(`1990-01-${num}`),
                 };
             });
-            return Promise.resolve().then(() => {
-                return cache.save(location1, objects);
-            }).then(() => {
-                return cache.save(location2, objects);
-            }).then(() => {
-                return cache.clean({ server: 'mordor.me' });
-            }).then(() => {
-                return cache.find(location1).then((objects1) => {
-                    return cache.find(location2).then((objects2) => {
-                        expect(objects1).to.have.lengthOf(10);
-                        expect(objects2).to.have.lengthOf(0);
-                    });
-                });
-            });
+            await cache.save(location1, objects);
+            await cache.save(location2, objects);
+            await cache.clean({ server: 'mordor.me' });
+            let objects1 = await cache.find(location1);
+            let objects2 = await cache.find(location2);
+            expect(objects1).to.have.lengthOf(10);
+            expect(objects2).to.have.lengthOf(0);
         })
-        it('should remove certain number of old objects', function() {
+        it('should remove certain number of old objects', async function() {
             let location1 = {
                 schema: 'global',
                 table: 'comment',
@@ -231,28 +223,21 @@ describe('LocalStorageCache', function() {
                 schema: 'global',
                 table: 'comment',
             };
-            let objects = _.map(_.range(1, 11), (num) => {
+            let objects = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
                 return {
                     id: num,
                     rtime: ISODate(`1990-01-${num}`),
                 };
             });
-            return Promise.resolve().then(() => {
-                return cache.save(location1, objects);
-            }).then(() => {
-                return cache.save(location2, objects);
-            }).then(() => {
-                return cache.clean({ count: 4 });
-            }).then(() => {
-                return cache.find(location1).then((objects1) => {
-                    return cache.find(location2).then((objects2) => {
-                        expect(objects1).to.have.lengthOf(8);
-                        expect(objects2).to.have.lengthOf(8);
-                    });
-                });
-            });
+            await cache.save(location1, objects);
+            await cache.save(location2, objects);
+            await cache.clean({ count: 4 });
+            let objects1 = await cache.find(location1);
+            let objects2 = await cache.find(location2);
+            expect(objects1).to.have.lengthOf(8);
+            expect(objects2).to.have.lengthOf(8);
         })
-        it('should remove objects older than a certain date', function() {
+        it('should remove objects older than a certain date', async function() {
             let location1 = {
                 schema: 'global',
                 table: 'comment',
@@ -262,26 +247,19 @@ describe('LocalStorageCache', function() {
                 schema: 'global',
                 table: 'comment',
             };
-            let objects = _.map(_.range(1, 11), (num) => {
+            let objects = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
                 return {
                     id: num,
                     rtime: ISODate(`1990-01-${num}`),
                 };
             });
-            return Promise.resolve().then(() => {
-                return cache.save(location1, objects);
-            }).then(() => {
-                return cache.save(location2, objects);
-            }).then(() => {
-                return cache.clean({ before: ISODate('1990-01-5') });
-            }).then(() => {
-                return cache.find(location1).then((objects1) => {
-                    return cache.find(location2).then((objects2) => {
-                        expect(objects1).to.have.lengthOf(6);
-                        expect(objects2).to.have.lengthOf(6);
-                    });
-                });
-            });
+            await cache.save(location1, objects);
+            await cache.save(location2, objects);
+            await cache.clean({ before: ISODate('1990-01-5') });
+            let objects1 = await cache.find(location1);
+            let objects2 = await cache.find(location2);
+            expect(objects1).to.have.lengthOf(6);
+            expect(objects2).to.have.lengthOf(6);
         })
     })
     after(() => {

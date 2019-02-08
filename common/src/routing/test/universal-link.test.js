@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { expect } from 'chai';
 
 import * as UniversalLink from 'routing/universal-link';
