@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Bluebird from 'bluebird';
 import SockJS from 'sockjs-client';
 import Notifier, { NotifierEvent } from 'transport/notifier';
 
@@ -100,7 +101,7 @@ class WebsocketNotifier extends Notifier {
                 this.socket = socket;
                 return true;
             } catch (err) {
-                console.error(err);
+                //console.error(err);
                 await Bluebird.delay(reconnectionDelay);
                 if (this.address !== address) {
                     return false;

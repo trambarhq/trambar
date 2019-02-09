@@ -76,7 +76,7 @@ class CordovaFile {
      *
      * @return {Promise}
      */
-    obtainMetadata() {
+    async obtainMetadata() {
         await this.getFile();
     }
 
@@ -85,7 +85,7 @@ class CordovaFile {
      *
      * @return {Promise}
      */
-    remove() {
+    async remove() {
         let fileEntry = await this.getFileEntry();
         await new Promise((resolve, reject) => {
             fileEntry.remove(() => {

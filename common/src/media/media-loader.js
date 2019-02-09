@@ -18,10 +18,8 @@ async function loadImage(blob) {
         url = blob;
     } else {
         if (blob instanceof CordovaFile) {
-            return blob.getArrayBuffer().then((arrayBuffer) => {
-                let newBlob = new Blob([ arrayBuffer ], { type: blob.type });
-                return loadImage(newBlob);
-            });
+            let arrayBuffer = await blob.getArrayBuffer();
+            blob = new Blob([ arrayBuffer ], { type: blob.type });
         }
         url = BlobManager.manage(blob);
     }
