@@ -26,47 +26,40 @@ class CordovaFile {
      *
      * @return {Promise<FileEntry>}
      */
-    getFileEntry() {
-        if (this.fileEntry) {
-            return Promise.resolve(this.fileEntry);
+    async getFileEntry() {
+        if (!this.fileEntry) {
+            this.fileEntry = await new Promise((resolve, reject) => {
+                resolveLocalFileSystemURL(this.fullPath, (fileEntry) => {
+                    resolve(fileEntry);
+                }, (errNo) => {
+                    reject(new FileError(errNo));
+                });
+            })
         }
-        return new Promise((resolve, reject) => {
-            resolveLocalFileSystemURL(this.fullPath, (fileEntry) => {
-                this.fileEntry = fileEntry;
-                resolve(fileEntry);
-            }, (errNo) => {
-                reject(new FileError(errNo));
-            });
-        });
+        return this.fileEntry;
     }
 
-    getFile() {
-        if (this.file) {
-            return Promise.resolve(this.file);
-        }
-        return this.getFileEntry().then((fileEntry) => {
-            return new Promise((resolve, reject) => {
+    async getFile() {
+        if (!this.file) {
+            this.file = await new Promise((resolve, reject) => {
                 fileEntry.file((file) => {
-                    this.file = file;
-                    this.size = file.size;
-                    this.type = decodeFileType(file.type);
                     resolve(file);
                 }, (errNo) => {
                     reject(new FileError(errNo));
                 });
             });
-        });
+            this.size = this.file.size;
+            this.type = decodeFileType(this.file.type);
+        }
+        return this.file;
     }
 
-    getArrayBuffer() {
-        if (this.arrayBuffer) {
-            return Promise.resolve(this.arrayBuffer);
-        }
-        return this.getFile().then((file) => {
-            return new Promise((resolve, reject) => {
+    async getArrayBuffer() {
+        if (!this.arrayBuffer) {
+            let file = await this.getFile();
+            this.arrayBuffer = await new Promise((resolve, reject) => {
                 let reader = new FileReader();
                 reader.onload = (evt) => {
-                    this.arrayBuffer = reader.result;
                     resolve(reader.result);
                 };
                 reader.onerror = (evt) => {
@@ -74,7 +67,8 @@ class CordovaFile {
                 };
                 reader.readAsArrayBuffer(file);
             });
-        });
+        }
+        return this.arrayBuffer;
     }
 
     /**
@@ -83,7 +77,7 @@ class CordovaFile {
      * @return {Promise}
      */
     obtainMetadata() {
-        return this.getFile().return();
+        await this.getFile();
     }
 
     /**
@@ -92,15 +86,14 @@ class CordovaFile {
      * @return {Promise}
      */
     remove() {
-        return this.getFileEntry().then((fileEntry) => {
-            return new Promise((resolve, reject) => {
-                fileEntry.remove(() => {
-                    resolve();
-                }, (errNo) => {
-                    reject(new FileError(errNo));
-                });
+        let fileEntry = await this.getFileEntry();
+        await new Promise((resolve, reject) => {
+            fileEntry.remove(() => {
+                resolve();
+            }, (errNo) => {
+                reject(new FileError(errNo));
             });
-        })
+        });
     }
 }
 
