@@ -87,13 +87,12 @@ describe('BlobManager', function() {
             let blob2 = BlobManager.find(url);
             expect(blob2).to.be.null;
 
-            let error;
             try {
                 await fetchOriginal('GET', url);
+                expect.fail();
             } catch (err) {
-                error = err;
+                expect(error).to.be.an.instanceOf(Error);
             }
-            expect(error).to.be.an.instanceOf(Error);
         })
     })
 })

@@ -230,7 +230,7 @@ class RemoteDataSource extends EventEmitter {
     async authenticate(location, credentials) {
         let session = this.obtainSession(location);
         if (!session.authenticationPromise) {
-            session.authenticationPromise = this.authenticateSession(session);
+            session.authenticationPromise = this.authenticateSession(session, credentials);
         }
         return session.authenticationPromise;
     }
@@ -698,7 +698,7 @@ class RemoteDataSource extends EventEmitter {
         }
     }
 
-    async authenticateSession(session) {
+    async authenticateSession(session, credentials) {
         try {
             await session.establishmentPromise;
             let url, payload;
@@ -1118,6 +1118,32 @@ class RemoteDataSource extends EventEmitter {
         let { address, schema } = location;
         let count = await this.cache.clean({ address, schema });
         return count;
+    }
+
+    /**
+      * Clear cached schema at given address
+      *
+      * @param  {Object} session
+      *
+      * @return {Promise}
+      */
+    async clearCachedSchemas(session) {
+        // remove cached remote signatures
+        this.cacheSignatures = _.filter(this.cacheSignatures, (cacheSignature) => {
+             return (cacheSignature.address !== session.address);
+        });
+
+        // clear the objects first
+        let location = { address: session.address, schema: '*' };
+        await this.clearLocalCache(location);
+
+        // remove the signatures
+        let prefix = `${session.address}/`;
+        let rows = await this.cache.find(signatureLocation)
+        let matchingRows = _.filter(rows, (row) => {
+            return _.startsWith(row.key, prefix);
+        });
+        await this.cache.remove(location, matchingRows);
     }
 
     /**

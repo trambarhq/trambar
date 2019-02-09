@@ -63,26 +63,24 @@ describe('HTTPRequest', function() {
         it('should reject with an error when the host is unreachable', async function() {
             this.timeout(5000);
             let url = 'http://domain.test/';
-            let error;
             try {
                 await HTTPRequest.fetch('GET', url);
+                expect.fail();
             } catch (err) {
-                error = err;
+                expect(err).to.be.instanceOf(Error);
             }
-            expect(error).to.be.an('error');
         })
         it('should reject with an error when timeout is short', async function() {
             let url = `${baseURL}/delay/1000`;
             let options = {
                 timeout: 200
             };
-            let error;
             try {
                 await HTTPRequest.fetch('GET', url, {}, options);
+                expect.fail();
             } catch (err) {
-                error = err;
+                expect(err).to.be.instanceOf(Error);
             }
-            expect(error).to.be.an('error');
         })
     })
     after(function() {

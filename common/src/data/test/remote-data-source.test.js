@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import Moment from 'moment';
 import Chai, { expect } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
@@ -39,42 +39,36 @@ describe('RemoteDataSource', function() {
     })
 
     describe('#beginSession()', function() {
-        it('should initiate a session', function() {
+        it('should initiate a session', async function() {
             let location = { address: 'http://mordor.me' };
             let session = { handle: 'abcdefg' };
             let system = { details: { en: 'Test' } };
             let servers = [ { id: 1, type: 'gitlab' } ];
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    expect(method).to.match(/post/i);
-                    expect(url).to.contain(location.address);
-                    expect(payload).to.have.property('area', 'client');
-                    return { session, system, servers };
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                expect(method).to.match(/post/i);
+                expect(url).to.contain(location.address);
+                expect(payload).to.have.property('area', 'client');
+                return { session, system, servers };
             };
-            return dataSource.beginSession(location, 'client').then((result) => {
-                expect(result).to.have.property('system').that.deep.equals(system);
-                expect(result).to.have.property('servers').that.deep.equals(servers);
-            });
+            let result = await dataSource.beginSession(location, 'client');
+            expect(result).to.have.property('system').that.deep.equals(system);
+            expect(result).to.have.property('servers').that.deep.equals(servers);
         })
-        it('should return a fulfilled promise when session was created already', function() {
+        it('should return a fulfilled promise when session was created already', async function() {
             let location = { address: 'http://rohan.me' };
             let session = { handle: 'abcdefg' };
             let system = { details: { en: 'Test' } };
             let servers = [ { id: 1, type: 'gitlab' } ];
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    return { session, system, servers };
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                return { session, system, servers };
             };
-            return dataSource.beginSession(location, 'client').then((result) => {
-                let promise = dataSource.beginSession(location, 'client');
-                expect(promise.isFulfilled()).to.be.true;
-            });
+            let promise1 = dataSource.beginSession(location, 'client');
+            let promise2 = dataSource.beginSession(location, 'client');
+            expect(promise1).to.equal(promise2);
         })
     })
     describe('#checkAuthorization()', function() {
-        it('should fire authorization event when remote server indicates session is authorized', function() {
+        it('should fire authorization event when remote server indicates session is authorized', async function() {
             let authorizationEventPromise = ManualPromise();
             dataSource.addEventListener('authorization', authorizationEventPromise.resolve);
             let location = { address: 'http://isengard.me' };
@@ -86,33 +80,26 @@ describe('RemoteDataSource', function() {
             };
             let system = { details: { en: 'Test' } };
             let servers = [ { id: 1, type: 'gitlab' } ];
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    return { session, system, servers };
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                return { session, system, servers };
             };
-            return dataSource.beginSession(location, 'client').then(() => {
-                expect(dataSource.hasAuthorization(location)).to.be.false;
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.try(() => {
-                        expect(method).to.match(/get/i);
-                        expect(payload).to.have.property('handle', session.handle);
-                        return { session: sessionLater };
-                    });
-                };
-                return dataSource.checkAuthorization(location).then((authorized) => {
-                    expect(authorized).to.be.true;
-                    expect(dataSource.hasAuthorization(location)).to.be.true;
-                    return authorizationEventPromise.timeout(1000);
-                }).then((evt) => {
-                    expect(evt).to.have.property('session');
-                    expect(evt.session).to.have.property('token');
-                    expect(evt.session).to.have.property('user_id');
-                    expect(evt.session).to.have.property('etime');
-                });
-            });
+            await dataSource.beginSession(location, 'client');
+            expect(dataSource.hasAuthorization(location)).to.be.false;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                expect(method).to.match(/get/i);
+                expect(payload).to.have.property('handle', session.handle);
+                return { session: sessionLater };
+            };
+            let authorized = await dataSource.checkAuthorization(location);
+            expect(authorized).to.be.true;
+            expect(dataSource.hasAuthorization(location)).to.be.true;
+            let evt = await authorizationEventPromise;
+            expect(evt).to.have.property('session');
+            expect(evt.session).to.have.property('token');
+            expect(evt.session).to.have.property('user_id');
+            expect(evt.session).to.have.property('etime');
         })
-        it('should simply return false when session is not authorized', function() {
+        it('should simply return false when session is not authorized', async function() {
             let expirationEventPromise = ManualPromise();
             let violationEventPromise = ManualPromise();
             dataSource.addEventListener('expiration', expirationEventPromise.resolve);
@@ -121,31 +108,27 @@ describe('RemoteDataSource', function() {
             let session = { handle: 'abcdefg' };
             let system = { details: { en: 'Test' } };
             let servers = [ { id: 1, type: 'gitlab' } ];
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    return { session, system, servers };
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                return { session, system, servers };
             };
-            return dataSource.beginSession(location, 'client').then(() => {
-                expect(dataSource.hasAuthorization(location)).to.be.false;
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.try(() => {
-                        return {};
-                    });
-                };
-                return dataSource.checkAuthorization(location).then((authorized) => {
-                    expect(dataSource.hasAuthorization(location)).to.be.false;
-                    expect(authorized).to.be.false;
-
-                    // shouldn't trigger event
-                    return expect(Promise.race([ expirationEventPromise, violationEventPromise ]).timeout(200))
-                        .to.eventually.be.rejectedWith(Promise.TimeoutError)
-                });
-            });
+            await dataSource.beginSession(location, 'client');
+            expect(dataSource.hasAuthorization(location)).to.be.false;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                return {};
+            };
+            let authorized = await dataSource.checkAuthorization(location);
+            expect(dataSource.hasAuthorization(location)).to.be.false;
+            expect(authorized).to.be.false;
+            let result = await Bluebird.race([
+                expirationEventPromise,
+                violationEventPromise,
+                Bluebird.resolve('no event').delay(200)
+            ]);
+            expect(result).to.equal('no event');
         })
     })
     describe('#authenticate()', function() {
-        it('should trigger authorization event when server accepts username/password', function() {
+        it('should trigger authorization event when server accepts username/password', async function() {
             let authorizationEventPromise = ManualPromise();
             dataSource.addEventListener('authorization', authorizationEventPromise.resolve);
             let location = { address: 'http://mdoom.mordor.me' };
@@ -159,39 +142,32 @@ describe('RemoteDataSource', function() {
             let servers = [ { id: 1, type: 'gitlab' } ];
             let username = 'frodo';
             let password = 'precious';
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    return { session, system, servers };
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                return { session, system, servers };
             };
-            return dataSource.beginSession(location, 'client').then(() => {
-                expect(dataSource.hasAuthorization(location)).to.be.false;
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.try(() => {
-                        expect(method).to.match(/post/i);
-                        expect(payload).to.have.property('handle', session.handle);
-                        expect(payload).to.have.property('username', username);
-                        expect(payload).to.have.property('password', password);
-                        return { session: sessionLater };
-                    });
-                };
-                let credentials = {
-                    type: 'password',
-                    username,
-                    password
-                };
-                return dataSource.authenticate(location, credentials).then(() => {
-                    expect(dataSource.hasAuthorization(location)).to.be.true;
-                    return authorizationEventPromise;
-                }).then((evt) => {
-                    expect(evt).to.have.property('session');
-                    expect(evt.session).to.have.property('token');
-                    expect(evt.session).to.have.property('user_id');
-                    expect(evt.session).to.have.property('etime');
-                });
-            });
+            await dataSource.beginSession(location, 'client');
+            expect(dataSource.hasAuthorization(location)).to.be.false;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                expect(method).to.match(/post/i);
+                expect(payload).to.have.property('handle', session.handle);
+                expect(payload).to.have.property('username', username);
+                expect(payload).to.have.property('password', password);
+                return { session: sessionLater };
+            };
+            let credentials = {
+                type: 'password',
+                username,
+                password
+            };
+            await dataSource.authenticate(location, credentials);
+            expect(dataSource.hasAuthorization(location)).to.be.true;
+            let evt = await authorizationEventPromise;
+            expect(evt).to.have.property('session');
+            expect(evt.session).to.have.property('token');
+            expect(evt.session).to.have.property('user_id');
+            expect(evt.session).to.have.property('etime');
         })
-        it('should reject when username/password are wrong, with error object containing information sent by server', function() {
+        it('should reject when username/password are wrong, with error object containing information sent by server', async function() {
             let changeEventPromise = ManualPromise();
             let expirationEventPromise = ManualPromise();
             let violationEventPromise = ManualPromise();
@@ -204,37 +180,37 @@ describe('RemoteDataSource', function() {
             let servers = [ { id: 1, type: 'gitlab' } ];
             let username = 'frodo';
             let password = 'precious';
-            let error = new HTTPError(401, {
-                message: 'username/password are wrong',
-                reason: 'dark-magic',
-            });
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    return { session, system, servers };
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                return { session, system, servers };
+            };
+            await dataSource.beginSession(location, 'client');
+            expect(dataSource.hasAuthorization(location)).to.be.false;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                throw new HTTPError(401, {
+                    message: 'username/password are wrong',
+                    reason: 'dark-magic',
                 });
             };
-            return dataSource.beginSession(location, 'client').then(() => {
-                expect(dataSource.hasAuthorization(location)).to.be.false;
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.try(() => {
-                        throw error;
-                    });
-                };
-                let credentials = {
-                    type: 'password',
-                    username,
-                    password
-                };
-                return expect(dataSource.authenticate(location, credentials))
-                    .to.eventually.be.rejectedWith(Error)
-                    .that.has.property('reason', 'dark-magic');
-            }).then(() => {
-                let anyEventPromise = Promise.race([ changeEventPromise, expirationEventPromise, violationEventPromise ]).timeout(100);
-                return expect(anyEventPromise)
-                    .to.eventually.be.rejectedWith(Promise.TimeoutError);
-            });
+            let credentials = {
+                type: 'password',
+                username,
+                password
+            };
+            try {
+                await dataSource.authenticate(location, credentials);
+                expect.fail();
+            } catch (err) {
+                expect(err).to.have.property('reason', 'dark-magic');
+            }
+            let result = await Promise.race([
+                changeEventPromise,
+                expirationEventPromise,
+                violationEventPromise,
+                Bluebird.resolve('no event').delay(100)
+            ]);
+            expect(result).to.equal('no event');
         })
-        it('should trigger change event to restart session when failure is other than 401 Unauthorized', function() {
+        it('should trigger change event to restart session when failure is other than 401 Unauthorized', async function() {
             let changeEventPromise = ManualPromise();
             let expirationEventPromise = ManualPromise();
             let violationEventPromise = ManualPromise();
@@ -247,91 +223,70 @@ describe('RemoteDataSource', function() {
             let servers = [ { id: 1, type: 'gitlab' } ];
             let username = 'frodo';
             let password = 'precious';
-            let error = new HTTPError(404, {
-                message: 'Session has disappeared!',
-                reason: 'one-ring',
-            });
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    return { session, system, servers };
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                return { session, system, servers };
+            };
+            await dataSource.beginSession(location, 'client');
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                throw new HTTPError(404, {
+                    message: 'Session has disappeared!',
+                    reason: 'one-ring',
                 });
             };
-            return dataSource.beginSession(location, 'client').then(() => {
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.try(() => {
-                        throw error;
-                    });
-                };
-                let credentials = {
-                    type: 'password',
-                    username,
-                    password
-                };
-                return expect(dataSource.authenticate(location, credentials))
-                    .to.eventually.be.rejected;
-            }).then(() => {
-                Promise.race([ changeEventPromise, expirationEventPromise, violationEventPromise ]).then((evt) => {
-                    expect(evt).to.have.property('type', 'change');
-                });
-            });
+            let credentials = {
+                type: 'password',
+                username,
+                password
+            };
+            try {
+                await dataSource.authenticate(location, credentials)
+                expect.fail();
+            } catch (err) {
+                expect(err).to.be.instanceOf(Error);
+            }
+            let evt = await Promise.race([ changeEventPromise, expirationEventPromise, violationEventPromise ]);
+            expect(evt).to.have.property('type', 'change');
         })
     })
     describe('#endSession()', function() {
-        it('should end a session', function() {
+        it('should end a session', async function() {
             let location = { address: 'http://helms-deep.me' };
             let session = { handle: 'abcdefg' };
             let system = { details: { en: 'Test' } };
             let servers = [ { id: 1, type: 'gitlab' } ];
             let username = 'frodo';
             let password = 'precious';
-            let error = new HTTPError(404, {
-                message: 'Session has disappeared!',
-                reason: 'one-ring',
-            });
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    return { session, system, servers };
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                return { session, system, servers };
             };
-            return dataSource.beginSession(location, 'client').then(() => {
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.try(() => {
-                        expect(method).to.match(/delete/i);
-                        expect(payload).to.property('handle', session.handle);
-                        return {};
-                    });
-                };
-                return dataSource.endSession(location).then(() => {
-                    expect(dataSource.hasAuthorization(location)).to.be.false;
-                });
-            });
+            await dataSource.beginSession(location, 'client');
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                expect(method).to.match(/delete/i);
+                expect(payload).to.property('handle', session.handle);
+                return {};
+            };
+            await dataSource.endSession(location);
+            expect(dataSource.hasAuthorization(location)).to.be.false;
         })
     })
     describe('#getOAuthURL()', function() {
-        it('should return a URL for logging in through OAuth', function() {
+        it('should return a URL for logging in through OAuth', async function() {
             let location = { address: 'http://helms-deep.me' };
             let session = { handle: 'abcdefg' };
             let system = { details: { en: 'Test' } };
             let servers = [ { id: 1, type: 'gitlab' } ];
             let username = 'frodo';
             let password = 'precious';
-            let error = new HTTPError(404, {
-                message: 'Session has disappeared!',
-                reason: 'one-ring',
-            });
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    return { session, system, servers };
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                return { session, system, servers };
             };
-            return dataSource.beginSession(location, 'client').then(() => {
-                let url1 = dataSource.getOAuthURL(location, servers[0]);
-                let url2 = dataSource.getOAuthURL(location, servers[0], 'test');
-                let url3 = dataSource.getOAuthURL(location, servers[0], 'activation');
-                expect(url1).to.equal('http://helms-deep.me/srv/session/gitlab/?sid=1&handle=abcdefg');
-                expect(url2).to.equal('http://helms-deep.me/srv/session/gitlab/?sid=1&handle=abcdefg&test=1');
-                expect(url3).to.equal('http://helms-deep.me/srv/session/gitlab/?sid=1&handle=abcdefg&activation=1');
-            });
+            await dataSource.beginSession(location, 'client');
+            let url1 = dataSource.getOAuthURL(location, servers[0]);
+            let url2 = dataSource.getOAuthURL(location, servers[0], 'test');
+            let url3 = dataSource.getOAuthURL(location, servers[0], 'activation');
+            expect(url1).to.equal('http://helms-deep.me/srv/session/gitlab/?sid=1&handle=abcdefg');
+            expect(url2).to.equal('http://helms-deep.me/srv/session/gitlab/?sid=1&handle=abcdefg&test=1');
+            expect(url3).to.equal('http://helms-deep.me/srv/session/gitlab/?sid=1&handle=abcdefg&activation=1');
         })
     })
     describe('#restoreAuthorization()', function() {
