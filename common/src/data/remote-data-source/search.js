@@ -208,11 +208,11 @@ class Search extends Operation {
     getRemovalList(ids) {
         let objects = this.results;
         let removal = [];
-        _.each(objects, (object) => {
+        for (let object of objects) {
             if (!_.includes(ids, object.id)) {
                 removal.push(object.id);
             }
-        });
+        }
         return removal;
     }
 
@@ -248,24 +248,24 @@ class Search extends Operation {
             this.promise = Promise.resolve(this.results);
 
             // update rtime of results
-            _.each(this.results, (object) => {
+            for (let object of this.results) {
                 if (!object.rtime) {
                     newlyRetrieved++;
                 }
                 object.rtime = this.finishTime;
-            });
+            }
 
             // if an object that we found before is no longer there, then
             // it's either deleted or changed in such a way that it longer
             // meets the criteria; in both scenarios, the local copy has
             // become stale and should be removed from cache
-            _.each(previousResults, (object) => {
+            for (let object of previousResults) {
                 let index = _.sortedIndexBy(results, object, 'id');
                 let target = results[index];
                 if (!target || target.id !== object.id) {
                     missingResults.push(object);
                 }
-            });
+            }
         }
         this.missingResults = missingResults;
         this.lastRetrieved = newlyRetrieved;

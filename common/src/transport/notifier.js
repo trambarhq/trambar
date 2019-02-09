@@ -63,13 +63,13 @@ class Notifier extends EventEmitter {
     unpackChanges(payload) {
         let list = [];
         let address = this.address;
-        _.each(payload.changes, (info, key) => {
+        for (let [ key, info ] of _.entries(payload.changes)) {
             let [ schema, table ] = _.split(key, '.');
-            _.each(info.ids, (id, index) => {
+            for (let [ index, id ] of info.ids.entries()) {
                 let gn = info.gns[index];
                 list.push({ address, schema, table, id, gn });
-            });
-        });
+            }
+        }
         return list;
     }
 

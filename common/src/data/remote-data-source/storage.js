@@ -13,9 +13,9 @@ class Storage extends Operation {
         super.finish(results);
 
         if (!this.local) {
-            _.each(this.results, (object) => {
+            for (let object of this.results) {
                 object.rtime = this.finishTime;
-            });
+            }
         }
     }
 }

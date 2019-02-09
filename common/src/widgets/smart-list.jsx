@@ -90,7 +90,7 @@ class SmartList extends Component {
      */
     updateSlots(nextProps, nextState) {
         let { transitioning } = this.props;
-        let items = nextProps.items;
+        let items = nextProps.items || [];
         let identity = (item, index, alt) => {
             return nextProps.onIdentity({
                 type: 'identity',
@@ -120,7 +120,7 @@ class SmartList extends Component {
         }, {});
         let useTransition = !_.isEmpty(slots);
         let isPresent = {};
-        _.each(items, (item, index) => {
+        for (let [ index, item ] of items.entries()) {
             // look for existing slot
             let id = identity(item, index);
             let slot = slotHash[id];
@@ -151,10 +151,10 @@ class SmartList extends Component {
                 slots.push(slot);
             }
             isPresent[id] = true;
-        });
+        }
 
         // see which slots are disappearing
-        _.each(slots, (slot) => {
+        for (let slot of slots) {
             if (!isPresent[slot.id]) {
                 if (useTransition && this.isSlotVisible(slot)) {
                     // use transition animation
@@ -164,12 +164,12 @@ class SmartList extends Component {
                     slot.state = 'gone';
                 }
             }
-        });
+        }
 
         // limit the number of transitioning elements
         let appearing = 0;
         let disappearing = 0;
-        _.each(slots, (slot) => {
+        for (let slot of slots) {
             if (slot.state === 'appearing') {
                 if (appearing < transitioning) {
                     appearing++;
@@ -183,7 +183,7 @@ class SmartList extends Component {
                     slot.state = 'gone';
                 }
             }
-        });
+        }
 
         // take out slots that are no longer used
         let oldSlots = _.remove(slots, { state: 'gone' });
@@ -456,14 +456,14 @@ class SmartList extends Component {
     setSlotHeights() {
         let { slots, estimatedHeight } = this.state;
         let heights = [];
-        _.each(slots, (slot) => {
+        for (let slot of slots) {
             if (slot.rendering) {
                 let child = slot.node.firstChild;
                 let height = (child) ? child.offsetHeight : 0;
                 slot.height = height;
                 heights.push(height);
             }
-        });
+        }
         if (estimatedHeight === undefined) {
             if (!_.isEmpty(heights)) {
                 let avg = _.sum(heights) / heights.length;
@@ -483,7 +483,7 @@ class SmartList extends Component {
         let { slots, currentAnchor } = this.state;
         let anchorSlotIndex = _.findIndex(slots, { id: currentAnchor });
         let changed = false;
-        _.each(slots, (slot, index) => {
+        for (let [ index, slot ] of slots.entries()) {
             if (slot.state === 'appearing') {
                 if (index < anchorSlotIndex) {
                     // if the slot is behind the anchor (i.e. above it when
@@ -504,7 +504,7 @@ class SmartList extends Component {
                     changed = true;
                 }
             }
-        });
+        }
         if (changed) {
             // see which ones are before the anchor
             let unseenSlots = _.filter(slots, { unseen: true });
@@ -519,7 +519,7 @@ class SmartList extends Component {
         let { inverted } = this.props;
         let { slots, currentAnchor } = this.state;
         let changed = false;
-        _.each(slots, (slot) => {
+        for (let slot of slots) {
             if (slot.state === 'appearing' || slot.state === 'disappearing') {
                 if (!slot.transition) {
                     let useTransition = this.isSlotVisible(slot);
@@ -546,7 +546,7 @@ class SmartList extends Component {
                     changed = true;
                 }
             }
-        });
+        }
         if (changed) {
             this.setState({ slots });
         }
@@ -698,9 +698,9 @@ class SmartList extends Component {
         if (this.scrollContainerWidth !== this.scrollContainer.clientWidth) {
             this.scrollContainerWidth = this.scrollContainer.clientWidth;
             slots = _.slice(slots);
-            _.each(slots, (slot) => {
+            for (let slot of slots) {
                 slot.height = undefined;
-            });
+            }
             this.setState({ slots, estimatedHeight: undefined });
 
             this.resizing = true;

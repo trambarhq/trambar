@@ -386,14 +386,14 @@ let summarizeStatistics = memoizeWeak(null, function(dailyActivities, dateRange,
 
 function summarizeDailyActivities(dailyActivities, month) {
     let stats = { total: 0 };
-    _.each(dailyActivities, (monthlyStats) => {
+    for (let monthlyStats of dailyActivities) {
         let dateRange = monthlyStats.filters.time_range;
         let dates = _.split(dateRange.slice(1, -1), ',');
         let startMonth = Moment(dates[0]).format('YYYY-MM');
         let endMonth = Moment(dates[1]).format('YYYY-MM');
         if (!month || (startMonth <= month && month <= endMonth)) {
-            _.each(monthlyStats.details, (dailyCounts, date) => {
-                _.each(dailyCounts, (value, type) => {
+            for (let [ date, dailyCounts ] of _.entries(monthlyStats.details)) {
+                for (let [ type, value ] of _.entries(dailyCounts)) {
                     if (type.charAt(0) !== '#') {
                         stats.total += value;
                     }
@@ -402,21 +402,21 @@ function summarizeDailyActivities(dailyActivities, month) {
                     } else {
                         stats[type] = value;
                     }
-                });
-            });
+                }
+            }
             if (monthlyStats.dirty) {
                 stats.dirty = true;
             }
         }
-    });
+    }
     return stats;
 }
 
 function mergeDailyActivities(dailyActivities) {
     let stats = {};
-    _.each(dailyActivities, (monthlyStats) => {
+    for (let monthlyStats of dailyActivities) {
         _.assign(stats, monthlyStats.details);
-    });
+    }
     return stats;
 }
 

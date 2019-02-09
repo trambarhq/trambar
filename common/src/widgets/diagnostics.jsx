@@ -11,12 +11,12 @@ function Diagnostics(props) {
     if (!immediate) {
         immediate = setImmediate(() => {
             immediate = 0;
-            _.each(listeners, (f) => {
+            for (let f of listeners) {
                 f({
                     type: 'change',
                     target: module.exports,
                 });
-            });
+            }
         });
     }
     return null;

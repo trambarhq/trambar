@@ -96,11 +96,11 @@ function getPayloadIDs(object) {
         let details = object.details;
         if (details) {
             if (details.resources) {
-                _.each(details.resources, (res) => {
+                for (let res of details.resources) {
                     if (res.payload_token) {
                         ids.push(res.payload_token);
                     }
-                });
+                }
             } else if (details.payload_token) {
                 ids.push(details.payload_token);
             }

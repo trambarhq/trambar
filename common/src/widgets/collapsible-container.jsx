@@ -120,7 +120,7 @@ function getContentHeight(div) {
     let height = div.offsetHeight;
     // find nexted collapsible containers
     let others = div.getElementsByClassName('collapsible-container');
-    _.each(others, (other) => {
+    for (let other of others) {
         // remove the container's current height
         height -= other.offsetHeight;
         // then add its eventual height when transition completes
@@ -129,7 +129,7 @@ function getContentHeight(div) {
             let contents = other.children[0];
             height += contents.offsetHeight;
         }
-    });
+    }
     return height;
 }
 
