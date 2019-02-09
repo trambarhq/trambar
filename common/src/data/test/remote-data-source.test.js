@@ -787,14 +787,14 @@ describe('RemoteDataSource', function() {
                     expect(payload).to.have.property('objects').that.is.an.array;
 
                     // wait for the search
-                    return preSaveSearchPromise.then(() => {
-                        // return the results only after we've done a search
-                        let object = _.clone(payload.objects[0]);
-                        object.id = id++;
-                        object.gn = 1;
-                        objects.push(object);
-                        return [ object ];
-                    });
+                    await preSaveSearchPromise;
+
+                    // return the results only after we've done a search
+                    let object = _.clone(payload.objects[0]);
+                    object.id = id++;
+                    object.gn = 1;
+                    objects.push(object);
+                    return [ object ];
                 } else if (/discovery/.test(url)) {
                     discovery++;
                     return {
@@ -863,9 +863,8 @@ describe('RemoteDataSource', function() {
                     object.id = id++;
                     object.gn = 1;
                     objects.push(object);
-                    return Promise.delay(100).then(() => {
-                        return [ object ];
-                    });
+                    await Bluebird.delay(100);
+                    return [ object ];
                 } else if (/discovery/.test(url)) {
                     discovery++;
                     return {

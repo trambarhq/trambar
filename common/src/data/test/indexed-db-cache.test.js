@@ -24,7 +24,7 @@ describe('IndexedDBCache', function() {
             };
             await cache.save(location, [ object ]);
         })
-        it('should overwrite an existing object', function() {
+        it('should overwrite an existing object', async function() {
             let location = {
                 address: 'http://somewhere.net',
                 schema: 'global',
@@ -40,9 +40,9 @@ describe('IndexedDBCache', function() {
                 },
                 rtime: ISODate('2017-01-01'),
             };
-            return cache.save(location, [ object ]);
+            await cache.save(location, [ object ]);
         })
-        it('should save multiple objects', function() {
+        it('should save multiple objects', async function() {
             let location = {
                 address: 'http://somewhere.net',
                 schema: 'global',
@@ -68,9 +68,9 @@ describe('IndexedDBCache', function() {
                 },
                 rtime: ISODate('2017-03-01'),
             };
-            return cache.save(location, [ object1, object2 ]);
+            await cache.save(location, [ object1, object2 ]);
         })
-        it('should save an object to local schema', function() {
+        it('should save an object to local schema', async function() {
             let location = {
                 schema: 'local',
                 table: 'settings',
@@ -79,11 +79,11 @@ describe('IndexedDBCache', function() {
                 key: 'what',
                 something: 5
             };
-            return cache.save(location, [ object ]);
+            await cache.save(location, [ object ]);
         })
     })
     describe('#find()', function() {
-        it('should be able to find object saved earlier', function() {
+        it('should be able to find object saved earlier', async function() {
             let query = {
                 address: 'http://somewhere.net',
                 schema: 'global',
@@ -92,11 +92,10 @@ describe('IndexedDBCache', function() {
                     id: 1
                 }
             };
-            return cache.find(query).then((objects) => {
-                expect(objects[0]).to.have.deep.property('details.name', 'John Doe');
-            });
+            let objects = await cache.find(query);
+            expect(objects[0]).to.have.deep.property('details.name', 'John Doe');
         })
-        it('should be able to find object by multiple ids', function() {
+        it('should be able to find object by multiple ids', async function() {
             let query = {
                 address: 'http://somewhere.net',
                 schema: 'global',
@@ -105,11 +104,10 @@ describe('IndexedDBCache', function() {
                     id: [1, 3]
                 }
             };
-            return cache.find(query).then((objects) => {
-                expect(objects).to.have.lengthOf(2).to.have.deep.property('1.details.name', 'Jason Doe');
-            });
+            let objects = await cache.find(query);
+            expect(objects).to.have.lengthOf(2).to.have.deep.property('1.details.name', 'Jason Doe');
         })
-        it('should find object by other criteria', function() {
+        it('should find object by other criteria', async function() {
             let query = {
                 address: 'http://somewhere.net',
                 schema: 'global',
@@ -118,23 +116,21 @@ describe('IndexedDBCache', function() {
                     type: 'member'
                 }
             };
-            return cache.find(query).then((objects) => {
-                expect(objects).to.have.lengthOf(2).to.have.deep.property('1.details.name', 'Jason Doe');
-            });
+            let objects = await cache.find(query);
+            expect(objects).to.have.lengthOf(2).to.have.deep.property('1.details.name', 'Jason Doe');
         })
-        it('should find object saved earlier to local schema', function() {
+        it('should find object saved earlier to local schema', async function() {
             let query = {
                 schema: 'local',
                 table: 'settings',
                 key: 'what'
             };
-            return cache.find(query).then((objects) => {
-                expect(objects[0]).to.have.deep.property('something', 5);
-            });
+            let objects = await cache.find(query);
+            expect(objects[0]).to.have.deep.property('something', 5);
         })
     })
     describe('#remove()', function() {
-        it('should remove an object saved earlier', function() {
+        it('should remove an object saved earlier', async function() {
             let location = {
                 address: 'http://somewhere.net',
                 schema: 'global',
@@ -150,19 +146,17 @@ describe('IndexedDBCache', function() {
                 },
                 rtime: ISODate('2017-01-01'),
             };
-            return cache.remove(location, [ object ]).then((objects) => {
-                let query = {
-                    address: 'http://somewhere.net',
-                    schema: 'global',
-                    table: 'user',
-                    criteria: {
-                        id: 1
-                    }
-                };
-                return cache.find(query).then((objects) => {
-                    expect(objects).to.have.lengthOf(0);
-                });
-            })
+            await cache.remove(location, [ object ]);
+            let query = {
+                address: 'http://somewhere.net',
+                schema: 'global',
+                table: 'user',
+                criteria: {
+                    id: 1
+                }
+            };
+            let objects = await cache.find(query);
+            expect(objects).to.have.lengthOf(0);
         })
         it('should remove an object saved to local schema earlier', async function() {
             let location = {
@@ -202,9 +196,8 @@ describe('IndexedDBCache', function() {
             });
             await cache.save(location1, objects);
             await cache.save(location2, objects);
-            await cache.clean({ address: 'http://mordor.me' }).then((count) => {
-                expect(count).to.equal(10);
-            });
+            let count = await cache.clean({ address: 'http://mordor.me' });
+            expect(count).to.equal(10);
             let objects1 = await cache.find(location1);
             let objects2 = await cache.find(location2);
             expect(objects1).to.have.lengthOf(10);
@@ -228,9 +221,8 @@ describe('IndexedDBCache', function() {
             });
             await cache.save(location1, objects);
             await cache.save(location2, objects);
-            await cache.clean({ count: 4 }).then((count) => {
-                expect(count).to.equal(4);
-            });
+            let count = await cache.clean({ count: 4 });
+            expect(count).to.equal(4);
             let objects1 = await cache.find(location1);
             let objects2 = await cache.find(location2);
             expect(objects1).to.have.lengthOf(8);
@@ -254,9 +246,8 @@ describe('IndexedDBCache', function() {
             });
             await cache.save(location1, objects);
             await cache.save(location2, objects);
-            await cache.clean({ before: ISODate('1990-01-5') }).then((count) => {
-                expect(count).to.equal(8);
-            });
+            let count = await cache.clean({ before: ISODate('1990-01-5') });
+            expect(count).to.equal(8);
             let objects1 = await cache.find(location1);
             let objects2 = await cache.find(location2);
             expect(objects1).to.have.lengthOf(6);
