@@ -48,45 +48,43 @@ class SQLiteCache {
      *
      * @return {Promise<Array<Object>>}
      */
-    find(query) {
+    async find(query) {
         let { address, schema, table, criteria } = query;
         if (address == undefined) {
             address = '';
         }
-        return this.fetchTable(address, schema, table).then((objects) => {
-            let keyName = this.getObjectKeyName(schema);
-            let results = [];
-            if (_.isEqual(_.keys(criteria), [ keyName ])) {
-                let keys = criteria[keyName];
-                if (keys instanceof Array) {
-                    keys = _.sortBy(_.slice(keys));
-                } else {
-                    keys = [ keys ];
-                }
-                // look up by sorted key
-                _.each(keys, (key) => {
-                    let keyObj = {};
-                    keyObj[keyName] = key;
-                    let index = _.sortedIndexBy(objects, keyObj, keyName);
-                    let object = objects[index];
-                    if (object && object[keyName] === key) {
-                        results.push(object);
-                    }
-                });
-                return results;
+        let objects = await this.fetchTable(address, schema, table);
+        let keyName = this.getObjectKeyName(schema);
+        let results = [];
+        if (_.isEqual(_.keys(criteria), [ keyName ])) {
+            let keys = criteria[keyName];
+            if (keys instanceof Array) {
+                keys = _.sortBy(_.slice(keys));
             } else {
-                _.each(objects, (object) => {
-                    if (LocalSearch.match(table, object, criteria)) {
-                        results.push(object);
-                    }
-                });
+                keys = [ keys ];
             }
+            // look up by sorted key
+            _.each(keys, (key) => {
+                let keyObj = {};
+                keyObj[keyName] = key;
+                let index = _.sortedIndexBy(objects, keyObj, keyName);
+                let object = objects[index];
+                if (object && object[keyName] === key) {
+                    results.push(object);
+                }
+            });
             return results;
-        }).then((objects) => {
-            LocalSearch.limit(table, objects, query.criteria);
-            this.readCount += objects.length;
-            return objects;
-        });
+        } else {
+            _.each(objects, (object) => {
+                if (LocalSearch.match(table, object, criteria)) {
+                    results.push(object);
+                }
+            });
+        }
+
+        LocalSearch.limit(table, results, query.criteria);
+        this.readCount += results.length;
+        return results;
     }
 
     /**
@@ -97,7 +95,7 @@ class SQLiteCache {
      *
      * @return {Promise<Array<Object>>}
      */
-    save(location, objects) {
+    async save(location, objects) {
         let { address, schema, table } = location;
         if (address == undefined) {
             address = '';
@@ -122,12 +120,11 @@ class SQLiteCache {
                 paramSets.push([ address, schema, table, object.id, json, rtime ]);
             }
         });
-        return this.execute(statements, paramSets).then((affectedCount) => {
-            this.writeCount += affectedCount;
-            this.updateTableEntry(address, schema, table, objects, false);
-            this.updateRecordCount(schema, 500);
-            return objects;
-        });
+        let affectedCount = await this.execute(statements, paramSets);
+        this.writeCount += affectedCount;
+        this.updateTableEntry(address, schema, table, objects, false);
+        this.updateRecordCount(schema, 500);
+        return objects;
     }
 
     /**
@@ -138,7 +135,7 @@ class SQLiteCache {
      *
      * @return {Promise<Array<Object>>}
      */
-    remove(location, objects) {
+    async remove(location, objects) {
         let { address, schema, table } = location;
         if (address == undefined) {
             address = '';
@@ -162,12 +159,12 @@ class SQLiteCache {
                 paramSets.push([ address, schema, table, object.id ]);
             }
         });
-        return this.execute(statements, paramSets).then((affectedCount) => {
-            this.deleteCount += affectedCount;
-            this.updateTableEntry(address, schema, table, objects, true);
-            this.updateRecordCount(schema, 500);
-            return objects;
-        });
+
+        let affectedCount = await this.execute(statements, paramSets);
+        this.deleteCount += affectedCount;
+        this.updateTableEntry(address, schema, table, objects, true);
+        this.updateRecordCount(schema, 500);
+        return objects;
     }
 
     /**
@@ -183,7 +180,7 @@ class SQLiteCache {
      *
      * @return {Promise<Number>}
      */
-    clean(criteria) {
+    async clean(criteria) {
         let sql, params;
         if (criteria.address !== undefined) {
             if (!criteria.schema || criteria.schema === '*') {
@@ -219,15 +216,15 @@ class SQLiteCache {
             if (process.env.NODE_ENV !== 'production') {
                 console.warn('Invalid removal criteria: ', criteria);
             }
-            return Promise.resolve(0);
+            return 0;
         }
-        return this.execute(sql, params).then((affectedCount) => {
-            if (affectedCount > 0) {
-                this.deleteCount += affectedCount;
-                this.updateRecordCount('remote_data');
-                this.tables['remote'] = {};
-            }
-        });
+        let affectedCount = await this.execute(sql, params);
+        if (affectedCount > 0) {
+            this.deleteCount += affectedCount;
+            this.updateRecordCount('remote_data');
+            this.tables['remote'] = {};
+        }
+        return affectedCount;
     }
 
     /**
@@ -238,21 +235,20 @@ class SQLiteCache {
      *
      * @return {Promise<Array<Object>>}
      */
-    query(sql, params) {
-        return this.open().then((db) => {
-            return new Promise((resolve, reject) => {
-                // annoyingly, SQLError isn't a subclass of Error
-                let rejectT = (err) => { reject(new Error(err.message)) };
-                db.transaction((tx) => {
-                    tx.executeSql(sql, params, (tx, rs) => {
-                        let rows = [];
-                        for (let i = 0; i < rs.rows.length; i++) {
-                            rows.push(rs.rows.item(i));
-                        }
-                        resolve(rows);
-                    });
-                }, rejectT);
-            });
+    async query(sql, params) {
+        let db = await this.open();
+        return new Promise((resolve, reject) => {
+            // annoyingly, SQLError isn't a subclass of Error
+            let rejectT = (err) => { reject(new Error(err.message)) };
+            db.transaction((tx) => {
+                tx.executeSql(sql, params, (tx, rs) => {
+                    let rows = [];
+                    for (let i = 0; i < rs.rows.length; i++) {
+                        rows.push(rs.rows.item(i));
+                    }
+                    resolve(rows);
+                });
+            }, rejectT);
         });
     }
 
@@ -264,25 +260,24 @@ class SQLiteCache {
      *
      * @return {Promise}
      */
-    execute(sql, params) {
-        return this.open().then((db) => {
-            return new Promise((resolve, reject) => {
-                let affected = 0;
-                let rejectT = (err) => { reject(new Error(err.message)) };
-                let resolveT = () => { resolve(affected) };
-                let callback = (tx, rs) => {
-                    affected += rs.rowsAffected ;
-                };
-                db.transaction((tx) => {
-                    if (sql instanceof Array) {
-                        for (let i = 0; i < sql.length; i++) {
-                            tx.executeSql(sql[i], params[i], callback);
-                        }
-                    } else {
-                        tx.executeSql(sql, params, callback);
+    async execute(sql, params) {
+        let db = await this.open();
+        return new Promise((resolve, reject) => {
+            let affected = 0;
+            let rejectT = (err) => { reject(new Error(err.message)) };
+            let resolveT = () => { resolve(affected) };
+            let callback = (tx, rs) => {
+                affected += rs.rowsAffected ;
+            };
+            db.transaction((tx) => {
+                if (sql instanceof Array) {
+                    for (let i = 0; i < sql.length; i++) {
+                        tx.executeSql(sql[i], params[i], callback);
                     }
-                }, rejectT, resolveT);
-            });
+                } else {
+                    tx.executeSql(sql, params, callback);
+                }
+            }, rejectT, resolveT);
         });
     }
 
@@ -298,10 +293,7 @@ class SQLiteCache {
     fetchTable(address, schema, table) {
         let tbl = this.getTableEntry(address, schema, table);
         if (!tbl.promise) {
-            tbl.promise = this.loadTable(address, schema, table).then((objects) => {
-                tbl.objects = objects;
-                return tbl.objects;
-            });
+            tbl.promise = this.loadTable(address, schema, table, tbl);
         }
         return tbl.promise;
     }
@@ -312,10 +304,11 @@ class SQLiteCache {
      * @param  {String} address
      * @param  {String} schema
      * @param  {String} table
+     * @param  {Object} tbl
      *
      * @return {Promise<Object>}
      */
-    loadTable(address, schema, table) {
+    async loadTable(address, schema, table, tbl) {
         let sql, params;
         if (schema === 'local') {
             sql = `
@@ -334,12 +327,12 @@ class SQLiteCache {
             `;
             params = [ address, schema, table ];
         }
-        return this.query(sql, params).then((rows) => {
-            let objects = _.map(rows, (row) => {
-                return decodeJSON(row.json);
-            });
-            return objects;
+        let rows = await this.query(sql, params);
+        let objects = _.map(rows, (row) => {
+            return decodeJSON(row.json);
         });
+        tbl.objects = objects;
+        return objects;
     }
 
     /**
@@ -349,7 +342,7 @@ class SQLiteCache {
      */
     open() {
         if (!this.databasePromise) {
-            this.databasePromise = Promise.try(() => {
+            this.databasePromise = new Promise((resolve, reject) => {
                 let { databaseName } = this.options;
                 let db = openDatabase(databaseName, '', '', 50 * 1048576);
                 let sql = [
@@ -406,14 +399,14 @@ class SQLiteCache {
                     sql.unshift(`DROP TABLE IF EXISTS remote_data`);
                     sql.unshift(`DROP TABLE IF EXISTS local_data`);
                 }
-                return new Promise((resolve, reject) => {
-                    let rejectS = (err) => { reject(new Error(err.message)) };
-                    db.transaction((tx) => {
-                        _.each(sql, (sql) => {
-                            tx.executeSql(sql);
-                        });
-                    }, rejectS, resolve)
-                }).return(db);
+
+                let resolveS = () => { resolve(db) };
+                let rejectS = (err) => { reject(new Error(err.message)) };
+                db.transaction((tx) => {
+                    for (let line of sql) {
+                        tx.executeSql(line);
+                    }
+                }, rejectS, resolveS)
             });
         }
         return this.databasePromise;
@@ -490,7 +483,7 @@ class SQLiteCache {
         let tbl = this.getTableEntry(address, schema, table);
         if (tbl.objects) {
             let keyName = this.getObjectKeyName(schema);
-            _.each(objects, (object) => {
+            for (let object of objects) {
                 let index = _.sortedIndexBy(tbl.objects, object, keyName);
                 let target = tbl.objects[index];
                 if (target && target[keyName] === object[keyName]) {
@@ -504,7 +497,7 @@ class SQLiteCache {
                         tbl.objects.splice(index, 0, object);
                     }
                 }
-            });
+            }
         }
     }
 
@@ -521,12 +514,13 @@ class SQLiteCache {
         if (timeout) {
             clearTimeout(timeout);
         }
-        timeout = setTimeout(() => {
-            let sql = `SELECT COUNT(*) as count FROM ${cacheTableName}`;
-            this.query(sql).then((rows) => {
+        timeout = setTimeout(async () => {
+            try {
+                let sql = `SELECT COUNT(*) as count FROM ${cacheTableName}`;
+                let rows = await this.query(sql);
                 this.recordCounts[cacheTableName] = rows[0].count;
-            }).catch((err) => {
-            });
+            } catch (err) {
+            }
             _.set(this, timeoutPath, 0);
         }, delay || 0);
         _.set(this, timeoutPath, timeout);
