@@ -290,7 +290,7 @@ describe('RemoteDataSource', function() {
         })
     })
     describe('#restoreAuthorization()', function() {
-        it('should add a session', function() {
+        it('should add a session', async function() {
             let session = {
                 handle: 'abcdefg',
                 address: 'http://minas-tirith.me',
@@ -305,7 +305,7 @@ describe('RemoteDataSource', function() {
             expect(restored).to.be.true;
             expect(dataSource.hasAuthorization(location)).to.be.true;
         })
-        it('should not add an expired session', function() {
+        it('should not add an expired session', async function() {
             let session = {
                 handle: 'abcdefg',
                 address: 'http://angmar.me',
@@ -322,7 +322,7 @@ describe('RemoteDataSource', function() {
         })
     })
     describe('#start()', function() {
-        it('should return the user id', function() {
+        it('should return the user id', async function() {
             let session = {
                 handle: 'abcdefg',
                 address: 'http://minas-tirith.me',
@@ -334,24 +334,24 @@ describe('RemoteDataSource', function() {
             let location = { address: session.address, schema: 'global' };
             let restored = dataSource.restoreAuthorization(location, session);
             expect(restored).to.be.true;
-            return dataSource.start(location).then((userID) => {
-                expect(userID).to.equal(session.user_id);
-            }).timeout(100);
+            let userID = await dataSource.start(location);
+            expect(userID).to.equal(session.user_id);
         })
-        it('should reject with 401 Unauthorized error when there is no session', function() {
+        it('should reject with 401 Unauthorized error when there is no session', async function() {
             dataSource.addEventListener('authentication', (evt) => {
                 evt.preventDefault();
             });
             let location = { address: 'http://minas-morgul.me', schema: 'global' };
-            return dataSource.start(location).catch((err) => {
-                return err;
-            }).then((err) => {
+            try {
+                await dataSource.start(location);
+                expect.fail();
+            } catch (err) {
                 expect(err).to.have.property('statusCode', 401);
-            }).timeout(100);
+            }
         })
     })
     describe('#find()', function() {
-        it('should request objects from remote server', function() {
+        it('should request objects from remote server', async function() {
             let query = {
                 address: 'http://minas-tirith.me',
                 schema: 'global',
@@ -365,32 +365,29 @@ describe('RemoteDataSource', function() {
             ]
             let discovery = 0;
             let retrieval = 0;
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    expect(method).to.match(/post/i);
-                    if (/discovery/.test(url)) {
-                        discovery++;
-                        expect(payload).to.have.property('id', 3);
-                        return {
-                            ids: _.map(objects, 'id'),
-                            gns: _.map(objects, 'gn')
-                        };
-                    } else if (/retrieval/.test(url)) {
-                        retrieval++;
-                        expect(payload).to.have.property('ids').that.deep.equal([ 3 ]);
-                        return _.filter(objects, (object) => {
-                            return _.includes(payload.ids, object.id);
-                        });
-                    }
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                expect(method).to.match(/post/i);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    expect(payload).to.have.property('id', 3);
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn')
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    expect(payload).to.have.property('ids').that.deep.equal([ 3 ]);
+                    return _.filter(objects, (object) => {
+                        return _.includes(payload.ids, object.id);
+                    });
+                }
             };
-            return dataSource.find(query).then((users) => {
-                expect(discovery).to.equal(1);
-                expect(retrieval).to.equal(1);
-                expect(users[0]).to.have.property('id', objects[0].id);
-            });
+            let users = await dataSource.find(query);
+            expect(discovery).to.equal(1);
+            expect(retrieval).to.equal(1);
+            expect(users[0]).to.have.property('id', objects[0].id);
         })
-        it('should reuse results from a previous search', function() {
+        it('should reuse results from a previous search', async function() {
             let query = {
                 address: 'http://minas-tirith.me',
                 schema: 'global',
@@ -404,34 +401,30 @@ describe('RemoteDataSource', function() {
             ]
             let discovery = 0;
             let retrieval = 0;
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    expect(method).to.match(/post/i);
-                    if (/discovery/.test(url)) {
-                        discovery++;
-                        expect(payload).to.have.property('id', 1);
-                        return {
-                            ids: _.map(objects, 'id'),
-                            gns: _.map(objects, 'gn')
-                        };
-                    } else if (/retrieval/.test(url)) {
-                        retrieval++;
-                        expect(payload).to.have.property('ids').that.deep.equal([ 1 ]);
-                        return _.filter(objects, (object) => {
-                            return _.includes(payload.ids, object.id);
-                        });
-                    }
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                expect(method).to.match(/post/i);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    expect(payload).to.have.property('id', 1);
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn')
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    expect(payload).to.have.property('ids').that.deep.equal([ 1 ]);
+                    return _.filter(objects, (object) => {
+                        return _.includes(payload.ids, object.id);
+                    });
+                }
             };
-            return dataSource.find(query).then((users) => {
-                expect(users[0]).to.have.property('id', objects[0].id);
-                return dataSource.find(query).then((users) => {
-                    expect(discovery).to.equal(1);
-                    expect(retrieval).to.equal(1);
-                });
-            });
+            let users1 = await dataSource.find(query);
+            expect(users1[0]).to.have.property('id', objects[0].id);
+            let users2 = await dataSource.find(query);
+            expect(discovery).to.equal(1);
+            expect(retrieval).to.equal(1);
         })
-        it('should return objects from cache without hitting remote server when the object count matches and the objects are retrieved recently', function() {
+        it('should return objects from cache without hitting remote server when the object count matches and the objects are retrieved recently', async function() {
             // put objects into cache first
             let location = { address: 'http://moria.me', schema: 'global', table: 'user' };
             let rtime = Moment().toISOString();
@@ -439,85 +432,77 @@ describe('RemoteDataSource', function() {
                 { id: 1, gn: 70, username: 'gandolf', rtime },
                 { id: 2, gn: 3, username: 'bilbo', rtime },
             ];
-            return cache.save(location, objects).then(() => {
-                let query = {
-                    address: location.address,
-                    schema: 'global',
-                    table: 'user',
-                    criteria: {
-                        id: [ 1, 2 ]
-                    }
-                };
-                let discovery = 0;
-                let retrieval = 0;
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.try(() => {
-                        expect(method).to.match(/post/i);
-                        if (/discovery/.test(url)) {
-                            discovery++;
-                            return {
-                                ids: _.map(objects, 'id'),
-                                gns: _.map(objects, 'gn')
-                            };
-                        } else if (/retrieval/.test(url)) {
-                            retrieval++;
-                            return _.filter(objects, (object) => {
-                                return _.includes(payload.ids, object.id);
-                            });
-                        }
+            await cache.save(location, objects);
+            let query = {
+                address: location.address,
+                schema: 'global',
+                table: 'user',
+                criteria: {
+                    id: [ 1, 2 ]
+                }
+            };
+            let discovery = 0;
+            let retrieval = 0;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                expect(method).to.match(/post/i);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn')
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return _.filter(objects, (object) => {
+                        return _.includes(payload.ids, object.id);
                     });
-                };
-                return dataSource.find(query).then((users) => {
-                    expect(discovery).to.equal(0);
-                    expect(retrieval).to.equal(0);
-                    expect(users[0]).to.have.property('id', objects[0].id);
-                    expect(users[1]).to.have.property('id', objects[1].id);
-                });
-            });
+                }
+            };
+            let users = await dataSource.find(query);
+            expect(discovery).to.equal(0);
+            expect(retrieval).to.equal(0);
+            expect(users[0]).to.have.property('id', objects[0].id);
+            expect(users[1]).to.have.property('id', objects[1].id);
         })
-        it('should return objects from cache then perform a server-side check when cached objects might be stale', function() {
+        it('should return objects from cache then perform a server-side check when cached objects might be stale', async function() {
             let location = { address: 'http://level2.moria.me', schema: 'global', table: 'user' };
             let rtime = Moment().subtract(1, 'day').toISOString();
             let objects = [
                 { id: 1, gn: 70, username: 'gandolf', rtime },
                 { id: 2, gn: 3, username: 'bilbo', rtime },
             ];
-            return cache.save(location, objects).then(() => {
-                let query = {
-                    address: location.address,
-                    schema: 'global',
-                    table: 'user',
-                    criteria: {
-                        id: [ 1, 2 ]
-                    }
-                };
-                let discovery = 0;
-                let retrieval = 0;
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.try(() => {
-                        if (/discovery/.test(url)) {
-                            discovery++;
-                            return {
-                                ids: _.map(objects, 'id'),
-                                gns: _.map(objects, 'gn')
-                            };
-                        } else if (/retrieval/.test(url)) {
-                            retrieval++;
-                            return _.filter(objects, (object) => {
-                                return _.includes(payload.ids, object.id);
-                            });
-                        }
+            await cache.save(location, objects);
+            let query = {
+                address: location.address,
+                schema: 'global',
+                table: 'user',
+                criteria: {
+                    id: [ 1, 2 ]
+                }
+            };
+            let discovery = 0;
+            let retrieval = 0;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn')
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return _.filter(objects, (object) => {
+                        return _.includes(payload.ids, object.id);
                     });
-                };
-                return dataSource.find(query).then((users) => {
-                    expect(discovery).to.equal(1);
-                    expect(retrieval).to.equal(0);
-                    expect(users[0]).to.have.property('id', objects[0].id);
-                    expect(users[1]).to.have.property('id', objects[1].id);
-                });
-            });
+                }
+            };
+            let users = await dataSource.find(query);
+            expect(discovery).to.equal(1);
+            expect(retrieval).to.equal(0);
+            expect(users[0]).to.have.property('id', objects[0].id);
+            expect(users[1]).to.have.property('id', objects[1].id);
         })
-        it('should update object whose gn has changed', function() {
+        it('should update object whose gn has changed', async function() {
             let changeEventPromise = ManualPromise();
             dataSource.addEventListener('change', changeEventPromise.resolve);
             let location = { address: 'http://level3.moria.me', schema: 'global', table: 'user' };
@@ -526,61 +511,55 @@ describe('RemoteDataSource', function() {
                 { id: 1, gn: 70, username: 'gandolf', rtime },
                 { id: 2, gn: 3, username: 'bilbo', rtime },
             ];
-            return cache.save(location, objects).then(() => {
-                // bump gn
-                objects[1] = _.cloneDeep(objects[1]);
-                objects[1].gn++;
-                let query = {
-                    address: location.address,
-                    schema: 'global',
-                    table: 'user',
-                    criteria: {
-                        id: [ 1, 2 ]
-                    }
-                };
-                let discovery = 0;
-                let retrieval = 0;
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.delay(50).then(() => {
-                        return Promise.try(() => {
-                            if (/discovery/.test(url)) {
-                                discovery++;
-                                return {
-                                    ids: _.map(objects, 'id'),
-                                    gns: _.map(objects, 'gn')
-                                };
-                            } else if (/retrieval/.test(url)) {
-                                expect(payload).to.have.property('ids').that.deep.equal([ objects[1].id ])
-                                retrieval++;
-                                return _.filter(objects, (object) => {
-                                    return _.includes(payload.ids, object.id);
-                                });
-                            }
-                        });
+            await cache.save(location, objects);
+            // bump gn
+            objects[1] = _.cloneDeep(objects[1]);
+            objects[1].gn++;
+            let query = {
+                address: location.address,
+                schema: 'global',
+                table: 'user',
+                criteria: {
+                    id: [ 1, 2 ]
+                }
+            };
+            let discovery = 0;
+            let retrieval = 0;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn')
+                    };
+                } else if (/retrieval/.test(url)) {
+                    expect(payload).to.have.property('ids').that.deep.equal([ objects[1].id ])
+                    retrieval++;
+                    return _.filter(objects, (object) => {
+                        return _.includes(payload.ids, object.id);
                     });
-                };
-                return dataSource.find(query).then((users) => {
-                    // the cached objects are returned first
-                    expect(discovery).to.equal(0);
-                    expect(retrieval).to.equal(0);
-                    expect(users).to.have.property('length', 2);
-                    expect(users[1]).to.have.property('id', objects[1].id);
-                    expect(users[1]).to.have.property('gn', objects[1].gn - 1);
+                }
+            };
+            let users1 = await dataSource.find(query);
+            // the cached objects are returned first
+            expect(discovery).to.equal(0);
+            expect(retrieval).to.equal(0);
+            expect(users1).to.have.property('length', 2);
+            expect(users1[1]).to.have.property('id', objects[1].id);
+            expect(users1[1]).to.have.property('gn', objects[1].gn - 1);
 
-                    // wait for change event
-                    return changeEventPromise.timeout(1000);
-                }).then(() => {
-                    // second query should yield updated object
-                    return dataSource.find(query).then((users) => {
-                        expect(discovery).to.equal(1);
-                        expect(retrieval).to.equal(1);
-                        expect(users[1]).to.have.property('id', objects[1].id);
-                        expect(users[1]).to.have.property('gn', objects[1].gn);
-                    });
-                });
-            });
+            // wait for change event
+            await changeEventPromise;
+
+            // second query should yield updated object
+            let users2 = await dataSource.find(query);
+            expect(discovery).to.equal(1);
+            expect(retrieval).to.equal(1);
+            expect(users2[1]).to.have.property('id', objects[1].id);
+            expect(users2[1]).to.have.property('gn', objects[1].gn);
         })
-        it('should return objects from cache on an open-ended search, perform discovery, then conclude that the initial result set was correct', function() {
+        it('should return objects from cache on an open-ended search, perform discovery, then conclude that the initial result set was correct', async function() {
             let changeEventPromise = ManualPromise();
             dataSource.addEventListener('change', changeEventPromise.resolve);
             let location = { address: 'http://level4.moria.me', schema: 'global', table: 'user' };
@@ -589,50 +568,47 @@ describe('RemoteDataSource', function() {
                 { id: 1, gn: 70, username: 'gandolf', rtime },
                 { id: 2, gn: 3, username: 'bilbo', rtime },
             ];
-            return cache.save(location, objects).then(() => {
-                let query = {
-                    address: location.address,
-                    schema: 'global',
-                    table: 'user',
-                    criteria: {},
-                    blocking: 'never',
-                };
-                let discovery = 0;
-                let retrieval = 0;
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.delay(50).then(() => {
-                        return Promise.try(() => {
-                            if (/discovery/.test(url)) {
-                                discovery++;
-                                return {
-                                    ids: _.map(objects, 'id'),
-                                    gns: _.map(objects, 'gn')
-                                };
-                            } else if (/retrieval/.test(url)) {
-                                retrieval++;
-                                return _.filter(objects, (object) => {
-                                    return _.includes(payload.ids, object.id);
-                                });
-                            }
-                        });
+            await cache.save(location, objects);
+            let query = {
+                address: location.address,
+                schema: 'global',
+                table: 'user',
+                criteria: {},
+                blocking: 'never',
+            };
+            let discovery = 0;
+            let retrieval = 0;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn')
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return _.filter(objects, (object) => {
+                        return _.includes(payload.ids, object.id);
                     });
-                };
-                return dataSource.find(query).then((users) => {
-                    expect(discovery).to.equal(0);
-                    expect(retrieval).to.equal(0);
-                    expect(users).to.have.property('length', 2);
-                    return Promise.delay(100);
-                }).then(() => {
-                    expect(discovery).to.equal(1);
-                    expect(retrieval).to.equal(0);
+                }
+            };
+            let users1 = await dataSource.find(query);
+            expect(discovery).to.equal(0);
+            expect(retrieval).to.equal(0);
+            expect(users1).to.have.property('length', 2);
 
-                    // no change event should be emitted
-                    return expect(changeEventPromise.timeout(500))
-                        .to.eventually.be.rejectedWith(Promise.TimeoutError);
-                });
-            });
+            await Bluebird.delay(100);
+            expect(discovery).to.equal(1);
+            expect(retrieval).to.equal(0);
+
+            let result = Promise.race([
+                changeEventPromise,
+                Bluebird.resolve('no event').delay(500)
+            ]);
+            expect(result).to.equal('no event');
         })
-        it('should return objects from cache, perform discovery, then retrieve an additional object', function() {
+        it('should return objects from cache, perform discovery, then retrieve an additional object', async function() {
             let changeEventPromise = ManualPromise();
             dataSource.addEventListener('change', changeEventPromise.resolve);
             let location = { address: 'http://level5.moria.me', schema: 'global', table: 'user' };
@@ -641,50 +617,44 @@ describe('RemoteDataSource', function() {
                 { id: 1, gn: 70, username: 'gandolf', rtime },
                 { id: 2, gn: 3, username: 'bilbo', rtime },
             ];
-            return cache.save(location, objects).then(() => {
-                objects.push({ id: 3, gn: 1, username: 'sauron' });
-                let query = {
-                    address: location.address,
-                    schema: 'global',
-                    table: 'user',
-                    criteria: {},
-                    blocking: 'never'
-                };
-                let discovery = 0;
-                let retrieval = 0;
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.delay(50).then(() => {
-                        return Promise.try(() => {
-                            if (/discovery/.test(url)) {
-                                discovery++;
-                                return {
-                                    ids: _.map(objects, 'id'),
-                                    gns: _.map(objects, 'gn')
-                                };
-                            } else if (/retrieval/.test(url)) {
-                                retrieval++;
-                                return _.filter(objects, (object) => {
-                                    return _.includes(payload.ids, object.id);
-                                });
-                            }
-                        });
+            await cache.save(location, objects);
+            objects.push({ id: 3, gn: 1, username: 'sauron' });
+            let query = {
+                address: location.address,
+                schema: 'global',
+                table: 'user',
+                criteria: {},
+                blocking: 'never'
+            };
+            let discovery = 0;
+            let retrieval = 0;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn')
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return _.filter(objects, (object) => {
+                        return _.includes(payload.ids, object.id);
                     });
-                };
-                return dataSource.find(query).then((users) => {
-                    expect(discovery).to.equal(0);
-                    expect(retrieval).to.equal(0);
-                    expect(users).to.have.property('length', 2);
-                    return changeEventPromise.timeout(1000);
-                }).then((evt) => {
-                    return dataSource.find(query).then((users) => {
-                        expect(discovery).to.equal(1);
-                        expect(retrieval).to.equal(1);
-                        expect(users).to.have.property('length', 3);
-                    });
-                });
-            });
+                }
+            };
+            let users1 = await dataSource.find(query);
+            expect(discovery).to.equal(0);
+            expect(retrieval).to.equal(0);
+            expect(users1).to.have.property('length', 2);
+            await changeEventPromise;
+
+            let users2 = await dataSource.find(query);
+            expect(discovery).to.equal(1);
+            expect(retrieval).to.equal(1);
+            expect(users2).to.have.property('length', 3);
         })
-        it('should not perform remote search when there is no connection', function() {
+        it('should not perform remote search when there is no connection', async function() {
             let changeEventPromise = ManualPromise();
             dataSource.addEventListener('change', changeEventPromise.resolve);
             dataSource.deactivate();
@@ -694,126 +664,113 @@ describe('RemoteDataSource', function() {
                 { id: 1, gn: 70, username: 'gandolf', rtime },
                 { id: 2, gn: 3, username: 'bilbo', rtime },
             ];
-            return cache.save(location, objects).then(() => {
-                objects.push({ id: 3, gn: 1, username: 'sauron' });
-                let query = {
-                    address: location.address,
-                    schema: 'global',
-                    table: 'user',
-                    criteria: {}
-                };
-                let discovery = 0;
-                let retrieval = 0;
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.delay(50).then(() => {
-                        return Promise.try(() => {
-                            if (/discovery/.test(url)) {
-                                discovery++;
-                                return {
-                                    ids: _.map(objects, 'id'),
-                                    gns: _.map(objects, 'gn')
-                                };
-                            } else if (/retrieval/.test(url)) {
-                                retrieval++;
-                                return _.filter(objects, (object) => {
-                                    return _.includes(payload.ids, object.id);
-                                });
-                            }
-                        });
+            await cache.save(location, objects);
+            objects.push({ id: 3, gn: 1, username: 'sauron' });
+            let query = {
+                address: location.address,
+                schema: 'global',
+                table: 'user',
+                criteria: {}
+            };
+            let discovery = 0;
+            let retrieval = 0;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn')
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return _.filter(objects, (object) => {
+                        return _.includes(payload.ids, object.id);
                     });
-                };
-                return dataSource.find(query).then((users) => {
-                    expect(discovery).to.equal(0);
-                    expect(retrieval).to.equal(0);
-                    expect(users).to.have.property('length', 2);
-                    return expect(changeEventPromise.timeout(200))
-                        .to.eventually.be.rejectedWith(Promise.TimeoutError);
-                });
-            }).finally(() => {
-                dataSource.activate();
-            });
+                }
+            };
+            let users = await dataSource.find(query);
+            expect(discovery).to.equal(0);
+            expect(retrieval).to.equal(0);
+            expect(users).to.have.property('length', 2);
+
+            let result = Promise.race([
+                changeEventPromise,
+                Bluebird.resolve('no event').delay(200)
+            ]);
+            expect(result).to.equal('no event');
+            dataSource.activate();
         })
     })
     describe('#save()', function() {
-        it('should send an object to remote server and save result to cache', function() {
+        it('should send an object to remote server and save result to cache', async function() {
             let changeEventPromise = ManualPromise();
             dataSource.addEventListener('change', changeEventPromise.resolve);
             let location = { address: 'http://level1.misty-mountain.me', schema: 'global', table: 'project' };
             let newObject = { name: 'anduril' };
             let storage = 0, id = 1;
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.delay(50).then(() => {
-                    return Promise.try(() => {
-                        if (/storage/.test(url)) {
-                            storage++;
-                            expect(method).to.match(/post/i);
-                            expect(payload).to.have.property('objects').that.is.an.array;
-                            return _.map(payload.objects, (object) => {
-                                object = _.clone(object);
-                                if (!object.id) {
-                                    object.id = id++;
-                                }
-                                return object;
-                            });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/storage/.test(url)) {
+                    storage++;
+                    expect(method).to.match(/post/i);
+                    expect(payload).to.have.property('objects').that.is.an.array;
+                    return _.map(payload.objects, (object) => {
+                        object = _.clone(object);
+                        if (!object.id) {
+                            object.id = id++;
                         }
+                        return object;
                     });
-                });
+                }
             };
-            return dataSource.save(location, [ newObject ]).each((object) => {
-                return cache.find(location, { id: object.id }).then((objects) => {
-                    expect(objects).to.have.length(1);
-                });
-            }).then(() => {
-                return changeEventPromise.timeout(1000);
-            }).then((evt) => {
-                expect(evt).to.have.property('type', 'change');
-            });
+            let savedObjects = await dataSource.save(location, [ newObject ]);
+            for (let object of savedObjects) {
+                let cachedObjects = await cache.find(location, { id: object.id });
+                expect(cachedObjects).to.have.length(1);
+            }
+            let evt = await changeEventPromise;
+            expect(evt).to.have.property('type', 'change');
         })
-        it('should update an existing object', function() {
+        it('should update an existing object', async function() {
             let changeEventPromise = ManualPromise();
             dataSource.addEventListener('change', changeEventPromise.resolve);
             let location = { address: 'http://level2.misty-mountain.me', schema: 'global', table: 'project' };
             let objects = [
                 { id: 3, name: 'smeagol' }
             ];
-            return cache.save(location, objects).then(() => {
-                let storage = 0;
-                let discovery = 0;
-                let updatedObject = _.clone(objects[0]);
-                updatedObject.name = 'gollum';
-                HTTPRequest.fetch = (method, url, payload, options) => {
-                    return Promise.delay(50).then(() => {
-                        return Promise.try(() => {
-                            if (/storage/.test(url)) {
-                                storage++;
-                                expect(method).to.match(/post/i);
-                                expect(payload).to.have.property('objects').that.is.an.array;
-                                let object = _.clone(payload.objects[0]);
-                                objects[0] = object;
-                                return [ object ];
-                            } else if (/discovery/.test(url)) {
-                                discovery++;
-                                return {
-                                    ids: _.map(objects, 'id'),
-                                    gns: _.map(objects, 'gn')
-                                };
-                            }
-                        });
-                    });
-                };
-                return dataSource.save(location, [ updatedObject ]).each((object) => {
-                    return cache.find(location, { id: object.id }).then((objects) => {
-                        expect(objects).to.have.length(1);
-                        expect(objects[0]).to.have.property('name', updatedObject.name);
-                    });
-                }).then(() => {
-                    return changeEventPromise.timeout(1000);
-                }).then((evt) => {
-                    expect(evt).to.have.property('type', 'change');
-                });
-            });
+            await cache.save(location, objects);
+            let storage = 0;
+            let discovery = 0;
+            let updatedObject = _.clone(objects[0]);
+            updatedObject.name = 'gollum';
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/storage/.test(url)) {
+                    storage++;
+                    expect(method).to.match(/post/i);
+                    expect(payload).to.have.property('objects').that.is.an.array;
+                    let object = _.clone(payload.objects[0]);
+                    objects[0] = object;
+                    return [ object ];
+                } else if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn')
+                    };
+                }
+            };
+            let savedObjects = await dataSource.save(location, [ updatedObject ]);
+            for (let object of savedObjects) {
+                let cachedObjects = await cache.find(location, { id: object.id });
+                expect(cachedObjects).to.have.length(1);
+                expect(cachedObjects[0]).to.have.property('name', updatedObject.name);
+            }
+            let evt = await changeEventPromise;
+            expect(evt).to.have.property('type', 'change');
         })
-        it('should make uncommitted objects available immediately when feature is on', function() {
+        it('should make uncommitted objects available immediately when feature is on', async function() {
             dataSource.options.discoveryFlags = {
                 include_uncommitted: true
             };
@@ -823,33 +780,31 @@ describe('RemoteDataSource', function() {
             let discovery = 0;
             let retrieval = 0;
             let objects = []
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    if (/storage/.test(url)) {
-                        storage++;
-                        expect(method).to.match(/post/i);
-                        expect(payload).to.have.property('objects').that.is.an.array;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                if (/storage/.test(url)) {
+                    storage++;
+                    expect(method).to.match(/post/i);
+                    expect(payload).to.have.property('objects').that.is.an.array;
 
-                        // wait for the search
-                        return preSaveSearchPromise.then(() => {
-                            // return the results only after we've done a search
-                            let object = _.clone(payload.objects[0]);
-                            object.id = id++;
-                            object.gn = 1;
-                            objects.push(object);
-                            return [ object ];
-                        });
-                    } else if (/discovery/.test(url)) {
-                        discovery++;
-                        return {
-                            ids: _.map(objects, 'id'),
-                            gns: _.map(objects, 'gn'),
-                        };
-                    } else if (/retrieval/.test(url)) {
-                        retrieval++;
-                        return objects;
-                    }
-                });
+                    // wait for the search
+                    return preSaveSearchPromise.then(() => {
+                        // return the results only after we've done a search
+                        let object = _.clone(payload.objects[0]);
+                        object.id = id++;
+                        object.gn = 1;
+                        objects.push(object);
+                        return [ object ];
+                    });
+                } else if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn'),
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return objects;
+                }
             };
             // the logic here is a bit convoluted...
             //
@@ -878,64 +833,58 @@ describe('RemoteDataSource', function() {
                 let query = _.assign({ criteria: {} }, location);
                 return dataSource.find(query);
             });
-            return dataSource.save(location, [ newObject ]).then((objects) => {
-                // the promise belong should fulfill immediately
-                return preSaveSearchPromise.then((projectsImmediately) => {
-                    // project should have a temporary ID
-                    expect(projectsImmediately).to.have.length(1);
-                    expect(projectsImmediately[0]).to.have.property('id').that.is.below(1);
-                });
-            }).then(() => {
+            let savedObjects = await dataSource.save(location, [ newObject ]);
+            // the promise should fulfill immediately
+            let projectsImmediately = await preSaveSearchPromise;
+            // project should have a temporary ID
+            expect(projectsImmediately).to.have.length(1);
+            expect(projectsImmediately[0]).to.have.property('id').that.is.below(1);
+
                 // this search should not trigger a remote search, since it's
                 // the same as the one performed in the change event handler
-                return dataSource.find(location, {}).then((projectsLater) => {
-                    expect(projectsLater).to.have.length(1);
-                    expect(projectsLater[0]).to.have.property('id').that.is.at.least(1);
-                    expect(discovery).to.equal(1);
-                    expect(retrieval).to.equal(0);
-                });
-            });
+            let projectsLater = await dataSource.find(location, {});
+            expect(projectsLater).to.have.length(1);
+            expect(projectsLater[0]).to.have.property('id').that.is.at.least(1);
+            expect(discovery).to.equal(1);
+            expect(retrieval).to.equal(0);
         })
-        it('should block search on a table until saving is complete', function() {
+        it('should block search on a table until saving is complete', async function() {
             let location = { address: 'http://level4.misty-mountain.me', schema: 'global', table: 'project' };
             let newObject = { name: 'anduril' };
             let storage = 0, id = 1;
             let discovery = 0;
             let retrieval = 0;
             let objects = [];
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    if (/storage/.test(url)) {
-                        storage++;
-                        // make object available, then wait a bit
-                        let object = _.clone(payload.objects[0]);
-                        object.id = id++;
-                        object.gn = 1;
-                        objects.push(object);
-                        return Promise.delay(100).then(() => {
-                            return [ object ];
-                        });
-                    } else if (/discovery/.test(url)) {
-                        discovery++;
-                        return {
-                            ids: _.map(objects, 'id'),
-                            gns: _.map(objects, 'gn'),
-                        };
-                    } else if (/retrieval/.test(url)) {
-                        retrieval++;
-                        return objects;
-                    }
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                if (/storage/.test(url)) {
+                    storage++;
+                    // make object available, then wait a bit
+                    let object = _.clone(payload.objects[0]);
+                    object.id = id++;
+                    object.gn = 1;
+                    objects.push(object);
+                    return Promise.delay(100).then(() => {
+                        return [ object ];
+                    });
+                } else if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn'),
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return objects;
+                }
             };
             dataSource.save(location, [ newObject ]);
-            return dataSource.find(location, {}).then((projects) => {
-                // it would return two objects--the uncommitted and the committed
-                // one if search is allowed to proceed before before a save() is
-                // finished
-                expect(projects).to.have.length(1);
-            });
+            let projects = await dataSource.find(location, {});
+            // it would return two objects--the uncommitted and the committed
+            // one if search is allowed to proceed before before a save() is
+            // finished
+            expect(projects).to.have.length(1);
         })
-        it('should merge multiple deferred saves', function() {
+        it('should merge multiple deferred saves', async function() {
             let event = null;
             let additionalSavePromises = [];
             let additionalSavesTriggeredPromise = ManualPromise();
@@ -944,11 +893,11 @@ describe('RemoteDataSource', function() {
                 if (num <= 4) {
                     // load the only object and modify it
                     let query = _.assign({ criteria: {} }, location);
-                    let promise = dataSource.find(query).get(0).then((object) => {
+                    let promise = dataSource.find(query).then((objects) => {
                         // should still be uncommitted at this point
-                        expect(object).to.have.property('id').that.is.below(1);
-                        expect(object).to.have.property('uncommitted').that.is.true;
-                        object = _.clone(object);
+                        expect(objects[0]).to.have.property('id').that.is.below(1);
+                        expect(objects[0]).to.have.property('uncommitted').that.is.true;
+                        let object = _.clone(objects[0]);
                         object['prop' + num] = num;
                         return dataSource.save(location, [ object ], { delay: 200 });
                     });
@@ -963,51 +912,47 @@ describe('RemoteDataSource', function() {
             let discovery = 0;
             let retrieval = 0;
             let objects = [];
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    if (/storage/.test(url)) {
-                        storage++;
-                        let object = _.clone(payload.objects[0]);
-                        object.id = id++;
-                        object.gn = 1;
-                        objects.push(object);
-                        return [ object ];
-                    } else if (/discovery/.test(url)) {
-                        discovery++;
-                        return {
-                            ids: _.map(objects, 'id'),
-                            gns: _.map(objects, 'gn'),
-                        };
-                    } else if (/retrieval/.test(url)) {
-                        retrieval++;
-                        return objects;
-                    }
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                if (/storage/.test(url)) {
+                    storage++;
+                    let object = _.clone(payload.objects[0]);
+                    object.id = id++;
+                    object.gn = 1;
+                    objects.push(object);
+                    return [ object ];
+                } else if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn'),
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return objects;
+                }
             };
-            return dataSource.save(location, [ newObject ], { delay: 200 }).then((objects) => {
-                // initial call should get canceled
-                expect(objects).to.have.length(0);
-            }).then(() => {
-                // wait for addition saves to be triggered
-                return additionalSavesTriggeredPromise.timeout(1000);
-            }).then(() => {
-                return Promise.all(additionalSavePromises);
-            }).then((results) => {
-                expect(storage).to.equal(1);
-                // all but the last should be canceled
-                expect(results[0]).to.have.length(0);
-                expect(results[1]).to.have.length(0);
-                expect(results[2]).to.have.length(0);
-                expect(results[3]).to.have.length(1);
-                let savedObject = results[3][0];
-                expect(savedObject).to.have.property('id').that.is.at.least(1);
-                expect(savedObject).to.have.property('prop1', 1);
-                expect(savedObject).to.have.property('prop2', 2);
-                expect(savedObject).to.have.property('prop3', 3);
-                expect(savedObject).to.have.property('prop4', 4);
-            });
+            let savedObjects = await dataSource.save(location, [ newObject ], { delay: 200 });
+            // initial call should get canceled
+            expect(savedObjects).to.have.length(0);
+
+            // wait for addition saves to be triggered
+            await additionalSavesTriggeredPromise;
+
+            let results = await Promise.all(additionalSavePromises);
+            expect(storage).to.equal(1);
+            // all but the last should be canceled
+            expect(results[0]).to.have.length(0);
+            expect(results[1]).to.have.length(0);
+            expect(results[2]).to.have.length(0);
+            expect(results[3]).to.have.length(1);
+            let savedObject = results[3][0];
+            expect(savedObject).to.have.property('id').that.is.at.least(1);
+            expect(savedObject).to.have.property('prop1', 1);
+            expect(savedObject).to.have.property('prop2', 2);
+            expect(savedObject).to.have.property('prop3', 3);
+            expect(savedObject).to.have.property('prop4', 4);
         })
-        it('should save objects to local schema', function() {
+        it('should save objects to local schema', async function() {
             let location = {
                 schema: 'local',
                 table: 'bob'
@@ -1018,92 +963,84 @@ describe('RemoteDataSource', function() {
                     age: 87
                 }
             };
-            return dataSource.save(location, [ newObject ]).then(() => {
-                cache.reset();
-                return dataSource.find(location).then((objects) => {
-                    expect(objects[0]).to.deep.equal(newObject);
-                });
-            });
+            await dataSource.save(location, [ newObject ]);
+            cache.reset();
+            let objects = await dataSource.find(location);
+            expect(objects[0]).to.deep.equal(newObject);
         })
     })
     describe('#remove()', function() {
-        it('should try to remove an object', function() {
+        it('should try to remove an object', async function() {
             let changeEventPromise = ManualPromise();
             dataSource.addEventListener('change', changeEventPromise.resolve);
             let location = { address: 'http://level1.lonely-mountain.me', schema: 'global', table: 'project' };
             let existingObject = { id: 1, name: 'smaug' };
             let storage = 0;
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.delay(50).then(() => {
-                    return Promise.try(() => {
-                        if (/storage/.test(url)) {
-                            storage++;
-                            expect(method).to.match(/post/i);
-                            expect(payload).to.have.property('objects').that.is.an.array;
-                            return _.map(payload.objects, (object) => {
-                                expect(object.deleted).to.be.true;
-                                return _.clone(object);
-                            });
-                        }
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/storage/.test(url)) {
+                    storage++;
+                    expect(method).to.match(/post/i);
+                    expect(payload).to.have.property('objects').that.is.an.array;
+                    return _.map(payload.objects, (object) => {
+                        expect(object.deleted).to.be.true;
+                        return _.clone(object);
                     });
-                });
+                }
             };
-            return dataSource.remove(location, [ existingObject ]).then((objects) => {
-                expect(storage).to.equal(1);
-                return changeEventPromise.timeout(1000);
-            }).then((evt) => {
-                expect(evt).to.have.property('type', 'change');
-            });
+            let objects = await dataSource.remove(location, [ existingObject ]);
+            expect(storage).to.equal(1);
+            let evt = await changeEventPromise;
+            expect(evt).to.have.property('type', 'change');
         })
-        it('should keep a delete request in the change queue when there is no connection and send it when connection is restored', function() {
+        it('should keep a delete request in the change queue when there is no connection and send it when connection is restored', async function() {
             let location = { address: 'http://level2.lonely-mountain.me', schema: 'global', table: 'project' };
             let objects = [ { id: 1, gn: 2, name: 'smaug' } ];
             let storage = 0;
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.delay(50).then(() => {
-                    return Promise.try(() => {
-                        if (/storage/.test(url)) {
-                            storage++;
-                            return _.map(payload.objects, (object) => {
-                                return _.clone(object);
-                            });
-                        } else if (/discovery/.test(url)) {
-                            return {
-                                ids: _.map(objects, 'id'),
-                                gns: _.map(objects, 'gn'),
-                            };
-                        } else if (/retrieval/.test(url)) {
-                            return objects;
-                        }
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/storage/.test(url)) {
+                    storage++;
+                    return _.map(payload.objects, (object) => {
+                        return _.clone(object);
                     });
-                });
+                } else if (/discovery/.test(url)) {
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn'),
+                    };
+                } else if (/retrieval/.test(url)) {
+                    return objects;
+                }
             };
             // create a search first
             let query = _.extend(location, { criteria: {} });
-            return dataSource.find(query).then((found) => {
-                expect(found).to.have.lengthOf(1);
+            let found1 = await dataSource.find(query);
+            expect(found1).to.have.lengthOf(1);
 
-                // deactivate data source
-                dataSource.deactivate();
-            }).then(() => {
-                // this call will stall
-                return expect(dataSource.remove(location, [ objects[0] ]).timeout(100))
-                    .to.eventually.be.rejectedWith(Promise.TimeoutError);
-            }).then(() => {
-                expect(storage).to.equal(0);
-                return dataSource.find(query).then((found) => {
-                    // merging uncommitted delete into result
-                    expect(found).to.have.lengthOf(0);
-                });
-            }).then(() => {
-                // reactivate data source
-                dataSource.activate();
-                return null;
-            }).delay(200).then(() => {
-                expect(storage).to.equal(1);
-            });
+            // deactivate data source
+            dataSource.deactivate();
+
+            // this call will stall
+            let removalPromise = dataSource.remove(location, [ objects[0] ]);
+            let result = await Promise.race([
+                removalPromise,
+                Bluebird.resolve('stalled').delay(100)
+            ]);
+            expect(result).to.equal('stalled');
+
+            expect(storage).to.equal(0);
+            let found2 = await dataSource.find(query);
+            // merging uncommitted delete into result
+            expect(found2).to.have.lengthOf(0);
+
+            // reactivate data source
+            dataSource.activate();
+
+            await removalPromise;
+            expect(storage).to.equal(1);
         })
-        it('should remove an object from local schema', function() {
+        it('should remove an object from local schema', async function() {
             let location = {
                 schema: 'local',
                 table: 'bob'
@@ -1114,127 +1051,109 @@ describe('RemoteDataSource', function() {
                     age: 87
                 }
             };
-            return dataSource.save(location, [ newObject ]).then(() => {
-                return dataSource.remove(location, [ newObject ]).then(() => {
-                    cache.reset();
-                    return dataSource.find(location).then((objects) => {
-                        expect(objects).to.have.lengthOf(0);
-                    });
-                });
-            });
+            await dataSource.save(location, [ newObject ]);
+            await dataSource.remove(location, [ newObject ]);
+            cache.reset();
+            let objects = await dataSource.find(location);
+            expect(objects).to.have.lengthOf(0);
         })
     })
     describe('#abandon()', function() {
-        it('should make searches at a given server dirty', function() {
+        it('should make searches at a given server dirty', async function() {
             let location = { address: 'http://toilet.helms-deep.me', schema: 'global', table: 'project' };
             let objects = [ { id: 1, gn: 2, name: 'fart' } ];
             let discovery = 0, retrieval = 0;
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.delay(50).then(() => {
-                    return Promise.try(() => {
-                        if (/discovery/.test(url)) {
-                            discovery++;
-                            return {
-                                ids: _.map(objects, 'id'),
-                                gns: _.map(objects, 'gn'),
-                            };
-                        } else if (/retrieval/.test(url)) {
-                            retrieval++;
-                            return objects;
-                        }
-                    });
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn'),
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return objects;
+                }
             };
             let query = _.extend(location, { blocking: 'expired', criteria: {} });
-            return dataSource.find(query).then((found) => {
-                expect(found).to.have.lengthOf(1);
-                expect(discovery).to.equal(1);
-                expect(retrieval).to.equal(1);
+            let found1 = await dataSource.find(query);
+            expect(found1).to.have.lengthOf(1);
+            expect(discovery).to.equal(1);
+            expect(retrieval).to.equal(1);
 
-                // wait for cache write to complete
-                return Promise.delay(500).then(() => {
-                    return cache.find(query).then((found) => {
-                        expect(found).to.have.lengthOf(1);
-                    });
-                });
-            }).then(() => {
-                dataSource.abandon(location.address, location.schema);
-            }).then(() => {
-                return dataSource.find(query).then((found) => {
-                    expect(found).to.have.lengthOf(1);
-                    // a discovery will occur again, since the criteria is open-ended
-                    // as the gn hasn't changed, the no retrieval will occur
-                    expect(discovery).to.equal(2);
-                    expect(retrieval).to.equal(1);
-                });
-            });
+            // wait for cache write to complete
+            await Bluebird.delay(500);
+            let found2 = await cache.find(query);
+            expect(found2).to.have.lengthOf(1);
+
+            await dataSource.abandon(location.address, location.schema);
+
+            let found3 = await dataSource.find(query);
+            expect(found3).to.have.lengthOf(1);
+            // a discovery will occur again, since the criteria is open-ended
+            // as the gn hasn't changed, the no retrieval will occur
+            expect(discovery).to.equal(2);
+            expect(retrieval).to.equal(1);
         })
     })
     describe('#invalidate()', function() {
-        it('should flag searches as dirty based on change info', function() {
+        it('should flag searches as dirty based on change info', async function() {
             let location = { address: 'http://kitchen.helms-deep.me', schema: 'global', table: 'project' };
             let objects = [ { id: 1, gn: 2, name: 'milk' } ];
             let discovery = 0, retrieval = 0;
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.delay(50).then(() => {
-                    return Promise.try(() => {
-                        if (/discovery/.test(url)) {
-                            discovery++;
-                            return {
-                                ids: _.map(objects, 'id'),
-                                gns: _.map(objects, 'gn'),
-                            };
-                        } else if (/retrieval/.test(url)) {
-                            retrieval++;
-                            return objects;
-                        }
-                    });
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn'),
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return objects;
+                }
             };
             let query = _.extend(location, { criteria: {} });
-            return dataSource.find(query).then((found) => {
-                expect(found).to.have.lengthOf(1);
-                expect(discovery).to.equal(1);
-                expect(retrieval).to.equal(1);
-            }).then(() => {
-                objects = [ { id: 1, gn: 3, name: 'cheese' } ];
-                let changes = [
-                    {
-                        address: location.address,
-                        schema: 'global',
-                        table: 'project',
-                        id: 1,
-                        gn: 3,
-                    }
-                ];
-                return dataSource.invalidate(changes);
-            }).then(() => {
-                let changeEventPromise = ManualPromise();
-                dataSource.addEventListener('change', changeEventPromise.resolve);
+            let found1 = await dataSource.find(query);
+            expect(found1).to.have.lengthOf(1);
+            expect(discovery).to.equal(1);
+            expect(retrieval).to.equal(1);
 
-                return dataSource.find(query).then((found) => {
-                    // the initial call to find() will return what we got before
-                    return changeEventPromise.timeout(1000);
-                }).then((evt) => {
-                    // a subsequent call triggered by change event will actually find
-                    // the updated results
-                    return dataSource.find(query).then((found) => {
-                        expect(found[0]).to.have.property('gn', 3);
-                        expect(discovery).to.equal(2);
-                        expect(retrieval).to.equal(2);
-                    });
-                });
-            });
+            objects = [ { id: 1, gn: 3, name: 'cheese' } ];
+            let changes = [
+                {
+                    address: location.address,
+                    schema: 'global',
+                    table: 'project',
+                    id: 1,
+                    gn: 3,
+                }
+            ];
+            await dataSource.invalidate(changes);
+
+            let changeEventPromise = ManualPromise();
+            dataSource.addEventListener('change', changeEventPromise.resolve);
+
+            let found2 = await dataSource.find(query);
+            expect(found2).to.deep.equal(found1);
+            // the initial call to find() will return what we got before
+            await changeEventPromise;
+            // a subsequent call triggered by change event will actually find
+            // the updated results
+            let found3 = await dataSource.find(query);
+            expect(found3[0]).to.have.property('gn', 3);
+            expect(discovery).to.equal(2);
+            expect(retrieval).to.equal(2);
         })
-        it('should flag all searches at all servers as dirty when no change info is given', function() {
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.try(() => {
-                    if (/discovery/.test(url)) {
-                        return { ids: [], gns: [] };
-                    } else if (/retrieval/.test(url)) {
-                        return [];
-                    }
-                });
+        it('should flag all searches at all servers as dirty when no change info is given', async function() {
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                if (/discovery/.test(url)) {
+                    return { ids: [], gns: [] };
+                } else if (/retrieval/.test(url)) {
+                    return [];
+                }
             };
             let queries = [
                 { address: 'http://mirkwood.me', schema: 'global', table: 'project', criteria: {}, blocking: true },
@@ -1242,18 +1161,16 @@ describe('RemoteDataSource', function() {
                 { address: 'http://mirkwood.me', schema: 'global', table: 'smerf', criteria: {}, blocking: true },
                 { address: 'http://rivendell.me', schema: 'global', table: 'project', criteria: {}, blocking: true },
             ];
-            return Promise.each(queries, (query) => {
-                return dataSource.find(query);
-            }).then(() => {
-                return dataSource.invalidate();
-            }).then(() => {
-                let searches = dataSource.recentSearchResults;
-                _.each(searches, (search) => {
-                    expect(search.dirty).to.be.true;
-                });
-            });
+            for (let query of queries) {
+                await dataSource.find(query);
+            }
+            await dataSource.invalidate();
+            let searches = dataSource.recentSearchResults;
+            for (let search of searches) {
+                expect(search.dirty).to.be.true;
+            }
         })
-        it('should trigger merging of remote changes', function() {
+        it('should trigger merging of remote changes', async function() {
             let location = { address: 'http://arnor.me', schema: 'global', table: 'project' };
             let objects = [ { id: 7, gn: 1, name: 'piglet' } ];
             let changedObject = { id: 7, gn: 1, name: 'lizard' };
@@ -1269,101 +1186,87 @@ describe('RemoteDataSource', function() {
                 evt.preventDefault();
             };
             let discovery = 0, retrieval = 0, storage = 0;
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.delay(50).then(() => {
-                    return Promise.try(() => {
-                        if (/discovery/.test(url)) {
-                            discovery++;
-                            return {
-                                ids: _.map(objects, 'id'),
-                                gns: _.map(objects, 'gn'),
-                            };
-                        } else if (/retrieval/.test(url)) {
-                            retrieval++;
-                            return objects;
-                        } else if (/storage/.test(url)) {
-                            storage++;
-                            expect(payload.objects[0]).to.have.property('name', 'merged');
-                            return payload.objects;
-                        }
-                    });
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn'),
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return objects;
+                } else if (/storage/.test(url)) {
+                    storage++;
+                    expect(payload.objects[0]).to.have.property('name', 'merged');
+                    return payload.objects;
+                }
             };
             // initiate a deferred save
             let options = { delay: 500, onConflict };
             let savePromise = dataSource.save(location, [ changedObject ], options);
-            return Promise.try(() => {
-                // simulate a change by someone else in the meantime
-                objects = [ { id: 7, gn: 2, name: 'cat' } ];
-                let changes = [
-                    {
-                        address: location.address,
-                        schema: 'global',
-                        table: 'project',
-                        id: 7,
-                        gn: 2,
-                    }
-                ];
-                return dataSource.invalidate(changes);
-            }).then(() => {
-                // wait for save() to finish
-                return savePromise;
-            }).then((results) => {
-                expect(results).to.have.lengthOf(1);
-                expect(onConflictCalled).to.be.true;
-                expect(retrieval).to.equal(1);
-                expect(storage).to.equal(1);
-            });
+            // simulate a change by someone else in the meantime
+            objects = [ { id: 7, gn: 2, name: 'cat' } ];
+            let changes = [
+                {
+                    address: location.address,
+                    schema: 'global',
+                    table: 'project',
+                    id: 7,
+                    gn: 2,
+                }
+            ];
+            await dataSource.invalidate(changes);
+            // wait for save() to finish
+            let results = await savePromise;
+            expect(results).to.have.lengthOf(1);
+            expect(onConflictCalled).to.be.true;
+            expect(retrieval).to.equal(1);
+            expect(storage).to.equal(1);
         })
-        it('should force the abandonment of a change when onConflict is not set', function() {
+        it('should force the abandonment of a change when onConflict is not set', async function() {
             let location = { address: 'http://esgaroth.me', schema: 'global', table: 'project' };
             let objects = [ { id: 7, gn: 1, name: 'piglet' } ];
             let changedObject = { id: 7, gn: 1, name: 'lizard' };
             let discovery = 0, retrieval = 0, storage = 0;
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.delay(50).then(() => {
-                    return Promise.try(() => {
-                        if (/discovery/.test(url)) {
-                            discovery++;
-                            return {
-                                ids: _.map(objects, 'id'),
-                                gns: _.map(objects, 'gn'),
-                            };
-                        } else if (/retrieval/.test(url)) {
-                            retrieval++;
-                            return objects;
-                        } else if (/storage/.test(url)) {
-                            storage++;
-                            return payload.objects;
-                        }
-                    });
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn'),
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return objects;
+                } else if (/storage/.test(url)) {
+                    storage++;
+                    return payload.objects;
+                }
             };
             // initiate a deferred save
             let options = { delay: 500 };
             let savePromise = dataSource.save(location, [ changedObject ], options);
-            return Promise.try(() => {
-                // simulate a change by someone else in the meantime
-                objects = [ { id: 7, gn: 2, name: 'cat' } ];
-                let changes = [
-                    {
-                        address: location.address,
-                        schema: 'global',
-                        table: 'project',
-                        id: 7,
-                        gn: 2,
-                    }
-                ];
-                return dataSource.invalidate(changes);
-            }).then(() => {
-                // wait for save() to finish
-                return savePromise;
-            }).then((results) => {
-                expect(results).to.have.lengthOf(0);
-                expect(storage).to.equal(0);
-            });
+            // simulate a change by someone else in the meantime
+            objects = [ { id: 7, gn: 2, name: 'cat' } ];
+            let changes = [
+                {
+                    address: location.address,
+                    schema: 'global',
+                    table: 'project',
+                    id: 7,
+                    gn: 2,
+                }
+            ];
+            await dataSource.invalidate(changes);
+            // wait for save() to finish
+            let results = await savePromise;
+            expect(results).to.have.lengthOf(0);
+            expect(storage).to.equal(0);
         })
-        it('should force the abandonment of a change when onConflict does not call preventDefault', function() {
+        it('should force the abandonment of a change when onConflict does not call preventDefault', async function() {
             let location = { address: 'http://fangorn.me', schema: 'global', table: 'project' };
             let objects = [ { id: 7, gn: 1, name: 'piglet' } ];
             let changedObject = { id: 7, gn: 1, name: 'lizard' };
@@ -1372,50 +1275,43 @@ describe('RemoteDataSource', function() {
                 onConflictCalled = true;
             };
             let discovery = 0, retrieval = 0, storage = 0;
-            HTTPRequest.fetch = (method, url, payload, options) => {
-                return Promise.delay(50).then(() => {
-                    return Promise.try(() => {
-                        if (/discovery/.test(url)) {
-                            discovery++;
-                            return {
-                                ids: _.map(objects, 'id'),
-                                gns: _.map(objects, 'gn'),
-                            };
-                        } else if (/retrieval/.test(url)) {
-                            retrieval++;
-                            return objects;
-                        } else if (/storage/.test(url)) {
-                            storage++;
-                            return payload.objects;
-                        }
-                    });
-                });
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn'),
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    return objects;
+                } else if (/storage/.test(url)) {
+                    storage++;
+                    return payload.objects;
+                }
             };
             // initiate a deferred save
             let options = { delay: 500, onConflict };
             let savePromise = dataSource.save(location, [ changedObject ], options);
-            return Promise.try(() => {
-                // simulate a change by someone else in the meantime
-                objects = [ { id: 7, gn: 2, name: 'cat' } ];
-                let changes = [
-                    {
-                        address: location.address,
-                        schema: 'global',
-                        table: 'project',
-                        id: 7,
-                        gn: 2,
-                    }
-                ];
-                return dataSource.invalidate(changes);
-            }).then(() => {
-                // wait for save() to finish
-                return savePromise;
-            }).then((results) => {
-                expect(results).to.have.lengthOf(0);
-                expect(onConflictCalled).to.be.true;
-                expect(retrieval).to.equal(1);
-                expect(storage).to.equal(0);
-            });
+            // simulate a change by someone else in the meantime
+            objects = [ { id: 7, gn: 2, name: 'cat' } ];
+            let changes = [
+                {
+                    address: location.address,
+                    schema: 'global',
+                    table: 'project',
+                    id: 7,
+                    gn: 2,
+                }
+            ];
+            await dataSource.invalidate(changes);
+            // wait for save() to finish
+            let results = await savePromise;
+            expect(results).to.have.lengthOf(0);
+            expect(onConflictCalled).to.be.true;
+            expect(retrieval).to.equal(1);
+            expect(storage).to.equal(0);
         })
     })
 })
