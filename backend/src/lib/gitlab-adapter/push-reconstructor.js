@@ -63,7 +63,7 @@ async function importCommits(db, server, repo, branch, headID, tailID, count) {
             commits[commitID] = commit;
             commitIDs.push(commitID);
             // add parents to queue
-            var parentIDs = getParentIDs(commit);
+            let parentIDs = getParentIDs(commit);
             for (let parentID of parentIDs) {
                 queue.push(parentID);
             }
@@ -90,7 +90,7 @@ function mergeLineChanges(chain) {
         modified: 0,
     };
     for (let commit in chain) {
-        var cl = commit.details.lines;
+        let cl = commit.details.lines;
         if (cl) {
             pl.added += cl.added;
             pl.deleted += cl.deleted;
@@ -108,7 +108,7 @@ function mergeFileChanges(chain) {
         renamed: [],
     };
     for (let commit in chain) {
-        var cf = commit.details.files;
+        let cf = commit.details.files;
         if (cf) {
             for (let path in cf.added) {
                 if (!_.includes(pf.added, path)) {
@@ -151,7 +151,7 @@ function mergeFileChanges(chain) {
 }
 
 function findSourceBranches(commits, branch) {
-    var list = [];
+    let list = [];
     for (let commit of commits) {
         if (commit.initial_branch !== branch) {
             if (!_.includes(list, commit.initial_branch)) {
@@ -171,9 +171,9 @@ function findSourceBranches(commits, branch) {
  * @return {Array<String>}
  */
 function getParentIDs(commit) {
-    var commitLink = _.find(commit.external, { type: 'gitlab' });
-    var commitID = commitLink.commit.id;
-    var parentIDs = commitLink.commit.parent_ids;
+    let commitLink = _.find(commit.external, { type: 'gitlab' });
+    let commitID = commitLink.commit.id;
+    let parentIDs = commitLink.commit.parent_ids;
     // sanity check
     if (_.includes(parentIDs, commitID)) {
         parentIDs = _.without(parentIDs, commitID);
@@ -191,12 +191,12 @@ function getParentIDs(commit) {
  * @return {Array<Commit>}
  */
 function getCommitChain(commits, headID, branch) {
-    var chain = [];
-    var id = headID;
+    let chain = [];
+    let id = headID;
     do {
-        var commit = commits[id];
+        let commit = commits[id];
         if (commit) {
-            var parentIDs = getParentIDs(commit);
+            let parentIDs = getParentIDs(commit);
             id = parentIDs[0];
             // include only commits that are checked directly into branch
             if (commit.initial_branch === branch) {

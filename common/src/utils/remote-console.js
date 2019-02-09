@@ -1,6 +1,6 @@
-var HTTPRequest = require('transport/http-request');
+import * as HTTPRequest from 'transport/http-request';
 
-var address = `http://192.168.0.53:8585`;
+const address = `http://192.168.0.53:8585`;
 
 _.each([ 'log', 'error', 'warn' ], (name) => {
     console[name] = function(...args) {

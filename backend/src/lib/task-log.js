@@ -25,16 +25,15 @@ function start(action, options) {
  *
  * @return {Promise<Task|null>}
  */
-function last(action, options) {
-    return Database.open().then((db) => {
-        var criteria = {
-            action,
-            options,
-            order: 'id DESC',
-            limit: 1,
-        };
-        return Task.findOne(db, 'global', criteria, '*');
-    });
+async function last(action, options) {
+    let db = await Database.open();
+    let criteria = {
+        action,
+        options,
+        order: 'id DESC',
+        limit: 1,
+    };
+    return Task.findOne(db, 'global', criteria, '*');
 }
 
 class TaskLog {
@@ -138,7 +137,7 @@ class TaskLog {
             return null;
         }
         let db = await Database.open();
-        var columns = {};
+        let columns = {};
         if (!this.id) {
             columns.action = this.action;
             columns.options = this.options;
@@ -155,7 +154,7 @@ class TaskLog {
         this.id = task.id;
         this.saved = true;
 
-        var state = ''
+        let state = ''
         if (this.completion < 100) {
             if (this.failed) {
                 state = 'aborted';

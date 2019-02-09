@@ -787,7 +787,7 @@ describe('RemoteDataSource', function() {
                     expect(payload).to.have.property('objects').that.is.an.array;
 
                     // wait for the search
-                    await preSaveSearchPromise;
+                    await presaveSearchPromise;
 
                     // return the results only after we've done a search
                     let object = _.clone(payload.objects[0]);
@@ -806,6 +806,7 @@ describe('RemoteDataSource', function() {
                     return objects;
                 }
             };
+
             // the logic here is a bit convoluted...
             //
             // 1. The first thing that happens is that we call save()
@@ -816,7 +817,7 @@ describe('RemoteDataSource', function() {
             //    the results (the feature we're testing)
             // 5. since save() would replace newObject with the saved version
             //    we want our pseudo-server code above to block until we've
-            //    performed step 4, the reason why it waits for preSaveSearchPromise
+            //    performed step 4, the reason why it waits for presaveSearchPromise
             // 6. once this happens, the pseudo-server code unblocks, and
             //    HTTPRequest.fetch() returns
             // 7. save() now has the object "returned by the server", which is
@@ -826,16 +827,18 @@ describe('RemoteDataSource', function() {
             // 9. then we run the query again and check that the result of step 7
             let changeEventPromise = ManualPromise();
             dataSource.addEventListener('change', changeEventPromise.resolve);
-            let preSaveSearchPromise = changeEventPromise.then((evt) => {
+            let presaveSearch = async () => {
+                await changeEventPromise;
                 dataSource.removeEventListener('change', changeEventPromise.resolve);
 
                 // perform the query that should yield the object with temporary ID
                 let query = _.assign({ criteria: {} }, location);
                 return dataSource.find(query);
-            });
+            };
+            let presaveSearchPromise = presaveSearch();
             let savedObjects = await dataSource.save(location, [ newObject ]);
             // the promise should fulfill immediately
-            let projectsImmediately = await preSaveSearchPromise;
+            let projectsImmediately = await presaveSearchPromise;
             // project should have a temporary ID
             expect(projectsImmediately).to.have.length(1);
             expect(projectsImmediately[0]).to.have.property('id').that.is.below(1);
@@ -892,14 +895,17 @@ describe('RemoteDataSource', function() {
                 if (num <= 4) {
                     // load the only object and modify it
                     let query = _.assign({ criteria: {} }, location);
-                    let promise = dataSource.find(query).then((objects) => {
+                    let save = async (num) => {
+                        let objects = await dataSource.find(query);
+                        let object = objects[0];
                         // should still be uncommitted at this point
-                        expect(objects[0]).to.have.property('id').that.is.below(1);
-                        expect(objects[0]).to.have.property('uncommitted').that.is.true;
-                        let object = _.clone(objects[0]);
+                        expect(object).to.have.property('id').that.is.below(1);
+                        expect(object).to.have.property('uncommitted').that.is.true;
+                        object = _.clone(object);
                         object['prop' + num] = num;
                         return dataSource.save(location, [ object ], { delay: 200 });
-                    });
+                    };
+                    let promise = save(num);
                     additionalSavePromises.push(promise);
                 } else {
                     additionalSavesTriggeredPromise.resolve();

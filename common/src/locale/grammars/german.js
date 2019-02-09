@@ -6,7 +6,7 @@ function cardinal(num, sg, pl) {
     }
 }
 
-var numberRegExp = /\d+/;
+let numberRegExp = /\d+/;
 
 function replaceNumber(s, n) {
     return s.replace(numberRegExp, n);

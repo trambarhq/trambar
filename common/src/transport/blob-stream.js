@@ -255,6 +255,13 @@ class BlobStream {
             while (!this.finished) {
                 await this.sendNextChunk(index++);
             }
+
+            if (this.onComplete) {
+                this.onComplete({
+                    type: 'complete',
+                    target: this,
+                });
+            }
         } catch (err) {
             // send abort request
             let formData = new FormData;

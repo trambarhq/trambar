@@ -1,11 +1,11 @@
-var _ = require('lodash');
-var Promise = require('bluebird');
-var Express = require('express');
-var BodyParser = require('body-parser');
-var Multer = require('multer');
-var CORS = require('cors');
-var SockJS = require('sockjs');
-var Crypto = Promise.promisifyAll(require('crypto'));
+const _ = require('lodash');
+const Bluebird = require('bluebird');
+const Express = require('express');
+const BodyParser = require('body-parser');
+const Multer = require('multer');
+const CORS = require('cors');
+const SockJS = require('sockjs');
+const Crypto = Bluebird.promisifyAll(require('crypto'));
 
 module.exports = {
     start,
@@ -13,17 +13,17 @@ module.exports = {
     send,
 };
 
-var server;
-var serverPort;
-var sockets = [];
+let server;
+let serverPort;
+let sockets = [];
 
-function start(port, options) {
+async function start(port, options) {
     // set up handlers
-    var app = Express();
+    let app = Express();
     app.use(BodyParser.json());
     app.use(CORS());
-    var storage = Multer.memoryStorage()
-    var upload = Multer({ storage: storage });
+    let storage = Multer.memoryStorage()
+    let upload = Multer({ storage: storage });
     app.set('json spaces', 2);
     app.route('/echo').all(handleEchoRequest);
     app.route('/delay/:delay').all(handleDelayEchoRequest);
@@ -33,7 +33,7 @@ function start(port, options) {
     app.route('/download/:id/:part').get(handleFileRetrieval);
 
     // set up SockJS server
-    var sockJS = SockJS.createServer({
+    let sockJS = SockJS.createServer({
         sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.1.2/sockjs.min.js',
         log: (severity, message) => {
             if (severity === 'error') {
@@ -41,7 +41,7 @@ function start(port, options) {
             }
         },
     });
-    sockJS.on('connection', (socket) => {
+    sockJS.on('connection', async (socket) => {
         if (socket) {
             sockets.push(socket);
             socket.on('close', () => {
@@ -49,10 +49,9 @@ function start(port, options) {
             });
 
             // assign a random id to socket
-            return Crypto.randomBytesAsync(16).then((buffer) => {
-                socket.token = buffer.toString('hex');
-                socket.write(JSON.stringify({ socket: socket.token }));
-            });
+            let buffer = await Crypto.randomBytesAsync(16);
+            socket.token = buffer.toString('hex');
+            socket.write(JSON.stringify({ socket: socket.token }));
         }
     });
 
@@ -66,9 +65,9 @@ function start(port, options) {
             sockJS.installHandlers(server, { prefix: '/socket' });
 
             // break connections on shutdown
-            var connections = {};
+            let connections = {};
             server.on('connection', function(conn) {
-                var key = conn.remoteAddress + ':' + conn.remotePort;
+                let key = conn.remoteAddress + ':' + conn.remotePort;
                 connections[key] = conn;
                 conn.on('close', function() {
                     delete connections[key];
@@ -76,7 +75,7 @@ function start(port, options) {
             });
             server.destroy = function(cb) {
                 server.close(cb);
-                for (var key in connections) {
+                for (let key in connections) {
                     connections[key].destroy();
                 }
             };
@@ -86,7 +85,7 @@ function start(port, options) {
     });
 }
 
-function stop() {
+async function stop() {
     return new Promise((resolve, reject) => {
         if (server) {
             server.destroy(resolve);
@@ -97,7 +96,7 @@ function stop() {
 }
 
 function send(token, payload) {
-    var socket = _.find(sockets, { token });
+    let socket = _.find(sockets, { token });
     if (socket) {
         socket.write(JSON.stringify(payload));
     }
@@ -105,7 +104,7 @@ function send(token, payload) {
 
 function handleEchoRequest(req, res) {
     try {
-        var input = (req.method === 'GET') ? req.query : req.body;
+        let input = (req.method === 'GET') ? req.query : req.body;
         res.json(input);
     } catch (err) {
         res.sendStatus(500);
@@ -114,7 +113,7 @@ function handleEchoRequest(req, res) {
 
 function handleDelayEchoRequest(req, res) {
     try {
-        var delay = parseInt(req.params.delay);
+        let delay = parseInt(req.params.delay);
         setTimeout(() => {
             res.json(req.body);
         }, delay);
@@ -123,15 +122,15 @@ function handleDelayEchoRequest(req, res) {
     }
 }
 
-var files = {};
+let files = {};
 
 function handleFileUpload(req, res) {
     try {
-        var payloadID = req.params.id;
-        var part = req.params.part;
-        var key = payloadID + '/' + part;
+        let payloadID = req.params.id;
+        let part = req.params.part;
+        let key = payloadID + '/' + part;
         if (req.file) {
-            var buffer = req.file.buffer;
+            let buffer = req.file.buffer;
             files[key] = buffer;
         } else if (req.body.stream) {
             files[key] = req.body.stream;
@@ -145,14 +144,14 @@ function handleFileUpload(req, res) {
     }
 }
 
-var streams = {};
+let streams = {};
 
 function handleStreamUpload(req, res) {
     try {
-        var streamID = req.params.id;
+        let streamID = req.params.id;
         if (req.file) {
-            var buffer = req.file.buffer;
-            var stream = streams[streamID];
+            let buffer = req.file.buffer;
+            let stream = streams[streamID];
             if (stream) {
                 streams[streamID] = Buffer.concat([ stream, buffer ]);
             } else {
@@ -168,10 +167,10 @@ function handleStreamUpload(req, res) {
 
 function handleFileRetrieval(req, res) {
     try {
-        var payloadID = req.params.id;
-        var part = req.params.part;
-        var key = payloadID + '/' + part;
-        var buffer = files[key];
+        let payloadID = req.params.id;
+        let part = req.params.part;
+        let key = payloadID + '/' + part;
+        let buffer = files[key];
         if (typeof(buffer) === 'string') {
             buffer = streams[buffer];
         }

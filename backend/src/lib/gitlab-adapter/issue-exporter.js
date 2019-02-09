@@ -171,9 +171,8 @@ async function exportStoryMove(db, system, project, story, fromRepo, toRepo, tas
         return exportStoryRemove(db, system, project, story, fromRepo, task);
     } else if (fromRepoLink.server_id !== toRepoLink.server_id) {
         // moving issue from one server to another
-        return exportStoryCreate(db, system, project, story, toRepo, task).then(() => {
-            return exportStoryRemove(db, system, project, story, fromRepo, task);
-        });
+        await exportStoryCreate(db, system, project, story, toRepo, task);
+        return exportStoryRemove(db, system, project, story, fromRepo, task);
     }
     let server = await findRepoServer(db, toRepo);
     let user = await findActingUser(db, task);
@@ -431,19 +430,18 @@ function adjustReactionProperties(reaction, server, story) {
  *
  * @return {Promise<Story|null>}
  */
-function findSourceStory(db, project, task) {
+async function findSourceStory(db, project, task) {
     let schema = project.name;
     let storyID = task.options.story_id;
     let criteria = {
         id: storyID,
         deleted: false,
     };
-    return Story.findOne(db, project.name, criteria, '*').then((story) => {
-        if (!story) {
-            throw new HTTPError(404, 'Story not found');
-        }
-        return story;
-    });
+    let story = await Story.findOne(db, project.name, criteria, '*');
+    if (!story) {
+        throw new HTTPError(404, 'Story not found');
+    }
+    return story;
 }
 
 /**

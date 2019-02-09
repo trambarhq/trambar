@@ -60,7 +60,7 @@ class Route {
     }
 
     free(callback) {
-        var index = this.callbacks.indexOf(callback);
+        let index = this.callbacks.indexOf(callback);
         if (index !== -1) {
             this.callbacks.splice(index, 1);
         }

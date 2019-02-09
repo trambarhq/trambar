@@ -23,8 +23,8 @@ class UploadProgress extends PureComponent {
         if (!payloads.uploading) {
             return null;
         }
-        var size = _.fileSize(payloads.uploading.bytes);
-        var count = payloads.uploading.files;
+        let size = _.fileSize(payloads.uploading.bytes);
+        let count = payloads.uploading.files;
         return (
             <div className="upload-progress">
                 {t('upload-progress-uploading-$count-files-$size-remaining', count, size)}

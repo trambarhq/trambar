@@ -19,13 +19,13 @@ function cardinal(num, sg, pl, plGenitive) {
     }
 }
 
-var numberRegExp = /\d+/;
+let numberRegExp = /\d+/;
 
 function replaceNumber(s, n) {
     return s.replace(numberRegExp, n);
 }
 
-var nameGenders = {};
+let nameGenders = {};
 
 function genderize(name, gender) {
     nameGenders[name] = gender;
@@ -34,7 +34,7 @@ function genderize(name, gender) {
 function gender(name) {
     // handle multiple names
     if (name instanceof Array) {
-        for (var i = 0; i < name.length; i++) {
+        for (let i = 0; i < name.length; i++) {
             if (gender(name[i]) === 'male') {
                 return 'male';
             }
@@ -44,14 +44,14 @@ function gender(name) {
 
     if (name) {
         // use value from prior call to genderize()
-        var gender = nameGenders[name];
+        let gender = nameGenders[name];
         if (gender) {
             return gender;
         }
 
         // see if the first name ends in an 'a', taking exceptions into consideration
-        var parts = name.split(/\s+/);
-        var fname = parts[0].toLocaleLowerCase();
+        let parts = name.split(/\s+/);
+        let fname = parts[0].toLocaleLowerCase();
         if (/a$/.test(fname)) {
             if (!isMasculine[fname]) {
                 return 'female';
@@ -79,13 +79,13 @@ function pastTenseEnding(name, plural) {
 
 function list(items) {
     if (items.length >= 2) {
-        var lastItem = items.pop();
+        let lastItem = items.pop();
         items[items.length - 1] += ' a ' + lastItem;
     }
     return items.join(', ');
 }
 
-var isFeminine = {};
+let isFeminine = {};
 [
     'Abigail',
     'Adél',
@@ -240,7 +240,7 @@ var isFeminine = {};
     isFeminine[name.toLocaleLowerCase()] = true;
 });
 
-var isMasculine = {};
+let isMasculine = {};
 [
     'Honza',
     'Jožka',

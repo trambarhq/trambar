@@ -238,7 +238,7 @@ async function removeSystemHook(host, server) {
     console.log(`Removing web-hook on server: ${server.name}`);
     let glHooks = await fetchSystemHooks(server);
     for (let glHook of glHooks) {
-        var url = getSystemHookEndpoint(host, server);
+        let url = getSystemHookEndpoint(host, server);
         if (glHook.url === url) {
             await destroySystemHook(server, glHook);
         }
@@ -422,8 +422,8 @@ function getProjectHookEndpoint(host, server, repo, project) {
  * @return {Boolean}
  */
 function hasAccessToken(server) {
-    var accessToken = _.get(server, 'settings.api.access_token');
-    var oauthBaseURL = _.get(server, 'settings.oauth.base_url');
+    let accessToken = _.get(server, 'settings.api.access_token');
+    let oauthBaseURL = _.get(server, 'settings.oauth.base_url');
     return (accessToken && oauthBaseURL);
 }
 
@@ -434,8 +434,8 @@ function hasAccessToken(server) {
  * @param  {HTTPRequest} req
  */
 function verifyHookRequest(req) {
-    var tokenReceived = req.headers['x-gitlab-token'];
-    var tokenRequired = getSecretToken();
+    let tokenReceived = req.headers['x-gitlab-token'];
+    let tokenRequired = getSecretToken();
     if (tokenReceived !== tokenRequired) {
         throw new HTTPError(403);
     }
@@ -448,13 +448,13 @@ function verifyHookRequest(req) {
  */
 function getSecretToken() {
     if (!secretToken) {
-        var buffer = Crypto.randomBytes(16);
+        let buffer = Crypto.randomBytes(16);
         secretToken = buffer.toString('hex');
     }
     return secretToken;
 }
 
-var secretToken;
+let secretToken;
 
 export {
     installHooks,

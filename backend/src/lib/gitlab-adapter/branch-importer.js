@@ -32,7 +32,7 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
         tailID = glEvent.push_data.commit_from;
     } else if (glEvent.data) {
         // version 9
-        var refParts = _.split(glEvent.data.ref, '/');
+        let refParts = _.split(glEvent.data.ref, '/');
         branch = _.last(refParts);
         type = /^tags$/.test(refParts[1]) ? 'tag' : 'branch';
         tailID = glEvent.data.before;

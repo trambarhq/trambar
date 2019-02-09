@@ -19,7 +19,7 @@ function cardinal(num, sg, pl, plGenitive) {
     }
 }
 
-var numberRegExp = /\d+/;
+let numberRegExp = /\d+/;
 
 function replaceNumber(s, n) {
     return s.replace(numberRegExp, n);
@@ -30,7 +30,7 @@ function list(items) {
         return `${item}`;
     });
     if (items.length >= 2) {
-        var lastItem = items.pop();
+        let lastItem = items.pop();
         items[items.length - 1] += ` ir ${lastItem}`;
     }
     return items.join(', ');

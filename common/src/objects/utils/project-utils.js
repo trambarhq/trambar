@@ -44,7 +44,7 @@ function getUserAccessLevel(project, user) {
  * @return {String}
  */
 function isVisibleToUser(project, user) {
-    var access = getUserAccessLevel(project, user);
+    let access = getUserAccessLevel(project, user);
     if (access) {
         return true;
     } else {

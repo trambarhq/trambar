@@ -65,7 +65,7 @@ async function findExistingRepos(db, minimum) {
  */
 async function findProjectRepos(db, projects) {
     if (projects instanceof Array) {
-        var ids = _.flatten(_.map(projects, 'repo_ids'));
+        let ids = _.flatten(_.map(projects, 'repo_ids'));
         if (_.isEmpty(ids)) {
             return emptyArray;
         }
@@ -79,7 +79,7 @@ async function findProjectRepos(db, projects) {
             },
         });
     } else {
-        var project = projects;
+        let project = projects;
         if (!project) {
             return emptyArray;
         }

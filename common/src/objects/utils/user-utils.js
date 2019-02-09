@@ -438,7 +438,7 @@ function canReceiveNotification(user, repos, type) {
             }
             if (_.includes(GitNotificationTypes.membership, type)) {
                 if (user) {
-                    var hasAccess = _.some(repos, (repo) => {
+                    let hasAccess = _.some(repos, (repo) => {
                         return canAccessRepo(user, repo)
                     });
                     if (!hasAccess) {
@@ -468,7 +468,7 @@ function getDisplayName(user, env) {
     if (!user) {
         return '\u00a0';
     }
-    var name = p(user.details.name);
+    let name = p(user.details.name);
     if (!_.trim(name)) {
         name = _.capitalize(user.username);
     }

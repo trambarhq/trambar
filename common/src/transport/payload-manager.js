@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import Moment from 'moment';
 import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 import BlobStream from 'transport/blob-stream';
@@ -110,9 +110,9 @@ class PayloadManager extends EventEmitter {
             return _.includes(ids, payload.id);
         });
         if (!_.isEmpty(payloads)) {
-            _.each(payloads, (payload) => {
+            for (let payload of payloads) {
                 payload.cancel();
-            });
+            }
             _.pullAll(this.payloads, payloads);
             this.triggerEvent(new PayloadManagerEvent('change', this));
         }
@@ -136,7 +136,7 @@ class PayloadManager extends EventEmitter {
         if (payloads.length < ids.length) {
             // some payloads are not there, either because they were sent by
             // another browser or a page refresh occurred
-            _.each(ids, (id) => {
+            for (let id of ids) {
                 let payload = _.find(this.payloads, { id });
                 if (!payload) {
                     // recreate it (if we know the destination)
@@ -145,17 +145,17 @@ class PayloadManager extends EventEmitter {
                         this.payloads.push(payload);
                     }
                 }
-            });
+            }
             return { action: 'unknown', progress: undefined };
         }
 
         // see if uploading is complete
         let uploadingSize = 0;
         let uploadingProgress = 0;
-        _.each(payloads, (payload) => {
+        for (let payload of payloads) {
             uploadingSize += payload.getSize();
             uploadingProgress += payload.getUploaded();
-        });
+        }
         uploadingProgress = (uploadingSize > 0) ? Math.round(uploadingProgress / uploadingSize * 100) : 100;
         if (uploadingProgress < 100) {
             return {
@@ -208,14 +208,14 @@ class PayloadManager extends EventEmitter {
     getUploadProgress() {
         let bytes = 0;
         let files = 0;
-        _.each(this.payloads, (payload) => {
+        for (let payload of this.payloads) {
             if (payload.started) {
                 if (!payload.failed && !payload.sent) {
                     files += payload.getRemainingFiles();
                     bytes += payload.getRemainingBytes();
                 }
             }
-        });
+        }
         return (files > 0) ? { files, bytes } : null;
     }
 
@@ -278,28 +278,28 @@ class PayloadManager extends EventEmitter {
      *
      * @param  {Array<Payload>} payloads
      */
-    dispatchPayloads(payloads) {
+    async dispatchPayloads(payloads) {
         let payloadGroups = separatePayloads(payloads);
-        _.each(payloadGroups, (payloadGroup) => {
+        for (let payloadGroup of payloadGroups) {
             let { destination, payloads } = payloadGroup;
-            this.acquirePermission(destination, payloads).then((acquired) => {
-                if (acquired) {
-                    _.each(payloads, (payload) => {
-                        this.sendPayload(payload);
-                    });
-                    this.triggerEvent(new PayloadManagerEvent('change', this));
+            let acquired = await this.acquirePermission(destination, payloads);
+            if (acquired) {
+                for (let payload of payloads) {
+                    this.sendPayload(payload);
                 }
-                return null;
-            });
-        });
+                this.triggerEvent(new PayloadManagerEvent('change', this));
+            }
+        }
     }
 
     /**
      * Update backend progress of payloads
      *
      * @param  {Object|null} destination
+     *
+     * @return {Promise}
      */
-    updatePayloadsBackendProgress(destination) {
+    async updatePayloadsBackendProgress(destination) {
         if (!this.active) {
             return false;
         }
@@ -308,16 +308,14 @@ class PayloadManager extends EventEmitter {
             completed: false,
         });
         let payloadGroups = separatePayloads(inProgressPayloads);
-        _.each(payloadGroups, (payloadGroup) => {
+        for (let payloadGroup of payloadGroups) {
             if (!destination || _.isEqual(payloadGroup.destination, destination)) {
-                this.requestBackendUpdate(payloadGroup).then((updated) => {
-                    if (updated) {
-                        this.triggerEvent(new PayloadManagerEvent('change', this));
-                    }
-                    return null;
-                });
+                let updated = await this.requestBackendUpdate(payloadGroup);
+                if (updated) {
+                    this.triggerEvent(new PayloadManagerEvent('change', this));
+                }
             }
-        });
+        }
     }
 
     /**
@@ -329,35 +327,36 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise}
      */
-    acquirePermission(destination, payloads) {
+    async acquirePermission(destination, payloads) {
         let unapprovedPayloads = _.filter(payloads, { approved: false });
         if (_.isEmpty(unapprovedPayloads)) {
-            return Promise.resolve();
+            return;
         }
         // set approved to true immediately to prevent it being sent again
-        _.each(unapprovedPayloads, (payload) => {
+        for (let payload of unapprovedPayloads) {
             payload.approved = true;
-        });
-        let event = new PayloadManagerEvent('permission', this, {
-            destination,
-            payloads: unapprovedPayloads
-        });
-        this.triggerEvent(event);
-        return event.waitForDecision().then(() => {
+        }
+        try {
+            let event = new PayloadManagerEvent('permission', this, {
+                destination,
+                payloads: unapprovedPayloads
+            });
+            this.triggerEvent(event);
+            await event.waitForDecision();
             // default action is to proceed with the upload
             if (!event.defaultPrevented) {
                 return true;
             } else {
                 return false;
             }
-        }).catch((err) => {
-            _.each(unapprovedPayloads, (payload) => {
+        } catch (err) {
+            for (let payload of unapprovedPayloads) {
                 // set it back to false
                 payload.approved = false;
                 payload.error = err;
-            });
+            }
             return false;
-        });
+        }
     }
 
     /**
@@ -368,14 +367,15 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise}
      */
-    requestBackendUpdate(payloadGroup) {
-        let event = new PayloadManagerEvent('backendprogress', this, payloadGroup);
-        this.triggerEvent(event);
-        return event.waitForDecision().then(() => {
+    async requestBackendUpdate(payloadGroup) {
+        try {
+            let event = new PayloadManagerEvent('backendprogress', this, payloadGroup);
+            this.triggerEvent(event);
+            await event.waitForDecision();
             return event.defaultPrevented;
-        }).catch((err) => {
+        } catch (err) {
             return false;
-        });
+        }
     }
 
     /**
@@ -384,9 +384,9 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise}
      */
-    waitForConnectivity() {
+    async waitForConnectivity() {
         if (this.active) {
-            return Promise.resolve();
+            return;
         }
         if (!this.connectivityPromise) {
             this.connectivityPromise = new Promise((resolve, reject) => {
@@ -400,8 +400,10 @@ class PayloadManager extends EventEmitter {
      * Send the payload
      *
      * @param  {Payload} payload
+     *
+     * @return {Promise}
      */
-    sendPayload(payload) {
+    async sendPayload(payload) {
         if (payload.started) {
             return;
         }
@@ -410,52 +412,41 @@ class PayloadManager extends EventEmitter {
         }
         payload.started = true;
         payload.uploadStartTime = Moment().toISOString();
-        Promise.each(payload.parts, (part) => {
-            var sent = false;
-            var attempts = 1;
-            var delay = 1000;
-            Async.do(() => {
-                return this.waitForConnectivity().then(() => {
-                    return this.sendPayloadPart(payload, part).then((response) => {
-                        sent = part.sent = true;
-                        this.triggerEvent(new PayloadManagerEvent('uploadpart', this, {
-                            destination: payload.destination,
-                            payload,
-                            part,
-                            response,
-                        }));
-                    }).catch((err) => {
-                        if (err.statusCode >= 400 && err.statusCode <= 499) {
-                            throw err;
-                        }
-                        // wait a bit then try again
-                        delay = Math.min(delay * 2, 10 * 1000);
-                        return Promise.delay(delay).then(() => {
-                            if (!payload.canceled) {
-                                attempts++;
-                            }
-                        });
-                    });
-                });
-            });
-            Async.while(() => {
-                return !sent && !payload.canceled;
-            });
-            return Async.end();
-        }).then(() => {
-            payload.sent = true;
-            payload.uploadEndTime = Moment().toISOString();
-            if (payload.onComplete) {
-                payload.onComplete(new PayloadManagerEvent('complete', payload, {
-                    destination: payload.destination,
-                }));
+        for (let part of payload.parts) {
+            let delay = 1000;
+            while (!part.sent && !payload.canceled) {
+                try {
+                    await this.waitForConnectivity();
+                    let response = await this.sendPayloadPart(payload, part);
+                    part.sent = true;
+                    this.triggerEvent(new PayloadManagerEvent('uploadpart', this, {
+                        destination: payload.destination,
+                        payload,
+                        part,
+                        response,
+                    }));
+                } catch (err) {
+                    if (err.statusCode >= 400 && err.statusCode <= 499) {
+                        throw err;
+                    }
+                    // wait a bit then try again
+                    delay = Math.min(delay * 2, 10 * 1000);
+                    await Bluebird.delay(delay);
+                }
             }
-            this.triggerEvent(new PayloadManagerEvent('uploadcomplete', this, {
+        }
+        payload.sent = true;
+        payload.uploadEndTime = Moment().toISOString();
+        if (payload.onComplete) {
+            payload.onComplete(new PayloadManagerEvent('complete', payload, {
                 destination: payload.destination,
-                payload
             }));
-            this.triggerEvent(new PayloadManagerEvent('change', this));
-        });
+        }
+        this.triggerEvent(new PayloadManagerEvent('uploadcomplete', this, {
+            destination: payload.destination,
+            payload
+        }));
+        this.triggerEvent(new PayloadManagerEvent('change', this));
     }
 
     /**
@@ -466,7 +457,7 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise}
      */
-    sendPayloadPart(payload, part) {
+    async sendPayloadPart(payload, part) {
         if (part.stream) {
             return this.sendPayloadStream(payload, part);
         } else if (part.blob) {
@@ -475,8 +466,6 @@ class PayloadManager extends EventEmitter {
             return this.sendPayloadCordovaFile(payload, part);
         } else if (part.url) {
             return this.sendPayloadURL(payload, part);
-        } else {
-            return Promise.resolve();
         }
     }
 
@@ -488,15 +477,15 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise}
      */
-    sendPayloadBlob(payload, part) {
-        var url = this.getUploadURL(payload, part);
-        var blob = part.blob;
-        var formData = new FormData;
+    async sendPayloadBlob(payload, part) {
+        let url = this.getUploadURL(payload, part);
+        let blob = part.blob;
+        let formData = new FormData;
         formData.append('file', blob);
-        _.each(part.options, (value, name) => {
+        for (let [ name, value ] of _.entries(part.options)) {
             formData.append(name, value);
-        });
-        var options = {
+        }
+        let options = {
             responseType: 'json',
             onUploadProgress: (evt) => {
                 if (evt.lengthComputable) {
@@ -506,7 +495,8 @@ class PayloadManager extends EventEmitter {
         };
         part.uploaded = 0;
         part.promise = HTTPRequest.fetch('POST', url, formData, options);
-        return part.promise;
+        let res = await part.promise;
+        return res;
     }
 
     /**
@@ -517,14 +507,14 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise<Object>}
      */
-    sendPayloadCordovaFile(payload, part) {
-        var url = this.getUploadURL(payload, part);
-        var file = part.cordovaFile;
-        var index = _.indexOf(this.parts, part);
-        var token = `${this.id}-${index + 1}`;
+    async sendPayloadCordovaFile(payload, part) {
+        let url = this.getUploadURL(payload, part);
+        let file = part.cordovaFile;
+        let index = _.indexOf(this.parts, part);
+        let token = `${this.id}-${index + 1}`;
         part.uploaded = 0;
         part.promise = new Promise((resolve, reject) => {
-            var options ={
+            let options ={
                 onSuccess: (upload) => {
                     this.updatePayloadProgress(payload, part, 1);
                     resolve(upload.serverResponse);
@@ -537,21 +527,20 @@ class PayloadManager extends EventEmitter {
                 },
             };
             BackgroundFileTransfer.send(token, file.fullPath, url, options);
-        }).then((res) => {
-            if (!(res instanceof Object)) {
-                // plugin didn't automatically decode JSON response
-                try {
-                    res = JSON.parse(res);
-                } catch(err) {
-                    res = {};
-                }
-            }
-            return res;
         });
         part.promise.cancel = () => {
             BackgroundFileTransfer.cancel(token);
         };
-        return part.promise;
+        let res = await part.promise;
+        if (!(res instanceof Object)) {
+            // plugin didn't automatically decode JSON response
+            try {
+                res = JSON.parse(res);
+            } catch(err) {
+                res = {};
+            }
+        }
+        return res;
     }
 
     /**
@@ -562,21 +551,20 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise<Object>}
      */
-    sendPayloadStream(payload, part) {
-        var url = this.getUploadURL(payload, part);
-        var stream = part.stream;
+    async sendPayloadStream(payload, part) {
+        let url = this.getUploadURL(payload, part);
+        let stream = part.stream;
         stream.resume();
         stream.onProgress = (evt) => {
             this.updatePayloadProgress(payload, part, evt.loaded / evt.total)
         };
         // start the stream first and wait for the first chunk to be sent
-        return stream.start().then(() => {
-            var options = {
-                responseType: 'json',
-                contentType: 'json',
-            };
-            return HTTPRequest.fetch('POST', url, { stream: stream.id }, options);
-        });
+        await stream.start();
+        let options = {
+            responseType: 'json',
+            contentType: 'json',
+        };
+        return HTTPRequest.fetch('POST', url, { stream: stream.id }, options);
     }
 
     /**
@@ -588,12 +576,12 @@ class PayloadManager extends EventEmitter {
      * @return {Promise<Object>}
      */
     sendPayloadURL(payload, part) {
-        var url = this.getUploadURL(payload, part);
-        var options = {
+        let url = this.getUploadURL(payload, part);
+        let options = {
             responseType: 'json',
             contentType: 'json',
         };
-        var body = _.extend({ url: part.url }, part.options);
+        let body = _.extend({ url: part.url }, part.options);
         part.promise = HTTPRequest.fetch('POST', url, body, options);
         return part.promise;
     }
@@ -605,22 +593,20 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise}
      */
-    cancelPayload(payload) {
+    async cancelPayload(payload) {
         if (payload.started) {
             if (!payload.completed) {
                 if (!payload.failed && !payload.canceled) {
                     payload.canceled = true;
-                    return Promise.each(payload.parts, (part) => {
+                    for (let part of payload.parts) {
                         if (!part.sent) {
-                            return this.cancelPart(payload, part);
+                            await this.cancelPart(payload, part);
                         }
-                    }).then(() => {
-                        return true;
-                    });
+                    }
                 }
             }
         }
-        return Promise.resolve(false);
+        return false;
     }
 
     /**
@@ -640,8 +626,6 @@ class PayloadManager extends EventEmitter {
             return this.cancelCordovaFile(payload, part);
         } else if (part.url) {
             return this.cancelURL(payload, part);
-        } else {
-            return Promise.resolve();
         }
     };
 
@@ -653,11 +637,11 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise}
      */
-    cancelPayloadStream(payload, part) {
-        return Promise.try(() => {
-            return part.stream.cancel();
-        }).catch((err) => {
-        });
+    async cancelPayloadStream(payload, part) {
+        try {
+            part.stream.cancel();
+        } catch (err) {
+        }
     };
 
     /**
@@ -668,13 +652,13 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise}
      */
-    cancelPayloadBlob(payload, part) {
-        return Promise.try(() => {
+    async cancelPayloadBlob(payload, part) {
+        try {
             if (part.promise && part.promise.isPending()) {
                 return part.promise.cancel();
             }
-        }).catch((err) => {
-        });
+        } catch (err) {
+        }
     }
 
     /**
@@ -685,13 +669,13 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise}
      */
-    cancelPayloadCordovaFile(payload, part) {
-        return Promise.try(() => {
-            var index = _.indexOf(this.parts, part);
-            var token = `${payload.id}-${index + 1}`;
-            return BackgroundFileTransfer.cancel(token);
-        }).catch((err) => {
-        });
+    async cancelPayloadCordovaFile(payload, part) {
+        try {
+            let index = _.indexOf(this.parts, part);
+            let token = `${payload.id}-${index + 1}`;
+            BackgroundFileTransfer.cancel(token)
+        } catch (err) {
+        }
     }
 
     /**
@@ -702,13 +686,13 @@ class PayloadManager extends EventEmitter {
      *
      * @return {Promise}
      */
-    cancelPayloadURL(payload, part) {
-        return Promise.try(() => {
+    async cancelPayloadURL(payload, part) {
+        try {
             if (part.promise && part.promise.isPending()) {
-                return part.promise.cancel();
+                part.promise.cancel();
             }
-        }).catch((err) => {
-        });
+        } catch (err) {
+        }
     }
 
     /**
@@ -717,17 +701,17 @@ class PayloadManager extends EventEmitter {
      * @param  {Array<Payload>} payloads
      */
     pausePayloads(payloads) {
-        _.each(payloads, (payload) => {
+        for (let payload of payloads) {
             if (payload.started) {
-                _.each(payload.parts, (part) => {
+                for (let part of payload.parts) {
                     if (part.stream) {
                         if (!part.stream.finished) {
                             part.stream.suspend();
                         }
                     }
-                });
+                }
             }
-        });
+        }
     }
 
     /**
@@ -736,17 +720,17 @@ class PayloadManager extends EventEmitter {
      * @param  {Array<Payload>} payloads
      */
     restartPayloads(payloads) {
-        _.each(payloads, (payload) => {
+        for (let payload of payloads) {
             if (payload.started) {
-                _.each(payload.parts, (part) => {
+                for (let part of payload.parts) {
                     if (part.stream) {
                         if (!part.stream.finished) {
                             part.stream.resume();
                         }
                     }
-                });
+                }
             }
-        });
+        }
     }
 
     /**
@@ -794,7 +778,7 @@ class PayloadManager extends EventEmitter {
  */
 function separatePayloads(payloads) {
     let groups = [];
-    _.each(payloads, (payload) => {
+    for (let payload of payloads) {
         let group = _.find(groups, (group) => {
             return _.isEqual(group.destination, payload.destination);
         });
@@ -807,7 +791,7 @@ function separatePayloads(payloads) {
             };
             groups.push(group);
         }
-    })
+    }
     return groups;
 }
 

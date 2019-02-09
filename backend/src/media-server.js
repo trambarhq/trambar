@@ -164,7 +164,7 @@ async function handleImageFiltersRequest(req, res) {
     try {
         let hash = req.params.hash;
         let filename = req.params.filename;
-        var m = /([^.]*?)(\.(.+))?$/i.exec(filename);
+        let m = /([^.]*?)(\.(.+))?$/i.exec(filename);
         if (!m) {
             throw new HTTPError(400, 'Invalid filename');
         }
@@ -375,7 +375,7 @@ async function handleMediaUpload(req, res, type) {
             let url = getFileURL(mediaPath);
             // create the transcoding job, checking if it exists already on
             // the off-chance the same file is uploaded twice at the same time
-            var jobID = Path.basename(mediaPath);
+            let jobID = Path.basename(mediaPath);
             if (!VideoManager.findTranscodingJob(jobID)) {
                 let job = await VideoManager.startTranscodingJob(mediaPath, type, jobID);
                 if (generatePoster) {
@@ -401,7 +401,7 @@ async function handleMediaUpload(req, res, type) {
 function monitorTranscodingJob(schema, taskID, job) {
     // monitor transcoding progress
     job.onProgress = (evt) => {
-        var progress = evt.target.progress;
+        let progress = evt.target.progress;
         console.log('Progress: ', progress + '%');
         saveTaskProgress(schema, taskID, progress);
     };

@@ -28,7 +28,7 @@ async function loadArrayBuffer(blob) {
         blob = await BlobManager.fetch(blob);
     }
     return new Promise((resolve, reject) => {
-        var reader = new FileReader();
+        let reader = new FileReader();
         reader.onload = function(evt) {
             resolve(reader.result);
         };
@@ -53,7 +53,7 @@ async function loadText(blob) {
         blob = await BlobManager.fetch(blob);
     }
     return new Promise((resolve, reject) => {
-        var reader = new FileReader();
+        let reader = new FileReader();
         reader.onload = (evt) => {
             resolve(reader.result);
         };

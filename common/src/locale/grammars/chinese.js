@@ -22,16 +22,16 @@ function number(num, literals) {
     }
 }
 
-var numberRegExp = /\d+/;
-var chineseNumberRegExp = /[〇零一二兩两三四五六七八九十]+/;
-var traditionalChineseNumbers = [ '零', '一', '兩', '三', '四', '五', '六', '七', '八', '九' ]
-var simplifiedChineseNumbers = [ '〇', '一', '两', '三', '四', '五', '六', '七', '八', '九' ]
+let numberRegExp = /\d+/;
+let chineseNumberRegExp = /[〇零一二兩两三四五六七八九十]+/;
+let traditionalChineseNumbers = [ '零', '一', '兩', '三', '四', '五', '六', '七', '八', '九' ]
+let simplifiedChineseNumbers = [ '〇', '一', '两', '三', '四', '五', '六', '七', '八', '九' ]
 
 function replaceNumberT(s, num) {
     if (numberRegExp.test(s)) {
         return s.replace(numberRegExp, num);
     } else {
-        var n = number(num, traditionalChineseNumbers);
+        let n = number(num, traditionalChineseNumbers);
         return s.replace(chineseNumberRegExp, n);
     }
 }
@@ -40,7 +40,7 @@ function replaceNumberS(s, num) {
     if (numberRegExp.test(s)) {
         return s.replace(numberRegExp, num);
     } else {
-        var n = number(num, simplifiedChineseNumbers);    
+        let n = number(num, simplifiedChineseNumbers);
         return s.replace(chineseNumberRegExp, n);
     }
 }
@@ -50,7 +50,7 @@ function list(items) {
         return `${item}`;
     });
     if (items.length >= 2) {
-        var lastItem = items.pop();
+        let lastItem = items.pop();
         items[items.length - 1] += `和${lastItem}`;
     }
     return items.join('，');

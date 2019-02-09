@@ -18,8 +18,8 @@ class ErrorBoundary extends Component {
     }
 
     static getDerivedStateFromProps(props, state) {
-        var { children } = props;
-        var { errorChildren } = state;
+        let { children } = props;
+        let { errorChildren } = state;
         if (errorChildren) {
             if (!compareChildren(children, errorChildren)) {
                 return { error: null, errorChildren: null };
@@ -63,7 +63,7 @@ function compareChildren(c1, c2) {
     if (c1.length !== c2.length) {
         return false;
     }
-    for (var i = 0; i < c1.length; i++) {
+    for (let i = 0; i < c1.length; i++) {
         if (!compareElements(c1[i], c2[i])) {
             return false;
         }
@@ -75,7 +75,7 @@ function compareElements(e1, e2) {
     if (e1.type !== e2.type) {
         return false;
     }
-    var diff = _.shallowDiff(e1.props, e2.props);
+    let diff = _.shallowDiff(e1.props, e2.props);
     return _.isEmpty(diff);
 }
 

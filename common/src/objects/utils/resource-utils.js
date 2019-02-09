@@ -114,7 +114,7 @@ function getClippingRect(res, params) {
     if (params.original) {
         return null;
     }
-    var clip = res.clip;
+    let clip = res.clip;
     if (params.hasOwnProperty('clip')) {
         // override the one stored in res
         clip = params.clip;

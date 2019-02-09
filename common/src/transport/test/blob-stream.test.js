@@ -64,15 +64,14 @@ describe('BlobStream', function() {
             }
             stream.close();
             let count = 0;
-            let interval = setInterval(() => {
-                stream.pull().then((blob) => {
-                    count++;
-                    if (blob) {
-                        stream.finalize(blob);
-                    } else {
-                        clearInterval(interval);
-                    }
-                });
+            let interval = setInterval(async () => {
+                let blob = await stream.pull();
+                count++;
+                if (blob) {
+                    stream.finalize(blob);
+                } else {
+                    clearInterval(interval);
+                }
             }, 50);
             await stream.wait();
             expect(count).to.equal(4);

@@ -52,7 +52,7 @@ const accessors = [
     Notification,
     Task,
 ];
-var database;
+let database;
 
 async function start() {
     database = await Database.open(true);
@@ -134,7 +134,7 @@ async function sendChangeNotifications(db, events, listeners, system) {
         let changes = {};
         let badge;
         for (let event of events) {
-            var accessor = _.find(accessors, { table: event.table });
+            let accessor = _.find(accessors, { table: event.table });
             if (accessor.isRelevantTo(event, listener.user, listener.subscription)) {
                 let table = `${event.schema}.${event.table}`;
                 let lists = changes[table];

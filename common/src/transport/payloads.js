@@ -37,7 +37,7 @@ class Payloads {
      * @return {Promise}
      */
     abandon(object) {
-        var ids = getPayloadIDs(object);
+        let ids = getPayloadIDs(object);
         return this.payloadManager.abandon(ids);
     }
 
@@ -49,7 +49,7 @@ class Payloads {
      * @return {Promise}
      */
     dispatch(object) {
-        var ids = getPayloadIDs(object);
+        let ids = getPayloadIDs(object);
         return this.payloadManager.dispatch(ids);
     }
 
@@ -61,7 +61,7 @@ class Payloads {
      * @return {Object|null}
      */
     inquire(object) {
-        var ids = getPayloadIDs(object);
+        let ids = getPayloadIDs(object);
         return this.payloadManager.inquire(ids, this.destination);
     }
 
@@ -91,9 +91,9 @@ class Payloads {
 }
 
 function getPayloadIDs(object) {
-    var ids = [];
+    let ids = [];
     if (object) {
-        var details = object.details;
+        let details = object.details;
         if (details) {
             if (details.resources) {
                 _.each(details.resources, (res) => {

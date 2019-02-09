@@ -271,7 +271,7 @@ async function filterPushMessages(messages) {
  * @return {Object}
  */
 function packagePushMessage(message) {
-    var push = {
+    let push = {
         tokens: message.tokens
     };
     for (let method of message.methods) {
@@ -301,7 +301,7 @@ function packagePushMessage(message) {
  * @return {Object}
  */
 function packageFirebaseMessage(message) {
-    var data = { address: message.address };
+    let data = { address: message.address };
     if (message.body.alert) {
         for (let [ name, value ] of _.entries(message.body.alert)) {
             switch (name) {
@@ -405,7 +405,7 @@ function packageWindowsMessage(message) {
         _.assign(launchData, { address: message.address });
         toast.$.launch = JSON.stringify(launchData);
 
-        var builder = new XML2JS.Builder({ headless: true });
+        let builder = new XML2JS.Builder({ headless: true });
         return {
             body: builder.buildObject({ toast }),
             attributes: {
@@ -451,7 +451,7 @@ async function getServerSignature() {
  * @param  {Response} res
  */
 function handleSignatureValidation(req, res) {
-    var signature = req.body.signature;
+    let signature = req.body.signature;
     if (signature === serverSignature) {
         res.sendStatus(200);
     } else {

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import Chai, { expect } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
 import * as HTTPRequest from 'transport/http-request';
@@ -33,14 +33,14 @@ describe('PayloadManager', function() {
     }
 
     describe('#add()', function() {
-        it('should add a payload', function() {
+        it('should add a payload', async function() {
             let payloadManager = new PayloadManager(options);
             payloadManager.activate();
             let destination = { address: baseURL, schema: 'test' }
             let payload = payloadManager.add(destination, 'image');
             expect(payload.id).to.be.a('string');
         })
-        it('should permit null as destination', function() {
+        it('should permit null as destination', async function() {
             let payloadManager = new PayloadManager(options);
             payloadManager.activate();
             let payload = payloadManager.add(null, 'image');
@@ -48,7 +48,7 @@ describe('PayloadManager', function() {
         })
     })
     describe('#dispatch()', function() {
-        it('should send payload with a single file', function() {
+        it('should send payload with a single file', async function() {
             let payloadManager = new PayloadManager(options);
             payloadManager.activate();
             let payload = payloadManager.add(null, 'image');
@@ -56,14 +56,12 @@ describe('PayloadManager', function() {
             let completeEventPromise = ManualPromise();
             payload.onComplete = completeEventPromise.resolve;
             payloadManager.dispatch([ payload.id ]);
-            return completeEventPromise.then(() => {
-                let url = `${baseURL}/download/${payload.id}/main`;
-                return HTTPRequest.fetch('GET', url).then((result) => {
-                    expect(result).to.equal(testJSON);
-                });
-            });
+            await completeEventPromise
+            let url = `${baseURL}/download/${payload.id}/main`;
+            let result = await HTTPRequest.fetch('GET', url);
+            expect(result).to.equal(testJSON);
         })
-        it('should send payload with two files', function() {
+        it('should send payload with two files', async function() {
             let payloadManager = new PayloadManager(options);
             payloadManager.activate();
             let payload = payloadManager.add(null, 'image');
@@ -72,29 +70,28 @@ describe('PayloadManager', function() {
             let completeEventPromise = ManualPromise();
             payload.onComplete = completeEventPromise.resolve;
             payloadManager.dispatch([ payload.id ]);
-            return completeEventPromise.then(() => {
-                let url = `${baseURL}/download/${payload.id}/main`;
-                return HTTPRequest.fetch('GET', url).then((result) => {
-                    expect(result).to.equal(testJSON);
-                });
-            }).then(() => {
-                let url = `${baseURL}/download/${payload.id}/second`;
-                return HTTPRequest.fetch('GET', url).then((result) => {
-                    expect(result).to.equal(testString);
-                });
-            });
+            await completeEventPromise;
+            let url1 = `${baseURL}/download/${payload.id}/main`;
+            let result1 = await HTTPRequest.fetch('GET', url1);
+            expect(result1).to.equal(testJSON);
+            let url2 = `${baseURL}/download/${payload.id}/second`;
+            let result2 = await HTTPRequest.fetch('GET', url2);
+            expect(result2).to.equal(testString);
         })
-        it('should not send payload when payload manager is inactive', function() {
+        it('should not send payload when payload manager is inactive', async function() {
             let payloadManager = new PayloadManager(options);
             let payload = payloadManager.add(null, 'image');
             payload.attachFile(testBlob1);
             let completeEventPromise = ManualPromise();
             payload.onComplete = completeEventPromise.resolve;
             payloadManager.dispatch([ payload.id ]);
-            return expect(completeEventPromise.timeout(100))
-                .to.eventually.be.rejectedWith(Promise.TimeoutError);
+            let result = await Promise.race([
+                completeEventPromise,
+                Bluebird.resolve('timeout').delay(100)
+            ]);
+            expect(result).to.equal('timeout');
         })
-        it('should send payload when payload manager becomes active', function() {
+        it('should send payload when payload manager becomes active', async function() {
             let payloadManager = new PayloadManager(options);
             let payload = payloadManager.add(null, 'image');
             payload.attachFile(testBlob1);
@@ -104,16 +101,14 @@ describe('PayloadManager', function() {
             setTimeout(() => {
                 payloadManager.activate();
             }, 100);
-            return completeEventPromise.timeout(200).then(() => {
-                let url = `${baseURL}/download/${payload.id}/main`;
-                return HTTPRequest.fetch('GET', url).then((result) => {
-                    expect(result).to.equal(testJSON);
-                });
-            });
+            await completeEventPromise;
+            let url = `${baseURL}/download/${payload.id}/main`;
+            let result = await HTTPRequest.fetch('GET', url);
+            expect(result).to.equal(testJSON);
         })
     })
     describe('#stream()', function() {
-        it('should send blobs to server as they are added to stream', function() {
+        it('should send blobs to server as they are added to stream', async function() {
             let payloadManager = new PayloadManager(options);
             payloadManager.activate();
             let stream = payloadManager.stream(null);
@@ -137,16 +132,13 @@ describe('PayloadManager', function() {
             payload.onComplete = payloadCompleteEventPromise.resolve;
             payloadManager.dispatch([ payload.id ]);
 
-            return payloadCompleteEventPromise.then(() => {
-                return streamCompleteEventPromise.then(() => {
-                    let url = `${baseURL}/download/${payload.id}/main`;
-                    return HTTPRequest.fetch('GET', url).then((result) => {
-                        expect(result).to.equal(testString);
-                    });
-                });
-            });
+            await payloadCompleteEventPromise;
+            await streamCompleteEventPromise;
+            let url = `${baseURL}/download/${payload.id}/main`;
+            let result = await HTTPRequest.fetch('GET', url);
+            expect(result).to.equal(testString);
         })
-        it ('should keep a stream suspend when PayloadManager is inactive', function() {
+        it ('should keep a stream suspend when PayloadManager is inactive', async function() {
             let payloadManager = new PayloadManager(options);
             let stream = payloadManager.stream(null).pipe(testBlob2, 100);
             let payload = payloadManager.add(null, 'text');
@@ -155,10 +147,13 @@ describe('PayloadManager', function() {
             let completeEventPromise = ManualPromise();
             stream.onComplete = completeEventPromise.resolve;
 
-            return expect(completeEventPromise.timeout(350))
-                .to.eventually.be.rejectedWith(Promise.TimeoutError);
+            let result = await Promise.race([
+                completeEventPromise,
+                Bluebird.resolve('timeout').delay(350),
+            ]);
+            expect(result).to.equal('timeout');
         })
-        it('should start a suspended stream once payload manager becomes active', function() {
+        it('should start a suspended stream once payload manager becomes active', async function() {
             let payloadManager = new PayloadManager(options);
             let stream = payloadManager.stream(null).pipe(testBlob2, 1000);
             let payload = payloadManager.add(null, 'text');
@@ -175,14 +170,11 @@ describe('PayloadManager', function() {
                 payloadManager.activate();
             }, 250);
 
-            return payloadCompleteEventPromise.then(() => {
-                return streamCompleteEventPromise.then(() => {
-                    let url = `${baseURL}/download/${payload.id}/main`;
-                    return HTTPRequest.fetch('GET', url).then((result) => {
-                        expect(result).to.equal(testString);
-                    });
-                });
-            });
+            await payloadCompleteEventPromise;
+            await streamCompleteEventPromise;
+            let url = `${baseURL}/download/${payload.id}/main`;
+            let result = await HTTPRequest.fetch('GET', url);
+            expect(result).to.equal(testString);
         })
     })
     describe('#inquire()', function() {

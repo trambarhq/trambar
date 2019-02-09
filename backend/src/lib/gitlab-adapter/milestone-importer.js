@@ -32,7 +32,7 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
         }),
     };
     let story = await Story.findOne(db, schema, criteria, '*');
-    var storyAfter = copyMilestoneProperties(story, system, server, repo, author, glMilestone);
+    let storyAfter = copyMilestoneProperties(story, system, server, repo, author, glMilestone);
     if (storyAfter !== story) {
         story = await Story.saveOne(db, schema, storyAfter);
     }
@@ -100,10 +100,10 @@ async function updateMilestones(db, system, server, repo, project) {
  * @return {Story}
  */
 function copyMilestoneProperties(story, system, server, repo, author, glMilestone) {
-    var descriptionTags = TagScanner.findTags(glMilestone.description);
-    var defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let descriptionTags = TagScanner.findTags(glMilestone.description);
+    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
 
-    var storyAfter = _.cloneDeep(story) || {};
+    let storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         milestone: { id: glMilestone.id }
     });
@@ -162,7 +162,7 @@ function copyMilestoneProperties(story, system, server, repo, author, glMileston
  * @return {Promise<Object>}
  */
 async function fetchMilestone(server, glProjectId, glMilestoneId) {
-    var url = `/projects/${glProjectId}/milestones/${glMilestoneId}`;
+    let url = `/projects/${glProjectId}/milestones/${glMilestoneId}`;
     return Transport.fetch(server, url);
 }
 
@@ -176,7 +176,7 @@ async function fetchMilestone(server, glProjectId, glMilestoneId) {
  * @return {Promise<Object>}
  */
 async function fetchMilestones(server, glProjectId) {
-    var url = `/projects/${glProjectId}/milestones`;
+    let url = `/projects/${glProjectId}/milestones`;
     return Transport.fetchAll(server, url);
 }
 

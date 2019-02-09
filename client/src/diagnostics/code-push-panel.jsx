@@ -50,7 +50,7 @@ function CodePushPackageDiagnostics(props) {
     if (!props.package) {
         return null;
     }
-    var pkg = props.package;
+    let pkg = props.package;
     return (
         <DiagnosticsSection label={props.label}>
             <div>Label: {pkg.label}</div>

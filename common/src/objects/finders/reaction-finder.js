@@ -13,7 +13,7 @@ const emptyArray = [];
  * @return {Promise<Array<Reaction>>}
  */
 async function findReactionsToStories(db, stories, currentUser, minimum) {
-    var storyIDs = _.filter(_.uniq(_.map(stories, 'id')), (id) => {
+    let storyIDs = _.filter(_.uniq(_.map(stories, 'id')), (id) => {
         return (id >= 1);
     });
     if (_.isEmpty(storyIDs) || !currentUser) {

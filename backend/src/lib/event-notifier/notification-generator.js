@@ -71,7 +71,7 @@ async function generate(db, events) {
     return savedNotifications;
 }
 
-var notificationGeneratingFunctions = [
+let notificationGeneratingFunctions = [
     generateCoauthoringNotifications,
     generateStoryPublicationNotifications,
     generateReactionPublicationNotifications,
@@ -360,7 +360,7 @@ async function generateJoinRequestNotifications(db, event) {
     let users = await User.findCached(db, 'global', criteria, '*');
     let admins = _.filter(users, { type: 'admin' });
     let entryLists = _.map(projects, (project) => {
-        var details = {
+        let details = {
             project_name: project.name,
             project_id: project.id,
         };
@@ -431,8 +431,8 @@ function isPublishing(event, table) {
 function getNewCoauthorIds(event) {
     if (isModifying(event, 'story')) {
         if (event.diff.user_ids) {
-            var coauthorIDsBefore = _.slice(event.previous.user_ids, 1);
-            var coauthorIDsAfter = _.slice(event.current.user_ids, 1);
+            let coauthorIDsBefore = _.slice(event.previous.user_ids, 1);
+            let coauthorIDsAfter = _.slice(event.current.user_ids, 1);
             return _.difference(coauthorIDsAfter, coauthorIDsBefore);
         }
     }
@@ -448,8 +448,8 @@ function getNewCoauthorIds(event) {
  */
 function getNewTags(event) {
     if (event.diff.tags) {
-        var tagsBefore = event.previous.tags;
-        var tagsAfter = event.current.tags;
+        let tagsBefore = event.previous.tags;
+        let tagsAfter = event.current.tags;
         return _.difference(tagsAfter, tagsBefore);
     }
     return [];
@@ -465,8 +465,8 @@ function getNewTags(event) {
 function getNewRequestedProjectIds(event) {
     if (isModifying(event, 'user')) {
         if (event.diff.requested_project_ids) {
-            var projectIdsBefore = event.previous.requested_project_ids;
-            var projectIdsAfter = event.current.requested_project_ids;
+            let projectIdsBefore = event.previous.requested_project_ids;
+            let projectIdsAfter = event.current.requested_project_ids;
             return _.difference(projectIdsAfter, projectIdsBefore);
         }
     }
@@ -481,8 +481,8 @@ function getNewRequestedProjectIds(event) {
  * @return {Boolean}
  */
 function checkUserPreference(user, notification) {
-    var name = _.snakeCase(notification.type);
-    var settingValue = _.get(user, `settings.notification.${name}`);
+    let name = _.snakeCase(notification.type);
+    let settingValue = _.get(user, `settings.notification.${name}`);
     if (settingValue) {
         // user never receives notification from himself
         if (notification.user_id === notification.target_user_id) {
@@ -491,7 +491,7 @@ function checkUserPreference(user, notification) {
         if (settingValue === true) {
             return true;
         } else {
-            var testValue;
+            let testValue;
             switch (notification.type) {
                 case 'push':
                 case 'merge':

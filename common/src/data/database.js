@@ -144,7 +144,7 @@ class Database {
      * @return {Database}
      */
     use(...varSets) {
-        var newContext = {};
+        let newContext = {};
         _.assign(newContext, this.context);
         for (let varSet of varSets) {
             _.assign(newContext, varSet);

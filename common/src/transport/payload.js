@@ -93,7 +93,7 @@ class Payload {
      */
     attachStep(source, name) {
         // add options to the source part
-        var options;
+        let options;
         switch (name) {
             case 'poster':
                 options = { generate_poster: true };
@@ -132,7 +132,7 @@ class Payload {
      * @param  {Object} options
      */
     setPartOptions(name, options) {
-        var part = _.find(this.parts, { name });
+        let part = _.find(this.parts, { name });
         if (!part) {
             throw new Error(`Unable to find part: ${name}`);
         }
@@ -150,7 +150,7 @@ class Payload {
      * @return {Number}
      */
     getSize() {
-        var sizes = _.map(this.parts, (part) => {
+        let sizes = _.map(this.parts, (part) => {
             return part.size || 0;
         });
         return _.sum(sizes);
@@ -162,7 +162,7 @@ class Payload {
      * @return {Number}
      */
     getUploaded() {
-        var counts = _.map(this.parts, (part) => {
+        let counts = _.map(this.parts, (part) => {
             return part.uploaded || 0;
         });
         return _.sum(counts);
@@ -174,7 +174,7 @@ class Payload {
      * @return {Number}
      */
     getRemainingFiles() {
-        var remainingFiles = _.filter(this.parts, (part) => {
+        let remainingFiles = _.filter(this.parts, (part) => {
             if (part.size > 0) {
                 if (part.uploaded < part.size) {
                     return true;
@@ -190,7 +190,7 @@ class Payload {
      * @return {Number}
      */
     getRemainingBytes() {
-        var remainingBytes = _.map(this.parts, (part) => {
+        let remainingBytes = _.map(this.parts, (part) => {
             return (part.size > 0) ? part.size - part.uploaded : 0;
         });
         return _.sum(remainingBytes);
@@ -200,13 +200,13 @@ class Payload {
      * Cancel a payload
      */
     cancel() {
-        _.each(this.parts, (part, key) => {
+        for (let part of this.parts) {
             if (part.stream) {
                 part.stream.cancel();
             } else if (part.promise && part.promise.cancel) {
                 part.promise.cancel();
             }
-        });
+        }
     }
 }
 

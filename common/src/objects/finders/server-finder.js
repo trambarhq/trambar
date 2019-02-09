@@ -45,8 +45,8 @@ async function findAllServers(db, minimum) {
  * @return {Promise<Array<Server>>}
  */
 async function findServersOfRepos(db, repos) {
-    var ids = _.filter(_.map(repos, (repo) => {
-        var link = ExternalDataUtils.findLinkByServerType(repo, repo.type);
+    let ids = _.filter(_.map(repos, (repo) => {
+        let link = ExternalDataUtils.findLinkByServerType(repo, repo.type);
         if (link) {
             return link.server_id;
         }

@@ -57,7 +57,7 @@ class PushNotifierPanel extends Component {
  * @return {Object}
  */
 function getDeviceDetails() {
-    var device = window.device;
+    let device = window.device;
     if (device) {
         return {
             manufacturer: device.manufacturer,

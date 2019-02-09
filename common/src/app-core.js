@@ -206,7 +206,7 @@ async function start(cfg) {
         let { payload, part } = evt;
         let file = part.blob || part.cordovaFile;
         if (file) {
-            var url = `payload:${payload.id}/${part.name}`;
+            let url = `payload:${payload.id}/${part.name}`;
             BlobManager.associate(file, url);
         }
     });
@@ -321,7 +321,7 @@ async function loadSession(address) {
     let criteria = { key: address };
     let query = Object.assign({ criteria }, sessionLocation);
     let records = await dataSource.find(query);
-    var record = records[0];
+    let record = records[0];
     if (record) {
         return {
             address: record.key,

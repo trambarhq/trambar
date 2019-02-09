@@ -155,7 +155,7 @@ function getMergeRequestNoteURL(repo, reaction) {
 }
 
 function isBright(color) {
-    var r, g, b;
+    let r, g, b;
     if (color.length === 4) {
         r = parseInt(color.substr(1, 1), 16) * (1 / 15);
         g = parseInt(color.substr(2, 1), 16) * (1 / 15);
@@ -165,8 +165,8 @@ function isBright(color) {
         g = parseInt(color.substr(3, 2), 16) * (1 / 255);
         b = parseInt(color.substr(5, 2), 16) * (1 / 255);
     }
-    var b = Math.sqrt(0.299 * r*r + 0.587 * g*g + 0.114 * b*b);
-    return (b > 0.80);
+    let brightness = Math.sqrt(0.299 * r*r + 0.587 * g*g + 0.114 * b*b);
+    return (brightness > 0.80);
 }
 
 export {

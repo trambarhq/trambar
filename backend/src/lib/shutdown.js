@@ -37,7 +37,7 @@ async function close(server, maxWait) {
         return;
     }
     await new Promise((resolve, reject) => {
-        var resolved = false;
+        let resolved = false;
         server.on('close', () => {
             if (!resolved) {
                 resolved = true;
