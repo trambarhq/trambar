@@ -125,7 +125,7 @@ class LocaleManager extends EventEmitter {
      *
      * @return {Promise<Boolean>}
      */
-    change(localeCode) {
+    async change(localeCode) {
         localeCode = _.toLower(localeCode);
         if (localeCode === this.localeCode) {
             return Promise.resolve(true);
@@ -137,26 +137,25 @@ class LocaleManager extends EventEmitter {
             return Promise.reject(err);
         }
         // Wekpack returns a native promise--convert it to Bluebird
-        return Promise.resolve(entry.module()).then((module) => {
-            let phraseTable = module.phrases;
-            if (!/^[a-z]{2}$/.test(countryCode)) {
-                countryCode = entry.defaultCountry;
-            }
-            if (phraseTable instanceof Function) {
-                phraseTable = phraseTable(countryCode);
-            }
-            this.phraseTable = phraseTable;
-            this.localeCode = localeCode;
-            this.languageCode = languageCode;
-            this.countryCode = countryCode;
-            this.module = module;
-            this.entry = entry;
-            this.missingPhrases = [];
+        let module = await entry.module();
+        let phraseTable = module.phrases;
+        if (!/^[a-z]{2}$/.test(countryCode)) {
+            countryCode = entry.defaultCountry;
+        }
+        if (phraseTable instanceof Function) {
+            phraseTable = phraseTable(countryCode);
+        }
+        this.phraseTable = phraseTable;
+        this.localeCode = localeCode;
+        this.languageCode = languageCode;
+        this.countryCode = countryCode;
+        this.module = module;
+        this.entry = entry;
+        this.missingPhrases = [];
 
-            let evt = new LocaleManagerEvent('change', this);
-            this.triggerEvent(evt);
-            return true;
-        });
+        let evt = new LocaleManagerEvent('change', this);
+        this.triggerEvent(evt);
+        return true;
     }
 
     /**

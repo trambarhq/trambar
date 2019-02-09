@@ -51,7 +51,7 @@ class EnvironmentMonitor extends EventEmitter {
         this.monitor(false);
     }
 
-    monitor(enabled) {
+    async monitor(enabled) {
         // monitor whether app is active
         if (this.platform === 'cordova') {
             toggleEventListener(document, 'pause', this.handlePause, enabled);
@@ -77,19 +77,18 @@ class EnvironmentMonitor extends EventEmitter {
         let network = getNetworkAPI();
         toggleEventListener(network, 'typechange', this.handleConnectionTypeChange, enabled);
 
-        // monitor battery
-        getBattery().then((battery) => {
-            if (battery) {
-                toggleEventListener(battery, 'levelchange', this.handleBatteryChange, enabled);
-                toggleEventListener(battery, 'chargingchange', this.handleBatteryChange, enabled);
-
-                let { charging, level } = battery;
-                this.battery = { charging, level };
-            }
-        });
-
         // monitor for device changes
         toggleEventListener(navigator.mediaDevices, 'devicechange', this.handleDeviceChange, enabled);
+
+        // monitor battery
+        let battery = await getBattery();
+        if (battery) {
+            toggleEventListener(battery, 'levelchange', this.handleBatteryChange, enabled);
+            toggleEventListener(battery, 'chargingchange', this.handleBatteryChange, enabled);
+
+            let { charging, level } = battery;
+            this.battery = { charging, level };
+        }
 
         this.scheduleDateCheck(enabled);
     }
@@ -254,14 +253,13 @@ class EnvironmentMonitor extends EventEmitter {
         }
     }
 
-    handleDeviceChange = (evt) => {
+    handleDeviceChange = async (evt) => {
         let { mediaDevices } = navigator;
         if (mediaDevices) {
-            mediaDevices.enumerateDevices().then((devices) => {
-                this.devices = devices;
-                this.recorders = getRecordingSupport(devices);
-                this.triggerEvent(new EnvironmentMonitorEvent('change', this));
-            });
+            let devices = await mediaDevices.enumerateDevices();
+            this.devices = devices;
+            this.recorders = getRecordingSupport(devices);
+            this.triggerEvent(new EnvironmentMonitorEvent('change', this));
         }
     }
 }
