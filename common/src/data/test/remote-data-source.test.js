@@ -843,9 +843,10 @@ describe('RemoteDataSource', function() {
             expect(projectsImmediately).to.have.length(1);
             expect(projectsImmediately[0]).to.have.property('id').that.is.below(1);
 
-                // this search should not trigger a remote search, since it's
-                // the same as the one performed in the change event handler
-            let projectsLater = await dataSource.find(location, {});
+            // this search should not trigger a remote search, since it's
+            // the same as the one performed in the change event handler
+            let query = _.assign({ criteria: {} }, location);
+            let projectsLater = await dataSource.find(query);
             expect(projectsLater).to.have.length(1);
             expect(projectsLater[0]).to.have.property('id').that.is.at.least(1);
             expect(discovery).to.equal(1);
@@ -999,6 +1000,9 @@ describe('RemoteDataSource', function() {
             expect(evt).to.have.property('type', 'change');
         })
         it('should keep a delete request in the change queue when there is no connection and send it when connection is restored', async function() {
+            dataSource.options.discoveryFlags = {
+                include_uncommitted: true
+            };
             let location = { address: 'http://level2.lonely-mountain.me', schema: 'global', table: 'project' };
             let objects = [ { id: 1, gn: 2, name: 'smaug' } ];
             let storage = 0;

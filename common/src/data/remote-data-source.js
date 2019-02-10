@@ -55,6 +55,7 @@ class RemoteDataSource extends EventEmitter {
             this.startTime = Moment();
             // force validation of schema signatures
             this.revalidate();
+            this.dispatchPending();
         }
     }
 
@@ -108,7 +109,7 @@ class RemoteDataSource extends EventEmitter {
 
         let includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
         if (includeUncommitted && !query.committed) {
-            search = await this.applyUncommittedChanges(search);
+            search = this.applyUncommittedChanges(search);
         }
         if (query.required) {
             if (!search.isMeetingExpectation()) {
@@ -579,20 +580,7 @@ class RemoteDataSource extends EventEmitter {
      *
      * @return {Object}
      */
-    async applyUncommittedChanges(search) {
-        // wait for any storage operation currently in flight to finish so
-        // we don't end up with both the committed and the uncommitted copy
-        for (let change of this.changeQueue) {
-            if (change.matchLocation(search)) {
-                if (change.dispatched && !change.committed) {
-                    try {
-                        await change.promise;
-                    } catch (err) {
-                    }
-                }
-            }
-        }
-
+    applyUncommittedChanges(search) {
         let newSearch;
         let includeDeleted = _.get(this.options.discoveryFlags, 'include_deleted');
         for (let change of this.changeQueue) {
@@ -1061,6 +1049,23 @@ class RemoteDataSource extends EventEmitter {
             // then add them to the list
             newResults = insertObjects(newResults, newObjects);
         }
+
+        let includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
+        if (includeUncommitted) {
+            // wait for any storage operation currently in flight to finish so
+            // we don't end up with both the committed and the uncommitted copy
+            for (let change of this.changeQueue) {
+                if (change.matchLocation(search)) {
+                    if (change.dispatched && !change.committed) {
+                        try {
+                            await change.promise;
+                        } catch (err) {
+                        }
+                    }
+                }
+            }
+        }
+
         search.finish(newResults);
 
         // save to cache
