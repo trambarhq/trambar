@@ -101,6 +101,8 @@ class RemoteDataSource extends EventEmitter {
         if (!search) {
             search = this.addSearch(newSearch);
             search.promise = this.performSearch(search);
+        } else {
+            search.promise = this.performSearchUpdate(search);
         }
         await search.promise;
 
@@ -947,22 +949,57 @@ class RemoteDataSource extends EventEmitter {
             await this.searchLocalCache(search);
         }
         if (!search.local) {
+            let needServerCheck, waitForServerCheck;
             if (search.isMeetingExpectation()) {
                 // local search yield the expected number of objects
                 if (search.isSufficientlyRecent(refreshInterval)) {
                     // don't need to do anything
+                    needServerCheck = false;
                 } else {
                     // check with server
-                    this.searchRemoteDatabase(search, true);
+                    needServerCheck = true;
+                    if (search.blocking === 'stale') {
+                        waitForServerCheck = true;
+                    } else {
+                        waitForServerCheck = false;
+                    }
                 }
             } else {
+                needServerCheck = true;
                 if (search.isSufficientlyCached()) {
-                    this.searchRemoteDatabase(search, true);
+                    waitForServerCheck = false;
+                } else if (search.blocking === 'never') {
+                    waitForServerCheck = false;
                 } else {
+                    waitForServerCheck = true;
+                }
+            }
+
+            if (needServerCheck) {
+                if (waitForServerCheck) {
                     await this.searchRemoteDatabase(search, false);
+                } else {
+                    this.searchRemoteDatabase(search, true);
                 }
             }
         }
+    }
+
+    async performSearchUpdate(search) {
+        let { refreshInterval } = this.options;
+        if (!search.local) {
+            let needServerCheck;
+            if (search.dirty || !search.isSufficientlyRecent(refreshInterval)) {
+                if (!search.updating) {
+                    search.updating = true;
+                    needServerCheck = true;
+                }
+            }
+            if (needServerCheck) {
+                this.searchRemoteDatabase(search, true);
+            }
+        }
+        return search.promise;
     }
 
     async searchLocalCache(search) {
@@ -1008,23 +1045,31 @@ class RemoteDataSource extends EventEmitter {
         // which objects have changed and which have gone missing
         let idsUpdated = search.getUpdateList(discovery.ids, discovery.gns);
         let idsRemoved = search.getRemovalList(discovery.ids);
-        let newResults = removeObjects(search.results, idsRemoved);
+        let noUpdate = _.isEmpty(idsUpdated);
+        let noRemoval = _.isEmpty(idsRemoved);
+        if (noUpdate && noRemoval) {
+            return false;
+        }
 
-        if (!_.isEmpty(idsUpdated)) {
+        let newResults = search.results;
+        if (!noRemoval) {
+            newResults = removeObjects(newResults, idsRemoved);
+        }
+        if (!noUpdate) {
             // retrieve the updated (or new) objects from server
             let newObjects = await this.retrieveRemoteObjects(location, idsUpdated);
             // then add them to the list
             newResults = insertObjects(newResults, newObjects);
         }
-        if (!search.finish(newResults)) {
-            return false;
-        }
+        search.finish(newResults);
+
         // save to cache
         this.updateLocalCache(search);
 
         if (notify) {
             this.triggerEvent(new RemoteDataSourceEvent('change', this));
         }
+        return true;
     }
 
     async verifyCacheSignature(search) {

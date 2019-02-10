@@ -17,6 +17,7 @@ class Search extends Operation {
         this.minimum = query.minimum;
         this.expected = query.expected;
         this.prefetch = query.prefetch;
+        this.blocking = query.blocking || 'insufficient';
 
         if (typeof(this.expected) !== 'number') {
             // if expected object count isn't specified, try inferring it from
@@ -244,6 +245,7 @@ class Search extends Operation {
 
         this.dirty = false;
         this.invalid = false;
+        this.updating = false;
         if (results) {
             this.promise = Promise.resolve(this.results);
 

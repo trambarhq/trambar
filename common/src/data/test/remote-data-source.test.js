@@ -602,7 +602,7 @@ describe('RemoteDataSource', function() {
             expect(discovery).to.equal(1);
             expect(retrieval).to.equal(0);
 
-            let result = Promise.race([
+            let result = await Promise.race([
                 changeEventPromise,
                 Bluebird.resolve('no event').delay(500)
             ]);
@@ -694,7 +694,7 @@ describe('RemoteDataSource', function() {
             expect(retrieval).to.equal(0);
             expect(users).to.have.property('length', 2);
 
-            let result = Promise.race([
+            let result = await Promise.race([
                 changeEventPromise,
                 Bluebird.resolve('no event').delay(200)
             ]);

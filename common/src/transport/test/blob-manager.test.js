@@ -91,7 +91,7 @@ describe('BlobManager', function() {
                 await fetchOriginal('GET', url);
                 expect.fail();
             } catch (err) {
-                expect(error).to.be.an.instanceOf(Error);
+                expect(err).to.be.an.instanceOf(Error);
             }
         })
     })
