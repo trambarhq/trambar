@@ -6,7 +6,7 @@ class Storage extends Operation {
         super(location);
         this.objects = objects;
         this.options = options || {};
-        this.canceled = false;
+        this.promise = null;
     }
 
     finish(results) {

@@ -10,14 +10,18 @@ class Search extends Operation {
         this.invalid = false;
         this.signature = '';
         this.updating = false;
-        this.scheduled = false;
+        this.notifying = false;
+        this.synchronized = false;
+        this.failed = false;
         this.lastRetrieved = 0;
+        this.results = undefined;
         this.missingResults = [];
+        this.localSearchPromise = null;
+        this.remoteSearchPromise = null;
 
         this.minimum = query.minimum;
         this.expected = query.expected;
         this.prefetch = query.prefetch;
-        this.blocking = query.blocking || 'insufficient';
 
         if (typeof(this.expected) !== 'number') {
             // if expected object count isn't specified, try inferring it from
@@ -40,22 +44,6 @@ class Search extends Operation {
      */
     getQuery() {
         return _.pick(this, 'address', 'schema', 'table', 'criteria');
-    }
-
-    /**
-     * Return the types of properties in the criteria object
-     *
-     * @return {Object}
-     */
-    getCriteriaShape() {
-        let shape = _.mapValues(this.criteria, (value) => {
-            if (value != null) {
-                return value.constructor;
-            } else {
-                return null;
-            }
-        });
-        return shape;
     }
 
     /**
@@ -107,6 +95,9 @@ class Search extends Operation {
     isSufficientlyRecent(refreshInterval) {
         if (this.local) {
             return true;
+        }
+        if (this.invalid) {
+            return false;
         }
         let rtimes = _.map(this.results, 'rtime');
         let minRetrievalTime = _.min(rtimes);
@@ -239,38 +230,40 @@ class Search extends Operation {
 
     finish(results) {
         let previousResults = this.results;
-        let missingResults = [];
-        let newlyRetrieved = 0;
         Operation.prototype.finish.call(this, results);
 
-        this.dirty = false;
-        this.invalid = false;
-        this.updating = false;
-        if (results) {
-            this.promise = Promise.resolve(this.results);
+        if (this.results !== previousResults) {
+            let missingResults = [];
+            let newlyRetrieved = 0;
 
-            // update rtime of results
-            for (let object of this.results) {
-                if (!object.rtime) {
-                    newlyRetrieved++;
+            this.dirty = false;
+            this.invalid = false;
+            this.updating = false;
+            this.synchronized = true;
+            if (results) {
+                // update rtime of results
+                for (let object of this.results) {
+                    if (!object.rtime) {
+                        newlyRetrieved++;
+                    }
+                    object.rtime = this.finishTime;
                 }
-                object.rtime = this.finishTime;
-            }
 
-            // if an object that we found before is no longer there, then
-            // it's either deleted or changed in such a way that it longer
-            // meets the criteria; in both scenarios, the local copy has
-            // become stale and should be removed from cache
-            for (let object of previousResults) {
-                let index = _.sortedIndexBy(results, object, 'id');
-                let target = results[index];
-                if (!target || target.id !== object.id) {
-                    missingResults.push(object);
+                // if an object that we found before is no longer there, then
+                // it's either deleted or changed in such a way that it longer
+                // meets the criteria; in both scenarios, the local copy has
+                // become stale and should be removed from cache
+                for (let object of previousResults) {
+                    let index = _.sortedIndexBy(results, object, 'id');
+                    let target = results[index];
+                    if (!target || target.id !== object.id) {
+                        missingResults.push(object);
+                    }
                 }
             }
+            this.missingResults = missingResults;
+            this.lastRetrieved = newlyRetrieved;
         }
-        this.missingResults = missingResults;
-        this.lastRetrieved = newlyRetrieved;
     }
 }
 

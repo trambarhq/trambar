@@ -9,10 +9,12 @@ class Operation {
         this.local = (location.schema === 'local');
         this.schema = location.schema;
         this.table = location.table;
+        this.canceled = false;
+        this.failed = false;
+        this.error = null;
         this.startTime = null;
         this.finishTime = null;
         this.results = [];
-        this.promise = null;
         this.by = (byComponent) ? [ byComponent ] : [];
     }
 
@@ -77,6 +79,19 @@ class Operation {
      */
     cancel() {
         this.canceled = true;
+    }
+
+    /**
+     * [fail description]
+     *
+     * @param  {[type]} err
+     *
+     * @return {[type]}
+     */
+    fail(err) {
+        this.finish(undefined);
+        this.failed = true;
+        this.error = err;
     }
 
     /**

@@ -96,22 +96,89 @@ class RemoteDataSource extends EventEmitter {
      */
     async find(query) {
         let newSearch = new Search(query);
+        let blocking;
+        if (query.blocking === true) {
+            blocking = 'insufficient';
+        } else if (query.blocking === false) {
+            blocking = 'never';
+        } else if (query.blocking == undefined) {
+            blocking = 'insufficient'
+        } else {
+            blocking = query.blocking;
+        }
+        let required = query.required || false;
+        let refreshInterval = this.options.refreshInterval;
         let search = _.find(this.recentSearchResults, (search) => {
             return search.match(newSearch);
         });
         if (!search) {
-            search = this.addSearch(newSearch);
-            search.promise = this.performSearch(search);
+            search = newSearch;
+            if (!search.remote) {
+                search.localSearchPromise = this.searchLocalCache(search);
+            }
+            // don't save local searches
+            if (!search.local) {
+                search.remoteSearchPromise = this.searchRemoteDatabase(search);
+                search = this.addSearch(newSearch);
+            }
         } else {
-            search.promise = this.performSearchUpdate(search);
+            if (search.synchronized) {
+                if (!search.isFresh(refreshInterval)) {
+                    if (!search.updating) {
+                        search.remoteSearchPromise = this.searchRemoteDatabase(search);
+                        search.updating = true;
+                    }
+                }
+            }
         }
-        await search.promise;
+
+        if (search.localSearchPromise) {
+            await search.localSearchPromise;
+        }
+
+        if (search.remoteSearchPromise) {
+            let waitForRemote = false;
+            if (!search.synchronized) {
+                switch (blocking) {
+                    case 'insufficient':
+                        if (!search.isMeetingExpectation() && !search.isSufficientlyCached()) {
+                            waitForRemote = true;
+                        }
+                        break;
+                    case 'expired':
+                    case 'stale':
+                        if (!search.isMeetingExpectation() || !search.isSufficientlyRecent(refreshInterval)) {
+                            waitForRemote = true;
+                        }
+                        break;
+                    case 'never':
+                        break;
+                }
+            } else {
+                switch (blocking) {
+                    case 'expired':
+                        if (search.dirty) {
+                            waitForRemote = true;
+                        }
+                        break;
+                    case 'insufficient':
+                    case 'never':
+                    case 'sale':
+                        break;
+                }
+            }
+            if (waitForRemote) {
+                await search.remoteSearchPromise;
+            } else {
+                search.notifying = true;
+            }
+        }
 
         let includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
         if (includeUncommitted && !query.committed) {
             search = this.applyUncommittedChanges(search);
         }
-        if (query.required) {
+        if (required) {
             if (!search.isMeetingExpectation()) {
                 this.triggerEvent(new RemoteDataSourceEvent('stupefaction', this, {
                     query,
@@ -449,6 +516,50 @@ class RemoteDataSource extends EventEmitter {
             }
             return true;
         });
+    }
+
+    /**
+     * Override cache mechansim and ensure that the remote searches are
+     * perform on given object
+     *
+     * @param  {Object} location
+     * @param  {Object} object
+     */
+    refresh(location, object) {
+        let relevantSearches = this.getRelevantRecentSearches(location);
+        for (let search of relevantSearches) {
+            let results = search.results;
+            let dirty = false;
+            let index = _.sortedIndexBy(results, object, 'id');
+            let target = results[index];
+            if (target && target.id === object.id) {
+                dirty = true;
+            }
+            if (dirty) {
+                search.dirty = true;
+            }
+        }
+    }
+
+    /**
+     * Indicate that we're not longer using data from specific location
+     *
+     * @param  {String} address
+     * @param  {String|undefined} schema
+     */
+    abandon(address, schema) {
+        for (let search of this.recentSearchResults) {
+            if (!search.local) {
+                if (search.address === address) {
+                    if (!schema || search.schema === schema) {
+                        search.dirty = true;
+                    }
+                }
+            }
+        }
+        if (this.cache) {
+            this.cache.reset(address, schema);
+        }
     }
 
     /**
@@ -931,65 +1042,6 @@ class RemoteDataSource extends EventEmitter {
         }
     }
 
-    async performSearch(search) {
-        let { refreshInterval } = this.options;
-        if (!search.remote) {
-            await this.searchLocalCache(search);
-        }
-        if (!search.local) {
-            let needServerCheck, waitForServerCheck;
-            if (search.isMeetingExpectation()) {
-                // local search yield the expected number of objects
-                if (search.isSufficientlyRecent(refreshInterval)) {
-                    // don't need to do anything
-                    needServerCheck = false;
-                } else {
-                    // check with server
-                    needServerCheck = true;
-                    if (search.blocking === 'stale') {
-                        waitForServerCheck = true;
-                    } else {
-                        waitForServerCheck = false;
-                    }
-                }
-            } else {
-                needServerCheck = true;
-                if (search.isSufficientlyCached()) {
-                    waitForServerCheck = false;
-                } else if (search.blocking === 'never') {
-                    waitForServerCheck = false;
-                } else {
-                    waitForServerCheck = true;
-                }
-            }
-
-            if (needServerCheck) {
-                if (waitForServerCheck) {
-                    await this.searchRemoteDatabase(search, false);
-                } else {
-                    this.searchRemoteDatabase(search, true);
-                }
-            }
-        }
-    }
-
-    async performSearchUpdate(search) {
-        let { refreshInterval } = this.options;
-        if (!search.local) {
-            let needServerCheck;
-            if (search.dirty || !search.isSufficientlyRecent(refreshInterval)) {
-                if (!search.updating) {
-                    search.updating = true;
-                    needServerCheck = true;
-                }
-            }
-            if (needServerCheck) {
-                this.searchRemoteDatabase(search, true);
-            }
-        }
-        return search.promise;
-    }
-
     async searchLocalCache(search) {
         try {
             let query = search.getQuery();
@@ -1014,67 +1066,82 @@ class RemoteDataSource extends EventEmitter {
         }
     }
 
-    async searchRemoteDatabase(search, notify) {
+    async searchRemoteDatabase(search) {
+        if (search.localSearchPromise) {
+            await search.localSearchPromise;
+        }
+
         if (!this.active) {
-            return false;
+            return;
         }
-        search.start();
-        if (!search.remote) {
-            await this.verifyCacheSignature(search);
-        }
-        let location = search.getLocation();
-        let criteria = search.criteria;
-        let discovery = await this.discoverRemoteObjects(location, criteria);
-        if (search.remote) {
-            await this.retrieveFromLocalCache(search, discovery);
-            await this.verifyCacheSignature(search);
-        }
-        // use the list of ids and gns (generation number) to determine
-        // which objects have changed and which have gone missing
-        let idsUpdated = search.getUpdateList(discovery.ids, discovery.gns);
-        let idsRemoved = search.getRemovalList(discovery.ids);
-        let noUpdate = _.isEmpty(idsUpdated);
-        let noRemoval = _.isEmpty(idsRemoved);
-        if (noUpdate && noRemoval) {
-            return false;
-        }
+        try {
+            if (!search.remote) {
+                await this.verifyCacheSignature(search);
 
-        let newResults = search.results;
-        if (!noRemoval) {
-            newResults = removeObjects(newResults, idsRemoved);
-        }
-        if (!noUpdate) {
-            // retrieve the updated (or new) objects from server
-            let newObjects = await this.retrieveRemoteObjects(location, idsUpdated);
-            // then add them to the list
-            newResults = insertObjects(newResults, newObjects);
-        }
+                if (search.isMeetingExpectation()) {
+                    let refreshInterval = this.options.refreshInterval;
+                    if (search.isSufficientlyRecent(refreshInterval)) {
+                        return;
+                    }
+                }
+            }
 
-        let includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
-        if (includeUncommitted) {
-            // wait for any storage operation currently in flight to finish so
-            // we don't end up with both the committed and the uncommitted copy
-            for (let change of this.changeQueue) {
-                if (change.matchLocation(search)) {
-                    if (change.dispatched && !change.committed) {
-                        try {
-                            await change.promise;
-                        } catch (err) {
+            search.start();
+            let location = search.getLocation();
+            let criteria = search.criteria;
+            let discovery = await this.discoverRemoteObjects(location, criteria);
+            if (search.remote) {
+                await this.retrieveFromLocalCache(search, discovery);
+                await this.verifyCacheSignature(search);
+            }
+            // use the list of ids and gns (generation number) to determine
+            // which objects have changed and which have gone missing
+            let idsUpdated = search.getUpdateList(discovery.ids, discovery.gns);
+            let idsRemoved = search.getRemovalList(discovery.ids);
+
+            let newResults = search.results;
+            if (_.isEmpty(idsRemoved)) {
+                newResults = removeObjects(newResults, idsRemoved);
+            }
+            if (!_.isEmpty(idsUpdated)) {
+                // retrieve the updated (or new) objects from server
+                let newObjects = await this.retrieveRemoteObjects(location, idsUpdated);
+                // then add them to the list
+                newResults = insertObjects(newResults, newObjects);
+            }
+
+            let includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
+            if (includeUncommitted) {
+                // wait for any storage operation currently in flight to finish so
+                // we don't end up with both the committed and the uncommitted copy
+                for (let change of this.changeQueue) {
+                    if (change.matchLocation(search)) {
+                        if (change.dispatched && !change.committed) {
+                            try {
+                                await change.promise;
+                            } catch (err) {
+                            }
                         }
                     }
                 }
             }
+
+            if (newResults !== search.results) {
+                search.finish(newResults);
+
+                // save to cache
+                this.updateLocalCache(search);
+
+                if (search.notifying) {
+                    this.triggerEvent(new RemoteDataSourceEvent('change', this));
+                }
+            } else {
+                search.finish();
+            }
+            search.notifying = false;
+        } catch (err) {
+            search.fail(err);
         }
-
-        search.finish(newResults);
-
-        // save to cache
-        this.updateLocalCache(search);
-
-        if (notify) {
-            this.triggerEvent(new RemoteDataSourceEvent('change', this));
-        }
-        return true;
     }
 
     async verifyCacheSignature(search) {

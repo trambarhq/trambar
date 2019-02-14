@@ -832,7 +832,10 @@ describe('RemoteDataSource', function() {
                 dataSource.removeEventListener('change', changeEventPromise.resolve);
 
                 // perform the query that should yield the object with temporary ID
-                let query = _.assign({ criteria: {} }, location);
+                // blocking needs to be 'never' here, since the remote search will
+                // wait for the save operation to finish (which would wait for the
+                // promise returned by this function)
+                let query = _.assign({ criteria: {}, blocking: 'never' }, location);
                 return dataSource.find(query);
             };
             let presaveSearchPromise = presaveSearch();
