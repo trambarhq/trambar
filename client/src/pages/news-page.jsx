@@ -71,8 +71,6 @@ class NewsPage extends AsyncComponent {
             route,
             env,
         };
-        // wait for retrieval of fresh story listing on initial render
-        let freshListing = meanwhile.revising() ? false : true;
         meanwhile.show(<NewsPageSync {...props} />);
         let currentUserID = await db.start();
         props.currentUser = await UserFinder.findUser(db, currentUserID);
@@ -85,9 +83,9 @@ class NewsPage extends AsyncComponent {
         } else if (date) {
             props.stories = await StoryFinder.findStoriesOnDate(db, date, props.currentUser);
         } else if (!_.isEmpty(roleIDs)) {
-            props.stories = await StoryFinder.findStoriesWithRolesInListing(db, 'news', roleIDs, props.currentUser, freshListing);
+            props.stories = await StoryFinder.findStoriesWithRolesInListing(db, 'news', roleIDs, props.currentUser);
         } else {
-            props.stories = await StoryFinder.findStoriesInListing(db, 'news', props.currentUser, freshListing);
+            props.stories = await StoryFinder.findStoriesInListing(db, 'news', props.currentUser);
             meanwhile.show(<NewsPageSync {...props} />);
             props.draftStories = await StoryFinder.findDraftStories(db, props.currentUser);
             let limit = env.getRelativeDate(-1, 'date');
