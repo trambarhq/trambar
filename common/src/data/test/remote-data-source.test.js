@@ -29,7 +29,7 @@ describe('RemoteDataSource', function() {
         },
         prefetching: false,
         sessionRetryInterval: 100,
-        cacheValidation: false,
+        cacheValidation: true,
         cache,
     };
     let dataSource = new RemoteDataSource(dataSourceOptions);
@@ -478,7 +478,8 @@ describe('RemoteDataSource', function() {
                 table: 'user',
                 criteria: {
                     id: [ 1, 2 ]
-                }
+                },
+                blocking: 'stale',
             };
             let discovery = 0;
             let retrieval = 0;
@@ -579,8 +580,8 @@ describe('RemoteDataSource', function() {
             let discovery = 0;
             let retrieval = 0;
             HTTPRequest.fetch = async (method, url, payload, options) => {
-                await Bluebird.delay(50);
                 if (/discovery/.test(url)) {
+                    await Bluebird.delay(50);
                     discovery++;
                     return {
                         ids: _.map(objects, 'id'),
@@ -848,12 +849,12 @@ describe('RemoteDataSource', function() {
 
             // this search should not trigger a remote search, since it's
             // the same as the one performed in the change event handler
-            let query = _.assign({ criteria: {} }, location);
+            let query = _.assign({ criteria: {}, blocking: true }, location);
             let projectsLater = await dataSource.find(query);
             expect(projectsLater).to.have.length(1);
             expect(projectsLater[0]).to.have.property('id').that.is.at.least(1);
             expect(discovery).to.equal(1);
-            expect(retrieval).to.equal(0);
+            expect(retrieval).to.equal(1);
         })
         it('should block search on a table until saving is complete', async function() {
             let location = { address: 'http://level4.misty-mountain.me', schema: 'global', table: 'project' };
@@ -1324,6 +1325,63 @@ describe('RemoteDataSource', function() {
             expect(onConflictCalled).to.be.true;
             expect(retrieval).to.equal(1);
             expect(storage).to.equal(0);
+        })
+    })
+    describe('#revalidate()', function() {
+        it ('should force cache revalidation', async function() {
+            dataSource.options.cacheValidation = true;
+            let query = {
+                address: 'http://dol-guldur.me',
+                schema: 'global',
+                table: 'user',
+                criteria: {},
+                blocking: 'expired',
+            };
+            let objects = [
+                { id: 1, gn: 70, username: 'gandolf', secret: 'magic' }
+            ]
+            let filtering = false;
+            let discovery = 0;
+            let retrieval = 0;
+            let signature = 0;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                if (/discovery/.test(url)) {
+                    discovery++;
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn'),
+                    };
+                } else if (/retrieval/.test(url)) {
+                    retrieval++;
+                    if (filtering) {
+                        return _.map(objects, (object) => {
+                            return _.omit(object, 'secret');
+                        });
+                    } else {
+                        return objects;
+                    }
+                } else if (/signature/.test(url)) {
+                    signature++;
+                    if (filtering) {
+                        return { signature: 'hello' };
+                    } else {
+                        return { signature: 'world' };
+                    }
+                }
+            };
+            let users1 = await dataSource.find(query);
+            expect(users1[0]).to.have.property('secret');
+            expect(discovery).to.equal(1);
+            expect(retrieval).to.equal(1);
+            expect(signature).to.equal(1);
+            filtering = true;
+            await dataSource.revalidate();
+            await dataSource.invalidate();
+            let users2 = await dataSource.find(query);
+            expect(users2[0]).to.not.have.property('secret');
+            expect(discovery).to.equal(2);
+            expect(retrieval).to.equal(2);
+            expect(signature).to.equal(2);
         })
     })
 })
