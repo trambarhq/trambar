@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import Database from 'database';
 import * as Shutdown from 'shutdown';
-import TaskQueue from 'utils/task-queue';
 
 import Task from 'accessors/task';
 
@@ -47,10 +46,6 @@ class TaskLog {
         this.action = action;
         this.options = options;
 
-        // calls scheduled later override those scheduled earlier
-        this.queue = new TaskQueue({ overriding: true });
-        this.frequency = '1 second';
-
         this.id = undefined;
         this.completion = undefined;
         this.details = undefined;
@@ -58,6 +53,7 @@ class TaskLog {
         this.saved = false;
         this.saving = false;
         this.error = null;
+        this.saveTimeout = 0;
 
         // monitor for system shutdown to ensure data is saved
         this.shutdownListener = () => {
@@ -68,7 +64,7 @@ class TaskLog {
                         this.details.error = _.pick(this.error, 'message');
                         this.failed = true;
                     }
-                    this.queue.clear();
+                    clearTimeout(this.saveTimeout);
                     return this.save();
                 }
             }
@@ -88,9 +84,11 @@ class TaskLog {
         this.details = details;
         this.noop = false;
         this.saved = false;
-        this.queue.schedule('log', this.frequency, () => {
-            return this.save();
-        });
+
+        clearTimeout(this.saveTimeout);
+        this.saveTimeout = setTimeout(() => {
+            this.save();
+        }, 2000);
     };
 
     /**
@@ -105,6 +103,7 @@ class TaskLog {
         }
         this.completion = 100;
         this.saved = false;
+        clearTimeout(this.saveTimeout);
         Shutdown.off(this.shutdownListener);
         return this.save();
     };
@@ -122,6 +121,7 @@ class TaskLog {
         this.details.error = _.pick(err, 'message', 'stack', 'code', 'statusCode', 'reason');
         this.failed = true;
         this.saved = false;
+        clearTimeout(this.saveTimeout);
         Shutdown.off(this.shutdownListener);
         console.error(err);
         return this.save();

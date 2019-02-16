@@ -25,17 +25,19 @@ async function installHooks(db, host) {
         deleted: false,
         disabled: false,
     };
-    let server = await Server.find(db, 'global', criteria, '*');
-    if (hasAccessToken(server)) {
-        try {
-            await installServerHooks(db, host, server);
-        } catch (err) {
-            if (!(err.statusCode >= 400 && err.statusCode <= 499)) {
-                if (!_.includes(problematicServerIDs, server.id)) {
-                    problematicServerIDs.push(server.id);
+    let servers = await Server.find(db, 'global', criteria, '*');
+    for (let server of servers) {
+        if (hasAccessToken(server)) {
+            try {
+                await installServerHooks(db, host, server);
+            } catch (err) {
+                if (!(err.statusCode >= 400 && err.statusCode <= 499)) {
+                    if (!_.includes(problematicServerIDs, server.id)) {
+                        problematicServerIDs.push(server.id);
+                    }
                 }
+                throw err;
             }
-            throw err;
         }
     }
 }
