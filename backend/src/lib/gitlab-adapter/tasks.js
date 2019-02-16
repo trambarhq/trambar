@@ -254,9 +254,29 @@ class TaskExportStory extends BasicTask {
 
     async run() {
         let db = await Database.open();
+        let system = await getSystem(db);
+        let project = await getProjectByName(this.schema);
         let task = await getTask(db, this.schema, this.taskID);
-        if (task) {
-
+        if (system && task && project) {
+            try {
+                let story = await IssueExporter.exportStory(db, system, project, task);
+                task.completion = 100;
+                task.failed = false;
+                task.etime = new String('NOW()');
+                delete task.details.error;
+                if (story) {
+                    let issueLink = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
+                    _.assign(task.details, _.pick(issueLink, 'repo', 'issue'));
+                }
+            } catch (err) {
+                task.details.error = _.pick(err, 'message', 'statusCode');
+                task.failed = true;
+                if (err.statusCode >= 400 && err.statusCode <= 499) {
+                    // stop trying
+                    task.deleted = true;
+                }
+            }
+            await Task.saveOne(db, schema, task);
         }
     }
 }
@@ -268,8 +288,20 @@ class TaskReexportStory extends BasicTask {
         this.storyID = storyID;
     }
 
-    async run() {
+    async run(queue) {
+        // look for the export task and run it again
         let db = await Database.open();
+        let story = await getStory(db, this.schema, this.storyID);
+        let task = await getExportTask(db, this.schema, story);
+
+         if (task && story) {
+             // reexport only if the exporting user is among the author
+             if (_.includes(story.user_ids, task.user_id)) {
+                 task.completion = 50;
+                 task = await Task.saveOne(db, this.schema, task);
+                 queue.add(new TaskExportStory(this.schema, task.id));
+             }
+         }
     }
 }
 
@@ -466,6 +498,15 @@ async function getProject(db, projectID) {
     return Project.findOne(db, 'global', criteria, '*');
 }
 
+async function getProjectByName(db, name) {
+    let criteria = {
+        name,
+        archived: false,
+        deleted: false,
+    };
+    return Project.findOne(db, 'global', criteria, '*');
+}
+
 async function getProjects(db) {
     let criteria = {
         archived: false,
@@ -490,6 +531,30 @@ async function getFailedExportTasks(db, project) {
         deleted: false,
     };
     return Task.find(db, project.name, criteria, '*');
+}
+
+async function getStory(db, schema, storyID) {
+    let criteria = {
+        id: storyID,
+        deleted: false,
+    };
+    return Story.find(db, schema, criteria, '*');
+}
+
+async function getExportTask(db, schema, story) {
+    if (!story) {
+        return;
+    }
+    let criteria = {
+         type: 'export-issue',
+         completion: 100,
+         failed: false,
+         options: {
+             story_id: story.id,
+         },
+         deleted: false,
+     };
+     return Task.findOne(db, schema, criteria, '*');
 }
 
 /**
