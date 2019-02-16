@@ -19,7 +19,6 @@ import Server from 'accessors/server';
 import Story from 'accessors/story';
 import System from 'accessors/system';
 import Task from 'accessors/task';
-import User from 'accessors/user';
 
 const MIN = 60 * 1000;
 
@@ -81,26 +80,12 @@ class TaskInstallHooks extends BasicTask {
         this.host = host;
     }
 
-    async run() {
-        if (process.env.NODE_ENV !== 'production') {
-            // reduce the chance that operations will overlap on nodemon restart
-            await Bluebird.delay(3000);
+    async run(queue) {
+        let db = await Database.open();
+        let servers = await getServers(db);
+        for (let server of servers) {
+            queue.add(new TaskInstallServerHooks(server.id, this.host));
         }
-
-        let db = await Database.open();
-        await HookManager.installHooks(db, this.host);
-    }
-}
-
-class TaskInstallFailedHooks extends BasicTask {
-    constructor(host) {
-        super();
-        this.host = host;
-    }
-
-    async run() {
-        let db = await Database.open();
-        await HookManager.installFailedHooks(db, this.host);
     }
 }
 
@@ -110,40 +95,66 @@ class TaskRemoveHooks extends BasicTask {
         this.host = host;
     }
 
-    async run() {
+    async run(queue) {
         let db = await Database.open();
-        await HookManager.removeHooks(db, this.host);
+        let servers = await getServers(db);
+        for (let server of servers) {
+            queue.add(new TaskRemoveServerHooks(server.id, this.host));
+        }
     }
 }
 
+let problematicServerIDs = [];
+
 class TaskInstallServerHooks extends BasicTask {
-    constructor(serverID) {
+    constructor(serverID, host) {
         super();
         this.serverID = serverID;
+        this.host = host;
     }
 
     async run() {
         let db = await Database.open();
-        let host = await getSystemAddress(db);
+        let host = this.host;
+        if (!host) {
+            host = await getSystemAddress(db);
+        }
         let server = await getServer(db, this.serverID);
+        let repos = await getServerRepos(db, server);
+        let projects = await getReposProjects(db, repos);
         if (host && server) {
-            await HookManager.installServerHooks(db, host, server);
+            try {
+                await HookManager.installServerHooks(host, server, repos, projects);
+                _.pull(problematicServerIDs, server.id);
+            } catch (err) {
+                _.union(problematicServerIDs, [ server.id ]);
+            }
         }
     }
 }
 
 class TaskRemoveServerHooks extends BasicTask {
-    constructor(serverID) {
+    constructor(serverID, host) {
         super();
         this.serverID = serverID;
+        this.host = host;
     }
 
     async run() {
         let db = await Database.open();
-        let host = await getSystemAddress(db);
+        let host = this.host;
+        if (!host) {
+            host = await getSystemAddress(db);
+        }
         let server = await getServer(db, this.serverID);
+        let repos = await getServerRepos(db, server);
+        let projects = await getReposProjects(db, repos);
         if (host && server) {
-            await HookManager.removeServerHooks(db, host, server);
+            try {
+                await HookManager.removeServerHooks(host, server, repos, projects);
+                _.pull(problematicServerIDs, server.id);
+            } catch (err) {
+            }
         }
     }
 }
@@ -162,7 +173,11 @@ class TaskInstallProjectHook extends BasicTask {
         let project = await getProject(db, this.projectID);
         let server = await getRepoServer(repo);
         if (host && repo && project && server) {
-            await HookManager.installProjectHook(host, server, repo, project);
+            try {
+                await HookManager.installProjectHook(host, server, repo, project);
+            } catch (err) {
+                _.union(problematicServerIDs, [ server.id ]);
+            }
         }
     }
 }
@@ -264,6 +279,11 @@ class PeriodicTaskMaintainHooks extends PeriodicTask {
     }
 
     async start(queue) {
+        if (process.env.NODE_ENV !== 'production') {
+            // reduce the chance that operations will overlap on nodemon restart
+            await Bluebird.delay(3000);
+        }
+
         let db = await Database.open();
         let host = await getSystemAddress(db);
         let task = new TaskInstallHooks(host);
@@ -272,8 +292,9 @@ class PeriodicTaskMaintainHooks extends PeriodicTask {
 
     async run(queue) {
         let db = await Database.open();
-        let host = await getSystemAddress(db);
-        queue.add(new TaskInstallFailedHooks(host));
+        for (let serverID of problematicServerIDs) {
+            queue.add(new TaskInstallServerHooks(serverID));
+        }
     }
 
     async stop(queue) {
@@ -407,10 +428,33 @@ async function getRepo(db, repoID) {
 }
 
 async function getRepoServer(db, repo) {
+    if (!repo) {
+        return;
+    }
     let repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
     if (repoLink) {
         return getServer(db, repoLink.server_id);
     }
+}
+
+async function getServerRepos(db, server) {
+    if (!server) {
+        return [];
+    }
+    let criteria = {
+        external_object: ExternalDataUtils.createLink(server),
+        deleted: false,
+    };
+    return Repo.find(db, 'global', criteria, '*');
+}
+
+async function getReposProjects(db, repos) {
+    let criteria = {
+        repo_ids: _.map(repos, 'id'),
+        deleted: false,
+        archived: false,
+    };
+    return Project.find(db, 'global', criteria, '*');
 }
 
 async function getProject(db, projectID) {

@@ -7,89 +7,24 @@ import Server from 'accessors/server';
 import HTTPError from 'errors/http-error';
 
 import * as Transport from 'gitlab-adapter/transport';
-import * as RepoAssociation from 'gitlab-adapter/repo-association';
-
-let problematicServerIDs = [];
-
-/**
- * Re-install all hooks
- *
- * @param  {Database} db
- * @param  {String} host
- *
- * @return {Promise}
- */
-async function installHooks(db, host) {
-    let criteria = {
-        type: 'gitlab',
-        deleted: false,
-        disabled: false,
-    };
-    let servers = await Server.find(db, 'global', criteria, '*');
-    for (let server of servers) {
-        if (hasAccessToken(server)) {
-            try {
-                await installServerHooks(db, host, server);
-            } catch (err) {
-                if (!(err.statusCode >= 400 && err.statusCode <= 499)) {
-                    if (!_.includes(problematicServerIDs, server.id)) {
-                        problematicServerIDs.push(server.id);
-                    }
-                }
-                throw err;
-            }
-        }
-    }
-}
-
-/**
- * Attempt to install hooks on server that failed earlier
- *
- * @param  {Database} db
- * @param  {String} host
- *
- * @return {Promise}
- */
-async function installFailedHooks(db, host) {
-    for (let serverID of problematicServerIDs) {
-        let criteria = {
-            id: serverID,
-            type: 'gitlab',
-            deleted: false,
-            disabled: false,
-        };
-        let server = await Server.find(db, 'global', criteria, '*');
-        if (hasAccessToken(server)) {
-            try {
-                await installServerHooks(db, host, server);
-                _.pull(problematicServerIDs, serverID);
-            } catch (err) {
-                if (err.statusCode >= 400 && err.statusCode <= 499) {
-                    _.pull(problematicServerIDs, serverID);
-                }
-                throw err;
-            }
-        }
-    }
-}
 
 /**
  * Install hooks on given server
  *
- * @param  {Database} db
  * @param  {String} host
  * @param  {Server} server
+ * @param  {Array<Repo>} repos
+ * @param  {Array<Project>} projects
  *
  * @return {Promise}
  */
-async function installServerHooks(db, host, server) {
+async function installServerHooks(host, server, repos, projects) {
     let taskLog = TaskLog.start('gitlab-hook-install', {
         server_id: server.id,
         server: server.name,
     });
     try {
-        let criteria = { server: { id: server.id } };
-        let list = await RepoAssociation.find(db, criteria);
+        let list = getRepoProjectPairs(repos, projects);
         let hookCount = list.length + 1;
         let added = [];
 
@@ -111,50 +46,22 @@ async function installServerHooks(db, host, server) {
 }
 
 /**
- * Remove all hooks
- *
- * @param  {Database} db
- * @param  {String} host
- *
- * @return {Promise}
- */
-async function removeHooks(db, host) {
-    let criteria = {
-        type: 'gitlab',
-        deleted: false,
-        disabled: false,
-    };
-    let servers = await Server.find(db, 'global', criteria, '*');
-    for (let server of servers) {
-        if (hasAccessToken(server)) {
-            try {
-                await removeServerHooks(db, host, server);
-            } finally {
-                _.pull(problematicServerIDs, server.id);
-            }
-        }
-    }
-}
-
-/**
  * Remove all project hooks
  *
- * @param  {Database} db
  * @param  {String} host
  * @param  {Server} server
+ * @param  {Array<Repo>} repos
+ * @param  {Array<Project>} projects
  *
  * @return {Promise}
  */
-async function removeServerHooks(db, host, server) {
+async function removeServerHooks(host, server, repos, projects) {
     let taskLog = TaskLog.start('gitlab-hook-remove', {
         server_id: server.id,
         server: server.name,
     });
-
     try {
-        // default criteria omit deleted repos and projects
-        let criteria = { server: { id: server.id }, repo: {}, project: {} };
-        let list = await RepoAssociation.find(db, criteria);
+        let list = getRepoProjectPairs(repos, projects);
         let hookCount = list.length + 1;
         let deleted = [];
 
@@ -208,9 +115,6 @@ async function installProjectHook(host, server, repo, project) {
     }
     console.log(`Installing web-hook on repo for project: ${repo.name} -> ${project.name}`);
     let repoLink = ExternalDataUtils.findLink(repo, server);
-    if (!repoLink) {
-        console.log(repo);
-    }
     let glHooks = await fetchProjectHooks(server, repoLink.project.id);
 
     // remove existing hooks
@@ -456,15 +360,24 @@ function getSecretToken() {
     return secretToken;
 }
 
+function getRepoProjectPairs(repos, projects) {
+    let list = [];
+    for (let project of projects) {
+        for (let repo of repos) {
+            if (_.includes(project.repo_ids, repo.id)) {
+                list.push({ repo, project });
+            }
+        }
+    }
+    return list;
+}
+
 let secretToken;
 
 export {
-    installHooks,
-    installFailedHooks,
     installServerHooks,
     installSystemHook,
     installProjectHook,
-    removeHooks,
     removeServerHooks,
     removeSystemHook,
     removeProjectHook,
