@@ -125,11 +125,15 @@ function handleDatabaseChanges(events) {
  */
 function handleServerChangeEvent(event) {
     let serverID = event.id;
+    let disabled = event.current.deleted || event.current.disabled;
     if (event.diff.settings) {
-        taskQueue.add(new TaskImportRepos(serverID));
+        if (!disabled) {
+            taskQueue.add(new TaskImportRepos(serverID));
+            taskQueue.add(new TaskImportUsers(serverID));
+        }
     }
     if (event.diff.deleted || event.diff.disabled) {
-        if (!event.current.deleted && !event.current.disabled) {
+        if (!disabled) {
             taskQueue.add(new TaskInstallServerHooks(serverID));
         } else {
             taskQueue.add(new TaskRemoveServerHooks(serverID));
