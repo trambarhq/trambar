@@ -64,7 +64,12 @@
     }
 
     .single-col & {
-        width: 100%;
-        max-width: none;
+        max-width: 100%;
+
+        .controls {
+            .center {
+                display: none;
+            }
+        }
     }
 }
