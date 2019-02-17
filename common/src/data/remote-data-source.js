@@ -122,12 +122,9 @@ class RemoteDataSource extends EventEmitter {
                 search = this.addSearch(newSearch);
             }
         } else {
-            if (search.synchronized) {
+            if (!search.updating) {
                 if (!search.isFresh(refreshInterval)) {
-                    if (!search.updating) {
-                        search.remoteSearchPromise = this.searchRemoteDatabase(search);
-                        search.updating = true;
-                    }
+                    search.remoteSearchPromise = this.searchRemoteDatabase(search);
                 }
             }
         }
@@ -138,7 +135,7 @@ class RemoteDataSource extends EventEmitter {
 
         if (search.remoteSearchPromise) {
             let waitForRemote = false;
-            if (!search.synchronized) {
+            if (search.initial) {
                 switch (blocking) {
                     case 'insufficient':
                         if (!search.isMeetingExpectation() && !search.isSufficientlyCached()) {
@@ -448,6 +445,7 @@ class RemoteDataSource extends EventEmitter {
         if (changes) {
             changes = this.omitOwnChanges(changes);
             if (_.isEmpty(changes)) {
+                console.log('Own change')
                 return;
             }
         }
@@ -485,6 +483,7 @@ class RemoteDataSource extends EventEmitter {
                     search.dirty = true;
                     invalidated.push(search);
                 }
+            } else {
             }
         }
         if (_.isEmpty(invalidated)) {
@@ -1078,10 +1077,12 @@ class RemoteDataSource extends EventEmitter {
             if (!search.remote) {
                 await this.verifyCacheSignature(search);
 
-                if (search.isMeetingExpectation()) {
-                    let refreshInterval = this.options.refreshInterval;
-                    if (search.isSufficientlyRecent(refreshInterval)) {
-                        return;
+                if (!search.dirty) {
+                    if (search.isMeetingExpectation()) {
+                        let refreshInterval = this.options.refreshInterval;
+                        if (search.isSufficientlyRecent(refreshInterval)) {
+                            return;
+                        }
                     }
                 }
             }

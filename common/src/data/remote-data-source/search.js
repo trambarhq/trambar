@@ -9,10 +9,10 @@ class Search extends Operation {
         this.dirty = false;
         this.invalid = false;
         this.signature = '';
-        this.updating = false;
         this.notifying = false;
-        this.synchronized = false;
         this.failed = false;
+        this.initial = true;
+        this.updating = false;
         this.lastRetrieved = 0;
         this.results = undefined;
         this.missingResults = [];
@@ -228,18 +228,24 @@ class Search extends Operation {
         return updated;
     }
 
+    start() {
+        super.start();
+        this.updating = true;
+    }
+
     finish(results) {
         let previousResults = this.results;
-        Operation.prototype.finish.call(this, results);
+        super.finish(results);
+
+        this.dirty = false;
+        this.invalid = false;
+        this.updating = false;
+        this.initial = false;
 
         if (this.results !== previousResults) {
             let missingResults = [];
             let newlyRetrieved = 0;
 
-            this.dirty = false;
-            this.invalid = false;
-            this.updating = false;
-            this.synchronized = true;
             if (results) {
                 // update rtime of results
                 for (let object of this.results) {
