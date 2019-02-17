@@ -66,7 +66,7 @@ async function findDailyActivitiesOfProject(db, project, publicOnly) {
         },
         prefetch: true,
     };
-    let dataRange = await db.findOne(rangeQuery);
+    let dateRange = await db.findOne(rangeQuery);
     if (!isValidRange(dateRange)) {
         return null;
     }
