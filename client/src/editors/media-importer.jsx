@@ -237,6 +237,7 @@ class MediaImporter extends PureComponent {
                 audio.height = meta.height;
             }
             payload.attachFile(imageBlob, 'poster');
+            return audio;
         } catch (err) {
             return {
                 type: 'audio',
