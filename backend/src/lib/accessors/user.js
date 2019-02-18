@@ -138,7 +138,7 @@ class User extends ExternalData {
     async insertUnique(db, schema, user) {
         // this doesn't work within a transaction
         try {
-            await this.insertOne(db, schema, user);
+            return this.insertOne(db, schema, user);
         } catch (err) {
             // unique violation
             if (err.code === '23505') {

@@ -851,7 +851,7 @@ async function findMatchingUser(server, account) {
                 reason: 'existing-users-only',
             });
         }
-        user = await User.insertUnique(db, 'global', userAfter);
+        user = await User.insertUnique(db, 'global', userNew);
     } else {
         // update profile image (without waiting)
         updateProfileImage(db, user, server, profile);
