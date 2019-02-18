@@ -159,7 +159,10 @@ class Search extends Operation {
      *
      * @return {Boolean}
      */
-     isMeetingExpectation() {
+    isMeetingExpectation() {
+        if (!this.results) {
+            return false;
+        }
         if (this.results.length !== this.expected) {
             return false;
         }

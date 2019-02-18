@@ -131,7 +131,7 @@ class PayloadManager extends EventEmitter {
             return null;
         }
         let payloads = _.filter(this.payloads, (payload) => {
-            return _.includes(ids, payload.id);
+            return _.includes(ids, payload.id) && payload.type !== 'unknown';
         });
         if (payloads.length < ids.length) {
             // some payloads are not there, either because they were sent by

@@ -22,7 +22,17 @@ function StoryProgress(props) {
         contents = t('story-status-storage-pending');
     } else {
         if (status) {
-            contents = t(`story-status-${status.action}-$progress`, status.progress);
+            if (status.action !== 'unknown') {
+                contents = t(`story-status-${status.action}-$progress`, status.progress);
+            } else {
+                contents = (
+                    <span>
+                        {t('story-status-storage-pending')}
+                        {' '}
+                        <i className="fa fa-warning" />
+                    </span>
+                );
+            }
         } else {
             contents = <Time time={story.ptime} env={env} />;
             if (pending) {
