@@ -546,7 +546,6 @@ class RepoListPageSync extends PureComponent {
         let confirmed = await confirmation.ask(message, bypass);
         if (confirmed) {
             this.setState({ problems: {} });
-            let currentUserID = await db.start();
             // remove ids of repo that no longer exist
             let existingRepoIDs = _.map(repos, 'id');
             let projectAfter = {
@@ -555,6 +554,7 @@ class RepoListPageSync extends PureComponent {
             };
             try {
                 let db = database.use({ schema: 'global', by: this });
+                let currentUserID = await db.start();
                 await db.saveOne({ table: 'project' }, projectAfter);
                 this.setState({ hasChanges: false }, () => {
                     this.setEditability(false);
