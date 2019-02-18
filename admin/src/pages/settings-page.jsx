@@ -44,6 +44,9 @@ class SettingsPage extends AsyncComponent {
         meanwhile.show(<SettingsPageSync {...props} />);
         let currentUserID = await db.start();
         props.system = await SystemFinder.findSystem(db);
+        if (_.isEmpty(props.system)) {
+            props.system = null;
+        }
         return <SettingsPageSync {...props} />;
     }
 }

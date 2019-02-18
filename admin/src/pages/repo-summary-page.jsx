@@ -5,7 +5,6 @@ import ComponentRefs from 'utils/component-refs';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as RepoFinder from 'objects/finders/repo-finder';
 import * as StatisticsFinder from 'objects/finders/statistics-finder';
-import * as SystemFinder from 'objects/finders/system-finder';
 
 // widgets
 import PushButton from 'widgets/push-button';

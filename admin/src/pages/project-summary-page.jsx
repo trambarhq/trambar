@@ -54,7 +54,7 @@ class ProjectSummaryPage extends AsyncComponent {
         };
         meanwhile.show(<ProjectSummaryPageSync {...props} />);
         let currentUserID = await db.start();
-        props.system = await SystemFinder.findSystem(db)
+        props.system = await SystemFinder.findSystem(db);
         if (!creating) {
             props.project = await ProjectFinder.findProject(db, projectID);
             meanwhile.show(<ProjectSummaryPageSync {...props} />);
