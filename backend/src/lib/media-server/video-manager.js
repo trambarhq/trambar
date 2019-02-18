@@ -603,9 +603,11 @@ async function probeMediaFile(srcPath) {
         let audioStream = _.find(dump.streams, { codec_type: 'audio' });
         if (videoStream) {
             let rotation = 0;
-            for (let item of videoStream.side_data_list) {
-                if (typeof(item.rotation) === 'number') {
-                    rotation = (item.rotation + 360) % 360;
+            if (videoStream.side_data_list) {
+                for (let item of videoStream.side_data_list) {
+                    if (typeof(item.rotation) === 'number') {
+                        rotation = (item.rotation + 360) % 360;
+                    }
                 }
             }
             switch (rotation) {
