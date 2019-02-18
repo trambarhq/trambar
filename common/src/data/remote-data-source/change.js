@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Bluebird from 'bluebird';
 import * as Async from 'async-do-while';
 
 import * as LocalSearch from 'data/local-search';
@@ -67,7 +68,9 @@ class Change {
             this.dispatching = true;
             return;
         }
-        await Promise.all(this.dependentPromises);
+        if (!_.isEmpty(this.dependentPromises)) {
+            await Promise.all(this.dependentPromises);
+        }
         let delay = 1000;
         for (;;) {
             this.dispatched = true;
@@ -181,6 +184,7 @@ class Change {
                 if (object.id < 1) {
                     let id = earlierOp.findPermanentID(object.id);
                     if (id) {
+                        console.log('Found permanent ID', id);
                         object.id = id;
                     }
                 }
@@ -287,6 +291,11 @@ class Change {
      * @return {Boolean}
      */
     noop() {
+        if (!_.isEmpty(this.dependentPromises)) {
+            // an earlier operation has already been dispatched--we can't
+            // drop this one since a new object will be created
+            return false;
+        }
         this.objects = _.filter(this.objects, (object) => {
             if (object.deleted && object.id < 1) {
                 return false;

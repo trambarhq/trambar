@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import Bluebird from 'bluebird';
 import Moment from 'moment';
 import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
 import ManualPromise from 'utils/manual-promise';
@@ -107,6 +108,7 @@ class RemoteDataSource extends EventEmitter {
             blocking = query.blocking;
         }
         let required = query.required || false;
+        let committed = query.committed || false;
         let refreshInterval = this.options.refreshInterval;
         let search = _.find(this.recentSearchResults, (search) => {
             return search.match(newSearch);
@@ -172,7 +174,7 @@ class RemoteDataSource extends EventEmitter {
         }
 
         let includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
-        if (includeUncommitted && !query.committed) {
+        if (includeUncommitted && !committed) {
             search = this.applyUncommittedChanges(search);
         }
         if (required) {
@@ -210,7 +212,13 @@ class RemoteDataSource extends EventEmitter {
             this.updateRecentSearchResults(storage);
         }
         this.triggerEvent(new RemoteDataSourceEvent('change', this));
-        return storage.results;
+        if (_.get(this.options.discoveryFlags, 'include_deleted')) {
+            return storage.results;
+        } else {
+            let deleted = _.filter(storage.results, { deleted: true });
+            let saved = _.difference(storage.results, deleted);
+            return saved;
+        }
     }
 
     /**
@@ -445,7 +453,6 @@ class RemoteDataSource extends EventEmitter {
         if (changes) {
             changes = this.omitOwnChanges(changes);
             if (_.isEmpty(changes)) {
-                console.log('Own change')
                 return;
             }
         }
@@ -1299,7 +1306,15 @@ class RemoteDataSource extends EventEmitter {
             } else if (op instanceof Removal) {
                 await this.cache.remove(location, op.results);
             } else if (op instanceof Storage) {
-                await this.cache.save(location, op.results);
+                if (_.get(this.options.discoveryFlags, 'include_deleted')) {
+                    await this.cache.save(location, op.results);
+                } else {
+                    let deleted = _.filter(op.results, { deleted: true });
+                    let saved = _.difference(op.results, deleted);
+                    await this.cache.save(location, saved);
+                    await this.cache.remove(location, deleted);
+                }
+
             }
             return true;
         } catch (err) {
@@ -1382,6 +1397,11 @@ class RemoteDataSource extends EventEmitter {
                     }
                 } else if (op instanceof Storage) {
                     let match = LocalSearch.match(search.table, object, search.criteria);
+                    if (object.deleted) {
+                        if (!_.get(this.options.discoveryFlags, 'include_deleted')) {
+                            match = false;
+                        }
+                    }
                     if (match || present) {
                         if (resultsAfter === resultsBefore) {
                             // create new array so memoized functions won't return old results

@@ -376,11 +376,19 @@ const array = memoizeWeak([], function(object) {
 const sortStories = memoizeWeak(null, function(stories, pendingStories) {
     if (!_.isEmpty(pendingStories)) {
         stories = _.slice(stories);
-        _.each(pendingStories, (story) => {
+        for (let story of pendingStories) {
             if (!story.published_version_id) {
                 stories.push(story);
+            } else {
+                // copy pending changes into story
+                let index = _.findIndex(stories, { id: story.published_version_id });
+                if (index !== -1) {
+                    let publishedStory = stories[index] = _.clone(stories[index]);
+                    publishedStory.details = story.details;
+                    publishedStory.user_ids = story.user_ids;
+                }
             }
-        });
+        }
     }
     return _.orderBy(stories, [ getStoryTime, 'id' ], [ 'desc', 'desc' ]);
 });

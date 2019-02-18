@@ -367,7 +367,7 @@ class Story extends ExternalData {
                     // stick contents of the original row into the temp copy
                     // so we can retrieve them later potentially
                     row = {
-                        id: storyBefore.id,
+                        id: (storyBefore) ? storyBefore.id : undefined,
                         details: storyPublished.details,
                         type: storyPublished.type,
                         user_ids: storyPublished.user_ids,
