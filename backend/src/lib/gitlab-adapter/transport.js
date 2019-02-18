@@ -168,7 +168,7 @@ async function impersonate(server, userID) {
         let existingUIs = await getImpersonations(server, userID);
         for (let existingUI of existingUIs) {
             if (existingUI.name === 'trambar') {
-                await deleteImpersonations(server, userID, old);
+                await deleteImpersonations(server, userID, existingUI);
             }
         }
         let impersonationProps = {

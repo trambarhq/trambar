@@ -43,19 +43,21 @@ function attachResources(text, resources, address) {
     let numbers = {};
     let footnotes = [];
     let thumbnails = [];
-    for (let res of resources) {
-        let number = numbers[res.type] || 1;
-        numbers[res.type] = number + 1;
-        let name = `${res.type}-${number}`;
-        let url = getURL(res, address);
-        footnotes.push(`[${name}]: ${url}`);
-        if (_.includes(inlineImages, name)) {
-            let iconURL = getImageURL(res, address, 'icon');
-            footnotes.push(`[${name}-icon]: ${iconURL}`);
-        } else {
-            let thumbnailURL = getImageURL(res, address, 'thumb');
-            footnotes.push(`[${name}-thumb]: ${thumbnailURL}`);
-            thumbnails.push(`[![${name}-thumb]][${name}]`);
+    if (resources) {
+        for (let res of resources) {
+            let number = numbers[res.type] || 1;
+            numbers[res.type] = number + 1;
+            let name = `${res.type}-${number}`;
+            let url = getURL(res, address);
+            footnotes.push(`[${name}]: ${url}`);
+            if (_.includes(inlineImages, name)) {
+                let iconURL = getImageURL(res, address, 'icon');
+                footnotes.push(`[${name}-icon]: ${iconURL}`);
+            } else {
+                let thumbnailURL = getImageURL(res, address, 'thumb');
+                footnotes.push(`[${name}-thumb]: ${thumbnailURL}`);
+                thumbnails.push(`[![${name}-thumb]][${name}]`);
+            }
         }
     }
 

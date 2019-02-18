@@ -255,7 +255,7 @@ class TaskExportStory extends BasicTask {
     async run() {
         let db = await Database.open();
         let system = await getSystem(db);
-        let project = await getProjectByName(this.schema);
+        let project = await getProjectByName(db, this.schema);
         let task = await getTask(db, this.schema, this.taskID);
         if (system && task && project) {
             try {
@@ -276,7 +276,7 @@ class TaskExportStory extends BasicTask {
                     task.deleted = true;
                 }
             }
-            await Task.saveOne(db, schema, task);
+            await Task.saveOne(db, this.schema, task);
         }
     }
 }
@@ -409,7 +409,7 @@ class PeriodicTaskRetryFailedExports extends PeriodicTask {
             // load export tasks that failed and try them again
             let tasks = await getFailedExportTasks(db, project);
             for (let task of tasks) {
-                queue.add(new TaskExportStory(task.id));
+                queue.add(new TaskExportStory(project.name, task.id));
             }
         }
     }
@@ -520,7 +520,7 @@ async function getTask(db, schema, taskID) {
         id: taskID,
         deleted: false,
     };
-    return Task.find(db, schema, criteria, '*');
+    return Task.findOne(db, schema, criteria, '*');
 }
 
 async function getFailedExportTasks(db, project) {
