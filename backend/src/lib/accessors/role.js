@@ -134,7 +134,7 @@ class Role extends ExternalData {
      * @return {Promise<Object>}
      */
     async importOne(db, schema, roleReceived, roleBefore, credentials, options) {
-        let row = await super.import(db, schema, roleReceived, roleBefore, credentials, options);
+        let row = await super.importOne(db, schema, roleReceived, roleBefore, credentials, options);
         await this.ensureUniqueName(db, schema, roleBefore, roleReceived);
         return row;
     }
