@@ -27,7 +27,7 @@ function checkConnectionPool() {
 async function checkConnectionPoolUncached() {
     for (let attempts = 0; attempts < 60; attempts++) {
         try {
-            pool.query('SELECT 1');
+            await pool.query('SELECT 1');
         } catch (err) {
             await Bluebird.delay(1000);
         }
