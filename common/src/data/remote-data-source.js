@@ -1108,7 +1108,7 @@ class RemoteDataSource extends EventEmitter {
             let idsRemoved = search.getRemovalList(discovery.ids);
 
             let newResults = search.results;
-            if (_.isEmpty(idsRemoved)) {
+            if (!_.isEmpty(idsRemoved)) {
                 newResults = removeObjects(newResults, idsRemoved);
             }
             if (!_.isEmpty(idsUpdated)) {
