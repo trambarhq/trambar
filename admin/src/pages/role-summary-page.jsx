@@ -642,7 +642,7 @@ class RoleSummaryPageSync extends PureComponent {
                     await db.save({ table: 'user' }, userChanges);
                 }
                 this.setState({ hasChanges: false, saving: false }, () => {
-                    return this.setEditability(false, role);
+                    return this.setEditability(false, roleAfter);
                 });
             } catch (err) {
                 let problems;
@@ -671,7 +671,7 @@ class RoleSummaryPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleNameChange = (evt) => {
-        let name = _.toLower(evt.target.value).replace(/\W+/g, '');
+        let name = _.toLower(evt.target.value).replace(/[^\w\-]+/g, '');
         this.setRoleProperty(`name`, name);
     }
 

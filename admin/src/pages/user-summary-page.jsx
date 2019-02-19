@@ -923,7 +923,7 @@ class UserSummaryPageSync extends PureComponent {
                 let userAfter = await db.saveOne({ table: 'user' }, user);
                 payloads.dispatch(userAfter);
                 this.setState({ hasChanges: false, saving: false }, () => {
-                    return this.setEditability(false, user);
+                    return this.setEditability(false, userAfter);
                 });
                 if (project) {
                     // add user to member list if he's not there yet
@@ -964,7 +964,7 @@ class UserSummaryPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleUsernameChange = (evt) => {
-        let username = _.toLower(evt.target.value).replace(/\W+/g, '');
+        let username = _.toLower(evt.target.value).replace(/[^\w\-]+/g, '');
         this.setUserProperty(`username`, username);
     }
 

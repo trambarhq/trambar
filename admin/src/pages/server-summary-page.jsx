@@ -1305,7 +1305,7 @@ class ServerSummaryPageSync extends PureComponent {
      * @param  {Object} evt
      */
     handleNameChange = (evt) => {
-        let name = _.toLower(evt.target.value).replace(/\W+/g, '');
+        let name = _.toLower(evt.target.value).replace(/[^\w\-]+/g, '');
         this.setServerProperty(`name`, name);
     }
 
