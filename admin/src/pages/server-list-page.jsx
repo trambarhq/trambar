@@ -518,18 +518,18 @@ class ServerListPageSync extends PureComponent {
             let db = database.use({ schema: 'global', by: this });
             let currentUserID = await db.start();
             let serversAfter = [];
-            _.each(servers, (server) => {
+            for (let server of servers) {
                 let flags = {};
                 if (_.includes(disablingServerIDs, server.id)) {
                     flags.disabled = true;
                 } else if (_.includes(restoringServerIDs, server.id)) {
                     flags.disabled = flags.deleted = false;
                 } else {
-                    return;
+                    continue;
                 }
                 let serverAfter = _.assign({}, server, flags);
                 serversAfter.push(serverAfter);
-            });
+            }
             try {
                 await db.save({ table: 'server' }, serversAfter);
                 this.setState({ hasChanges: false }, () => {

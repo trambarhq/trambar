@@ -450,18 +450,18 @@ class RoleListPageSync extends PureComponent {
             let db = database.use({ schema: 'global', by: this });
             let currentUserID = await db.start();
             let rolesAfter = [];
-            _.each(roles, (role) => {
+            for (let role of roles) {
                 let flags = {};
                 if (_.includes(disablingRoleIDs, role.id)) {
                     flags.disabled = true;
                 } else if (_.includes(restoringRoleIDs, role.id)) {
                     flags.disabled = flags.deleted = false;
                 } else {
-                    return;
+                    continue;
                 }
                 let roleAfter = _.assign({}, role, flags);
                 rolesAfter.push(roleAfter);
-            });
+            }
             try {
                 await db.save({ table: 'role' }, rolesAfter);
                 this.setState({ hasChanges: false }, () => {

@@ -38,20 +38,19 @@ class ActivityTooltip extends PureComponent {
             label = '-';
         }
         let list = [];
-        _.each(StoryTypes, (type, i) => {
+        for (let type of StoryTypes) {
             let count = statistics[type];
-            if (!count) {
-                return;
+            if (count) {
+                let Icon = StoryIcons[type];
+                list.push(
+                    <div className="item" key={type}>
+                        <Icon className="icon" />
+                        {' '}
+                        {t(`activity-tooltip-$count-${type}`, count)}
+                    </div>
+                );
             }
-            let Icon = StoryIcons[type];
-            list.push(
-                <div className="item" key={i}>
-                    <Icon className="icon" />
-                    {' '}
-                    {t(`activity-tooltip-$count-${type}`, count)}
-                </div>
-            )
-        });
+        }
         return (
             <Tooltip className="activity" disabled={disabled}>
                 <inline>{label}</inline>

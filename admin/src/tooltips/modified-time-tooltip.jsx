@@ -61,9 +61,9 @@ let instances = [];
 
 // refresh the labels every minute
 setInterval(() => {
-    _.each(instances, (instance) => {
+    for (let instance of instances) {
         instance.forceUpdate();
-    });
+    }
 }, 30 * 1000);
 
 export {

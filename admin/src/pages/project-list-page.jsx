@@ -601,18 +601,18 @@ class ProjectListPageSync extends PureComponent {
         let db = database.use({ schema: 'global', by: this });
         let currentUserID = await db.start();
         let projectsAfter = [];
-        _.each(projects, (project) => {
+        for (let project of projects) {
             let flags = {};
             if (_.includes(archivingProjectIDs, project.id)) {
                 flags.archived = true;
             } else if (_.includes(restoringProjectIDs, project.id)) {
                 flags.archived = flags.deleted = false;
             } else {
-                return;
+                continue;
             }
             let projectAfter = _.assign({}, project, flags);
             projectsAfter.push(projectAfter);
-        });
+        }
         try {
             await db.save({ table: 'project' }, projectsAfter);
             this.setState({ hasChanges: false }, () => {

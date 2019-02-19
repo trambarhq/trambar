@@ -570,18 +570,18 @@ class UserListPageSync extends PureComponent {
             let db = database.use({ schema: 'global', by: this });
             let currentUserID = await db.start();
             let usersAfter = [];
-            _.each(users, (user) => {
+            for (let user of users) {
                 let flags = {};
                 if (_.includes(disablingUserIDs, user.id)) {
                     flags.disabled = true;
                 } else if (_.includes(restoringUserIDs, user.id)) {
                     flags.disabled = flags.deleted = false;
                 } else {
-                    return;
+                    continue;
                 }
                 let userAfter = _.assign({}, user, flags);
                 usersAfter.push(userAfter);
-            });
+            }
             try {
                 await db.save({ table: 'user' }, usersAfter);
                 this.setState({ hasChanges: false }, () => {

@@ -624,20 +624,20 @@ class RoleSummaryPageSync extends PureComponent {
                 let roleAfter = await db.saveOne({ table: 'role' }, role);
                 // change role_ids of selected/deselected users
                 let userChanges = [];
-                _.each(addingUserIDs, (userID) => {
+                for (let userID of addingUserIDs) {
                     let user = _.find(users, { id: userID });
                     userChanges.push({
                         id: user.id,
                         role_ids: _.union(user.role_ids, [ roleAfter.id ]),
                     });
-                });
-                _.each(removingUserIDs, (userID) => {
+                }
+                for (let userID of removingUserIDs) {
                     let user = _.find(users, { id: userID });
                     userChanges.push({
                         id: user.id,
                         role_ids: _.difference(user.role_ids, [ roleAfter.id ]),
                     });
-                });
+                }
                 if (!_.isEmpty(userChanges)) {
                     await db.save({ table: 'user' }, userChanges);
                 }
