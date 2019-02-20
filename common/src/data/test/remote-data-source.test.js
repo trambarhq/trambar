@@ -1329,7 +1329,6 @@ describe('RemoteDataSource', function() {
     })
     describe('#revalidate()', function() {
         it ('should force cache revalidation', async function() {
-            dataSource.options.cacheValidation = true;
             let query = {
                 address: 'http://dol-guldur.me',
                 schema: 'global',
@@ -1382,6 +1381,63 @@ describe('RemoteDataSource', function() {
             expect(discovery).to.equal(2);
             expect(retrieval).to.equal(2);
             expect(signature).to.equal(2);
+        })
+    })
+
+    describe('#waitForChange()', function() {
+        it ('should wait for change notification', async function() {
+            let location = {
+                address: 'http://dol-guldur.me',
+                schema: 'global',
+                table: 'user',
+            };
+            let object = { id: 1, gn: 70, username: 'gandolf', secret: 'magic' };
+            setTimeout(() => {
+                let changes = [
+                    {
+                        address: 'http://dol-guldur.me',
+                        schema: 'global',
+                        table: 'user',
+                        id: 1,
+                        gn: 71
+                    }
+                ];
+                dataSource.invalidate(changes)
+            }, 50);
+            let result = await dataSource.waitForChange(location, object, 100);
+            expect(result).to.be.true;
+        })
+        it ('should quit waiting for change notification', async function() {
+            let location = {
+                address: 'http://dol-guldur.me',
+                schema: 'global',
+                table: 'user',
+            };
+            let object = { id: 1, gn: 70, username: 'gandolf', secret: 'magic' };
+            let result = await dataSource.waitForChange(location, object, 100);
+            expect(result).to.be.false;
+        })
+        it ('should should not return true when a different object changed', async function() {
+            let location = {
+                address: 'http://dol-guldur.me',
+                schema: 'global',
+                table: 'user',
+            };
+            let object = { id: 1, gn: 70, username: 'gandolf', secret: 'magic' };
+            setTimeout(() => {
+                let changes = [
+                    {
+                        address: 'http://dol-guldur.me',
+                        schema: 'global',
+                        table: 'user',
+                        id: 3,
+                        gn: 71
+                    }
+                ];
+                dataSource.invalidate(changes)
+            }, 50);
+            let result = await dataSource.waitForChange(location, object, 100);
+            expect(result).to.be.false;
         })
     })
 })

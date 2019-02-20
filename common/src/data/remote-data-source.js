@@ -11,6 +11,7 @@ import Change from 'data/remote-data-source/change';
 import Storage from 'data/remote-data-source/storage';
 import Removal from 'data/remote-data-source/removal';
 import CacheSignature from 'data/remote-data-source/cache-signature';
+import ChangeMonitor from 'data/remote-data-source/change-monitor';
 
 const defaultOptions = {
     basePath: '/srv/data',
@@ -452,9 +453,6 @@ class RemoteDataSource extends EventEmitter {
     async invalidate(changes) {
         if (changes) {
             changes = this.omitOwnChanges(changes);
-            if (_.isEmpty(changes)) {
-                return;
-            }
         }
         await this.reconcileChanges(changes);
         let invalidated = [];
@@ -491,6 +489,13 @@ class RemoteDataSource extends EventEmitter {
                     invalidated.push(search);
                 }
             } else {
+            }
+        }
+        for (let changeMontior of this.changeMonitors) {
+            for (let their of changes) {
+                if (changeMontior.match(their)) {
+                    changeMontior.resolve();
+                }
             }
         }
         if (_.isEmpty(invalidated)) {
@@ -566,6 +571,27 @@ class RemoteDataSource extends EventEmitter {
         if (this.cache) {
             this.cache.reset(address, schema);
         }
+    }
+
+    /**
+     * Wait for an object to change
+     *
+     * @param  {Object} location
+     * @param  {Object} object
+     * @param  {Number} timeout
+     *
+     * @return {Promise<Boolean>}
+     */
+    async waitForChange(location, object, timeout) {
+        let { address, schema, table } = location;
+        let { id } = object;
+        let monitor = new ChangeMonitor(address, schema, table, id);
+        this.changeMonitors.push(monitor);
+        monitor.setTimeout(timeout);
+        let result = await monitor.promise;
+        _.pull(this.changeMonitors, monitor);
+        console.log('Changed: ' + result);
+        return result;
     }
 
     /**

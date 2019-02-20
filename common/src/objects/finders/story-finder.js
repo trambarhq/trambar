@@ -236,7 +236,7 @@ async function findStoriesInListing(db, type, currentUser, blockIfStale) {
     }
     if (_.isEmpty(listing.story_ids) && listing.dirty) {
         // wait for the listing to become populated then try again
-        let changed = await db.await({ table: 'listing' }, listing, 5000);
+        let changed = await db.waitForChange({ table: 'listing' }, listing, 5000);
         if (!changed) {
             // force remote check
             db.refresh({ table: 'listing' }, listing);
@@ -363,7 +363,7 @@ async function findStoriesByUserInListing(db, type, user, currentUser, blockIfSt
     }
     if (_.isEmpty(listing.story_ids) && listing.dirty) {
         // wait for the listing to become populated then try again
-        let changed = await db.await({ table: 'listing' }, listing, 5000);
+        let changed = await db.waitForChange({ table: 'listing' }, listing, 5000);
         if (!changed) {
             // force remote check
             db.refresh({ table: 'listing' }, listing);

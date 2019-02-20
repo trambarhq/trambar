@@ -117,9 +117,9 @@ class Database {
      *
      * @return {Promise<Boolean>}
      */
-    async await(location, object, timeout) {
+    async waitForChange(location, object, timeout) {
         location = merge(this.context, location);
-        return this.remoteDataSource.await(location, object, timeout);
+        return this.remoteDataSource.waitForChange(location, object, timeout);
     }
 
     /**
