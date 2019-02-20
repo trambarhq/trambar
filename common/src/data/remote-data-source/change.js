@@ -72,7 +72,7 @@ class Change {
             await Promise.all(this.dependentPromises);
         }
         let delay = 1000;
-        for (;;) {
+        while (!this.canceled) {
             this.dispatched = true;
 
             try {
