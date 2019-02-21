@@ -67,7 +67,7 @@ class SignOffMenuSync extends AsyncComponent {
         let { route, show, user, env } = this.props;
         let { onSignOff } = this.props;
         let { t } = env.locale;
-        let url = (user) ? route.find('user-summary-page', { user: user.id }) : undefined;
+        let url = (user) ? route.find('user-summary-page', { userID: user.id }) : undefined;
         let name = UserUtils.getDisplayName(user, env);
         if (!show) {
             return null;
