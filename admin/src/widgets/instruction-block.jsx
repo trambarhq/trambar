@@ -88,14 +88,16 @@ async function loadMarkdown(folder, topic, lang) {
  * @return {Promise}
  */
 async function loadText(folder, topic, lang) {
+    let module;
     try {
-        return import(`instructions/${folder}/${topic}.${lang}.md`);
+        module = await import(`instructions/${folder}/${topic}.${lang}.md`);
     } catch (err) {
         if (process.env.NODE_ENV !== 'production') {
             console.log(`Missing instructions for topic "${topic}" in language "${lang}"`);
         }
-        return import(`instructions/${folder}/${topic}.en.md`);
+        module = await import(`instructions/${folder}/${topic}.en.md`);
     }
+    return module;
 }
 
 /**
