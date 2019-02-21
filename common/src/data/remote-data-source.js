@@ -590,7 +590,6 @@ class RemoteDataSource extends EventEmitter {
         monitor.setTimeout(timeout);
         let result = await monitor.promise;
         _.pull(this.changeMonitors, monitor);
-        console.log('Changed: ' + result);
         return result;
     }
 

@@ -1028,11 +1028,13 @@ class StartPageSync extends PureComponent {
     handleTransitionEnd = (evt) => {
         let { onTransitionOut } = this.props;
         if (evt.propertyName === 'opacity') {
-            if (onTransitionOut) {
-                onTransitionOut({
-                    type: 'transitionout',
-                    target: this,
-                });
+            if (/start\-page/.test(evt.target.className)) {
+                if (onTransitionOut) {
+                    onTransitionOut({
+                        type: 'transitionout',
+                        target: this,
+                    });
+                }
             }
         }
     }
