@@ -89,7 +89,7 @@ function mergeLineChanges(chain) {
         deleted: 0,
         modified: 0,
     };
-    for (let commit in chain) {
+    for (let commit of chain) {
         let cl = commit.details.lines;
         if (cl) {
             pl.added += cl.added;
@@ -107,7 +107,7 @@ function mergeFileChanges(chain) {
         modified: [],
         renamed: [],
     };
-    for (let commit in chain) {
+    for (let commit of chain) {
         let cf = commit.details.files;
         if (cf) {
             for (let path in cf.added) {
@@ -152,7 +152,7 @@ function mergeFileChanges(chain) {
 
 function findSourceBranches(commits, branch) {
     let list = [];
-    for (let commit of commits) {
+    for (let commit of _.values(commits)) {
         if (commit.initial_branch !== branch) {
             if (!_.includes(list, commit.initial_branch)) {
                 list.push(commit.initial_branch);

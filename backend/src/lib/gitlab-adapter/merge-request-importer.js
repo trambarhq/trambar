@@ -60,7 +60,7 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
  */
 async function importHookEvent(db, system, server, repo, project, author, glHookEvent) {
     if (glHookEvent.object_attributes.action !== 'update') {
-        return null;
+        return false;
     }
     // construct a glMergeRequest object from data in hook event
     let repoLink = ExternalDataUtils.findLink(repo, server);

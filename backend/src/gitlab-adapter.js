@@ -19,7 +19,7 @@ import {
     TaskRemoveServerHooks,
     TaskInstallProjectHook,
     TaskRemoveProjectHook,
-    TaskImportProjectHookEvents,
+    TaskImportProjectHookEvent,
     TaskUpdateMilestones,
     TaskExportStory,
     TaskReexportStory,

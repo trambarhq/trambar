@@ -171,7 +171,7 @@ class TaskInstallProjectHook extends BasicTask {
         let host = await getSystemAddress(db);
         let repo = await getRepo(db, this.repoID);
         let project = await getProject(db, this.projectID);
-        let server = await getRepoServer(repo);
+        let server = await getRepoServer(db, repo);
         if (host && repo && project && server) {
             try {
                 await HookManager.installProjectHook(host, server, repo, project);
@@ -194,14 +194,14 @@ class TaskRemoveProjectHook extends BasicTask {
         let host = await getSystemAddress(db);
         let repo = await getRepo(db, this.repoID);
         let project = await getProject(db, this.projectID);
-        let server = await getRepoServer(repo);
+        let server = await getRepoServer(db, repo);
         if (host && repo && project && server) {
             await HookManager.removeProjectHook(host, server, repo, project);
         }
     }
 }
 
-class TaskImportProjectHookEvents extends BasicTask {
+class TaskImportProjectHookEvent extends BasicTask {
     constructor(repoID, projectID, glHookEvent) {
         super();
         this.repoID = repoID;
@@ -214,7 +214,7 @@ class TaskImportProjectHookEvents extends BasicTask {
         let system = await getSystem(db);
         let repo = await getRepo(db, this.repoID);
         let project = await getProject(db, this.projectID);
-        let server = await getRepoServer(repo);
+        let server = await getRepoServer(db, repo);
         let glHookEvent = this.glHookEvent;
         if (system && server && repo && project) {
             let story = await EventImporter.importHookEvent(db, system, server, repo, project, glHookEvent);
@@ -580,7 +580,7 @@ export {
     TaskRemoveServerHooks,
     TaskInstallProjectHook,
     TaskRemoveProjectHook,
-    TaskImportProjectHookEvents,
+    TaskImportProjectHookEvent,
     TaskUpdateMilestones,
     TaskExportStory,
     TaskReexportStory,

@@ -148,7 +148,7 @@ function findMatchingComponents(cxt, push) {
     ));
     let matching = [];
     for (let path of fileChanges) {
-        for (let descriptor of cxt.descriptors) {
+        for (let descriptor of _.values(cxt.descriptors)) {
             if (!_.includes(matching, descriptor)) {
                 if (matchDescriptor(path, descriptor)) {
                     matching.push(descriptor);
@@ -348,10 +348,10 @@ async function scanFolder(cxt, folderPath) {
             path: folderPath,
             ref: cxt.headID,
         };
-        list = await Transport.fetchAll(cxt.server, url, query);
+        listing = await Transport.fetchAll(cxt.server, url, query);
     } catch (err) {
         if (err instanceof HTTPError && err.statusCode === 404) {
-            list = [];
+            listing = [];
         } else {
             throw err;
         }
