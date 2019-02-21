@@ -592,6 +592,10 @@ let sortServers = memoizeWeak(null, function(servers, users, env, columns, direc
                 return (server) => {
                     return _.size(findUsers(users, server));
                 };
+            case 'api':
+                return (server) => {
+                    return hasAPICredentials(server);
+                };
             default:
                 return column;
         }
