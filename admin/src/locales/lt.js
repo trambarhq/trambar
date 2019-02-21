@@ -493,11 +493,11 @@ const phrases = {
     'user-list-cancel': 'Atšaukti',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'pasirinktą paskyrą', 'šias 2 pasirinktas paskyras', 'šias 10 pasirinktų paskyrų');
-        return `Ar tikrai norite deaktyvuoti ${accouns}?`;
+        return `Ar tikrai norite deaktyvuoti ${accounts}?`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
         let accounts = cardinal(count, 'pasirinktą paskyrą', 'šias 2 pasirinktas paskyras', 'šias 10 pasirinktų paskyrų');
-        return `Ar tikrai norite reaktyvuoti ${acounts}?`;
+        return `Ar tikrai norite reaktyvuoti ${accounts}?`;
     },
     'user-list-edit': 'Redaguoti vartotojų sąrašą',
     'user-list-reject-all': 'Atmesti visus prašymus',

@@ -506,11 +506,11 @@ const phrases = {
     'user-list-cancel': 'Anuluj',
     'user-list-confirm-disable-$count': (count) => {
         let accounts = cardinal(count, 'wybrane konto', 'te 2 wybrane konta', 'tych 5 wybranych kont');
-        return `Czy na pewno chcesz wyłączyć ${accouns}?`;
+        return `Czy na pewno chcesz wyłączyć ${accounts}?`;
     },
     'user-list-confirm-reactivate-$count': (count) => {
         let accounts = cardinal(count, 'wybrane konto', 'te 2 wybrane konta', 'tych 5 wybranych kont');
-        return `Czy jesteś pewien, że chcesz reaktywować ${acounts}?`;
+        return `Czy jesteś pewien, że chcesz reaktywować ${accounts}?`;
     },
     'user-list-edit': 'Zmodyfikuj listę użytkowników',
     'user-list-reject-all': 'Odrzuć wszystkie prośby',
