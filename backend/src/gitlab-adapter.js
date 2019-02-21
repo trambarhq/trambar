@@ -156,9 +156,9 @@ function handleProjectChangeEvent(event) {
         let deletedBefore = (event.diff.deleted) ? event.previous.deleted : deletedAfter;
         let repoIDsAfter = event.current.repo_ids;
         let repoIDsBefore = (event.diff.repo_ids) ? event.previous.repo_ids : repoIDsAfter;
-        for (let repoID of repoIDsAfter) {
+        for (let repoID of _.union(repoIDsAfter, repoIDsBefore)) {
             let connectedBefore = !archivedBefore && !deletedBefore && _.includes(repoIDsBefore, repoID);
-            let connectedAfter = !archivedAfter && !deletedAfter;
+            let connectedAfter = !archivedAfter && !deletedAfter && _.includes(repoIDsAfter, repoID);
             // remove or restore hooks
             if (connectedBefore && !connectedAfter) {
                 taskQueue.add(new TaskRemoveProjectHook(repoID, projectID));
