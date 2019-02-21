@@ -397,7 +397,7 @@ class RepoSummaryPageSync extends PureComponent {
         }
         let projectAfter = _.assign({}, project, { repo_ids: repoIDs });
         try {
-            db.saveOne({ table: 'project' }, projectAfter);
+            return db.saveOne({ table: 'project' }, projectAfter);
         } catch (err) {
             let problems = { unexpected: err.message };
             this.setState({ problems });
