@@ -1144,7 +1144,7 @@ class ServerSummaryPageSync extends PureComponent {
         let { confirmation } = this.components;
         let { t } = env.locale;
         let message = t('server-summary-confirm-delete');
-        let confirmd = await confirmation.ask(message);
+        let confirmed = await confirmation.ask(message);
         if (confirmed) {
             let serverAfter = await this.changeFlags({ deleted: true });
             if (serverAfter) {
