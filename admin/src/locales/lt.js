@@ -414,7 +414,7 @@ const phrases = {
     'table-heading-users': 'Vartotojai',
 
     'task-$seconds': (seconds) => {
-        return cardinal(count, '1 sekundė', '2 sekundės', '10 sekundžių');
+        return cardinal(seconds, '1 sekundė', '2 sekundės', '10 sekundžių');
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
         return cardinal(count, '1 revizijos komentaras importuotas', '2 revizijos komentarai importuoti', '10 revizijos komentarų importuoti');

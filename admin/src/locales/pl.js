@@ -415,7 +415,7 @@ const phrases = {
     'table-heading-users': 'Użytkownicy',
 
     'task-$seconds': (seconds) => {
-        return cardinal(count, '1 sekunda', '2 sekundy', '5 sekund');
+        return cardinal(seconds, '1 sekunda', '2 sekundy', '5 sekund');
     },
     'task-imported-$count-commit-comments-from-$repo': (count, repo) => {
         let comments = cardinal(count, '1 komentarz rewizji', '2 komentarzy rewizji', '5 komentarzy rewizji');
