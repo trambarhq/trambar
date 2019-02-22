@@ -1609,7 +1609,7 @@ class RemoteDataSource extends EventEmitter {
         // save the search
         this.recentSearchResults.unshift(newSearch);
         while (this.recentSearchResults.length > 1024) {
-            after.pop();
+            this.recentSearchResults.pop();
         }
         return newSearch;
     }
