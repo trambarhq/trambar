@@ -234,8 +234,7 @@ async function loadDescriptor(cxt, folderPath, filePath) {
     let image = await importImage(cxt, folderPath, info.icon);
     let id = `${folderPath}/${name}`;
     let component = new Component(id, info.descriptions, image);
-    let descriptor = new Descriptor(name, folderPath, rules, component);
-    cxt.descriptors[filePath] = descriptor;
+    cxt.descriptors[filePath] = new Descriptor(name, folderPath, rules, component);
 }
 
 /**
@@ -253,7 +252,7 @@ async function loadDescriptors(cxt, folderPath) {
     for (let record of tfRecords) {
         if (record.type === 'blob') {
             if (/\.md$/.test(record.name)) {
-                await loadDescriptor(cxt, folderPath, fileRecord.path);
+                await loadDescriptor(cxt, folderPath, record.path);
             }
         }
     }
