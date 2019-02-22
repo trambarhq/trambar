@@ -215,7 +215,7 @@ class Database {
                 // we received the id of an oversized message
                 // fetch it from the database
                 let sql = `SELECT message FROM "message_queue" WHERE id = $1`;
-                let rows = await this.query(sql, [ json ]);
+                let rows = await this.query(sql, [ event ]);
                 if (rows.length > 0) {
                     event = rows[0].message;
                 } else {

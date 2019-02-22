@@ -60,10 +60,11 @@ async function importIssueNote(db, system, server, repo, project, author, glEven
     };
     let story = await Story.findOne(db, schema, criteria, '*');
     if (!story) {
-        throw new HTTPError(404, 'Story not found');
+        console.log('Story not found');
+        return null;
     }
     let reactioNew = copyEventProperties(null, system, server, story, author, glEvent);
-    await Reaction.insertOne(db, schema, reactioNew)
+    await Reaction.insertOne(db, schema, reactioNew);
     return story;
 }
 
