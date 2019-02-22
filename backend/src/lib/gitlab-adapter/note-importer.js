@@ -156,7 +156,7 @@ async function findCommitID(db, server, repo, glEvent, glHookEvent) {
         title_hash: hash(glEvent.target_title),
         external_object: ExternalDataUtils.findLink(repo, server),
     };
-    let commits = Commit.find(db, 'global', criteria, '*');
+    let commits = await Commit.find(db, 'global', criteria, '*');
     for (let commit of commits) {
         let commitLink = ExternalDataUtils.findLink(commit, server);
         let commitID = commitLink.commit.id;

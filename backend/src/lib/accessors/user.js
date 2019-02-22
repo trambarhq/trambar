@@ -399,7 +399,7 @@ class User extends ExternalData {
         let projectIDs = _.map(_.keys(newMembers), parseInt);
         let criteria = { id: projectIDs, deleted: false };
         // update user_ids column in project table
-        let projects = Project.find(db, schema, criteria, 'id, user_ids, settings');
+        let projects = await Project.find(db, schema, criteria, 'id, user_ids, settings');
         for (let project of projects) {
             // make sure user can actually join
             let newProjectMembers = _.filter(newMembers[project.id], (user) => {

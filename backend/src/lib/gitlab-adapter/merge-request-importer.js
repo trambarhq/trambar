@@ -79,7 +79,7 @@ async function importHookEvent(db, system, server, repo, project, author, glHook
             merge_request: { id: glMergeRequest.id }
         }),
     };
-    let story = Story.findOne(db, schema, criteria, '*');
+    let story = await Story.findOne(db, schema, criteria, '*');
     if (!story) {
         throw new HTTPError(404, 'Story not found');
     }

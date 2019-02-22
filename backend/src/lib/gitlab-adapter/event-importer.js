@@ -138,7 +138,7 @@ async function importHookEvent(db, system, server, repo, project, glHookEvent) {
             // not handled
             return false;
         }
-        let author = UserImporter.findUser(db, server, glHookEvent.user);
+        let author = await UserImporter.findUser(db, server, glHookEvent.user);
         if (!author) {
             return null;
         }

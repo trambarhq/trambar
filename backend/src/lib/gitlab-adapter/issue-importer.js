@@ -92,7 +92,7 @@ async function importHookEvent(db, system, server, repo, project, author, glHook
             issue: { id: glIssue.id }
         }),
     };
-    let story = Story.findOne(db, schema, criteria, '*');
+    let story = await Story.findOne(db, schema, criteria, '*');
     if (!story) {
         throw new Error('Story not found');
     }

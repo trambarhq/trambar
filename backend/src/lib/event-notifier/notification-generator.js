@@ -355,7 +355,7 @@ async function generateJoinRequestNotifications(db, event) {
     let notificationType = 'join-request';
     let userId = event.id;
     let projectCriteria = { id: newProjectIds, deleted: false };
-    let projects = Project.find(db, 'global', projectCriteria, 'id, name');
+    let projects = await Project.find(db, 'global', projectCriteria, 'id, name');
     let userCriteria = {};
     let users = await User.findCached(db, 'global', criteria, '*');
     let admins = _.filter(users, { type: 'admin' });
