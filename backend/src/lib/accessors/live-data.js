@@ -273,7 +273,8 @@ class LiveData extends Data {
         // we need these columns in order to tell which rows are missing
         let keyColumns = _.keys(keys);
         let columnsNeeded = columns + ', ' + keyColumns.join(', ');
-        let existingRows = await super.find(db, schema, keys, columnsNeeded);
+        let criteria = _.extend({ deleted: false }, keys);
+        let existingRows = await super.find(db, schema, criteria, columnsNeeded);
         // find missing rows
         let missingRows = [];
         for (let expectedRow of expectedRows) {

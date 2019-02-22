@@ -232,7 +232,7 @@ async function findStoriesInListing(db, type, currentUser, blockIfStale) {
     let listing = await db.findOne(query);
     if (!listing) {
         // shouldn't happen, since listings are created on demand
-        return null;
+        throw new Error('No story listing');
     }
     if (_.isEmpty(listing.story_ids) && listing.dirty) {
         // wait for the listing to become populated then try again
