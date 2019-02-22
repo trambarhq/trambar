@@ -415,6 +415,9 @@ const gitConflicts = /<{7}\s\w+\r?\n([\s\S]*?\r?\n)={7}\r?\n([\s\S]*?\r?\n)>{7}\
  */
 async function importImage(cxt, folderPath, url) {
     try {
+        if (!url) {
+            return;
+        }
         if (/^\w+:/.test(url)) {
             // absolute URL
             return url;
