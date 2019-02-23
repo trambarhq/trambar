@@ -159,16 +159,19 @@ class Database {
         do {
             let now = new Date;
             try {
-                let found = this.schemaExists(schema);
+                let found = await this.schemaExists(schema);
                 if (found) {
                     return;
                 }
             } catch (err) {
                 console.error(err);
                 lastError = err;
-                await Bluebird.delay(500);
             }
+            await Bluebird.delay(500);
         } while ((now - startTime) < wait);
+        if (!lastError) {
+            lastError = new Error(`Schema does not exist: ${schema}`);
+        }
         throw lastError;
     }
 
