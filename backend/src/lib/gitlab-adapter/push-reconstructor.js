@@ -110,12 +110,12 @@ function mergeFileChanges(chain) {
     for (let commit of chain) {
         let cf = commit.details.files;
         if (cf) {
-            for (let path in cf.added) {
+            for (let path of cf.added) {
                 if (!_.includes(pf.added, path)) {
                     pf.added.push(path);
                 }
             }
-            for (let path in cf.deleted) {
+            for (let path of cf.deleted) {
                 // if the file was deleted within this push, ignore it
                 if (_.includes(pf.added, path)) {
                     _.pull(pf.added, path);
@@ -123,7 +123,7 @@ function mergeFileChanges(chain) {
                     pf.added.push(path);
                 }
             }
-            for (let path in cf.renamed) {
+            for (let path of cf.renamed) {
                 // if the file was renamed within this push, treat it
                 // as an addition under the new name
                 if (_.includes(pf.added, path.before)) {
@@ -136,7 +136,7 @@ function mergeFileChanges(chain) {
                     pf.renamed.push(path);
                 }
             }
-            for (let path in cf.modified) {
+            for (let path of cf.modified) {
                 // if the file was added by this push, don't treat it
                 // as a modification
                 if (!_.includes(pf.added, path)) {
