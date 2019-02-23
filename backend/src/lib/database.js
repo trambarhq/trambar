@@ -151,13 +151,13 @@ class Database {
      * @param  {Number} wait
      */
     async need(schema, wait) {
-        let startTime = new Date;
+        let startTime = new Date, now;
         let lastError;
         if (!wait) {
             wait = 10000;
         }
         do {
-            let now = new Date;
+            now = new Date;
             try {
                 let found = await this.schemaExists(schema);
                 if (found) {
