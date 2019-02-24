@@ -29,6 +29,7 @@ async function last(action, options) {
     let criteria = {
         action,
         options,
+        noop: false,
         order: 'id DESC',
         limit: 1,
     };
@@ -54,6 +55,7 @@ class TaskLog {
         this.saving = false;
         this.error = null;
         this.saveTimeout = 0;
+        this.saveTime = null;
 
         // monitor for system shutdown to ensure data is saved
         this.shutdownListener = () => {
@@ -85,10 +87,13 @@ class TaskLog {
         this.noop = false;
         this.saved = false;
 
-        clearTimeout(this.saveTimeout);
-        this.saveTimeout = setTimeout(() => {
-            this.save();
-        }, 2000);
+        let now = new Date;
+        if (!this.saveTimeout || !this.saveTime || (now - this.saveTime) < 5000) {
+            clearTimeout(this.saveTimeout);
+            this.saveTimeout = setTimeout(() => {
+                this.save();
+            }, 1500);
+        }
     };
 
     /**
@@ -153,6 +158,8 @@ class TaskLog {
         let task = await Task.saveOne(db, 'global', columns);
         this.id = task.id;
         this.saved = true;
+        this.saveTime = new Date;
+        this.saveTimeout = 0;
 
         let state = ''
         if (this.completion < 100) {

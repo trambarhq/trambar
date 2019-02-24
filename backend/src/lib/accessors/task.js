@@ -29,6 +29,7 @@ class Task extends Data {
             newer_than: String,
             older_than: String,
             complete: Boolean,
+            noop: Boolean,
         });
     }
 
@@ -95,6 +96,7 @@ class Task extends Data {
             'newer_than',
             'older_than',
             'complete',
+            'noop',
         ];
         super.apply(_.omit(criteria, special), query);
 
@@ -114,6 +116,13 @@ class Task extends Data {
                 conds.push(`completion = 100`);
             } else {
                 conds.push(`completion <> 100`);
+            }
+        }
+        if (criteria.noop !== undefined) {
+            if (criteria.noop) {
+                conds.push(`completion = 0`);
+            } else {
+                conds.push(`completion > 0`);
             }
         }
     }
