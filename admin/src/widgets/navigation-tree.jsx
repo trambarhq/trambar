@@ -156,8 +156,8 @@ class NavigationTreeSync extends PureComponent {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        let { route } = this.props;
-        if (prevProps.route !== route) {
+        let { route, env } = this.props;
+        if (prevProps.route !== route || prevProps.env !== env) {
             this.repositionArrow();
         }
     }
