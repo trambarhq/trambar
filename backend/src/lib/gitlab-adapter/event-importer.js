@@ -112,9 +112,14 @@ async function importEvent(db, system, server, repo, project, glEvent, glHookEve
         if (!author) {
             return null;
         }
-        return importer.importEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
+        let story = await importer.importEvent(db, system, server, repo, project, author, glEvent, glHookEvent);
+        return story;
     } catch (err) {
-        console.error(err);
+        if (err.statusCode === 404) {
+            console.error(err)
+        } else {
+            throw err;
+        }
     }
 }
 
