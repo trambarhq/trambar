@@ -25,6 +25,9 @@ import Story from 'accessors/story';
  * @return {Promise<Story>}
  */
 async function importEvent(db, system, server, repo, project, author, glEvent) {
+    if (!glEvent.target_id) {
+        return null;
+    }
     let schema = project.name;
     let repoLink = ExternalDataUtils.findLink(repo, server);
     let glMergeRequest = await fetchMergeRequest(server, repoLink.project.id, glEvent.target_id);

@@ -22,6 +22,10 @@ import Story from 'accessors/story';
  * @return {Promise<Story>}
  */
 async function importEvent(db, system, server, repo, project, author, glEvent) {
+    if (!glEvent.target_id) {
+        // milestone was deleted
+        return null;
+    }
     let schema = project.name;
     let repoLink = ExternalDataUtils.findLink(repo, server);
     let glMilestone = await fetchMilestone(server, repoLink.project.id, glEvent.target_id);
