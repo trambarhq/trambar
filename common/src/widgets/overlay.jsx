@@ -84,6 +84,7 @@ class Overlay extends PureComponent {
         let { rendering } = this.state;
         if (rendering) {
             this.preserveKeyboardFocus();
+            this.setState({ transitioning: false });
         }
     }
 
