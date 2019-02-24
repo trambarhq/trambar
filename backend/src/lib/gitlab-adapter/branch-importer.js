@@ -47,8 +47,8 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
             commit: { ids: [ tailID ] }
         })
     };
-    let story = await Story.find(db, schema, criteria, 'id, details');
-    if (story.details.branch === branch) {
+    let story = await Story.findOne(db, schema, criteria, 'id, details');
+    if (story && story.details.branch === branch) {
         // delete the story if no changes were checked in with the branch
         if (_.isEmpty(story.details.files)) {
             story.deleted = true;
