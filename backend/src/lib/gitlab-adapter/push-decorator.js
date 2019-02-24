@@ -296,14 +296,17 @@ async function parseDescriptorFile(cxt, path) {
             if (m) {
                 let code = m[1];
                 languageTokens[code] = currentLanguageTokens = [];
+                continue;
             }
         } else if (token.type === 'code') {
             if (token.lang === 'fnmatch' || token.lang === 'match') {
                 fileMatchDefinitions.push(token.text);
+                continue;
             }
         } else if (token.type === 'def') {
             if (token.name === 'icon') {
                 icon = token.href;
+                continue;
             }
         }
         currentLanguageTokens.push(token);
@@ -322,6 +325,7 @@ async function parseDescriptorFile(cxt, path) {
             return _.filter(_.split(patterns, /[\r\n]+/));
         }));
     }
+    console.log(descriptions, rules, icon);
     return { descriptions, rules, icon };
 }
 
