@@ -325,7 +325,6 @@ async function parseDescriptorFile(cxt, path) {
             return _.filter(_.split(patterns, /[\r\n]+/));
         }));
     }
-    console.log(descriptions, rules, icon);
     return { descriptions, rules, icon };
 }
 
