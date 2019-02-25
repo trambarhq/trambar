@@ -138,7 +138,9 @@ class RemoteDataSource extends EventEmitter {
 
         if (search.remoteSearchPromise) {
             let waitForRemote = false;
-            if (search.initial) {
+            if (search.remote) {
+                waitForRemote = true;
+            } else if (search.initial) {
                 switch (blocking) {
                     case 'insufficient':
                         if (!search.isMeetingExpectation() && !search.isSufficientlyCached()) {
@@ -1122,6 +1124,9 @@ class RemoteDataSource extends EventEmitter {
             search.start();
             let location = search.getLocation();
             let criteria = search.criteria;
+            if (search.remote) {
+                console.log(criteria);
+            }
             let discovery = await this.discoverRemoteObjects(location, criteria);
             if (search.remote) {
                 await this.retrieveFromLocalCache(search, discovery);
@@ -1142,6 +1147,9 @@ class RemoteDataSource extends EventEmitter {
                 // then add them to the list
                 newResults = insertObjects(newResults, newObjects);
             }
+            if (newResults === undefined) {
+                newResults = [];
+            }
 
             let includeUncommitted = _.get(this.options.discoveryFlags, 'include_uncommitted');
             if (includeUncommitted) {
@@ -1159,6 +1167,7 @@ class RemoteDataSource extends EventEmitter {
                 }
             }
 
+
             if (newResults !== search.results) {
                 search.finish(newResults);
 
@@ -1173,6 +1182,9 @@ class RemoteDataSource extends EventEmitter {
             }
             search.notifying = false;
         } catch (err) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.error(err);
+            }
             search.fail(err);
         }
     }

@@ -337,15 +337,15 @@ class Database {
         if (dictFile) {
             // see if ispell dictionary already exists
             let dictName = `ispell_${dictFile}`;
-            let sql = `
+            let sql1 = `
                 SELECT dictname FROM pg_catalog.pg_ts_dict
                 WHERE dictname = '${dictName}'
             `;
-            let rows = await this.query(sql);
+            let rows = await this.query(sql1);
             if (rows.length > 0) {
                 return;
             }
-            let sql = `
+            let sql2 = `
                 CREATE TEXT SEARCH DICTIONARY ${dictName} (
                     template  = ispell,
                     dictfile = ${dictFile},
@@ -354,7 +354,7 @@ class Database {
                 )
             `;
             try {
-                await this.execute(sql);
+                await this.execute(sql2);
             } catch (err) {
                 if (err.code === '23505') {
                     // unique_violation

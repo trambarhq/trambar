@@ -144,11 +144,13 @@ class Search extends Operation {
      * @return {Boolean}
      */
     isSufficientlyCached() {
-        let count = this.results.length;
+        if (!this.results) {
+            return false;
+        }
         if (this.minimum == undefined) {
             return false;
         }
-        if (count < this.minimum) {
+        if (this.results.length < this.minimum) {
             return false;
         }
         return true;
@@ -180,7 +182,7 @@ class Search extends Operation {
      * @return {Array<Number>}
      */
     getUpdateList(ids, gns) {
-        let objects = (this.invalid) ? [] : this.results;
+        let objects = (this.invalid || !this.results) ? [] : this.results;
         let updated = [];
         for (let [ i, id ] of ids.entries()) {
             let gn = gns[i];
@@ -201,7 +203,7 @@ class Search extends Operation {
      * @return {Array<Number>}
      */
     getRemovalList(ids) {
-        let objects = this.results;
+        let objects = (!this.results) ? [] : this.results;
         let removal = [];
         for (let object of objects) {
             if (!_.includes(ids, object.id)) {
@@ -237,7 +239,7 @@ class Search extends Operation {
     }
 
     finish(results) {
-        let previousResults = this.results;
+        let previousResults = this.results || [];
         super.finish(results);
 
         this.dirty = false;

@@ -483,19 +483,19 @@ class Data {
             }
             valueSets.push(`(${values.join(',')})`);
         }
-        let sql = `
+        let sql1 = `
             INSERT INTO ${table} (${columnsPresent.join(', ')})
             VALUES ${valueSets.join(',')}
             RETURNING *
         `;
-        let results = await db.query(sql, parameters);
+        let results = await db.query(sql1, parameters);
         if (manualID) {
             // update the sequence used for auto-increment primary key
             let sequence = `"${schema}"."${this.table}_id_seq"`;
-            let sql = `
+            let sql2 = `
                 SELECT setval('${sequence}', COALESCE((SELECT MAX(id) FROM ${table}), 0));
             `;
-            await db.query(sql);
+            await db.query(sql2);
         }
         return results;
     }
@@ -758,18 +758,18 @@ class Data {
     async clean(db, schema, interval) {
         let table = this.getTableName(schema);
         let params = [ interval ];
-        let sql = `
+        let sql1 = `
             SELECT id FROM ${table}
             WHERE deleted = true
             AND mtime + CAST($1 AS INTERVAL) < NOW()
         `;
-        let rows = await db.query(sql, params);
+        let rows = await db.query(sql1, params);
         if (_.isEmpty(rows)) {
             return 0;
         }
         let params = [ _.map(rows, 'id') ];
-        let sql = `DELETE FROM ${table} WHERE id = ANY($1)`;
-        let result = await db.execute(sql, params);
+        let sql2 = `DELETE FROM ${table} WHERE id = ANY($1)`;
+        let result = await db.execute(sql2, params);
         return result.rowCount;
     }
 
@@ -925,14 +925,14 @@ class Data {
         }
         // create dictionaries for language first
         let dicts = await db.createDictionaries(code);
-        let sql2 = `
-            CREATE TEXT SEARCH CONFIGURATION search_${code} (COPY = pg_catalog.english);
-            ALTER TEXT SEARCH CONFIGURATION search_${code}
-            ALTER MAPPING FOR asciiword, asciihword, hword_asciipart, word, hword, hword_part
-            WITH ${dicts.join(', ')};
-        `;
         try {
-            db.execute(sql2);
+            let sql2 = `
+                CREATE TEXT SEARCH CONFIGURATION search_${code} (COPY = pg_catalog.english);
+                ALTER TEXT SEARCH CONFIGURATION search_${code}
+                ALTER MAPPING FOR asciiword, asciihword, hword_asciipart, word, hword, hword_part
+                WITH ${dicts.join(', ')};
+            `;
+            await db.execute(sql2);
         } catch (err) {
             if (err.code !== '23505') {
                 throw err;
