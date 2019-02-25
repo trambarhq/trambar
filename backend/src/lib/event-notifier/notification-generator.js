@@ -318,7 +318,7 @@ async function generateUserMentionNotifications(db, event) {
         details = { reaction_type: event.current.type };
     }
     let userCriteria = { deleted: false, disabled: false };
-    let users = await User.findCached(db, 'global', criteria, '*');
+    let users = await User.findCached(db, 'global', userCriteria, '*');
     let mentionedUsers = _.filter(users, (user) => {
         return _.includes(relevantUserTags, `@${_.toLower(user.username)}`);
     });
