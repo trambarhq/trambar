@@ -55,6 +55,10 @@
             .volume-indicator {
                 margin-top: 0.5em;
             }
+
+            &:empty {
+                display: none;
+            }
         }
 
         .right {
