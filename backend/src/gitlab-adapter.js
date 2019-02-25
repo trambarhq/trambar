@@ -227,10 +227,10 @@ function handleSystemChangeEvent(event) {
         let hostAfter = event.current.settings.address;
         if (hostBefore !== hostAfter) {
             if (hostBefore) {
-                taskQueue.add(new TaskRemoveHooks);
+                taskQueue.add(new TaskRemoveHooks(hostBefore));
             }
             if (hostAfter) {
-                taskQueue.add(new TaskInstallHooks);
+                taskQueue.add(new TaskInstallHooks(hostAfter));
             }
         }
     }

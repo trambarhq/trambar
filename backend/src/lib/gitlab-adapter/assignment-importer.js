@@ -126,12 +126,14 @@ async function findAssignmentsFromNotes(db, server, glObject, glNotes) {
         if (!assignees && glObject.assignee) {
             assignees = [ glObject.assignee ];
         }
-        for (let assignee of assignees) {
-            assignments.push({
-                username: assignee.username,
-                user: null,
-                ctime: new Date(glObject.created_at).toISOString()
-            });
+        if (assignees) {
+            for (let assignee of assignees) {
+                assignments.push({
+                    username: assignee.username,
+                    user: null,
+                    ctime: new Date(glObject.created_at).toISOString()
+                });
+            }
         }
     }
 
