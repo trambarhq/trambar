@@ -446,16 +446,18 @@ function getAudioURL(res, params, env) {
 
 function getMarkdownIconURL(res, forImage, env) {
     if (forImage)  {
-        if (res.type === 'audio') {
-            return require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
-        } else {
-            // images are style at height = 1.5em
-            let params = {
-                height: 24,
-                jsonURL: true
-            };
-            return getImageURL(res, params, env);
+        // images are style at height = 1.5em
+        let params = {
+            height: 24,
+            jsonURL: true
+        };
+        let imageURL = getImageURL(res, params, env);
+        if (!imageURL) {
+            if (res.type === 'audio') {
+                imageURL = require('!file-loader!speaker.svg') + `#${encodeURI(res.url)}`;
+            }
         }
+        return imageURL;
     } else {
         return getURL(res, {}, env);
     }
