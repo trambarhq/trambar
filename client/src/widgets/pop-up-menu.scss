@@ -4,6 +4,8 @@
     position: relative;
 
     .button {
+        user-select: none;
+        
         &.active {
             cursor: pointer;
         }

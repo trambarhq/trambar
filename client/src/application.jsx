@@ -7,6 +7,7 @@ import CORSRewriter from 'routing/cors-rewriter';
 import SchemaRewriter from 'routing/schema-rewriter';
 import * as ProjectFinder from 'objects/finders/project-finder';
 import * as ProjectLinkFinder from 'objects/finders/project-link-finder';
+import TopLevelMouseTrap from 'utils/top-level-mouse-trap';
 import { codePushDeploymentKeys } from 'keys';
 
 // non-visual components
@@ -121,9 +122,14 @@ class Application extends PureComponent {
             route,
             env,
         };
-        let className = this.getClassName();
+        let topLevelProps = {
+            className: this.getClassName(),
+            id: 'application',
+            onMouseDown: TopLevelMouseTrap.handleMouseDown,
+            onMouseUp: TopLevelMouseTrap.handleMouseUp,
+        };
         return (
-            <div className={className} id="application">
+            <div {...topLevelProps}>
                 <TopNavigation {...topNavProps} />
                 <section className="page-view-port">
                     <ErrorBoundary env={env}>
