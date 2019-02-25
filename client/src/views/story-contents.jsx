@@ -221,8 +221,9 @@ class StoryContents extends PureComponent {
         } else {
             let className = 'text story plain-text';
             let emoji = PlainText.findEmoji(langText);
+            let chars = _.replace(langText, /\s+/g, '');
             if (emoji) {
-                if (_.join(emoji, '') === langText) {
+                if (_.join(emoji, '') === chars) {
                     // all we have are emojis--make them bigger depending on
                     // how many there are
                     className += ` emoji-${emoji.length}`;
