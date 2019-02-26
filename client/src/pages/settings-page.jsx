@@ -79,15 +79,24 @@ class SettingsPageSync extends PureComponent {
         super(props);
         this.state = {
             original: null,
+            draft: null,
         };
     }
 
     static getDerivedStateFromProps(props, state) {
         let { currentUser } = props;
-        if (currentUser && !currentUser.uncommitted) {
-            return { original: currentUser };
+        let { original, draft } = state;
+        if (currentUser) {
+            if (!currentUser.uncommitted) {
+                original = currentUser;
+            }
+            if (draft) {
+                if (draft.gn !== currentUser.gn) {
+                    draft = null;
+                }
+            }
         }
-        return null;
+        return { original, draft };
     }
 
     /**
@@ -197,8 +206,9 @@ class SettingsPageSync extends PureComponent {
      */
     renderUserInfoPanel() {
         let { env, currentUser } = this.props;
+        let { draft } = this.state;
         let panelProps = {
-            currentUser,
+            currentUser: draft || currentUser,
             env,
             onChange: this.handleChange,
         };
@@ -212,8 +222,9 @@ class SettingsPageSync extends PureComponent {
      */
     renderUserImagePanel() {
         let { env, payloads, currentUser } = this.props;
+        let { draft } = this.state;
         let panelProps = {
-            currentUser,
+            currentUser: draft || currentUser,
             payloads,
             env,
             onChange: this.handleChange,
@@ -228,8 +239,9 @@ class SettingsPageSync extends PureComponent {
      */
     renderSocialNetworkPanel() {
         let { env, currentUser } = this.props;
+        let { draft } = this.state;
         let panelProps = {
-            currentUser,
+            currentUser: draft || currentUser,
             env,
             onChange: this.handleChange,
         };
@@ -243,8 +255,9 @@ class SettingsPageSync extends PureComponent {
      */
     renderNotificationPanel() {
         let { env, currentUser, repos } = this.props;
+        let { draft } = this.state;
         let panelProps = {
-            currentUser,
+            currentUser: draft || currentUser,
             repos,
             env,
             onChange: this.handleChange,
@@ -259,11 +272,12 @@ class SettingsPageSync extends PureComponent {
      */
     renderWebAlertPanel() {
         let { env, currentUser, repos } = this.props;
+        let { draft } = this.state;
         if (env.platform === 'cordova') {
             return null;
         }
         let panelProps = {
-            currentUser,
+            currentUser: draft || currentUser,
             repos,
             env,
             onChange: this.handleChange,
@@ -278,11 +292,12 @@ class SettingsPageSync extends PureComponent {
      */
     renderMobileAlertPanel() {
         let { env, currentUser, devices, repos } = this.props;
+        let { draft } = this.state;
         if (_.isEmpty(devices)) {
             return null;
         }
         let panelProps = {
-            currentUser,
+            currentUser: draft || currentUser,
             repos,
             env,
             onChange: this.handleChange,
@@ -338,6 +353,7 @@ class SettingsPageSync extends PureComponent {
                 }
             },
         };
+        this.setState({ draft: user });
         let db = database.use({ schema: 'global', by: this });
         let userAfter = await db.saveOne({ table: 'user' }, user, options);
         // start file upload
