@@ -349,7 +349,7 @@ function copyUserProperties(user, server, image, glUser) {
     });
     ExternalDataUtils.importProperty(userAfter, server, 'details.gitlab_url', {
         value: glUser.web_url,
-        overwrite: 'always',
+        overwrite: 'match-previous:gitlab_url',
     });
     ExternalDataUtils.importProperty(userAfter, server, 'details.skype_username', {
         value: glUser.skype,

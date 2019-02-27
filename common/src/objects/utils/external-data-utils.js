@@ -73,12 +73,17 @@ function inheritLink(object, server, parent, props) {
  * @return {Object}
  */
 function attachLink(object, link) {
+    let index = -1;
     if (object.external) {
-        _.remove(object.external, { server_id: link.server_id });
+        index = _.find(object.external, { server_id: link.server_id });
     } else {
         object.external = [];
     }
-    object.external.push(link);
+    if (index !== -1) {
+        object.external[index] = link;
+    } else {
+        object.external.push(link);
+    }
     return link;
 }
 
