@@ -228,6 +228,7 @@ async function fetchMergeRequestNotes(server, glProjectID, glMergeRequestNumber)
 
 class ObjectMovedError extends Error {
     constructor() {
+        super();
         this.message = 'Object moved';
     }
 }
