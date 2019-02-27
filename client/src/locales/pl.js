@@ -693,7 +693,7 @@ const phrases = {
     },
     'time-$minutes-ago': (minutes) => {
         let time = cardinal(minutes, 'Minuta', '2 minuty', '5 minut');
-        return `${time} temnu`;
+        return `${time} temu`;
     },
     'time-just-now': 'Właśnie teraz',
     'time-yesterday': 'Wczoraj',
