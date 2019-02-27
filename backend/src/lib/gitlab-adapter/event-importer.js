@@ -56,6 +56,7 @@ async function importEvents(db, system, server, repo, project, glHookEvent) {
     });
     let added = [];
     let firstEventAge;
+    let processedEventTime;
     let now = Moment();
     try {
         await Transport.fetchEach(server, url, params, async (glEvent, index, total) => {
@@ -65,11 +66,7 @@ async function importEvents(db, system, server, repo, project, glHookEvent) {
                     return;
                 }
             }
-            let story = await importEvent(db, system, server, repo, project, glEvent, glHookEvent);
-            if (story) {
-                added.push(glEvent.action_name);
-            }
-            let nom = index + 1;
+            let nom = index;
             let denom = total;
             if (!total) {
                 // when the number of events is not yet known, use the event
@@ -81,7 +78,15 @@ async function importEvents(db, system, server, repo, project, glHookEvent) {
                 nom = (firstEventAge - eventAge);
                 denom = firstEventAge;
             }
-            taskLog.report(nom, denom, { added, last_event_time: ctime });
+            taskLog.report(nom, denom, { added, last_event_time: processedEventTime });
+            let story = await importEvent(db, system, server, repo, project, glEvent, glHookEvent);
+            if (story) {
+                added.push(glEvent.action_name);
+                processedEventTime = ctime;
+            }
+            if (total) {
+                taskLog.report(nom + 1, denom, { added, last_event_time: processedEventTime });
+            }
         });
         await taskLog.finish();
     } catch (err) {

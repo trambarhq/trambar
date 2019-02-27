@@ -183,7 +183,7 @@ class TaskAlertBarSync extends PureComponent {
             if (selectedTask) {
                 this.setState({ selectedTask, highestTaskID, showing: true });
             } else {
-                let currentSelectedTask = selectedTask;
+                let currentSelectedTask = this.state.selectedTask;
                 setTimeout(() => {
                     // stop showing it after 5 seconds
                     let { selectedTask } = this.state;
