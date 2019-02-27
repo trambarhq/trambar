@@ -266,7 +266,7 @@ class NavigationTreeSync extends PureComponent {
         let children = [
             this.getRepoNode(),
         ];
-        return { label, page };
+        return { label, page, children };
     }
 
     /**
