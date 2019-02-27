@@ -132,7 +132,7 @@ class Device extends Data {
      */
     async export(db, schema, rows, credentials, options) {
         let objects = await super.export(db, schema, rows, credentials, options);
-        for (let [ index, object] of objects) {
+        for (let [ index, object ] of _.entries(objects)) {
             let row = rows[index];
             object.user_id = row.user_id;
             object.type = row.type;

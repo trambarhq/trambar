@@ -156,7 +156,10 @@ class CodePush extends EventEmitter {
     }
 }
 
-function readTextFile(filename) {
+async function readTextFile(filename) {
+    if (!window.requestFileSystem) {
+        return '';
+    }
     return new Promise((resolve, reject) => {
         requestFileSystem(LocalFileSystem.PERSISTENT, 0, (fs) => {
             fs.root.getFile(filename, { create: false, exclusive: false }, (fileEntry) => {
@@ -181,7 +184,10 @@ function readTextFile(filename) {
     });
 }
 
-function writeTextFile(filename, text) {
+async function writeTextFile(filename, text) {
+    if (!window.requestFileSystem) {
+        return;
+    }
     return new Promise((resolve, reject) => {
         let blob = new Blob([ text ], { type: 'text/plain' })
         requestFileSystem(LocalFileSystem.PERSISTENT, 0, (fs) => {
