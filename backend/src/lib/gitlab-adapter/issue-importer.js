@@ -37,13 +37,13 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
         }),
     };
     let story = await Story.findOne(db, schema, criteria, '*');
-    let assignments = await AssignmentImporter.findIssueAssignments(db, server, glIssue);
-    let opener = (glEvent.action_name === 'opened') ? author : null;
-    let storyAfter = copyIssueProperties(story, system, server, repo, opener, assignments, glIssue);
-    if (storyAfter !== story) {
-        story = await Story.saveOne(db, schema, storyAfter);
-    }
     try {
+        let assignments = await AssignmentImporter.findIssueAssignments(db, server, glIssue);
+        let opener = (glEvent.action_name === 'opened') ? author : null;
+        let storyAfter = copyIssueProperties(story, system, server, repo, opener, assignments, glIssue);
+        if (storyAfter !== story) {
+            story = await Story.saveOne(db, schema, storyAfter);
+        }
         await AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
     } catch (err) {
         if (err instanceof AssignmentImporter.ObjectMovedError) {

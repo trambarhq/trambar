@@ -38,13 +38,27 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
         })
     };
     let story = await Story.findOne(db, schema, criteria, '*');
-    let assignments = await AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest);
-    let opener = (glEvent.action_name === 'opened') ? author : null;
-    let storyAfter = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
-    if (storyAfter !== story) {
-        story = await Story.saveOne(db, schema, storyAfter);
+    try {
+        let assignments = await AssignmentImporter.findMergeRequestAssignments(db, server, glMergeRequest);
+        let opener = (glEvent.action_name === 'opened') ? author : null;
+        let storyAfter = copyMergeRequestProperties(story, system, server, repo, opener, assignments, glMergeRequest);
+        if (storyAfter !== story) {
+            story = await Story.saveOne(db, schema, storyAfter);
+        }
+        await AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
+    } catch (err) {
+        if (err instanceof AssignmentImporter.ObjectMovedError) {
+            // the merge request has been moved to a different repo--delete the
+            // story if it was imported
+            if (story) {
+                let storyAfter = { id: story.id, deleted: true };
+                await Story.saveOne(db, schema, storyAfter);
+                story = null;
+            }
+        } else {
+            throw err;
+        }
     }
-    let reactions = await AssignmentImporter.importAssignments(db, server, project, repo, story, assignments);
     return story;
 }
 
