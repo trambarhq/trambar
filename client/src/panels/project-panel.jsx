@@ -278,7 +278,7 @@ class ProjectPanel extends PureComponent {
         let props = {
             show: confirmingSignOut,
             env,
-            onClose: this.handleDialogClose,
+            onClose: this.handleConfirmationDialogClose,
             onConfirm: this.handleSignOutConfirm,
         };
         return (
