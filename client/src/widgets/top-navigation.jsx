@@ -8,6 +8,7 @@ import CollapsibleContainer from 'widgets/collapsible-container';
 import CalendarBar from 'widgets/calendar-bar';
 import RoleFilterBar from 'widgets/role-filter-bar';
 import SearchBar from 'widgets/search-bar';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import './top-navigation.scss';
 
@@ -195,10 +196,13 @@ class TopNavigation extends PureComponent {
      * @return {ReactElement}
      */
     renderCollapsibleControl() {
+        let { env } = this.props;
         let selected = this.getSelectedControl();
         return (
             <CollapsibleContainer open={!!selected}>
-                {this.renderControl()}
+                <ErrorBoundary env={env}>
+                    {this.renderControl()}
+                </ErrorBoundary>
             </CollapsibleContainer>
         );
     }
