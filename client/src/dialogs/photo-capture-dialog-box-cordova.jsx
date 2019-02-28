@@ -20,7 +20,7 @@ class PhotoCaptureDialogBoxCordova extends PureComponent {
     componentWillReceiveProps(nextProps) {
         let { show } = this.props;
         if (nextProps.show && !show) {
-            this.startCapture();
+            this.startCapture(nextProps);
         }
     }
 
@@ -33,7 +33,7 @@ class PhotoCaptureDialogBoxCordova extends PureComponent {
         return null;
     }
 
-    async startCapture() {
+    async startCapture(nextProps) {
         let camera = navigator.camera;
         if (camera) {
             let direction;

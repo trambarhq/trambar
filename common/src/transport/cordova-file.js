@@ -32,6 +32,8 @@ class CordovaFile {
                 resolveLocalFileSystemURL(this.fullPath, (fileEntry) => {
                     resolve(fileEntry);
                 }, (errNo) => {
+                    console.log('resolveLocalFileSystemURL failed')
+                    console.log(this.fullPath);
                     reject(new FileError(errNo));
                 });
             })
@@ -41,6 +43,7 @@ class CordovaFile {
 
     async getFile() {
         if (!this.file) {
+            let fileEntry = await this.getFileEntry();
             this.file = await new Promise((resolve, reject) => {
                 fileEntry.file((file) => {
                     resolve(file);

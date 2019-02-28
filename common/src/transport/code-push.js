@@ -49,7 +49,11 @@ class CodePush extends EventEmitter {
      */
     async loadDeploymentName() {
         let names = this.getDeploymentNames();
-        let name = await readTextFile('codepush');
+        let name;
+        try {
+            name = await readTextFile('codepush');
+        } catch (err) {
+        }
         if (_.includes(names, name)) {
             return name;
         } else {
