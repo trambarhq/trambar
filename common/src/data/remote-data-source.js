@@ -57,6 +57,7 @@ class RemoteDataSource extends EventEmitter {
             this.startTime = Moment();
             // force validation of schema signatures
             this.revalidate();
+            this.invalidate();
             this.dispatchPending();
         }
     }
@@ -1124,9 +1125,6 @@ class RemoteDataSource extends EventEmitter {
             search.start();
             let location = search.getLocation();
             let criteria = search.criteria;
-            if (search.remote) {
-                console.log(criteria);
-            }
             let discovery = await this.discoverRemoteObjects(location, criteria);
             if (search.remote) {
                 await this.retrieveFromLocalCache(search, discovery);
@@ -1182,9 +1180,6 @@ class RemoteDataSource extends EventEmitter {
             }
             search.notifying = false;
         } catch (err) {
-            if (process.env.NODE_ENV !== 'production') {
-                console.error(err);
-            }
             search.fail(err);
         }
     }
