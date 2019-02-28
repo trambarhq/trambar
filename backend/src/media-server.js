@@ -279,8 +279,8 @@ async function handleImageUpload(req, res) {
 async function handleImageImport(req, res) {
     try {
         let file = req.file;
-        let url = req.body.url;
-        let imagePath = await FileManager.preserveFile(file, url, CacheFolders.image);
+        let sourceURL = req.body.url;
+        let imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
         if (!imagePath) {
             throw new HTTPError(400);
         }
@@ -351,7 +351,7 @@ async function handleMediaUpload(req, res, type) {
         let token = req.query.token;
         let streamID = req.body.stream;
         let file = req.file;
-        let url = req.body.url;
+        let sourceURL = req.body.url;
         let generatePoster = !!req.body.generate_poster;
         let taskID = await checkTaskToken(schema, token, `add-${type}`);
         let result;
@@ -367,7 +367,7 @@ async function handleMediaUpload(req, res, type) {
         } else {
             // transcode an uploaded file--move it into cache folder first
             let dstFolder = CacheFolders[type];
-            let mediaPath = await FileManager.preserveFile(file, url, dstFolder);
+            let mediaPath = await FileManager.preserveFile(file, sourceURL, dstFolder);
             if (!mediaPath) {
                 throw new HTTPError(400);
             }
