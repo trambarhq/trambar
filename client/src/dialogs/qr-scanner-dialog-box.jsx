@@ -46,7 +46,7 @@ class QRScannerDialogBox extends PureComponent {
         let { available } = this.state;
         if (available && show) {
             this.show();
-        } else if (prevProps.show && !show) {
+        } else if (!show) {
             this.hide();
         }
     }
@@ -82,6 +82,10 @@ class QRScannerDialogBox extends PureComponent {
         let { scanning, found } = this.state;
         let { t } = env.locale;
         if (!this.overlayNode) {
+            // create overlay
+            this.overlayNode = document.createElement('DIV');
+            document.body.appendChild(this.overlayNode);
+
             // show the camera preview, which appears behind the webview
             if (QRScanner) {
                 await QRScanner.showAsync();
@@ -113,8 +117,6 @@ class QRScannerDialogBox extends PureComponent {
                     this.cameraPlaceholderNode.appendChild(input);
                 }
             }
-            this.overlayNode = document.createElement('DIV');
-            document.body.appendChild(this.overlayNode);
         } else {
             if (!found || error) {
                 this.startScanning();
@@ -208,6 +210,9 @@ class QRScannerDialogBox extends PureComponent {
      */
     async hide() {
         if (this.overlayNode) {
+            ReactDOM.unmountComponentAtNode(this.overlayNode);
+            document.body.removeChild(this.overlayNode);
+            this.overlayNode = null;
             if (QRScanner) {
                 await QRScanner.hideAsync();
                 this.stopScanning();
@@ -218,9 +223,6 @@ class QRScannerDialogBox extends PureComponent {
                     }
                 }
             }
-            ReactDOM.unmountComponentAtNode(this.overlayNode);
-            document.body.removeChild(this.overlayNode);
-            this.overlayNode = null;
         }
     }
 
