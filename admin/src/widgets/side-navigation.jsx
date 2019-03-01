@@ -5,6 +5,7 @@ import React, { PureComponent } from 'react';
 import NavigationTree from 'widgets/navigation-tree';
 import Tooltip from 'widgets/tooltip';
 import SignOffMenu from 'widgets/sign-off-menu';
+import ErrorBoundary from 'widgets/error-boundary';
 
 import './side-navigation.scss';
 
@@ -46,6 +47,7 @@ class SideNavigation extends PureComponent {
      * @return {ReactElement}
      */
     render() {
+        let { env } = this.props;
         let { ready } = this.state;
         let className = 'side-navigation';
         if (!ready) {
@@ -53,9 +55,11 @@ class SideNavigation extends PureComponent {
         }
         return (
             <nav className={className}>
-                {this.renderHeader()}
-                {this.renderNavTree()}
-                {this.renderBottomButtons()}
+                <ErrorBoundary env={env}>
+                    {this.renderHeader()}
+                    {this.renderNavTree()}
+                    {this.renderBottomButtons()}
+                </ErrorBoundary>
             </nav>
         );
     }

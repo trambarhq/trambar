@@ -7,7 +7,7 @@ System Architecture
 
 ## Trambar subsystems
 
-Trambar Server is composed of [Nginx](https://www.nginx.com/), [PostgreSQL](https://www.postgresql.org/), and scripts running on [Node.js](https://nodejs.org/en/). Trambar Web Client is an HTML5 application based on the [React](https://reactjs.org/) framework.
+Trambar Server is composed of [Nginx](https://www.nginx.com/), [PostgreSQL](https://www.postgresql.org/), and scripts running on [Node.js](https://nodejs.org/en/). Trambar Web Client is a front-end based on the [React](https://reactjs.org/) framework.
 
 Trambar Mobile Client runs a variant of the Web Client on [Cordova](https://cordova.apache.org/).
 
@@ -189,20 +189,20 @@ Trambar services that do not accept requests directly from the front-end code ar
 
 ## Basic structure
 
-Trambar Web Client is based on React. The React component tree is the app's main structure. Using React's [Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en) or [Firefox browser extension](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/), you can easily examine the running state of most parts of Trambar.
+Trambar Web Client is based on React. The React component tree is the program's main structure. Using React's [Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en) or [Firefox browser extension](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/), you can easily examine the running state of most parts of Trambar.
 
 ![React component tree](img/component-tree.png)
 
 ## Bootstrap sequence
 
 1. After HTML page load event triggers bootstrap function ([main.js](https://github.com/trambarhq/trambar/blob/master/client/src/main.js))
-2. External libraries ([libraries.js](https://github.com/trambarhq/trambar/blob/master/client/src/libraries.js)) are asynchronously loaded, along with application code
-3. AppCore ([app-core.js](https://github.com/trambarhq/trambar/blob/master/common/src/app-core.js)) initiates data sources
-4. `<Application />` is rendered, with props returned by AppCore ([application.jsx](https://github.com/trambarhq/trambar/blob/master/client/src/application.jsx))
+2. External libraries ([libraries.js](https://github.com/trambarhq/trambar/blob/master/client/src/libraries.js)) are asynchronously loaded, along with front-end code
+3. `FrontEndCore` ([front-end-core.js](https://github.com/trambarhq/trambar/blob/master/common/src/front-end-core.js)) initiates data sources
+4. `<FrontEnd />` is rendered, with props returned by `FrontEndCore` ([front-end.jsx](https://github.com/trambarhq/trambar/blob/master/client/src/front-end.jsx))
 
 ## Data sources
 
-AppCore is responsible for initiating data sources used by the application. It sets up the basic plumbing underlying the React UI code. It's used by both the Web Client and the Administrative Console.
+FrontEndCore is responsible for initiating data sources used by the front-end. It sets up the basic plumbing underlying the React UI code. It's used by both the Web Client and the Administrative Console.
 
 Data sources are classes that provide data. There are five of them:
 
@@ -230,7 +230,7 @@ The five aforementioned data sources all emit the `change` event:
 
 `RemoteDataSource` fires the event when it receives a change notification from the remote server--and also after it has performed authentication or storage operations.
 
-`RouteManager` fires the event when the user has navigated to a different part of the app (by clicking a hyperlink, for instance).
+`RouteManager` fires the event when the user has navigated to a different part of the site (by clicking a hyperlink, for instance).
 
 `LocaleManager` fires the event when the UI language is changed.
 
@@ -238,7 +238,7 @@ The five aforementioned data sources all emit the `change` event:
 
 `EnvironmentMonitor` will fire the event whenever the browser environment changes in some way (e.g. resizing of the browser window).
 
-In each case, `Application` responds by creating a new instance of the component's proxy object. This behavior is tailored for the typical response of React components' `shouldComponentUpdate` method. So called pure components don't perform any work unless they receive new props. When a prop is an object, only a shallow comparison is done usually. Creation of new proxy objects is designed specifically to trip this detection mechanism.
+In each case, `FrontEnd` responds by creating a new instance of the component's proxy object. This behavior is tailored for the typical response of React components' `shouldComponentUpdate` method. So called pure components don't perform any work unless they receive new props. When a prop is an object, only a shallow comparison is done usually. Creation of new proxy objects is designed specifically to trip this detection mechanism.
 
 ## Asynchronous operations
 

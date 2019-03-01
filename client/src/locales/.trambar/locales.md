@@ -1,6 +1,6 @@
 Client Localization Packages
 ----------------------------
-Support for different languages in the end-user application.
+Support for different languages in the web client.
 
 ```match
 *.js

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import AppCore from 'app-core';
+import FrontEndCore from 'front-end-core';
 import CORSRewriter from 'routing/cors-rewriter';
 
 import ComponentRefs from 'utils/component-refs';
@@ -25,7 +25,7 @@ import ErrorBoundary from 'widgets/error-boundary';
 import 'setimmediate';
 import 'utils/lodash-extra';
 import 'font-awesome-webpack';
-import 'application.scss';
+import 'front-end.scss';
 import 'colors.scss';
 
 const widthDefinitions = {
@@ -36,8 +36,8 @@ const widthDefinitions = {
     'ultra-wide': 2000,
 };
 
-class Application extends PureComponent {
-    static displayName = 'Application';
+class FrontEnd extends PureComponent {
+    static displayName = 'FrontEnd';
     static coreConfiguration = {
         area: 'admin',
         routeManager: {
@@ -102,7 +102,7 @@ class Application extends PureComponent {
             payloads,
         }, route.pageParams);
         return (
-            <div className="application" id="application">
+            <div className="front-end">
                 <SideNavigation {...navProps} />
                 <section className="page-view-port">
                     <div className="scroll-box">
@@ -300,9 +300,9 @@ class Application extends PureComponent {
 }
 
 export {
-    Application as default,
-    Application,
-    AppCore,
+    FrontEnd as default,
+    FrontEnd,
+    FrontEndCore,
 };
 
 // pull in modules here so they won't be placed in the JS files of the pages
@@ -331,7 +331,7 @@ import Notifier from 'transport/notifier';
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
-    Application.propTypes = {
+    FrontEnd.propTypes = {
         envMonitor: PropTypes.instanceOf(EnvironmentMonitor).isRequired,
         dataSource: PropTypes.instanceOf(RemoteDataSource).isRequired,
         localeManager: PropTypes.instanceOf(LocaleManager).isRequired,

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import ComponentRefs from 'utils/component-refs';
-import AppCore from 'app-core';
+import FrontEndCore from 'front-end-core';
 import { routes } from 'routing';
 import CORSRewriter from 'routing/cors-rewriter';
 import SchemaRewriter from 'routing/schema-rewriter';
@@ -26,7 +26,7 @@ import ErrorBoundary from 'widgets/error-boundary';
 import Time from 'widgets/time';
 
 import 'utils/lodash-extra';
-import 'application.scss';
+import 'front-end.scss';
 import 'font-awesome-webpack';
 
 const widthDefinitions = {
@@ -35,8 +35,8 @@ const widthDefinitions = {
     'triple-col': 1300,
 };
 
-class Application extends PureComponent {
-    static displayName = 'Application';
+class FrontEnd extends PureComponent {
+    static displayName = 'FrontEnd';
     static coreConfiguration = {
         area: 'client',
         routeManager: {
@@ -90,7 +90,7 @@ class Application extends PureComponent {
         } else {
             mode = 'single-col';
         }
-        let className = `application ${mode}`;
+        let className = `front-end ${mode}`;
         if (env.androidKeyboard) {
             className += ` keyboard`;
         }
@@ -101,7 +101,7 @@ class Application extends PureComponent {
     }
 
     /**
-     * Render the application
+     * Render the front-end
      *
      * @return {ReactElement}
      */
@@ -124,7 +124,6 @@ class Application extends PureComponent {
         };
         let topLevelProps = {
             className: this.getClassName(),
-            id: 'application',
             onMouseDown: TopLevelMouseTrap.handleMouseDown,
             onMouseUp: TopLevelMouseTrap.handleMouseUp,
         };
@@ -540,9 +539,9 @@ class Application extends PureComponent {
 }
 
 export {
-    Application as default,
-    Application,
-    AppCore,
+    FrontEnd as default,
+    FrontEnd,
+    FrontEndCore,
 };
 
 // pull in modules here so they won't be placed in the JS files of the pages
@@ -574,7 +573,7 @@ import CodePush from 'transport/code-push';
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
 
-    Application.propTypes = {
+    FrontEnd.propTypes = {
         envMonitor: PropTypes.instanceOf(EnvironmentMonitor).isRequired,
         dataSource: PropTypes.instanceOf(RemoteDataSource).isRequired,
         localeManager: PropTypes.instanceOf(LocaleManager).isRequired,

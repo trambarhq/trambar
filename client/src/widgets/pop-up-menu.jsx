@@ -165,8 +165,7 @@ class PopUpMenu extends PureComponent {
      * Remove mousedown handler on unmount
      */
     componentWillUnmount() {
-        let appContainer = document.getElementById('application');
-        appContainer.removeEventListener('mousedown', this.handleTopLevelMouseDown);
+        TopLevelMouseTrap.removeEventListener('mousedown', this.handleTopLevelMouseDown);
         this.removePopOutContainer();
     }
 
@@ -266,8 +265,8 @@ function getRelativePosition(node, container) {
 }
 
 function getPageNode() {
-    let appContainer = document.getElementById('app-container');
-    return appContainer.getElementsByClassName('page-container')[0];
+    let container = document.getElementById('react-container');
+    return container.getElementsByClassName('page-container')[0];
 }
 
 PopUpMenu.defaultProps = {

@@ -4,25 +4,21 @@ import libraries from 'libraries';
 window.addEventListener('load', initialize);
 
 async function initialize(evt) {
-    let appContainer = document.getElementById('app-container');
-    if (!appContainer) {
-        throw new Error('Unable to find app element in DOM');
-    }
+    let container = document.getElementById('react-container');
 
-    // load application code and support libraries
+    // load front-end code and support libraries
     let importFuncs = {};
     for (let key in libraries) {
         importFuncs[key] = libraries[key];
     }
-    importFuncs['app'] = () => import('application' /* webpackChunkName: "app" */);
+    importFuncs['front-end'] = () => import('front-end' /* webpackChunkName: "front-end" */);
     let modules = await BootstrapLoader.load(importFuncs, showProgress);
-    let AppCore = modules['app'].AppCore;
-    let Application = modules['app'].default;
+    let { FrontEndCore, FrontEnd } = modules['front-end'];
     let React = modules['react'];
     let ReactDOM = modules['react-dom'];
-    let appProps = await AppCore(Application.coreConfiguration);
-    let appElement = React.createElement(Application, appProps);
-    ReactDOM.render(appElement, appContainer);
+    let props = await FrontEndCore(FrontEnd.coreConfiguration);
+    let element = React.createElement(FrontEnd, props);
+    ReactDOM.render(element, container);
     hideSplashScreen();
 }
 

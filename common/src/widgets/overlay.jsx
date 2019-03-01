@@ -39,10 +39,11 @@ class Overlay extends PureComponent {
     getPortalDestination() {
         let node = document.getElementById('overlay');
         if (!node) {
-            let app = document.getElementById('application');
+            let frontEnd = document.getElementById('react-container');
+            let root = frontEnd.firstChild;
             node = document.createElement('DIV');
             node.id = 'overlay';
-            app.appendChild(node);
+            root.appendChild(node);
         }
         return node;
     }
