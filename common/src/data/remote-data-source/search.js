@@ -184,7 +184,7 @@ class Search extends Operation {
     getUpdateList(ids, gns) {
         let objects = (this.invalid || !this.results) ? [] : this.results;
         let updated = [];
-        for (let [ i, id ] of ids.entries()) {
+        for (let [ i, id ] of _.entries(ids)) {
             let gn = gns[i];
             let index = _.sortedIndexBy(objects, { id }, 'id');
             let object = (objects) ? objects[index] : null;

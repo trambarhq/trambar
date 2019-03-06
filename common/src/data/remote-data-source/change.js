@@ -224,7 +224,7 @@ class Change {
         if (this.canceled) {
             return;
         }
-        for (let [ i, uncommittedObject ] of this.objects.entries()) {
+        for (let [ i, uncommittedObject ] of _.entries(this.objects)) {
             if (this.removed[i]) {
                 continue;
             }

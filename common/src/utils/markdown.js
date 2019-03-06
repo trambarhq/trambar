@@ -246,7 +246,7 @@ function renderListTokens(listTokens, onReference) {
     });
 
     // process at the inline level
-    for (let [ index, listToken ] of listTokens.entries()) {
+    for (let [ index, listToken ] of _.entries(listTokens)) {
         let blockTokens = blockTokenLists[index];
         if (listToken instanceof Array) {
             for (let tokens of blockTokens) {

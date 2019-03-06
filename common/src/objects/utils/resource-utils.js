@@ -19,7 +19,7 @@ function mergeLists(local, remote, common) {
     let commonToRemote = findIndexMapping(common, remote);
     let localToRemote = findIndexMapping(local, remote);
     let list = [];
-    for (let [ indexC, resC ] of common.entries()) {
+    for (let [ indexC, resC ] of _.entries(common)) {
         let indexL = commonToLocal[indexC];
         let indexR = commonToRemote[indexC];
         let resL = local[indexL];
@@ -34,13 +34,13 @@ function mergeLists(local, remote, common) {
             list.push(d);
         }
     }
-    for (let [ indexR, resR ] of common.entries()) {
+    for (let [ indexR, resR ] of _.entries(common)) {
         if (!_.includes(commonToRemote, indexR)) {
             // add resource that wasn't there before
             list.push({ resource: resR, index: indexR });
         }
     }
-    for (let [ indexL, resL ] of local.entries()) {
+    for (let [ indexL, resL ] of _.entries(local)) {
         let indexR = localToRemote[indexL];
         let resR = remote[indexR];
         if (!_.includes(commonToLocal, indexL) && !resR) {
@@ -64,7 +64,7 @@ function mergeLists(local, remote, common) {
 function findIndexMapping(listA, listB) {
     let map = [];
     let mapped = [];
-    for (let [ indexA, a ] of listA.entries()) {
+    for (let [ indexA, a ] of _.entries(listA)) {
         let keyA = a.url || a.payload_token;
         let indexB = _.findIndex(listB, (b, indexB) => {
             let keyB = b.url || b.payload_token;

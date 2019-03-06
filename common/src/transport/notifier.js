@@ -65,7 +65,7 @@ class Notifier extends EventEmitter {
         let address = this.address;
         for (let [ key, info ] of _.entries(payload.changes)) {
             let [ schema, table ] = _.split(key, '.');
-            for (let [ index, id ] of info.ids.entries()) {
+            for (let [ index, id ] of _.entries(info.ids)) {
                 let gn = info.gns[index];
                 list.push({ address, schema, table, id, gn });
             }

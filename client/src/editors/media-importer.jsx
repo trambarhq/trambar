@@ -92,7 +92,7 @@ class MediaImporter extends PureComponent {
             return this.getResourceType(file.type);
         });
         let placeholders = this.addResourcePlaceholders(types);
-        for (let [ index, file ] of files.entries()) {
+        for (let [ index, file ] of _.entries(files)) {
             // import the file then replace the placeholder
             try {
                 let res = await this.importFile(file);
