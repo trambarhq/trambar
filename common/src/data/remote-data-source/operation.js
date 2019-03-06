@@ -82,11 +82,9 @@ class Operation {
     }
 
     /**
-     * [fail description]
+     * Mark the operation as failed
      *
-     * @param  {[type]} err
-     *
-     * @return {[type]}
+     * @param  {Error} err
      */
     fail(err) {
         this.finish(undefined);

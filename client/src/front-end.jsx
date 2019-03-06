@@ -360,7 +360,12 @@ class FrontEnd extends PureComponent {
      */
     handleStupefaction = (evt) => {
         let { routeManager } = this.props;
-        routeManager.substitute('error-page');
+        let { route } = this.state;
+        if (route.name !== 'start-page') {
+            // go to error page if unless we've been redirected to the
+            // start page already due to a violation error
+            routeManager.substitute('error-page');
+        }
     }
 
     /**

@@ -183,11 +183,15 @@ class RemoteDataSource extends EventEmitter {
         }
         if (required) {
             if (!search.isMeetingExpectation()) {
-                this.triggerEvent(new RemoteDataSourceEvent('stupefaction', this, {
-                    query,
-                    results: search.results
-                }));
-                throw new HTTPError(404);
+                if (search.failed) {
+                    throw search.error;
+                } else {
+                    this.triggerEvent(new RemoteDataSourceEvent('stupefaction', this, {
+                        query,
+                        results: search.results
+                    }));
+                    throw new HTTPError(404);
+                }
             }
         }
         return search.results;
@@ -1165,7 +1169,6 @@ class RemoteDataSource extends EventEmitter {
                 }
             }
 
-
             if (newResults !== search.results) {
                 search.finish(newResults);
 
@@ -1241,38 +1244,17 @@ class RemoteDataSource extends EventEmitter {
      *
      * @return {Promise<String>}
      */
-    getRemoteSignature(location) {
+    async getRemoteSignature(location) {
         let { address, schema } = location;
         let cacheSignature = _.find(this.cacheSignatures, { address, schema });
         if (!cacheSignature) {
             cacheSignature = new CacheSignature(address, schema);
-            cacheSignature.promise = this.fetchRemoteSignature(cacheSignature);
+            cacheSignature.promise = this.performRemoteAction(location, 'signature');
             this.cacheSignatures.push(cacheSignature);
         }
-        return cacheSignature.promise;
-    }
-
-    async fetchRemoteSignature(cacheSignature) {
-        let session = this.obtainSession(cacheSignature);
-        try {
-            let { schema } = cacheSignature;
-            let { basePath } = this.options;
-            let url = `${session.address}${basePath}/signature/${schema}`;
-            let options = { responseType: 'json', contentType: 'json' };
-            let payload = { auth_token: session.token };
-            let result = await HTTPRequest.fetch('POST', url, payload, options);
-            cacheSignature.signature = _.get(result, 'signature', '');
-            return cacheSignature.signature;
-        } catch (err) {
-            if (err.statusCode === 401) {
-                this.clearRecentOperations(session);
-                this.clearCachedSchemas(session);
-                this.discardSession(session);
-                this.triggerEvent(new RemoteDataSourceEvent('expiration', this, { session }));
-                this.triggerEvent(new RemoteDataSourceEvent('change', this));
-            }
-            throw err;
-        }
+        let result = await cacheSignature.promise;
+        cacheSignature.signature = _.get(result, 'signature', '');
+        return cacheSignature.signature;
     }
 
     /**
@@ -1515,7 +1497,9 @@ class RemoteDataSource extends EventEmitter {
             throw new HTTPError(400, 'No schema specified');
         }
         if (!table) {
-            throw new HTTPError(400, 'No table specified');
+            if (action !== 'signature') {
+                throw new HTTPError(400, 'No table specified');
+            }
         }
         let flags;
         if (action === 'retrieval' || action === 'storage') {
@@ -1523,12 +1507,12 @@ class RemoteDataSource extends EventEmitter {
         } else if (action === 'discovery') {
             flags = _.omit(this.options.discoveryFlags, 'include_uncommitted');
         }
-        let url = `${address}${basePath}/${action}/${schema}/${table}/`;
+        let url = `${address}${basePath}/${action}/${schema}/`;
+        if (action !== 'signature') {
+            url += `${table}/`;
+        }
         let req = _.assign({}, payload, flags, { auth_token: session.token });
-        let options = {
-            contentType: 'json',
-            responseType: 'json',
-        };
+        let options = { contentType: 'json', responseType: 'json' };
         this.requestCount++;
         this.triggerEvent(new RemoteDataSourceEvent('requeststart', this));
         let result;
