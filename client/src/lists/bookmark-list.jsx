@@ -98,9 +98,9 @@ class BookmarkListSync extends PureComponent {
      * @return {ReactElement}
      */
     render() {
-        let { bookmarks, highlightStoryID, scrollToStoryID } = this.props;
+        let { bookmarks, stories, highlightStoryID, scrollToStoryID } = this.props;
         let anchorStoryID = highlightStoryID || scrollToStoryID;
-        bookmarks = sortBookmarks(bookmarks);
+        bookmarks = sortBookmarks(bookmarks, stories);
         let smartListProps = {
             items: bookmarks,
             behind: 4,
@@ -184,9 +184,6 @@ class BookmarkListSync extends PureComponent {
         let { repos, access, highlightStoryID } = this.props;
         let bookmark = evt.item;
         let story = findStory(stories, bookmark);
-        if (!story) {
-            return null;
-        }
 
         // see if it's being editted
         let editing = false;
@@ -280,7 +277,6 @@ class BookmarkListSync extends PureComponent {
                 return <div className="bookmark-view" style={{ height }} />
             }
         }
-
     }
 
     /**
@@ -328,7 +324,10 @@ const array = memoizeWeak([], function(object) {
     return [ object ];
 });
 
-const sortBookmarks = memoizeWeak(null, function(bookmarks) {
+const sortBookmarks = memoizeWeak(null, function(bookmarks, stories) {
+    bookmarks = _.filter(bookmarks, (bookmark) => {
+        return _.find(stories, { id: bookmark.story_id });
+    });
     return _.orderBy(bookmarks, [ 'id' ], [ 'desc' ]);
 });
 

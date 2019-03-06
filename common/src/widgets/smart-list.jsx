@@ -722,10 +722,10 @@ class SmartList extends Component {
     handleTransitionEnd = (evt) => {
         let { slots, currentAnchor } = this.state;
         slots = _.slice(slots);
-        if (evt.propertyName === 'opacity') {
-            let slot = _.find(slots, { node: evt.target });
-            if (slot) {
-                if (slot.state === 'appearing') {
+        let slot = _.find(slots, { node: evt.target });
+        if (slot) {
+            if (slot.state === 'appearing') {
+                if (evt.propertyName === 'opacity') {
                     // slot has transitioned in--render normally from now on
                     slot.state = 'present';
                     slot.transition = false;
@@ -738,11 +738,8 @@ class SmartList extends Component {
                         this.scrollToAnchorNode = null;
                     }
                 }
-            }
-        } else if (evt.propertyName === 'height') {
-            let slot = _.find(slots, { node: evt.target });
-            if (slot) {
-                if (slot.state === 'disappearing') {
+            } else if (slot.state === 'disappearing') {
+                if (evt.propertyName === 'height' || slot.node.clientHeight === 0) {
                     // slot has transitioned out--remove it
                     let index = _.indexOf(slots, slot);
                     slots.splice(index, 1);
