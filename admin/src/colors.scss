@@ -41,12 +41,12 @@ $navigation-text-color: $white;
 $navigation-hover-text-color: $light-blue;
 $navigation-disabled-text-color: #2483b3;
 $navigation-menu-text-color: #777777;
-$navigation-menu-button-text-color: #0077b3;
+$navigation-menu-button-text-color: lighten($dark-blue, 10%);
 $navigation-menu-button-hover-text-color: $light-blue;
 
-$alert-bar-text-color: #0077b3;
+$alert-bar-text-color: lighten($dark-blue, 10%);
 $alert-bar-hover-text-color: $light-blue;
-$alert-bar-progress-bar-color: #0077b3;
+$alert-bar-progress-bar-color: lighten($dark-blue, 10%);
 
 $dialog-box-background-color: $dark-blue;
 $dialog-box-text-color: $white;
