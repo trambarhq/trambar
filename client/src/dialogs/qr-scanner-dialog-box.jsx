@@ -305,7 +305,7 @@ class CameraOverlay extends PureComponent {
      * Hide the app container on mount
      */
     componentDidMount() {
-        let app = document.getElementById('app-container');
+        let app = document.getElementById('react-container');
         app.style.visibility = 'hidden';
     }
 
