@@ -313,7 +313,7 @@ class CameraOverlay extends PureComponent {
      * Show the app container again on unmount
      */
     componentWillUnmount() {
-        let app = document.getElementById('app-container');
+        let app = document.getElementById('react-container');
         app.style.visibility = '';
     }
 }
