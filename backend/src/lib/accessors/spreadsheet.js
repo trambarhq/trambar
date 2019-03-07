@@ -78,7 +78,7 @@ class Spreadsheet extends Data {
         let table = this.getTableName(schema);
         let sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
-            GRANT SELECT ON ${table} TO client_role;
+            GRANT SELECT, UPDATE ON ${table} TO client_role;
         `;
         await db.execute(sql);
     }

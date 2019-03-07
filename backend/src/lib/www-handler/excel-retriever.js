@@ -1,7 +1,39 @@
-const _ = require('lodash');
-const Bluebird = require('bluebird');
-const FS = Bluebird.promisifyAll(require('fs'));
-const CrossFetch = require('cross-fetch');
+import _ from 'lodash';
+import CrossFetch from 'cross-fetch';
+import HTTPError from 'errors/http-error';
+import Spreadsheet from 'accessors/spreadsheet';
+
+import * as ExcelParser from 'www-handler/excel-parser';
+
+async function fetch(db, schema, name) {
+    let criteria = { name, deleted: false };
+    let spreadsheet = await Spreadsheet.findOne(db, schema, criteria, '*');
+    if (!spreadsheet) {
+        throw new HTTPError(404);
+    }
+    if (!_.get(spreadsheet, 'details.data')) {
+        spreadsheet = await update(db, schema, spreadsheet);
+    }
+    return spreadsheet;
+}
+
+async function update(db, schema, spreadsheet) {
+    let buffer = await fetchFile(spreadsheet.url, spreadsheet.etag);
+    if (!buffer) {
+        return null;
+    }
+    let { etag, type } = buffer;
+    if (!etag) {
+        throw new HTTPError(400);
+    }
+    let data = await ExcelParser.parse(buffer);
+    let spreadsheetAfter = {
+        id: spreadsheet.id,
+        details: { type, data },
+        etag,
+    };
+    return Spreadsheet.updateOne(db, schema, spreadsheetAfter);
+}
 
 async function fetchFile(url, etag) {
     let fileURL = getFileURL(url);
@@ -60,5 +92,6 @@ function getOneDriveShareURL(url) {
 }
 
 export {
-
+    fetch,
+    update,
 };

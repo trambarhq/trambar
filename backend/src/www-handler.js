@@ -3,8 +3,10 @@ import CORS from 'cors';
 import BodyParser from 'body-parser';
 import Moment from 'moment';
 import DNSCache from 'dnscache';
-
+import Database from 'database';
 import * as Shutdown from 'shutdown';
+
+import * as ExcelRetriever from 'www-handler/excel-retriever';
 
 let server;
 
@@ -16,9 +18,9 @@ async function start() {
     app.use(CORS());
     app.use(BodyParser.json());
     app.set('json spaces', 2);
-    app.get('/srv/www/wiki/:slug?', handleWikiRequest);
-    app.get('/srv/www/excel/:file?', handleExcelRequest);
-    app.get('/srv/www/*', handlePageRequest);
+    app.get('/srv/www/:schema/wiki/:slug?', handleWikiRequest);
+    app.get('/srv/www/:schema/excel/:name?', handleExcelRequest);
+    app.get('/srv/www/:schema/*', handlePageRequest);
     app.use(handleError);
 
     await new Promise((resolve, reject) => {
@@ -56,7 +58,18 @@ async function handleWikiRequest(req, res, next) {
 
 async function handleExcelRequest(req, res, next) {
     try {
-        res.json({ excel: true });
+        let db = await Database.open();
+        let { schema, name } = req.params;
+        let spreadsheet = await ExcelRetriever.fetch(db, schema, name);
+        let { data } = spreadsheet.details;
+        res.json(data);
+
+        let spreadsheetUpdated = await ExcelRetriever.update(db, schema, spreadsheet);
+        if (spreadsheetUpdated) {
+            console.log('updated', spreadsheetUpdated);
+        } else {
+            console.log('not modified');
+        }
     } catch (err) {
         next(err);
     }
