@@ -22,6 +22,7 @@ import User from 'accessors/user';
 import Bookmark from 'accessors/bookmark';
 import Listing from 'accessors/listing';
 import Reaction from 'accessors/reaction';
+import Spreadsheet from 'accessors/spreadsheet';
 import Statistics from 'accessors/statistics';
 import Story from 'accessors/story';
 
@@ -265,6 +266,7 @@ const projectAccessors = [
     Listing,
     Notification,
     Reaction,
+    Spreadsheet,
     Statistics,
     Story,
     Task,
