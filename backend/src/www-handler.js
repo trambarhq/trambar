@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import Express from 'express';
 import CORS from 'cors';
 import BodyParser from 'body-parser';
@@ -61,14 +62,11 @@ async function handleExcelRequest(req, res, next) {
         let db = await Database.open();
         let { schema, name } = req.params;
         let spreadsheet = await ExcelRetriever.fetch(db, schema, name);
-        let { data } = spreadsheet.details;
-        res.json(data);
+        controlCache(res, { 's-maxage': 5 }, spreadsheet.etag);
+        res.json(spreadsheet.details.data);
 
-        let spreadsheetUpdated = await ExcelRetriever.update(db, schema, spreadsheet);
-        if (spreadsheetUpdated) {
-            console.log('updated', spreadsheetUpdated);
-        } else {
-            console.log('not modified');
+        if (spreadsheet.changed) {
+
         }
     } catch (err) {
         next(err);
@@ -79,8 +77,33 @@ function handleError(err, req, res, next) {
     if (!res.headersSent) {
         let status = err.status || err.statusCode || 400;
         res.type('text').status(status).send(err.message);
+    } else {
+        console.error(err);
     }
-    console.error(err);
+}
+
+const DEFAULT_CACHE_CONTROL = {
+    'public': true,
+    'max-age': 0,
+    's-maxage': 60,
+    'must-revalidate': true,
+    'proxy-revalidate': true,
+};
+
+function controlCache(res, override, etag) {
+    let params = _.assign({}, DEFAULT_CACHE_CONTROL, override);
+    let items = [];
+    for (let [ name, value ] of _.entries(params)) {
+        if (typeof(value) === 'number') {
+            items.push(`${name}=${value}`);
+        } else if (value === true) {
+            items.push(name);
+        }
+    }
+    res.set({ 'Cache-Control': items.join() });
+    if (etag) {
+        res.set({ 'ETag': etag });
+    }
 }
 
 if (process.argv[1] === __filename) {

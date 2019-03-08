@@ -11,29 +11,28 @@ async function fetch(db, schema, name) {
     if (!spreadsheet) {
         throw new HTTPError(404);
     }
-    if (!_.get(spreadsheet, 'details.data')) {
-        spreadsheet = await update(db, schema, spreadsheet);
+    let buffer = await fetchFile(spreadsheet.url, spreadsheet.etag);
+    if (buffer) {
+        let { etag, type } = buffer;
+        if (!etag) {
+            throw new HTTPError(400);
+        }
+        try {
+            let data = await ExcelParser.parse(buffer);
+            let spreadsheetAfter = {
+                id: spreadsheet.id,
+                details: { type, data },
+                etag,
+            };
+            spreadsheet = await Spreadsheet.updateOne(db, schema, spreadsheetAfter);
+            spreadsheet.changed = true;
+        } catch (err) {
+            throw new HTTPError(400);
+        }
     }
     return spreadsheet;
 }
 
-async function update(db, schema, spreadsheet) {
-    let buffer = await fetchFile(spreadsheet.url, spreadsheet.etag);
-    if (!buffer) {
-        return null;
-    }
-    let { etag, type } = buffer;
-    if (!etag) {
-        throw new HTTPError(400);
-    }
-    let data = await ExcelParser.parse(buffer);
-    let spreadsheetAfter = {
-        id: spreadsheet.id,
-        details: { type, data },
-        etag,
-    };
-    return Spreadsheet.updateOne(db, schema, spreadsheetAfter);
-}
 
 async function fetchFile(url, etag) {
     let fileURL = getFileURL(url);
@@ -93,5 +92,4 @@ function getOneDriveShareURL(url) {
 
 export {
     fetch,
-    update,
 };
