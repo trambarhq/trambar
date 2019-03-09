@@ -15,6 +15,7 @@ import Project from 'accessors/project';
 import Repo from 'accessors/repo';
 import Role from 'accessors/role';
 import Server from 'accessors/server';
+import Session from 'accessors/session';
 import Subscription from 'accessors/subscription';
 import System from 'accessors/system';
 import User from 'accessors/user';
@@ -37,6 +38,7 @@ const accessors = [
     Repo,
     Role,
     Server,
+    Session,
     System,
     Task,
     User,
@@ -85,7 +87,7 @@ async function handleDatabaseChanges(events) {
     let system = await System.findOne(db, 'global', { deleted: false }, '*');
     // see who's listening
     let listeners = await ListenerManager.find(db);
-    // request revalidation of cache when access level changes
+    // request revalidation of cache if necessary (silent)
     await sendRevalidationRequests(db, events, listeners, system);
     // send change messages (silent)
     await sendChangeNotifications(db, events, listeners, system);
@@ -107,11 +109,26 @@ async function sendRevalidationRequests(db, events, listeners, system) {
     let messages = [];
     for (let listener of listeners) {
         for (let event of events) {
-            if (event.table === 'user' && event.id === listener.user.id) {
-                if (event.diff.type) {
-                    let revalidation = { schema: '*' };
-                    messages.push(new Message('revalidation', listener, { revalidation }, system));
+            let revalidate = false;
+            if (event.table === 'user') {
+                if (event.id === listener.user.id) {
+                    // see if the access level changed
+                    if (event.diff.type) {
+                        revalidate = true;
+                    }
                 }
+            } else if (event.table === 'session') {
+                if (event.current.user_id === listener.user.id) {
+                    // see if the session was deleted
+                    if (event.diff.deleted && event.current.deleted) {
+                        revalidate = true;
+                    }
+                }
+            }
+
+            if (revalidate) {
+                let revalidation = { schema: '*' };
+                messages.push(new Message('revalidation', listener, { revalidation }, system));
             }
         }
     }
