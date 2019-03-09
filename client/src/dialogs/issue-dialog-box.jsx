@@ -73,6 +73,8 @@ class IssueDialogBox extends PureComponent {
                 }
                 return { newIssue, originalIssue: issue };
             }
+        } else {
+            return { newIssue: undefined, originalIssue: undefined };
         }
         return null;
     }
