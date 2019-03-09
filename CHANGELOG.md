@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 1.3.0
+
+* Refactored code to use async/await syntax.
+* Reworked cache mechanism to quicken loading on mobile devices.
+* Improved appearance of audio recording dialog box.
+* Added Lithuanian localization.
+* Fixed gap in bookmarks page when a story is deleted.
+* Fixed event import when there're deleted merge requests.
+* Fixed sign off confirmation dialog box.
+* Fixed text editing in settings page.
+* Fixed other minor glitches.
+
 ## 1.2.1
 
 * Fixed camera selection
@@ -18,12 +30,10 @@
 * Refactored data providers.
 * Consolidated SASS color definitions.
 * Improved build process.
-
 * Fixed task list merging.
 * Fixed non-updating of milestone titles.
 * Fixed unnecessary reloading by image editor.
 * Fixed notification badge clearing.
-* Fixed multiple.
 * Fixed uploading bug.
 
 ## 1.1.0
@@ -34,7 +44,6 @@
 * Enabled gzip compression of HTTP response.
 * Made pop-up menu bigger on mobile.
 * Implemented OAuth deactivation.
-
 * Fixed CodePush app updating mechanism.
 * Fixed auto-renewal of Certbot SSL certificate.
 * Fixed handling of branch and tag events.
