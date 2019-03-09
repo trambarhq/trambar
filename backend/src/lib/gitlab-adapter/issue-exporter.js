@@ -128,8 +128,7 @@ async function exportStoryRemove(db, system, project, story, repo, task) {
     let glProjectID = issueLink.project.id;
     let glIssueNumber = issueLink.issue.number;
     let userLink = findUserLink(user, server);
-    let glUserID = userLink.user.id;
-    await removeIssue(server, glProjectID, glIssueNumber, glUserID);
+    await removeIssue(server, glProjectID, glIssueNumber);
     let schema = project.name;
     let storyAfter = deleteIssueProperties(story, server);
     story = await Story.updateOne(db, schema, storyAfter);
@@ -181,8 +180,7 @@ async function exportStoryMove(db, system, project, story, fromRepo, toRepo, tas
     let glFromIssueNumber = issueLink.issue.number;
     let glToProjectID = toRepoLink.project.id;
     let userLink = findUserLink(user, server);
-    let glUserID = userLink.user.id;
-    let glIssue = await moveIssue(server, glFromProjectID, glFromIssueNumber, glToProjectID, glUserID);
+    let glIssue = await moveIssue(server, glFromProjectID, glFromIssueNumber, glToProjectID);
     let schema = project.name;
     let storyAfter = copyIssueProperties(story, server, toRepo, glIssue);
     story = await Story.updateOne(db, schema, storyAfter);
@@ -611,13 +609,12 @@ async function saveIssue(server, glProjectID, glIssueNumber, glIssue, glUserID) 
  * @param  {Server} server
  * @param  {Number} glProjectID
  * @param  {Number} glIssueNumber
- * @param  {Number} glUserID
  *
  * @return {Promise}
  */
-async function removeIssue(server, glProjectID, glIssueNumber, glUserID) {
+async function removeIssue(server, glProjectID, glIssueNumber) {
     let url = `/projects/${glProjectID}/issues/${glIssueNumber}`;
-    return Transport.remove(server, url, glUserID);
+    return Transport.remove(server, url);
 }
 
 /**
@@ -627,14 +624,13 @@ async function removeIssue(server, glProjectID, glIssueNumber, glUserID) {
  * @param  {Number} glSrcProjectID
  * @param  {Number} glSrcIssueNumber
  * @param  {Number} glDstProjectID
- * @param  {Number} glUserID
  *
  * @return {Promise<Object>}
  */
-async function moveIssue(server, glSrcProjectID, glSrcIssueNumber, glDstProjectID, glUserID) {
+async function moveIssue(server, glSrcProjectID, glSrcIssueNumber, glDstProjectID) {
     let url = `/projects/${glSrcProjectID}/issues/${glSrcIssueNumber}/move`;
     let props = { to_project_id: glDstProjectID };
-    return Transport.post(server, url, props, glUserID);
+    return Transport.post(server, url, props);
 }
 
 export {
