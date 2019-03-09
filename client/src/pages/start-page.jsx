@@ -75,26 +75,47 @@ class StartPage extends AsyncComponent {
                 props.system = info.system;
                 props.servers = info.servers;
             } else if (env.platform === 'cordova') {
+                this.sessionStartSystem = {};
                 props.projectLinks = await ProjectLinkFinder.findActiveLinks(db);
             }
         } else {
             // handle things normally after we've gained authorization
-            if (this.sessionStartSystem) {
-                props.system = this.sessionStartSystem;
+            if (env.platform === 'browser') {
+                if (this.sessionStartSystem) {
+                    props.system = this.sessionStartSystem;
 
-                // need to adjust the progressive rendering delay since Relaks
-                // by default disables it once a page has fully rendered
-                meanwhile.delay(undefined, 300);
+                    // need to adjust the progressive rendering delay since Relaks
+                    // by default disables it once a page has fully rendered
+                    meanwhile.delay(undefined, 500);
+                }
+                meanwhile.show(<StartPageSync {...props} />);
+                let currentUserID = await db.start();
+                props.currentUser = await UserFinder.findUser(db, currentUserID);
+                meanwhile.show(<StartPageSync {...props} />);
+                props.system = await SystemFinder.findSystem(db);
+                meanwhile.show(<StartPageSync {...props} />);
+                props.projects = await ProjectFinder.findActiveProjects(db, 1);
+                meanwhile.show(<StartPageSync {...props} />);
+                props.projectLinks = await ProjectLinkFinder.findActiveLinks(db);
+            } else if (env.platform === 'cordova') {
+                if (this.sessionStartSystem) {
+                    // save reason as above; we can let the QR scanner screen
+                    // linger for a little bit longer
+                    meanwhile.delay(undefined, 1000);
+                }
+                meanwhile.show(<StartPageSync {...props} />);
+                let currentUserID = await db.start();
+                props.currentUser = await UserFinder.findUser(db, currentUserID);
+                // we don't need the rest when we're transitioning out
+                if (!transitionOut) {
+                    meanwhile.show(<StartPageSync {...props} />);
+                    props.system = await SystemFinder.findSystem(db);
+                    meanwhile.show(<StartPageSync {...props} />);
+                    props.projects = await ProjectFinder.findActiveProjects(db, 1);
+                    meanwhile.show(<StartPageSync {...props} />);
+                    props.projectLinks = await ProjectLinkFinder.findActiveLinks(db);
+                }
             }
-            meanwhile.show(<StartPageSync {...props} />);
-            let currentUserID = await db.start();
-            props.currentUser = await UserFinder.findUser(db, currentUserID);
-            meanwhile.show(<StartPageSync {...props} />);
-            props.system = await SystemFinder.findSystem(db);
-            meanwhile.show(<StartPageSync {...props} />);
-            props.projects = await ProjectFinder.findActiveProjects(db, 1);
-            meanwhile.show(<StartPageSync {...props} />);
-            props.projectLinks = await ProjectLinkFinder.findActiveLinks(db);
         }
         return <StartPageSync {...props} />;
     }
@@ -784,7 +805,7 @@ class StartPageSync extends PureComponent {
                 user_id: userID,
                 session_handle: _.toLower(activationCode),
             };
-            return db.saveOne({ schema: 'global', table: 'device' }, device);
+            await db.saveOne({ schema: 'global', table: 'device' }, device);
         } catch (err) {
             db.releaseMobileSession();
             this.setState({ activationError: err });
