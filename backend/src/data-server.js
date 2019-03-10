@@ -31,8 +31,8 @@ import Statistics from 'accessors/statistics';
 import Story from 'accessors/story';
 import Task from 'accessors/task';
 
-const SESSION_LIFETIME_ADMIN = 60 * 24 * 1;
-const SESSION_LIFETIME_CLIENT = 60 * 24 * 30;
+const SESSION_LIFETIME_ADMIN = 1;
+const SESSION_LIFETIME_CLIENT = 30;
 const APP_AREA = (process.env.POSTGRES_USER === 'admin_role') ? 'admin' : 'client';
 
 let server;
@@ -352,13 +352,13 @@ async function checkAuthorization(db, token) {
     if (!userID) {
         throw new HTTPError(401);
     }
-    let minutes;
+    let days;
     if (APP_AREA === 'client') {
-        minutes = SESSION_LIFETIME_CLIENT;
+        days = SESSION_LIFETIME_CLIENT;
     } else if (APP_AREA === 'admin') {
-        minutes = SESSION_LIFETIME_ADMIN;
+        days = SESSION_LIFETIME_ADMIN;
     }
-    await Session.extend(db, token, minutes)
+    Session.extend(db, token, days)
     return userID;
 }
 
