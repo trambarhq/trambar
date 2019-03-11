@@ -170,7 +170,7 @@ class MediaDialogBox extends PureComponent {
                     maxHeight = Math.round(maxWidth / maxAspect);
                 }
             }
-            let style = { minWidth: maxWidth, height: maxHeight };
+            let style = { width: maxWidth, height: maxHeight };
             let contents;
             switch (res.type) {
                 case 'image':

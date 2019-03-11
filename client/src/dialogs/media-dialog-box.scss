@@ -21,6 +21,7 @@
         justify-content: center;
 
         IMG, CANVAS, svg {
+            width: 100%;
             object-fit: contain;
             display: block;
         }
