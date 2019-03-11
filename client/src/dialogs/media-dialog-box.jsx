@@ -412,14 +412,14 @@ class MediaDialogBox extends PureComponent {
      * Called when user swipe left
      */
     handleSwipeLeft = (evt) => {
-        this.changeSelection(-1);
+        this.changeSelection(+1);
     }
 
     /**
      * Called when user swipe right
      */
     handleSwipeRight = (evt) => {
-        this.changeSelection(+1);
+        this.changeSelection(-1);
     }
 }
 
