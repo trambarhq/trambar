@@ -1369,11 +1369,28 @@ class RemoteDataSource extends EventEmitter {
             return;
         }
         change.onDispatch = async (change) => {
-            let objects = change.deliverables();
             let location = change.location;
+            let deliverables = change.deliverables();
+            let objects = _.map(deliverables, (object) => {
+                // replace temporary IDs with permanent ones (if created)
+                if (object.id < 1) {
+                    let permanentID = this.findPermanentID(location, object.id);
+                    if (permanentID) {
+                        object = _.clone(object);
+                        object.id = permanentID;
+                    } else {
+                        object = _.omit(object, 'id', 'uncommitted');
+                    }
+                } else {
+                    if (object.uncommitted !== undefined) {
+                        object = _.omit(object, 'uncommitted');
+                    }
+                }
+                return object;
+            });
             storage.start();
             let results = await this.performRemoteAction(location, 'storage', { objects });
-            this.saveIDMapping(location, change.objects, results);
+            this.saveIDMapping(location, deliverables, results);
             return results;
         };
         this.queueChange(change);

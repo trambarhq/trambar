@@ -57,6 +57,7 @@ class StoryEditor extends PureComponent {
             draft: null,
             confirming: false,
             capturing: null,
+            publishing: false,
             action: null,
         };
         this.updateDraft(this.state, props);
@@ -100,6 +101,10 @@ class StoryEditor extends PureComponent {
      */
     componentWillReceiveProps(nextProps) {
         let { env, story, currentUser, repos, recommendations } = this.props;
+        let { publishing } = this.state;
+        if (publishing) {
+            return;
+        }
         let nextState = _.clone(this.state);
         if (nextProps.story !== story) {
             this.updateDraft(nextState, nextProps);
@@ -480,14 +485,13 @@ class StoryEditor extends PureComponent {
      */
     renderButtons() {
         let { env } = this.props;
-        let { draft } = this.state;
+        let { draft, publishing } = this.state;
         let { t } = env.locale;
         let text = _.get(draft, 'details.text');
         let resources = _.get(draft, 'details.resources');
         let noText = _.isEmpty(_.pickBy(text));
         let noResources = _.isEmpty(resources);
         let pendingResource = hasPendingResources(resources)
-        let publishing = _.get(draft, 'published', false);
         let cancelButtonProps = {
             label: t('story-cancel'),
             onClick: this.handleCancelClick,
@@ -1028,33 +1032,43 @@ class StoryEditor extends PureComponent {
      */
     async publishStory() {
         let { env, authors, repos, isStationary, currentUser } = this.props;
-        let { draft, options } = this.state;
-        draft = _.clone(draft);
-        if (!draft.type) {
-            draft.type = 'post';
+        let { draft, options, publishing } = this.state;
+        if (publishing) {
+            return;
         }
-        let roleIDs = _.map(authors, 'role_ids');
-        draft.role_ids = _.uniq(_.flatten(roleIDs));
-        draft.published = true;
-
-        if (isStationary) {
-            // blank it out immediately
-            let blank = createBlankStory(currentUser);
-            await this.changeDraft(blank);
-        }
-
-        let resources = draft.details.resources;
-        await ResourceUtils.attachMosaic(resources, env);
-        let story = await this.saveStory(draft, true);
-        await this.sendBookmarks(story, options.bookmarkRecipients);
-        let issueDetailsBefore = IssueUtils.extractIssueDetails(draft, repos);
-        let issueDetailsAfter = options.issueDetails;
-        if (!_.isEqual(issueDetailsAfter, issueDetailsBefore)) {
-            if (issueDetailsAfter) {
-                let params = _.clone(issueDetailsAfter);
-                params.story_id = story.id;
-                await this.sendTask('export-issue', params);
+        this.setState({ publishing: true });
+        try {
+            draft = _.clone(draft);
+            if (!draft.type) {
+                draft.type = 'post';
             }
+            let roleIDs = _.map(authors, 'role_ids');
+            draft.role_ids = _.uniq(_.flatten(roleIDs));
+            draft.published = true;
+
+            /*
+            if (isStationary) {
+                // blank it out immediately
+                let blank = createBlankStory(currentUser);
+                await this.changeDraft(blank);
+            }
+            */
+
+            let resources = draft.details.resources;
+            await ResourceUtils.attachMosaic(resources, env);
+            let story = await this.saveStory(draft, true);
+            await this.sendBookmarks(story, options.bookmarkRecipients);
+            let issueDetailsBefore = IssueUtils.extractIssueDetails(draft, repos);
+            let issueDetailsAfter = options.issueDetails;
+            if (!_.isEqual(issueDetailsAfter, issueDetailsBefore)) {
+                if (issueDetailsAfter) {
+                    let params = _.clone(issueDetailsAfter);
+                    params.story_id = story.id;
+                    await this.sendTask('export-issue', params);
+                }
+            }
+        } finally {
+            this.setState({ publishing: false });
         }
     }
 

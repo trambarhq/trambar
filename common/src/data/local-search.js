@@ -58,6 +58,9 @@ function match(table, object, criteria) {
             // if field is not in the object then check if it's a special
             // search criteria
             switch (name) {
+                case 'ready':
+                    matching = true;
+                    break;
                 case 'time_range':
                     if (desiredValue) {
                         let times = desiredValue.substr(1, desiredValue.length - 2).split(',');

@@ -273,14 +273,7 @@ class Change {
         this.delivered = _.filter(this.objects, (object, index) => {
             return !this.removed[index];
         });
-        return _.map(this.delivered, (object) => {
-            // strip out special properties
-            if (object.id < 1) {
-                return _.omit(object, 'id', 'uncommitted');
-            } else {
-                return _.omit(object, 'uncommitted')
-            }
-        });
+        return this.delivered;
     }
 
     /**
