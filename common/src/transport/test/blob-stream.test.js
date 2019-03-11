@@ -72,9 +72,9 @@ describe('BlobStream', function() {
                 } else {
                     clearInterval(interval);
                 }
-            }, 50);
+            }, 10);
             await stream.wait();
-            expect(count).to.equal(4);
+            expect(count).to.equal(50);
         })
         it('should reject when the stream was abandoned', async function() {
             let stream = new BlobStream('http://somewhere/6', {});
@@ -138,44 +138,6 @@ describe('BlobStream', function() {
             expect(sent).to.equal(50);
             expect(stream.transferred).to.equal(all.size);
         })
-        it('should reattempt a chunk when an error occurs', async function() {
-            this.timeout(30000);
-
-            let stream = new BlobStream('http://somewhere/7', {});
-            for (let i = 1; i <= 50; i++) {
-                let blob = new Blob([ `Blob #${i}` ]);
-                stream.push(blob);
-            }
-            stream.close();
-
-            let sent = 0;
-            let errors = 0;
-            HTTPRequest.fetch = async (method, url, payload, options) => {
-                let onUploadProgress = options.onUploadProgress;
-                await Bluebird.delay(20);
-                if (Math.random() > 0.90) {
-                    if (errors < 2) {
-                        errors++;
-                        throw new HTTPError(504);
-                    }
-                }
-                sent++;
-                if (onUploadProgress) {
-                    onUploadProgress({
-                        type: 'progress',
-                        target: {},
-                        loaded: 20,
-                        total: 20,
-                    });
-                }
-                return {};
-            };
-
-            stream.start();
-            let result = await stream.wait();
-            expect(sent).to.equal(50);
-            expect(errors).to.be.above(0);
-        })
         it('should wait for resumption when suspected', async function() {
             this.timeout(5000);
 
@@ -185,17 +147,21 @@ describe('BlobStream', function() {
                 stream.push(blob);
             }
             stream.close();
-            stream.suspend();
 
             let sent = 0;
-            let online = false;
+            let sentBeforeSuspending = 20;
+            let sentBeforeResuming = 0;
             HTTPRequest.fetch = async (method, url, payload, options) => {
                 let onUploadProgress = options.onUploadProgress;
                 await Bluebird.delay(20);
-                if (!online) {
-                    throw new HTTPError(504);
-                }
                 sent++;
+
+                if (sent === sentBeforeSuspending) {
+                    stream.suspend();
+                    setTimeout(() => { sentBeforeResuming = sent }, 200);
+                    setTimeout(() => { stream.resume() }, 500);
+                }
+
                 if (onUploadProgress) {
                     onUploadProgress({
                         type: 'progress',
@@ -207,14 +173,10 @@ describe('BlobStream', function() {
                 return {};
             };
 
-            setTimeout(() => {
-                online = true;
-                stream.resume();
-            }, 200);
-
             stream.start();
             let result = await stream.wait();
             expect(sent).to.equal(50);
+            expect(sentBeforeResuming).to.equal(sentBeforeSuspending);
         })
     })
 })

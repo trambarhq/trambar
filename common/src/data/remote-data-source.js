@@ -1551,7 +1551,9 @@ class RemoteDataSource extends EventEmitter {
      */
     getRelevantRecentSearches(location) {
         return _.filter(this.recentSearchResults, (search) => {
-            return search.matchLocation(location);
+            if (search.results) {
+                return search.matchLocation(location);
+            }
         });
     }
 

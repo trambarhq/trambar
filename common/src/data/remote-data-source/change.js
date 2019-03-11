@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import Bluebird from 'bluebird';
-import * as Async from 'async-do-while';
 
 import * as LocalSearch from 'data/local-search';
 import * as TemporaryID from 'data/remote-data-source/temporary-id';

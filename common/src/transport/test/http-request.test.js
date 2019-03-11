@@ -3,11 +3,12 @@ import TestServer from './lib/test-server';
 
 import * as HTTPRequest from 'transport/http-request';
 
-let port = 7878;
+let port = 7978;
 let baseURL = `http://localhost:${port}`;
 
 describe('HTTPRequest', function() {
     before(function() {
+        this.timeout(5000);
         return TestServer.start(port);
     })
 

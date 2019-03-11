@@ -10,7 +10,6 @@ import * as BackgroundFileTransfer from 'transport/background-file-transfer';
 import * as RandomToken from 'utils/random-token';
 import HTTPError from 'errors/http-error';
 import FileError from 'errors/file-error';
-import Async from 'async-do-while';
 
 const defaultOptions = {
     uploadURL: null,

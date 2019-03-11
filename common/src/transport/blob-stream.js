@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Bluebird from 'bluebird';
 import * as HTTPRequest from 'transport/http-request';
-import Async from 'async-do-while';
+import ManualPromise from 'utils/manual-promise';
 
 class BlobStream {
     constructor(id, url, options) {
@@ -20,6 +20,7 @@ class BlobStream {
         this.suspended = false;
         this.transferred = 0;
         this.initialChunkPromise = null;
+        this.resumptionPromise = null;
         this.onProgress = null;
         this.onComplete = null;
         this.onError = null;
@@ -188,7 +189,8 @@ class BlobStream {
      */
     suspend() {
         if (!this.suspended) {
-            this.suspended = false;
+            this.suspended = true;
+            this.resumptionPromise = ManualPromise();
         }
     }
 
@@ -197,34 +199,11 @@ class BlobStream {
      */
     resume() {
         if (this.suspended) {
+            let promise = this.resumptionPromise;
             this.suspended = false;
-            if (this.onConnectivity) {
-                let f = this.onConnectivity;
-                this.onConnectivity = null;
-                this.onConnectivityReject = null;
-                this.connectivityPromise = null;
-                f();
-            }
+            this.resumptionPromise = null;
+            promise.resolve();
         }
-    }
-
-    /**
-     * Resolve immediately if suspended = false, otherwise wait for resume()
-     * to be called
-     *
-     * @return {Promise}
-     */
-    waitForConnectivity() {
-        if (!this.suspended) {
-            return Promise.resolve();
-        }
-        if (!this.connectivityPromise) {
-            this.connectivityPromise = new Promise((resolve, reject) => {
-                this.onConnectivity = resolve;
-                this.onConnectivityReject = reject;
-            });
-        }
-        return this.connectivityPromise;
     }
 
     /**
@@ -282,7 +261,7 @@ class BlobStream {
      *
      * @param  {Number}  index
      *
-     * @return {Promise<Object>}
+     * @return {Promise<Object|undefined>}
      */
     async sendNextChunk(index) {
         let transferredBefore = this.transferred;
@@ -291,11 +270,17 @@ class BlobStream {
         let unrecoverable = false;
         let more = true;
         let delay = 1000;
-        let result = null;
+        let result;
         for (let attempt = 0; attempt < 10 && !successful && !unrecoverable; attempt++) {
             try {
+                if (this.suspended) {
+                    await this.resumptionPromise;
+                }
+                if (this.canceled) {
+                    throw new Error('Operation canceled');
+                }
+
                 let blob = await this.pull();
-                await this.waitForConnectivity();
                 if (!this.started) {
                     this.started = true;
                 }
@@ -341,6 +326,8 @@ class BlobStream {
                 // fail immediately if it's a HTTP 4XX error
                 if (err.statusCode >= 400 && err.statusCode <= 499 && err.statusCode !== 429) {
                     unrecoverable = true;
+                } else if (this.canceled) {
+                    unrecoverable = true;
                 } else {
                     // try again after a delay
                     delay = Math.min(delay * 2, 30 * 1000);
@@ -369,6 +356,9 @@ class BlobStream {
                 this.canceled = true;
                 if (this.chunkPromise && this.chunkPromise.isPending()) {
                     this.chunkPromise.cancel();
+                }
+                if (this.suspended) {
+                    this.resume();
                 }
             }
         }

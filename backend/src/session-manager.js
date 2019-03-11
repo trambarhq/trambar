@@ -9,7 +9,6 @@ import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Moment from 'moment';
 import Request from 'request';
 import HtpasswdAuth from 'htpasswd-auth';
-import Async from 'async-do-while';
 import HTTPError from 'errors/http-error';
 import Database from 'database';
 import * as Shutdown from 'shutdown';
