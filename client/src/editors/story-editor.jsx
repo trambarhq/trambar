@@ -1027,7 +1027,7 @@ class StoryEditor extends PureComponent {
      * @return {Promise}
      */
     async publishStory() {
-        let { env, authors, repos } = this.props;
+        let { env, authors, repos, isStationary, currentUser } = this.props;
         let { draft, options } = this.state;
         draft = _.clone(draft);
         if (!draft.type) {
@@ -1036,6 +1036,12 @@ class StoryEditor extends PureComponent {
         let roleIDs = _.map(authors, 'role_ids');
         draft.role_ids = _.uniq(_.flatten(roleIDs));
         draft.published = true;
+
+        if (isStationary) {
+            // blank it out immediately
+            let blank = createBlankStory(currentUser);
+            await this.changeDraft(blank);
+        }
 
         let resources = draft.details.resources;
         await ResourceUtils.attachMosaic(resources, env);
@@ -1274,10 +1280,8 @@ class StoryEditor extends PureComponent {
             // instance of the component will be reused
             let blank = createBlankStory(currentUser);
             await this.changeDraft(blank);
-            if (draft.id) {
-                await this.removeStory(draft);
-            }
-        } else {
+        }
+        if (draft.id) {
             await this.removeStory(draft);
         }
     }

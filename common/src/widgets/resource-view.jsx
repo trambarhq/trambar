@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as BlobManager from 'transport/blob-manager';
+import * as MediaLoader from 'media/media-loader';
 import * as ImageCropping from 'media/image-cropping';
 import * as ResourceUtils from 'objects/utils/resource-utils';
 
@@ -128,7 +128,7 @@ class ResourceView extends PureComponent {
                 // the image has just become available on the remote server
                 // pre-cache it before switching from the local copy
                 this.setState({ loadingRemoteImage: remoteURL });
-                await BlobManager.fetch(remoteURL);
+                await MediaLoader.loadImage(remoteURL);
                 this.setState({ remoteImageLoaded: remoteURL });
             }
         }
