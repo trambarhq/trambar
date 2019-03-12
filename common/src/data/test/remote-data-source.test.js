@@ -24,6 +24,7 @@ describe('RemoteDataSource', function() {
     let cache = new IndexedDBCache({ databaseName: 'rds-test' });
     let dataSourceOptions = {
         discoveryFlags: {
+            include_uncommitted: true
         },
         retrievalFlags: {
         },
@@ -772,9 +773,6 @@ describe('RemoteDataSource', function() {
             expect(evt).to.have.property('type', 'change');
         })
         it('should make uncommitted objects available immediately when feature is on', async function() {
-            dataSource.options.discoveryFlags = {
-                include_uncommitted: true
-            };
             let location = { address: 'http://level3.misty-mountain.me', schema: 'global', table: 'project' };
             let newObject = { name: 'anduril' };
             let storage = 0, id = 1;
@@ -855,6 +853,39 @@ describe('RemoteDataSource', function() {
             expect(projectsLater[0]).to.have.property('id').that.is.at.least(1);
             expect(discovery).to.equal(1);
             expect(retrieval).to.equal(1);
+        })
+        it('should remove an object from search result when uncommitted changes mean it no longer matches criteria', async function() {
+            let objects = [
+                { id: 3, name: 'smeagol', evil: false }
+            ];
+            let updatedObject = _.clone(objects[0]);
+            updatedObject.name = 'gollum';
+            updatedObject.evil = true;
+            HTTPRequest.fetch = async (method, url, payload, options) => {
+                await Bluebird.delay(50);
+                if (/discovery/.test(url)) {
+                    return {
+                        ids: _.map(objects, 'id'),
+                        gns: _.map(objects, 'gn')
+                    };
+                } else if (/retrieval/.test(url)) {
+                    return objects;
+                }
+            };
+            let location = {
+                address: 'http://gladden-fields.me', 
+                schema: 'global', 
+                table: 'hobbit',
+            };
+            let query = _.assign({ 
+                criteria: { evil: false }
+            }, location);
+            let options = { delay: 1000 };
+            let results1 = await dataSource.find(query);
+            expect(results1).to.deep.equal(objects);
+            dataSource.save(location, [ updatedObject ], options);
+            let results2 = await dataSource.find(query);
+            expect(results2).to.have.lengthOf(0);
         })
         it('should block search on a table until saving is complete', async function() {
             let location = { address: 'http://level4.misty-mountain.me', schema: 'global', table: 'project' };
