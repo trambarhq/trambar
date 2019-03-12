@@ -39,9 +39,9 @@ function StoryProgress(props) {
                 // story has not made it into listings yet
                 let spinnerStyle = {};
                 let now = Moment();
-                let ptime = Moment(story.ptime);
+                let rtime = Moment(story.rtime);
                 // give story ten seconds to show up before we show the spinner
-                let delay = 10000 - (now - ptime);
+                let delay = 10000 - (now - rtime);
                 if (delay > 0) {
                     spinnerStyle.animationDelay = (delay / 1000) + 's';
                 }
