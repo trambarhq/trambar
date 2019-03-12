@@ -101,10 +101,6 @@ class StoryEditor extends PureComponent {
      */
     componentWillReceiveProps(nextProps) {
         let { env, story, currentUser, repos, recommendations } = this.props;
-        let { publishing } = this.state;
-        if (publishing) {
-            return;
-        }
         let nextState = _.clone(this.state);
         if (nextProps.story !== story) {
             this.updateDraft(nextState, nextProps);
@@ -138,6 +134,7 @@ class StoryEditor extends PureComponent {
      * @param  {Object} nextProps
      */
     updateDraft(nextState, nextProps) {
+        let { publishing } = this.state;
         if (nextProps.story) {
             nextState.draft = nextProps.story;
             if (!nextProps.story.uncommitted) {
@@ -172,17 +169,17 @@ class StoryEditor extends PureComponent {
      * @param  {Object} nextProps
      */
     updateOptions(nextState, nextProps) {
-        if (!nextProps.story) {
-            // reset options to default when a new story starts
-            nextState.options = defaultOptions;
-        } else {
+        if (nextProps.story) {
             nextState.options = _.clone(nextState.options);
             nextState.options.hidePost = !nextState.draft.public;
             nextState.options.issueDetails = IssueUtils.extractIssueDetails(nextState.draft, nextProps.repos);
             if (!nextState.options.preview) {
                 nextState.options.preview = this.choosePreview(nextState.draft);
             }
-        }
+        } else {
+            // reset options to default when a new story starts
+            nextState.options = defaultOptions;
+        } 
     }
 
     /**
@@ -192,9 +189,11 @@ class StoryEditor extends PureComponent {
      * @param  {Object} nextProps
      */
     updateBookmarkRecipients(nextState, nextProps) {
-        let targetUserIDs = _.map(nextProps.recommendations, 'target_user_id');
-        nextState.options = _.clone(nextState.options);
-        nextState.options.bookmarkRecipients = _.union(nextState.options.bookmarkRecipients, targetUserIDs);
+        if (nextProps.story) {
+            let targetUserIDs = _.map(nextProps.recommendations, 'target_user_id');
+            nextState.options = _.clone(nextState.options);
+            nextState.options.bookmarkRecipients = _.union(nextState.options.bookmarkRecipients, targetUserIDs);
+        }
     }
 
     /**
@@ -215,12 +214,14 @@ class StoryEditor extends PureComponent {
      * @param  {Object} nextProps
      */
     updateResourceIndex(nextState, nextProps) {
-        let resources = _.get(nextState.draft, 'details.resources');
-        let count = _.size(resources);
-        if (nextState.selectedResourceIndex >= count) {
-            nextState.selectedResourceIndex = count - 1;
-        } else if (nextState.selectedResourceIndex < 0 && count > 0) {
-            nextState.selectedResourceIndex = 0;
+        if (nextProps.story) {
+            let resources = _.get(nextState.draft, 'details.resources');
+            let count = _.size(resources);
+            if (nextState.selectedResourceIndex >= count) {
+                nextState.selectedResourceIndex = count - 1;
+            } else if (nextState.selectedResourceIndex < 0 && count > 0) {
+                nextState.selectedResourceIndex = 0;
+            }
         }
     }
 

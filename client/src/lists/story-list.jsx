@@ -185,7 +185,7 @@ class StoryListSync extends PureComponent {
      */
     handleStoryIdentity = (evt) => {
         let { database, acceptNewStory } = this.props;
-        if (evt.alternative && evt.item) {
+        if (evt.alternative && evt.item && evt.item.id >= 1) {
             // look for temporary id
             let location = { table: 'story' };
             let temporaryID = database.findTemporaryID(location, evt.item.id);
