@@ -62,9 +62,11 @@ class ResourceView extends PureComponent {
         });
         let props = _.omit(this.props, propNames);
         if (width) {
+            props.width = width;
             props.height = Math.round(width * dims.height / dims.width);
         } else if (height) {
             props.width = Math.round(height * dims.width / dims.height);
+            props.height = height;
         } else {
             props.width = dims.width;
             props.height = dims.height;

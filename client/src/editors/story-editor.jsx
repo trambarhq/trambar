@@ -688,7 +688,7 @@ class StoryEditor extends PureComponent {
         let { draft, selectedResourceIndex } = this.state;
         let editorProps = {
             allowEmbedding: true,
-            allowShifting: true,
+            allowShifting: env.isWiderThan('double-col'),
             resources: _.get(draft, 'details.resources'),
             resourceIndex: selectedResourceIndex,
             payloads,

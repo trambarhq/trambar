@@ -155,7 +155,7 @@ class Overlay extends PureComponent {
         // prevent scrolling of contents underneath
         let targetNode = evt.target;
         let scrollableNode = null;
-        for (let p = targetNode; p && p !== this.containerNode; p = p.parentNode) {
+        for (let p = targetNode; p && p !== window && p !== this.containerNode; p = p.parentNode) {
             let style = getComputedStyle(p);
             if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
                 if (p.scrollHeight > p.clientHeight) {
