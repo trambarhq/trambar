@@ -77,7 +77,7 @@ const phrases = {
         return `Télécharger les mises à jour du code depuis «${deployment}»`;
     },
     'development-show-diagnostics': "Voir le diagnostic",
-    'development-show-panel': "Dfficher ce panneau",
+    'development-show-panel': "Afficher ce panneau",
 
     'device-selector-camera-$number': (number) => {
         return `Caméra ${number}`;
@@ -116,7 +116,7 @@ const phrases = {
             ae = "s";
         }
         let verb = (names.length === 1) ? "a" : "ont";
-        return `${list(names)} ${verb} posté les ${list(objects)} suivant${ae}:`;
+        return `${list(names)} ${verb} posté ${list(objects)} suivant${ae}:`;
     },
     'issue-export-$names-wrote': (names) => {
         return `${list(names)} a écrit:`;
