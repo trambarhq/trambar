@@ -8,12 +8,14 @@ import * as Shutdown from 'shutdown';
 // global accessors
 import Commit from 'accessors/commit';
 import Device from 'accessors/device';
+import Frontend from 'accessors/frontend'
 import Picture from 'accessors/picture';
 import Project from 'accessors/project';
 import Repo from 'accessors/repo';
 import Role from 'accessors/role';
 import Server from 'accessors/server';
 import Session from 'accessors/session';
+import Skin from 'accessors/skin';
 import Subscription from 'accessors/subscription';
 import System from 'accessors/system';
 import User from 'accessors/user';
@@ -25,6 +27,8 @@ import Reaction from 'accessors/reaction';
 import Spreadsheet from 'accessors/spreadsheet';
 import Statistics from 'accessors/statistics';
 import Story from 'accessors/story';
+import Website from 'accessors/website';
+import Wiki from 'accessors/wiki';
 
 // appear in both
 import Notification from 'accessors/notification';
@@ -60,11 +64,11 @@ async function start() {
     db.close();
     db = database = await Database.open(true);
     await db.updateJavaScriptFunctions();
-    let created = await initializeDatabase(db);
+    const created = await initializeDatabase(db);
     if (!created) {
         await upgradeDatabase(db);
     }
-    let tables = [
+    const tables = [
         'project',
         'story',
         'reaction',
@@ -73,12 +77,12 @@ async function start() {
 
     if (process.env.NODE_ENV !== 'production') {
         // listen for console messages from stored procs
-        let f = function(method, evts) {
+        const f = function(method, evts) {
             for (let args in evts) {
                 console[method].apply(console, args);
             }
         };
-        let tbl = [ 'console' ];
+        const tbl = [ 'console' ];
         await db.listen(tbl, 'info', (evts) => { f('info', evts) }, 0);
         await db.listen(tbl, 'log', (evts) => { f('log', evts) }, 0);
         await db.listen(tbl, 'warn', (evts) => { f('warn', evts) }, 0);
@@ -108,12 +112,12 @@ async function stop() {
 };
 
 async function handleDatabaseChanges(events) {
-    let db = this;
+    const db = this;
     for (let event of events) {
         try {
             if (event.table === 'project') {
-                let defaultName = `$nameless$-project-${event.id}`;
-                let deletedName = `$recycled$-project-${event.id}`;
+                const defaultName = `$nameless$-project-${event.id}`;
+                const deletedName = `$recycled$-project-${event.id}`;
                 if (event.op === 'INSERT') {
                     // create the schema if the row is insert
                     let name = event.current.name || defaultName;
@@ -126,22 +130,22 @@ async function handleDatabaseChanges(events) {
                     if (event.diff.deleted) {
                         if (event.current.deleted) {
                             // rename the schema when project is flagged as deleted
-                            let normalName = event.previous.name || event.current.name || defaultName;
+                            const normalName = event.previous.name || event.current.name || defaultName;
                             await renameSchema(db, normalName, deletedName);
                         } else {
                             // restore it when project is undeleted
-                            let normalName = event.current.name || defaultName;
+                            const normalName = event.current.name || defaultName;
                             await renameSchema(db, deletedName, normalName);
                         }
                     } else if (event.diff.name) {
                         // change the schema name to match the project name
-                        let nameBefore = event.previous.name || defaultName;
-                        let nameAfter = event.current.name || defaultName;
+                        const nameBefore = event.previous.name || defaultName;
+                        const nameAfter = event.current.name || defaultName;
                         await renameSchema(db, nameBefore, nameAfter);
                     }
                 } else if (event.op === 'DELETE') {
                     // remove schema when project is deleted
-                    let name = event.previous.name || defaultName;
+                    const name = event.previous.name || defaultName;
                     if (event.previous.deleted) {
                         name = deletedName;
                     }
@@ -158,11 +162,11 @@ async function handleDatabaseChanges(events) {
                         }
 
                         // see if new languages are introduced
-                        let languagesBefore = event.previous.language_codes;
-                        let languagesAfter = event.current.language_codes;
-                        let newLanguages = _.difference(languagesAfter, languagesBefore);
+                        const languagesBefore = event.previous.language_codes;
+                        const languagesAfter = event.current.language_codes;
+                        const newLanguages = _.difference(languagesAfter, languagesBefore);
                         // make sure we have indices for these languages
-                        let existing = await accessor.getTextSearchLanguages(db, event.schema);
+                        const existing = await accessor.getTextSearchLanguages(db, event.schema);
                         // take out the ones we have already
                         _.pullAll(newLanguages, existing);
                         // cap number of indices at 4
@@ -194,7 +198,7 @@ async function handleDatabaseChanges(events) {
  */
 async function initializeDatabase(db) {
     await addDatabaseRoles(db);
-    let exists = await db.schemaExists('global');
+    const exists = await db.schemaExists('global');
     if (!exists) {
         await createSchema(db, 'global');
         await createMessageQueue(db);
@@ -212,9 +216,9 @@ async function initializeDatabase(db) {
 async function addDatabaseRoles(db) {
     let changed = false;
     for (let role of roles) {
-        let exists = await db.roleExists(role.name);
+        const exists = await db.roleExists(role.name);
         if (!exists) {
-            let sql = `CREATE USER ${role.name} WITH PASSWORD '${role.password}'`;
+            const sql = `CREATE USER ${role.name} WITH PASSWORD '${role.password}'`;
             await db.execute(sql);
             changed = true;
         }
@@ -230,12 +234,12 @@ async function addDatabaseRoles(db) {
  * @return {Promise<Boolean>}
  */
 async function upgradeDatabase(db) {
-    let globalChanged = await upgradeSchema(db, 'global');
-    let someProjectChanged = false;
-    let projects = await Project.find(db, 'global', { deleted: false }, 'name');
+    const globalChanged = await upgradeSchema(db, 'global');
+    const someProjectChanged = false;
+    const projects = await Project.find(db, 'global', { deleted: false }, 'name');
     for (let project of projects) {
         try {
-            let projectChanged = await upgradeSchema(db, project.name);
+            const projectChanged = await upgradeSchema(db, project.name);
             if (projectChanged) {
                 someProjectChanged = true;
             }
@@ -249,6 +253,7 @@ async function upgradeDatabase(db) {
 const globalAccessors = [
     Commit,
     Device,
+    Frontend,
     Notification,
     Picture,
     Project,
@@ -256,10 +261,12 @@ const globalAccessors = [
     Role,
     Server,
     Session,
+    Skin,
     Subscription,
     System,
     Task,
     User,
+    Wiki,
 ];
 const projectAccessors = [
     Bookmark,
@@ -270,6 +277,7 @@ const projectAccessors = [
     Statistics,
     Story,
     Task,
+    Website,
 ];
 
 /**
@@ -281,10 +289,10 @@ const projectAccessors = [
  * @return {Promise<Boolean>}
  */
 async function upgradeSchema(db, schema) {
-    let accessors = (schema === 'global') ? globalAccessors : projectAccessors;
-    let currentVersion = await getSchemaVersion(db, schema);
-    let latestVersion = _.max(_.map(accessors, 'version'));
-    let jumps = _.range(currentVersion, latestVersion);
+    const accessors = (schema === 'global') ? globalAccessors : projectAccessors;
+    const currentVersion = await getSchemaVersion(db, schema);
+    const latestVersion = _.max(_.map(accessors, 'version'));
+    const jumps = _.range(currentVersion, latestVersion);
     for (let version of jumps) {
         for (let accessor of accessors) {
             await accessor.upgrade(db, schema, version + 1);
@@ -309,14 +317,14 @@ async function upgradeSchema(db, schema) {
 async function createSchema(db, schema) {
     await db.begin();
     try {
-        let sql = `CREATE SCHEMA "${schema}"`;
+        const sql = `CREATE SCHEMA "${schema}"`;
         await db.execute(sql);
 
         // grant usage right and right to all sequences to each role
         for (let role of roles) {
-            let schemaType = (schema === 'global') ? 'global' : 'project';
+            const schemaType = (schema === 'global') ? 'global' : 'project';
             if (_.includes(role.schemas, schemaType)) {
-                let sql = `
+                const sql = `
                     GRANT USAGE ON SCHEMA "${schema}" TO "${role.name}";
                     ALTER DEFAULT PRIVILEGES IN SCHEMA "${schema}" GRANT USAGE, SELECT ON SEQUENCES TO "${role.name}";
                 `;
@@ -325,7 +333,7 @@ async function createSchema(db, schema) {
         }
 
         // create tables
-        let accessors = (schema === 'global') ? globalAccessors : projectAccessors;
+        const accessors = (schema === 'global') ? globalAccessors : projectAccessors;
         for (let accessor of accessors) {
             await accessor.create(db, schema);
         }
@@ -339,7 +347,7 @@ async function createSchema(db, schema) {
         }
 
         // add version number
-        let latestVersion = _.max(_.map(accessors, 'version')) || 0;
+        const latestVersion = _.max(_.map(accessors, 'version')) || 0;
         await addSchemaVersion(db, schema, latestVersion);
 
         await db.commit()
@@ -360,7 +368,7 @@ async function createSchema(db, schema) {
  * @return {Promise<Boolean>}
  */
 async function deleteSchema(db, schema) {
-    let sql = `DROP SCHEMA "${schema}" CASCADE`;
+    const sql = `DROP SCHEMA "${schema}" CASCADE`;
     await db.execute(sql);
     return true;
 }
@@ -375,7 +383,7 @@ async function deleteSchema(db, schema) {
  * @return {Promise<Boolean>}
  */
 async function renameSchema(db, schemaBefore, schemaAfter) {
-    let sql = `ALTER SCHEMA "${schemaBefore}" RENAME TO "${schemaAfter}"`;
+    const sql = `ALTER SCHEMA "${schemaBefore}" RENAME TO "${schemaAfter}"`;
     await db.execute(sql);
     return true;
 }
@@ -389,9 +397,9 @@ async function renameSchema(db, schemaBefore, schemaAfter) {
  * @return {Number}
  */
 async function getSchemaVersion(db, schema) {
-    let table = `"${schema}"."meta"`;
-    let sql = `SELECT version FROM ${table}`;
-    let rows = await db.query(sql);
+    const table = `"${schema}"."meta"`;
+    const sql = `SELECT version FROM ${table}`;
+    const rows = await db.query(sql);
     return (rows[0]) ? rows[0].version : -1;
 }
 
@@ -405,9 +413,9 @@ async function getSchemaVersion(db, schema) {
  * @return {Promise}
  */
 async function addSchemaVersion(db, schema, version) {
-    let roleNames = _.map(roles, 'name');
-    let table = `"${schema}"."meta"`;
-    let sql1 = `
+    const roleNames = _.map(roles, 'name');
+    const table = `"${schema}"."meta"`;
+    const sql1 = `
         CREATE TABLE ${table} (
             version int,
             signature varchar(64)
@@ -415,9 +423,9 @@ async function addSchemaVersion(db, schema, version) {
         GRANT SELECT ON ${table} TO ${roleNames.join(', ')};
     `;
     await db.execute(sql1);
-    let buffer = await Crypto.randomBytesAsync(16);
-    let signature = buffer.toString('hex');
-    let sql2 = `INSERT INTO ${table} (version, signature) VALUES ($1, $2)`;
+    const buffer = await Crypto.randomBytesAsync(16);
+    const signature = buffer.toString('hex');
+    const sql2 = `INSERT INTO ${table} (version, signature) VALUES ($1, $2)`;
     await db.execute(sql2, [ version, signature ]);
 }
 
@@ -431,8 +439,8 @@ async function addSchemaVersion(db, schema, version) {
  * @return {Promise}
  */
 async function setSchemaVersion(db, schema, version) {
-    let table = `"${schema}"."meta"`;
-    let sql = `UPDATE ${table} SET version = $1`;
+    const table = `"${schema}"."meta"`;
+    const sql = `UPDATE ${table} SET version = $1`;
     await db.execute(sql, [ version ]);
 }
 
@@ -444,8 +452,8 @@ async function setSchemaVersion(db, schema, version) {
  * @return {Promise<Boolean>}
  */
 async function createMessageQueue(db) {
-    let roleNames = _.map(roles, 'name');
-    let sql = `
+    const roleNames = _.map(roles, 'name');
+    const sql = `
         CREATE TABLE IF NOT EXISTS "message_queue" (
             id serial,
             message jsonb NOT NULL,
@@ -467,8 +475,8 @@ async function createMessageQueue(db) {
  * @return {Promise}
  */
 async function cleanMessageQueue(db) {
-    let lifetime = '1 hour';
-    let sql = `DELETE FROM "message_queue" WHERE ctime + CAST($1 AS INTERVAL) < NOW()`;
+    const lifetime = '1 hour';
+    const sql = `DELETE FROM "message_queue" WHERE ctime + CAST($1 AS INTERVAL) < NOW()`;
     await db.execute(sql, [ lifetime ]);
 }
 
@@ -479,25 +487,25 @@ async function cleanMessageQueue(db) {
  */
 async function collectGarbage(db) {
     // do it in the middle of the night
-    let now = Moment();
+    const now = Moment();
     if (now.hour() !== 3) {
         return;
     }
-    let elapsed = now - lastGCTime;
+    const elapsed = now - lastGCTime;
     if (!(elapsed > 23 * 60 * 60 * 1000)) {
         return;
     }
     lastGCTime = now;
 
-    let projects = await Project.find(db, 'global', { deleted: false }, 'name');
-    let schemas = _.concat('global', _.map(projects, 'name'));
-    let preservation = process.env.GARBAGE_PRESERVATION || '2 weeks';
-    let totalRemoved = 0;
+    const projects = await Project.find(db, 'global', { deleted: false }, 'name');
+    const schemas = _.concat('global', _.map(projects, 'name'));
+    const preservation = process.env.GARBAGE_PRESERVATION || '2 weeks';
+    const totalRemoved = 0;
     for (let schema of schemas) {
         try {
-            let accessors = (schema === 'global') ? globalAccessors : projectAccessors;
+            const accessors = (schema === 'global') ? globalAccessors : projectAccessors;
             for (let acccessor of accessors) {
-                let count = await accessor.clean(db, schema, preservation);
+                const count = await accessor.clean(db, schema, preservation);
                 totalRemoved += count;
             }
         } catch (err) {

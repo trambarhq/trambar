@@ -27,8 +27,8 @@ class Skin extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -37,7 +37,7 @@ class Skin extends Data {
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
                 type varchar(32) NOT NULL DEFAULT '',
-                name varchar(128) NOT NULL DEFAULT '',
+                name varchar(128) NOT NULL DEFAULT ''
             );
         `;
         await db.execute(sql);
@@ -71,8 +71,8 @@ class Skin extends Data {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO client_role;
         `;

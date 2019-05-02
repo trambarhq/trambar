@@ -20,6 +20,7 @@ import {
     TaskInstallProjectHook,
     TaskRemoveProjectHook,
     TaskImportProjectHookEvent,
+    TaskImportWikis,
     TaskUpdateMilestones,
     TaskExportStory,
     TaskReexportStory,
@@ -164,6 +165,7 @@ function handleProjectChangeEvent(event) {
                 taskQueue.add(new TaskRemoveProjectHook(repoID, projectID));
             } else if (!connectedBefore && connectedAfter) {
                 taskQueue.add(new TaskImportRepoEvents(repoID, projectID));
+                taskQueue.add(new TaskImportWikis(repoID, projectID));
                 taskQueue.add(new TaskInstallProjectHook(repoID, projectID));
             }
         }

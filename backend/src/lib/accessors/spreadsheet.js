@@ -28,8 +28,8 @@ class Spreadsheet extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -75,8 +75,8 @@ class Spreadsheet extends Data {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT, UPDATE ON ${table} TO client_role;
         `;
@@ -114,9 +114,9 @@ class Spreadsheet extends Data {
      * @return {Promise<Array<Object>>}
      */
     async export(db, schema, rows, credentials, options) {
-        let objects = await super.export(db, schema, rows, credentials, options);
+        const objects = await super.export(db, schema, rows, credentials, options);
         for (let [ index, object ] of objects.entries()) {
-            let row = rows[index];
+            const row = rows[index];
             object.name = row.name;
             object.etag = row.etag;
             object.url = row.url;
@@ -137,7 +137,7 @@ class Spreadsheet extends Data {
      * @return {Promise<Object>}
      */
     async importOne(db, schema, spreadsheetReceived, spreadsheetBefore, credentials, options) {
-        let row = await super.importOne(db, schema, spreadsheetReceived, spreadsheetBefore, credentials, options);
+        const row = await super.importOne(db, schema, spreadsheetReceived, spreadsheetBefore, credentials, options);
         await this.ensureUniqueName(db, schema, spreadsheetBefore, spreadsheetReceived);
         return row;
     }

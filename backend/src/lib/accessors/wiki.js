@@ -4,16 +4,21 @@ import { ExternalData } from 'accessors/external-data';
 class Wiki extends ExternalData {
     constructor() {
         super();
-        this.schema = 'global';
+        this.schema = 'project';
         this.table = 'wiki';
         _.extend(this.columns, {
+            language_codes: Array(String),
             slug: String,
-            format: String,
+            public: Boolean,
+            chosen: Boolean,
         });
         _.extend(this.criteria, {
+            language_codes: Array(String),
             slug: String,
-            format: String,
+            public: Boolean,
+            chosen: Boolean,
         });
+        this.version = 3;
     }
 
     /**
@@ -25,8 +30,8 @@ class Wiki extends ExternalData {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -34,8 +39,10 @@ class Wiki extends ExternalData {
                 ctime timestamp NOT NULL DEFAULT NOW(),
                 mtime timestamp NOT NULL DEFAULT NOW(),
                 details jsonb NOT NULL DEFAULT '{}',
-                format varchar(32) NOT NULL,
+                language_codes varchar(2)[] NOT NULL DEFAULT '{}'::text[],
                 slug varchar(256) NOT NULL,
+                public boolean NOT NULL DEFAULT false,
+                chosen boolean NOT NULL DEFAULT false,
                 external jsonb[] NOT NULL DEFAULT '{}',
                 exchange jsonb[] NOT NULL DEFAULT '{}',
                 itime timestamp,
@@ -74,8 +81,8 @@ class Wiki extends ExternalData {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT SELECT ON ${table} TO client_role;
         `;
@@ -96,6 +103,8 @@ class Wiki extends ExternalData {
             'deleted',
             'external',
             'slug',
+            'public',
+            'chosen',
         ]);
     }
 

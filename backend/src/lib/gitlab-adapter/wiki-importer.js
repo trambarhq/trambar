@@ -20,29 +20,26 @@ import User from 'accessors/user';
  * @return {Promise<Story|null>}
  */
 async function importHookEvent(db, system, server, repo, project, author, glHookEvent) {
-    let schema = project.name;
+    const schema = project.name;
     // see if there's story about this page recently
     // one story a day about a page is enough
-    let criteria = {
+    const criteria = {
         newer_than: Moment().subtract(1, 'day').toISOString(),
         external_object: ExternalDataUtils.extendLink(server, repo, {
             wiki: { id: glHookEvent.object_attributes.slug }
         }),
     };
-    let recentStory = await Story.findOne(db, schema, criteria, 'id');
+    const recentStory = await Story.findOne(db, schema, criteria, 'id');
     if (recentStory) {
         if (glHookEvent.object_attributes.action === 'delete') {
             // remove the story if the page is no longer there
-            let columns = {
-                id: recentStory.id,
-                deleted: true,
-            };
-            await Story.updateOne(db, schema, columns);
+            await Story.updateOne(db, schema, { id: recentStory.id, deleted: true });
         }
         return null;
     } else {
-        let storyNew = copyEventProperties(null, system, server, repo, author, glHookEvent);
-        return Story.saveOne(db, schema, storyNew);
+        const storyNew = copyEventProperties(null, system, server, repo, author, glHookEvent);
+        const storySaved = await Story.saveOne(db, schema, storyNew);
+        return storySaved;
     }
 }
 
@@ -59,9 +56,9 @@ async function importHookEvent(db, system, server, repo, project, author, glHook
  * @return {Object|null}
 */
 function copyEventProperties(story, system, server, repo, author, glHookEvent) {
-    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    const defLangCode = Localization.getDefaultLanguageCode(system);
 
-    let storyAfter = _.cloneDeep(story) || {};
+    const storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
         wiki: { id: glHookEvent.object_attributes.slug }
     });
@@ -112,6 +109,149 @@ function copyEventProperties(story, system, server, repo, author, glHookEvent) {
     return storyAfter;
 }
 
+/**
+ * Import wikis from repo
+ *
+ * @param  {Database} db
+ * @param  {System} system
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Project} project
+ *
+ * @return {Promise<Array>}
+ */
+async function importWikis(db, system, server, repo, project) {
+    const wikiList = [];
+    const schema = project.name;
+    const repoLink = ExternalDataUtils.findLink(repo, server);
+    const wikis = await Wiki.find(db, schema, { deleted: false });
+    const glWikis = await fetchWikis(server, repoLink.project.id);
+
+    // delete ones that no longer exists
+    for (let wiki of wikis) {
+        const wikiLink = ExternalDataUtils.findLink(wiki, server);
+        if (!_.some(glWikis, { id: wikiLink.wiki.id })) {
+            await Wiki.updateOne(db, schema, { id: wiki.id, deleted: true });
+        }
+    }
+
+    const wikiRefLists = [];
+    for (let glWiki of glWikis) {
+        const refs = getWikiReferences(glWiki.content, glWiki.format);
+        wikiRefLists.push({ refs, glWikiReferrer: glWiki });
+    }
+
+    const findWiki = (glWiki) => {
+        return _.find(wikis, (wiki) => {
+            return !!ExternalDataUtils.findLink(wiki, server, {
+                wiki: { id: glWiki.id }
+            });
+        });
+    };
+    const isPublic = (glWiki, checked) => {
+        if (!checked) {
+            checked = {};
+        }
+        if (checked[glWiki.slug]) {
+            return false;
+        } else {
+            checked[glWiki.slug] = true;
+        }
+
+        // see if the wiki has been chosen
+        const wiki = findWiki(glWiki);
+        if (wiki && wiki.chosen) {
+            return true;
+        }
+
+        // see if another wiki that references this one is public
+        for (let { refs, glWikiReferrer } of wikiRefLists) {
+            if (_.includes(refs, glWiki.slug)) {
+                return isPublic(glWikiReferrer, checked);
+            }
+        }
+        return false;
+    };
+    for (let glWiki of glWikis) {
+        const wiki = findWiki(glWiki);
+        const wikiAfter = copyWikiProperties(wiki, system, server, repo, glWiki, isPublic(glWiki));
+        if (wikiAfter !== wiki) {
+            const wikiSaved = await Story.updateOne(db, schema, wikiAfter);
+            wikiList.push(wikiSaved);
+        } else {
+            wikiList.push(wiki);
+        }
+    }
+    return wikiList;
+}
+
+/**
+ * Copy properties of milestone
+ *
+ * @param  {Wiki|null} wiki
+ * @param  {System} system
+ * @param  {Server} server
+ * @param  {Repo} repo
+ * @param  {Object} glWiki
+ *
+ * @return {Story}
+ */
+function copyWikiProperties(wiki, system, server, repo, glWiki, isPublic) {
+    const defLangCode = Localization.getDefaultLanguageCode(system);
+    const wikiAfter = _.cloneDeep(wiki) || {};
+    ExternalDataUtils.inheritLink(wikiAfter, server, repo, {
+        wiki: { id: glWiki.id }
+    });
+    ExternalDataUtils.importProperty(wikiAfter, server, 'slug', {
+        value: glWiki.slug,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(wikiAfter, server, 'details.title', {
+        value: glWiki.title,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(wikiAfter, server, 'details.content', {
+        value: (isPublic) ? glWiki.content : undefined,
+        overwrite: 'always',
+    });
+    ExternalDataUtils.importProperty(wikiAfter, server, 'details.format', {
+        value: glWiki.format,
+        overwrite: 'always',
+    });
+    if (_.isEqual(wikiAfter, wiki)) {
+        return wiki;
+    }
+    return wikiAfter;
+}
+
+/**
+ * Retrieve milestone from Gitlab
+ *
+ * @param  {Server} server
+ * @param  {Number} glProjectId
+ * @param  {String} slug
+ *
+ * @return {Promise<Object>}
+ */
+async function fetchWiki(server, glProjectId, slug) {
+    let url = `/projects/${glProjectId}/wikis/${slug}`;
+    return Transport.fetch(server, url);
+}
+
+/**
+ * Retrieve milestone from Gitlab
+ *
+ * @param  {Server} server
+ * @param  {Number} glProjectId
+ *
+ * @return {Promise<Array<Object>>}
+ */
+async function fetchWikis(server, glProjectId) {
+    let url = `/projects/${glProjectId}/wikis`;
+    return Transport.fetchAll(server, url);
+}
+
 export {
     importHookEvent,
+    importWikis,
 };

@@ -31,8 +31,8 @@ class Frontend extends Data {
      * @return {Promise}
      */
     async create(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             CREATE TABLE ${table} (
                 id serial,
                 gn int NOT NULL DEFAULT 1,
@@ -44,7 +44,7 @@ class Frontend extends Data {
                 repo_id int NOT NULL,
                 commit_id int NOT NULL,
                 file_paths text[],
-                file_contents blob[]
+                file_contents bytea[] NOT NULL DEFAULT '{}'::bytea[]
             );
             CREATE UNIQUE INDEX ON ${table} (repo_id) WHERE deleted = false;
         `;
@@ -79,8 +79,8 @@ class Frontend extends Data {
      * @return {Promise}
      */
     async grant(db, schema) {
-        let table = this.getTableName(schema);
-        let sql = `
+        const table = this.getTableName(schema);
+        const sql = `
             GRANT INSERT, SELECT, UPDATE ON ${table} TO admin_role;
             GRANT INSERT, SELECT, UPDATE ON ${table} TO client_role;
         `;

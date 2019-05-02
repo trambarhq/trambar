@@ -10,6 +10,7 @@ import * as EventImporter from 'gitlab-adapter/event-importer';
 import * as RepoImporter from 'gitlab-adapter/repo-importer';
 import * as UserImporter from 'gitlab-adapter/user-importer';
 import * as MilestoneImporter from 'gitlab-adapter/milestone-importer';
+import * as WikiImporter from 'gitlab-adapter/wiki-importer';
 import * as IssueExporter from 'gitlab-adapter/issue-exporter';
 
 // accessors
@@ -225,6 +226,25 @@ class TaskImportProjectHookEvent extends BasicTask {
     }
 }
 
+class TaskImportWikis extends BasicTask {
+    constructor(repoID, projectID) {
+        super();
+        this.repoID = repoID;
+        this.projectID = projectID;
+    }
+
+    async run() {
+        let db = await Database.open();
+        let system = await getSystem(db);
+        let repo = await getRepo(db, this.repoID);
+        let project = await getProject(db, this.projectID);
+        let server = await getRepoServer(db, repo);
+        if (system && server && repo && project) {
+            await MilestoneImporter.importWikis(db, system, server, repo, project);
+        }
+    }
+}
+
 class TaskUpdateMilestones extends BasicTask {
     constructor(repoID, projectID) {
         super();
@@ -243,7 +263,6 @@ class TaskUpdateMilestones extends BasicTask {
         }
     }
 }
-
 
 class TaskExportStory extends BasicTask {
     constructor(schema, taskID) {
@@ -581,6 +600,7 @@ export {
     TaskInstallProjectHook,
     TaskRemoveProjectHook,
     TaskImportProjectHookEvent,
+    TaskImportWikis,
     TaskUpdateMilestones,
     TaskExportStory,
     TaskReexportStory,
