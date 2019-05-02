@@ -91,7 +91,7 @@ function copyPushProperties(story, system, server, repo, author, push, component
     } else {
         storyType = 'push';
     }
-    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let defLangCode = Localization.getDefaultLanguageCode(system);
 
     let storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
