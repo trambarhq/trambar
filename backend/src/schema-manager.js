@@ -151,7 +151,7 @@ async function handleDatabaseChanges(events) {
                     }
                     await deleteSchema(db, name);
                 }
-            } else if (event.table === 'story' || event.table === 'reaction') {
+            } else if (event.table === 'story' || event.table === 'reaction' || event.table === 'wiki') {
                 if (event.op === 'INSERT' || event.op === 'UPDATE') {
                     if (event.diff.language_codes) {
                         let accessor;
@@ -159,6 +159,8 @@ async function handleDatabaseChanges(events) {
                             accessor = Story;
                         } else if (event.table === 'reaction') {
                             accessor = Reaction;
+                        } else if (event.table === 'wiki') {
+                            accessor = Wiki;
                         }
 
                         // see if new languages are introduced
@@ -266,7 +268,6 @@ const globalAccessors = [
     System,
     Task,
     User,
-    Wiki,
 ];
 const projectAccessors = [
     Bookmark,
@@ -278,6 +279,7 @@ const projectAccessors = [
     Story,
     Task,
     Website,
+    Wiki,
 ];
 
 /**

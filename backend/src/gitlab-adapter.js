@@ -28,6 +28,7 @@ import {
     PeriodicTaskMaintainHooks,
     PeriodicTaskImportRepos,
     PeriodicTaskImportUsers,
+    PeriodicTaskImportWikis,
     PeriodicTaskImportRepoEvents,
     PeriodicTaskUpdateMilestones,
     PeriodicTaskRetryFailedExports,
@@ -40,11 +41,11 @@ let taskQueue;
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
 async function start() {
-    let db = database = await Database.open(true);
+    const db = database = await Database.open(true);
     await db.need('global');
 
     // listen for Webhook invocation
-    let app = Express();
+    const app = Express();
     app.use(BodyParser.json());
     app.set('json spaces', 2);
     app.post('/srv/gitlab/hook/:serverID', handleSystemHookCallback);
@@ -52,7 +53,7 @@ async function start() {
     server = app.listen(80);
 
     // listen for database change events
-    let tables = [
+    const tables = [
         'project',
         'server',
         'story',
@@ -62,12 +63,13 @@ async function start() {
     await db.listen(tables, 'change', handleDatabaseChanges, 100);
 
     taskQueue = new TaskQueue;
-    taskQueue.schedule(new PeriodicTaskMaintainHooks());
-    taskQueue.schedule(new PeriodicTaskImportRepos());
-    taskQueue.schedule(new PeriodicTaskImportUsers());
-    taskQueue.schedule(new PeriodicTaskImportRepoEvents());
-    taskQueue.schedule(new PeriodicTaskUpdateMilestones());
-    taskQueue.schedule(new PeriodicTaskRetryFailedExports());
+    taskQueue.schedule(new PeriodicTaskMaintainHooks);
+    taskQueue.schedule(new PeriodicTaskImportRepos);
+    taskQueue.schedule(new PeriodicTaskImportUsers);
+    taskQueue.schedule(new PeriodicTaskImportWikis);
+    taskQueue.schedule(new PeriodicTaskImportRepoEvents);
+    taskQueue.schedule(new PeriodicTaskUpdateMilestones);
+    taskQueue.schedule(new PeriodicTaskRetryFailedExports);
     await taskQueue.start();
 }
 
@@ -125,8 +127,8 @@ function handleDatabaseChanges(events) {
  * @param  {Object} event
  */
 function handleServerChangeEvent(event) {
-    let serverID = event.id;
-    let disabled = event.current.deleted || event.current.disabled;
+    const serverID = event.id;
+    const disabled = event.current.deleted || event.current.disabled;
     if (event.diff.settings) {
         if (!disabled) {
             taskQueue.add(new TaskImportRepos(serverID));
@@ -150,16 +152,16 @@ function handleServerChangeEvent(event) {
  */
 function handleProjectChangeEvent(event) {
     if (event.diff.archived || event.diff.deleted || event.diff.repo_ids) {
-        let projectID = event.id;
-        let archivedAfter = event.current.archived;
-        let archivedBefore = (event.diff.archived) ? event.previous.archived : archivedAfter;
-        let deletedAfter = event.current.deleted;
-        let deletedBefore = (event.diff.deleted) ? event.previous.deleted : deletedAfter;
-        let repoIDsAfter = event.current.repo_ids;
-        let repoIDsBefore = (event.diff.repo_ids) ? event.previous.repo_ids : repoIDsAfter;
+        const projectID = event.id;
+        const archivedAfter = event.current.archived;
+        const archivedBefore = (event.diff.archived) ? event.previous.archived : archivedAfter;
+        const deletedAfter = event.current.deleted;
+        const deletedBefore = (event.diff.deleted) ? event.previous.deleted : deletedAfter;
+        const repoIDsAfter = event.current.repo_ids;
+        const repoIDsBefore = (event.diff.repo_ids) ? event.previous.repo_ids : repoIDsAfter;
         for (let repoID of _.union(repoIDsAfter, repoIDsBefore)) {
-            let connectedBefore = !archivedBefore && !deletedBefore && _.includes(repoIDsBefore, repoID);
-            let connectedAfter = !archivedAfter && !deletedAfter && _.includes(repoIDsAfter, repoID);
+            const connectedBefore = !archivedBefore && !deletedBefore && _.includes(repoIDsBefore, repoID);
+            const connectedAfter = !archivedAfter && !deletedAfter && _.includes(repoIDsAfter, repoID);
             // remove or restore hooks
             if (connectedBefore && !connectedAfter) {
                 taskQueue.add(new TaskRemoveProjectHook(repoID, projectID));
@@ -191,7 +193,7 @@ function handleStoryChangeEvent(event) {
     } else if (!event.diff.details) {
         return;
     }
-    let storyID = event.id;
+    const storyID = event.id;
     taskQueue.add(new TaskReexportStory(storyID));
 }
 
@@ -213,8 +215,8 @@ function handleTaskChangeEvent(event) {
     if (event.current.deleted) {
         return;
     }
-    let schema = event.schema;
-    let taskID = event.id;
+    const schema = event.schema;
+    const taskID = event.id;
     taskQueue.add(new TaskExportStory(schema, taskID));
 }
 
@@ -225,8 +227,8 @@ function handleTaskChangeEvent(event) {
  */
 function handleSystemChangeEvent(event) {
     if (event.diff.settings) {
-        let hostBefore = (event.previous.settings) ? event.previous.settings.address : '';
-        let hostAfter = event.current.settings.address;
+        const hostBefore = (event.previous.settings) ? event.previous.settings.address : '';
+        const hostAfter = event.current.settings.address;
         if (hostBefore !== hostAfter) {
             if (hostBefore) {
                 taskQueue.add(new TaskRemoveHooks(hostBefore));
@@ -250,8 +252,8 @@ async function handleSystemHookCallback(req, res) {
     try {
         HookManager.verifyHookRequest(req);
 
-        let glHookEvent = req.body;
-        let serverID = parseInt(req.params.serverID);
+        const glHookEvent = req.body;
+        const serverID = parseInt(req.params.serverID);
         switch (glHookEvent.event_name) {
             case 'project_create':
             case 'project_destroy':
@@ -286,10 +288,10 @@ async function handleProjectHookCallback(req, res) {
     try {
         HookManager.verifyHookRequest(req);
 
-        let glHookEvent = req.body;
-        let serverID = parseInt(req.params.serverID);
-        let repoID = parseInt(req.params.repoID);
-        let projectID = parseInt(req.params.projectID);
+        const glHookEvent = req.body;
+        const serverID = parseInt(req.params.serverID);
+        const repoID = parseInt(req.params.repoID);
+        const projectID = parseInt(req.params.projectID);
         taskQueue.add(new TaskImportProjectHookEvent(repoID, projectID, glHookEvent));
     } catch (err) {
         console.error(err);

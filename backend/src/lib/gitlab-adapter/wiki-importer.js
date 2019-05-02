@@ -1,5 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
+import MarkGorParser from 'mark-gor/lib/parser';
+
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
 // accessors
@@ -137,7 +139,7 @@ async function importWikis(db, system, server, repo, project) {
 
     const wikiRefLists = [];
     for (let glWiki of glWikis) {
-        const refs = getWikiReferences(glWiki.content, glWiki.format);
+        const refs = findWikiReferences(glWiki.content, glWiki.format);
         wikiRefLists.push({ refs, glWikiReferrer: glWiki });
     }
 
@@ -202,6 +204,10 @@ function copyWikiProperties(wiki, system, server, repo, glWiki, isPublic) {
     ExternalDataUtils.inheritLink(wikiAfter, server, repo, {
         wiki: { id: glWiki.id }
     });
+    ExternalDataUtils.importProperty(storyAfter, server, 'language_codes', {
+        value: [ defLangCode ],
+        overwrite: 'always',
+    });
     ExternalDataUtils.importProperty(wikiAfter, server, 'slug', {
         value: glWiki.slug,
         overwrite: 'always',
@@ -224,6 +230,28 @@ function copyWikiProperties(wiki, system, server, repo, glWiki, isPublic) {
     return wikiAfter;
 }
 
+function findWikiReferences(text, format) {
+    if (format === 'markdown') {
+        return findMarkdownReferences(text);
+    } else {
+        return [];
+    }
+}
+
+function findMarkdownReferences(text) {
+    const parser = new MarkGorParser;
+    const blockTokens = parser.parse(text);
+    const slugs = [];
+    for (let blockToken of blockTokens) {
+        for (let inlineToken of blockToken.children) {
+            if (inlineToken.type === 'link') {
+                slugs.push(inlineToken.href);
+            }
+        }
+    }
+    return slugs;
+}
+
 /**
  * Retrieve milestone from Gitlab
  *
@@ -234,7 +262,7 @@ function copyWikiProperties(wiki, system, server, repo, glWiki, isPublic) {
  * @return {Promise<Object>}
  */
 async function fetchWiki(server, glProjectId, slug) {
-    let url = `/projects/${glProjectId}/wikis/${slug}`;
+    let url = `/projects/${glProjectId}/wikis/${slug}?with_content=1`;
     return Transport.fetch(server, url);
 }
 
@@ -247,7 +275,7 @@ async function fetchWiki(server, glProjectId, slug) {
  * @return {Promise<Array<Object>>}
  */
 async function fetchWikis(server, glProjectId) {
-    let url = `/projects/${glProjectId}/wikis`;
+    let url = `/projects/${glProjectId}/wikis?with_content=1`;
     return Transport.fetchAll(server, url);
 }
 

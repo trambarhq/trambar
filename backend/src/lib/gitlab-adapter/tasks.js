@@ -384,6 +384,22 @@ class PeriodicTaskImportUsers extends PeriodicTask {
     }
 }
 
+class PeriodicTaskImportWikis extends PeriodicTask {
+    delay(initial) {
+        return (initial) ? 0 : 60 * MIN;
+    }
+
+    async run(queue) {
+        let db = await Database.open();
+        let projects = await getProjects(db);
+        for (let project of projects) {
+            for (let repoID of project.repo_ids) {
+                queue.add(new TaskImportWikis(repoID, project.id));
+            }
+        }
+    }
+}
+
 class PeriodicTaskImportRepoEvents extends PeriodicTask {
     delay(initial) {
         return (initial) ? 0 : 2 * MIN;
@@ -608,6 +624,7 @@ export {
     PeriodicTaskMaintainHooks,
     PeriodicTaskImportRepos,
     PeriodicTaskImportUsers,
+    PeriodicTaskImportWikis,
     PeriodicTaskImportRepoEvents,
     PeriodicTaskUpdateMilestones,
     PeriodicTaskRetryFailedExports,
