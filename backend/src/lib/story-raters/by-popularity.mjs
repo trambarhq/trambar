@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Statistics from '../accessors/statistics';
+import Statistics from '../accessors/statistics.mjs';
 
 import ReactionTypeRatings from './ratings/reaction-type-ratings.mjs';
 

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Reaction from './reaction.mjs';
+import Reaction from '../accessors/reaction.mjs';
 
 class StoryPopularity {
     constructor() {

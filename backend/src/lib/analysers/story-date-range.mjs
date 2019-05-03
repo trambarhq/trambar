@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Story from './story.mjs';
+import Story from '../accessors/story.mjs';
 
 class StoryDateRange {
     constructor() {

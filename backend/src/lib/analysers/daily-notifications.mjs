@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment-timezone';
-import Notification from './notification.mjs';
+import Notification from '../accessors/notification.mjs';
 
 class DailyNotifications {
     constructor() {

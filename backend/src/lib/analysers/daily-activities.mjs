@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-
-import Story from './story.mjs';
+import Story from '../accessors/story.mjs';
 
 class DailyActivities {
     constructor() {

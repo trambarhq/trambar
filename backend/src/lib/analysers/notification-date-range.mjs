@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Notification from './notification.mjs';
+import Notification from '../accessors/notification.mjs';
 
 class NotificationDateRange {
     constructor() {

@@ -2,49 +2,58 @@ import _ from 'lodash';
 import Moment from 'moment';
 import Bluebird from 'bluebird';
 import FS from 'fs';
-import Database from 'database';
-import * as Shutdown from 'shutdown';
-import AsyncQueue from 'utils/async-queue';
+import Database from './lib/database.mjs';
+import * as Shutdown from './lib/shutdown.mjs';
+import AsyncQueue from './lib/common/utils/async-queue.mjs';
 
 // accessors
-import Statistics from 'accessors/statistics';
-import Listing from 'accessors/listing';
-import Project from 'accessors/project';
-import Story from 'accessors/story';
+import Statistics from './lib/accessors/statistics.mjs';
+import Listing from './lib/accessors/listing.mjs';
+import Project from './lib/accessors/project.mjs';
+import Story from './lib/accessors/story.mjs';
 
-// load available analysers
-const Analysers = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/analysers`), (filename) => {
-    if (/\.js$/.test(filename)) {
-        let module = require(`analysers/${filename}`).default;
-        return module;
-    }
-}));
-// load available story raters
-const StoryRaters = _.filter(_.map(FS.readdirSync(`${__dirname}/lib/story-raters`), (filename) => {
-    if (/\.js$/.test(filename)) {
-        let module = require(`story-raters/${filename}`).default;
-        // certain ratings cannot be applied until the listing is being retrieved
-        // (e.g. by retrieval time)
-        if (module.calculation !== 'deferred') {
-            return module;
-        }
-    }
-}));
+//  analysers
+import DailyActivities from './lib/analysers/daily-activities.mjs';
+import DailyNotifications from './lib/analysers/daily-notifications.mjs';
+import NotificationDateRange from './lib/analysers/notification-date-range.mjs';
+import StoryDateRange from './lib/analysers/story-date-range.mjs';
+import StoryPopularity from './lib/analysers/story-popularity.mjs';
+
+// story raters
+import ByDiversity from './lib/story-raters/by-diversity.mjs';
+import ByPopularity from './lib/story-raters/by-popularity.mjs';
+import ByRole from './lib/story-raters/by-role.mjs';
+import ByType from './lib/story-raters/by-type.mjs';
+
+const Analysers = [
+    DailyActivities,
+    DailyNotifications,
+    NotificationDateRange,
+    StoryDateRange,
+    StoryPopularity,
+];
+
+const StoryRaters = [
+    ByDiversity,
+    ByPopularity,
+    ByRole,
+    ByType,
+];
 
 let database;
 
 async function start() {
-    let db = database = await Database.open(true);
+    const db = database = await Database.open(true);
     await db.need('global');
     await queueDirtyStatistics(db);
     await queueDirtyListings(db);
 
-    let liveDataTables = [ 'listing', 'statistics' ];
+    const liveDataTables = [ 'listing', 'statistics' ];
     await db.listen(liveDataTables, 'clean', handleCleanRequests, 0);
 
     // capture event for tables that the story raters are monitoring
     // (for the purpose of cache invalidation)
-    let raterTables = _.uniq(_.flatten(_.map(StoryRaters, 'monitoring')));
+    const raterTables = _.uniq(_.flatten(_.map(StoryRaters, 'monitoring')));
     await db.listen(raterTables, 'change', handleRatingDependencyChanges, 0);
 
     // listen for changes to stories so we can invalidate cache
@@ -78,7 +87,7 @@ function handleCleanRequests(events) {
             return (event.schema === 'test:LiveDataUpdater');
         });
     }
-    let now = new Date;
+    const now = new Date;
     for (let event of events) {
         switch (event.table) {
             case 'statistics':
@@ -134,11 +143,11 @@ function handleStoryChanges(events) {
  * @return {Promise}
  */
 async function queueDirtyStatistics(db) {
-    let schemas = await getProjectSchemas(db);
+    const schemas = await getProjectSchemas(db);
     for (let schema of schemas) {
         try {
-            let criteria = { dirty: true, order: 'sample_count' };
-            let rows = await Statistics.find(db, schema, criteria, 'id, atime');
+            const criteria = { dirty: true, order: 'sample_count' };
+            const rows = await Statistics.find(db, schema, criteria, 'id, atime');
             for (let row of rows) {
                 addToStatisticsQueue(schema, row.id, row.atime);
             }
@@ -156,11 +165,11 @@ async function queueDirtyStatistics(db) {
  * @return {Promise}
  */
 async function queueDirtyListings(db) {
-    let schemas = await getProjectSchemas(db);
+    const schemas = await getProjectSchemas(db);
     for (let schema of schemas) {
         try {
-            let criteria = { dirty: true };
-            let rows = await Listing.find(db, schema, criteria, 'id, atime');
+            const criteria = { dirty: true };
+            const rows = await Listing.find(db, schema, criteria, 'id, atime');
             for (let row of rows) {
                 addToListingQueue(schema, row.id, row.atime);
             }
@@ -174,7 +183,7 @@ const HIGH = 10;
 const MEDIUM = 5;
 const LOW = 1;
 
-let statisticsUpdateQueue = new AsyncQueue('priority', 'desc');
+const statisticsUpdateQueue = new AsyncQueue('priority', 'desc');
 
 /**
  * Add statistics row to update queue, with priority based on how recently
@@ -186,7 +195,7 @@ let statisticsUpdateQueue = new AsyncQueue('priority', 'desc');
  */
 function addToStatisticsQueue(schema, id, atime) {
     // use access time to determine priority of update
-    let elapsed = getTimeElapsed(atime, new Date);
+    const elapsed = getTimeElapsed(atime, new Date);
     let priority = LOW;
     if (elapsed < 10 * 1000) {
         // last accessed within 10 sec
@@ -203,7 +212,7 @@ function addToStatisticsQueue(schema, id, atime) {
 async function processStatisticsQueue() {
     statisticsUpdateQueue.start();
     for (;;) {
-        let item = await statisticsUpdateQueue.pull();
+        const item = await statisticsUpdateQueue.pull();
         if (!item) {
             break;
         }
@@ -239,20 +248,20 @@ function haltStatisticsQueue() {
  */
 async function updateStatistics(schema, id) {
     console.log(`Updating statistics in ${schema}: ${id}`);
-    let db = await Database.open();
+    const db = await Database.open();
     // establish a lock on the row first, so multiple instances of this
     // script won't waste time performing the same work
-    let row = await Statistics.lock(db, schema, id, '1 minute', 'gn, type, filters');
+    const row = await Statistics.lock(db, schema, id, '1 minute', 'gn, type, filters');
     if (!row) {
         return;
     }
     try {
         // regenerate the row
-        let analyser = _.find(Analysers, { type: row.type });
+        const analyser = _.find(Analysers, { type: row.type });
         if (!analyser) {
             throw new Error('Unknown statistics type: ' + row.type);
         }
-        let props = await analyser.generate(db, schema, row.filters);
+        const props = await analyser.generate(db, schema, row.filters);
         // save the new data and release the lock
         await Statistics.unlock(db, schema, id, props, 'gn');
     } catch (err) {
@@ -261,7 +270,7 @@ async function updateStatistics(schema, id) {
     }
 }
 
-let listingUpdateQueue = new AsyncQueue('priority', 'desc');
+const listingUpdateQueue = new AsyncQueue('priority', 'desc');
 /**
  * Add listing row to update queue, with priority based on how recently
  * it was accessed
@@ -271,7 +280,7 @@ let listingUpdateQueue = new AsyncQueue('priority', 'desc');
  * @param {String} atime
  */
 function addToListingQueue(schema, id, atime) {
-    let elapsed = getTimeElapsed(atime, new Date);
+    const elapsed = getTimeElapsed(atime, new Date);
     let priority = 'low';
     if (elapsed < 60 * 1000) {
         // last accessed within 1 min
@@ -284,7 +293,7 @@ function addToListingQueue(schema, id, atime) {
 async function processListingQueue() {
     listingUpdateQueue.start();
     for (;;) {
-        let item = await listingUpdateQueue.pull();
+        const item = await listingUpdateQueue.pull();
         if (!item) {
             break;
         }
@@ -320,22 +329,22 @@ function haltListingQueue() {
  */
 async function updateListing(schema, id) {
     console.log(`Updating listing in ${schema}: ${id}`);
-    let db = await Database.open();
+    const db = await Database.open();
     // establish a lock on the row first, so multiple instances of this
     // script won't waste time performing the same work
-    let listing = await Listing.lock(db, schema, id, '1 minute', 'gn, type, filters, details');
+    const listing = await Listing.lock(db, schema, id, '1 minute', 'gn, type, filters, details');
     if (!listing) {
         return;
     }
     try {
-        let limit = _.get(listing.filters, 'limit', 100);
-        let latestStoryTime = _.get(listing.details, 'latest');
-        let earliestStoryTime = _.get(listing.details, 'earliest');
-        let retrievedStories = _.get(listing.details, 'stories', []);
-        let maxCandidateCount = 1000;
+        const limit = _.get(listing.filters, 'limit', 100);
+        const latestStoryTime = _.get(listing.details, 'latest');
+        const earliestStoryTime = _.get(listing.details, 'earliest');
+        const retrievedStories = _.get(listing.details, 'stories', []);
+        const maxCandidateCount = 1000;
 
-        let filterCriteria = _.pick(listing.filters, _.keys(Story.criteria));
-        let criteria = _.extend({}, filterCriteria, {
+        const filterCriteria = _.pick(listing.filters, _.keys(Story.criteria));
+        const criteria = _.extend({}, filterCriteria, {
             published: true,
             ready: true,
             deleted: false,
@@ -346,7 +355,7 @@ async function updateListing(schema, id) {
         let columns = _.flatten(_.map(StoryRaters, 'columns'));
         columns = _.concat(columns, [ 'id', 'COALESCE(ptime, btime) AS btime' ]);
         columns = _.uniq(columns);
-        let stories = await Story.findCached(db, schema, criteria, columns.join(', '));
+        const stories = await Story.findCached(db, schema, criteria, columns.join(', '));
         // take out stories retrieved earlier that are no longer
         // available for one reason or another (deleted, made private, etc)
         //
@@ -354,14 +363,14 @@ async function updateListing(schema, id) {
         // many newer ones that it's now excluded by the row limit; in
         // that case the story is bound to get pushed out anyway so
         // removing it (for the wrong reason) isn't an issue
-        let storyHash = _.keyBy(stories, 'id');
-        let retainingStories = _.filter(retrievedStories, (story) => {
+        const storyHash = _.keyBy(stories, 'id');
+        const retainingStories = _.filter(retrievedStories, (story) => {
             return !!storyHash[story.id];
         });
 
         // get unretrieved stories that are newer than the last story considered
-        let retrievedStoriesHash = _.keyBy(retrievedStories, 'id');
-        let newStories = _.filter(stories, (story) => {
+        const retrievedStoriesHash = _.keyBy(retrievedStories, 'id');
+        const newStories = _.filter(stories, (story) => {
             if (!retrievedStoriesHash[story.id]) {
                 if (!latestStoryTime || story.btime > latestStoryTime) {
                     return true;
@@ -369,15 +378,15 @@ async function updateListing(schema, id) {
             }
         });
 
-        let oldRows = [];
-        let gap = Math.max(0, limit - _.size(retainingStories) - _.size(newStories));
+        const oldRows = [];
+        const gap = Math.max(0, limit - _.size(retainingStories) - _.size(newStories));
         if (gap > 0) {
             // need to backfill the list--look for stories with btime
             // earlier than stories already retrieved
             //
             // first, find stories that were rejected earlier
-            let newStoriesHash = _.keyBy(newStories, 'id');
-            let ignoredStories = _.filter(stories, (story) => {
+            const newStoriesHash = _.keyBy(newStories, 'id');
+            const ignoredStories = _.filter(stories, (story) => {
                 if (!retrievedStoriesHash[story.id] && !newStoriesHash[story.id]) {
                     if (earliestStoryTime && story.btime <= earliestStoryTime) {
                         return true;
@@ -386,7 +395,7 @@ async function updateListing(schema, id) {
             });
 
             // don't go too far back--just one day
-            let dayBefore = Moment(earliestStoryTime).subtract(1, 'day').toISOString();
+            const dayBefore = Moment(earliestStoryTime).subtract(1, 'day').toISOString();
             oldRows = _.filter(ignoredStories, (story) => {
                 return (story.btime >= dayBefore);
             });
@@ -396,17 +405,17 @@ async function updateListing(schema, id) {
                 oldRows = _.slice(ignoredStories, 0, gap);
             }
         }
-        let selectedRows = _.concat(newStories, oldRows);
+        const selectedRows = _.concat(newStories, oldRows);
         // retrieve data needed to rate the candidates
-        let contexts = await prepareStoryRaterContexts(db, schema, selectedRows, listing);
-        let candidates = _.map(newStories, (story) => {
+        const contexts = await prepareStoryRaterContexts(db, schema, selectedRows, listing);
+        const candidates = _.map(newStories, (story) => {
             return {
                 id: story.id,
                 btime: story.btime,
                 rating: calculateStoryRating(contexts, story),
             };
         });
-        let backfillCandidates = _.map(oldRows, (story) => {
+        const backfillCandidates = _.map(oldRows, (story) => {
             return {
                 id: story.id,
                 btime: story.btime,
@@ -418,7 +427,7 @@ async function updateListing(schema, id) {
         }
 
         // save the new candidate list
-        let details = _.assign({}, listing.details, {
+        const details = _.assign({}, listing.details, {
             stories: retainingStories,
             candidates: candidates,
             backfill_candidates: backfillCandidates
@@ -453,9 +462,9 @@ async function updateListing(schema, id) {
  * @return {Promise<Object>}
  */
 async function prepareStoryRaterContexts(db, schema, stories, listing) {
-    let contexts = {};
+    const contexts = {};
     for (let rater of StoryRaters) {
-        let context = await rater.prepareContext(db, schema, stories, listing);
+        const context = await rater.prepareContext(db, schema, stories, listing);
         contexts[rater.type] = context;
     }
     return contexts;
@@ -472,7 +481,7 @@ async function prepareStoryRaterContexts(db, schema, stories, listing) {
 function calculateStoryRating(contexts, story) {
     let total = 0;
     for (let rater of StoryRaters) {
-        let rating = rater.calculateRating(contexts[rater.type], story);
+        const rating = rater.calculateRating(contexts[rater.type], story);
         total += rating;
     }
     return total;
@@ -486,8 +495,8 @@ function calculateStoryRating(contexts, story) {
  * @return {Promise<Array<String>>}
  */
 async function getProjectSchemas(db) {
-    let rows = await Project.find(db, 'global', { deleted: false }, 'name');
-    let names = _.map(_.sortBy(rows, 'name'), 'name');
+    const rows = await Project.find(db, 'global', { deleted: false }, 'name');
+    const names = _.map(_.sortBy(rows, 'name'), 'name');
     return names;
 }
 
@@ -506,12 +515,12 @@ function getTimeElapsed(start, end) {
     if (!end) {
         return 0;
     }
-    let s = (typeof(start) === 'string') ? new Date(start) : start;
-    let e = (typeof(end) === 'string') ? new Date(end) : end;
+    const s = (typeof(start) === 'string') ? new Date(start) : start;
+    const e = (typeof(end) === 'string') ? new Date(end) : end;
     return (e - s);
 }
 
-if (process.argv[1] === __filename) {
+if ('file://' + process.argv[1] === import.meta.url) {
     start();
     Shutdown.on(stop);
 }

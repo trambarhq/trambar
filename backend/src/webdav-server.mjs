@@ -1,35 +1,35 @@
 import _ from 'lodash';
 import JsDAV from 'jsDAV';
-import JsDAVLocksBackendFS from 'jsDAV/lib/DAV/plugins/locks/fs';
-import { File, Collection, Conflict } from 'jsdav-promise/es6';
+import JsDAVLocksBackendFS from 'jsDAV/lib/DAV/plugins/locks/fs.js';
+import JsDAVPromise from 'jsdav-promise/es6.js';
 
-import Database from 'database';
-import * as Shutdown from 'shutdown';
+import Database from './lib/database.mjs';
+import * as Shutdown from './lib/shutdown.mjs';
 
 // accessors
-import Commit from 'accessors/commit';
-import Device from 'accessors/device';
-import Picture from 'accessors/picture';
-import Project from 'accessors/project';
-import Repo from 'accessors/repo';
-import Role from 'accessors/role';
-import Server from 'accessors/server';
-import Session from 'accessors/session';
-import Subscription from 'accessors/subscription';
-import System from 'accessors/system';
-import User from 'accessors/user';
+import Commit from './lib/accessors/commit.mjs';
+import Device from './lib/accessors/device.mjs';
+import Picture from './lib/accessors/picture.mjs';
+import Project from './lib/accessors/project.mjs';
+import Repo from './lib/accessors/repo.mjs';
+import Role from './lib/accessors/role.mjs';
+import Server from './lib/accessors/server.mjs';
+import Session from './lib/accessors/session.mjs';
+import Subscription from './lib/accessors/subscription.mjs';
+import System from './lib/accessors/system.mjs';
+import User from './lib/accessors/user.mjs';
 
-import Bookmark from 'accessors/bookmark';
-import Listing from 'accessors/listing';
-import Reaction from 'accessors/reaction';
-import Spreadsheet from 'accessors/spreadsheet';
-import Statistics from 'accessors/statistics';
-import Story from 'accessors/story';
+import Bookmark from './lib/accessors/bookmark.mjs';
+import Listing from './lib/accessors/listing.mjs';
+import Reaction from './lib/accessors/reaction.mjs';
+import Spreadsheet from './lib/accessors/spreadsheet.mjs';
+import Statistics from './lib/accessors/statistics.mjs';
+import Story from './lib/accessors/story.mjs';
 
-import Notification from 'accessors/notification';
-import Task from 'accessors/task';
+import Notification from './lib/accessors/notification.mjs';
+import Task from './lib/accessors/task.mjs';
 
-let globalAccessors = [
+const globalAccessors = [
     Commit,
     Device,
     Notification,
@@ -44,7 +44,7 @@ let globalAccessors = [
     Task,
     User,
 ];
-let projectAccessors = [
+const projectAccessors = [
     Bookmark,
     Listing,
     Notification,
@@ -57,7 +57,7 @@ let projectAccessors = [
 let server;
 let db;
 
-class RootFolder extends Collection {
+class RootFolder extends JsDAVPromise.Collection {
     constructor() {
         super();
         this.name = '';
@@ -68,7 +68,7 @@ class RootFolder extends Collection {
         if (name === 'global') {
             return new SchemaFolder('global');
         } else {
-            let project = await Project.findOne(db, 'global', { name, deleted: false }, 'name');
+            const project = await Project.findOne(db, 'global', { name, deleted: false }, 'name');
             if (project) {
                 return new SchemaFolder(project.name);
             }
@@ -76,8 +76,8 @@ class RootFolder extends Collection {
     }
 
     async getChildrenAsync() {
-        let projects = await Project.find(db, 'global', { deleted: false }, 'name');
-        let children = [];
+        const projects = await Project.find(db, 'global', { deleted: false }, 'name');
+        const children = [];
         for (let project of projects) {
             if (project.name) {
                 children.push(new SchemaFolder(project.name));
@@ -88,7 +88,7 @@ class RootFolder extends Collection {
     }
 }
 
-class SchemaFolder extends Collection {
+class SchemaFolder extends JsDAVPromise.Collection {
     constructor(schema) {
         super();
         this.name = schema;
@@ -98,7 +98,7 @@ class SchemaFolder extends Collection {
     }
 
     async getChildrenAsync() {
-        let children = [];
+        const children = [];
         for (let accessor of this.accessors) {
             children.push(new TableFolder(this.schema, accessor.table));
         }
@@ -106,49 +106,49 @@ class SchemaFolder extends Collection {
     }
 }
 
-class TableFolder extends Collection {
+class TableFolder extends JsDAVPromise.Collection {
     constructor(schema, table) {
         super();
         this.name = table;
         this.path = `/${schema}/${table}`;
         this.schema = schema;
         this.table = table;
-        let accessors = (schema === 'global') ? globalAccessors : projectAccessors;
+        const accessors = (schema === 'global') ? globalAccessors : projectAccessors;
         this.accessor = _.find(accessors, { table });
     }
 
     async createFileAsync(name, data, type) {
-        let text = data.toString();
-        let object = (text) ? JSON.parse(text) : {};
-        let m = /^(\d+)\.json$/.exec(name);
+        const text = data.toString();
+        const object = (text) ? JSON.parse(text) : {};
+        const m = /^(\d+)\.json$/.exec(name);
         if (!m) {
-            throw new Conflict;
+            throw new JsDAVPromise.Conflict;
         }
-        let id = parseInt(m[1]);
+        const id = parseInt(m[1]);
         if (object.id) {
             if (object.id !== id) {
-                throw new Conflict;
+                throw new JsDAVPromise.Conflict;
             }
         } else {
             object.id = id;
         }
-        let row = await this.accessor.findOne(db, this.schema, { id, deleted: false }, `id`);
+        const row = await this.accessor.findOne(db, this.schema, { id, deleted: false }, `id`);
         if (row) {
-            throw new Conflict;
+            throw new JsDAVPromise.Conflict;
         }
         await this.accessor.insertOne(db, this.schema, object);
         return true;
     }
 
     async getChildAsync(name) {
-        let id = parseInt(name);
+        const id = parseInt(name);
         if (id !== id) {
             // NaN
             return null;
         }
-        let row = await this.accessor.findOne(db, this.schema, { id, deleted: false }, `id`);
+        const row = await this.accessor.findOne(db, this.schema, { id, deleted: false }, `id`);
         if (row) {
-            let filename = row.id + '.json';
+            const filename = row.id + '.json';
             return new RowFile(this.schema, this.table, row.id, filename);
         } else {
             return null;
@@ -156,17 +156,17 @@ class TableFolder extends Collection {
     }
 
     async getChildrenAsync() {
-        let children = [];
-        let rows = await this.accessor.find(db, this.schema, { deleted: false }, `id`);
+        const children = [];
+        const rows = await this.accessor.find(db, this.schema, { deleted: false }, `id`);
         for (let row of rows) {
-            let filename = row.id + '.json';
+            const filename = row.id + '.json';
             children.push(new RowFile(this.schema, this.table, row.id, filename));
         }
         return children;
     }
 }
 
-class RowFile extends File {
+class RowFile extends JsDAVPromise.File {
     constructor(schema, table, id, filename) {
         super();
         this.name = filename;
@@ -174,24 +174,24 @@ class RowFile extends File {
         this.id = id;
         this.schema = schema;
         this.table = table;
-        let accessors = (schema === 'global') ? globalAccessors : projectAccessors;
+        const accessors = (schema === 'global') ? globalAccessors : projectAccessors;
         this.accessor = _.find(accessors, { table });
     }
 
     async getAsync() {
-        let row = await this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, '*');
-        let props = _.omit(row, 'ctime', 'mtime', 'gn', 'deleted');
-        let text = JSON.stringify(props, undefined, 2);
+        const row = await this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, '*');
+        const props = _.omit(row, 'ctime', 'mtime', 'gn', 'deleted');
+        const text = JSON.stringify(props, undefined, 2);
         return new Buffer(text);
     }
 
     async putAsync(data, type) {
-        let text = data.toString();
-        let props = JSON.parse(text);
+        const text = data.toString();
+        const props = JSON.parse(text);
         if (props.id !== this.id) {
             throw new Error('Cannot change id');
         }
-        let row = await this.accessor.updateOne(db, this.schema, props);
+        const row = await this.accessor.updateOne(db, this.schema, props);
         return !!row;
     }
 
@@ -205,7 +205,7 @@ class RowFile extends File {
     }
 
     async getSizeAsync() {
-        let buffer = await this.getAsync();
+        const buffer = await this.getAsync();
         return buffer.length;
     }
 
@@ -214,7 +214,7 @@ class RowFile extends File {
     }
 
     async getLastModifiedAsync() {
-        let row = await this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, 'mtime');
+        const row = await this.accessor.findOne(db, this.schema, { id: this.id, deleted: false }, 'mtime');
         return row.mtime;
     }
 }
@@ -223,7 +223,7 @@ async function start() {
     db = await Database.open(true);
     server = JsDAV.createServer({
         node: new RootFolder,
-        locksBackend: JsDAVLocksBackendFS.new('/let/tmp')
+        locksBackend: JsDAVLocksBackendFS.new('/var/tmp')
     }, 8000, '0.0.0.0');
 }
 
@@ -233,7 +233,7 @@ async function stop() {
     db = null;
 }
 
-if (process.argv[1] === __filename) {
+if ('file://' + process.argv[1] === import.meta.url) {
     start();
     Shutdown.on(stop);
 }
