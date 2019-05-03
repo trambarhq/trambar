@@ -4,7 +4,7 @@ import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Request from 'request';
 import Crypto from 'crypto';
 import { PassThrough } from 'stream';
-import HTTPError from 'errors/http-error';
+import HTTPError from '../common/errors/http-error.mjs';
 
 /**
  * Save file to cache folder, using the MD5 hash of its content as name
@@ -15,12 +15,12 @@ import HTTPError from 'errors/http-error';
  * @return {String}
  */
 async function saveFile(srcPath, dstFolder) {
-    let hash = await hashFile(srcPath);
+    const hash = await hashFile(srcPath);
     try {
         await FS.statAsync(dstPath);
     } catch (err) {
-        let inputStream = FS.createReadStream(srcPath);
-        let outputStream = FS.createWriteStream(dstPath);
+        const inputStream = FS.createReadStream(srcPath);
+        const outputStream = FS.createWriteStream(dstPath);
         await new Promise((resolve, reject) => {
             inputStream.once('error', reject);
             outputStream.once('finish', resolve);
@@ -51,8 +51,8 @@ async function moveFile(srcPath, dstPath) {
             await FS.renameAsync(srcPath, dstPath);
         } catch (err) {
             // can't rename accross volumes
-            let readStream = FS.createReadStream(srcPath);
-            let writeStream = FS.createWriteStream(dstPath);
+            const readStream = FS.createReadStream(srcPath);
+            const writeStream = FS.createWriteStream(dstPath);
             await new Promise((resolve, reject) => {
                 writeStream.once('error', reject);
                 writeStream.once('finish', resolve);
@@ -74,8 +74,8 @@ async function moveFile(srcPath, dstPath) {
  * @return {Promise<String>}
  */
 async function hashFile(srcPath) {
-    let hash = Crypto.createHash('md5');
-    let stream = FS.createReadStream(srcPath);
+    const hash = Crypto.createHash('md5');
+    const stream = FS.createReadStream(srcPath);
     await new Promise((resolve, reject) => {
         stream.once('error', reject);
         hash.once('readable', resolve);
@@ -94,26 +94,26 @@ async function hashFile(srcPath) {
  * @return {Promise<String>}
  */
 async function downloadFile(url, dstFolder) {
-    let previousDownload = await recallDownload(url, dstFolder);
-    let headers = await getRetrievalHeaders(previousDownload, dstFolder);
-    let request = Request.get({ url, headers });
-    let passThru = new PassThrough;
-    let response = await new Promise((resolve, reject) => {
+    const previousDownload = await recallDownload(url, dstFolder);
+    const headers = await getRetrievalHeaders(previousDownload, dstFolder);
+    const request = Request.get({ url, headers });
+    const passThru = new PassThrough;
+    const response = await new Promise((resolve, reject) => {
         request.once('response', resolve);
         request.once('error', reject);
         request.pipe(passThru);
     });
     if (response.statusCode === 200) {
         // stream contents into temp file
-        let tempPath = makeTempPath(dstFolder, url);
-        let tempFile = FS.createWriteStream(tempPath);
-        let tempFilePromise = new Promise((resolve, reject) => {
+        const tempPath = makeTempPath(dstFolder, url);
+        const tempFile = FS.createWriteStream(tempPath);
+        const tempFilePromise = new Promise((resolve, reject) => {
             tempFile.once('finish', resolve);
             tempFile.once('error', reject);
         });
         //  calculate the MD5 hash at the same time
-        let md5Hash = Crypto.createHash('md5');
-        let md5HashPromise = new Promise((resolve, reject) => {
+        const md5Hash = Crypto.createHash('md5');
+        const md5HashPromise = new Promise((resolve, reject) => {
             md5Hash.once('readable', resolve);
             md5Hash.once('error', reject);
         });
@@ -122,8 +122,8 @@ async function downloadFile(url, dstFolder) {
         await Promise.all([ tempFilePromise, md5HashPromise ]);
 
         // rename file to its MD5 hash
-        let hash = md5Hash.read().toString('hex');
-        let dstPath = `${dstFolder}/${hash}`;
+        const hash = md5Hash.read().toString('hex');
+        const dstPath = `${dstFolder}/${hash}`;
         await moveFile(tempPath, dstPath);
         await rememberDownload(url, dstFolder, hash, response.headers);
         return dstPath;
@@ -149,9 +149,9 @@ async function downloadFile(url, dstFolder) {
  */
 async function preserveFile(file, url, dstFolder) {
     if (file) {
-        let srcPath = file.path;
-        let hash = await hashFile(srcPath);
-        let dstPath = `${dstFolder}/${hash}`;
+        const srcPath = file.path;
+        const hash = await hashFile(srcPath);
+        const dstPath = `${dstFolder}/${hash}`;
         await moveFile(srcPath, dstPath);
         return dstPath;
     } else if (url) {
@@ -168,7 +168,7 @@ async function preserveFile(file, url, dstFolder) {
  * @return {String}
  */
 function md5(data) {
-    let hash = Crypto.createHash('md5').update(data);
+    const hash = Crypto.createHash('md5').update(data);
     return hash.digest('hex');
 }
 
@@ -182,8 +182,8 @@ function md5(data) {
  * @return {String}
  */
 function makeTempPath(dstFolder, url, ext) {
-    let date = (new Date).toISOString();
-    let hash = md5(`${url} ${date}`);
+    const date = (new Date).toISOString();
+    const hash = md5(`${url} ${date}`);
     if (!ext) {
         ext = '';
     }
@@ -202,20 +202,20 @@ function makeTempPath(dstFolder, url, ext) {
  */
 async function rememberDownload(url, dstFolder, hash, headers) {
     try {
-        let etag = headers['etag'];
-        let mtime = headers['last-modified'];
-        let type = headers['content-type'];
-        let size = parseInt(headers['content-length']);
-        let info = { url, hash, type, size, etag, mtime };
-        let json = JSON.stringify(info, undefined, 2);
-        let folder = `${dstFolder}/.url`;
+        const etag = headers['etag'];
+        const mtime = headers['last-modified'];
+        const type = headers['content-type'];
+        const size = parseInt(headers['content-length']);
+        const info = { url, hash, type, size, etag, mtime };
+        const json = JSON.stringify(info, undefined, 2);
+        const folder = `${dstFolder}/.url`;
         try {
             await FS.statAsync(folder);
         } catch (err) {
             await FS.mkdirAsync(folder);
         }
-        let urlHash = md5(url);
-        let path = `${dstFolder}/.url/${urlHash}`;
+        const urlHash = md5(url);
+        const path = `${dstFolder}/.url/${urlHash}`;
         return FS.writeFileAsync(path, json);
     } catch (err) {
         console.error(err);
@@ -232,15 +232,15 @@ async function rememberDownload(url, dstFolder, hash, headers) {
  */
 async function recallDownload(url, dstFolder) {
     try {
-        let urlHash = md5(url);
-        let path = `${dstFolder}/.url/${urlHash}`;
-        let json = await FS.readFileAsync(path, 'utf-8');
-        let info = JSON.parse(json);
+        const urlHash = md5(url);
+        const path = `${dstFolder}/.url/${urlHash}`;
+        const json = await FS.readFileAsync(path, 'utf-8');
+        const info = JSON.parse(json);
         info.path = `${dstFolder}/${info.hash}`;
 
         // verify that the file is there
         if (info.size !== undefined) {
-            let stats = await FS.statAsync(info.path);
+            const stats = await FS.statAsync(info.path);
             if (info.size !== stats.size) {
                 throw new Error('Size mismatch');
             }

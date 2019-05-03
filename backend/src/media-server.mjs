@@ -10,23 +10,24 @@ import Moment from 'moment';
 import DNSCache from 'dnscache';
 import FileType from 'file-type';
 
-import Database from 'database';
-import Task from 'accessors/task';
-import HTTPError from 'errors/http-error';
-import * as Shutdown from 'shutdown';
+import Database from './lib/database.mjs';
+import Task from './lib/accessors/task.mjs';
+import HTTPError from './lib/common/errors/http-error.mjs';
+import * as Shutdown from './lib/shutdown.mjs';
 
-import * as CacheFolders from 'media-server/cache-folders';
-import * as FileManager from 'media-server/file-manager';
-import * as ImageManager from 'media-server/image-manager';
-import * as VideoManager from 'media-server/video-manager';
-import * as StockPhotoImporter from 'media-server/stock-photo-importer';
+import * as CacheFolders from './lib/media-server/cache-folders.mjs';
+import * as FileManager from './lib/media-server/file-manager.mjs';
+import * as ImageManager from './lib/media-server/image-manager.mjs';
+import * as VideoManager from './lib/media-server/video-manager.mjs';
+import * as StockPhotoImporter from './lib/media-server/stock-photo-importer.mjs';
 
-let server;
-let cacheControl = {
+const cacheControl = {
     image: 'max-age=2592000, immutable',
     video: 'max-age=86400',
     audio: 'max-age=86400',
 };
+
+let server;
 
 DNSCache({ enable: true, ttl: 300, cachesize: 100 });
 
@@ -36,8 +37,8 @@ async function start() {
     await StockPhotoImporter.importPhotos();
 
     // start up Express
-    let app = Express();
-    let upload = Multer({ dest: '/var/tmp' });
+    const app = Express();
+    const upload = Multer({ dest: '/var/tmp' });
     app.use(CORS());
     app.use(BodyParser.json());
     app.set('json spaces', 2);
@@ -110,7 +111,7 @@ function sendFile(res, buffer, mimeType, cc) {
  * @return {Promise}
  */
 async function sendStaticFile(res, path, cc, filename) {
-    let info = await getFileType(path);
+    const info = await getFileType(path);
     res.type(info.mime);
     if (cc) {
         res.set('Cache-Control', cc);
@@ -119,15 +120,15 @@ async function sendStaticFile(res, path, cc, filename) {
         res.set('Content-disposition', `attachment; filename=${filename}`);
     }
     try {
-        let stat = await FS.lstatAsync(path);
+        const stat = await FS.lstatAsync(path);
         if (stat.isSymbolicLink()) {
             // serve file through Express if it's a symlink, since it's probably
             // pointing to a file that only exist in this Docker container
             res.sendFile(path);
         } else {
             // ask Nginx to server the file
-            let relPath = path.substr(CacheFolders.root.length + 1);
-            let uri = `/srv/static_media/${relPath}`;
+            const relPath = path.substr(CacheFolders.root.length + 1);
+            const uri = `/srv/static_media/${relPath}`;
             res.set('X-Accel-Redirect', uri).end();
         }
     } catch (err) {
@@ -162,18 +163,19 @@ function sendError(res, err) {
  */
 async function handleImageFiltersRequest(req, res) {
     try {
-        let hash = req.params.hash;
-        let filename = req.params.filename;
-        let m = /([^.]*?)(\.(.+))?$/i.exec(filename);
+        const hash = req.params.hash;
+        const filename = req.params.filename;
+        const m = /([^.]*?)(\.(.+))?$/i.exec(filename);
         if (!m) {
             throw new HTTPError(400, 'Invalid filename');
         }
-        let filters = m[1], format = m[3];
+        const filters = m[1];
+        let format = m[3];
         if (!format || format === 'jpg') {
             format = 'jpeg';
         }
-        let path = `${CacheFolders.image}/${hash}`;
-        let buffer = await ImageManager.applyFilters(path, filters, format);
+        const path = `${CacheFolders.image}/${hash}`;
+        const buffer = await ImageManager.applyFilters(path, filters, format);
         sendFile(res, buffer, format, cacheControl.image);
     } catch (err) {
         sendError(res, err);
@@ -187,7 +189,7 @@ async function handleImageFiltersRequest(req, res) {
  * @param  {Response} res
  */
 async function handleImageOriginalRequest(req, res) {
-    let path = `${CacheFolders.image}/${req.params.filename}`;
+    const path = `${CacheFolders.image}/${req.params.filename}`;
     await sendStaticFile(res, path, cacheControl.video);
 }
 
@@ -198,7 +200,7 @@ async function handleImageOriginalRequest(req, res) {
  * @param  {Response} res
  */
 async function handleVideoRequest(req, res) {
-    let path = `${CacheFolders.video}/${req.params.filename}`;
+    const path = `${CacheFolders.video}/${req.params.filename}`;
     await sendStaticFile(res, path, cacheControl.video);
 }
 
@@ -209,7 +211,7 @@ async function handleVideoRequest(req, res) {
  * @param  {Response} res
  */
 async function handleAudioRequest(req, res) {
-    let path = `${CacheFolders.audio}/${req.params.filename}`;
+    const path = `${CacheFolders.audio}/${req.params.filename}`;
     await sendStaticFile(res, path, cacheControl.audio);
 }
 
@@ -221,8 +223,8 @@ async function handleAudioRequest(req, res) {
  */
 async function handleClipartRequest(req, res) {
     try {
-        let path = Path.resolve(`../media/cliparts/${req.params.filename}`);
-        let info = await getFileType(path);
+        const path = Path.resolve(`../media/cliparts/${req.params.filename}`);
+        const info = await getFileType(path);
         res.type(info.mime);
         res.set('Cache-Control', 'max-age=86400');
         res.sendFile(path);
@@ -239,12 +241,12 @@ async function handleClipartRequest(req, res) {
  */
 async function handleImageUpload(req, res) {
     try {
-        let schema = req.params.schema;
-        let token = req.query.token;
-        let file = req.file;
-        let sourceURL = req.body.url;
-        let taskID = await checkTaskToken(schema, token, 'add-image');
-        let imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+        const schema = req.params.schema;
+        const token = req.query.token;
+        const file = req.file;
+        const sourceURL = req.body.url;
+        const taskID = await checkTaskToken(schema, token, 'add-image');
+        const imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
         if (!imagePath) {
             throw new HTTPError(400);
         }
@@ -252,9 +254,9 @@ async function handleImageUpload(req, res) {
         // save image metadata into the task object
         // a PostgreSQL stored-proc will then transfer that into objects
         // that contains the token
-        let metadata = ImageManager.getImageMetadata(imagePath);
-        let url = getFileURL(imagePath);
-        let details = {
+        const metadata = ImageManager.getImageMetadata(imagePath);
+        const url = getFileURL(imagePath);
+        const details = {
             url: url,
             format: metadata.format,
             width: metadata.width,
@@ -263,7 +265,7 @@ async function handleImageUpload(req, res) {
         };
         await saveTaskOutcome(schema, taskID, 'main', details);
 
-        let result = { url };
+        const result = { url };
         sendJSON(res, result);
     } catch (err) {
         sendError(res, err);
@@ -278,15 +280,15 @@ async function handleImageUpload(req, res) {
  */
 async function handleImageImport(req, res) {
     try {
-        let file = req.file;
-        let sourceURL = req.body.url;
-        let imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+        const file = req.file;
+        const sourceURL = req.body.url;
+        const imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
         if (!imagePath) {
             throw new HTTPError(400);
         }
 
-        let metadata = await ImageManager.getImageMetadata(imagePath);
-        let result = {
+        const metadata = await ImageManager.getImageMetadata(imagePath);
+        const result = {
             type: 'image',
             url: getFileURL(imagePath),
             format: metadata.format,
@@ -347,18 +349,18 @@ async function handleAudioPoster(req, res) {
  */
 async function handleMediaUpload(req, res, type) {
     try {
-        let schema = req.params.schema;
-        let token = req.query.token;
-        let streamID = req.body.stream;
-        let file = req.file;
-        let sourceURL = req.body.url;
-        let generatePoster = !!req.body.generate_poster;
-        let taskID = await checkTaskToken(schema, token, `add-${type}`);
+        const schema = req.params.schema;
+        const token = req.query.token;
+        const streamID = req.body.stream;
+        const file = req.file;
+        const sourceURL = req.body.url;
+        const generatePoster = !!req.body.generate_poster;
+        const taskID = await checkTaskToken(schema, token, `add-${type}`);
         let result;
 
         if (streamID) {
             // handle streaming upload--transcoding job has been created already
-            let job = VideoManager.findTranscodingJob(streamID);
+            const job = VideoManager.findTranscodingJob(streamID);
             if (!job) {
                 throw new HTTPError(404);
             }
@@ -366,18 +368,18 @@ async function handleMediaUpload(req, res, type) {
             result = {};
         } else {
             // transcode an uploaded file--move it into cache folder first
-            let dstFolder = CacheFolders[type];
-            let mediaPath = await FileManager.preserveFile(file, sourceURL, dstFolder);
+            const dstFolder = CacheFolders[type];
+            const mediaPath = await FileManager.preserveFile(file, sourceURL, dstFolder);
             if (!mediaPath) {
                 throw new HTTPError(400);
             }
 
-            let url = getFileURL(mediaPath);
+            const url = getFileURL(mediaPath);
             // create the transcoding job, checking if it exists already on
             // the off-chance the same file is uploaded twice at the same time
-            let jobID = Path.basename(mediaPath);
+            const jobID = Path.basename(mediaPath);
             if (!VideoManager.findTranscodingJob(jobID)) {
-                let job = await VideoManager.startTranscodingJob(mediaPath, type, jobID);
+                const job = await VideoManager.startTranscodingJob(mediaPath, type, jobID);
                 if (generatePoster) {
                     await VideoManager.requestPosterGeneration(job);
                 }
@@ -401,13 +403,13 @@ async function handleMediaUpload(req, res, type) {
 function monitorTranscodingJob(schema, taskID, job) {
     // monitor transcoding progress
     job.onProgress = (evt) => {
-        let progress = evt.target.progress;
+        const progress = evt.target.progress;
         console.log('Progress: ', progress + '%');
         saveTaskProgress(schema, taskID, progress);
     };
 
     // wait for transcoding to finish
-    let monitorMedia = async () => {
+    const monitorMedia = async () => {
         await VideoManager.awaitTranscodingJob(job);
         if (job.aborted) {
             return;
@@ -415,7 +417,7 @@ function monitorTranscodingJob(schema, taskID, job) {
         // save URL and information about available version to task object
         // (doing so transfer these properties into details.resources of
         // object that has the Task object's token as payload_token)
-        let details = {
+        const details = {
             url: getFileURL(job.inputFile.path),
             duration: job.inputFile.duration,
             width: job.inputFile.width,
@@ -440,13 +442,13 @@ function monitorTranscodingJob(schema, taskID, job) {
         await saveTaskOutcome(schema, taskID, 'main', details);
     };
     // wait for poster to be generated
-    let monitorPoster = async () => {
+    const monitorPoster = async () => {
         if (job.posterFile) {
             await VideoManager.awaitPosterGeneration(job);
             if (job.aborted) {
                 return;
             }
-            let details = {
+            const details = {
                 poster_url: getFileURL(job.posterFile.path),
                 width: job.posterFile.width,
                 height: job.posterFile.height,
@@ -467,20 +469,20 @@ function monitorTranscodingJob(schema, taskID, job) {
  */
 async function handleMediaPoster(req, res, type) {
     try {
-        let schema = req.params.schema;
-        let token = req.query.token;
-        let streamID = req.body.stream;
-        let file = req.file;
-        let sourceURL = req.body.url;
-        let taskID = await checkTaskToken(schema, token, `add-${type}`);
-        let imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
+        const schema = req.params.schema;
+        const token = req.query.token;
+        const streamID = req.body.stream;
+        const file = req.file;
+        const sourceURL = req.body.url;
+        const taskID = await checkTaskToken(schema, token, `add-${type}`);
+        const imagePath = await FileManager.preserveFile(file, sourceURL, CacheFolders.image);
         if (!imagePath) {
             throw new HTTPError(400);
         }
 
-        let url = getFileURL(imagePath);
-        let metadata = await ImageManager.getImageMetadata(imagePath);
-        let details = {
+        const url = getFileURL(imagePath);
+        const metadata = await ImageManager.getImageMetadata(imagePath);
+        const details = {
             poster_url: url,
             width: metadata.width,
             height: metadata.height,
@@ -501,13 +503,13 @@ async function handleMediaPoster(req, res, type) {
  */
 async function handleStream(req, res) {
     try {
-        let jobID = req.query.id;
-        let file = req.file;
-        let abort = !!req.body.abort;
-        let chunk = parseInt(req.body.chunk);
-        let generatePoster = !!req.body.generate_poster;
+        const jobID = req.query.id;
+        const file = req.file;
+        const abort = !!req.body.abort;
+        const chunk = parseInt(req.body.chunk);
+        const generatePoster = !!req.body.generate_poster;
 
-        let job = VideoManager.findTranscodingJob(jobID);
+        const job = VideoManager.findTranscodingJob(jobID);
         if (chunk === 0) {
             if (job) {
                 throw new HTTPError(409);
@@ -516,7 +518,7 @@ async function handleStream(req, res) {
                 throw new HTTPError(400);
             }
             // create the job
-            let type = _.first(_.split(file.mimetype, '/'));
+            const type = _.first(_.split(file.mimetype, '/'));
             if (type !== 'video' && type !== 'audio') {
                 throw new HTTPError(400);
             }
@@ -550,8 +552,8 @@ async function handleStream(req, res) {
  * @return {Promise<Number>}
  */
 async function checkTaskToken(schema, token, action) {
-    let db = await Database.open();
-    let task = await Task.findOne(db, schema, { token }, 'id, action');
+    const db = await Database.open();
+    const task = await Task.findOne(db, schema, { token }, 'id, action');
     if (!task || task.action !== action) {
         throw new HTTPError(403);
     }
@@ -569,10 +571,10 @@ async function checkTaskToken(schema, token, action) {
  * @return {Promise}
  */
 async function saveTaskProgress(schema, taskID, completion) {
-    let db = await Database.open();
-    let params = [ completion, taskID ];
-    let table = Task.getTableName(schema);
-    let sql = `
+    const db = await Database.open();
+    const params = [ completion, taskID ];
+    const table = Task.getTableName(schema);
+    const sql = `
         UPDATE ${table} SET
         completion = $1
         WHERE id = $2
@@ -590,18 +592,18 @@ async function saveTaskProgress(schema, taskID, completion) {
  * @return {Promise}
  */
 async function saveTaskOutcome(schema, taskID, part, details) {
-    let db = await Database.open();
-    let params = [ details, taskID ];
-    let table = Task.getTableName(schema);
+    const db = await Database.open();
+    const params = [ details, taskID ];
+    const table = Task.getTableName(schema);
     // merge in new details
-    let detailsAfter = `details || $1`;
+    const detailsAfter = `details || $1`;
     // set the part to true
-    let optionsAfter = `options || '{ "${part}": true }'`;
+    const optionsAfter = `options || '{ "${part}": true }'`;
     // set etime to NOW() when there're no more false value
-    let etimeAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN null ELSE NOW() END`;
+    const etimeAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN null ELSE NOW() END`;
     // set completion to 100 when there're no more false value in options
-    let completionAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN completion ELSE 100 END`;
-    let sql = `
+    const completionAfter = `CASE WHEN "hasFalse"(${optionsAfter}) THEN completion ELSE 100 END`;
+    const sql = `
         UPDATE ${table} SET
         details = ${detailsAfter},
         options = ${optionsAfter},
@@ -620,12 +622,12 @@ async function saveTaskOutcome(schema, taskID, part, details) {
  * @return {Promise<Object>}
  */
 async function getFileType(path) {
-    let fd = await FS.openAsync(path, 'r');
+    const fd = await FS.openAsync(path, 'r');
     try {
-        let len = 1024;
-        let buffer = Buffer.alloc(len);
+        const len = 1024;
+        const buffer = Buffer.alloc(len);
         await FS.readAsync(fd, buffer, 0, len, 0);
-        let info = FileType(buffer);
+        const info = FileType(buffer);
         if (!info) {
             info = {
                 ext: undefined,
@@ -649,7 +651,7 @@ function getFileURL(path) {
     return `/srv/media/${Path.relative(CacheFolders.root, path)}`
 }
 
-if (process.argv[1] === __filename) {
+if ('file://' + process.argv[1] === import.meta.url) {
     start();
     Shutdown.on(stop);
 }
