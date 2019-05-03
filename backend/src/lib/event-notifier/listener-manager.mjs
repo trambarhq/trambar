@@ -8,13 +8,13 @@ import SockJS from 'sockjs';
 import Request from 'request';
 import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
 import XML2JS from 'xml2js';
-import HTTPError from 'errors/http-error';
-import * as Shutdown from 'shutdown';
+import HTTPError from '../common/errors/http-error.mjs';
+import * as Shutdown from '../shutdown.mjs';
 
 // accessors
-import Subscription from 'accessors/subscription';
-import System from 'accessors/system';
-import User from 'accessors/user';
+import Subscription from '../accessors/subscription.mjs';
+import System from '../accessors/system.mjs';
+import User from '../accessors/user.mjs';
 
 let server;
 let sockets = [];
@@ -26,7 +26,7 @@ let sockets = [];
  */
 async function listen() {
     // set up endpoint for push subscription
-    let app = Express();
+    const app = Express();
     app.use(CORS());
     app.use(BodyParser.json());
     app.set('json spaces', 2);
@@ -34,7 +34,7 @@ async function listen() {
     app.post('/srv/push/signature', handleSignatureValidation);
 
     // set up SockJS server
-    let sockJS = SockJS.createServer({
+    const sockJS = SockJS.createServer({
         sockjs_url: 'http://cdn.jsdelivr.net/sockjs/1.1.2/sockjs.min.js',
         log: (severity, message) => {
             if (severity === 'error') {
@@ -51,7 +51,7 @@ async function listen() {
 
             // assign a random id to socket
 
-            let buffer = await Crypto.randomBytesAsync(16);
+            const buffer = await Crypto.randomBytesAsync(16);
             socket.token = buffer.toString('hex');
             socket.write(JSON.stringify({ socket: socket.token }));
         }
@@ -86,16 +86,16 @@ async function shutdown() {
  * @return {Promise<Array<Listener>>}
  */
 async function find(db, schema) {
-    let subscriptionCriteria = { deleted: false };
-    let subscriptions = await Subscription.findCached(db, 'global', subscriptionCriteria, '*');
-    let userCriteria = {
+    const subscriptionCriteria = { deleted: false };
+    const subscriptions = await Subscription.findCached(db, 'global', subscriptionCriteria, '*');
+    const userCriteria = {
         id: _.map(subscriptions, 'user_id'),
         deleted: false,
     };
-    let users = await User.findCached(db, 'global', userCriteria, '*');
-    let listeners = [];
+    const users = await User.findCached(db, 'global', userCriteria, '*');
+    const listeners = [];
     for (let subscription of subscriptions) {
-        let user = _.find(users, { id: subscription.user_id });
+        const user = _.find(users, { id: subscription.user_id });
         if (user) {
             listeners.push(new Listener(user, subscription));
         }
@@ -124,14 +124,14 @@ async function send(db, messages) {
  * @return {Promise}
  */
 async function sendToWebsockets(db, messages) {
-    let desiredMessages = await filterWebsocketMessages(messages);
+    const desiredMessages = await filterWebsocketMessages(messages);
     for (let message of desiredMessages) {
         // dispatch web-socket messages
-        let listener = message.listener;
-        let subscription = listener.subscription;
-        let socket = _.find(sockets, { token: subscription.token });
+        const listener = message.listener;
+        const subscription = listener.subscription;
+        const socket = _.find(sockets, { token: subscription.token });
         if (socket) {
-            let messageType = _.first(_.keys(message.body));
+            const messageType = _.first(_.keys(message.body));
             console.log(`Sending message (${messageType}) to socket ${socket.token} (${listener.user.username})`);
             socket.write(JSON.stringify(message.body));
         } else {
@@ -155,9 +155,9 @@ async function filterWebsocketMessages(messages) {
             return false;
         }
         if (message.body.alert) {
-            let user = message.listener.user;
-            let name = _.snakeCase(message.body.alert.type);
-            let receiving = _.get(user, `settings.web_alert.${name}`, false);
+            const user = message.listener.user;
+            const name = _.snakeCase(message.body.alert.type);
+            const receiving = _.get(user, `settings.web_alert.${name}`, false);
             if (!receiving) {
                 return false;
             }
@@ -167,19 +167,19 @@ async function filterWebsocketMessages(messages) {
 }
 
 async function sendToPushRelays(db, messages) {
-    let signature = await getServerSignature();
-    let desiredMessages = await filterPushMessages(messages);
+    const signature = await getServerSignature();
+    const desiredMessages = await filterPushMessages(messages);
     // in theory, it's possible to see multiple relays if a different relay is
     // selected after subscriptions were created
-    let messagesByRelay = _.entries(_.groupBy(desiredMessages, 'listener.subscription.relay'));
+    const messagesByRelay = _.entries(_.groupBy(desiredMessages, 'listener.subscription.relay'));
     for (let [ relay, messages ] of messagesByRelay) {
         // merge identifical messages
-        let messagesByJSON = {};
-        let subscriptions = [];
+        const messagesByJSON = {};
+        const subscriptions = [];
         for (let message of messages) {
-            let subscription = message.listener.subscription;
-            let json = JSON.stringify(message.body);
-            let m = messagesByJSON[json];
+            const subscription = message.listener.subscription;
+            const json = JSON.stringify(message.body);
+            const m = messagesByJSON[json];
             if (m) {
                 if (!_.includes(m.tokens, subscription.token)) {
                     m.tokens.push(subscription.token);
@@ -199,23 +199,23 @@ async function sendToPushRelays(db, messages) {
                 subscriptions.push(subscription);
             }
         }
-        let pushMessages = _.map(messagesByJSON, (message) => {
+        const pushMessages = _.map(messagesByJSON, (message) => {
             return packagePushMessage(message);
         });
-        let url = `${relay}/dispatch`;
-        let payload = {
+        const url = `${relay}/dispatch`;
+        const payload = {
             address: _.get(messages, [ 0, 'address' ]),
             signature,
             messages: pushMessages
         };
-        let result = await post(url, payload);
-        let errors = result.errors;
+        const result = await post(url, payload);
+        const errors = result.errors;
         if (!_.isEmpty(errors)) {
             console.error(errors);
         }
 
         // delete subscriptions that are no longer valid
-        let expiredTokens = result.invalid_tokens;
+        const expiredTokens = result.invalid_tokens;
         for (let subscription of subscriptions) {
             if (_.includes(expiredTokens, subscription.token)) {
                 subscription.deleted = true;
@@ -239,13 +239,13 @@ async function filterPushMessages(messages) {
             return false;
         }
         if (message.body.alert) {
-            let user = message.listener.user;
-            let name = _.snakeCase(message.body.alert.type);
-            let receiving = _.get(user, `settings.mobile_alert.${name}`, false);
+            const user = message.listener.user;
+            const name = _.snakeCase(message.body.alert.type);
+            const receiving = _.get(user, `settings.mobile_alert.${name}`, false);
             if (!receiving) {
                 return false;
             }
-            let hasWebSession = _.some(messages, (m) => {
+            const hasWebSession = _.some(messages, (m) => {
                 if (m.listener.type === 'websocket') {
                     if (m.listener.user.id === user.id) {
                         return true;
@@ -253,7 +253,7 @@ async function filterPushMessages(messages) {
                 }
             });
             if (hasWebSession) {
-                let sendToBoth = _.get(user, `settings.mobile_alert.web_session`, false);
+                const sendToBoth = _.get(user, `settings.mobile_alert.web_session`, false);
                 if (!sendToBoth) {
                     return false;
                 }
@@ -271,7 +271,7 @@ async function filterPushMessages(messages) {
  * @return {Object}
  */
 function packagePushMessage(message) {
-    let push = {
+    const push = {
         tokens: message.tokens
     };
     for (let method of message.methods) {
@@ -301,7 +301,7 @@ function packagePushMessage(message) {
  * @return {Object}
  */
 function packageFirebaseMessage(message) {
-    let data = { address: message.address };
+    const data = { address: message.address };
     if (message.body.alert) {
         for (let [ name, value ] of _.entries(message.body.alert)) {
             switch (name) {
@@ -340,7 +340,7 @@ let apnsNotID = 1;
  * @return {Object}
  */
 function packageAppleMessage(message) {
-    let aps = { address: message.address };
+    const aps = { address: message.address };
     if (message.body.alert) {
         for (let [ key, value ] of _.entries(message.body.alert)) {
             switch (key) {
@@ -361,7 +361,7 @@ function packageAppleMessage(message) {
             aps[key] = value;
         }
     }
-    let notID = apnsNotID++;
+    const notID = apnsNotID++;
     if (apnsNotID >= 2147483647) {
         apnsNotID = 1;
     }
@@ -381,8 +381,8 @@ function packageAppleMessage(message) {
  */
 function packageWindowsMessage(message) {
     if (message.body.alert) {
-        let alert = message.body.alert;
-        let toast = {
+        const alert = message.body.alert;
+        const toast = {
             $: {},
             visual: {
                 binding: {
@@ -395,17 +395,17 @@ function packageWindowsMessage(message) {
             }
         };
         if (alert.profile_image) {
-            let url = message.address + alert.profile_image;
+            const url = message.address + alert.profile_image;
             toast.visual.binding.$.template = 'ToastImageAndText02';
             toast.visual.binding.image = { $: { id: 1, src: url } };
         }
 
         // add launch data
-        let launchData = _.omit(alert, 'title', 'message', 'profile_image');
+        const launchData = _.omit(alert, 'title', 'message', 'profile_image');
         _.assign(launchData, { address: message.address });
         toast.$.launch = JSON.stringify(launchData);
 
-        let builder = new XML2JS.Builder({ headless: true });
+        const builder = new XML2JS.Builder({ headless: true });
         return {
             body: builder.buildObject({ toast }),
             attributes: {
@@ -416,7 +416,7 @@ function packageWindowsMessage(message) {
             },
         };
     } else {
-        let data = _.assign({ address: message.address }, message.body);
+        const data = _.assign({ address: message.address }, message.body);
         return {
             body: JSON.stringify(data),
             attributes: {
@@ -438,7 +438,7 @@ let serverSignature;
  */
 async function getServerSignature() {
     if (!serverSignature) {
-        let buffer = await Crypto.randomBytesAsync(16);
+        const buffer = await Crypto.randomBytesAsync(16);
         serverSignature = buffer.toString('hex');
     }
     return serverSignature;
@@ -451,7 +451,7 @@ async function getServerSignature() {
  * @param  {Response} res
  */
 function handleSignatureValidation(req, res) {
-    let signature = req.body.signature;
+    const signature = req.body.signature;
     if (signature === serverSignature) {
         res.sendStatus(200);
     } else {
@@ -468,12 +468,12 @@ function handleSignatureValidation(req, res) {
  * @return {Promise<Object>}
  */
 async function post(url, payload) {
-    let canceled = false;
+    const canceled = false;
     let attempts = 1;
     let delayInterval = 500;
     while (true) {
         try {
-            let options = {
+            const options = {
                 json: true,
                 body: payload,
                 method: 'post',
@@ -509,7 +509,7 @@ async function post(url, payload) {
  * @return {Promise<Object>}
  */
 async function attempt(options) {
-    let body = await new Promise((resolve, reject) => {
+    const body = await new Promise((resolve, reject) => {
         Request(options, (err, resp, body) => {
             if (!err && resp && resp.statusCode >= 400) {
                 err = new HTTPError(resp.statusCode);

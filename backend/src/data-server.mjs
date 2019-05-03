@@ -4,32 +4,32 @@ import CORS from 'cors';
 import BodyParser from 'body-parser';
 import Moment from 'moment';
 
-import 'utils/lodash-extra';
-import Database from 'database';
-import HTTPError from 'errors/http-error';
-import * as Shutdown from 'shutdown';
-import * as ProjectUtils from 'objects/utils/project-utils';
+import './lib/common/utils/lodash-extra.mjs';
+import Database from './lib/database.mjs';
+import HTTPError from './lib/common/errors/http-error.mjs';
+import * as Shutdown from './lib/shutdown.mjs';
+import * as ProjectUtils from './lib/common/objects/utils/project-utils.mjs';
 
 // global accessors
-import Device from 'accessors/device';
-import Picture from 'accessors/picture';
-import Project from 'accessors/project';
-import Repo from 'accessors/repo';
-import Role from 'accessors/role';
-import Server from 'accessors/server';
-import Session from 'accessors/session';
-import Subscription from 'accessors/subscription';
-import System from 'accessors/system';
-import User from 'accessors/user';
+import Device from './lib/accessors/device.mjs';
+import Picture from './lib/accessors/picture.mjs';
+import Project from './lib/accessors/project.mjs';
+import Repo from './lib/accessors/repo.mjs';
+import Role from './lib/accessors/role.mjs';
+import Server from './lib/accessors/server.mjs';
+import Session from './lib/accessors/session.mjs';
+import Subscription from './lib/accessors/subscription.mjs';
+import System from './lib/accessors/system.mjs';
+import User from './lib/accessors/user.mjs';
 
 // project-specific accessors
-import Bookmark from 'accessors/bookmark';
-import Listing from 'accessors/listing';
-import Notification from 'accessors/notification';
-import Reaction from 'accessors/reaction';
-import Statistics from 'accessors/statistics';
-import Story from 'accessors/story';
-import Task from 'accessors/task';
+import Bookmark from './lib/accessors/bookmark.mjs';
+import Listing from './lib/accessors/listing.mjs';
+import Notification from './lib/accessors/notification.mjs';
+import Reaction from './lib/accessors/reaction.mjs';
+import Statistics from './lib/accessors/statistics.mjs';
+import Story from './lib/accessors/story.mjs';
+import Task from './lib/accessors/task.mjs';
 
 const SESSION_LIFETIME_ADMIN = 1;
 const SESSION_LIFETIME_CLIENT = 30;
@@ -449,7 +449,7 @@ function getAccessor(schema, table) {
     return accessor;
 }
 
-if (process.argv[1] === __filename) {
+if ('file://' + process.argv[1] === import.meta.url) {
     start();
     Shutdown.on(stop);
 }

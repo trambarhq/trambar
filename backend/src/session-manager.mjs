@@ -9,23 +9,22 @@ import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Moment from 'moment';
 import Request from 'request';
 import HtpasswdJS from 'htpasswd-js';
-import Async from 'async-do-while';
-import HTTPError from 'errors/http-error';
-import Database from 'database';
-import * as Shutdown from 'shutdown';
-import * as ExternalDataUtils from 'objects/utils/external-data-utils';
-import { DefaultUserSettings } from 'objects/settings/user-settings';
-import * as Whitelist from 'utils/whitelist';
+import HTTPError from './lib/common/errors/http-error.mjs';
+import Database from './lib/database.mjs';
+import * as Shutdown from './lib/shutdown.mjs';
+import * as ExternalDataUtils from './lib/common/objects/utils/external-data-utils.mjs';
+import { DefaultUserSettings } from './lib/common/objects/settings/user-settings.mjs';
+import * as Whitelist from './lib/common/utils/whitelist.mjs';
 
-import * as GitlabUserImporter from 'gitlab-adapter/user-importer';
+import * as GitlabUserImporter from './lib/gitlab-adapter/user-importer.mjs';
 
 // accessors
-import Device from 'accessors/device';
-import Project from 'accessors/project';
-import Server from 'accessors/server';
-import Session from 'accessors/session';
-import System from 'accessors/system';
-import User from 'accessors/user';
+import Device from './lib/accessors/device.mjs';
+import Project from './lib/accessors/project.mjs';
+import Server from './lib/accessors/server.mjs';
+import Session from './lib/accessors/session.mjs';
+import System from './lib/accessors/system.mjs';
+import User from './lib/accessors/user.mjs';
 
 const SESSION_LIFETIME_AUTHENTICATION = 120; // minutes
 const SESSION_LIFETIME_DEVICE_ACTIVATION = 60;
@@ -36,7 +35,7 @@ let server;
 let cleanUpInterval;
 
 async function start() {
-    let app = Express();
+    const app = Express();
     app.set('json spaces', 2);
     app.use(CORS());
     app.use(BodyParser.json());
@@ -89,7 +88,7 @@ function sendHTML(res, html) {
  */
 function sendErrorHTML(res, err) {
     err = sanitizeError(err);
-    let html = `
+    const html = `
         <h1>${err.statusCode} ${err.name}</h1>
         <p>${err.message}</p>
     `;
@@ -132,7 +131,7 @@ function sanitizeError(err) {
     if (!err.statusCode) {
         // not an expected error
         console.error(err);
-        let message = err.message;
+        const message = err.message;
         if (process.env.NODE_ENV === 'production') {
             message = 'The application has encountered an unexpected fault';
         }
@@ -149,19 +148,19 @@ function sanitizeError(err) {
  */
 async function handleSessionStart(req, res) {
     try {
-        let area = _.toLower(req.body.area);
-        let originalHandle = _.toLower(req.body.handle);
+        const area = _.toLower(req.body.area);
+        const originalHandle = _.toLower(req.body.handle);
         if (!(area === 'client' || area === 'admin')) {
             throw new HTTPError(400);
         }
         let result;
         if (!originalHandle) {
-            let handle = await createRandomToken(8);
+            const handle = await createRandomToken(8);
             // create session object
-            let etime = getFutureTime(SESSION_LIFETIME_AUTHENTICATION);
-            let session = await saveSession({ area, handle, etime });
-            let system = await findSystem();
-            let servers = await findOAuthServers(area);
+            const etime = getFutureTime(SESSION_LIFETIME_AUTHENTICATION);
+            const session = await saveSession({ area, handle, etime });
+            const system = await findSystem();
+            const servers = await findOAuthServers(area);
             result = {
                 session: _.pick(session, 'handle', 'etime'),
                 system: _.pick(system, 'details'),
@@ -171,15 +170,15 @@ async function handleSessionStart(req, res) {
             };
         } else {
             // create session for mobile device
-            let originalSession = await findSession(originalHandle);
+            const originalSession = await findSession(originalHandle);
             if (originalSession.area !== area) {
                 throw new HTTPError(403);
             }
-            let userID = originalSession.user_id;
-            let handle = await createRandomToken(8);
-            let token = await createRandomToken(16);
-            let etime = getFutureTime(SESSION_LIFETIME_DEVICE_ACTIVATION);
-            let session = await saveSession({ area, handle, token, etime, user_id: userID });
+            const userID = originalSession.user_id;
+            const handle = await createRandomToken(8);
+            const token = await createRandomToken(16);
+            const etime = getFutureTime(SESSION_LIFETIME_DEVICE_ACTIVATION);
+            const session = await saveSession({ area, handle, token, etime, user_id: userID });
             result = {
                 session: _.pick(session, 'handle', 'etime')
             };
@@ -198,14 +197,14 @@ async function handleSessionStart(req, res) {
  */
 async function handleHTPasswdRequest(req, res) {
     try {
-        let handle = _.toLower(req.body.handle);
-        let username = _.trim(_.toLower(req.body.username));
-        let password = _.trim(req.body.password);
-        let session = await findSession(handle);
-        let matched = await findHtpasswdRecord(username, password);
-        let user = await findUserByName(username);
-        let sessionAfter = await authorizeUser(session, user, {}, true);
-        let result = {
+        const handle = _.toLower(req.body.handle);
+        const username = _.trim(_.toLower(req.body.username));
+        const password = _.trim(req.body.password);
+        const session = await findSession(handle);
+        const matched = await findHtpasswdRecord(username, password);
+        const user = await findUserByName(username);
+        const sessionAfter = await authorizeUser(session, user, {}, true);
+        const result = {
             session: _.pick(sessionAfter, 'token', 'user_id', 'etime')
         };
         sendJSON(res, result);
@@ -223,8 +222,8 @@ async function handleHTPasswdRequest(req, res) {
  */
 async function handleSessionRetrieval(req, res) {
     try {
-        let handle = _.toLower(req.query.handle);
-        let session = await findSession(handle);
+        const handle = _.toLower(req.query.handle);
+        const session = await findSession(handle);
         if (session.activated) {
             throw new HTTPError(410);
         }
@@ -232,12 +231,12 @@ async function handleSessionRetrieval(req, res) {
         if (session.token) {
             session.activated = true;
             session.etime = getFutureTime(SESSION_LIFETIME_CLIENT);
-            let sessionAfter = await saveSession(session);
+            const sessionAfter = await saveSession(session);
             result = {
                 session: _.pick(sessionAfter, 'token', 'user_id', 'etime')
             };
         } else {
-            let error = session.details.error;
+            const error = session.details.error;
             if (error) {
                 throw new HTTPError(error);
             }
@@ -257,9 +256,9 @@ async function handleSessionRetrieval(req, res) {
  */
 async function handleSessionTermination(req, res) {
     try {
-        let handle = _.toLower(req.body.handle);
-        let session = await removeSession(handle);
-        let devices = await removeDevices(session.handle);
+        const handle = _.toLower(req.body.handle);
+        const session = await removeSession(handle);
+        const devices = await removeDevices(session.handle);
         sendJSON(res, {});
     } catch (err) {
         sendErrorJSON(res, err);
@@ -275,18 +274,18 @@ async function handleSessionTermination(req, res) {
  */
 async function handleOAuthRequest(req, res, done) {
     try {
-        let query = extractQueryVariables(req.query);
-        let serverID = parseInt(query.sid);
-        let handle = _.toLower(query.handle);
-        let session = await findSession(handle);
+        const query = extractQueryVariables(req.query);
+        const serverID = parseInt(query.sid);
+        const handle = _.toLower(query.handle);
+        const session = await findSession(handle);
         try {
-            let system = await findSystem();
-            let server = await findServer(serverID);
-            let params = { sid: serverID, handle };
-            let account = await authenticateThruPassport(req, res, system, server, params);
-            let user = await findMatchingUser(server, account);
+            const system = await findSystem();
+            const server = await findServer(serverID);
+            const params = { sid: serverID, handle };
+            const account = await authenticateThruPassport(req, res, system, server, params);
+            const user = await findMatchingUser(server, account);
             // save the info from provider for potential future use
-            let details = {
+            const details = {
                 profile: account.profile._json,
                 access_token: account.accessToken,
                 refresh_token: account.refreshToken,
@@ -297,7 +296,7 @@ async function handleOAuthRequest(req, res, done) {
             session.details.error = _.pick(err, 'statusCode', 'code', 'message', 'reason', 'stack');
             await saveSession(session);
         }
-        let html = `<script> close() </script>`;
+        const html = `<script> close() </script>`;
         sendHTML(res, html);
     } catch (err) {
         sendErrorHTML(res, err);
@@ -312,23 +311,23 @@ async function handleOAuthRequest(req, res, done) {
  * @param  {Function}  done
  */
 async function handleOAuthTestRequest(req, res, done) {
-    let query = extractQueryVariables(req.query);
+    const query = extractQueryVariables(req.query);
     if (!query.test) {
         return done();
     }
     try {
-        let serverID = parseInt(query.sid);
-        let system = await findSystem();
-        let server = await findServer(serverID);
-        let params = { test: 1, sid: serverID, handle: 'TEST' };
-        let account = await authenticateThruPassport(req, res, system, server, params);
+        const serverID = parseInt(query.sid);
+        const system = await findSystem();
+        const server = await findServer(serverID);
+        const params = { test: 1, sid: serverID, handle: 'TEST' };
+        const account = await authenticateThruPassport(req, res, system, server, params);
         console.log(`OAuth authentication test:\n`);
         console.log(`Display name = ${account.profile.displayName}`);
         console.log(`User name = ${account.profile.username}`);
         console.log(`User ID = ${account.profile.id}`);
         console.log(`Email = ${_.map(account.profile.emails, 'value').join(', ')}`);
         console.log(`Server type = ${server.type}`);
-        let html = `<h1>OK</h1>`;
+        const html = `<h1>OK</h1>`;
         sendHTML(res, html);
     } catch (err) {
         sendErrorHTML(res, err);
@@ -343,29 +342,29 @@ async function handleOAuthTestRequest(req, res, done) {
  * @param  {Function}  done
  */
 async function handleOAuthActivationRequest(req, res, done) {
-    let query = extractQueryVariables(req.query);
+    const query = extractQueryVariables(req.query);
     if (!query.activation) {
         return done();
     }
     try {
-        let serverID = parseInt(query.sid);
-        let handle = _.toLower(query.handle);
-        let session = await findSession(handle);
+        const serverID = parseInt(query.sid);
+        const handle = _.toLower(query.handle);
+        const session = await findSession(handle);
         // make sure we have admin access
         if (session.area !== 'admin') {
             throw new HTTPError(403);
         }
-        let system = await findSystem();
-        let server = await findServer(serverID);
-        let params = { activation: 1, sid: serverID, handle };
-        let account = await authenticateThruPassport(req, res, system, server, params);
-        let profile = account.profile._json;
+        const system = await findSystem();
+        const server = await findServer(serverID);
+        const params = { activation: 1, sid: serverID, handle };
+        const account = await authenticateThruPassport(req, res, system, server, params);
+        const profile = account.profile._json;
         let isAdmin = false;
         if (server.type === 'gitlab') {
             isAdmin = profile.is_admin;
         }
         if (!isAdmin) {
-            let username = account.profile.username;
+            const username = account.profile.username;
             throw new HTTPError(403, {
                 reason: 'insufficient-access-right',
                 message: `The account "${username}" does not have administrative access`,
@@ -377,7 +376,7 @@ async function handleOAuthActivationRequest(req, res, done) {
             refresh_token: account.refreshToken,
         };
         await saveServer(server);
-        let html = `<h1>OK</h1>`;
+        const html = `<h1>OK</h1>`;
         sendHTML(res, html);
     } catch (err) {
         sendErrorHTML(res, err);
@@ -394,14 +393,14 @@ async function handleOAuthActivationRequest(req, res, done) {
  */
 async function handleOAuthDeauthorizationRequest(req, res, done) {
     try {
-        let provider = req.params.provider;
-        let signedRequest = req.body.signed_request;
-        let servers = await findServersByType(req.params.provider);
+        const provider = req.params.provider;
+        const signedRequest = req.body.signed_request;
+        const servers = await findServersByType(req.params.provider);
         let matchingServer, payload, lastError;
         for (let server in servers) {
             // see which server has the right secret
             // having multiple servers isn't really a normal use case
-            let secret = _.get(server, 'settings.oauth.client_secret');
+            const secret = _.get(server, 'settings.oauth.client_secret');
             if (secret) {
                 try {
                     payload = parseDeauthorizationRequest(signedRequest, secret);
@@ -436,14 +435,14 @@ async function handleOAuthDeauthorizationRequest(req, res, done) {
  */
 async function handleLegalDocumentRequest(req, res) {
     try {
-        let db = await Database.open();
-        let system = await System.findOne(db, 'global', { deleted: false }, 'details');
-        let name = req.params.name;
-        let path = `${__dirname}/templates/${name}.ejs`;
-        let company = _.get(system, 'details.company_name', 'Our company');
-        let text = await FS.readFileAsync(path, 'utf-8');
-        let fn = _.template(text);
-        let html = fn({ company });
+        const db = await Database.open();
+        const system = await System.findOne(db, 'global', { deleted: false }, 'details');
+        const name = req.params.name;
+        const path = `${__dirname}/templates/${name}.ejs`;
+        const company = _.get(system, 'details.company_name', 'Our company');
+        const text = await FS.readFileAsync(path, 'utf-8');
+        const fn = _.template(text);
+        const html = fn({ company });
         sendHTML(res, html);
     } catch (err) {
         sendErrorHTML(res, err);
@@ -462,7 +461,7 @@ async function handleLegalDocumentRequest(req, res) {
  * @return {Promise<Session>}
  */
 async function authorizeUser(session, user, details, activate) {
-    let token = await createRandomToken(16);
+    const token = await createRandomToken(16);
     if (session.area === 'admin' && user.type !== 'admin') {
         if (!process.env.ADMIN_GUEST_MODE) {
             throw new HTTPError(403, {
@@ -510,42 +509,42 @@ async function authorizeUser(session, user, details, activate) {
  * @return {Promise<Object>}
  */
 async function authenticateThruPassport(req, res, system, server, params) {
-    return new Promise((resolve, reject) => {
-        let provider = req.params.provider;
+    return new Promise(async (resolve, reject) => {
+        const provider = req.params.provider;
         // query variables are send as the state parameter
-        let query = _.reduce(params, (query, value, name) => {
+        const query = _.reduce(params, (query, value, name) => {
             if (query) {
                 query += '&';
             }
             query += name + '=' + value;
             return query;
         }, '');
-        let address = _.get(system, 'settings.address');
+        const address = _.get(system, 'settings.address');
         if (!address) {
             throw new HTTPError(400, { message: 'Missing site address' });
         }
-        let settings = addServerSpecificSettings(server, {
+        const settings = addServerSpecificSettings(server, {
             clientID: server.settings.oauth.client_id,
             clientSecret: server.settings.oauth.client_secret,
             baseURL: server.settings.oauth.base_url,
             callbackURL: `${address}/srv/session/${provider}/callback/`,
         });
-        let options = addServerSpecificOptions(server, params, {
+        const options = addServerSpecificOptions(server, params, {
             session: false,
             state: query,
         });
 
         // create strategy object, resolving promise when we have the profile
-        let Strategy = findPassportPlugin(server);
-        let strategy = new Strategy(settings, (accessToken, refreshToken, profile, done) => {
+        const Strategy = await findPassportPlugin(server);
+        const strategy = new Strategy(settings, (accessToken, refreshToken, profile, done) => {
             // just resolve the promise--no need to call done() since we're not
             // using Passport as an Express middleware
             resolve({ accessToken, refreshToken, profile });
         });
         // trigger Passport middleware manually
         Passport.use(strategy);
-        let authType = server.type;
-        let auth = Passport.authenticate(strategy.name, options, (err, user, info) => {
+        const authType = server.type;
+        const auth = Passport.authenticate(strategy.name, options, (err, user, info) => {
             // if this callback is called, then authentication has failed, since
             // the callback passed to Strategy() resolves the promise and does
             // not invoke done()
@@ -558,7 +557,7 @@ async function authenticateThruPassport(req, res, system, server, params) {
                         message = err.oauthError.message;
                     } else if (err.oauthError.data) {
                         try {
-                            let oauthResult = JSON.parse(err.oauthError.data);
+                            const oauthResult = JSON.parse(err.oauthError.data);
                             if (oauthResult.error) {
                                 message = oauthResult.error.message;
                             }
@@ -585,21 +584,21 @@ async function authenticateThruPassport(req, res, system, server, params) {
  * @return {Promise<User>}
  */
 async function detachExternalAccount(server, externalUserID) {
-    let db = await Database.open();
-    let criteria = {
+    const db = await Database.open();
+    const criteria = {
         external_object: ExternalDataUtils.createLink(server, {
             user: { id: externalUserID },
         }),
     };
-    let user = await User.findOne(db, 'global', criteria, '*');
+    const user = await User.findOne(db, 'global', criteria, '*');
     if (!user) {
         return null;
     }
     ExternalDataUtils.removeLink(user, server);
-    let userAfter = await User.saveOne(db, 'global', user);
+    const userAfter = await User.saveOne(db, 'global', user);
     // delete active sessions when user is not connected to any account
     if (ExternalDataUtils.countLinks(userAfter) === 0) {
-        let sessionCriteria = {
+        const sessionCriteria = {
             deleted: false,
             user_id: userAfter.id,
         };
@@ -616,7 +615,7 @@ async function detachExternalAccount(server, externalUserID) {
  * @return {Promise<Session>}
  */
 async function saveSession(session) {
-    let db = await Database.open();
+    const db = await Database.open();
     return Session.saveOne(db, 'global', session);
 }
 
@@ -628,8 +627,8 @@ async function saveSession(session) {
  * @return {Promise<Session>}
  */
 async function removeSession(handle) {
-    let db = await Database.open();
-    let session = await Session.findOne(db, 'global', { handle }, 'id');
+    const db = await Database.open();
+    const session = await Session.findOne(db, 'global', { handle }, 'id');
     if (!session) {
         throw new HTTPError(404);
     }
@@ -645,13 +644,13 @@ async function removeSession(handle) {
  * @return {Promise<Session>}
  */
 async function findSession(handle) {
-    let db = await Database.open();
-    let criteria = {
+    const db = await Database.open();
+    const criteria = {
         handle,
         expired: false,
         deleted: false,
     };
-    let session = await Session.findOne(db, 'global', criteria, '*');
+    const session = await Session.findOne(db, 'global', criteria, '*');
     if (!session) {
         throw new HTTPError(404);
     }
@@ -664,8 +663,8 @@ async function findSession(handle) {
  * @return {Promise<System>}
  */
 async function findSystem() {
-    let db = await Database.open();
-    let criteria = { deleted: false };
+    const db = await Database.open();
+    const criteria = { deleted: false };
     return System.findOne(db, 'global', criteria, '*');
 }
 
@@ -677,9 +676,9 @@ async function findSystem() {
  * @return {Promise<Server>}
  */
 async function findServer(serverID) {
-    let db = await Database.open();
-    let criteria = { id: serverID, deleted: false };
-    let server = await Server.findOne(db, 'global', criteria, '*');
+    const db = await Database.open();
+    const criteria = { id: serverID, deleted: false };
+    const server = await Server.findOne(db, 'global', criteria, '*');
     if (!server) {
         throw new HTTPError(400);
     }
@@ -694,8 +693,8 @@ async function findServer(serverID) {
  * @return {Promise<Server>}
  */
 async function findServersByType(type) {
-    let db = await Database.open();
-    let criteria = { type, deleted: false };
+    const db = await Database.open();
+    const criteria = { type, deleted: false };
     return Server.find(db, 'global', criteria, '*');
 }
 
@@ -707,13 +706,13 @@ async function findServersByType(type) {
  * @return {Promise<Array<Server>>}
  */
 async function findOAuthServers(area) {
-    let db = await Database.open();
-    let criteria = {
+    const db = await Database.open();
+    const criteria = {
         deleted: false,
         disabled: false,
     };
-    let servers = await Server.find(db, 'global', criteria, '*');
-    let availableServers = _.filter(servers, (server) => {
+    const servers = await Server.find(db, 'global', criteria, '*');
+    const availableServers = _.filter(servers, (server) => {
         return canProvideAccess(server, area);
     });
     return availableServers;
@@ -727,7 +726,7 @@ async function findOAuthServers(area) {
  * @return {Promise<Server>}
  */
 async function saveServer(server) {
-    let db = await Database.open();
+    const db = await Database.open();
     return Server.saveOne(db, 'global', server);
 }
 
@@ -739,9 +738,9 @@ async function saveServer(server) {
  * @return {Promise<User>}
  */
 async function findUser(userID) {
-    let db = await Database.open();
-    let criteria = { id: userID, deleted: false };
-    let user = await User.findOne(db, 'global', criteria, '*');
+    const db = await Database.open();
+    const criteria = { id: userID, deleted: false };
+    const user = await User.findOne(db, 'global', criteria, '*');
     if (!user) {
         throw new HTTPError(401);
     }
@@ -756,16 +755,16 @@ async function findUser(userID) {
  * @return {Promise<User>}
  */
 async function findUserByName(username) {
-    let db = await Database.open();
-    let criteria = { username, deleted: false };
-    let user = await User.findOne(db, 'global', criteria, '*');
+    const db = await Database.open();
+    const criteria = { username, deleted: false };
+    const user = await User.findOne(db, 'global', criteria, '*');
     if (!user) {
         // create the admin user if it's not there
-        let name = _.capitalize(username);
+        const name = _.capitalize(username);
         if (name === 'Root') {
             name = 'Administrator';
         }
-        let userNew = {
+        const userNew = {
             username,
             type: 'admin',
             details: { name },
@@ -785,8 +784,8 @@ async function findUserByName(username) {
  * @return {Array<Device>}
  */
 async function removeDevices(handles) {
-    let db = await Database.open();
-    let criteria = {
+    const db = await Database.open();
+    const criteria = {
         session_handle: handles,
         deleted: false,
     };
@@ -802,20 +801,20 @@ async function removeDevices(handles) {
  * @return {Promise<User>}
  */
 async function findMatchingUser(server, account) {
-    let db = await Database.open();
+    const db = await Database.open();
     // look for a user with the external id
-    let profile = account.profile;
-    let criteria = {
+    const profile = account.profile;
+    const criteria = {
         external_object: ExternalDataUtils.createLink(server, {
             user: { id: getProfileID(profile) },
         }),
         deleted: false,
     };
-    let user = await User.findOne(db, 'global', criteria, '*');
+    const user = await User.findOne(db, 'global', criteria, '*');
     if (!user) {
-        let emails = _.filter(_.map(profile.emails, 'value'));
+        const emails = _.filter(_.map(profile.emails, 'value'));
         for (let email of emails) {
-            let criteria = {
+            const criteria = {
                 email: email,
                 deleted: false,
                 order: 'id'
@@ -829,7 +828,7 @@ async function findMatchingUser(server, account) {
     if (!user) {
         // map Gitlab root user to root
         if (server.type === 'gitlab' && profile.username === 'root') {
-            let criteria = {
+            const criteria = {
                 username: profile.username,
                 deleted: false,
             };
@@ -843,8 +842,8 @@ async function findMatchingUser(server, account) {
                 reason: 'existing-users-only',
             });
         }
-        let image = await retrieveProfileImage(profile);
-        let userNew = copyUserProperties(null, server, image, profile);
+        const image = await retrieveProfileImage(profile);
+        const userNew = copyUserProperties(null, server, image, profile);
         if (userNew.disabled) {
             // don't create disabled user
             throw new HTTPError(403, {
@@ -869,9 +868,9 @@ async function findMatchingUser(server, account) {
  */
 async function findHtpasswdRecord(username, password) {
     try {
-        let htpasswdPath = process.env.HTPASSWD_PATH;
-        let data = await FS.readFileAsync(htpasswdPath, 'utf-8');
-        let successful = await HtpasswdJS.authenticate(username, password, data);
+        const htpasswdPath = process.env.HTPASSWD_PATH;
+        const data = await FS.readFileAsync(htpasswdPath, 'utf-8');
+        const successful = await HtpasswdJS.authenticate(username, password, data);
         if (successful !== true) {
             await Bluebird.delay(Math.random() * 1000);
             throw new HTTPError(401);
@@ -895,8 +894,8 @@ async function findHtpasswdRecord(username, password) {
  *
  * @return {Function}
  */
-function findPassportPlugin(server) {
-    let plugins = {
+async function findPassportPlugin(server) {
+    const plugins = {
         dropbox: 'passport-dropbox-oauth2',
         facebook: 'passport-facebook',
         github: 'passport-github',
@@ -904,7 +903,7 @@ function findPassportPlugin(server) {
         google: 'passport-google-oauth2',
         windows: 'passport-windowslive',
     };
-    let module = require(plugins[server.type]);
+    let module = await import(plugins[server.type]);
     if (!(module instanceof Function)) {
         if (module.Strategy) {
             module = module.Strategy;
@@ -953,14 +952,14 @@ function canProvideAccess(server, area) {
  * @return {Boolean}
  */
 function acceptNewUser(server, profile) {
-    let type = _.get(server, 'settings.user.type');
-    let mapping = _.get(server, 'settings.user.mapping');
+    const type = _.get(server, 'settings.user.type');
+    const mapping = _.get(server, 'settings.user.mapping');
     if (!type && !_.some(mapping)) {
         return false;
     }
-    let whitelist = _.trim(_.get(server, 'settings.user.whitelist'));
+    const whitelist = _.trim(_.get(server, 'settings.user.whitelist'));
     if (whitelist) {
-        let emails = _.map(profile.emails, 'value');
+        const emails = _.map(profile.emails, 'value');
         return _.some(emails, (email) => {
             return Whitelist.match(email, whitelist);
         });
@@ -993,14 +992,14 @@ function getProfileID(profile) {
  * @return {User|null}
  */
 function copyUserProperties(user, server, image, profile) {
-    let json = profile._json;
+    const json = profile._json;
     if (server.type === 'gitlab') {
         // use GitlabAdapter's importer
         return GitlabUserImporter.copyUserProperties(user, server, image, json);
     } else {
-        let email = _.first(_.map(profile.emails, 'value'));
-        let username = profile.username || proposeUsername(profile);
-        let userType = _.get(server, 'settings.user.type');
+        const email = _.first(_.map(profile.emails, 'value'));
+        const username = profile.username || proposeUsername(profile);
+        const userType = _.get(server, 'settings.user.type');
         let userAfter;
         if (user) {
             userAfter = _.cloneDeep(user);
@@ -1067,12 +1066,12 @@ function proposeUsername(profile) {
     if (profile.username) {
         return profile.username;
     }
-    let email = _.get(profile.emails, '0.value');
+    const email = _.get(profile.emails, '0.value');
     if (email) {
         return _.replace(email, /@.*/, '');
     }
-    let lname = toSimpleLatin(profile.name.familyName);
-    let fname = toSimpleLatin(profile.name.givenName);
+    const lname = toSimpleLatin(profile.name.familyName);
+    const fname = toSimpleLatin(profile.name.givenName);
     if (lname && fname) {
         return fname.charAt(0) + lname;
     } else if (fname || lname) {
@@ -1112,7 +1111,7 @@ async function retrieveProfileImage(profile) {
     if (!url) {
         return null;
     }
-    let options = {
+    const options = {
         json: true,
         url: 'http://media_server/srv/internal/import',
         body: { url },
@@ -1141,8 +1140,8 @@ async function retrieveProfileImage(profile) {
  */
 async function updateProfileImage(db, user, server, profile) {
     try {
-        let image = await retrieveProfileImage(profile);
-        let userAfter = copyUserProperties(user, server, image, profile);
+        const image = await retrieveProfileImage(profile);
+        const userAfter = copyUserProperties(user, server, image, profile);
         if(!_.isEqual(userAfter, user)) {
             await User.updateOne(db, 'global', userAfter);
         }
@@ -1159,7 +1158,7 @@ async function updateProfileImage(db, user, server, profile) {
  * @return {Promise<String>}
  */
 async function createRandomToken(bytes) {
-    let buffer = await Crypto.randomBytesAsync(bytes);
+    const buffer = await Crypto.randomBytesAsync(bytes);
     return buffer.toString('hex');
 }
 
@@ -1243,12 +1242,12 @@ function extractQueryVariables(query) {
  * @return {Object}
  */
 function parseQueryString(queryString) {
-    let values = {};
-    let pairs = _.split(queryString, '&');
+    const values = {};
+    const pairs = _.split(queryString, '&');
     for (let pair of pairs) {
-        let parts = _.split(pair, '=');
-        let name = decodeURIComponent(parts[0]);
-        let value = decodeURIComponent(parts[1] || '');
+        const parts = _.split(pair, '=');
+        const name = decodeURIComponent(parts[0]);
+        const value = decodeURIComponent(parts[1] || '');
         value = _.replace(value, /\+/g, ' ');
         values[name] = value;
     }
@@ -1265,15 +1264,15 @@ function parseQueryString(queryString) {
  * @return {Object}
  */
 function parseDeauthorizationRequest(signedRequest, appSecret){
-    let [ signatureReceived, payloadBase64 ] = signedRequest.split('.');
-    let payloadText = new Buffer(payloadBase64, 'base64').toString();
-    let payload = JSON.parse(payloadText);
-    let algorithm = _.toLower(payload.algorithm);
+    const [ signatureReceived, payloadBase64 ] = signedRequest.split('.');
+    const payloadText = new Buffer(payloadBase64, 'base64').toString();
+    const payload = JSON.parse(payloadText);
+    const algorithm = _.toLower(payload.algorithm);
     if (!_.startsWith(algorithm, 'hmac-')) {
         throw new HTTPError(400, `Unsupported hashing scheme: ${algorithm}`);
     }
-    let hmac = Crypto.createHmac(algorithm.substr(5), appSecret);
-    let signatureCalculated = hmac.update(payloadBase64).digest('base64');
+    const hmac = Crypto.createHmac(algorithm.substr(5), appSecret);
+    const signatureCalculated = hmac.update(payloadBase64).digest('base64');
     signatureCalculated = _.replace(signatureCalculated, /\//g, '_');
     signatureCalculated = _.replace(signatureCalculated, /\+/g, '-');
     signatureCalculated = _.trimEnd(signatureCalculated, '=');
@@ -1289,18 +1288,18 @@ function parseDeauthorizationRequest(signedRequest, appSecret){
  * @return {Promise<Array>}
  */
 async function deleteExpiredSessions() {
-    let db = await Database.open();
-    let criteria = {
+    const db = await Database.open();
+    const criteria = {
         authorization_id: null,
         expired: true,
     };
-    let sessions = await Session.updateMatching(db, 'global', criteria, { deleted: true });
-    let handles = _.map(sessions, 'handle');
+    const sessions = await Session.updateMatching(db, 'global', criteria, { deleted: true });
+    const handles = _.map(sessions, 'handle');
     await removeDevices(handles)
     return sessions;
 }
 
-if (process.argv[1] === __filename) {
+if ('file://' + process.argv[1] === import.meta.url) {
     start();
     Shutdown.on(stop);
 }

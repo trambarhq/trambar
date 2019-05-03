@@ -1,35 +1,35 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import Database from 'database';
-import * as Shutdown from 'shutdown';
-import HTTPError from 'errors/http-error';
+import Database from './lib/database.mjs';
+import * as Shutdown from './lib/shutdown.mjs';
+import HTTPError from './lib/common/errors/http-error.mjs';
 
-import * as ListenerManager from 'event-notifier/listener-manager';
-import * as NotificationGenerator from 'event-notifier/notification-generator';
-import * as AlertComposer from 'event-notifier/alert-composer';
+import * as ListenerManager from './lib/event-notifier/listener-manager.mjs';
+import * as NotificationGenerator from './lib/event-notifier/notification-generator.mjs';
+import * as AlertComposer from './lib/event-notifier/alert-composer.mjs';
 
 // global accessors
-import Device from 'accessors/device';
-import Picture from 'accessors/picture';
-import Project from 'accessors/project';
-import Repo from 'accessors/repo';
-import Role from 'accessors/role';
-import Server from 'accessors/server';
-import Session from 'accessors/session';
-import Subscription from 'accessors/subscription';
-import System from 'accessors/system';
-import User from 'accessors/user';
+import Device from './lib/accessors/device.mjs';
+import Picture from './lib/accessors/picture.mjs';
+import Project from './lib/accessors/project.mjs';
+import Repo from './lib/accessors/repo.mjs';
+import Role from './lib/accessors/role.mjs';
+import Server from './lib/accessors/server.mjs';
+import Session from './lib/accessors/session.mjs';
+import Subscription from './lib/accessors/subscription.mjs';
+import System from './lib/accessors/system.mjs';
+import User from './lib/accessors/user.mjs';
 
 // project accessors
-import Bookmark from 'accessors/bookmark';
-import Listing from 'accessors/listing';
-import Reaction from 'accessors/reaction';
-import Statistics from 'accessors/statistics';
-import Story from 'accessors/story';
+import Bookmark from './lib/accessors/bookmark.mjs';
+import Listing from './lib/accessors/listing.mjs';
+import Reaction from './lib/accessors/reaction.mjs';
+import Statistics from './lib/accessors/statistics.mjs';
+import Story from './lib/accessors/story.mjs';
 
 // appear in both
-import Notification from 'accessors/notification';
-import Task from 'accessors/task';
+import Notification from './lib/accessors/notification.mjs';
+import Task from './lib/accessors/task.mjs';
 
 const accessors = [
     Device,
@@ -231,7 +231,7 @@ class Message {
     }
 }
 
-if (process.argv[1] === __filename) {
+if ('file://' + process.argv[1] === import.meta.url) {
     start();
     Shutdown.on(stop);
 }
