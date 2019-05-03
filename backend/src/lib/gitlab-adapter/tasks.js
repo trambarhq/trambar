@@ -30,8 +30,8 @@ class TaskImportRepos extends BasicTask {
     }
 
     async run() {
-        let db = await Database.open();
-        let server = await getServer(db, this.serverID);
+        const db = await Database.open();
+        const server = await getServer(db, this.serverID);
         if (server) {
             await RepoImporter.importRepositories(db, server);
         }
@@ -47,11 +47,11 @@ class TaskImportRepoEvents extends BasicTask {
     }
 
     async run() {
-        let db = await Database.open();
-        let system = await getSystem(db);
-        let repo = await getRepo(db, this.repoID);
-        let project = await getProject(db, this.projectID);
-        let server = await getRepoServer(db, repo);
+        const db = await Database.open();
+        const system = await getSystem(db);
+        const repo = await getRepo(db, this.repoID);
+        const project = await getProject(db, this.projectID);
+        const server = await getRepoServer(db, repo);
         if (system, repo, project, server) {
             // make sure the project-specific schema exists
             await db.need(project.name);
@@ -67,8 +67,8 @@ class TaskImportUsers extends BasicTask {
     }
 
     async run() {
-        let db = await Database.open();
-        let server = await getServer(db, this.serverID);
+        const db = await Database.open();
+        const server = await getServer(db, this.serverID);
         if (server) {
             await UserImporter.importUsers(db, server);
         }
@@ -82,8 +82,8 @@ class TaskInstallHooks extends BasicTask {
     }
 
     async run(queue) {
-        let db = await Database.open();
-        let servers = await getServers(db);
+        const db = await Database.open();
+        const servers = await getServers(db);
         for (let server of servers) {
             queue.add(new TaskInstallServerHooks(server.id, this.host));
         }
@@ -97,15 +97,15 @@ class TaskRemoveHooks extends BasicTask {
     }
 
     async run(queue) {
-        let db = await Database.open();
-        let servers = await getServers(db);
+        const db = await Database.open();
+        const servers = await getServers(db);
         for (let server of servers) {
             queue.add(new TaskRemoveServerHooks(server.id, this.host));
         }
     }
 }
 
-let problematicServerIDs = [];
+const problematicServerIDs = [];
 
 class TaskInstallServerHooks extends BasicTask {
     constructor(serverID, host) {
@@ -115,14 +115,11 @@ class TaskInstallServerHooks extends BasicTask {
     }
 
     async run() {
-        let db = await Database.open();
-        let host = this.host;
-        if (!host) {
-            host = await getSystemAddress(db);
-        }
-        let server = await getServer(db, this.serverID);
-        let repos = await getServerRepos(db, server);
-        let projects = await getReposProjects(db, repos);
+        const db = await Database.open();
+        const host = await this.host || getSystemAddress(db);
+        const server = await getServer(db, this.serverID);
+        const repos = await getServerRepos(db, server);
+        const projects = await getReposProjects(db, repos);
         if (host && server) {
             try {
                 await HookManager.installServerHooks(host, server, repos, projects);
@@ -142,14 +139,11 @@ class TaskRemoveServerHooks extends BasicTask {
     }
 
     async run() {
-        let db = await Database.open();
-        let host = this.host;
-        if (!host) {
-            host = await getSystemAddress(db);
-        }
-        let server = await getServer(db, this.serverID);
-        let repos = await getServerRepos(db, server);
-        let projects = await getReposProjects(db, repos);
+        const db = await Database.open();
+        const host = await this.host || getSystemAddress(db);
+        const server = await getServer(db, this.serverID);
+        const repos = await getServerRepos(db, server);
+        const projects = await getReposProjects(db, repos);
         if (host && server) {
             try {
                 await HookManager.removeServerHooks(host, server, repos, projects);
@@ -168,11 +162,11 @@ class TaskInstallProjectHook extends BasicTask {
     }
 
     async run() {
-        let db = await Database.open();
-        let host = await getSystemAddress(db);
-        let repo = await getRepo(db, this.repoID);
-        let project = await getProject(db, this.projectID);
-        let server = await getRepoServer(db, repo);
+        const db = await Database.open();
+        const host = await getSystemAddress(db);
+        const repo = await getRepo(db, this.repoID);
+        const project = await getProject(db, this.projectID);
+        const server = await getRepoServer(db, repo);
         if (host && repo && project && server) {
             try {
                 await HookManager.installProjectHook(host, server, repo, project);
@@ -191,11 +185,11 @@ class TaskRemoveProjectHook extends BasicTask {
     }
 
     async run() {
-        let db = await Database.open();
-        let host = await getSystemAddress(db);
-        let repo = await getRepo(db, this.repoID);
-        let project = await getProject(db, this.projectID);
-        let server = await getRepoServer(db, repo);
+        const db = await Database.open();
+        const host = await getSystemAddress(db);
+        const repo = await getRepo(db, this.repoID);
+        const project = await getProject(db, this.projectID);
+        const server = await getRepoServer(db, repo);
         if (host && repo && project && server) {
             await HookManager.removeProjectHook(host, server, repo, project);
         }
@@ -211,14 +205,14 @@ class TaskImportProjectHookEvent extends BasicTask {
     }
 
     async run(queue) {
-        let db = await Database.open();
-        let system = await getSystem(db);
-        let repo = await getRepo(db, this.repoID);
-        let project = await getProject(db, this.projectID);
-        let server = await getRepoServer(db, repo);
-        let glHookEvent = this.glHookEvent;
+        const db = await Database.open();
+        const system = await getSystem(db);
+        const repo = await getRepo(db, this.repoID);
+        const project = await getProject(db, this.projectID);
+        const server = await getRepoServer(db, repo);
+        const glHookEvent = this.glHookEvent;
         if (system && server && repo && project) {
-            let story = await EventImporter.importHookEvent(db, system, server, repo, project, glHookEvent);
+            const story = await EventImporter.importHookEvent(db, system, server, repo, project, glHookEvent);
             if (story === false) {
                 queue.add(new TaskImportRepoEvents(this.repoID, this.projectID, this.glHookEvent));
             }
@@ -234,13 +228,33 @@ class TaskImportWikis extends BasicTask {
     }
 
     async run() {
-        let db = await Database.open();
-        let system = await getSystem(db);
-        let repo = await getRepo(db, this.repoID);
-        let project = await getProject(db, this.projectID);
-        let server = await getRepoServer(db, repo);
+        const db = await Database.open();
+        const system = await getSystem(db);
+        const repo = await getRepo(db, this.repoID);
+        const project = await getProject(db, this.projectID);
+        const server = await getRepoServer(db, repo);
         if (system && server && repo && project) {
-            await MilestoneImporter.importWikis(db, system, server, repo, project);
+            await WikiImporter.importWikis(db, system, server, repo, project);
+        }
+    }
+}
+
+class TaskReimportWiki extends BasicTask {
+    constructor(schema, wikiID) {
+        super();
+        this.schema = schema;
+        this.wikiID;
+    }
+
+    async run() {
+        const db = await Database.open();
+        const system = await getSystem(db);
+        const project = await getProjectByName(db, this.schema);
+        const wiki = await getWiki(db, this.schema, this.wikiID);
+        const repo = await getWikiRepo(db, wiki);
+        const server = await getRepoServer(db, repo);
+        if (system && server && repo && project) {
+            await WikiImporter.importWikis(db, system, server, repo, project);
         }
     }
 }
@@ -253,11 +267,11 @@ class TaskUpdateMilestones extends BasicTask {
     }
 
     async run() {
-        let db = await Database.open();
-        let system = await getSystem(db);
-        let repo = await getRepo(db, this.repoID);
-        let project = await getProject(db, this.projectID);
-        let server = await getRepoServer(db, repo);
+        const db = await Database.open();
+        const system = await getSystem(db);
+        const repo = await getRepo(db, this.repoID);
+        const project = await getProject(db, this.projectID);
+        const server = await getRepoServer(db, repo);
         if (system && server && repo && project) {
             await MilestoneImporter.updateMilestones(db, system, server, repo, project);
         }
@@ -272,19 +286,19 @@ class TaskExportStory extends BasicTask {
     }
 
     async run() {
-        let db = await Database.open();
-        let system = await getSystem(db);
-        let project = await getProjectByName(db, this.schema);
-        let task = await getTask(db, this.schema, this.taskID);
+        const db = await Database.open();
+        const system = await getSystem(db);
+        const project = await getProjectByName(db, this.schema);
+        const task = await getTask(db, this.schema, this.taskID);
         if (system && task && project) {
             try {
-                let story = await IssueExporter.exportStory(db, system, project, task);
+                const story = await IssueExporter.exportStory(db, system, project, task);
                 task.completion = 100;
                 task.failed = false;
                 task.etime = new String('NOW()');
                 delete task.details.error;
                 if (story) {
-                    let issueLink = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
+                    const issueLink = ExternalDataUtils.findLinkByServerType(story, 'gitlab');
                     _.assign(task.details, _.pick(issueLink, 'repo', 'issue'));
                 }
             } catch (err) {
@@ -309,9 +323,9 @@ class TaskReexportStory extends BasicTask {
 
     async run(queue) {
         // look for the export task and run it again
-        let db = await Database.open();
-        let story = await getStory(db, this.schema, this.storyID);
-        let task = await getExportTask(db, this.schema, story);
+        const db = await Database.open();
+        const story = await getStory(db, this.schema, this.storyID);
+        const task = await getExportTask(db, this.schema, story);
 
          if (task && story) {
              // reexport only if the exporting user is among the author
@@ -335,23 +349,23 @@ class PeriodicTaskMaintainHooks extends PeriodicTask {
             await Bluebird.delay(3000);
         }
 
-        let db = await Database.open();
-        let host = await getSystemAddress(db);
-        let task = new TaskInstallHooks(host);
+        const db = await Database.open();
+        const host = await getSystemAddress(db);
+        const task = new TaskInstallHooks(host);
         await task.run(queue);
     }
 
     async run(queue) {
-        let db = await Database.open();
+        const db = await Database.open();
         for (let serverID of problematicServerIDs) {
             queue.add(new TaskInstallServerHooks(serverID));
         }
     }
 
     async stop(queue) {
-        let db = await Database.open();
-        let host = await getSystemAddress(db);
-        let task = new TaskRemoveHooks(host);
+        const db = await Database.open();
+        const host = await getSystemAddress(db);
+        const task = new TaskRemoveHooks(host);
         await task.run(queue);
     }
 }
@@ -362,8 +376,8 @@ class PeriodicTaskImportRepos extends PeriodicTask {
     }
 
     async run(queue) {
-        let db = await Database.open();
-        let servers = await getServers(db);
+        const db = await Database.open();
+        const servers = await getServers(db);
         for (let server of servers) {
             queue.add(new TaskImportRepos(server.id));
         }
@@ -376,8 +390,8 @@ class PeriodicTaskImportUsers extends PeriodicTask {
     }
 
     async run(queue) {
-        let db = await Database.open();
-        let servers = await getServers(db);
+        const db = await Database.open();
+        const servers = await getServers(db);
         for (let server of servers) {
             queue.add(new TaskImportUsers(server.id));
         }
@@ -390,8 +404,8 @@ class PeriodicTaskImportWikis extends PeriodicTask {
     }
 
     async run(queue) {
-        let db = await Database.open();
-        let projects = await getProjects(db);
+        const db = await Database.open();
+        const projects = await getProjects(db);
         for (let project of projects) {
             for (let repoID of project.repo_ids) {
                 queue.add(new TaskImportWikis(repoID, project.id));
@@ -406,8 +420,8 @@ class PeriodicTaskImportRepoEvents extends PeriodicTask {
     }
 
     async run(queue) {
-        let db = await Database.open();
-        let projects = await getProjects(db);
+        const db = await Database.open();
+        const projects = await getProjects(db);
         for (let project of projects) {
             for (let repoID of project.repo_ids) {
                 queue.add(new TaskImportRepoEvents(repoID, project.id));
@@ -422,8 +436,8 @@ class PeriodicTaskUpdateMilestones extends PeriodicTask {
     }
 
     async run(queue) {
-        let db = await Database.open();
-        let projects = await getProjects(db);
+        const db = await Database.open();
+        const projects = await getProjects(db);
         for (let project of projects) {
             for (let repoID of project.repo_ids) {
                 queue.add(new TaskUpdateMilestones(repoID, project.id));
@@ -438,11 +452,11 @@ class PeriodicTaskRetryFailedExports extends PeriodicTask {
     }
 
     async run(queue) {
-        let db = await Database.open();
-        let projects = await getProjects(db);
+        const db = await Database.open();
+        const projects = await getProjects(db);
         for (let project of projects) {
             // load export tasks that failed and try them again
-            let tasks = await getFailedExportTasks(db, project);
+            const tasks = await getFailedExportTasks(db, project);
             for (let task of tasks) {
                 queue.add(new TaskExportStory(project.name, task.id));
             }
@@ -451,43 +465,43 @@ class PeriodicTaskRetryFailedExports extends PeriodicTask {
 }
 
 async function getSystem(db) {
-    let criteria = {
+    const criteria = {
         deleted: false,
     };
     return System.findOne(db, 'global', criteria, '*');
 }
 
 async function getSystemAddress(db) {
-    let system = await getSystem(db);
-    let address = _.get(system, 'settings.address');
+    const system = await getSystem(db);
+    const address = _.get(system, 'settings.address');
     return _.trimEnd(address, ' /');
 }
 
 async function getServer(db, serverID) {
-    let criteria = {
+    const criteria = {
         id: serverID,
         type: 'gitlab',
         disabled: false,
         deleted: false,
     }
-    let server = await Server.findOne(db, 'global', criteria, '*');
+    const server = await Server.findOne(db, 'global', criteria, '*');
     if (hasAccessToken(server)) {
         return server;
     }
 }
 
 async function getServers(db) {
-    let criteria = {
+    const criteria = {
         type: 'gitlab',
         disabled: false,
         deleted: false,
     }
-    let servers = await Server.find(db, 'global', criteria, '*');
+    const servers = await Server.find(db, 'global', criteria, '*');
     return _.filter(servers, hasAccessToken);
 }
 
 async function getRepo(db, repoID) {
-    let criteria = {
+    const criteria = {
         id: repoID,
         deleted: false,
     };
@@ -498,7 +512,7 @@ async function getRepoServer(db, repo) {
     if (!repo) {
         return;
     }
-    let repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
+    const repoLink = ExternalDataUtils.findLinkByServerType(repo, 'gitlab');
     if (repoLink) {
         return getServer(db, repoLink.server_id);
     }
@@ -508,7 +522,7 @@ async function getServerRepos(db, server) {
     if (!server) {
         return [];
     }
-    let criteria = {
+    const criteria = {
         external_object: ExternalDataUtils.createLink(server),
         deleted: false,
     };
@@ -516,7 +530,7 @@ async function getServerRepos(db, server) {
 }
 
 async function getReposProjects(db, repos) {
-    let criteria = {
+    const criteria = {
         repo_ids: _.map(repos, 'id'),
         deleted: false,
         archived: false,
@@ -525,7 +539,10 @@ async function getReposProjects(db, repos) {
 }
 
 async function getProject(db, projectID) {
-    let criteria = {
+    if (typeof(projectID) === 'string') {
+        return getProjectByName(db, projectID);
+    }
+    const criteria = {
         id : projectID,
         archived: false,
         deleted: false,
@@ -534,7 +551,7 @@ async function getProject(db, projectID) {
 }
 
 async function getProjectByName(db, name) {
-    let criteria = {
+    const criteria = {
         name,
         archived: false,
         deleted: false,
@@ -543,7 +560,7 @@ async function getProjectByName(db, name) {
 }
 
 async function getProjects(db) {
-    let criteria = {
+    const criteria = {
         archived: false,
         deleted: false,
     };
@@ -551,7 +568,7 @@ async function getProjects(db) {
 }
 
 async function getTask(db, schema, taskID) {
-    let criteria = {
+    const criteria = {
         id: taskID,
         deleted: false,
     };
@@ -559,7 +576,7 @@ async function getTask(db, schema, taskID) {
 }
 
 async function getFailedExportTasks(db, project) {
-    let criteria = {
+    const criteria = {
         action: 'export-issue',
         complete: false,
         newer_than: Moment().startOf('day').subtract(3, 'day'),
@@ -569,18 +586,41 @@ async function getFailedExportTasks(db, project) {
 }
 
 async function getStory(db, schema, storyID) {
-    let criteria = {
+    const criteria = {
         id: storyID,
         deleted: false,
     };
     return Story.find(db, schema, criteria, '*');
 }
 
+async function getWiki(db, schema, wikiID) {
+    const criteria = {
+        id: wikiID,
+        deleted: false,
+    };
+    return Wiki.find(db, schema, criteria, '*');
+}
+
+async function getWikiRepo(db, schema, wiki) {
+    if (wiki) {
+        const wikiLink = ExternalObject.findLinkByRelations(wiki, 'wiki');
+        if (wikiLink) {
+            const repoLink = _.omit(wikiLink, 'wiki');
+            const criteria = {
+                externa_object: repoLink,
+                deleted: false,
+            };
+            return Repo.find(db, schema, criteria, '*');
+        }
+    }
+    return null;
+}
+
 async function getExportTask(db, schema, story) {
     if (!story) {
         return;
     }
-    let criteria = {
+    const criteria = {
          type: 'export-issue',
          completion: 100,
          failed: false,
@@ -600,8 +640,8 @@ async function getExportTask(db, schema, story) {
  * @return {Boolean}
  */
 function hasAccessToken(server) {
-    let accessToken = _.get(server, 'settings.api.access_token');
-    let oauthBaseURL = _.get(server, 'settings.oauth.base_url');
+    const accessToken = _.get(server, 'settings.api.access_token');
+    const oauthBaseURL = _.get(server, 'settings.oauth.base_url');
     return !!(accessToken && oauthBaseURL);
 }
 
@@ -617,6 +657,7 @@ export {
     TaskRemoveProjectHook,
     TaskImportProjectHookEvent,
     TaskImportWikis,
+    TaskReimportWiki,
     TaskUpdateMilestones,
     TaskExportStory,
     TaskReexportStory,

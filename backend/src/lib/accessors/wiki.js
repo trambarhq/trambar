@@ -101,7 +101,6 @@ class Wiki extends ExternalData {
         await this.createChangeTrigger(db, schema);
         await this.createNotificationTriggers(db, schema, [
             'deleted',
-            'external',
             'slug',
             'public',
             'chosen',

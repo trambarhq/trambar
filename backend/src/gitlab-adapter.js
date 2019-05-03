@@ -21,6 +21,7 @@ import {
     TaskRemoveProjectHook,
     TaskImportProjectHookEvent,
     TaskImportWikis,
+    TaskReimportWiki,
     TaskUpdateMilestones,
     TaskExportStory,
     TaskReexportStory,
@@ -114,6 +115,9 @@ function handleDatabaseChanges(events) {
                 case 'task':
                     handleTaskChangeEvent(event);
                     break;
+                case 'wiki':
+                    handleWikiChangeEvent(event);
+                    break;
             }
         } catch (err) {
             console.error(err);
@@ -175,7 +179,7 @@ function handleProjectChangeEvent(event) {
 }
 
 /**
- * copy contents from story to issue tracker
+ * Initiate reexporting of story to issue tracker
  *
  * @param  {Object} event
  */
@@ -198,7 +202,7 @@ function handleStoryChangeEvent(event) {
 }
 
 /**
- * copy contents from story to issue tracker
+ * Initiate exporting of story to issue tracker
  *
  * @param  {Object} event
  */
@@ -218,6 +222,15 @@ function handleTaskChangeEvent(event) {
     const schema = event.schema;
     const taskID = event.id;
     taskQueue.add(new TaskExportStory(schema, taskID));
+}
+
+function handleWikiChangeEvent(event) {
+    if (!event.diff.chosen) {
+        return;
+    }
+    const schema = event.schema;
+    const wikiID = event.id;
+    taskQueue.add(new TaskReimportWiki(wikiID, schema));
 }
 
 /**
