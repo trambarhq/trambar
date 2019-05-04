@@ -31,13 +31,14 @@ module.exports = function(config) {
         ],
         reporters: [ 'progress' ],
         webpack: {
-            mode: 'production',
+            mode: 'development',
             module: {
                 rules: [
                     {
-                        test: /\.jsx?$/,
+                        test: /\.(js|jsx|mjs)$/,
                         loader: 'babel-loader',
                         exclude: Path.resolve('./node_modules'),
+                        type: 'javascript/auto',
                         query: {
                             presets: [
                                 'env',
@@ -66,12 +67,6 @@ module.exports = function(config) {
                         ]
                     },
                 ]
-            },
-            resolve: {
-                extensions: [ '.js', '.jsx' ],
-                modules: [ 'src', 'assets', 'node_modules' ].map((folder) => {
-                    return Path.resolve(`./${folder}`);
-                })
             },
             devtool: 'inline-source-map',
         },

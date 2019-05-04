@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as MediaLoader from 'media/media-loader';
-import * as ImageCropping from 'media/image-cropping';
-import * as ResourceUtils from 'objects/utils/resource-utils';
+import * as MediaLoader from '../media/media-loader.mjs';
+import * as ImageCropping from '../media/image-cropping.mjs';
+import * as ResourceUtils from '../objects/utils/resource-utils.mjs';
 
-import BitmapView from 'widgets/bitmap-view';
-import VectorView from 'widgets/vector-view';
+import BitmapView from '../widgets/bitmap-view.jsx';
+import VectorView from '../widgets/vector-view.jsx';
 
 require('./resource-view.scss');
 
@@ -236,7 +236,7 @@ export {
     ResourceView,
 };
 
-import Environment from 'env/environment';
+import Environment from '../env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

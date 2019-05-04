@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as BlobManager from 'transport/blob-manager';
-import * as BlobReader from 'transport/blob-reader';
-import * as MediaLoader from 'media/media-loader';
-import * as JPEGAnalyser from 'media/jpeg-analyser';
-import * as ImageOrientation from 'media/image-orientation';
-import ComponentRefs from 'utils/component-refs';
+import * as BlobManager from '../transport/blob-manager.mjs';
+import * as BlobReader from '../transport/blob-reader.mjs';
+import * as MediaLoader from '../media/media-loader.mjs';
+import * as JPEGAnalyser from '../media/jpeg-analyser.mjs';
+import * as ImageOrientation from '../media/image-orientation.mjs';
+import ComponentRefs from '../utils/component-refs.mjs';
 
 /**
  * A component that displays a bitmap image file (JPEG, PNG, etc.), with

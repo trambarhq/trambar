@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as MediaLoader from 'media/media-loader';
-import ComponentRefs from 'utils/component-refs';
+import * as MediaLoader from '../media/media-loader.mjs';
+import ComponentRefs from '../utils/component-refs.mjs';
 
 /**
  * A component for displaying a SVG file, with proper support for zooming
