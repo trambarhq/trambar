@@ -2,10 +2,10 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import Hammer from 'hammerjs';
-import ComponentRefs from 'utils/component-refs';
+import ComponentRefs from '../utils/component-refs.mjs';
 
-import BitmapView from 'widgets/bitmap-view';
-import VectorView from 'widgets/vector-view';
+import BitmapView from './bitmap-view.mjs';
+import VectorView from './vector-view.mjs';
 
 import './image-cropper.scss';
 

@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { Component } from 'react';
-import ComponentRefs from 'utils/component-refs';
+import ComponentRefs from '../utils/component-refs.mjs';
 
 import './smart-list.scss';
 

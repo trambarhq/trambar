@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
+import ComponentRefs from '../utils/component-refs.mjs';
 
 import './autosize-text-area.scss';
 

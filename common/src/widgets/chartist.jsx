@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import { Bar, Pie, Line, Interpolation, Svg } from 'chartist';
-import ComponentRefs from 'utils/component-refs';
+import ComponentRefs from '../utils/component-refs.mjs';
 
 import 'widgets/chartist.scss';
 

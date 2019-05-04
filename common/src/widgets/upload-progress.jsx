@@ -33,8 +33,8 @@ class UploadProgress extends PureComponent {
     }
 }
 
-import Environment from 'env/environment';
-import Payloads from 'transport/payloads';
+import Environment from '../env/environment.mjs';
+import Payloads from '../transport/payloads.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

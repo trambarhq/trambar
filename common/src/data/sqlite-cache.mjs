@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import * as LocalSearch from './local-search.mjs';
 
 let openDatabase = window.openDatabase;

@@ -203,7 +203,7 @@ export {
     Overlay,
 };
 
-import Environment from 'env/environment';
+import Environment from '../env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

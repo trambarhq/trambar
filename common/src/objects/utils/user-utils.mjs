@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import * as ReactionUtils from 'objects/utils/reaction-utils';
-import * as StoryUtils from 'objects/utils/story-utils';
-import { mergeRemoteChanges } from 'objects/utils/story-utils';
+import * as ReactionUtils from './reaction-utils.mjs';
+import * as StoryUtils from './story-utils.mjs';
+import { mergeRemoteChanges } from './story-utils.mjs';
 import {
     GitNotificationTypes,
     AdminNotificationTypes,
     MembershipNotificationTypes
-} from 'objects/types/notification-types';
+} from '../types/notification-types.mjs';
 
 /**
  * Return true if user is a member of the project

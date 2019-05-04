@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { Component } from 'react';
 
-require('./error-boundary.scss');
+import './error-boundary.scss';
 
 /**
  * Component for trapping JavaScript exeception encountered during rendering

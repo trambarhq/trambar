@@ -7,7 +7,7 @@ import * as ResourceUtils from '../objects/utils/resource-utils.mjs';
 import BitmapView from '../widgets/bitmap-view.jsx';
 import VectorView from '../widgets/vector-view.jsx';
 
-require('./resource-view.scss');
+import './resource-view.scss';
 
 /**
  * A component for displaying a media resource (image, video, audio, web-link).
