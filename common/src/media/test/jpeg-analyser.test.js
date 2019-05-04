@@ -35,7 +35,7 @@ describe('JPEGAnalyser', function() {
             let paths = JPEGAnalyser.extractPaths(imageWithPaths);
             expect(paths).to.not.be.empty;
             for(let name in paths) {
-                expect(paths[name]).to.not.be.emtpy;
+                expect(paths[name]).to.not.be.empty;
             }
         })
     })

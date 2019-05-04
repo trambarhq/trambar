@@ -31,9 +31,9 @@ module.exports = function(config) {
         ],
         reporters: [ 'progress' ],
         webpack: {
-            devtool: 'inline-source-map',
+            mode: 'production',
             module: {
-                loaders: [
+                rules: [
                     {
                         test: /\.jsx?$/,
                         loader: 'babel-loader',
@@ -45,6 +45,7 @@ module.exports = function(config) {
                                 'stage-0',
                             ],
                             plugins: [
+                                'syntax-dynamic-import',
                                 'syntax-async-functions',
                                 'syntax-class-properties',
                                 'transform-regenerator',
@@ -72,12 +73,7 @@ module.exports = function(config) {
                     return Path.resolve(`./${folder}`);
                 })
             },
-            plugins: [
-                new DefinePlugin({
-                    'process.env.NODE_ENV': '"production"',
-                    'process.env.PLATFORM': '"browser"',
-                }),
-            ],
+            devtool: 'inline-source-map',
         },
         webpackMiddleware: {
             noInfo: true,

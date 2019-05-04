@@ -93,7 +93,7 @@ describe('IndexedDBCache', function() {
                 }
             };
             let objects = await cache.find(query);
-            expect(objects[0]).to.have.deep.property('details.name', 'John Doe');
+            expect(objects[0]).to.have.nested.property('details.name', 'John Doe');
         })
         it('should be able to find object by multiple ids', async function() {
             let query = {
@@ -105,7 +105,7 @@ describe('IndexedDBCache', function() {
                 }
             };
             let objects = await cache.find(query);
-            expect(objects).to.have.lengthOf(2).to.have.deep.property('1.details.name', 'Jason Doe');
+            expect(objects).to.have.lengthOf(2).to.have.nested.property('1.details.name', 'Jason Doe');
         })
         it('should find object by other criteria', async function() {
             let query = {
@@ -117,7 +117,7 @@ describe('IndexedDBCache', function() {
                 }
             };
             let objects = await cache.find(query);
-            expect(objects).to.have.lengthOf(2).to.have.deep.property('1.details.name', 'Jason Doe');
+            expect(objects).to.have.lengthOf(2).to.have.nested.property('1.details.name', 'Jason Doe');
         })
         it('should find object saved earlier to local schema', async function() {
             let query = {
@@ -126,7 +126,7 @@ describe('IndexedDBCache', function() {
                 key: 'what'
             };
             let objects = await cache.find(query);
-            expect(objects[0]).to.have.deep.property('something', 5);
+            expect(objects[0]).to.have.nested.property('something', 5);
         })
     })
     describe('#remove()', function() {

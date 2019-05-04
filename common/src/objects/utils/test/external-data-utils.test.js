@@ -482,7 +482,7 @@ describe('ExternalDataUtils', function() {
                 value: res,
                 replace: 'always'
             });
-            expect(repo).to.have.deep.property('details.resources').that.contains(res);
+            expect(repo).to.have.nested.property('details.resources').that.contains(res);
         })
         it('should replace a resource when replace = always', function() {
             let server = {
@@ -509,13 +509,13 @@ describe('ExternalDataUtils', function() {
                 value: res1,
                 replace: 'always'
             });
-            expect(repo).to.have.deep.property('details.resources').that.contains(res1);
+            expect(repo).to.have.nested.property('details.resources').that.contains(res1);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
                 value: res2,
                 replace: 'always'
             });
-            expect(repo).to.have.deep.property('details.resources').to.have.lengthOf(1).that.contains(res2);
+            expect(repo).to.have.nested.property('details.resources').to.have.lengthOf(1).that.contains(res2);
         })
         it('should remove a resource when replace = always', function() {
             let server = {
@@ -542,13 +542,13 @@ describe('ExternalDataUtils', function() {
                 value: res1,
                 replace: 'always'
             });
-            expect(repo).to.have.deep.property('details.resources').that.contains(res1);
+            expect(repo).to.have.nested.property('details.resources').that.contains(res1);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
                 value: null,
                 replace: 'always'
             });
-            expect(repo).to.not.have.deep.property('details.resources');
+            expect(repo).to.not.have.nested.property('details.resources');
         })
         it('should not replace a resource when replace = never', function() {
             let server = {
@@ -575,13 +575,13 @@ describe('ExternalDataUtils', function() {
                 value: res1,
                 replace: 'never'
             });
-            expect(repo).to.have.deep.property('details.resources').that.contains(res1);
+            expect(repo).to.have.nested.property('details.resources').that.contains(res1);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
                 value: res2,
                 replace: 'never'
             });
-            expect(repo).to.have.deep.property('details.resources').to.have.lengthOf(1).that.contains(res1);
+            expect(repo).to.have.nested.property('details.resources').to.have.lengthOf(1).that.contains(res1);
         })
         it('should replace a resource when replace = match-previous', function() {
             let server = {
@@ -614,19 +614,19 @@ describe('ExternalDataUtils', function() {
                 value: res1,
                 replace: 'match-previous'
             });
-            expect(repo).to.have.deep.property('details.resources').that.contains(res1);
+            expect(repo).to.have.nested.property('details.resources').that.contains(res1);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
                 value: res2,
                 replace: 'match-previous'
             });
-            expect(repo).to.have.deep.property('details.resources').to.have.lengthOf(1).that.contains(res2);
+            expect(repo).to.have.nested.property('details.resources').to.have.lengthOf(1).that.contains(res2);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
                 value: res3,
                 replace: 'match-previous'
             });
-            expect(repo).to.have.deep.property('details.resources').to.have.lengthOf(1).that.contains(res3);
+            expect(repo).to.have.nested.property('details.resources').to.have.lengthOf(1).that.contains(res3);
         })
         it('should not replace a resource if it was changed', function() {
             let server = {
@@ -665,20 +665,20 @@ describe('ExternalDataUtils', function() {
                 value: res1,
                 replace: 'match-previous'
             });
-            expect(repo).to.have.deep.property('details.resources').that.contains(res1);
+            expect(repo).to.have.nested.property('details.resources').that.contains(res1);
             repo.details.resources[0] = resX;
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
                 value: res2,
                 replace: 'match-previous'
             });
-            expect(repo).to.have.deep.property('details.resources').to.have.lengthOf(1).that.contains(resX);
+            expect(repo).to.have.nested.property('details.resources').to.have.lengthOf(1).that.contains(resX);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
                 value: res3,
                 replace: 'match-previous'
             });
-            expect(repo).to.have.deep.property('details.resources').to.have.lengthOf(1).that.contains(resX);
+            expect(repo).to.have.nested.property('details.resources').to.have.lengthOf(1).that.contains(resX);
         })
         it('should not insert another resource if the previous one was removed', function() {
             let server = {
@@ -711,20 +711,20 @@ describe('ExternalDataUtils', function() {
                 value: res1,
                 replace: 'match-previous'
             });
-            expect(repo).to.have.deep.property('details.resources').that.contains(res1);
+            expect(repo).to.have.nested.property('details.resources').that.contains(res1);
             repo.details.resources.splice(0);
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
                 value: res2,
                 replace: 'match-previous'
             });
-            expect(repo).to.not.have.deep.property('details.resources');
+            expect(repo).to.not.have.nested.property('details.resources');
             ExternalDataUtils.importResource(repo, server, {
                 type: 'image',
                 value: res3,
                 replace: 'match-previous'
             });
-            expect(repo).to.not.have.deep.property('details.resources');
+            expect(repo).to.not.have.nested.property('details.resources');
         })
     })
     describe('#findCommonServer()', function() {

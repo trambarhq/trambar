@@ -716,7 +716,7 @@ describe('RemoteDataSource', function() {
                 if (/storage/.test(url)) {
                     storage++;
                     expect(method).to.match(/post/i);
-                    expect(payload).to.have.property('objects').that.is.an.array;
+                    expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
                     return _.map(payload.objects, (object) => {
                         object = _.clone(object);
                         if (!object.id) {
@@ -751,7 +751,7 @@ describe('RemoteDataSource', function() {
                 if (/storage/.test(url)) {
                     storage++;
                     expect(method).to.match(/post/i);
-                    expect(payload).to.have.property('objects').that.is.an.array;
+                    expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
                     let object = _.clone(payload.objects[0]);
                     objects[0] = object;
                     return [ object ];
@@ -783,7 +783,7 @@ describe('RemoteDataSource', function() {
                 if (/storage/.test(url)) {
                     storage++;
                     expect(method).to.match(/post/i);
-                    expect(payload).to.have.property('objects').that.is.an.array;
+                    expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
 
                     // wait for the search
                     await presaveSearchPromise;
@@ -873,11 +873,11 @@ describe('RemoteDataSource', function() {
                 }
             };
             let location = {
-                address: 'http://gladden-fields.me', 
-                schema: 'global', 
+                address: 'http://gladden-fields.me',
+                schema: 'global',
                 table: 'hobbit',
             };
-            let query = _.assign({ 
+            let query = _.assign({
                 criteria: { evil: false }
             }, location);
             let options = { delay: 1000 };
@@ -1022,7 +1022,7 @@ describe('RemoteDataSource', function() {
                 if (/storage/.test(url)) {
                     storage++;
                     expect(method).to.match(/post/i);
-                    expect(payload).to.have.property('objects').that.is.an.array;
+                    expect(payload).to.have.property('objects').that.is.an.instanceOf(Array);
                     return _.map(payload.objects, (object) => {
                         expect(object.deleted).to.be.true;
                         return _.clone(object);
