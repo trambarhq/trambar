@@ -3,7 +3,7 @@ import {
     gender,
     genderize,
     pastTenseEnding,
-} from 'locale/grammars/russian';
+} from '../../grammars/russian.mjs';
 
 let phrases = {
     'hello': 'привет',

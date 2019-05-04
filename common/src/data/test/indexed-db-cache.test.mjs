@@ -1,14 +1,14 @@
 import { expect } from 'chai';
 
-import SQLiteCache from '../sqlite-cache';
+import IndexedDBCache from '../indexed-db-cache.mjs';
 
-describe('SQLiteCache', function() {
-    let cache = new SQLiteCache({ databaseName: 'test' });
+describe('IndexedDBCache', function() {
+    let cache = new IndexedDBCache({ databaseName: 'test' });
 
     describe('#save()', function() {
-        it('should save an object to SQLite', async function() {
+        it('should save an object to IndexedDB', async function() {
             let location = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -26,7 +26,7 @@ describe('SQLiteCache', function() {
         })
         it('should overwrite an existing object', async function() {
             let location = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -44,7 +44,7 @@ describe('SQLiteCache', function() {
         })
         it('should save multiple objects', async function() {
             let location = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -85,7 +85,7 @@ describe('SQLiteCache', function() {
     describe('#find()', function() {
         it('should be able to find object saved earlier', async function() {
             let query = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -97,7 +97,7 @@ describe('SQLiteCache', function() {
         })
         it('should be able to find object by multiple ids', async function() {
             let query = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -109,7 +109,7 @@ describe('SQLiteCache', function() {
         })
         it('should find object by other criteria', async function() {
             let query = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -132,7 +132,7 @@ describe('SQLiteCache', function() {
     describe('#remove()', function() {
         it('should remove an object saved earlier', async function() {
             let location = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -148,7 +148,7 @@ describe('SQLiteCache', function() {
             };
             await cache.remove(location, [ object ]);
             let query = {
-                server: 'somewhere.net',
+                address: 'http://somewhere.net',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -196,7 +196,8 @@ describe('SQLiteCache', function() {
             });
             await cache.save(location1, objects);
             await cache.save(location2, objects);
-            await cache.clean({ address: 'http://mordor.me' });
+            let count = await cache.clean({ address: 'http://mordor.me' });
+            expect(count).to.equal(10);
             let objects1 = await cache.find(location1);
             let objects2 = await cache.find(location2);
             expect(objects1).to.have.lengthOf(10);
@@ -220,7 +221,8 @@ describe('SQLiteCache', function() {
             });
             await cache.save(location1, objects);
             await cache.save(location2, objects);
-            await cache.clean({ count: 4 });
+            let count = await cache.clean({ count: 4 });
+            expect(count).to.equal(4);
             let objects1 = await cache.find(location1);
             let objects2 = await cache.find(location2);
             expect(objects1).to.have.lengthOf(8);
@@ -244,7 +246,8 @@ describe('SQLiteCache', function() {
             });
             await cache.save(location1, objects);
             await cache.save(location2, objects);
-            await cache.clean({ before: ISODate('1990-01-5') });
+            let count = await cache.clean({ before: ISODate('1990-01-5') });
+            expect(count).to.equal(8);
             let objects1 = await cache.find(location1);
             let objects2 = await cache.find(location2);
             expect(objects1).to.have.lengthOf(6);

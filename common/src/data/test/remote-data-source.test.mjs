@@ -3,14 +3,14 @@ import Bluebird from 'bluebird';
 import Moment from 'moment';
 import Chai, { expect } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
-import ManualPromise from 'utils/manual-promise';
+import ManualPromise from '../../utils/manual-promise.mjs';
 
 Chai.use(ChaiAsPromised);
 
-import RemoteDataSource from 'data/remote-data-source';
-import IndexedDBCache from 'data/indexed-db-cache';
-import * as HTTPRequest from 'transport/http-request';
-import HTTPError from 'errors/http-error';
+import RemoteDataSource from '../remote-data-source.mjs';
+import IndexedDBCache from '../indexed-db-cache.mjs';
+import * as HTTPRequest from '../../transport/http-request.mjs';
+import HTTPError from '../../errors/http-error.mjs';
 
 describe('RemoteDataSource', function() {
     before(function() {

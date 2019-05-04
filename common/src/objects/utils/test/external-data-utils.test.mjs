@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import * as ExternalDataUtils from '../external-data-utils.js';
+import * as ExternalDataUtils from '../external-data-utils.mjs';
 
 describe('ExternalDataUtils', function() {
     describe('#createLink()', function() {

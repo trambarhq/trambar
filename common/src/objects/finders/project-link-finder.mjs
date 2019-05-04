@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as ProjectFinder from 'objects/finders/project-finder';
+import * as ProjectFinder from './project-finder.mjs';
 
 /**
  * Find all project links

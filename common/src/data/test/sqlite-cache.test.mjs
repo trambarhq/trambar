@@ -1,15 +1,12 @@
-import Promise from 'bluebird';
 import { expect } from 'chai';
 
-import LocalStorageCache from '../local-storage-cache';
+import SQLiteCache from '../sqlite-cache.mjs';
 
-describe('LocalStorageCache', function() {
-    let cache = new LocalStorageCache({ databaseName: 'test' });
-    before(() => {
-        cache.initialize();
-    })
+describe('SQLiteCache', function() {
+    let cache = new SQLiteCache({ databaseName: 'test' });
+
     describe('#save()', function() {
-        it('should cache an object', async function() {
+        it('should save an object to SQLite', async function() {
             let location = {
                 server: 'somewhere.net',
                 schema: 'global',
@@ -187,7 +184,7 @@ describe('LocalStorageCache', function() {
                 table: 'comment',
             };
             let location2 = {
-                server: 'mordor.me',
+                address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
@@ -199,7 +196,7 @@ describe('LocalStorageCache', function() {
             });
             await cache.save(location1, objects);
             await cache.save(location2, objects);
-            await cache.clean({ server: 'mordor.me' });
+            await cache.clean({ address: 'http://mordor.me' });
             let objects1 = await cache.find(location1);
             let objects2 = await cache.find(location2);
             expect(objects1).to.have.lengthOf(10);
@@ -211,7 +208,7 @@ describe('LocalStorageCache', function() {
                 table: 'comment',
             };
             let location2 = {
-                server: 'mordor.me',
+                address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
@@ -235,7 +232,7 @@ describe('LocalStorageCache', function() {
                 table: 'comment',
             };
             let location2 = {
-                server: 'mordor.me',
+                address: 'http://mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
@@ -253,9 +250,6 @@ describe('LocalStorageCache', function() {
             expect(objects1).to.have.lengthOf(6);
             expect(objects2).to.have.lengthOf(6);
         })
-    })
-    after(() => {
-        cache.shutdown();
     })
 })
 

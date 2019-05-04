@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import LocaleManager from 'locale/locale-manager';
+import LocaleManager from '../locale-manager.mjs';
 
 describe('LocaleManager', function() {
     let directory = [

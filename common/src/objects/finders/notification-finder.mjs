@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as DateUtils from 'utils/date-utils';
+import * as DateUtils from '../../utils/date-utils.mjs';
 
 const emptyArray = [];
 

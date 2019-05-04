@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import Operation from 'data/remote-data-source/operation';
+import Operation from './operation.mjs';
 
 class Search extends Operation {
     constructor(query) {

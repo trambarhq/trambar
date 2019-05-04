@@ -2,16 +2,16 @@ import _ from 'lodash';
 import Bluebird from 'bluebird';
 import Moment from 'moment';
 import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
-import ManualPromise from 'utils/manual-promise';
-import * as HTTPRequest from 'transport/http-request';
-import HTTPError from 'errors/http-error';
-import * as LocalSearch from 'data/local-search';
-import Search from 'data/remote-data-source/search';
-import Change from 'data/remote-data-source/change';
-import Storage from 'data/remote-data-source/storage';
-import Removal from 'data/remote-data-source/removal';
-import CacheSignature from 'data/remote-data-source/cache-signature';
-import ChangeMonitor from 'data/remote-data-source/change-monitor';
+import ManualPromise from '../utils/manual-promise.mjs';
+import * as HTTPRequest from '../transport/http-request.mjs';
+import HTTPError from '../errors/http-error.mjs';
+import * as LocalSearch from './local-search.mjs';
+import Search from './remote-data-source/search.mjs';
+import Change from './remote-data-source/change.mjs';
+import Storage from './remote-data-source/storage.mjs';
+import Removal from './remote-data-source/removal.mjs';
+import CacheSignature from './remote-data-source/cache-signature.mjs';
+import ChangeMonitor from './remote-data-source/change-monitor.mjs';
 
 const defaultOptions = {
     basePath: '/srv/data',

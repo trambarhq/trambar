@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import { memoizeWeak } from 'utils/memoize';
-import * as DateUtils from 'utils/date-utils';
+import { memoizeWeak } from '../../utils/memoize.mjs';
+import * as DateUtils from '../../utils/date-utils.mjs';
 
 /**
  * Fetch statistics, given certain parameters

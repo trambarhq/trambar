@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as ExternalDataUtils from 'objects/utils/external-data-utils';
+import * as ExternalDataUtils from '../utils/external-data-utils.mjs';
 
 const emptyArray = [];
 

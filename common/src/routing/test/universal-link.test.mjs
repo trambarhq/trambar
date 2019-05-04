@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import * as UniversalLink from 'routing/universal-link';
+import * as UniversalLink from '../universal-link.mjs';
 
 describe('UniversalLink', function() {
     describe('#createActivationURL()', function() {
