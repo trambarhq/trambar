@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import ManualPromise from 'utils/manual-promise';
+import ManualPromise from '../../utils/manual-promise.mjs';
 
 class CacheSignature {
     constructor(address, schema, table, id) {

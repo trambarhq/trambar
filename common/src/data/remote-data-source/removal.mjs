@@ -1,4 +1,4 @@
-import Storage from 'data/remote-data-source/storage';
+import Storage from './storage.mjs';
 
 class Removal extends Storage {
     constructor(location, objects) {

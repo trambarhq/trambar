@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import ManualPromise from 'utils/manual-promise';
+import ManualPromise from '../../utils/manual-promise.mjs';
 
-import EnvironmentMonitor from 'env/environment-monitor';
+import EnvironmentMonitor from '../environment-monitor.mjs';
 
 describe('EnvironmentMonitor', function() {
     it ('should correct identify the browser and OS', function() {

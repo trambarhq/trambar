@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import Bluebird from 'bluebird';
-import ManualPromise from 'utils/manual-promise';
-import Notifier, { NotifierEvent } from 'transport/notifier';
-import * as HTTPRequest from 'transport/http-request';
+import ManualPromise from '../utils/manual-promise.mjs';
+import Notifier, { NotifierEvent } from './notifier.mjs';
+import * as HTTPRequest from './http-request.mjs';
 
 let defaultOptions = {
     initialReconnectionDelay: 500,

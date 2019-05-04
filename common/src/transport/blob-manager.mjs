@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import * as HTTPRequest from 'transport/http-request';
-import CordovaFile from 'transport/cordova-file';
+import * as HTTPRequest from './http-request.mjs';
+import CordovaFile from './cordova-file.mjs';
 
 let list = [];
 

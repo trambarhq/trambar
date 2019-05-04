@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import * as LocalSearch from 'data/local-search';
+import * as LocalSearch from './local-search.mjs';
 
 const defaultOptions = {
     databaseName: 'database'

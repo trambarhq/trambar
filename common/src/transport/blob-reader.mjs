@@ -1,5 +1,5 @@
-import * as BlobManager from 'transport/blob-manager';
-import CordovaFile from 'transport/cordova-file';
+import * as BlobManager from './blob-manager.mjs';
+import CordovaFile from './cordova-file.mjs';
 
 /**
  * Load a file as Uint8Array

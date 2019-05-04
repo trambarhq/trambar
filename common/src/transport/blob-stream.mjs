@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import Bluebird from 'bluebird';
-import * as HTTPRequest from 'transport/http-request';
-import Async from 'async-do-while';
+import * as HTTPRequest from './http-request.mjs';
 
 class BlobStream {
     constructor(id, url, options) {

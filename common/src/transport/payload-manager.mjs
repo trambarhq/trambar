@@ -2,15 +2,14 @@ import _ from 'lodash';
 import Bluebird from 'bluebird';
 import Moment from 'moment';
 import EventEmitter, { GenericEvent } from 'relaks-event-emitter';
-import BlobStream from 'transport/blob-stream';
-import Payload from 'transport/payload';
-import * as HTTPRequest from 'transport/http-request';
-import CordovaFile from 'transport/cordova-file';
-import * as BackgroundFileTransfer from 'transport/background-file-transfer';
-import * as RandomToken from 'utils/random-token';
-import HTTPError from 'errors/http-error';
-import FileError from 'errors/file-error';
-import Async from 'async-do-while';
+import BlobStream from './blob-stream.mjs';
+import Payload from './payload.mjs';
+import * as HTTPRequest from './http-request.mjs';
+import CordovaFile from './cordova-file.mjs';
+import * as BackgroundFileTransfer from './background-file-transfer.mjs';
+import * as RandomToken from '../utils/random-token.mjs';
+import HTTPError from '../errors/http-error.mjs';
+import FileError from '../errors/file-error.mjs';
 
 const defaultOptions = {
     uploadURL: null,

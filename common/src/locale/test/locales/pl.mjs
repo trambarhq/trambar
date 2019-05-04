@@ -3,7 +3,7 @@ import {
     gender,
     genderize,
     pastTenseEnding,
-} from 'locale/grammars/polish';
+} from '../../grammars/polish.mjs';
 
 let phrases = {
     'hello': 'cześć',

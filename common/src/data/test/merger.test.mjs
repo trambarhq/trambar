@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import * as Merger from '../merger.js';
+import * as Merger from '../merger.mjs';
 
 describe('Merger', function() {
     describe('#mergeStrings()', function() {

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import CordovaFile from 'transport/cordova-file';
+import CordovaFile from './cordova-file.mjs';
 
 class Payload {
     constructor(id, destination, type) {

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import * as LocalSearch from '../local-search';
+import * as LocalSearch from '../local-search.mjs';
 
 describe('LocalSearch', function() {
     describe('#match()', function() {

@@ -24,6 +24,7 @@
     "exceljs": "^1.9.1",
     "express": "^4.16.4",
     "file-type": "^10.11.0",
+    "gnu-tools": "https://github.com/paroga/node-gnu-tools.git",
     "htpasswd-js": "^1.0.2",
     "ignore": "^5.1.1",
     "isolated-vm": "^1.7.10",

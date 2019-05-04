@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Bluebird from 'bluebird';
 import SockJS from 'sockjs-client';
-import Notifier, { NotifierEvent } from 'transport/notifier';
+import Notifier, { NotifierEvent } from './notifier.mjs';
 
 const defaultOptions = {
     reconnectionDelay: 1000,

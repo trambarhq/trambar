@@ -1,6 +1,4 @@
 var Path = require('path');
-var Webpack = require('webpack');
-var DefinePlugin = Webpack.DefinePlugin;
 
 module.exports = function(config) {
     config.set({
@@ -31,13 +29,14 @@ module.exports = function(config) {
         ],
         reporters: [ 'progress' ],
         webpack: {
-            devtool: 'inline-source-map',
+            mode: 'development',
             module: {
-                loaders: [
+                rules: [
                     {
-                        test: /\.jsx?$/,
+                        test: /\.(js|jsx|mjs)$/,
                         loader: 'babel-loader',
                         exclude: Path.resolve('./node_modules'),
+                        type: 'javascript/auto',
                         query: {
                             presets: [
                                 'env',
@@ -66,18 +65,7 @@ module.exports = function(config) {
                     },
                 ]
             },
-            resolve: {
-                extensions: [ '.js', '.jsx' ],
-                modules: [ 'src', 'assets', 'node_modules' ].map((folder) => {
-                    return Path.resolve(`./${folder}`);
-                })
-            },
-            plugins: [
-                new DefinePlugin({
-                    'process.env.NODE_ENV': '"production"',
-                    'process.env.PLATFORM': '"browser"',
-                }),
-            ],
+            devtool: 'inline-source-map',
         },
         webpackMiddleware: {
             noInfo: true,

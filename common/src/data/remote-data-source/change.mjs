@@ -1,9 +1,8 @@
 import _ from 'lodash';
 import Bluebird from 'bluebird';
-import * as Async from 'async-do-while';
 
-import * as LocalSearch from 'data/local-search';
-import * as TemporaryID from 'data/remote-data-source/temporary-id';
+import * as LocalSearch from '../local-search.mjs';
+import * as TemporaryID from './temporary-id.mjs';
 
 class Change {
     constructor(location, objects, options) {

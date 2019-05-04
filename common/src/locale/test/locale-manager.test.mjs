@@ -1,18 +1,18 @@
 import { expect } from 'chai';
 
-import LocaleManager from 'locale/locale-manager';
+import LocaleManager from '../locale-manager.mjs';
 
 describe('LocaleManager', function() {
     let directory = [
         {
             code: 'pl',
             defaultCountry: 'pl',
-            module: () => import('./locales/pl'),
+            module: () => import('./locales/pl.mjs'),
         },
         {
             code: 'ru',
             defaultCountry: 'ru',
-            module: () => import('./locales/ru'),
+            module: () => import('./locales/ru.mjs'),
         }
     ];
     let options = {

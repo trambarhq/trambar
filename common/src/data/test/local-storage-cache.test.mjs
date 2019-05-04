@@ -1,14 +1,17 @@
+import Promise from 'bluebird';
 import { expect } from 'chai';
 
-import IndexedDBCache from '../indexed-db-cache.mjs';
+import LocalStorageCache from '../local-storage-cache.mjs';
 
-describe('IndexedDBCache', function() {
-    let cache = new IndexedDBCache({ databaseName: 'test' });
-
+describe('LocalStorageCache', function() {
+    let cache = new LocalStorageCache({ databaseName: 'test' });
+    before(() => {
+        cache.initialize();
+    })
     describe('#save()', function() {
-        it('should save an object to IndexedDB', async function() {
+        it('should cache an object', async function() {
             let location = {
-                address: 'http://somewhere.net',
+                server: 'somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -26,7 +29,7 @@ describe('IndexedDBCache', function() {
         })
         it('should overwrite an existing object', async function() {
             let location = {
-                address: 'http://somewhere.net',
+                server: 'somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -44,7 +47,7 @@ describe('IndexedDBCache', function() {
         })
         it('should save multiple objects', async function() {
             let location = {
-                address: 'http://somewhere.net',
+                server: 'somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -85,7 +88,7 @@ describe('IndexedDBCache', function() {
     describe('#find()', function() {
         it('should be able to find object saved earlier', async function() {
             let query = {
-                address: 'http://somewhere.net',
+                server: 'somewhere.net',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -97,7 +100,7 @@ describe('IndexedDBCache', function() {
         })
         it('should be able to find object by multiple ids', async function() {
             let query = {
-                address: 'http://somewhere.net',
+                server: 'somewhere.net',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -109,7 +112,7 @@ describe('IndexedDBCache', function() {
         })
         it('should find object by other criteria', async function() {
             let query = {
-                address: 'http://somewhere.net',
+                server: 'somewhere.net',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -132,7 +135,7 @@ describe('IndexedDBCache', function() {
     describe('#remove()', function() {
         it('should remove an object saved earlier', async function() {
             let location = {
-                address: 'http://somewhere.net',
+                server: 'somewhere.net',
                 schema: 'global',
                 table: 'user',
             };
@@ -148,7 +151,7 @@ describe('IndexedDBCache', function() {
             };
             await cache.remove(location, [ object ]);
             let query = {
-                address: 'http://somewhere.net',
+                server: 'somewhere.net',
                 schema: 'global',
                 table: 'user',
                 criteria: {
@@ -184,7 +187,7 @@ describe('IndexedDBCache', function() {
                 table: 'comment',
             };
             let location2 = {
-                address: 'http://mordor.me',
+                server: 'mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
@@ -196,8 +199,7 @@ describe('IndexedDBCache', function() {
             });
             await cache.save(location1, objects);
             await cache.save(location2, objects);
-            let count = await cache.clean({ address: 'http://mordor.me' });
-            expect(count).to.equal(10);
+            await cache.clean({ server: 'mordor.me' });
             let objects1 = await cache.find(location1);
             let objects2 = await cache.find(location2);
             expect(objects1).to.have.lengthOf(10);
@@ -209,7 +211,7 @@ describe('IndexedDBCache', function() {
                 table: 'comment',
             };
             let location2 = {
-                address: 'http://mordor.me',
+                server: 'mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
@@ -221,8 +223,7 @@ describe('IndexedDBCache', function() {
             });
             await cache.save(location1, objects);
             await cache.save(location2, objects);
-            let count = await cache.clean({ count: 4 });
-            expect(count).to.equal(4);
+            await cache.clean({ count: 4 });
             let objects1 = await cache.find(location1);
             let objects2 = await cache.find(location2);
             expect(objects1).to.have.lengthOf(8);
@@ -234,7 +235,7 @@ describe('IndexedDBCache', function() {
                 table: 'comment',
             };
             let location2 = {
-                address: 'http://mordor.me',
+                server: 'mordor.me',
                 schema: 'global',
                 table: 'comment',
             };
@@ -246,13 +247,15 @@ describe('IndexedDBCache', function() {
             });
             await cache.save(location1, objects);
             await cache.save(location2, objects);
-            let count = await cache.clean({ before: ISODate('1990-01-5') });
-            expect(count).to.equal(8);
+            await cache.clean({ before: ISODate('1990-01-5') });
             let objects1 = await cache.find(location1);
             let objects2 = await cache.find(location2);
             expect(objects1).to.have.lengthOf(6);
             expect(objects2).to.have.lengthOf(6);
         })
+    })
+    after(() => {
+        cache.shutdown();
     })
 })
 
