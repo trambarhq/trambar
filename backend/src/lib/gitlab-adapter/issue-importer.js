@@ -147,7 +147,7 @@ function copyIssueProperties(story, system, server, repo, opener, assignments, g
         return `#${_.replace(label, /\s+/g, '-')}`;
     });
     let tags = _.union(descriptionTags, labelTags);
-    let langCode = Localization.getDefaultLanguageCode(system);
+    let defLangCode = Localization.getDefaultLanguageCode(system);
 
     let state = glIssue.state;
     if (state === 'opened') {
@@ -178,7 +178,7 @@ function copyIssueProperties(story, system, server, repo, opener, assignments, g
         overwrite: 'always',
     });
     ExternalDataUtils.importProperty(storyAfter, server, 'language_codes', {
-        value: [ langCode ],
+        value: [ defLangCode ],
         overwrite: 'always',
         ignore: exported,
     });

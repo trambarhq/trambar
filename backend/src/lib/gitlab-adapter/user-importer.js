@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import Request from 'request';
 import * as TaskLog from 'task-log';
+import * as Localization from 'localization';
 import HTTPError from 'errors/http-error';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 import { DefaultUserSettings } from 'objects/settings/user-settings';
@@ -56,7 +57,7 @@ async function importEvent(db, system, server, repo, project, author, glEvent) {
  * @return {Story}
  */
 function copyEventProperties(story, system, server, repo, author, glEvent) {
-    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let defLangCode = Localization.getDefaultLanguageCode(system);
 
     let storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {

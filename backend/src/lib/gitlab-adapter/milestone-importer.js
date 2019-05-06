@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
+import * as Localization from 'localization';
 import * as TagScanner from 'utils/tag-scanner';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
@@ -105,7 +106,7 @@ async function updateMilestones(db, system, server, repo, project) {
  */
 function copyMilestoneProperties(story, system, server, repo, author, glMilestone) {
     let descriptionTags = TagScanner.findTags(glMilestone.description);
-    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let defLangCode = Localization.getDefaultLanguageCode(system);
 
     let storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {
@@ -171,13 +172,12 @@ async function fetchMilestone(server, glProjectId, glMilestoneId) {
 }
 
 /**
- * Retrieve milestone from Gitlab
+ * Retrieve milestones from Gitlab
  *
  * @param  {Server} server
  * @param  {Number} glProjectId
- * @param  {Number} glMilestoneId
  *
- * @return {Promise<Object>}
+ * @return {Promise<Array<Object>>}
  */
 async function fetchMilestones(server, glProjectId) {
     let url = `/projects/${glProjectId}/milestones`;

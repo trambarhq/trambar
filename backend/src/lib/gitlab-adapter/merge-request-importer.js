@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import HTTPError from 'errors/http-error';
+import * as Localization from 'localization';
 import * as TagScanner from 'utils/tag-scanner';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
@@ -136,7 +137,7 @@ function copyMergeRequestProperties(story, system, server, repo, opener, assignm
         return `#${_.replace(label, /\s+/g, '-')}`;
     });
     let tags = _.union(descriptionTags, labelTags);
-    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let defLangCode = Localization.getDefaultLanguageCode(system);
 
     let storyAfter = _.cloneDeep(story) || {};
     ExternalDataUtils.inheritLink(storyAfter, server, repo, {

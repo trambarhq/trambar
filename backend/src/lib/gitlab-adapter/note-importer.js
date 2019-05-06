@@ -2,6 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import Crypto from 'crypto';
 import * as TaskLog from 'task-log';
+import * as Localization from 'localization';
 import HTTPError from 'errors/http-error';
 import * as ExternalDataUtils from 'objects/utils/external-data-utils';
 
@@ -188,7 +189,7 @@ async function findCommitID(db, server, repo, glEvent, glHookEvent) {
  * @return {Reaction}
  */
 function copyEventProperties(reaction, system, server, story, author, glNote) {
-    let defLangCode = _.get(system, [ 'settings', 'input_languages', 0 ]);
+    let defLangCode = Localization.getDefaultLanguageCode(system);
     let reactionAfter = _.cloneDeep(reaction) || {};
     ExternalDataUtils.inheritLink(reactionAfter, server, story, {
         note: { id: _.get(glNote, 'note.id') }
