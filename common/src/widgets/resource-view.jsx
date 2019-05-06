@@ -4,8 +4,8 @@ import * as MediaLoader from '../media/media-loader.mjs';
 import * as ImageCropping from '../media/image-cropping.mjs';
 import * as ResourceUtils from '../objects/utils/resource-utils.mjs';
 
-import BitmapView from '../widgets/bitmap-view.jsx';
-import VectorView from '../widgets/vector-view.jsx';
+import BitmapView from './bitmap-view.jsx';
+import VectorView from './vector-view.jsx';
 
 import './resource-view.scss';
 

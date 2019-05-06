@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as RepoUtils from 'objects/utils/repo-utils';
+import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
 
 // widgets
-import Tooltip from 'widgets/tooltip';
+import Tooltip from '../widgets/tooltip.jsx';
 
 import './repository-tooltip.scss';
 
@@ -59,8 +59,8 @@ export {
     RepositoryTooltip,
 };
 
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

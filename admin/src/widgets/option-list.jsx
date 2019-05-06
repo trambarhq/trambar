@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent, Children } from 'react';
 
-import SortableTable from 'widgets/sortable-table';
+import SortableTable from './sortable-table.jsx';
 
 import './option-list.scss';
 

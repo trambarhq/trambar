@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent, Children } from 'react';
-import ComponentRefs from 'utils/component-refs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
 
 import './tooltip.scss';
 

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
-import CollapsibleContainer from 'widgets/collapsible-container';
+import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
 
 import './sortable-table.scss';
 

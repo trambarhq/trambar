@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 
-import Unicorn from 'unicorn.svg';
+import Unicorn from 'common-assets/unicorn.svg';
 
 import './error-page.scss';
 
@@ -32,9 +32,9 @@ export {
     ErrorPage,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

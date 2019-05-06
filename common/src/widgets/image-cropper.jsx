@@ -4,8 +4,8 @@ import ReactDOM from 'react-dom';
 import Hammer from 'hammerjs';
 import ComponentRefs from '../utils/component-refs.mjs';
 
-import BitmapView from './bitmap-view.mjs';
-import VectorView from './vector-view.mjs';
+import BitmapView from './bitmap-view.jsx';
+import VectorView from './vector-view.jsx';
 
 import './image-cropper.scss';
 

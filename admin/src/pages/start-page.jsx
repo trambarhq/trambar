@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import * as SystemFinder from 'objects/finders/system-finder';
+import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 
 import './start-page.scss';
 
@@ -70,9 +70,9 @@ export {
     StartPageSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

@@ -1,18 +1,18 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import * as SystemFinder from 'objects/finders/system-finder';
-import * as SystemSettings from 'objects/settings/system-settings';
+import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
+import * as SystemSettings from 'common/objects/settings/system-settings.mjs';
 
 // widgets
-import PushButton from 'widgets/push-button';
-import InstructionBlock from 'widgets/instruction-block';
-import TextField from 'widgets/text-field';
-import MultilingualTextField from 'widgets/multilingual-text-field';
-import OptionList from 'widgets/option-list';
-import ImageSelector from 'widgets/image-selector';
-import DataLossWarning from 'widgets/data-loss-warning';
-import UnexpectedError from 'widgets/unexpected-error';
+import PushButton from '../widgets/push-button.jsx';
+import InstructionBlock from '../widgets/instruction-block.jsx';
+import TextField from '../widgets/text-field.jsx';
+import MultilingualTextField from '../widgets/multilingual-text-field.jsx';
+import OptionList from '../widgets/option-list.jsx';
+import ImageSelector from '../widgets/image-selector.jsx';
+import DataLossWarning from '../widgets/data-loss-warning.jsx';
+import UnexpectedError from '../widgets/unexpected-error.jsx';
 
 import './settings-page.scss';
 
@@ -585,10 +585,10 @@ export {
     SettingsPageSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-import Payloads from 'transport/payloads';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
+import Payloads from 'common/transport/payloads.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

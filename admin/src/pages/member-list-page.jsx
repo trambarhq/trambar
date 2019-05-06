@@ -2,23 +2,23 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as RoleFinder from 'objects/finders/role-finder';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as StatisticsFinder from 'objects/finders/statistics-finder';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 
 // widgets
-import PushButton from 'widgets/push-button';
-import ComboButton from 'widgets/combo-button';
-import SortableTable, { TH } from 'widgets/sortable-table';
-import ProfileImage from 'widgets/profile-image';
-import ActivityTooltip from 'tooltips/activity-tooltip';
-import RoleTooltip from 'tooltips/role-tooltip';
-import ActionBadge from 'widgets/action-badge';
-import ModifiedTimeTooltip from 'tooltips/modified-time-tooltip'
-import DataLossWarning from 'widgets/data-loss-warning';
-import UnexpectedError from 'widgets/unexpected-error';
+import PushButton from '../widgets/push-button.jsx';
+import ComboButton from '../widgets/combo-button.jsx';
+import SortableTable, { TH } from '../widgets/sortable-table.jsx';
+import ProfileImage from '../widgets/profile-image.jsx';
+import ActivityTooltip from '../tooltips/activity-tooltip.jsx';
+import RoleTooltip from '../tooltips/role-tooltip.jsx';
+import ActionBadge from '../widgets/action-badge.jsx';
+import ModifiedTimeTooltip from '../tooltips/modified-time-tooltip.jsx'
+import DataLossWarning from '../widgets/data-loss-warning.jsx';
+import UnexpectedError from '../widgets/unexpected-error.jsx';
 
 import './member-list-page.scss';
 
@@ -790,9 +790,9 @@ export {
     MemberListPageSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

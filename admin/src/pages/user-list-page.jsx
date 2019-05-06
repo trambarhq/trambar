@@ -2,25 +2,25 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import ComponentRefs from 'utils/component-refs';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as RoleFinder from 'objects/finders/role-finder';
-import * as UserFinder from 'objects/finders/user-finder';
-import UserTypes from 'objects/types/user-types';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import UserTypes from 'common/objects/types/user-types.mjs';
 
 // widgets
-import PushButton from 'widgets/push-button';
-import ComboButton from 'widgets/combo-button';
-import SortableTable, { TH } from 'widgets/sortable-table';
-import ProfileImage from 'widgets/profile-image';
-import ProjectTooltip from 'tooltips/project-tooltip';
-import RoleTooltip from 'tooltips/role-tooltip';
-import ModifiedTimeTooltip from 'tooltips/modified-time-tooltip'
-import ActionBadge from 'widgets/action-badge';
-import ActionConfirmation from 'widgets/action-confirmation';
-import DataLossWarning from 'widgets/data-loss-warning';
-import UnexpectedError from 'widgets/unexpected-error';
+import PushButton from '../widgets/push-button.jsx';
+import ComboButton from '../widgets/combo-button.jsx';
+import SortableTable, { TH } from '../widgets/sortable-table.jsx';
+import ProfileImage from '../widgets/profile-image.jsx';
+import ProjectTooltip from '../tooltips/project-tooltip.jsx';
+import RoleTooltip from '../tooltips/role-tooltip.jsx';
+import ModifiedTimeTooltip from '../tooltips/modified-time-tooltip.jsx'
+import ActionBadge from '../widgets/action-badge.jsx';
+import ActionConfirmation from '../widgets/action-confirmation.jsx';
+import DataLossWarning from '../widgets/data-loss-warning.jsx';
+import UnexpectedError from '../widgets/unexpected-error.jsx';
 
 import './user-list-page.scss';
 
@@ -688,9 +688,9 @@ export {
     UserListPageSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

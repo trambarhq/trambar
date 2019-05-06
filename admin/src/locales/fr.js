@@ -1,7 +1,7 @@
 import 'moment/locale/fr';
 import 'moment/locale/fr-ca';
 import 'moment/locale/fr-ch';
-import { cardinal } from 'locale/grammars/french';
+import { cardinal } from 'common/locale/grammars/french.mjs';
 
 const phrases = {
     'action-badge-add': "ajouter",

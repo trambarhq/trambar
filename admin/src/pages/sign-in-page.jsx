@@ -2,11 +2,11 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Moment from 'moment';
-import * as HTTPRequest from 'transport/http-request';
+import * as HTTPRequest from 'common/transport/http-request.mjs';
 
 // widgets
-import PushButton from 'widgets/push-button';
-import TextField from 'widgets/text-field';
+import PushButton from '../widgets/push-button.jsx';
+import TextField from '../widgets/text-field.jsx';
 
 import './sign-in-page.scss';
 
@@ -381,9 +381,9 @@ export {
     SignInPageSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

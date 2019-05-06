@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 module.exports = InputError;
 

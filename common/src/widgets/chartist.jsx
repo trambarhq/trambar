@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import { Bar, Pie, Line, Interpolation, Svg } from 'chartist';
 import ComponentRefs from '../utils/component-refs.mjs';
 
-import 'widgets/chartist.scss';
+import 'context/widgets/chartist.scss';
 
 const chartClasses = {
     bar: Bar,

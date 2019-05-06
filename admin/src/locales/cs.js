@@ -2,7 +2,7 @@ import 'moment/locale/cs';
 import {
     cardinal,
     genderize,
-} from 'locale/grammars/czech';
+} from 'common/locale/grammars/czech.mjs';
 
 const phrases = {
     'action-badge-add': 'přidat',

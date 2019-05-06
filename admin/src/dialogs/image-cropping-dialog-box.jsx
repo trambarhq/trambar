@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as ImageCropping from 'media/image-cropping';
-import * as ResourceUtils from 'objects/utils/resource-utils';
+import * as ImageCropping from 'common/media/image-cropping.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import ImageCropper from 'widgets/image-cropper';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import ImageCropper from 'common/widgets/image-cropper.jsx';
 
 import './image-cropping-dialog-box.scss';
 
@@ -274,8 +274,8 @@ export {
     ImageCroppingDialogBox,
 };
 
-import Database from 'data/database';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

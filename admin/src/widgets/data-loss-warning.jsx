@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
 
 // widgets
-import ActionConfirmation from 'widgets/action-confirmation';
+import ActionConfirmation from './action-confirmation.jsx';
 
 /**
  * Component that bring up a confirmation dialog when there're unsaved changes.
@@ -70,8 +70,8 @@ export {
     DataLossWarning,
 };
 
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

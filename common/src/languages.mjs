@@ -9,7 +9,7 @@ const directory = [
             sk: 'Slovensko',
         },
         defaultCountry: 'cz',
-        module: () => import('locales/cs' /* webpackChunkName: "locale-cs" */),
+        module: () => import('context/locales/cs' /* webpackChunkName: "locale-cs" */),
     },
     {
         name: 'Dansk',
@@ -35,7 +35,7 @@ const directory = [
             ch: 'Schweiz',
         },
         defaultCountry: 'de',
-        module: () => import('locales/de' /* webpackChunkName: "locale-de" */),
+        module: () => import('context/locales/de' /* webpackChunkName: "locale-de" */),
     },
     {
         name: 'Ελληνικά',
@@ -61,7 +61,7 @@ const directory = [
             us: 'United States',
         },
         defaultCountry: 'us',
-        module: () => import('locales/en' /* webpackChunkName: "locale-en" */),
+        module: () => import('context/locales/en' /* webpackChunkName: "locale-en" */),
     },
     {
         name: 'Español',
@@ -125,7 +125,7 @@ const directory = [
             tg: 'Togo',
         },
         defaultCountry: 'fr',
-        module: () => import('locales/fr' /* webpackChunkName: "locale-fr" */),
+        module: () => import('context/locales/fr' /* webpackChunkName: "locale-fr" */),
     },
     {
         name: '한국어',
@@ -159,7 +159,7 @@ const directory = [
             si: 'Slovenia',
         },
         defaultCountry: 'it',
-        module: () => import('locales/it' /* webpackChunkName: "locale-it" */),
+        module: () => import('context/locales/it' /* webpackChunkName: "locale-it" */),
     },
     {
         name: 'Lietuvių',
@@ -169,7 +169,7 @@ const directory = [
             lt: 'Lietuva',
         },
         defaultCountry: 'lt',
-        module: () => import('locales/lt' /* webpackChunkName: "locale-lt" */),
+        module: () => import('context/locales/lt' /* webpackChunkName: "locale-lt" */),
     },
     {
         name: 'Magyar',
@@ -209,7 +209,7 @@ const directory = [
             no: 'Norge',
         },
         defaultCountry: 'no',
-        module: () => import('locales/nb' /* webpackChunkName: "locale-nb" */),
+        module: () => import('context/locales/nb' /* webpackChunkName: "locale-nb" */),
     },
     {
         name: 'Polski',
@@ -222,7 +222,7 @@ const directory = [
             ua: 'Ukraina',
         },
         defaultCountry: 'pl',
-        module: () => import('locales/pl' /* webpackChunkName: "locale-pl" */),
+        module: () => import('context/locales/pl' /* webpackChunkName: "locale-pl" */),
     },
     {
         name: 'Português',
@@ -259,7 +259,7 @@ const directory = [
             es: 'Эстония',
         },
         defaultCountry: 'ru',
-        module: () => import('locales/ru' /* webpackChunkName: "locale-ru" */),
+        module: () => import('context/locales/ru' /* webpackChunkName: "locale-ru" */),
     },
     {
         name: 'Srpski',
@@ -281,7 +281,7 @@ const directory = [
             se: 'Ruotsi',
         },
         defaultCountry: 'fi',
-        module: () => import('locales/fi' /* webpackChunkName: "locale-fi" */),
+        module: () => import('context/locales/fi' /* webpackChunkName: "locale-fi" */),
     },
     {
         name: 'Slovenčina',
@@ -334,7 +334,7 @@ const directory = [
             tw: '台灣',
         },
         defaultCountry: 'cn',
-        module: () => import('locales/zh' /* webpackChunkName: "locale-zh" */),
+        module: () => import('context/locales/zh' /* webpackChunkName: "locale-zh" */),
     },
 ];
 

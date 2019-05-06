@@ -2,21 +2,21 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import ComponentRefs from 'utils/component-refs';
-import * as ServerFinder from 'objects/finders/server-finder';
-import * as UserFinder from 'objects/finders/user-finder';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
-import PushButton from 'widgets/push-button';
-import ComboButton from 'widgets/combo-button';
-import SortableTable, { TH } from 'widgets/sortable-table';
-import UserTooltip from 'tooltips/user-tooltip';
-import ModifiedTimeTooltip from 'tooltips/modified-time-tooltip'
-import ActionBadge from 'widgets/action-badge';
-import ActionConfirmation from 'widgets/action-confirmation';
-import DataLossWarning from 'widgets/data-loss-warning';
-import UnexpectedError from 'widgets/unexpected-error';
+import PushButton from '../widgets/push-button.jsx';
+import ComboButton from '../widgets/combo-button.jsx';
+import SortableTable, { TH } from '../widgets/sortable-table.jsx';
+import UserTooltip from '../tooltips/user-tooltip.jsx';
+import ModifiedTimeTooltip from '../tooltips/modified-time-tooltip.jsx'
+import ActionBadge from '../widgets/action-badge.jsx';
+import ActionConfirmation from '../widgets/action-confirmation.jsx';
+import DataLossWarning from '../widgets/data-loss-warning.jsx';
+import UnexpectedError from '../widgets/unexpected-error.jsx';
 
 import './server-list-page.scss';
 
@@ -652,9 +652,9 @@ export {
     ServerListPageSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

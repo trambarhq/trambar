@@ -1,16 +1,16 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import EnvironmentMonitor from '../env/environment-monitor.mjs';
-import LocaleManager from '../locale/locale-manager.mjs';
+import EnvironmentMonitor from './env/environment-monitor.mjs';
+import LocaleManager from './locale/locale-manager.mjs';
 import RouteManager from 'relaks-route-manager';
-import PayloadManager from '../transport/payload-manager.mjs';
-import PushNotifier from '../transport/push-notifier.mjs';
-import WebsocketNotifier from '../transport/websocket-notifier.mjs';
-import CodePush from '../transport/code-push.mjs';
-import RemoteDataSource from '../data/remote-data-source.mjs';
-import IndexedDBCache from '../data/indexed-db-cache.mjs';
-import LocalStorageCache from '../data/local-storage-cache.mjs';
-import * as BlobManager from '../transport/blob-manager.mjs';
+import PayloadManager from './transport/payload-manager.mjs';
+import PushNotifier from './transport/push-notifier.mjs';
+import WebsocketNotifier from './transport/websocket-notifier.mjs';
+import CodePush from './transport/code-push.mjs';
+import RemoteDataSource from './data/remote-data-source.mjs';
+import IndexedDBCache from './data/indexed-db-cache.mjs';
+import LocalStorageCache from './data/local-storage-cache.mjs';
+import * as BlobManager from './transport/blob-manager.mjs';
 
 import languages from './languages.mjs';
 

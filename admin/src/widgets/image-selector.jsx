@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as MediaLoader from 'media/media-loader';
-import * as ResourceUtils from 'objects/utils/resource-utils';
+import * as MediaLoader from 'common/media/media-loader.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
 // widgets
-import ImageCroppingDialogBox from 'dialogs/image-cropping-dialog-box';
-import ImageAlbumDialogBox from 'dialogs/image-album-dialog-box';
-import ResourceView from 'widgets/resource-view';
+import ImageCroppingDialogBox from '../dialogs/image-cropping-dialog-box.jsx';
+import ImageAlbumDialogBox from '../dialogs/image-album-dialog-box.jsx';
+import ResourceView from 'common/widgets/resource-view.jsx';
 
 import './image-selector.scss';
 
@@ -417,9 +417,9 @@ export {
     ImageSelector,
 };
 
-import Database from 'data/database';
-import Environment from 'env/environment';
-import Payloads from 'transport/payloads';
+import Database from 'common/data/database.mjs';
+import Environment from 'common/env/environment.mjs';
+import Payloads from 'common/transport/payloads.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

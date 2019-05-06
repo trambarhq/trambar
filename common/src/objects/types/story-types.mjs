@@ -51,7 +51,7 @@ if (!isNodeJs) {
         'issue.reopened': require('octicons/build/svg/issue-reopened.svg'),
         'milestone': require('octicons/build/svg/milestone.svg'),
         'merge-request': require('octicons/build/svg/git-pull-request.svg'),
-        'wiki': require('octicons/build/svg/file-text.svg'),
+        'wiki': require('octicons/build/svg/file.svg'),
         'member': require('octicons/build/svg/person.svg'),
         'repo': require('octicons/build/svg/repo.svg'),
         'post': require('octicons/build/svg/note.svg'),

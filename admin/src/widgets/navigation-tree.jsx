@@ -2,15 +2,15 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as RepoFinder from 'objects/finders/repo-finder';
-import * as RoleFinder from 'objects/finders/role-finder';
-import * as ServerFinder from 'objects/finders/server-finder';
-import * as UserFinder from 'objects/finders/user-finder';
-import ComponentRefs from 'utils/component-refs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
+import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
+import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
 
 // widgets
-import CollapsibleContainer from 'widgets/collapsible-container';
+import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
 
 import './navigation-tree.scss';
 
@@ -484,9 +484,9 @@ export {
     NavigationTree,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

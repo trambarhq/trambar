@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 
 // widgets
-import ResourceView from 'widgets/resource-view';
+import ResourceView from 'common/widgets/resource-view.jsx';
 import Icon from 'octicons/build/svg/person.svg';
 
 import './profile-image.scss';
@@ -45,7 +45,7 @@ export {
     ProfileImage,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

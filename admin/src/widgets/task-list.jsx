@@ -2,12 +2,12 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import ComponentRefs from 'utils/component-refs';
-import * as TaskFinder from 'objects/finders/task-finder';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as TaskFinder from 'common/objects/finders/task-finder.mjs';
 
 // widgets
-import SmartList from 'widgets/smart-list';
+import SmartList from 'common/widgets/smart-list.jsx';
 
 import './task-list.scss';
 
@@ -400,8 +400,8 @@ export {
     TaskListSync,
 };
 
-import Database from 'data/database';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

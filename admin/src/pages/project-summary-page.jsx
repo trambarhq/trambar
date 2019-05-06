@@ -1,27 +1,27 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import ComponentRefs from 'utils/component-refs';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as ProjectSettings from 'objects/settings/project-settings';
-import * as StatisticsFinder from 'objects/finders/statistics-finder';
-import * as SystemFinder from 'objects/finders/system-finder';
-import * as SlugGenerator from 'utils/slug-generator';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectSettings from 'common/objects/settings/project-settings.mjs';
+import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
+import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
+import * as SlugGenerator from 'common/utils/slug-generator.mjs';
 
 // widgets
-import PushButton from 'widgets/push-button';
-import ComboButton from 'widgets/combo-button';
-import InstructionBlock from 'widgets/instruction-block';
-import TextField from 'widgets/text-field';
-import MultilingualTextField from 'widgets/multilingual-text-field';
-import OptionList from 'widgets/option-list';
-import ImageSelector from 'widgets/image-selector';
-import ActivityChart from 'widgets/activity-chart';
-import InputError from 'widgets/input-error';
-import ActionConfirmation from 'widgets/action-confirmation';
-import DataLossWarning from 'widgets/data-loss-warning';
-import UnexpectedError from 'widgets/unexpected-error';
-import ErrorBoundary from 'widgets/error-boundary';
+import PushButton from '../widgets/push-button.jsx';
+import ComboButton from '../widgets/combo-button.jsx';
+import InstructionBlock from '../widgets/instruction-block.jsx';
+import TextField from '../widgets/text-field.jsx';
+import MultilingualTextField from '../widgets/multilingual-text-field.jsx';
+import OptionList from '../widgets/option-list.jsx';
+import ImageSelector from '../widgets/image-selector.jsx';
+import ActivityChart from '../widgets/activity-chart.jsx';
+import InputError from '../widgets/input-error.jsx';
+import ActionConfirmation from '../widgets/action-confirmation.jsx';
+import DataLossWarning from '../widgets/data-loss-warning.jsx';
+import UnexpectedError from '../widgets/unexpected-error.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './project-summary-page.scss';
 
@@ -857,10 +857,10 @@ export {
     ProjectSummaryPageSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
-import Payloads from 'transport/payloads';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
+import Payloads from 'common/transport/payloads.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

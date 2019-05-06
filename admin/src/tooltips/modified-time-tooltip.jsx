@@ -2,10 +2,10 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import Moment from 'moment';
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 // widgets
-import Tooltip from 'widgets/tooltip';
+import Tooltip from '../widgets/tooltip.jsx';
 
 /**
  * Tooltip showing the full timestamp.

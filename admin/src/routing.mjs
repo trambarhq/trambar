@@ -16,7 +16,7 @@ var routes = {
         params: { projectID: Number, editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/member-list-page' /* webpackChunkName: "page-member-list" */);
+            match.params.module = await import('./pages/member-list-page.jsx' /* webpackChunkName: "page-member-list" */);
         }
     },
     'member-summary-page': {
@@ -27,7 +27,7 @@ var routes = {
         params: { projectID: Number, userID: NumberOrNew, editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/user-summary-page' /* webpackChunkName: "page-user-summary" */);
+            match.params.module = await import('./pages/user-summary-page.jsx' /* webpackChunkName: "page-user-summary" */);
         }
     },
     'project-list-page': {
@@ -38,7 +38,7 @@ var routes = {
         params: { editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/project-list-page' /* webpackChunkName: "page-project-list" */);
+            match.params.module = await import('./pages/project-list-page.jsx' /* webpackChunkName: "page-project-list" */);
         }
     },
     'project-summary-page': {
@@ -49,7 +49,7 @@ var routes = {
         params: { projectID: NumberOrNew, editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/project-summary-page' /* webpackChunkName: "page-project-summary" */);
+            match.params.module = await import('./pages/project-summary-page.jsx' /* webpackChunkName: "page-project-summary" */);
         }
     },
     'repo-list-page': {
@@ -60,7 +60,7 @@ var routes = {
         params: { projectID: Number, editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/repo-list-page' /* webpackChunkName: "page-repo-list" */);
+            match.params.module = await import('./pages/repo-list-page.jsx' /* webpackChunkName: "page-repo-list" */);
         }
     },
     'repo-summary-page': {
@@ -71,7 +71,7 @@ var routes = {
         params: { projectID: Number, repoID: Number, editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/repo-summary-page' /* webpackChunkName: "page-repo-summary" */);
+            match.params.module = await import('./pages/repo-summary-page.jsx' /* webpackChunkName: "page-repo-summary" */);
         }
     },
     'role-list-page': {
@@ -82,7 +82,7 @@ var routes = {
         params: { editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/role-list-page' /* webpackChunkName: "page-role-list" */);
+            match.params.module = await import('./pages/role-list-page.jsx' /* webpackChunkName: "page-role-list" */);
         }
     },
     'role-summary-page': {
@@ -93,7 +93,7 @@ var routes = {
         params: { roleID: NumberOrNew, editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/role-summary-page' /* webpackChunkName: "page-role-summary" */);
+            match.params.module = await import('./pages/role-summary-page.jsx' /* webpackChunkName: "page-role-summary" */);
         }
     },
     'server-list-page': {
@@ -104,7 +104,7 @@ var routes = {
         params: { editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/server-list-page' /* webpackChunkName: "page-server-list" */);
+            match.params.module = await import('./pages/server-list-page.jsx' /* webpackChunkName: "page-server-list" */);
         }
     },
     'server-summary-page': {
@@ -116,7 +116,7 @@ var routes = {
         params: { serverID: NumberOrNew, editing: Boolean, scrollToTaskID: Number },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/server-summary-page' /* webpackChunkName: "page-server-summary" */);
+            match.params.module = await import('./pages/server-summary-page.jsx' /* webpackChunkName: "page-server-summary" */);
         }
     },
     'settings-page': {
@@ -127,21 +127,21 @@ var routes = {
         params: { editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/settings-page' /* webpackChunkName: "page-settings" */);
+            match.params.module = await import('./pages/settings-page.jsx' /* webpackChunkName: "page-settings" */);
         }
     },
     'start-page': {
         path: '/',
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/start-page' /* webpackChunkName: "page-start" */);
+            match.params.module = await import('./pages/start-page.jsx' /* webpackChunkName: "page-start" */);
         },
         start: true,
     },
     'sign-in-page': {
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/sign-in-page' /* webpackChunkName: "page-sign-in" */);
+            match.params.module = await import('./pages/sign-in-page.jsx' /* webpackChunkName: "page-sign-in" */);
         },
         public: true,
         signIn: true,
@@ -154,7 +154,7 @@ var routes = {
         params: { editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/user-list-page' /* webpackChunkName: "page-user-list" */);
+            match.params.module = await import('./pages/user-list-page.jsx' /* webpackChunkName: "page-user-list" */);
         }
     },
     'user-summary-page': {
@@ -165,14 +165,14 @@ var routes = {
         params: { userID: NumberOrNew, editing: Boolean },
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/user-summary-page' /* webpackChunkName: "page-user-summary" */);
+            match.params.module = await import('./pages/user-summary-page.jsx' /* webpackChunkName: "page-user-summary" */);
         }
     },
     'error-page': {
         path: '*',
         load: async (match) => {
             match.params.key = match.name;
-            match.params.module = await import('pages/error-page' /* webpackChunkName: "page-error" */);
+            match.params.module = await import('./pages/error-page.jsx' /* webpackChunkName: "page-error" */);
         }
     },
 };

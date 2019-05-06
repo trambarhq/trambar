@@ -1,5 +1,5 @@
 import 'moment/locale/it';
-import { cardinal } from 'locale/grammars/italian';
+import { cardinal } from 'common/locale/grammars/italian.mjs';
 
 const phrases = {
     'action-badge-add': "aggiungere",

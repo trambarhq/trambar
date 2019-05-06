@@ -3,7 +3,7 @@ import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 
 // widgets
-import ConfirmationDialogBox from 'dialogs/confirmation-dialog-box';
+import ConfirmationDialogBox from '../dialogs/confirmation-dialog-box.jsx';
 
 /**
  * Component that renders a confirmation dialog box.
@@ -143,7 +143,7 @@ export {
     ActionConfirmation,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

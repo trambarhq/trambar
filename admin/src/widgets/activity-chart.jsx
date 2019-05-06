@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import Promise from 'promise';
 import React, { PureComponent } from 'react';
-import Chartist from 'widgets/chartist';
+import Chartist from 'common/widgets/chartist.jsx';
 import Moment from 'moment';
-import { memoizeWeak } from 'utils/memoize';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
 
-import StoryTypes from 'objects/types/story-types';
+import StoryTypes from 'common/objects/types/story-types.mjs';
 
 import './activity-chart.scss';
 
@@ -238,7 +238,7 @@ export {
     LegendItem,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

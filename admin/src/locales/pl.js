@@ -2,7 +2,7 @@ import 'moment/locale/pl';
 import {
     cardinal,
     genderize,
-} from 'locale/grammars/polish';
+} from 'common/locale/grammars/polish.mjs';
 
 const phrases = {
     'action-badge-add': 'dodaj',

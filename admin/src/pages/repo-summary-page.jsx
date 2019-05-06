@@ -1,23 +1,23 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import ComponentRefs from 'utils/component-refs';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as RepoFinder from 'objects/finders/repo-finder';
-import * as StatisticsFinder from 'objects/finders/statistics-finder';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
+import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 
 // widgets
-import PushButton from 'widgets/push-button';
-import ComboButton from 'widgets/combo-button';
-import InstructionBlock from 'widgets/instruction-block';
-import TextField from 'widgets/text-field';
-import MultilingualTextField from 'widgets/multilingual-text-field';
-import OptionList from 'widgets/option-list';
-import ActivityChart from 'widgets/activity-chart';
-import ActionConfirmation from 'widgets/action-confirmation';
-import DataLossWarning from 'widgets/data-loss-warning';
-import UnexpectedError from 'widgets/unexpected-error';
-import ErrorBoundary from 'widgets/error-boundary';
+import PushButton from '../widgets/push-button.jsx';
+import ComboButton from '../widgets/combo-button.jsx';
+import InstructionBlock from '../widgets/instruction-block.jsx';
+import TextField from '../widgets/text-field.jsx';
+import MultilingualTextField from '../widgets/multilingual-text-field.jsx';
+import OptionList from '../widgets/option-list.jsx';
+import ActivityChart from '../widgets/activity-chart.jsx';
+import ActionConfirmation from '../widgets/action-confirmation.jsx';
+import DataLossWarning from '../widgets/data-loss-warning.jsx';
+import UnexpectedError from '../widgets/unexpected-error.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './repo-summary-page.scss';
 
@@ -513,9 +513,9 @@ export {
     RepoSummaryPageSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

@@ -2,14 +2,14 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import * as MediaLoader from 'media/media-loader';
-import * as PictureFinder from 'objects/finders/picture-finder';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as MediaLoader from 'common/media/media-loader.mjs';
+import * as PictureFinder from 'common/objects/finders/picture-finder.mjs';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import ResourceView from 'widgets/resource-view';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import ResourceView from 'common/widgets/resource-view.jsx';
 
 import './image-album-dialog-box.scss';
 
@@ -495,9 +495,9 @@ export {
     ImageAlbumDialogBox,
 };
 
-import Database from 'data/database';
-import Environment from 'env/environment';
-import Payloads from 'transport/payloads';
+import Database from 'common/data/database.mjs';
+import Environment from 'common/env/environment.mjs';
+import Payloads from 'common/transport/payloads.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

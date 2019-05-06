@@ -1,24 +1,24 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import ComponentRefs from 'utils/component-refs';
-import * as RoleFinder from 'objects/finders/role-finder';
-import * as SystemFinder from 'objects/finders/system-finder';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as SlugGenerator from 'utils/slug-generator';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
+import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as SlugGenerator from 'common/utils/slug-generator.mjs';
 
 // widgets
-import PushButton from 'widgets/push-button';
-import ComboButton from 'widgets/combo-button';
-import InstructionBlock from 'widgets/instruction-block';
-import TextField from 'widgets/text-field';
-import MultilingualTextField from 'widgets/multilingual-text-field';
-import OptionList from 'widgets/option-list';
-import InputError from 'widgets/input-error';
-import ActionConfirmation from 'widgets/action-confirmation';
-import DataLossWarning from 'widgets/data-loss-warning';
-import UnexpectedError from 'widgets/unexpected-error';
+import PushButton from '../widgets/push-button.jsx';
+import ComboButton from '../widgets/combo-button.jsx';
+import InstructionBlock from '../widgets/instruction-block.jsx';
+import TextField from '../widgets/text-field.jsx';
+import MultilingualTextField from '../widgets/multilingual-text-field.jsx';
+import OptionList from '../widgets/option-list.jsx';
+import InputError from '../widgets/input-error.jsx';
+import ActionConfirmation from '../widgets/action-confirmation.jsx';
+import DataLossWarning from '../widgets/data-loss-warning.jsx';
+import UnexpectedError from '../widgets/unexpected-error.jsx';
 
 import './role-summary-page.scss';
 
@@ -753,9 +753,9 @@ export {
     RoleSummaryPageSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

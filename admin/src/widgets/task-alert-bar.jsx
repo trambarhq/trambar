@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import * as TaskFinder from 'objects/finders/task-finder';
+import * as TaskFinder from 'common/objects/finders/task-finder.mjs';
 
 import './task-alert-bar.scss';
 
@@ -299,9 +299,9 @@ export {
     TaskAlertBarSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

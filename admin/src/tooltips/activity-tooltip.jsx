@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
-import { StoryTypes, StoryIcons } from 'objects/types/story-types';
+import { StoryTypes, StoryIcons } from 'common/objects/types/story-types.mjs';
 
 // widgets
-import Tooltip from 'widgets/tooltip';
+import Tooltip from '../widgets/tooltip.jsx';
 
 import './activity-tooltip.scss';
 

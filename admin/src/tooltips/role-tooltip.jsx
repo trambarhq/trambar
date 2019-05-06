@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
 // widgets
-import Tooltip from 'widgets/tooltip';
+import Tooltip from '../widgets/tooltip.jsx';
 
 import './role-tooltip.scss';
 
@@ -81,8 +81,8 @@ export {
     RoleTooltip,
 };
 
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

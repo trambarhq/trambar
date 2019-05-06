@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 // widgets
-import Tooltip from 'widgets/tooltip';
+import Tooltip from '../widgets/tooltip.jsx';
 
 import './project-tooltip.scss';
 

@@ -1,5 +1,5 @@
-import * as BootstrapLoader from 'utils/bootstrap-loader';
-import libraries from 'libraries';
+import * as BootstrapLoader from 'common/utils/bootstrap-loader.mjs';
+import libraries from './libraries.mjs';
 
 window.addEventListener('load', initialize);
 
@@ -11,7 +11,7 @@ async function initialize(evt) {
     for (let key in libraries) {
         importFuncs[key] = libraries[key];
     }
-    importFuncs['front-end'] = () => import('front-end' /* webpackChunkName: "front-end" */);
+    importFuncs['front-end'] = () => import('./front-end.jsx' /* webpackChunkName: "front-end" */);
     let modules = await BootstrapLoader.load(importFuncs, showProgress);
     let { FrontEndCore, FrontEnd } = modules['front-end'];
     let React = modules['react'];

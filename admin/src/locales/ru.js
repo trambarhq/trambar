@@ -2,7 +2,7 @@ import 'moment/locale/ru';
 import {
     cardinal,
     genderize,
-} from 'locale/grammars/russian';
+} from 'common/locale/grammars/russian.mjs';
 
 const phrases = {
     'action-badge-add': 'добавить',

@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "acorn": "^5.7.3",
+    "autoprefixer": "^9.5.1",
     "b64-to-blob": "^1.2.19",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
@@ -39,6 +40,8 @@
     "font-awesome": "^4.7.0",
     "font-awesome-webpack": "0.0.5-beta.2",
     "hammerjs": "^2.0.8",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
     "karma": "^4.1.0",
     "karma-babel-preprocessor": "^8.0.0",
     "karma-chai": "^0.1.0",
@@ -51,10 +54,14 @@
     "lodash": "^4.17.11",
     "mark-gor": "0.0.7",
     "memoizee": "^0.4.14",
+    "mini-css-extract-plugin": "^0.6.0",
     "mocha": "^6.1.4",
     "moment": "^2.24.0",
     "multer": "^1.4.1",
     "node-sass": "^4.12.0",
+    "octicons": "^8.5.0",
+    "postcss-loader": "^3.0.0",
+    "raw-loader": "^2.0.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-easy-emoji": "^1.2.0",
@@ -67,6 +74,13 @@
     "sockjs": "^0.3.19",
     "sockjs-client": "^1.3.0",
     "style-loader": "^0.23.1",
-    "webpack": "^4.28.2"
+    "svg-react-loader": "^0.4.6",
+    "uglifyjs-webpack-plugin": "^2.1.2",
+    "url-loader": "^1.1.2",
+    "webpack": "^4.28.2",
+    "webpack-bundle-analyzer": "^3.3.2"
+  },
+  "dependencies": {
+    "less-loader": "^5.0.0"
   }
 }

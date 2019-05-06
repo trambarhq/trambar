@@ -1,32 +1,32 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import FrontEndCore from 'front-end-core';
-import CORSRewriter from 'routing/cors-rewriter';
+import FrontEndCore from 'common/front-end-core.mjs';
+import CORSRewriter from 'common/routing/cors-rewriter.mjs';
 
-import ComponentRefs from 'utils/component-refs';
-import HTTPError from 'errors/http-error';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import HTTPError from 'common/errors/http-error.mjs';
 
-import { routes } from 'routing';
+import { routes } from './routing.mjs';
 
 // proxy objects
-import Database from 'data/database';
-import Route from 'routing/route';
-import Payloads from 'transport/payloads';
-import Locale from 'locale/locale';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Locale from 'common/locale/locale.mjs';
+import Environment from 'common/env/environment.mjs';
 
 // widgets
-import SideNavigation from 'widgets/side-navigation';
-import TaskAlertBar from 'widgets/task-alert-bar';
-import UploadProgress from 'widgets/upload-progress';
-import ErrorBoundary from 'widgets/error-boundary';
+import SideNavigation from './widgets/side-navigation.jsx';
+import TaskAlertBar from './widgets/task-alert-bar.jsx';
+import UploadProgress from 'common/widgets/upload-progress.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import 'setimmediate';
-import 'utils/lodash-extra';
+import 'common/utils/lodash-extra.mjs';
 import 'font-awesome-webpack';
-import 'front-end.scss';
-import 'colors.scss';
+import './front-end.scss';
+import './colors.scss';
 
 const widthDefinitions = {
     'narrow': 700,
@@ -318,15 +318,15 @@ import 'react-dom';
 import 'relaks';
 
 // pull in all widgets and dialogs for the same reason
-require.context('widgets', true);
-require.context('dialogs', true);
+require.context('./widgets', true);
+require.context('./dialogs', true);
 
-import EnvironmentMonitor from 'env/environment-monitor';
+import EnvironmentMonitor from 'common/env/environment-monitor.mjs';
 import RouteManager from 'relaks-route-manager';
-import RemoteDataSource from 'data/remote-data-source';
-import PayloadManager from 'transport/payload-manager';
-import LocaleManager from 'locale/locale-manager';
-import Notifier from 'transport/notifier';
+import RemoteDataSource from 'common/data/remote-data-source.mjs';
+import PayloadManager from 'common/transport/payload-manager.mjs';
+import LocaleManager from 'common/locale/locale-manager.mjs';
+import Notifier from 'common/transport/notifier.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

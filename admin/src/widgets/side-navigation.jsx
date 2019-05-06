@@ -2,10 +2,10 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
 // widgets
-import NavigationTree from 'widgets/navigation-tree';
-import Tooltip from 'widgets/tooltip';
-import SignOffMenu from 'widgets/sign-off-menu';
-import ErrorBoundary from 'widgets/error-boundary';
+import NavigationTree from './navigation-tree.jsx';
+import Tooltip from './tooltip.jsx';
+import SignOffMenu from './sign-off-menu.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './side-navigation.scss';
 
@@ -317,9 +317,9 @@ export {
     SideNavigation,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

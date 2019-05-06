@@ -4,7 +4,7 @@ import { AsyncComponent } from 'relaks';
 import MarkGor from 'mark-gor/react';
 
 // widgets
-import CollapsibleContainer from 'widgets/collapsible-container';
+import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
 
 import './instruction-block.scss';
 
@@ -90,12 +90,12 @@ async function loadMarkdown(folder, topic, lang) {
 async function loadText(folder, topic, lang) {
     let module;
     try {
-        module = await import(`instructions/${folder}/${topic}.${lang}.md`);
+        module = await import(`../instructions/${folder}/${topic}.${lang}.md`);
     } catch (err) {
         if (process.env.NODE_ENV !== 'production') {
             console.log(`Missing instructions for topic "${topic}" in language "${lang}"`);
         }
-        module = await import(`instructions/${folder}/${topic}.en.md`);
+        module = await import(`../instructions/${folder}/${topic}.en.md`);
     }
     return module;
 }
@@ -122,7 +122,7 @@ async function loadImages(element, folder) {
         let filename = element.props.src;
         if (filename && !/^\w+:/.test(filename)) {
             try {
-                let url = await import(`instructions/${folder}/${filename}`);
+                let url = await import(`../instructions/${folder}/${filename}`);
                 return React.cloneElement(element, { src: url });
             } catch (err) {
                 if (process.env.NODE_ENV !== 'production') {
@@ -135,7 +135,7 @@ async function loadImages(element, folder) {
         let url = element.props.href;
         if (url && !/^\w+:/.test(url)) {
             try {
-                let fileURL = await import(`instructions/${folder}/${url}`);
+                let fileURL = await import(`../instructions/${folder}/${url}`);
                 let props = { href: url };
                 if (/\.html$/.test(url)) {
                     props.target = '_blank';
@@ -174,7 +174,7 @@ export {
     InstructionBlockSync,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

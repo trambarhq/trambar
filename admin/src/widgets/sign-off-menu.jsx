@@ -2,11 +2,11 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as UserUtils from 'objects/utils/user-utils';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import ProfileImage from 'widgets/profile-image';
+import ProfileImage from './profile-image.jsx';
 
 import './sign-off-menu.scss';
 
@@ -92,9 +92,9 @@ export {
     SignOffMenuSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
