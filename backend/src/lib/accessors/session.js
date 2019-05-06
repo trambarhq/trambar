@@ -23,6 +23,7 @@ class Session extends Data {
 
             expired: Boolean,
         });
+        this.version = 3;
     }
 
     /**
@@ -58,6 +59,27 @@ class Session extends Data {
     }
 
     /**
+     * Upgrade table in schema to given DB version (from one version prior)
+     *
+     * @param  {Database} db
+     * @param  {String} schema
+     * @param  {Number} version
+     *
+     * @return {Promise<Boolean>}
+     */
+    async upgrade(db, schema, version) {
+        if (version === 3) {
+            console.log('upgrade');
+            await this.createNotificationTriggers(db, schema, [
+                'deleted',
+                'user_id',
+            ]);
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Grant privileges to table to appropriate Postgres users
      *
      * @param  {Database} db
@@ -85,6 +107,10 @@ class Session extends Data {
      */
     async watch(db, schema) {
         await this.createChangeTrigger(db, schema);
+        await this.createNotificationTriggers(db, schema, [
+            'deleted',
+            'user_id',
+        ]);
     }
 
     /**
