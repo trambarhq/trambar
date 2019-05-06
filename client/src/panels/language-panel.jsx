@@ -2,8 +2,8 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import OptionButton from 'widgets/option-button';
+import SettingsPanel from '../widgets/settings-panel.jsx';
+import OptionButton from '../widgets/option-button.jsx';
 
 import './language-panel.scss';
 
@@ -138,7 +138,7 @@ export {
     LanguagePanel,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

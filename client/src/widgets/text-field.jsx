@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
 
 // widgets
-import AutosizeTextArea from 'widgets/autosize-text-area';
+import AutosizeTextArea from 'common/widgets/autosize-text-area.jsx';
 
 import './text-field.scss';
 
@@ -71,7 +71,7 @@ export {
     TextField,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

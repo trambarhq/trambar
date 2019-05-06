@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as UserUtils from 'objects/utils/user-utils';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import Time from 'widgets/time';
-import ProfileImage from 'widgets/profile-image';
+import Time from '../widgets/time.jsx';
+import ProfileImage from '../widgets/profile-image.jsx';
 
 import './notification-view.scss';
 
@@ -246,9 +246,9 @@ export {
     NotificationView,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

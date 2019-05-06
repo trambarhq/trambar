@@ -1,28 +1,28 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import * as KonamiCode from 'utils/konami-code';
-import * as DeviceFinder from 'objects/finders/device-finder';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as ProjectLinkFinder from 'objects/finders/project-link-finder';
-import * as RepoFinder from 'objects/finders/repo-finder';
-import * as SystemFinder from 'objects/finders/system-finder';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as UserUtils from 'objects/utils/user-utils';
+import * as KonamiCode from 'common/utils/konami-code.mjs';
+import * as DeviceFinder from 'common/objects/finders/device-finder.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.mjs';
+import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
+import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import PageContainer from 'widgets/page-container';
-import DevelopmentPanel from 'panels/development-panel';
-import ProjectPanel from 'panels/project-panel';
-import DevicePanel from 'panels/device-panel';
-import UserInfoPanel from 'panels/user-info-panel';
-import UserImagePanel from 'panels/user-image-panel';
-import NotificationPanel from 'panels/notification-panel';
-import WebAlertPanel from 'panels/web-alert-panel';
-import MobileAlertPanel from 'panels/mobile-alert-panel';
-import SocialNetworkPanel from 'panels/social-network-panel';
-import LanguagePanel from 'panels/language-panel';
-import ErrorBoundary  from 'widgets/error-boundary';
+import PageContainer from '../widgets/page-container.jsx';
+import DevelopmentPanel from '../panels/development-panel.jsx';
+import ProjectPanel from '../panels/project-panel.jsx';
+import DevicePanel from '../panels/device-panel.jsx';
+import UserInfoPanel from '../panels/user-info-panel.jsx';
+import UserImagePanel from '../panels/user-image-panel.jsx';
+import NotificationPanel from '../panels/notification-panel.jsx';
+import WebAlertPanel from '../panels/web-alert-panel.jsx';
+import MobileAlertPanel from '../panels/mobile-alert-panel.jsx';
+import SocialNetworkPanel from '../panels/social-network-panel.jsx';
+import LanguagePanel from '../panels/language-panel.jsx';
+import ErrorBoundary  from 'common/widgets/error-boundary.jsx';
 
 import './settings-page.scss';
 
@@ -388,10 +388,10 @@ export {
     SettingsPageSync,
 };
 
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

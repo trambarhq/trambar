@@ -2,8 +2,8 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import DiagnosticsSection from 'widgets/diagnostics-section';
+import SettingsPanel from '../widgets/settings-panel.jsx';
+import DiagnosticsSection from '../widgets/diagnostics-section.jsx';
 
 import './sqlite-cache-panel.scss';
 
@@ -58,7 +58,7 @@ export {
     SQLiteCachePanel,
 };
 
-import SQLiteCache from 'data/sqlite-cache';
+import SQLiteCache from 'common/data/sqlite-cache.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

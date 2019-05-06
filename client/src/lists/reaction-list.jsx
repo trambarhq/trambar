@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import { memoizeWeak } from 'utils/memoize';
-import Merger from 'data/merger';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import Merger from 'common/data/merger.mjs';
 
 // widgets
-import ReactionView from 'views/reaction-view';
-import ReactionEditor from 'editors/reaction-editor';
-import SmartList from 'widgets/smart-list';
-import ErrorBoundary from 'widgets/error-boundary';
+import ReactionView from '../views/reaction-view.jsx';
+import ReactionEditor from '../editors/reaction-editor.jsx';
+import SmartList from 'common/widgets/smart-list.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './reaction-list.scss';
 
@@ -201,10 +201,10 @@ export {
     ReactionList,
 };
 
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

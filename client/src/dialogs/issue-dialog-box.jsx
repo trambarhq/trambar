@@ -1,15 +1,15 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
-import * as TagScanner from 'utils/tag-scanner';
-import * as RepoUtils from 'objects/utils/repo-utils';
-import * as UserUtils from 'objects/utils/user-utils';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as TagScanner from 'common/utils/tag-scanner.mjs';
+import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import TextField from 'widgets/text-field';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import TextField from '../widgets/text-field.jsx';
 
 import './issue-dialog-box.scss';
 
@@ -433,7 +433,7 @@ export {
     IssueDialogBox,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

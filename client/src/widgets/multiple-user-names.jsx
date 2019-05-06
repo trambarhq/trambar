@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as UserUtils from 'objects/utils/user-utils';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import Scrollable from 'widgets/scrollable';
-import ProfileImage from 'widgets/profile-image';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from './push-button.jsx';
+import Scrollable from './scrollable.jsx';
+import ProfileImage from './profile-image.jsx';
 
 import './multiple-user-names.scss';
 
@@ -215,7 +215,7 @@ export {
     MultipleUserNames,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

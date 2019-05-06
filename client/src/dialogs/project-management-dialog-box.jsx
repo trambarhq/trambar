@@ -2,10 +2,10 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import Scrollable from 'widgets/scrollable';
-import OptionButton from 'widgets/option-button';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import Scrollable from '../widgets/scrollable.jsx';
+import OptionButton from '../widgets/option-button.jsx';
 
 import './project-management-dialog-box.scss';
 
@@ -164,8 +164,8 @@ export {
     ProjectManagementDialogBox,
 };
 
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

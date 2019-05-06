@@ -3,9 +3,9 @@ import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import TextField from 'widgets/text-field';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import TextField from '../widgets/text-field.jsx';
 
 import './activation-dialog-box.scss';
 
@@ -234,7 +234,7 @@ export {
     ActivationDialogBox,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

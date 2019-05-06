@@ -3,8 +3,8 @@ import Moment from 'moment';
 import React, { Component } from 'react';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import DiagnosticsSection from 'widgets/diagnostics-section';
+import SettingsPanel from '../widgets/settings-panel.jsx';
+import DiagnosticsSection from '../widgets/diagnostics-section.jsx';
 
 import './payload-manager-panel.scss';
 
@@ -176,7 +176,7 @@ export {
     PayloadManagerPanel,
 };
 
-import PayloadManager from 'transport/payload-manager';
+import PayloadManager from 'common/transport/payload-manager.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

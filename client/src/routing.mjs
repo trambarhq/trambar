@@ -67,7 +67,7 @@ const routes = {
                 navigation: { section: 'bookmarks' }
             };
             match.params.key = `${match.path}${match.search}`;
-            match.params.module = await import('pages/bookmarks-page' /* webpackChunkName: "page-bookmarks" */);
+            match.params.module = await import('./pages/bookmarks-page.jsx' /* webpackChunkName: "page-bookmarks" */);
         }
     },
     'news-page': {
@@ -101,7 +101,7 @@ const routes = {
                 navigation: { section: 'news' }
             };
             match.params.key = `${match.path}${match.search}`;
-            match.params.module = await import('pages/news-page' /* webpackChunkName: "page-news" */);
+            match.params.module = await import('./pages/news-page.jsx' /* webpackChunkName: "page-news" */);
         }
     },
     'notifications-page': {
@@ -124,7 +124,7 @@ const routes = {
                 navigation: { section: 'notifications' }
             };
             match.params.key = `${match.path}${match.search}`;
-            match.params.module = await import('pages/notifications-page' /* webpackChunkName: "page-notifications" */);
+            match.params.module = await import('./pages/notifications-page.jsx' /* webpackChunkName: "page-notifications" */);
         }
     },
     'people-page': {
@@ -153,7 +153,7 @@ const routes = {
                 navigation: { section: 'people' }
             }
             match.params.key = `${match.path}${match.search}`;
-            match.params.module = await import('pages/people-page' /* webpackChunkName: "page-people" */);
+            match.params.module = await import('./pages/people-page.jsx' /* webpackChunkName: "page-people" */);
         }
     },
     'person-page': {
@@ -188,7 +188,7 @@ const routes = {
                 navigation: { section: 'people' }
             };
             match.params.key = `${match.path}${match.search}`;
-            match.params.module = await import('pages/people-page' /* webpackChunkName: "page-people" */);
+            match.params.module = await import('./pages/people-page.jsx' /* webpackChunkName: "page-people" */);
         }
     },
     'settings-page': {
@@ -198,7 +198,7 @@ const routes = {
                 navigation: { section: 'settings' },
             };
             match.params.key = match.path;
-            match.params.module = await import('pages/settings-page' /* webpackChunkName: "page-settings" */);
+            match.params.module = await import('./pages/settings-page.jsx' /* webpackChunkName: "page-settings" */);
         }
     },
     'diagnostics-page': {
@@ -208,7 +208,7 @@ const routes = {
                 navigation: { section: 'settings' },
             };
             match.params.key = match.path;
-            match.params.module = await import('pages/diagnostics-page' /* webpackChunkName: "page-diagnostics" */);
+            match.params.module = await import('./pages/diagnostics-page.jsx' /* webpackChunkName: "page-diagnostics" */);
         }
     },
     'start-page': {
@@ -226,7 +226,7 @@ const routes = {
                 navigation: { top: false, bottom: false }
             };
             match.params.key = match.path;
-            match.params.module = await import('pages/start-page' /* webpackChunkName: "page-start" */);
+            match.params.module = await import('./pages/start-page.jsx' /* webpackChunkName: "page-start" */);
         },
         start: true,
         signIn: true,
@@ -235,7 +235,7 @@ const routes = {
         path: '*',
         load: async (match) => {
             match.params.key = match.path;
-            match.params.module = await import('pages/error-page' /* webpackChunkName: "page-error" */);
+            match.params.module = await import('./pages/error-page.jsx' /* webpackChunkName: "page-error" */);
         },
     },
 };

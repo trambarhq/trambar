@@ -1,8 +1,8 @@
 import React from 'react';
 
 // widgets
-import ImageEditor from 'editors/image-editor';
-import DurationIndicator from 'widgets/duration-indicator';
+import ImageEditor from '../editors/image-editor.jsx';
+import DurationIndicator from '../widgets/duration-indicator.jsx';
 
 import './audio-editor.scss';
 

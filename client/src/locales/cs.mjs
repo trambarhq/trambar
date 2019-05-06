@@ -4,7 +4,7 @@ import {
     list,
     genderize,
     pastTenseEnding
-} from 'locale/grammars/czech';
+} from 'common/locale/grammars/czech.mjs';
 
 let phrases = {
     'action-contact-by-email': 'Kontaktovat e-mailem',

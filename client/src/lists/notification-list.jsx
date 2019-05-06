@@ -1,16 +1,16 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import Merger from 'data/merger';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as StoryFinder from 'objects/finders/story-finder';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import Merger from 'common/data/merger.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as StoryFinder from 'common/objects/finders/story-finder.mjs';
 
 // widgets
-import SmartList from 'widgets/smart-list';
-import NotificationView from 'views/notification-view';
-import NewItemsAlert from 'widgets/new-items-alert';
-import ErrorBoundary from 'widgets/error-boundary';
+import SmartList from 'common/widgets/smart-list.jsx';
+import NotificationView from '../views/notification-view.jsx';
+import NewItemsAlert from '../widgets/new-items-alert.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './notification-list.scss';
 
@@ -314,9 +314,9 @@ export {
     NotificationListSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

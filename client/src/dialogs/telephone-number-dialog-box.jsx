@@ -1,11 +1,11 @@
 import React, { PureComponent } from 'react';
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import QRCode from 'widgets/qr-code';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import QRCode from '../widgets/qr-code.jsx';
 
 import './telephone-number-dialog-box.scss';
 

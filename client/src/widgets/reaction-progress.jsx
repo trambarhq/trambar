@@ -1,8 +1,8 @@
 import React from 'react';
-import * as ReactionUtils from 'objects/utils/reaction-utils';
+import * as ReactionUtils from 'common/objects/utils/reaction-utils.mjs';
 
 // widgets
-import Time from 'widgets/time';
+import Time from './time.jsx';
 
 import './reaction-progress.scss';
 
@@ -33,7 +33,7 @@ export {
     ReactionProgress,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

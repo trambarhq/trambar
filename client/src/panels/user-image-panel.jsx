@@ -2,14 +2,14 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
-import * as FocusManager from 'utils/focus-manager';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as FocusManager from 'common/utils/focus-manager.mjs';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import PushButton from 'widgets/push-button';
-import ImageEditor from 'editors/image-editor';
-import MediaImporter from 'editors/media-importer';
+import SettingsPanel from '../widgets/settings-panel.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import ImageEditor from '../editors/image-editor.jsx';
+import MediaImporter from '../editors/media-importer.jsx';
 import Icon from 'octicons/build/svg/person.svg';
 
 import './user-image-panel.scss';
@@ -345,8 +345,8 @@ export {
     UserImagePanel,
 };
 
-import Payloads from 'transport/payloads';
-import Environment from 'env/environment';
+import Payloads from 'common/transport/payloads.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

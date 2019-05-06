@@ -1,14 +1,14 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
 
 // widgets
-import Link from 'widgets/link';
-import CollapsibleContainer from 'widgets/collapsible-container';
-import CalendarBar from 'widgets/calendar-bar';
-import RoleFilterBar from 'widgets/role-filter-bar';
-import SearchBar from 'widgets/search-bar';
-import ErrorBoundary from 'widgets/error-boundary';
+import Link from './link.jsx';
+import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
+import CalendarBar from './calendar-bar.jsx';
+import RoleFilterBar from './role-filter-bar.jsx';
+import SearchBar from './search-bar.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './top-navigation.scss';
 
@@ -321,10 +321,10 @@ export {
     TopNavigation,
 };
 
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import { memoizeWeak } from 'utils/memoize';
-import * as UserUtils from 'objects/utils/user-utils';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import SmartList from 'widgets/smart-list';
-import UserView from 'views/user-view';
-import ErrorBoundary from 'widgets/error-boundary';
+import SmartList from 'common/widgets/smart-list.jsx';
+import UserView from '../views/user-view.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './user-list.scss';
 
@@ -203,9 +203,9 @@ export {
     UserList,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

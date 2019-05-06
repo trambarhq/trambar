@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
 // widgets
-import HeaderButton from 'widgets/header-button';
+import HeaderButton from './header-button.jsx';
 
 import './reaction-media-toolbar.scss';
 
@@ -183,7 +183,7 @@ export {
     ReactionMediaToolbar,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

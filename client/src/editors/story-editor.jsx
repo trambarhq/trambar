@@ -1,34 +1,34 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import * as ListParser from 'utils/list-parser';
-import * as Markdown from 'utils/markdown';
-import * as PlainText from 'utils/plain-text';
-import * as TagScanner from 'utils/tag-scanner';
-import * as FocusManager from 'utils/focus-manager';
-import ComponentRefs from 'utils/component-refs';
-import * as StoryUtils from 'objects/utils/story-utils';
-import * as IssueUtils from 'objects/utils/issue-utils';
-import * as ResourceUtils from 'objects/utils/resource-utils';
-import * as TemporaryID from 'data/remote-data-source/temporary-id';
-import * as RandomToken from 'utils/random-token';
+import * as ListParser from 'common/utils/list-parser.mjs';
+import * as Markdown from 'common/utils/markdown.mjs';
+import * as PlainText from 'common/utils/plain-text.mjs';
+import * as TagScanner from 'common/utils/tag-scanner.mjs';
+import * as FocusManager from 'common/utils/focus-manager.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
+import * as IssueUtils from 'common/objects/utils/issue-utils.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import * as TemporaryID from 'common/data/remote-data-source/temporary-id.mjs';
+import * as RandomToken from 'common/utils/random-token.mjs';
 
 // widgets
-import AuthorNames from 'widgets/author-names';
-import ProfileImage from 'widgets/profile-image';
-import CoauthoringButton from 'widgets/coauthoring-button';
-import PushButton from 'widgets/push-button';
-import AutosizeTextArea from 'widgets/autosize-text-area';
-import MediaToolbar from 'widgets/media-toolbar';
-import TextToolbar from 'widgets/text-toolbar';
-import HeaderButton from 'widgets/header-button';
-import DropZone from 'widgets/drop-zone';
-import MediaEditor from 'editors/media-editor';
-import MediaImporter from 'editors/media-importer';
-import MediaPlaceholder from 'widgets/media-placeholder';
-import StoryEditorOptions from 'editors/story-editor-options';
-import CornerPopUp from 'widgets/corner-pop-up';
-import ConfirmationDialogBox from 'dialogs/confirmation-dialog-box';
+import AuthorNames from '../widgets/author-names.jsx';
+import ProfileImage from '../widgets/profile-image.jsx';
+import CoauthoringButton from '../widgets/coauthoring-button.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import AutosizeTextArea from 'common/widgets/autosize-text-area.jsx';
+import MediaToolbar from '../widgets/media-toolbar.jsx';
+import TextToolbar from '../widgets/text-toolbar.jsx';
+import HeaderButton from '../widgets/header-button.jsx';
+import DropZone from '../widgets/drop-zone.jsx';
+import MediaEditor from '../editors/media-editor.jsx';
+import MediaImporter from '../editors/media-importer.jsx';
+import MediaPlaceholder from '../widgets/media-placeholder.jsx';
+import StoryEditorOptions from '../editors/story-editor-options.jsx';
+import CornerPopUp from '../widgets/corner-pop-up.jsx';
+import ConfirmationDialogBox from '../dialogs/confirmation-dialog-box';
 
 import './story-editor.scss';
 
@@ -1604,10 +1604,10 @@ export {
     StoryEditor,
 };
 
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

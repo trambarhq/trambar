@@ -6,34 +6,17 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "watch": "webpack --watch && exit 0",
-    "build": "webpack && exit 0",
-    "start": "webpack-dev-server && exit 0",
+    "watch": "NODE_PATH=./node_modules:../common/node_modules webpack --watch && exit 0",
+    "build": "NODE_PATH=./node_modules:../common/node_modules webpack && exit 0",
+    "dev": "NODE_PATH=./node_modules:../common/node_modules webpack-dev-server && exit 0",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "dependencies": {},
   "devDependencies": {
-    "autoprefixer": "^8.3.0",
-    "css-loader": "^0.28.1",
-    "extract-text-webpack-plugin": "^3.0.2",
-    "file-loader": "^0.11.1",
-    "html-loader": "^0.4.5",
-    "html-webpack-plugin": "^2.28.0",
     "jsmediatags": "^3.8.1",
-    "less": "^3.8.1",
-    "node-sass": "^4.9.3",
-    "octicons": "^6.0.0",
-    "postcss-loader": "^2.1.4",
-    "prop-types": "^15.6.2",
     "qrcode": "^0.9.0",
-    "sass-loader": "^6.0.5",
     "scroll-into-view-if-needed": "^2.2.20",
-    "style-loader": "^0.17.0",
-    "svg-react-loader": "^0.4.4",
-    "uglifyjs-webpack-plugin": "^0.4.6",
-    "url-loader": "^1.1.0",
-    "webpack": "^3.1.0",
-    "webpack-bundle-analyzer": "^2.10.0",
-    "webpack-dev-server": "^2.11.2"
+    "webpack": "^4.30.0",
+    "webpack-cli": "^3.3.1",
+    "webpack-dev-server": "^3.3.1"
   }
 }

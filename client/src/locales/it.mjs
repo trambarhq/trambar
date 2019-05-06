@@ -1,5 +1,5 @@
 import 'moment/locale/it';
-import { cardinal, list } from 'locale/grammars/italian';
+import { cardinal, list } from 'common/locale/grammars/italian.mjs';
 
 const phrases = {
     'action-contact-by-email': "Contatto via e-mail",

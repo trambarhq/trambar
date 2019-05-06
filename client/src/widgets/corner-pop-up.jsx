@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
 
 // widgets
-import PopUpMenu from 'widgets/pop-up-menu';
+import PopUpMenu from './pop-up-menu.jsx';
 
 import './corner-pop-up.scss';
 

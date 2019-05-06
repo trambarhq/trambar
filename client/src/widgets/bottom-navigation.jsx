@@ -1,15 +1,15 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import ComponentRefs from 'utils/component-refs';
-import HTTPError from 'errors/http-error';
-import * as NotificationFinder from 'objects/finders/notification-finder';
-import * as UserFinder from 'objects/finders/user-finder';
-import { setApplicationIconBadgeNumber } from 'transport/push-notifier';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import HTTPError from 'common/errors/http-error.mjs';
+import * as NotificationFinder from 'common/objects/finders/notification-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import { setApplicationIconBadgeNumber } from 'common/transport/push-notifier.mjs';
 
 // widgets
-import Link from 'widgets/link';
-import ErrorBoundary from 'widgets/error-boundary';
+import Link from './link.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './bottom-navigation.scss';
 
@@ -309,13 +309,13 @@ let favIcons;
 function changeFavIcon(count) {
     if (!favIcons) {
         // get the post-WebPack filenames of the favicons
-        let paths = require.context('favicon-notification', true, /\.png$/).keys();
+        let paths = require.context('../../assets/favicon-notification', true, /\.png$/).keys();
         favIcons = _.map(paths, (path) => {
             // make the file extension part of the expression passed to require()
             // so WebPack will filter out other files
             let name = path.substring(path.indexOf('/') + 1, path.lastIndexOf('.'));
-            let withoutBadge = require(`favicon/${name}.png`);
-            let withBadge = require(`favicon-notification/${name}.png`);
+            let withoutBadge = require(`../../assets/favicon/${name}.png`);
+            let withBadge = require(`../../assets/favicon-notification/${name}.png`);
             return { withoutBadge, withBadge };
         });
     }
@@ -360,9 +360,9 @@ export {
     NewNotificationsBadge,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

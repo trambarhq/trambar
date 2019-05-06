@@ -1,5 +1,5 @@
 import 'moment/locale/fi';
-import { cardinal, list } from 'locale/grammars/finnish';
+import { cardinal, list } from 'common/locale/grammars/finnish.mjs';
 
 const phrases = {
     'action-contact-by-email': 'Ota yhteyttä sähköpostitse',

@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 
-import CollapsibleContainer from 'widgets/collapsible-container';
+import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
 
 class DiagnosticsSection extends PureComponent {
     static displayName = 'DiagnosticsSection';

@@ -1,16 +1,16 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as BookmarkFinder from 'objects/finders/bookmark-finder';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as ProjectUtils from 'objects/utils/project-utils';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
 
 // widgets
-import PageContainer from 'widgets/page-container';
-import BookmarkList from 'lists/bookmark-list';
-import LoadingAnimation from 'widgets/loading-animation';
-import EmptyMessage from 'widgets/empty-message';
+import PageContainer from '../widgets/page-container.jsx';
+import BookmarkList from '../lists/bookmark-list.jsx';
+import LoadingAnimation from '../widgets/loading-animation.jsx';
+import EmptyMessage from '../widgets/empty-message.jsx';
 
 import './bookmarks-page.scss';
 
@@ -149,10 +149,10 @@ export {
     BookmarksPageSync,
 };
 
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

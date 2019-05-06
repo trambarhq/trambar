@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import * as MediaLoader from 'media/media-loader';
-import CordovaFile from 'transport/cordova-file';
+import * as MediaLoader from 'common/media/media-loader.mjs';
+import CordovaFile from 'common/transport/cordova-file.mjs';
 
 /**
  * Non-visual component that uses the Media Capture Cordiva plug-in to capture
@@ -220,8 +220,8 @@ export {
     VideoCaptureDialogBoxCordova,
 };
 
-import Payloads from 'transport/payloads';
-import Environment from 'env/environment';
+import Payloads from 'common/transport/payloads.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

@@ -1,18 +1,17 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import HTTPRequest from 'transport/http-request';
-import { memoizeWeak } from 'utils/memoize';
-import ComponentRefs from 'utils/component-refs';
-import Payload from 'transport/payload';
-import * as ResourceUtils from 'objects/utils/resource-utils';
-import * as ImageCropping from 'media/image-cropping';
+import HTTPRequest from 'common/transport/http-request.mjs';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import Payload from 'common/transport/payload.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import * as ImageCropping from 'common/media/image-cropping.mjs';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import MediaButton from 'widgets/media-button';
-import MediaDialogBox from 'dialogs/media-dialog-box';
-import ResourceView from 'widgets/resource-view';
-import DurationIndicator from 'widgets/duration-indicator';
+import MediaButton from '../widgets/media-button.jsx';
+import MediaDialogBox from '../dialogs/media-dialog-box';
+import ResourceView from 'common/widgets/resource-view.jsx';
+import DurationIndicator from '../widgets/duration-indicator.jsx';
 
 import './media-view.scss';
 
@@ -416,7 +415,7 @@ export {
     MediaView,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

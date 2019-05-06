@@ -2,8 +2,8 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import DiagnosticsSection from 'widgets/diagnostics-section';
+import SettingsPanel from '../widgets/settings-panel.jsx';
+import DiagnosticsSection from '../widgets/diagnostics-section.jsx';
 
 import './websocket-notifier-panel.scss';
 
@@ -52,7 +52,7 @@ export {
     WebsocketNotifierPanel,
 };
 
-import WebsocketNotifier from 'transport/websocket-notifier';
+import WebsocketNotifier from 'common/transport/websocket-notifier.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

@@ -2,10 +2,10 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import Scrollable from 'widgets/scrollable';
-import UserSelectionList from 'lists/user-selection-list';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import Scrollable from '../widgets/scrollable.jsx';
+import UserSelectionList from '../lists/user-selection-list.jsx';
 
 import './user-selection-dialog-box.scss';
 
@@ -154,9 +154,9 @@ export {
     UserSelectionDialogBox,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

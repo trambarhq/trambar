@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as UserUtils from 'objects/utils/user-utils';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import HeaderButton from 'widgets/header-button';
-import OptionButton from 'widgets/option-button';
-import UserSelectionDialogBox from 'dialogs/user-selection-dialog-box';
-import IssueDialogBox from 'dialogs/issue-dialog-box';
+import HeaderButton from '../widgets/header-button.jsx';
+import OptionButton from '../widgets/option-button.jsx';
+import UserSelectionDialogBox from '../dialogs/user-selection-dialog-box';
+import IssueDialogBox from '../dialogs/issue-dialog-box';
 
 import './story-editor-options.scss';
 
@@ -369,9 +369,9 @@ export {
     StoryEditorOptions,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

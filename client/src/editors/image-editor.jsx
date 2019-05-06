@@ -1,15 +1,15 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import * as BlobManager from 'transport/blob-manager';
-import Payload from 'transport/payload';
-import * as ImageCropping from 'media/image-cropping';
-import * as FocusManager from 'utils/focus-manager';
-import * as ResourceUtils from 'objects/utils/resource-utils';
-import ComponentRefs from 'utils/component-refs';
+import * as BlobManager from 'common/transport/blob-manager.mjs';
+import Payload from 'common/transport/payload.mjs';
+import * as ImageCropping from 'common/media/image-cropping.mjs';
+import * as FocusManager from 'common/utils/focus-manager.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
 
 // widgets
-import ImageCropper from 'widgets/image-cropper';
+import ImageCropper from 'common/widgets/image-cropper.jsx';
 
 import './image-editor.scss';
 
@@ -307,7 +307,7 @@ export {
     ImageEditor,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

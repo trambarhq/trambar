@@ -1,24 +1,24 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import { memoizeWeak } from 'utils/memoize';
-import * as ListParser from 'utils/list-parser';
-import * as Markdown from 'utils/markdown';
-import * as PlainText from 'utils/plain-text';
-import ComponentRefs from 'utils/component-refs';
-import * as ExternalDataUtils from 'objects/utils/external-data-utils';
-import * as UserUtils from 'objects/utils/user-utils';
-import * as RepoUtils from 'objects/utils/repo-utils';
-import * as ResourceUtils from 'objects/utils/resource-utils';
-import Payload from 'transport/payload';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as ListParser from 'common/utils/list-parser.mjs';
+import * as Markdown from 'common/utils/markdown.mjs';
+import * as PlainText from 'common/utils/plain-text.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import Payload from 'common/transport/payload.mjs';
 
 // widgets
-import MediaView from 'views/media-view';
-import MediaDialogBox from 'dialogs/media-dialog-box';
-import AppComponent from 'views/app-component';
-import AppComponentDialogBox from 'dialogs/app-component-dialog-box';
-import Scrollable from 'widgets/scrollable';
-import PushButton from 'widgets/push-button';
+import MediaView from '../views/media-view.jsx';
+import MediaDialogBox from '../dialogs/media-dialog-box';
+import AppComponent from '../views/app-component.jsx';
+import AppComponentDialogBox from '../dialogs/app-component-dialog-box';
+import Scrollable from '../widgets/scrollable.jsx';
+import PushButton from '../widgets/push-button.jsx';
 
 import './story-contents.scss';
 
@@ -1105,7 +1105,7 @@ export {
     StoryContents,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

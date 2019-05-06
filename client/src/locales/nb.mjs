@@ -1,5 +1,5 @@
 import 'moment/locale/nb';
-import { cardinal, list } from 'locale/grammars/norwegian';
+import { cardinal, list } from 'common/locale/grammars/norwegian.mjs';
 
 const phrases = {
     'action-contact-by-email': 'Kontakt via e-post',

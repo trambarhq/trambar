@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import Chartist, { Svg } from 'widgets/chartist';
+import Chartist, { Svg } from 'common/widgets/chartist.jsx';
 import Moment from 'moment';
-import { memoizeWeak, memoizeStrong } from 'utils/memoize';
-import StoryTypes from 'objects/types/story-types';
+import { memoizeWeak, memoizeStrong } from 'common/utils/memoize.mjs';
+import StoryTypes from 'common/objects/types/story-types.mjs';
 
 import './user-statistics.scss';
 
@@ -546,8 +546,8 @@ export {
     UserStatistics,
 };
 
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

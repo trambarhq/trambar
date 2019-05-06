@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as RoleFinder from 'objects/finders/role-finder';
-import * as UserFinder from 'objects/finders/user-finder';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
-import RoleFilterButton from 'widgets/role-filter-button';
+import RoleFilterButton from './role-filter-button.jsx';
 
 import './role-filter-bar.scss';
 
@@ -126,9 +126,9 @@ export {
     RoleFilterBarSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

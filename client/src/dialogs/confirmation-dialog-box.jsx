@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
 
 import './confirmation-dialog-box.scss';
 
@@ -75,7 +75,7 @@ export {
     ConfirmationDialogBox,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

@@ -2,8 +2,8 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
 // widgets
-import OptionButton from 'widgets/option-button';
-import TelephoneNumberDialogBox from 'dialogs/telephone-number-dialog-box';
+import OptionButton from '../widgets/option-button.jsx';
+import TelephoneNumberDialogBox from '../dialogs/telephone-number-dialog-box';
 
 import './user-view-options.scss';
 
@@ -310,7 +310,7 @@ export {
     UserViewOptions,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

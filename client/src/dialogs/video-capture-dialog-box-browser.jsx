@@ -5,13 +5,13 @@ import { AsyncComponent } from 'relaks';
 import RelaksMediaCapture from 'relaks-media-capture';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import LiveVideo from 'widgets/live-video';
-import DeviceSelector from 'widgets/device-selector';
-import DevicePlaceholder from 'widgets/device-placeholder';
-import DurationIndicator from 'widgets/duration-indicator';
-import VolumeIndicator from 'widgets/volume-indicator';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import LiveVideo from 'common/widgets/live-video.jsx';
+import DeviceSelector from '../widgets/device-selector.jsx';
+import DevicePlaceholder from '../widgets/device-placeholder.jsx';
+import DurationIndicator from '../widgets/duration-indicator.jsx';
+import VolumeIndicator from '../widgets/volume-indicator.jsx';
 
 import './video-capture-dialog-box-browser.scss';
 
@@ -443,8 +443,8 @@ export {
     VideoCaptureDialogBoxBrowserSync,
 };
 
-import Payloads from 'transport/payloads';
-import Environment from 'env/environment';
+import Payloads from 'common/transport/payloads.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

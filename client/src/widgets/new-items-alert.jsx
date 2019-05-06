@@ -139,7 +139,7 @@ export {
     NewItemsAlert,
 };
 
-import Route from 'routing/route';
+import Route from 'common/routing/route.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

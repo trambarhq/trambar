@@ -2,8 +2,8 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import DiagnosticsSection from 'widgets/diagnostics-section';
+import SettingsPanel from '../widgets/settings-panel.jsx';
+import DiagnosticsSection from '../widgets/diagnostics-section.jsx';
 
 import './indexed-db-cache-panel.scss';
 
@@ -58,7 +58,7 @@ export {
     IndexedDBCachePanel,
 };
 
-import IndexedDBCache from 'data/indexed-db-cache';
+import IndexedDBCache from 'common/data/indexed-db-cache.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

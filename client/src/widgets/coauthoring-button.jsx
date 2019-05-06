@@ -2,8 +2,8 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
 // widgets
-import HeaderButton from 'widgets/header-button';
-import UserSelectionDialogBox from 'dialogs/user-selection-dialog-box';
+import HeaderButton from './header-button.jsx';
+import UserSelectionDialogBox from '../dialogs/user-selection-dialog-box';
 
 import './coauthoring-button.scss';
 
@@ -126,9 +126,9 @@ export {
     CoauthoringButton,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

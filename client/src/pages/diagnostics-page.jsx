@@ -1,22 +1,22 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import IndexedDBCache from 'data/indexed-db-cache';
-import SQLIteCache from 'data/sqlite-cache';
-import WebsocketNotifier from 'transport/websocket-notifier';
-import PushNotifier from 'transport/push-notifier';
+import IndexedDBCache from 'common/data/indexed-db-cache.mjs';
+import SQLIteCache from 'common/data/sqlite-cache.mjs';
+import WebsocketNotifier from 'common/transport/websocket-notifier.mjs';
+import PushNotifier from 'common/transport/push-notifier.mjs';
 
 // widgets
-import PageContainer from 'widgets/page-container';
-import EnvironmentMonitorPanel from 'diagnostics/environment-monitor-panel';
-import RemoteDataSourcePanel from 'diagnostics/remote-data-source-panel';
-import IndexedDBCachePanel from 'diagnostics/indexed-db-cache-panel';
-import SQLiteCachePanel from 'diagnostics/sqlite-cache-panel';
-import LocaleManagerPanel from 'diagnostics/locale-manager-panel';
-import WebsocketNotifierPanel from 'diagnostics/websocket-notifier-panel';
-import PushNotifierPanel from 'diagnostics/push-notifier-panel';
-import PayloadManagerPanel from 'diagnostics/payload-manager-panel';
-import CodePushPanel from 'diagnostics/code-push-panel';
-import ErrorBoundary from 'widgets/error-boundary';
+import PageContainer from '../widgets/page-container.jsx';
+import EnvironmentMonitorPanel from '../diagnostics/environment-monitor-panel.jsx';
+import RemoteDataSourcePanel from '../diagnostics/remote-data-source-panel.jsx';
+import IndexedDBCachePanel from '../diagnostics/indexed-db-cache-panel.jsx';
+import SQLiteCachePanel from '../diagnostics/sqlite-cache-panel.jsx';
+import LocaleManagerPanel from '../diagnostics/locale-manager-panel.jsx';
+import WebsocketNotifierPanel from '../diagnostics/websocket-notifier-panel.jsx';
+import PushNotifierPanel from '../diagnostics/push-notifier-panel.jsx';
+import PayloadManagerPanel from '../diagnostics/payload-manager-panel.jsx';
+import CodePushPanel from '../diagnostics/code-push-panel.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './diagnostics-page.scss';
 
@@ -148,18 +148,18 @@ export {
     DiagnosticsPage,
 };
 
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
-import EnvironmentMonitor from 'env/environment-monitor';
+import EnvironmentMonitor from 'common/env/environment-monitor.mjs';
 import RouteManager from 'relaks-route-manager';
-import RemoteDataSource from 'data/remote-data-source';
-import PayloadManager from 'transport/payload-manager';
-import LocaleManager from 'locale/locale-manager';
-import Notifier from 'transport/notifier';
-import CodePush from 'transport/code-push';
+import RemoteDataSource from 'common/data/remote-data-source.mjs';
+import PayloadManager from 'common/transport/payload-manager.mjs';
+import LocaleManager from 'common/locale/locale-manager.mjs';
+import Notifier from 'common/transport/notifier.mjs';
+import CodePush from 'common/transport/code-push.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

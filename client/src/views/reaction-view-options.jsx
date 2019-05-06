@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
-import * as UserUtils from 'objects/utils/user-utils';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import PopUpMenu from 'widgets/pop-up-menu';
-import OptionButton from 'widgets/option-button';
+import PopUpMenu from '../widgets/pop-up-menu.jsx';
+import OptionButton from '../widgets/option-button.jsx';
 
 import './reaction-view-options.scss';
 
@@ -191,7 +191,7 @@ export {
     ReactionViewOptions,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

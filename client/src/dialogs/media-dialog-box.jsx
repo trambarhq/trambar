@@ -2,12 +2,12 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import Hammer from 'hammerjs';
-import * as ResourceUtils from 'objects/utils/resource-utils';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import ResourceView from 'widgets/resource-view';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import ResourceView from 'common/widgets/resource-view.jsx';
 
 import './media-dialog-box.scss';
 
@@ -428,7 +428,7 @@ export {
     MediaDialogBox,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

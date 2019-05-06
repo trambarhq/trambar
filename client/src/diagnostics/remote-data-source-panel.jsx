@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React, { Component } from 'react';
-import CodePush from 'transport/code-push';
+import CodePush from 'common/transport/code-push.mjs';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import DiagnosticsSection from 'widgets/diagnostics-section';
+import SettingsPanel from '../widgets/settings-panel.jsx';
+import DiagnosticsSection from '../widgets/diagnostics-section.jsx';
 
 import './remote-data-source-panel.scss';
 
@@ -144,7 +144,7 @@ export {
     RemoteDataSourcePanel as default,
 };
 
-import RemoteDataSource from 'data/remote-data-source';
+import RemoteDataSource from 'common/data/remote-data-source.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

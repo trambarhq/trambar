@@ -2,10 +2,10 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import ResourceView from 'widgets/resource-view';
-import Scrollable from 'widgets/scrollable';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import ResourceView from 'common/widgets/resource-view.jsx';
+import Scrollable from '../widgets/scrollable.jsx';
 
 import './project-description-dialog-box.scss';
 
@@ -97,7 +97,7 @@ export {
     ProjectDescriptionDialogBox,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

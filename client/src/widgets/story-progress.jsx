@@ -1,9 +1,9 @@
 import React from 'react';
 import Moment from 'moment';
-import * as StoryUtils from 'objects/utils/story-utils';
+import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
 
 // widgets
-import Time from 'widgets/time';
+import Time from './time.jsx';
 
 import './story-progress.scss';
 
@@ -65,7 +65,7 @@ export {
     StoryProgress,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

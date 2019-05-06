@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
-import { GitStoryTypes, StoryIcons } from 'objects/types/story-types';
+import { GitStoryTypes, StoryIcons } from 'common/objects/types/story-types.mjs';
 
 import './story-emblem.scss';
 
@@ -16,7 +16,7 @@ function StoryEmblem(props) {
     if (_.includes(tags, '#yippeekiyay')) {
         return (
             <div className="story-emblem die-hard">
-                <img src={require('explosion.gif')} />
+                <img src={require('../../assets/explosion.gif')} />
             </div>
         );
     }

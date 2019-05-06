@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
 
 /**
  * Component for generating and displaying a QR code.

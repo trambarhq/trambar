@@ -7,11 +7,10 @@
   "main": "index.js",
   "scripts": {
     "watch": "NODE_PATH=./node_modules:../common/node_modules webpack --watch",
-    "build": "webpack",
-    "dev": "webpack-dev-server --port 8088",
+    "build": "NODE_PATH=./node_modules:../common/node_modules webpack",
+    "dev": "NODE_PATH=./node_modules:../common/node_modules webpack-dev-server --port 8088",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "dependencies": {},
   "devDependencies": {
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.1",

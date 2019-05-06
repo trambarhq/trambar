@@ -2,8 +2,8 @@ import _ from 'lodash';
 import React, { PureComponent, Children } from 'react';
 import ReactDOM from 'react-dom';
 import ScrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
-import ComponentRefs from 'utils/component-refs';
-import TopLevelMouseTrap from 'utils/top-level-mouse-trap';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import TopLevelMouseTrap from 'common/utils/top-level-mouse-trap.mjs';
 
 import './pop-up-menu.scss';
 

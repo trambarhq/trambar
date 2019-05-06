@@ -3,10 +3,10 @@ import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 
 // widgets
-import MediaButton from 'widgets/media-button';
-import ImageEditor from 'editors/image-editor';
-import VideoEditor from 'editors/video-editor';
-import AudioEditor from 'editors/audio-editor';
+import MediaButton from '../widgets/media-button.jsx';
+import ImageEditor from '../editors/image-editor.jsx';
+import VideoEditor from '../editors/video-editor.jsx';
+import AudioEditor from '../editors/audio-editor.jsx';
 
 import './media-editor.scss';
 
@@ -263,8 +263,8 @@ export {
     MediaEditor,
 };
 
-import Environment from 'env/environment';
-import Payloads from 'transport/payloads';
+import Environment from 'common/env/environment.mjs';
+import Payloads from 'common/transport/payloads.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

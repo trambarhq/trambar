@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import ComponentRefs from 'utils/component-refs';
-import * as TagScanner from 'utils/tag-scanner';
-import * as StatisticsFinder from 'objects/finders/statistics-finder';
-import * as UserFinder from 'objects/finders/user-finder';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as TagScanner from 'common/utils/tag-scanner.mjs';
+import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 import './search-bar.scss';
 
@@ -395,9 +395,9 @@ export {
     SearchBarSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

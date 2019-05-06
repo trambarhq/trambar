@@ -1,32 +1,32 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
-import FrontEndCore from 'front-end-core';
-import { routes } from 'routing';
-import CORSRewriter from 'routing/cors-rewriter';
-import SchemaRewriter from 'routing/schema-rewriter';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as ProjectLinkFinder from 'objects/finders/project-link-finder';
-import TopLevelMouseTrap from 'utils/top-level-mouse-trap';
-import { codePushDeploymentKeys } from 'keys';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import FrontEndCore from 'common/front-end-core.mjs';
+import { routes } from './routing.mjs';
+import CORSRewriter from 'common/routing/cors-rewriter.mjs';
+import SchemaRewriter from 'common/routing/schema-rewriter.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.mjs';
+import TopLevelMouseTrap from 'common/utils/top-level-mouse-trap.mjs';
+import { codePushDeploymentKeys } from './keys.mjs';
 
 // non-visual components
-import Database from 'data/database';
-import Route from 'routing/route';
-import Payloads from 'transport/payloads';
-import Locale from 'locale/locale';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Locale from 'common/locale/locale.mjs';
+import Environment from 'common/env/environment.mjs';
 
 // widgets
-import TopNavigation from 'widgets/top-navigation';
-import BottomNavigation from 'widgets/bottom-navigation';
-import UploadProgress from 'widgets/upload-progress';
-import NotificationView from 'views/notification-view';
-import ErrorBoundary from 'widgets/error-boundary';
-import Time from 'widgets/time';
+import TopNavigation from './widgets/top-navigation.jsx';
+import BottomNavigation from './widgets/bottom-navigation.jsx';
+import UploadProgress from 'common/widgets/upload-progress.jsx';
+import NotificationView from './views/notification-view.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
+import Time from './widgets/time.jsx';
 
-import 'utils/lodash-extra';
-import 'front-end.scss';
+import 'common/utils/lodash-extra.mjs';
+import './front-end.scss';
 import 'font-awesome-webpack';
 
 const widthDefinitions = {
@@ -562,18 +562,18 @@ import 'react-dom';
 import 'relaks';
 
 // pull in all widgets for the same reason
-require.context('widgets', true);
+require.context('./widgets', true);
 
 // pull in shims
-require.context('shims', true);
+require.context('./shims', true);
 
-import EnvironmentMonitor from 'env/environment-monitor';
+import EnvironmentMonitor from 'common/env/environment-monitor.mjs';
 import RouteManager from 'relaks-route-manager';
-import RemoteDataSource from 'data/remote-data-source';
-import PayloadManager from 'transport/payload-manager';
-import LocaleManager from 'locale/locale-manager';
-import Notifier from 'transport/notifier';
-import CodePush from 'transport/code-push';
+import RemoteDataSource from 'common/data/remote-data-source.mjs';
+import PayloadManager from 'common/transport/payload-manager.mjs';
+import LocaleManager from 'common/locale/locale-manager.mjs';
+import Notifier from 'common/transport/notifier.mjs';
+import CodePush from 'common/transport/code-push.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

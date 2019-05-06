@@ -1,13 +1,13 @@
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import * as UniversalLink from 'routing/universal-link';
-import * as DeviceFinder from 'objects/finders/device-finder';
-import * as UserFinder from 'objects/finders/user-finder';
+import * as UniversalLink from 'common/routing/universal-link.mjs';
+import * as DeviceFinder from 'common/objects/finders/device-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import QRCode from 'widgets/qr-code';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import QRCode from '../widgets/qr-code.jsx';
 
 import './mobile-setup-dialog-box.scss';
 
@@ -160,8 +160,8 @@ export {
     MobileSetupDialogBox,
 };
 
-import Database from 'data/database';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

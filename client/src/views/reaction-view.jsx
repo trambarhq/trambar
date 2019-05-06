@@ -1,21 +1,21 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as Markdown from 'utils/markdown';
-import * as PlainText from 'utils/plain-text';
-import { memoizeWeak } from 'utils/memoize';
-import ComponentRefs from 'utils/component-refs';
-import * as ExternalDataUtils from 'objects/utils/external-data-utils';
-import * as UserUtils from 'objects/utils/user-utils';
-import * as RepoUtils from 'objects/utils/repo-utils';
-import * as ResourceUtils from 'objects/utils/resource-utils';
+import * as Markdown from 'common/utils/markdown.mjs';
+import * as PlainText from 'common/utils/plain-text.mjs';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
 // widgets
-import ProfileImage from 'widgets/profile-image';
-import MediaView from 'views/media-view';
-import MediaDialogBox from 'dialogs/media-dialog-box';
-import ReactionProgress from 'widgets/reaction-progress';
-import Time from 'widgets/time';
-import ReactionViewOptions from 'views/reaction-view-options';
+import ProfileImage from '../widgets/profile-image.jsx';
+import MediaView from '../views/media-view.jsx';
+import MediaDialogBox from '../dialogs/media-dialog-box';
+import ReactionProgress from '../widgets/reaction-progress.jsx';
+import Time from '../widgets/time.jsx';
+import ReactionViewOptions from '../views/reaction-view-options.jsx';
 
 import './reaction-view.scss';
 
@@ -551,9 +551,9 @@ export {
     ReactionView,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

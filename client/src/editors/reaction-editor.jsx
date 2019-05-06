@@ -1,23 +1,23 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
-import { memoizeWeak } from 'utils/memoize';
-import ComponentRefs from 'utils/component-refs';
-import * as TagScanner from 'utils/tag-scanner';
-import * as Markdown from 'utils/markdown';
-import * as FocusManager from 'utils/focus-manager';
-import * as ReactionUtils from 'objects/utils/reaction-utils';
-import * as ResourceUtils from 'objects/utils/resource-utils';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as TagScanner from 'common/utils/tag-scanner.mjs';
+import * as Markdown from 'common/utils/markdown.mjs';
+import * as FocusManager from 'common/utils/focus-manager.mjs';
+import * as ReactionUtils from 'common/objects/utils/reaction-utils.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
 // widgets
-import AutosizeTextArea from 'widgets/autosize-text-area';
-import PushButton from 'widgets/push-button';
-import HeaderButton from 'widgets/header-button';
-import ProfileImage from 'widgets/profile-image';
-import DropZone from 'widgets/drop-zone';
-import ReactionMediaToolbar from 'widgets/reaction-media-toolbar';
-import MediaEditor from 'editors/media-editor';
-import MediaImporter from 'editors/media-importer';
+import AutosizeTextArea from 'common/widgets/autosize-text-area.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import HeaderButton from '../widgets/header-button.jsx';
+import ProfileImage from '../widgets/profile-image.jsx';
+import DropZone from '../widgets/drop-zone.jsx';
+import ReactionMediaToolbar from '../widgets/reaction-media-toolbar.jsx';
+import MediaEditor from '../editors/media-editor.jsx';
+import MediaImporter from '../editors/media-importer.jsx';
 
 import './reaction-editor.scss';
 
@@ -594,10 +594,10 @@ export {
     ReactionEditor,
 };
 
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

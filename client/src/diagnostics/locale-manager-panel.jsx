@@ -2,8 +2,8 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import DiagnosticsSection from 'widgets/diagnostics-section';
+import SettingsPanel from '../widgets/settings-panel.jsx';
+import DiagnosticsSection from '../widgets/diagnostics-section.jsx';
 
 import './locale-manager-panel.scss';
 
@@ -55,7 +55,7 @@ export {
     LocaleManagerPanel
 };
 
-import LocaleManager from 'locale/locale-manager';
+import LocaleManager from 'common/locale/locale-manager.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

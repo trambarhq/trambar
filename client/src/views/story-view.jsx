@@ -1,26 +1,26 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import { memoizeWeak } from 'utils/memoize';
-import ComponentRefs from 'utils/component-refs';
-import * as FocusManager from 'utils/focus-manager';
-import * as ExternalDataUtils from 'objects/utils/external-data-utils';
-import * as IssueUtils from 'objects/utils/issue-utils';
-import * as StoryUtils from 'objects/utils/story-utils';
-import * as RandomToken from 'utils/random-token';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as FocusManager from 'common/utils/focus-manager.mjs';
+import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
+import * as IssueUtils from 'common/objects/utils/issue-utils.mjs';
+import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
+import * as RandomToken from 'common/utils/random-token.mjs';
 
 // widgets
-import ProfileImage from 'widgets/profile-image';
-import AuthorNames from 'widgets/author-names';
-import StoryProgress from 'widgets/story-progress';
-import StoryEmblem from 'widgets/story-emblem';
-import Scrollable from 'widgets/scrollable';
-import ReactionToolbar from 'widgets/reaction-toolbar';
-import ReactionList from 'lists/reaction-list';
-import HeaderButton from 'widgets/header-button';
-import StoryContents from 'views/story-contents';
-import StoryViewOptions from 'views/story-view-options';
-import CornerPopUp from 'widgets/corner-pop-up';
+import ProfileImage from '../widgets/profile-image.jsx';
+import AuthorNames from '../widgets/author-names.jsx';
+import StoryProgress from '../widgets/story-progress.jsx';
+import StoryEmblem from '../widgets/story-emblem.jsx';
+import Scrollable from '../widgets/scrollable.jsx';
+import ReactionToolbar from '../widgets/reaction-toolbar.jsx';
+import ReactionList from '../lists/reaction-list.jsx';
+import HeaderButton from '../widgets/header-button.jsx';
+import StoryContents from '../views/story-contents.jsx';
+import StoryViewOptions from '../views/story-view-options.jsx';
+import CornerPopUp from '../widgets/corner-pop-up.jsx';
 
 import './story-view.scss';
 
@@ -954,10 +954,10 @@ export {
     StoryView,
 };
 
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

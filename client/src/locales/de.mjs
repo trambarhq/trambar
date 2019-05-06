@@ -1,7 +1,7 @@
 import 'moment/locale/de';
 import 'moment/locale/de-at';
 import 'moment/locale/de-ch';
-import { cardinal, list } from 'locale/grammars/german';
+import { cardinal, list } from 'common/locale/grammars/german.mjs';
 
 const phrases = {
     'action-contact-by-email': 'Per E-Mail kontaktieren',

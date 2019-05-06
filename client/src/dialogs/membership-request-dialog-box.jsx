@@ -1,13 +1,13 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import * as UserUtils from 'objects/utils/user-utils';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import ResourceView from 'widgets/resource-view';
-import Scrollable from 'widgets/scrollable';
-import CollapsibleContainer from 'widgets/collapsible-container';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import ResourceView from 'common/widgets/resource-view.jsx';
+import Scrollable from '../widgets/scrollable.jsx';
+import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
 
 import './membership-request-dialog-box.scss';
 
@@ -241,7 +241,7 @@ export {
     MembershipRequestDialogBox,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

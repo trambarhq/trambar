@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import React from 'react';
-import * as UserUtils from 'objects/utils/user-utils';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import MultipleUserNames from 'widgets/multiple-user-names';
+import MultipleUserNames from './multiple-user-names.jsx';
 
 import './author-names.scss';
 
@@ -47,7 +47,7 @@ export {
     AuthorNames,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

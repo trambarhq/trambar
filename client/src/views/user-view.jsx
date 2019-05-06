@@ -1,18 +1,18 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import ComponentRefs from 'utils/component-refs';
-import * as TagScanner from 'utils/tag-scanner';
-import * as UserUtils from 'objects/utils/user-utils';
+import ComponentRefs from 'common/utils/component-refs.mjs';
+import * as TagScanner from 'common/utils/tag-scanner.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import ProfileImage from 'widgets/profile-image';
-import ChartToolbar from 'widgets/chart-toolbar';
-import HeaderButton from 'widgets/header-button';
-import UserActivityList from 'lists/user-activity-list';
-import UserStatistics from 'views/user-statistics';
-import UserViewOptions from 'views/user-view-options';
-import UserList from 'lists/user-list';
-import CornerPopUp from 'widgets/corner-pop-up';
+import ProfileImage from '../widgets/profile-image.jsx';
+import ChartToolbar from '../widgets/chart-toolbar.jsx';
+import HeaderButton from '../widgets/header-button.jsx';
+import UserActivityList from '../lists/user-activity-list.jsx';
+import UserStatistics from '../views/user-statistics.jsx';
+import UserViewOptions from '../views/user-view-options.jsx';
+import UserList from '../lists/user-list.jsx';
+import CornerPopUp from '../widgets/corner-pop-up.jsx';
 
 import './user-view.scss';
 
@@ -523,9 +523,9 @@ export {
     UserView,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

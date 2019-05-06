@@ -5,15 +5,11 @@ var Webpack = require('webpack');
 
 // plugins
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var CommonsChunkPlugin = Webpack.optimize.CommonsChunkPlugin;
 var NamedChunksPlugin = Webpack.NamedChunksPlugin;
-var NamedModulesPlugin = Webpack.NamedModulesPlugin;
 var ContextReplacementPlugin = Webpack.ContextReplacementPlugin;
 var DefinePlugin = Webpack.DefinePlugin;
-var SourceMapDevToolPlugin = Webpack.SourceMapDevToolPlugin;
-var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-var ExtractTextPlugin = require("extract-text-webpack-plugin");
+var MiniCSSExtractPlugin = require('mini-css-extract-plugin');
 
 var event = 'build';
 var platform = 'browser';
@@ -45,16 +41,17 @@ if (platform === 'cordova') {
 }
 
 var folders = _.mapValues({
-    src: 'src',
-    www: targetFolder,
+    context: 'src',
+    output: 'www',
     assets: 'assets',
-    includes: [ 'src', 'assets', '../common/src', '../common/assets', '../common/node_modules', 'node_modules' ],
-    loaders: [ 'node_modules', '../common/node_modules' ],
+    commonCode: '../common/src',
+    commonAssets: '../common/assets',
+    modules: [ 'node_modules', '../common/node_modules' ],
 }, resolve);
 if (event !== 'start') {
-    console.log(`Output folder: ${folders.www}`);
-    if (FS.lstatSync(folders.www).isSymbolicLink()) {
-        var actualFolder = FS.readlinkSync(folders.www);
+    console.log(`Output folder: ${folders.output}`);
+    if (FS.lstatSync(folders.output).isSymbolicLink()) {
+        var actualFolder = FS.readlinkSync(folders.output);
         console.log(`Actual output folder: ${actualFolder}`);
     }
 }
@@ -72,7 +69,7 @@ _.each(env, (value, name) => {
 });
 
 // get list of external libraries
-var code = FS.readFileSync(`${folders.src}/libraries.js`, { encoding: 'utf8'});
+var code = FS.readFileSync(`${folders.context}/libraries.mjs`, { encoding: 'utf8'});
 var libraries = [];
 var re = /webpackChunkName:\s*"(.+)"/ig, m;
 while (m = re.exec(code)) {
@@ -80,26 +77,33 @@ while (m = re.exec(code)) {
 }
 
 module.exports = {
-    context: folders.src,
-    entry: './main',
+    mode: env.NODE_ENV,
+    context: folders.context,
+    entry: './main.mjs',
     output: {
-        path: folders.www,
+        path: folders.output,
         filename: '[name].js?[hash]',
         chunkFilename: '[name].js?[chunkhash]',
     },
     resolve: {
-        extensions: [ '.js', '.jsx' ],
-        modules: folders.includes,
+        extensions: [ '.js', '.jsx', '.mjs' ],
+        modules: folders.modules,
+        alias: {
+            'common': folders.commonCode,
+            'common-assets': folders.commonAssets,
+            'context': folders.context,
+        }
     },
     resolveLoader: {
-        modules: folders.loaders,
+        modules: folders.modules,
     },
     module: {
         rules: [
             {
-                test: /.jsx?$/,
+                test: /\.(js|jsx|mjs)$/,
                 loader: 'babel-loader',
                 exclude: /node_modules/,
+                type: 'javascript/auto',
                 query: {
                     presets: [
                         'env',
@@ -116,33 +120,18 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                use: ExtractTextPlugin.extract({
-                    fallback: 'style-loader',
-                    use: 'css-loader',
-                }),
+                use: [
+                    MiniCSSExtractPlugin.loader,
+                    'css-loader',
+                ],
             },
             {
                 test: /\.scss$/,
-                use: ExtractTextPlugin.extract({
-                    fallback: 'style-loader',
-                    use: [
-                        'css-loader',
-                        {
-                            loader: 'postcss-loader',
-                            options: {
-                                config: {
-                                    path: resolve('postcss.config.js'),
-                                },
-                            }
-                        },
-                        {
-                            loader: 'sass-loader',
-                            options: {
-                                includePaths: [ resolve('../common/node_modules') ]
-                            }
-                        }
-                    ],
-                }),
+                use: [
+                    MiniCSSExtractPlugin.loader,
+                    'css-loader',
+                    'sass-loader'
+                ],
             },
             {
                 test: /\.md$/,
@@ -192,31 +181,21 @@ module.exports = {
         new DefinePlugin(constants),
         new HtmlWebpackPlugin({
             template: `${folders.assets}/${platform}.html`,
-            filename: `${folders.www}/index.html`,
+            filename: `${folders.output}/index.html`,
             version: env.VERSION,
         }),
-        new ExtractTextPlugin({
-            filename: 'styles.css?[hash]',
-            allChunks: true,
-        }),
-        // pull library code out of app chunk and into their own files
-        ... _.map(libraries, (lib) => {
-            return new CommonsChunkPlugin({
-                async: lib,
-                chunks: [ 'app', lib ],
-            });
+        new MiniCSSExtractPlugin({
+            filename: "[name].css?[hash]",
+            chunkFilename: "[id].css?[hash]"
         }),
         new NamedChunksPlugin,
-        new NamedModulesPlugin,
-        new SourceMapDevToolPlugin({
-            filename: '[file].map',
-        }),
         new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
         new BundleAnalyzerPlugin({
             analyzerMode: (event === 'build') ? 'static' : 'disabled',
             reportFilename: `../report.html`,
         }),
     ],
+    devtool: (event === 'build') ? 'source-map' : 'inline-source-map',
     devServer: {
         inline: true,
         historyApiFallback: {
@@ -225,12 +204,6 @@ module.exports = {
         publicPath: '/'
     }
 };
-
-if (event === 'build') {
-    // use Uglify to remove dead-code
-    console.log('Optimizing JS code');
-    module.exports.plugins.unshift(new UglifyJSPlugin());
-}
 
 function readJSON(path) {
     var text = FS.readFileSync(path);

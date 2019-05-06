@@ -2,14 +2,14 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as NotificationFinder from 'objects/finders/notification-finder';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as NotificationFinder from 'common/objects/finders/notification-finder.mjs';
 
 // widgets
-import PageContainer from 'widgets/page-container';
-import NotificationList from 'lists/notification-list';
-import LoadingAnimation from 'widgets/loading-animation';
-import EmptyMessage from 'widgets/empty-message';
+import PageContainer from '../widgets/page-container.jsx';
+import NotificationList from '../lists/notification-list.jsx';
+import LoadingAnimation from '../widgets/loading-animation.jsx';
+import EmptyMessage from '../widgets/empty-message.jsx';
 
 import './notifications-page.scss';
 
@@ -135,9 +135,9 @@ export {
     NotificationsPageSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

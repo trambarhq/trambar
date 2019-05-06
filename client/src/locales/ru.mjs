@@ -4,7 +4,7 @@ import {
     list,
     genderize,
     pastTenseEnding,
-} from 'locale/grammars/russian';
+} from 'common/locale/grammars/russian.mjs';
 
 let phrases = {
     'action-contact-by-email': 'Связаться по электронной почте',

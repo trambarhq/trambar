@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import NotificationTypes, { AdminNotificationTypes } from 'objects/types/notification-types';
-import * as UserUtils from 'objects/utils/user-utils';
+import NotificationTypes, { AdminNotificationTypes } from 'common/objects/types/notification-types.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import OptionButton from 'widgets/option-button';
+import SettingsPanel from '../widgets/settings-panel.jsx';
+import OptionButton from '../widgets/option-button.jsx';
 
 import './web-alert-panel.scss';
 
@@ -149,7 +149,7 @@ export {
     WebAlertPanel,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

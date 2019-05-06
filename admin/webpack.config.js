@@ -8,7 +8,6 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 var NamedChunksPlugin = Webpack.NamedChunksPlugin;
 var ContextReplacementPlugin = Webpack.ContextReplacementPlugin;
 var DefinePlugin = Webpack.DefinePlugin;
-var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var MiniCSSExtractPlugin = require('mini-css-extract-plugin');
 
@@ -23,8 +22,7 @@ var folders = _.mapValues({
     assets: 'assets',
     commonCode: '../common/src',
     commonAssets: '../common/assets',
-    includes: [ '../common/node_modules', 'node_modules' ],
-    loaders: [ 'node_modules', '../common/node_modules' ],
+    modules: [ 'node_modules', '../common/node_modules' ],
 }, resolve);
 if (event !== 'start') {
     console.log(`Output folder: ${folders.output}`);
@@ -65,7 +63,7 @@ module.exports = {
     },
     resolve: {
         extensions: [ '.js', '.jsx', '.mjs' ],
-        modules: folders.includes,
+        modules: folders.modules,
         alias: {
             'common': folders.commonCode,
             'common-assets': folders.commonAssets,
@@ -73,7 +71,7 @@ module.exports = {
         }
     },
     resolveLoader: {
-        modules: folders.loaders,
+        modules: folders.modules,
     },
     module: {
         rules: [

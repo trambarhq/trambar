@@ -2,17 +2,17 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as StoryFinder from 'objects/finders/story-finder';
-import * as ProjectUtils from 'objects/utils/project-utils';
-import * as TagScanner from 'utils/tag-scanner';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as StoryFinder from 'common/objects/finders/story-finder.mjs';
+import * as ProjectUtils from 'common/objects/utils/project-utils.mjs';
+import * as TagScanner from 'common/utils/tag-scanner.mjs';
 
 // widgets
-import PageContainer from 'widgets/page-container';
-import StoryList from 'lists/story-list';
-import LoadingAnimation from 'widgets/loading-animation';
-import EmptyMessage from 'widgets/empty-message';
+import PageContainer from '../widgets/page-container.jsx';
+import StoryList from '../lists/story-list.jsx';
+import LoadingAnimation from '../widgets/loading-animation.jsx';
+import EmptyMessage from '../widgets/empty-message.jsx';
 
 import './news-page.scss';
 
@@ -253,10 +253,10 @@ export {
     NewsPageSync
 };
 
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

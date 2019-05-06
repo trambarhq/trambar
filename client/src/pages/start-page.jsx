@@ -2,27 +2,27 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import HTTPRequest from 'transport/http-request';
-import { memoizeWeak } from 'utils/memoize';
-import * as UniversalLink from 'routing/universal-link';
-import * as ProjectFinder from 'objects/finders/project-finder';
-import * as ProjectLinkFinder from 'objects/finders/project-link-finder';
-import * as ResourceUtils from 'objects/utils/resource-utils';
-import * as SystemFinder from 'objects/finders/system-finder';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as UserUtils from 'objects/utils/user-utils';
+import HTTPRequest from 'common/transport/http-request.mjs';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as UniversalLink from 'common/routing/universal-link.mjs';
+import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
+import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import Logo from 'trambar-logo.svg';
-import Scrollable from 'widgets/scrollable';
-import PushButton from 'widgets/push-button';
-import ProfileImage from 'widgets/profile-image';
-import ResourceView from 'widgets/resource-view';
-import MembershipRequestDialogBox from 'dialogs/membership-request-dialog-box';
-import QRScannerDialogBox from 'dialogs/qr-scanner-dialog-box';
-import ActivationDialogBox from 'dialogs/activation-dialog-box';
-import LoadingAnimation from 'widgets/loading-animation';
-import EmptyMessage from 'widgets/empty-message';
+import Logo from '../../assets/trambar-logo.svg';
+import Scrollable from '../widgets/scrollable.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import ProfileImage from '../widgets/profile-image.jsx';
+import ResourceView from 'common/widgets/resource-view.jsx';
+import MembershipRequestDialogBox from '../dialogs/membership-request-dialog-box.jsx';
+import QRScannerDialogBox from '../dialogs/qr-scanner-dialog-box.jsx';
+import ActivationDialogBox from '../dialogs/activation-dialog-box.jsx';
+import LoadingAnimation from '../widgets/loading-animation.jsx';
+import EmptyMessage from '../widgets/empty-message.jsx';
 
 import './start-page.scss';
 
@@ -1145,9 +1145,9 @@ export {
     StartPageSync,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

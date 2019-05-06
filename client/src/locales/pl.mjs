@@ -6,7 +6,7 @@ import {
     gender,
     genderize,
     pastTenseEnding,
-} from 'locale/grammars/polish';
+} from 'common/locale/grammars/polish.mjs';
 
 const phrases = {
     'action-contact-by-email': 'Skontaktuj się przez e-mail',

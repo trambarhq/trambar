@@ -2,19 +2,19 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import * as MediaLoader from 'media/media-loader';
-import * as MediaTagReader from 'media/media-tag-reader';
-import * as QuickStart from 'media/quick-start';
-import * as BlobReader from 'transport/blob-reader';
-import ResourceTypes from 'objects/types/resource-types';
+import * as MediaLoader from 'common/media/media-loader.mjs';
+import * as MediaTagReader from 'common/media/media-tag-reader.mjs';
+import * as QuickStart from 'common/media/quick-start.mjs';
+import * as BlobReader from 'common/transport/blob-reader.mjs';
+import ResourceTypes from 'common/objects/types/resource-types.mjs';
 
 // widgets
-import PhotoCaptureDialogBoxBrowser from 'dialogs/photo-capture-dialog-box-browser';
-import PhotoCaptureDialogBoxCordova from 'dialogs/photo-capture-dialog-box-cordova';
-import AudioCaptureDialogBoxBrowser from 'dialogs/audio-capture-dialog-box-browser';
-import AudioCaptureDialogBoxCordova from 'dialogs/audio-capture-dialog-box-cordova';
-import VideoCaptureDialogBoxBrowser from 'dialogs/video-capture-dialog-box-browser';
-import VideoCaptureDialogBoxCordova from 'dialogs/video-capture-dialog-box-cordova';
+import PhotoCaptureDialogBoxBrowser from '../dialogs/photo-capture-dialog-box-browser.jsx';
+import PhotoCaptureDialogBoxCordova from '../dialogs/photo-capture-dialog-box-cordova.jsx';
+import AudioCaptureDialogBoxBrowser from '../dialogs/audio-capture-dialog-box-browser.jsx';
+import AudioCaptureDialogBoxCordova from '../dialogs/audio-capture-dialog-box-cordova.jsx';
+import VideoCaptureDialogBoxBrowser from '../dialogs/video-capture-dialog-box-browser.jsx';
+import VideoCaptureDialogBoxCordova from '../dialogs/video-capture-dialog-box-cordova.jsx';
 
 const USE_STREAM = true;
 
@@ -626,8 +626,8 @@ export {
     MediaImporter,
 };
 
-import Environment from 'env/environment';
-import Payloads from 'transport/payloads';
+import Environment from 'common/env/environment.mjs';
+import Payloads from 'common/transport/payloads.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

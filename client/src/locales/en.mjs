@@ -3,7 +3,7 @@ import 'moment/locale/en-ca';
 import 'moment/locale/en-gb';
 import 'moment/locale/en-ie';
 import 'moment/locale/en-nz';
-import { cardinal, list } from 'locale/grammars/english';
+import { cardinal, list } from 'common/locale/grammars/english.mjs';
 
 function chooseVariant(countryCode) {
     let freedomLoving;

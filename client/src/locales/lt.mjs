@@ -1,7 +1,7 @@
 import 'moment/locale/lt';
 import {
     cardinal,
-} from 'locale/grammars/lithuanian';
+} from 'common/locale/grammars/lithuanian.mjs';
 
 const phrases = {
     'action-contact-by-email': 'Susisiekti e-paštu',

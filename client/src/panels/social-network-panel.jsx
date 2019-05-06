@@ -2,9 +2,9 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import PushButton from 'widgets/push-button';
-import TextField from 'widgets/text-field';
+import SettingsPanel from '../widgets/settings-panel.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import TextField from '../widgets/text-field.jsx';
 
 import './social-network-panel.scss';
 
@@ -280,7 +280,7 @@ export {
     SocialNetworkPanel,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

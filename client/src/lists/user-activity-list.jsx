@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import Moment from 'moment';
 import React, { PureComponent } from 'react';
-import { memoizeWeak } from 'utils/memoize';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
 
 // widgets
-import ProfileImage from 'widgets/profile-image';
-import Time from 'widgets/time';
+import ProfileImage from '../widgets/profile-image.jsx';
+import Time from '../widgets/time.jsx';
 
 import './user-activity-list.scss';
 
@@ -161,8 +161,8 @@ export {
     UserActivityList,
 };
 
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

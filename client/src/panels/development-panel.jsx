@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import CodePush from 'transport/code-push';
+import CodePush from 'common/transport/code-push.mjs';
 
 // widgets
-import SettingsPanel from 'widgets/settings-panel';
-import PushButton from 'widgets/push-button';
-import OptionButton from 'widgets/option-button';
+import SettingsPanel from '../widgets/settings-panel.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import OptionButton from '../widgets/option-button.jsx';
 
 import './development-panel.scss';
 
@@ -227,8 +227,8 @@ export {
     DevelopmentPanel,
 };
 
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

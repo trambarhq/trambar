@@ -2,9 +2,9 @@ import React, { PureComponent } from 'react';
 import MarkGor from 'mark-gor/react';
 
 // widgets
-import Overlay from 'widgets/overlay';
-import PushButton from 'widgets/push-button';
-import ResourceView from 'widgets/resource-view';
+import Overlay from 'common/widgets/overlay.jsx';
+import PushButton from '../widgets/push-button.jsx';
+import ResourceView from 'common/widgets/resource-view.jsx';
 
 import './app-component-dialog-box.scss';
 
@@ -113,7 +113,7 @@ export {
     AppComponentDialogBox,
 };
 
-import Environment from 'env/environment';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

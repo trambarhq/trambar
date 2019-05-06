@@ -2,11 +2,11 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
 import Moment from 'moment';
-import * as StatisticsFinder from 'objects/finders/statistics-finder';
-import * as UserFinder from 'objects/finders/user-finder';
+import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
-import Calendar from 'widgets/calendar';
+import Calendar from './calendar.jsx';
 
 import './calendar-bar.scss';
 
@@ -131,9 +131,9 @@ export {
     CalendarBar,
 };
 
-import Database from 'data/database';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');

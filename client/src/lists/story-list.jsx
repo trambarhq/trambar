@@ -2,18 +2,18 @@ import _ from 'lodash';
 import Promise from 'bluebird';
 import React, { PureComponent } from 'react';
 import { AsyncComponent } from 'relaks';
-import { memoizeWeak } from 'utils/memoize';
-import * as UserFinder from 'objects/finders/user-finder';
-import * as RepoFinder from 'objects/finders/repo-finder';
-import * as BookmarkFinder from 'objects/finders/bookmark-finder';
-import * as ReactionFinder from 'objects/finders/reaction-finder';
+import { memoizeWeak } from 'common/utils/memoize.mjs';
+import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
+import * as BookmarkFinder from 'common/objects/finders/bookmark-finder.mjs';
+import * as ReactionFinder from 'common/objects/finders/reaction-finder.mjs';
 
 // widgets
-import SmartList from 'widgets/smart-list';
-import StoryView from 'views/story-view';
-import StoryEditor from 'editors/story-editor';
-import NewItemsAlert from 'widgets/new-items-alert';
-import ErrorBoundary from 'widgets/error-boundary';
+import SmartList from 'common/widgets/smart-list.jsx';
+import StoryView from '../views/story-view.jsx';
+import StoryEditor from '../editors/story-editor.jsx';
+import NewItemsAlert from '../widgets/new-items-alert.jsx';
+import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './story-list.scss';
 
@@ -480,10 +480,10 @@ export {
     StoryListSync,
 };
 
-import Database from 'data/database';
-import Payloads from 'transport/payloads';
-import Route from 'routing/route';
-import Environment from 'env/environment';
+import Database from 'common/data/database.mjs';
+import Payloads from 'common/transport/payloads.mjs';
+import Route from 'common/routing/route.mjs';
+import Environment from 'common/env/environment.mjs';
 
 if (process.env.NODE_ENV !== 'production') {
     const PropTypes = require('prop-types');
