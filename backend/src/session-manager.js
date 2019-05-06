@@ -8,7 +8,7 @@ import Crypto from 'crypto'; Bluebird.promisifyAll(Crypto);
 import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Moment from 'moment';
 import Request from 'request';
-import HtpasswdAuth from 'htpasswd-auth';
+import HtpasswdJS from 'htpasswd-js';
 import HTTPError from 'errors/http-error';
 import Database from 'database';
 import * as Shutdown from 'shutdown';
@@ -870,7 +870,7 @@ async function findHtpasswdRecord(username, password) {
     try {
         let htpasswdPath = process.env.HTPASSWD_PATH;
         let data = await FS.readFileAsync(htpasswdPath, 'utf-8');
-        let successful = await HtpasswdAuth.authenticate(username, password, data);
+        let successful = await HtpasswdJS.authenticate(username, password, data);
         if (successful !== true) {
             await Bluebird.delay(Math.random() * 1000);
             throw new HTTPError(401);
