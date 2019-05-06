@@ -93,13 +93,14 @@ class Database {
     async execute(sql, parameters) {
         await this.connect();
         try {
-            return this.client.query(sql, parameters);
+            let result = await this.client.query(sql, parameters);
+            return result;
         } catch (err) {
             if (err.message === 'Connection terminated') {
                 await this.connect();
                 return this.client.query(sql, parameters);
             } else {
-                logError(err);
+                logError(err, sql, parameters);
                 throw err;
             }
         }
@@ -378,7 +379,7 @@ Database.open = async function(exclusive) {
     return db;
 };
 
-function logError(err) {
+function logError(err, sql, parameters) {
     if (process.env.NODE_ENV !== 'production' && typeof(err.code) === 'string') {
         let programmingError;
         switch (err.code.substr(0, 2)) {
@@ -396,7 +397,7 @@ function logError(err) {
             console.log(sql);
             console.log('----------------------------------------');
             console.log('Parameters:');
-            console.log(parameters);
+            console.log(parameters || {});
             console.log('----------------------------------------');
         }
     }
