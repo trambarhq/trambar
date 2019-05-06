@@ -166,11 +166,19 @@ checkAuthorization.flags = 'SECURITY DEFINER';
  * @param  {Number} days
  */
 function extendAuthorization(token, days) {
+    var etime = new Date;
+    etime.setMilliseconds(0);
+    etime.setSeconds(0);
+    etime.setMinutes(0);
+    etime.setHours(etime.getHours() + days * 24);
+    if (days > 2) {
+        etime.setHours(0);
+    }
     var sql = `UPDATE "global"."session"
-               SET etime = NOW() + ($2 || ' day')::INTERVAL
+               SET etime = $2
                WHERE token = $1
                AND deleted = false`;
-    plv8.execute(sql, [ token, days ]);
+    plv8.execute(sql, [ token, etime.toISOString() ]);
 }
 extendAuthorization.args = 'token text, days int';
 extendAuthorization.ret = 'void';
