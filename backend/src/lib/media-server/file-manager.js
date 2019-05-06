@@ -3,6 +3,8 @@ import Bluebird from 'bluebird'
 import FS from 'fs'; Bluebird.promisifyAll(FS);
 import Request from 'request';
 import Crypto from 'crypto';
+import { PassThrough } from 'stream';
+import HTTPError from 'errors/http-error';
 
 /**
  * Save file to cache folder, using the MD5 hash of its content as name
@@ -92,16 +94,48 @@ async function hashFile(srcPath) {
  * @return {Promise<String>}
  */
 async function downloadFile(url, dstFolder) {
-    let tempPath = makeTempPath(dstFolder, url);
-    let writeStream = FS.createWriteStream(tempPath);
-    let readStream = Request.get(url);
-    await new Promise((resolve, reject) => {
-        writeStream.once('error', reject);
-        writeStream.once('finish', resolve);
-        readStream.once('error', reject);
-        readStream.pipe(writeStream);
+    let previousDownload = await recallDownload(url, dstFolder);
+    let headers = await getRetrievalHeaders(previousDownload, dstFolder);
+    let request = Request.get({ url, headers });
+    let passThru = new PassThrough;
+    let response = await new Promise((resolve, reject) => {
+        request.once('response', resolve);
+        request.once('error', reject);
+        request.pipe(passThru);
     });
-    return tempPath;
+    if (response.statusCode === 200) {
+        // stream contents into temp file
+        let tempPath = makeTempPath(dstFolder, url);
+        let tempFile = FS.createWriteStream(tempPath);
+        let tempFilePromise = new Promise((resolve, reject) => {
+            tempFile.once('finish', resolve);
+            tempFile.once('error', reject);
+        });
+        //  calculate the MD5 hash at the same time
+        let md5Hash = Crypto.createHash('md5');
+        let md5HashPromise = new Promise((resolve, reject) => {
+            md5Hash.once('readable', resolve);
+            md5Hash.once('error', reject);
+        });
+        passThru.pipe(md5Hash);
+        passThru.pipe(tempFile);
+        await Promise.all([ tempFilePromise, md5HashPromise ]);
+
+        // rename file to its MD5 hash
+        let hash = md5Hash.read().toString('hex');
+        let dstPath = `${dstFolder}/${hash}`;
+        await moveFile(tempPath, dstPath);
+        await rememberDownload(url, dstFolder, hash, response.headers);
+        return dstPath;
+    } else if (response.statusCode === 204) {
+        return null;
+    } else if (response.statusCode === 304) {
+        return previousDownload.path;
+    } else if (response.statusCode >= 400) {
+        throw new HTTPError(response.statusCode);
+    } else {
+        throw new HTTPError(500);
+    }
 }
 
 /**
@@ -111,22 +145,19 @@ async function downloadFile(url, dstFolder) {
  * @param  {String|undefined} url
  * @param  {String} dstFolder
  *
- * @return {Promise<String>}
+ * @return {Promise<String|null>}
  */
 async function preserveFile(file, url, dstFolder) {
-    let srcPath;
     if (file) {
-        srcPath = file.path;
+        let srcPath = file.path;
+        let hash = await hashFile(srcPath);
+        let dstPath = `${dstFolder}/${hash}`;
+        await moveFile(srcPath, dstPath);
+        return dstPath;
     } else if (url) {
-        srcPath = await downloadFile(url, dstFolder);
+        return downloadFile(url, dstFolder);
     }
-    if (!srcPath) {
-        return null;
-    }
-    let hash = await hashFile(srcPath);
-    let dstPath = `${dstFolder}/${hash}`;
-    await moveFile(srcPath, dstPath);
-    return dstPath;
+    return null;
 }
 
 /**
@@ -157,6 +188,87 @@ function makeTempPath(dstFolder, url, ext) {
         ext = '';
     }
     return `${dstFolder}/${hash}${ext}`;
+}
+
+/**
+ * Save information about a downloaded file
+ *
+ * @param  {String} url
+ * @param  {String} dstFolder
+ * @param  {String} hash
+ * @param  {Object<String>} headers
+ *
+ * @return {Promise}
+ */
+async function rememberDownload(url, dstFolder, hash, headers) {
+    try {
+        let etag = headers['etag'];
+        let mtime = headers['last-modified'];
+        let type = headers['content-type'];
+        let size = parseInt(headers['content-length']);
+        let info = { url, hash, type, size, etag, mtime };
+        let json = JSON.stringify(info, undefined, 2);
+        let folder = `${dstFolder}/.url`;
+        try {
+            await FS.statAsync(folder);
+        } catch (err) {
+            await FS.mkdirAsync(folder);
+        }
+        let urlHash = md5(url);
+        let path = `${dstFolder}/.url/${urlHash}`;
+        return FS.writeFileAsync(path, json);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+/**
+ * Retrieve saved information about a previous download (if any)
+ *
+ * @param  {String} url
+ * @param  {String} dstFolder
+ *
+ * @return {Promise<Object|undefined>}
+ */
+async function recallDownload(url, dstFolder) {
+    try {
+        let urlHash = md5(url);
+        let path = `${dstFolder}/.url/${urlHash}`;
+        let json = await FS.readFileAsync(path, 'utf-8');
+        let info = JSON.parse(json);
+        info.path = `${dstFolder}/${info.hash}`;
+
+        // verify that the file is there
+        if (info.size !== undefined) {
+            let stats = await FS.statAsync(info.path);
+            if (info.size !== stats.size) {
+                throw new Error('Size mismatch');
+            }
+        }
+        return info;
+    } catch (err) {
+    }
+}
+
+/**
+ * Return HTTP headers for conditional download
+ *
+ * @param  {Object} previousDownload
+ *
+ * @return {Object|undefined}
+ */
+function getRetrievalHeaders(previousDownload) {
+    if (previousDownload) {
+        if (previousDownload.etag) {
+            return {
+                'If-None-Match': previousDownload.etag
+            };
+        } else if (previousDownload.mtime) {
+            return {
+                'If-Modified-Since': previousDownload.mtime
+            };
+        }
+    }
 }
 
 export {
