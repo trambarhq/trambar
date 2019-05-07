@@ -97,7 +97,7 @@ async function loadText(folder, topic, lang) {
         }
         module = await import(`../instructions/${folder}/${topic}.en.md`);
     }
-    return module;
+    return module.default || '';
 }
 
 /**
