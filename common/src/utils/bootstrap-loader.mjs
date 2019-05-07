@@ -1,5 +1,4 @@
-async function load(importFuncs, progress) {
-    let modules = {};
+async function preload(importFuncs, progress) {
     let loaded = 0;
     let entries = Object.entries(importFuncs);
     for (let [ key, load ] of entries) {
@@ -7,8 +6,7 @@ async function load(importFuncs, progress) {
             progress(loaded, entries.length, key);
         }
         try {
-            let module = await load();
-            modules[key] = module;
+            await load();
             loaded++;
         } catch (err) {
             if (/Loading chunk/i.test(err.message)) {
@@ -28,9 +26,8 @@ async function load(importFuncs, progress) {
     if (progress) {
         progress(loaded, entries.length);
     }
-    return modules;
 }
 
 export {
-    load,
+    preload,
 };

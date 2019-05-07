@@ -5,9 +5,8 @@ var Webpack = require('webpack');
 
 // plugins
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var NamedChunksPlugin = Webpack.NamedChunksPlugin;
-var ContextReplacementPlugin = Webpack.ContextReplacementPlugin;
 var DefinePlugin = Webpack.DefinePlugin;
+var ContextReplacementPlugin = Webpack.ContextReplacementPlugin;
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var MiniCSSExtractPlugin = require('mini-css-extract-plugin');
 
@@ -45,12 +44,7 @@ _.each(env, (value, name) => {
 });
 
 // get list of external libraries
-var code = FS.readFileSync(`${folders.context}/libraries.mjs`, { encoding: 'utf8'});
-var libraries = [];
-var re = /webpackChunkName:\s*"(.+)"/ig, m;
-while (m = re.exec(code)) {
-    libraries.push(m[1]);
-}
+var libraries = parseLibraryList(`${folders.context}/libraries.mjs`);
 
 module.exports = {
     mode: env.NODE_ENV,
@@ -164,13 +158,24 @@ module.exports = {
             filename: "[name].css?[hash]",
             chunkFilename: "[id].css?[hash]"
         }),
-        new NamedChunksPlugin,
         new ContextReplacementPlugin(/moment[\/\\]locale$/, /zz/),
         new BundleAnalyzerPlugin({
             analyzerMode: (event === 'build') ? 'static' : 'disabled',
             reportFilename: `../report_admin.html`,
         }),
     ],
+    optimization: {
+        splitChunks: {
+            cacheGroups: _.mapValues(libraries, (modules, name) => {
+                return {
+                    test: new RegExp(`\\b${modules.join('|')}\\b`),
+                    name: name,
+                    chunks: 'all',
+                    enforce: true
+                };
+            }),
+        },
+    },
     devtool: (event === 'build') ? 'source-map' : 'inline-source-map',
     devServer: {
         inline: true,
@@ -198,29 +203,18 @@ function resolve(path) {
     }
 }
 
-function resolveBabel(type, module) {
-    if (module instanceof Array) {
-        module[0] = resolve(type, module[0]);
-        return module;
-    } else {
-        if (!/^[\w\-]+$/.test(module)) {
-            return module;
+function parseLibraryList(path) {
+    var code = FS.readFileSync(path, { encoding: 'utf8' });
+    var libraries = {};
+    var re1 = /'([^']+)':.*?{([^}]*)}/g, m1;
+    while (m1 = re1.exec(code)) {
+        var name = m1[1];
+        var re2 = /import\('(.*)'\)/g, m2;
+        var modules = [];
+        while (m2 = re2.exec(m1[2])) {
+            modules.push(m2[1]);
         }
-        return Path.resolve(`../common/node_modules/babel-${type}-${module}`);
+        libraries[name] = modules;
     }
+    return libraries;
 }
-
-module.exports.module.rules.forEach((rule) => {
-    if (rule.loader === 'babel-loader' && rule.query) {
-        if (rule.query.presets) {
-            rule.query.presets = rule.query.presets.map((preset) => {
-                return resolveBabel('preset', preset);
-            })
-        }
-        if (rule.query.plugins) {
-            rule.query.plugins = rule.query.plugins.map((plugin) => {
-                return resolveBabel('plugin', plugin);
-            })
-        }
-    }
-});

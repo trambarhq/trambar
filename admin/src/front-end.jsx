@@ -305,22 +305,6 @@ export {
     FrontEndCore,
 };
 
-// pull in modules here so they won't be placed in the JS files of the pages
-import 'chartist';
-import 'diff';
-import 'hammerjs';
-import 'mark-gor';
-import 'memoizee';
-import 'moment';
-import 'octicons';
-import 'sockjs-client';
-import 'react-dom';
-import 'relaks';
-
-// pull in all widgets and dialogs for the same reason
-require.context('./widgets', true);
-require.context('./dialogs', true);
-
 import EnvironmentMonitor from 'common/env/environment-monitor.mjs';
 import RouteManager from 'relaks-route-manager';
 import RemoteDataSource from 'common/data/remote-data-source.mjs';

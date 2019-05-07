@@ -1,30 +1,27 @@
-import * as BootstrapLoader from 'common/utils/bootstrap-loader.mjs';
+import { preload } from 'common/utils/bootstrap-loader.mjs';
 import libraries from './libraries.mjs';
 
 window.addEventListener('load', initialize);
 
 async function initialize(evt) {
-    let container = document.getElementById('react-container');
+    const loadFrontEnd = async () => {
+        return import('./front-end.jsx' /* webpackChunkName: "front-end" */);
+    };
+    await preload({ ...libraries, loadFrontEnd }, showProgress);
 
-    // load front-end code and support libraries
-    let importFuncs = {};
-    for (let key in libraries) {
-        importFuncs[key] = libraries[key];
-    }
-    importFuncs['front-end'] = () => import('./front-end.jsx' /* webpackChunkName: "front-end" */);
-    let modules = await BootstrapLoader.load(importFuncs, showProgress);
-    let { FrontEndCore, FrontEnd } = modules['front-end'];
-    let React = modules['react'];
-    let ReactDOM = modules['react-dom'];
-    let props = await FrontEndCore(FrontEnd.coreConfiguration);
-    let element = React.createElement(FrontEnd, props);
+    const React = await import('react');
+    const ReactDOM = await import('react-dom');
+    const { FrontEndCore, FrontEnd } = await loadFrontEnd();
+    const props = await FrontEndCore(FrontEnd.coreConfiguration);
+    const element = React.createElement(FrontEnd, props);
+    const container = document.getElementById('react-container');
     ReactDOM.render(element, container);
     hideSplashScreen();
 }
 
 function hideSplashScreen() {
-    let screen = document.getElementById('splash-screen');
-    let style = document.getElementById('splash-screen-style');
+    const screen = document.getElementById('splash-screen');
+    const style = document.getElementById('splash-screen-style');
     if (screen) {
         screen.className = 'transition-out';
         setTimeout(() => {
@@ -39,8 +36,9 @@ function hideSplashScreen() {
 }
 
 function showProgress(loaded, total) {
-    let progressBar = document.getElementById('bootstrap-progress-bar');
-    let progressBarFilled = document.getElementById('bootstrap-progress-bar-filled');
+    console.log(loaded + '/' + total)
+    const progressBar = document.getElementById('bootstrap-progress-bar');
+    const progressBarFilled = document.getElementById('bootstrap-progress-bar-filled');
 
     if (progressBar && progressBarFilled) {
         if (loaded < total) {
