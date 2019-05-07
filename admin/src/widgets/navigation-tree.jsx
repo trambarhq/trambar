@@ -37,28 +37,32 @@ class NavigationTree extends AsyncComponent {
             route,
             env,
         };
-        if (!db.authorized) {
-            return <NavigationTreeSync {...props} />;
+
+        render();
+        if (db.authorized) {
+            let currentUserID = await db.start();
+            let params = route.params;
+            if (typeof(params.projectID) === 'number') {
+                props.project = await ProjectFinder.findProject(db, params.projectID);
+            }
+            if (typeof(params.userID) === 'number') {
+                props.user = await UserFinder.findUser(db, params.userID);
+            }
+            if (typeof(params.roleID) === 'number') {
+                props.role = await RoleFinder.findRole(db, params.roleID);
+            }
+            if (typeof(params.repoID) === 'number') {
+                props.repo = await RepoFinder.findRepo(db, params.repoID);
+            }
+            if (typeof(params.serverID) === 'number') {
+                props.server = await ServerFinder.findServer(db, params.serverID);
+            }
+            render();
         }
-        meanwhile.show(<NavigationTreeSync {...props} />);
-        let currentUserID = await db.start();
-        let params = route.params;
-        if (typeof(params.projectID) === 'number') {
-            props.project = await ProjectFinder.findProject(db, params.projectID);
+
+        function render() {
+            meanwhile.show(<NavigationTreeSync {...props} />);
         }
-        if (typeof(params.userID) === 'number') {
-            props.user = await UserFinder.findUser(db, params.userID);
-        }
-        if (typeof(params.roleID) === 'number') {
-            props.role = await RoleFinder.findRole(db, params.roleID);
-        }
-        if (typeof(params.repoID) === 'number') {
-            props.repo = await RepoFinder.findRepo(db, params.repoID);
-        }
-        if (typeof(params.serverID) === 'number') {
-            props.server = await ServerFinder.findServer(db, params.serverID);
-        }
-        return <NavigationTreeSync {...props} />;
     }
 }
 
