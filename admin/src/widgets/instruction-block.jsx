@@ -25,14 +25,8 @@ class InstructionBlock extends AsyncComponent {
             hidden,
             env,
         };
-
-        render();
         props.contents = await loadMarkdown(folder, topic, languageCode);
-        render();
-
-        function render() {
-            meanwhile.show(<InstructionBlockSync {...props} />);
-        }
+        return <InstructionBlockSync {...props} />;
     }
 }
 
@@ -80,7 +74,7 @@ class InstructionBlockSync extends PureComponent {
  */
 async function loadMarkdown(folder, topic, lang) {
     let text = await loadText(folder, topic, lang);
-    let contents = MarkGor.parse(text || '');
+    let contents = MarkGor.parse(text);
     return loadImages(contents, folder);
 }
 
@@ -91,7 +85,7 @@ async function loadMarkdown(folder, topic, lang) {
  * @param  {String} topic
  * @param  {String} lang
  *
- * @return {Promise<String>}
+ * @return {Promise}
  */
 async function loadText(folder, topic, lang) {
     let module;
@@ -103,7 +97,7 @@ async function loadText(folder, topic, lang) {
         }
         module = await import(`../instructions/${folder}/${topic}.en.md`);
     }
-    return module.default || '';
+    return module;
 }
 
 /**
