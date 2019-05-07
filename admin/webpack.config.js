@@ -176,6 +176,11 @@ module.exports = {
             }),
         },
     },
+    stats: {
+        warningsFilter: (warning) => {
+            return /Conflicting order between/i.test(warning);
+        },
+    },
     devtool: (event === 'build') ? 'source-map' : 'inline-source-map',
     devServer: {
         inline: true,

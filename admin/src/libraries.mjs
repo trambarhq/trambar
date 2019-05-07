@@ -20,6 +20,9 @@ const libraries = {
     'moment': async () => {
         await import('moment');
     },
+    'octicons': async () => {
+        await import('octicons');
+    },
     'sockjs-client': async () => {
         await import('sockjs-client');
     },

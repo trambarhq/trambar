@@ -71,7 +71,7 @@ class PeoplePage extends AsyncComponent {
             env,
         };
         // wait for retrieval of fresh story listing on initial render
-        let freshListing = meanwhile.revising() ? false : true;
+        let freshListing = meanwhile.initial ? false : true;
         meanwhile.show(<PeoplePageSync {...props} />);
         let currentUserID = await db.start();
         props.currentUser = await UserFinder.findUser(db, currentUserID);

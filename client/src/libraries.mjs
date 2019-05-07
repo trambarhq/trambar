@@ -1,13 +1,37 @@
-module.exports = {
-    'bluebird': () => import('bluebird' /* webpackChunkName: "bluebird" */),
-    'chartist': () => import('chartist' /* webpackChunkName: "chartist" */),
-    'diff': () => import('diff' /* webpackChunkName: "diff" */),
-    'hammerjs': () => import('hammerjs' /* webpackChunkName: "hammerjs" */),
-    'lodash': () => import('lodash' /* webpackChunkName: "lodash" */),
-    'mark-gor': () => import('mark-gor' /* webpackChunkName: "mark-gor" */),
-    'moment': () => import('moment' /* webpackChunkName: "moment" */),
-    'sockjs-client': () => import('sockjs-client' /* webpackChunkName: "sockjs-client" */),
-    'react': () => import('react' /* webpackChunkName: "react" */),
-    'react-dom': () => import('react-dom' /* webpackChunkName: "react-dom" */),
-    'relaks': () => import('relaks' /* webpackChunkName: "relaks" */)
+const libraries = {
+    'bluebird': async () => {
+        await import('bluebird');
+    },
+    'chartist': async () => {
+        await import('chartist');
+    },
+    'diff': async () => {
+        await import('diff');
+    },
+    'hammerjs': async () => {
+        await import('hammerjs');
+    },
+    'lodash': async () => {
+        await import('lodash');
+    },
+    'mark-gor': async () => {
+        await import('mark-gor');
+    },
+    'moment': async () => {
+        await import('moment');
+    },
+    'octicons': async () => {
+        await import('octicons');
+    },
+    'sockjs-client': async () => {
+        await import('sockjs-client');
+    },
+    'react': async () => {
+        await import('react');
+        await import('react-dom');
+    },
+};
+
+export {
+    libraries as default
 };
