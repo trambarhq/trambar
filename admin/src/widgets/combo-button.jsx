@@ -153,7 +153,7 @@ class ComboButton extends PureComponent {
             this.setState({ selected: preselected });
         }
 
-        let appContainer = document.getElementById('app-container');
+        let appContainer = document.getElementById('react-container');
         if (!prevState.open && open) {
             appContainer.addEventListener('mousedown', this.handleBodyMouseDown);
         } else if (prevState.open && !open) {
