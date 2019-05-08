@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress, useSaveBuffer } from 'relaks';
-import { useAfterglow } from 'common/utils/custom-hooks.mjs';
+import { useAfterglow, useErrorHandling, useSortHandling, useEditToggle } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
@@ -30,38 +30,29 @@ async function ProjectListPage(props) {
     const { database, route, env, editing } = props;
     const { t, p, f } = env.locale;
     const [ show ] = useProgress();
-    const [ sort, setSort ] = useState({ columns: [ 'name' ], directions: [ 'asc' ] });
     const selection = useSaveBuffer({
         original: { restoring: [], archiving: [] },
         compare: _.isEqual,
     });
-    const [ problems, setProblems ] = useState({});
-    const fullList = useAfterglow(!!editing);
+    const fullList = useAfterglow(editing);
     const confirmation = useRef();
     const db = database.use({ schema: 'global', by: this });
 
-    const handleSort = useCallback((evt) => {
-        const { columns, direction } = evt;
-        setSort({ columns, direction });
+    const [ sort, handleSort ] = useSortHandling();
+    const [ problems, setProblems, setUnexpectedError ] = useErrorHandling();
+    const [ handleEditClick, handleCancelClick, handleAddClick ] = useEditToggle(route, {
+        page: 'project-summary-page',
+        params: { 'projectID': 'new' },
     });
-    const handleAddClick = useCallback((evt) => {
-        route.push('project-summary-page', { projectID: 'new' });
-    }, [ route ]);
-    const handleEditClick = useCallback((evt) => {
-        route.modify({ editing: true });
-    }, [ route ]);
-    const handleCancelClick = useCallback((evt) => {
-        route.modify({ editing: undefined });
-    }, [ route ]);
     const handleSaveClick = useCallback(async (evt) => {
         try {
             setProblems({});
             await saveSelection();
-            await route.modify({ editing: undefined });
+            handleCancelClick();
         } catch (err) {
-            saveUnexpectedError(err);
+            setUnexpectedError(err);
         }
-    }, [ saveSelection ]);
+    }, [ saveSelection, handleCancelClick ]);
     const handleRowClick = useCallback((evt) => {
         const projectID = parseInt(evt.currentTarget.getAttribute('data-project-id'));
         toggleProject(projectID);
@@ -138,12 +129,8 @@ async function ProjectListPage(props) {
         }
         return (
             <SortableTable {...tableProps}>
-                <thead>
-                    {renderHeadings()}
-                </thead>
-                <tbody>
-                    {renderRows()}
-                </tbody>
+                <thead>{renderHeadings()}</thead>
+                <tbody>{renderRows()}</tbody>
             </SortableTable>
         );
     }
@@ -185,16 +172,15 @@ async function ProjectListPage(props) {
             title = t('project-list-status-archived');
         }
         if (fullList) {
-            const { restoring, archiving } = selection.current;
-            if (project.deleted || project.archived) {
-                if (_.includes(restoring, project.id)) {
-                    classNames.push('selected');
-                }
-            } else {
+            const existing = !project.deleted && !project.archived;
+            if (existing) {
                 classNames.push('fixed');
-                if (!_.includes(archiving, project.id)) {
-                    classNames.push('selected');
-                }
+            }
+            const { restoring, archiving } = selection.current;
+            const keep = existing && !_.includes(archiving, project.id);
+            const add = !existing && _.includes(restoring, project.id);
+            if (add || keep) {
+                classNames.push('selected');
             }
             onClick = handleRowClick;
         }

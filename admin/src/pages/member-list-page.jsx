@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import Relaks, { useProgress, useSaveBuffer } from 'relaks';
-import { useAfterglow } from 'common/utils/custom-hooks.mjs';
+import { useAfterglow, useErrorHandling, useSortHandling, useEditToggle } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -29,50 +29,40 @@ async function MemberListPage(props) {
     const { database, route, env, projectID, editing } = props;
     const { t, p, f } = env.locale;
     const [ show ] = useProgress();
-    const [ sort, setSort ] = useState({ columns: [ 'name' ], directions: [ 'asc' ] });
     const selection = useSaveBuffer({
         original: { adding: [], removing: [] },
         compare: _.isEqual,
     });
-    const [ problems, setProblems ] = useState({});
-    const fullList = useAfterglow(!!editing);
+    const fullList = useAfterglow(editing);
     const db = database.use({ schema: 'global', by: this });
 
-    const handleSort = useCallback((evt) => {
-        const { columns, directions } = evt;
-        setSort({ columns, directions });
+    const [ sort, handleSort ] = useSortHandling();
+    const [ problems, setProblems, setUnexpectedError ] = useErrorHandling();
+    const [ handleEditClick, handleCancelClick, handleAddClick ] = useEditToggle(route, {
+        page: 'member-summary-page',
+        params: { userID: 'new' },
     });
-    const handleEditClick = useCallback((evt) => {
-        route.modify({ editing: true });
-    }, [ route ]);
-    const handleAddClick = useCallback((evt) => {
-        const params = _.assign({}, route.params, { userID: 'new' });
-        route.push('member-summary-page', params);
-    }, [ route ]);
-    const handleCancelClick = useCallback((evt) => {
-        route.modify({ editing: undefined });
-    }, [ route ]);
     const handleSaveClick = useCallback(async (evt) => {
         try {
+            setProblems({});
             await saveSelection();
-            await route.modify({ editing: undefined });
-            selection.reset();
+            handleCancelClick();
         } catch (err) {
-            saveUnexpectError(err);
+            setUnexpectedError(err);
         }
-    }, [ route, saveSelection ]);
+    }, [ saveSelection, handleCancelClick ]);
     const handleApproveClick = useCallback(async (evt) => {
         try {
             await updateMemberList();
         } catch (err) {
-            saveUnexpectError(err);
+            setUnexpectedError(err);
         }
     }, [ updateMemberList ]);
     const handleRejectClick = useCallback(async(evt) => {
         try {
             await rejectPendingUsers();
         } catch (err) {
-            saveUnexpectError(err);
+            setUnexpectedError(err);
         }
     }, [ rejectPendingUsers ]);
     const handleRowClick = useCallback((evt) => {
@@ -159,12 +149,8 @@ async function MemberListPage(props) {
         }
         return (
             <SortableTable {...tableProps}>
-                <thead>
-                    {renderHeadings()}
-                </thead>
-                <tbody>
-                    {renderRows()}
-                </tbody>
+                <thead>{renderHeadings()}</thead>
+                <tbody>{renderRows()}</tbody>
             </SortableTable>
         );
     }
@@ -212,19 +198,14 @@ async function MemberListPage(props) {
             }
         }
         if (fullList) {
-            const { adding, removing } = selection.current;
-            console.log({ adding, removing })
             if (existing || pending) {
                 classNames.push('fixed');
             }
-            if (existing) {
-                if (!_.includes(removing, user.id)) {
-                    classNames.push('selected');
-                }
-            } else {
-                if (_.includes(adding, user.id)) {
-                    classNames.push('selected');
-                }
+            const { adding, removing } = selection.current;
+            const keep = existing && _.includes(removing, repo.id);
+            const add = !existing && _.includes(adding, repo.id);
+            if (add || keep) {
+                classNames.push('selected');
             }
             onClick = handleRowClick;
         }
@@ -453,15 +434,14 @@ async function MemberListPage(props) {
     async function updateMemberList(adding, removing) {
         const userIDs = project.user_ids;
         const userIDsAfter = _.difference(_.union(userIDs, adding), removing);
-        const columns = { id: project.id, user_ids: userIDsAfter };
+        const existingUserIDs = _.map(users, 'id');
+        const columns = {
+            id: project.id,
+            user_ids: _.intersection(userIDsAfter, existingUserIDs)
+        };
         const currentUserID = await db.start();
         const projectAfter = await db.saveOne({ table: 'project' }, columns);
         return projectAfter;
-    }
-
-    function saveUnexpectError(err) {
-        const newProblems = { unexpected: err.message };
-        setProblems(newProblems);
     }
 }
 

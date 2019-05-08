@@ -21,6 +21,15 @@ MemberListPage.propTypes = {
 };
 ProjectListPage.propTypes = {
     editing: PropTypes.bool,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+RepoListPage.propTypes = {
+    editing: PropTypes.bool,
+    projectID: PropTypes.number.isRequired,
+
     database: PropTypes.instanceOf(Database).isRequired,
     route: PropTypes.instanceOf(Route).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,
