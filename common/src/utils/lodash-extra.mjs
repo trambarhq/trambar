@@ -4,6 +4,22 @@ let emptyObject = {};
 
 _.mixin({
     /**
+     * Add an item to an array if it's not there, remove it if it is there
+     *
+     * @param  {Array} array
+     * @param  {*} item
+     *
+     * @return {Array}
+     */
+    toggle: function(array, item) {
+        if (_.includes(array, item)) {
+            return _.without(array, item);
+        } else {
+            return _.concat(array, item);
+        }
+    },
+
+    /**
      * Clone objects along a path
      *
      * @param  {Object} srcObj

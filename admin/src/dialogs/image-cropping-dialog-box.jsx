@@ -1,161 +1,70 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { useSaveBuffer } from 'relaks';
 import * as ImageCropping from 'common/media/image-cropping.mjs';
 import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
 // widgets
-import Overlay from 'common/widgets/overlay.jsx';
-import PushButton from '../widgets/push-button.jsx';
-import ImageCropper from 'common/widgets/image-cropper.jsx';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ImageCropper } from 'common/widgets/image-cropper.jsx';
 
 import './image-cropping-dialog-box.scss';
 
 /**
  * Dialog box for cropping/resizing an image.
- *
- * @extends PureComponent
  */
-class ImageCroppingDialogBox extends PureComponent {
-    static displayName = 'ImageCroppingDialogBox';
+function ImageCroppingDialogBox(props) {
+    const { env, show, image, desiredWidth, desiredHeight } = props;
+    const { onCancel, onSelect } = props;
+    const { t } = env.locale;
+    const ratio = desiredWidth / desiredHeight;
+    const clippingRect = useSaveBuffer({
+        original: getDefault(image, ratio),
+        compare: _.isEqual,
+    });
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            clippingRect: {},
-            currentImage: null,
-            hasChanged: false,
-        };
-    }
-
-    static getDerivedStateFromProps(props, state) {
-        let { image, show } = props;
-        let { currentImage } = state;
-        if (show && image) {
-            if (image !== currentImage) {
-                let clippingRect = image.clip;
-                if (!clippingRect) {
-                    clippingRect = ImageCropping.centerSquare(image.width, image.height);
-                }
-                return {
-                    clippingRect,
-                    currentImage: image,
-                    hasChanged: false,
-                };
-            }
-        } else {
-            return {
-                clippingRect: {},
-                currentImage: null,
-                hasChanged: false,
-            };
+    const handleChange = useCallback((evt) => {
+        clippingRect.set(round(evt.rect));
+    });
+    const handleCancelClick = useCallback((evt) => {
+        if (onCancel) {
+            onCancel({});
         }
-        return null;
-    }
-
-    /**
-     * Change zoom level image by fractional amount
-     *
-     * @param  {Number} amount
-     */
-    zoom(amount) {
-        let rect = this.resizeClippingRect(amount);
-        this.setClippingRect(rect)
-    }
-
-    /**
-     * Return true if it's possible to zoom out
-     *
-     * @param  {Number} amount
-     *
-     * @return {Boolean}
-     */
-    canZoom(amount) {
-        let { clippingRect } = this.state;
-        let rect = this.resizeClippingRect(amount);
-        return !_.isEqual(rect, clippingRect);
-    }
-
-    /**
-     * Change the clipping rect
-     */
-    setClippingRect(rect) {
-        let { image } = this.props;
-        let clippingRect = _.mapValues(rect, (value) => {
-            return Math.round(value);
-        });
-        let hasChanged = true;
-        if (_.isEqual(clippingRect, image.rect)) {
-            hasChanged = false;
+        clippingRect.reset();
+    }, [ onCancel ]);
+    const handleSelectClick = useCallback((evt) => {
+        if (onSelect) {
+            onSelect({ clippingRect: clippingRect.current });
         }
-        this.setState({ clippingRect, hasChanged });
-    }
+    }, [ onSelect ]);
+    const handleZoomInClick = useCallback((evt) => {
+        const rect = resize(clippingRect.current, 0.9, ratio, image);
+        clippingRect.set(rect);
+    }, [ ratio, image ]);
+    const handleZoomOutClick = useCallback((evt) => {
+        const rect = resize(clippingRect.current, 1 / 0.9, ratio, image);
+        clippingRect.set(rect);
+    }, [ ratio, image ]);
 
-    /**
-     * Return a rectangle that's larger ro smaller than the current one
-     *
-     * @param  {Number} amount
-     *
-     * @return {Object}
-     */
-    resizeClippingRect(amount) {
-        let { image, desiredWidth, desiredHeight } = this.props;
-        let { clippingRect } = this.state;
-        let width = Math.round(clippingRect.width * amount);
-        let height = Math.round(clippingRect.height * amount);
-        let ratio = desiredWidth / desiredHeight;
-        if (width > image.width) {
-            width = image.width;
-            height = Math.round(width / ratio);
-        }
-        if (height > image.height) {
-            height = image.height;
-            width = Math.round(height * ratio);
-        }
-        let left = clippingRect.left - Math.round((width - clippingRect.width) / 2);
-        let top = clippingRect.top - Math.round((height - clippingRect.height) / 2);
-        if (left < 0) {
-            left = 0;
-        }
-        if (top < 0) {
-            top = 0;
-        }
-        return { left, top, width, height };
-    }
+    return (
+        <Overlay show={show}>
+            <div className="image-cropping-dialog-box">
+                {renderImage()}
+                {renderButtons()}
+            </div>
+        </Overlay>
+    );
 
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show } = this.props;
-        return (
-            <Overlay show={show}>
-                <div className="image-cropping-dialog-box">
-                    {this.renderImage()}
-                    {this.renderButtons()}
-                </div>
-            </Overlay>
-        );
-    }
-
-    /**
-     * Render image cropper
-     *
-     * @return {ReactElement}
-     */
-    renderImage() {
-        let { env, image, desiredWidth, desiredHeight } = this.props;
-        let { clippingRect } = this.state;
-        let url = ResourceUtils.getImageURL(image, { original: true }, env);
-        let props = {
+    function renderImage() {
+        const url = ResourceUtils.getImageURL(image, { original: true }, env);
+        const props = {
             url,
-            clippingRect,
+            clippingRect: clippingRect.current,
             vector: image.format === 'svg',
-            onChange: this.handleChange,
+            onChange: handleChange,
         };
-        let style = {
+        const style = {
             width: desiredWidth,
             height: desiredHeight,
         };
@@ -166,33 +75,25 @@ class ImageCroppingDialogBox extends PureComponent {
         );
     }
 
-    /**
-     * Render buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env } = this.props;
-        let { hasChanged } = this.state;
-        let { t } = env.locale;
-        let zoomOutProps = {
+    function renderButtons() {
+        const zoomOutProps = {
             className: 'zoom',
-            disabled: !this.canZoom(1 / 0.9),
-            onClick: this.handleZoomOutClick,
+            disabled: !canZoom(1 / 0.9),
+            onClick: handleZoomOutClick,
         };
-        let zoomInProps = {
+        const zoomInProps = {
             className: 'zoom',
-            disabled: !this.canZoom(0.9),
-            onClick: this.handleZoomInClick,
+            disabled: !canZoom(0.9),
+            onClick: handleZoomInClick,
         };
-        let cancelProps = {
+        const cancelProps = {
             className: 'cancel',
-            onClick: this.handleCancelClick,
+            onClick: handleCancelClick,
         };
-        let selectProps = {
+        const selectProps = {
             className: 'select',
-            disabled: !hasChanged,
-            onClick: this.handleSelectClick,
+            disabled: !clippingRect.changed,
+            onClick: handleSelectClick,
         };
         return (
             <div key="select" className="buttons">
@@ -209,83 +110,58 @@ class ImageCroppingDialogBox extends PureComponent {
         );
     }
 
-    /**
-     * Called when user moves the image or change the zoom
-     *
-     * @param  {Object} evt
-     */
-    handleChange = (evt) => {
-        this.setClippingRect(evt.rect);
+    function canZoom(amount) {
+        const rect = clippingRect.current;
+        const newRect = resize(rect, amount, ratio, image);
+        return !_.isEqual(rect, newRect);
     }
+}
 
-    /**
-     * Called when user clicks on cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        let { onCancel } = this.props;
-        if (onCancel) {
-            onCancel({
-                type: 'cancel',
-                target: this,
-            });
+function resize(rect, amount, ratio, image) {
+    let width = rect.width * amount;
+    let height = rect.height * amount;
+    if (image) {
+        if (width > image.width) {
+            width = image.width;
+            height = width / ratio;
+        }
+        if (height > image.height) {
+            height = image.height;
+            width = height * ratio;
         }
     }
+    let left = rect.left - (width - rect.width) / 2;
+    let top = rect.top - (height - rect.height) / 2;
+    if (left < 0) {
+        left = 0;
+    }
+    if (top < 0) {
+        top = 0;
+    }
+    return round({ left, top, width, height });
+}
 
-    /**
-     * Called when user clicks on OK button
-     *
-     * @param  {Event} evt
-     */
-    handleSelectClick = (evt) => {
-        let { onSelect } = this.props;
-        let { clippingRect } = this.state;
-        if (onSelect) {
-            onSelect({
-                type: 'select',
-                target: this,
-                clippingRect,
-            });
+function round(rect) {
+    return _.mapValues(rect, (value) => {
+        return Math.round(value);
+    });
+}
+
+function getDefault(image) {
+    let rect;
+    if (image) {
+        if (image.clip) {
+            rect = image.clip;
+        } else {
+            rect = ImageCropping.centerSquare(image.width, image.height);
         }
+    } else {
+        rect = ImageCropping.centerSquare(0, 0);
     }
-
-    /**
-     * Called when user clicks zoom in button
-     *
-     * @param  {Event} evt
-     */
-    handleZoomInClick = (evt) => {
-        this.zoom(0.9);
-    }
-
-    /**
-     * Called when user clicks zoom out button
-     *
-     * @param  {Event} evt
-     */
-    handleZoomOutClick = (evt) => {
-        this.zoom(1 / 0.9);
-    }
+    return round(rect);
 }
 
 export {
     ImageCroppingDialogBox as default,
     ImageCroppingDialogBox,
 };
-
-import Database from 'common/data/database.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ImageCroppingDialogBox.propTypes = {
-        image: PropTypes.object,
-        desiredWidth: PropTypes.number,
-        desiredHeight: PropTypes.number,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        onSelect: PropTypes.func,
-        onCancel: PropTypes.func,
-    };
-}

@@ -36,7 +36,6 @@ function hideSplashScreen() {
 }
 
 function showProgress(loaded, total) {
-    console.log(loaded + '/' + total)
     const progressBar = document.getElementById('bootstrap-progress-bar');
     const progressBarFilled = document.getElementById('bootstrap-progress-bar-filled');
 

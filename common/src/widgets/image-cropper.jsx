@@ -245,7 +245,9 @@ class ImageCropper extends PureComponent {
      * @param  {Event} evt
      */
     handleMouseMove = (evt) => {
-        evt.preventDefault();
+        if (evt.cancelable) {
+            evt.preventDefault();
+        }
 
         // just in case an event manages to slip through
         if (!this.dragStart) {
@@ -291,7 +293,9 @@ class ImageCropper extends PureComponent {
         let { hasFocus } = this.state;
         let { image, container } = this.components;
         let clippingRect = this.getClippingRect();
-        evt.preventDefault();
+        if (evt.cancelable) {
+            evt.preventDefault();
+        }
 
         if (!image || !container || !clippingRect) {
             return;

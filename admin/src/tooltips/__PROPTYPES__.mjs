@@ -2,7 +2,12 @@ import PropTypes from 'prop-types';
 import Route from 'common/routing/route.mjs';
 import Environment from 'common/env/environment.mjs';
 
-import { ActivityTooltip } from 'activity-tooltip';
+import { ActivityTooltip } from './activity-tooltip.jsx';
+import { ModifiedTimeTooltip } from './modified-time-tooltip.jsx';
+import { ProjectTooltip } from './project-tooltip.jsx';
+import { RepositoryTooltip } from './repository-tooltip.jsx';
+import { RoleTooltip } from './role-tooltip.jsx';
+import { UserTooltip } from './user-tooltip.jsx';
 
 ActivityTooltip.propTypes = {
     statistics: PropTypes.object,
