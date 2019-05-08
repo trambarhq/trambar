@@ -52,7 +52,7 @@ class Route {
 
     reanchor(params) {
         params = _.assign({}, this.params, params);
-        this.replace(this.name, params);
+        return this.replace(this.name, params);
     }
 
     keep(callback) {
@@ -64,6 +64,11 @@ class Route {
         if (index !== -1) {
             this.callbacks.splice(index, 1);
         }
+    }
+
+    async modify(params) {
+        params = _.assign({}, this.params, params);
+        return this.replace(this.name, params);
     }
 };
 
