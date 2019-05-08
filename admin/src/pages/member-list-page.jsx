@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import Moment from 'moment';
 import React, { useState, useCallback } from 'react';
 import Relaks, { useProgress, useSaveBuffer } from 'relaks';
+import { useAfterglow } from 'common/utils/custom-hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -34,8 +34,8 @@ async function MemberListPage(props) {
         original: { adding: [], removing: [] },
         compare: _.isEqual,
     });
-    const [ renderingFullList, setRenderingFullList ] = useState(false);
     const [ problems, setProblems ] = useState({});
+    const fullList = useAfterglow(!!editing);
     const db = database.use({ schema: 'global', by: this });
 
     const handleSort = useCallback((evt) => {
@@ -152,10 +152,10 @@ async function MemberListPage(props) {
             sortDirections: sort.directions,
             onSort: handleSort,
         };
-        if (renderingFullList) {
+        if (fullList) {
             tableProps.expandable = true;
             tableProps.selectable = true;
-            tableProps.expanded = editing;
+            tableProps.expanded = !!editing;
         }
         return (
             <SortableTable {...tableProps}>
@@ -186,7 +186,7 @@ async function MemberListPage(props) {
 
     function renderRows() {
         let visible;
-        if (renderingFullList) {
+        if (fullList) {
             // list all users when we're editing the list
             visible = users;
         } else {
@@ -211,16 +211,18 @@ async function MemberListPage(props) {
                 title = t('member-list-status-non-member');
             }
         }
-        if (renderingFullList) {
+        if (fullList) {
+            const { adding, removing } = selection.current;
+            console.log({ adding, removing })
             if (existing || pending) {
                 classNames.push('fixed');
             }
             if (existing) {
-                if (!_.includes(selection.removing, user.id)) {
+                if (!_.includes(removing, user.id)) {
                     classNames.push('selected');
                 }
             } else {
-                if (_.includes(selection.adding, user.id)) {
+                if (_.includes(adding, user.id)) {
                     classNames.push('selected');
                 }
             }
@@ -252,13 +254,17 @@ async function MemberListPage(props) {
         } else {
             const name = p(user.details.name);
             let url, badge;
-            if (renderingFullList) {
+            if (fullList) {
                 // compare against original list if the member will be added or removed
+                const { adding, removing } = selection.current;
                 const userIDs = _.get(project, 'user_ids', []);
-                const includedBefore = _.includes(userIDs, user.id);
-                const includedAfter = (includedBefore)
-                                    ? !_.includes(selection.removing, user.id)
-                                    : _.includes(selection.adding, user.id);
+                let includedBefore = _.includes(userIDs, user.id);
+                let includedAfter;
+                if (includedBefore) {
+                    includedAfter = !_.includes(removing, user.id);
+                } else {
+                    includedAfter = _.includes(adding, user.id);
+                }
                 if (includedBefore !== includedAfter) {
                     if (includedAfter) {
                         badge = <ActionBadge type="add" env={env} />;
@@ -268,8 +274,7 @@ async function MemberListPage(props) {
                 }
             } else {
                 // don't create the link when we're editing the list
-                const params = _.clone(route.params);
-                params.userID = user.id;
+                const params = _.assign({}, route.params, { userID: user.id });
                 url = route.find('member-summary-page', params);
             }
             const image = <ProfileImage user={user} env={env} />;
@@ -301,7 +306,7 @@ async function MemberListPage(props) {
         } else {
             const props = {
                 roles: findRoles(roles, user),
-                disabled: renderingFullList,
+                disabled: fullList,
                 route,
                 env,
             };
@@ -311,7 +316,7 @@ async function MemberListPage(props) {
 
     function renderEmailColumn(user) {
         let { env } = this.props;
-        let { renderingFullList } = this.state;
+        let { fullList } = this.state;
         let { t } = env.locale;
         if (!env.isWiderThan('wide')) {
             return null;
@@ -322,7 +327,7 @@ async function MemberListPage(props) {
             let contents = '-';
             let email = user.details.email;
             let url;
-            if (!renderingFullList && email) {
+            if (!fullList && email) {
                 url = `mailto:${email}`;
             }
             return <td><a href={url}>{email}</a></td>;
@@ -352,7 +357,7 @@ async function MemberListPage(props) {
         } else {
             const props = {
                 statistics: _.get(statistics, [ user.id, 'last_month' ]),
-                disabled: renderingFullList,
+                disabled: fullList,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -368,7 +373,7 @@ async function MemberListPage(props) {
         } else {
             const props = {
                 statistics: _.get(statistics, [ user.id, 'this_month' ]),
-                disabled: renderingFullList,
+                disabled: fullList,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -384,7 +389,7 @@ async function MemberListPage(props) {
         } else {
             const props = {
                 statistics: _.get(statistics, [ user.id, 'to_date' ]),
-                disabled: renderingFullList,
+                disabled: fullList,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -400,7 +405,7 @@ async function MemberListPage(props) {
         } else {
             const props = {
                 time: user.mtime,
-                disabled: renderingFullList,
+                disabled: fullList,
                 env,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
@@ -441,8 +446,8 @@ async function MemberListPage(props) {
             };
         });
         const currentUserID = await db.start();
-        const users = await db.save({ table: 'user' }, changes);
-        return users;
+        const usersAfter = await db.save({ table: 'user' }, changes);
+        return usersAfter;
     }
 
     async function updateMemberList(adding, removing) {

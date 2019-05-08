@@ -38,7 +38,7 @@ function RepositoryTooltip(props) {
     if (list.length > max) {
         list.splice(max);
         list.push(
-            <div className="ellipsis">
+            <div className="ellipsis" key={0}>
                 <i className="fa fa-ellipsis-v" />
             </div>
         );
