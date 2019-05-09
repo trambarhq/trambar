@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 
 import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
 
@@ -8,184 +8,151 @@ import './sortable-table.scss';
 /**
  * A table with clickable headers that changes how sorting is performed. The
  * table can expand to show additional rows.
- *
- * @extends PureComponent
  */
-class SortableTable extends PureComponent {
-    static displayName = 'SortableTable';
+function SortableTable(props) {
+    const { children, expandable, expanded, selectable, className, sortColumns, sortDirections, onSort, ...tableProps } = props;
+    const [ action, setAction ] = useState(null);
+    const [ transition, setTransition ] = useState(false);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            action: null,
-        };
-    }
+    useEffect(() => {
+        if (transition) {
+            setAction(expanded ? 'expanding' : 'collapsing');
+        }
+    }, [ expanded ])
+    useEffect(() => {
+        if (action) {
+            setAction(null);
+        }
+    }, [ action ])
+    useEffect(() => {
+        setTransition(true);
+    }, [])
 
-    componentWillReceiveProps(nextProps) {
-        let { expanded } = this.props;
-        if (nextProps.expanded !== expanded) {
-            if (nextProps.expanded) {
-                this.setState({ action: 'expanding' });
-            } else {
-                this.setState({ action: 'collapsing' });
-            }
-        }
-    }
-
-    render() {
-        let { children, expandable, expanded, selectable, className } = this.props;
-        let thead = findChild(children, 'thead');
-        let tbody = findChild(children, 'tbody');
-        if (thead) {
-            thead = this.highlightHeading(thead);
-        }
-        if (tbody && expanded != null) {
-            tbody = this.wrapUnselectedRows(tbody);
-        }
-        let tableProps = _.omit(this.props, [ 'sortColumns', 'sortDirections', 'expandable', 'selectable', 'expanded', 'onSort' ]);
-        tableProps.onClick = this.handleClick;
-        tableProps.className = 'sortable-table'
-        if (expandable) {
-            tableProps.className += ' expandable';
-            if (expanded) {
-                tableProps.className += ' expanded';
-            } else {
-                tableProps.className += ' collapsed';
-            }
-        }
-        if (selectable) {
-            tableProps.className += ' selectable';
-        }
-        if (className) {
-            tableProps.className += ' ' + className;
-        }
-        return (
-            <table ref="table" {...tableProps}>
-                {thead}
-                {tbody}
-            </table>
-        );
-    }
-
-    highlightHeading(thead) {
-        let { sortColumns, sortDirections } = this.props;
-        let sortColumn = _.get(sortColumns, 0);
-        let sortDirection = _.get(sortDirections, 0, 'asc');
-        let tr = findChild(thead.props.children, 'tr');
-        let children = React.Children.toArray(tr.props.children);
-        children = _.map(children, (child) => {
-            if (child.props.id === sortColumn) {
-                let className = child.props.className || '';
-                if (className) {
-                    className += ' ';
+    const handleClick = useCallback((evt) => {
+        const target = evt.target;
+        const th = findHeaderNode(evt.target);
+        if (th && onSort) {
+            const column = th.id;
+            let dir = 'asc';
+            const columns = _.slice(sortColumns);
+            const directions = _.slice(sortDirections);
+            const index = _.indexOf(sortColumns, column);
+            if (index !== -1) {
+                if (index === 0) {
+                    if (sortDirections[0] === 'asc') {
+                        dir = 'desc';
+                    }
                 }
-                className += sortDirection;
+                columns.splice(index, 1);
+                directions.splice(index, 1);
+            }
+            columns.unshift(column);
+            directions.unshift(dir);
+            onSort({ columns, directions });
+        }
+    }, [ sortColumns, sortDirections, onSort ]);
+
+    let thead = findChild(children, 'thead');
+    let tbody = findChild(children, 'tbody');
+    if (thead) {
+        thead = highlightHeading(thead);
+    }
+    if (tbody && expanded != null) {
+        tbody = wrapUnselectedRows(tbody);
+    }
+    const classNames = [ 'sortable-table' ];
+    if (expandable) {
+        classNames.push('expandable');
+        if (expanded) {
+            classNames.push('expanded');
+        } else {
+            classNames.push('collapsed');
+        }
+    }
+    if (selectable) {
+        classNames.push('selectable');
+    }
+    if (className) {
+        classNames.push(className);
+    }
+    tableProps.className = classNames.join(' ');
+    tableProps.onClick = handleClick;
+    return (
+        <table {...tableProps}>
+            {thead}
+            {tbody}
+        </table>
+    );
+
+    function highlightHeading(thead) {
+        const sortColumn = _.get(sortColumns, 0);
+        const sortDirection = _.get(sortDirections, 0, 'asc');
+        const tr = findChild(thead.props.children, 'tr');
+        const children = React.Children.toArray(tr.props.children);
+        const newChildren = _.map(children, (child) => {
+            if (child.props.id === sortColumn) {
+                const c = child.props.className || '';
+                const className = _.trim(`${c} ${sortDirection}`);
                 child = React.cloneElement(child, { className });
             }
             return child;
         });
-        tr = React.cloneElement(tr, {}, children);
-        thead = React.cloneElement(thead, {}, [ tr ]);
-        return thead;
+        const newTr = React.cloneElement(tr, {}, newChildren);
+        const newThead = React.cloneElement(thead, {}, [ newTr ]);
+        return newThead;
     }
 
-    wrapUnselectedRows(tbody) {
-        let { expanded } = this.props;
-        let { action, cellHeights } = this.state;
+    function wrapUnselectedRows(tbody) {
         // not using React.Children.toArray() on the rows, as that
         // leads to new keys and messes up CSS transition
-        let trs = tbody.props.children;
-        trs = _.map(trs, (tr, i) => {
+        const trs = tbody.props.children;
+        const newTrs = _.map(trs, (tr, i) => {
             if (!tr) {
                 return null;
             }
             if (/\bfixed\b/.test(tr.props.className)) {
                 return tr;
             }
-            let tds = React.Children.toArray(tr.props.children);
-            let open;
-            let className = tr.props.className;
+            const tds = React.Children.toArray(tr.props.children);
+            const c = tr.props.className;
+            let open = expanded;
             if (action === 'expanding') {
                 // render in the closed state at start of transition
                 open = false;
             } else if (action === 'collapsing') {
                 // render in the open state at start of transition
                 open = true;
-            } else {
-                open = expanded;
             }
-            if (className) {
-                className += ' ';
-            } else {
-                className = '';
-            }
-            className += (open) ? 'expanded' : 'collapsed';
-            tds = _.map(tds, (td, j) => {
-                let container = (
+            const state = (open) ? 'expanded' : 'collapsed';
+            const className = _.trim(`${c} ${state}`);
+            const newTds = _.map(tds, (td, j) => {
+                const container = (
                     <CollapsibleContainer open={open}>
                         {td.props.children}
                     </CollapsibleContainer>
                 );
                 return React.cloneElement(td, {}, container);
             });
-            return React.cloneElement(tr, { className }, tds);
+            return React.cloneElement(tr, { className }, newTds);
         });
-        tbody = React.cloneElement(tbody, {}, trs);
-        return tbody;
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        let { action } = this.state;
-        if (action) {
-            // clear the action and redraw, giving componentDidUpdate() of
-            // CollapsibleContainer a chance to capture the height of its
-            // contents first
-            setImmediate(() => {
-                this.setState({ action: null });
-            });
-        }
-    }
-
-    handleClick = (evt) => {
-        let { sortColumns, sortDirections, onSort } = this.props;
-        let target = evt.target;
-        for (let n = evt.target; n && n.tagName !== 'TABLE'; n = n.parentNode) {
-            if (n.tagName === 'TH') {
-                let column = n.id;
-                if (!column) {
-                    return;
-                }
-                let dir = 'asc';
-                sortColumns = _.slice(sortColumns);
-                sortDirections = _.slice(sortDirections);
-                let index = _.indexOf(sortColumns, column);
-                if (index !== -1) {
-                    if (index === 0) {
-                        if (sortDirections[0] === 'asc') {
-                            dir = 'desc';
-                        }
-                    }
-                    sortColumns.splice(index, 1);
-                    sortDirections.splice(index, 1);
-                }
-                sortColumns.unshift(column);
-                sortDirections.unshift(dir);
-                if (onSort) {
-                    onSort({
-                        type: 'sort',
-                        target: this,
-                        columns: sortColumns,
-                        directions: sortDirections,
-                    });
-                }
-            }
-        }
+        const newTbody = React.cloneElement(tbody, {}, newTrs);
+        return newTbody;
     }
 }
 
 function findChild(children, tagName) {
     children = React.Children.toArray(children);
     return _.find(children, { type: tagName });
+}
+
+function findHeaderNode(node) {
+    for (let n = node; n && n.tagName !== 'TABLE'; n = n.parentNode) {
+        if (n.tagName === 'TH') {
+            if (n.id) {
+                return n;
+            }
+        }
+    }
 }
 
 function TH(props) {
@@ -198,21 +165,10 @@ function TH(props) {
     );
 }
 
+const component = React.memo(SortableTable);
+
 export {
-    SortableTable as default,
-    SortableTable,
+    component as default,
+    component as SortableTable,
     TH,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    SortableTable.propTypes = {
-        sortColumns: PropTypes.arrayOf(PropTypes.string).isRequired,
-        sortDirections: PropTypes.arrayOf(PropTypes.oneOf([ 'asc', 'desc' ])),
-        expanded: PropTypes.bool,
-        expandable: PropTypes.bool,
-        selectable: PropTypes.bool,
-        onSort: PropTypes.func,
-    };
-}

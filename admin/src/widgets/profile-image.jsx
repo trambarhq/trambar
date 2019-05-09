@@ -44,15 +44,3 @@ export {
     ProfileImage as default,
     ProfileImage,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ProfileImage.propTypes = {
-        user: PropTypes.object,
-        size: PropTypes.oneOf([ 'small', 'large' ]),
-        env: PropTypes.instanceOf(Environment),
-    };
-}

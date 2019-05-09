@@ -10,6 +10,8 @@ import { ImageSelector } from './image-selector.jsx';
 import { InputError } from './input-error.jsx';
 import { InstructionBlock } from './instruction-block.jsx';
 
+import { ProfileImage } from './profile-image.jsx';
+
 import { TextField } from './text-field.jsx';
 import { UnexpectedError } from './unexpected-error.jsx';
 
@@ -52,6 +54,35 @@ InstructionBlock.propTypes = {
     topic: PropTypes.string.isRequired,
     hidden: PropTypes.bool,
     env: PropTypes.instanceOf(Environment).isRequired,
+};
+
+OptionList.propTypes = {
+    readOnly: PropTypes.bool,
+    onOptionClick: PropTypes.func,
+};
+ProfileImage.propTypes = {
+    user: PropTypes.object,
+    size: PropTypes.oneOf([ 'small', 'large' ]),
+    env: PropTypes.instanceOf(Environment),
+};
+SideNavigation.propTypes = {
+    disabled: PropTypes.bool,
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+SignOffMenu.propTypes = {
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+SortableTable.propTypes = {
+    sortColumns: PropTypes.arrayOf(PropTypes.string).isRequired,
+    sortDirections: PropTypes.arrayOf(PropTypes.oneOf([ 'asc', 'desc' ])),
+    expanded: PropTypes.bool,
+    expandable: PropTypes.bool,
+    selectable: PropTypes.bool,
+    onSort: PropTypes.func,
 };
 
 TaskList.propTypes = {

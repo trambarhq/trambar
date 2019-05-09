@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 // widgets
 import NavigationTree from './navigation-tree.jsx';
@@ -12,101 +12,68 @@ import './side-navigation.scss';
 /**
  * The left-side of the user interface, containg the navigation tree, language
  * selection menus, and the sign-off button.
- *
- * @extends PureComponent
  */
-class SideNavigation extends PureComponent {
-    static displayName = 'SideNavigation';
+function SideNavigation(props) {
+    const { database, route, env, disabled } = props;
+    const { t, languageCode, directory, countryCode } = env.locale;
+    const [ ready, setReady ] = useState(false);
+    const selectedLanguage = _.find(directory, { code: languageCode });
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            ready: false
-        };
+    const handleLanguageClick = useCallback((evt) => {
+        const code = evt.currentTarget.getAttribute('data-code');
+        const language = _.find(directory, { code });
+        const localeCode = `${language.code}-${language.defaultCountry}`;
+        return env.locale.change(localeCode);
+    }, [ env ]);
+    const handleCountryClick = useCallback((evt) => {
+        const code = evt.currentTarget.getAttribute('data-code');
+        const localeCode = `${selectedLanguage.code}-${code}`;
+        return env.locale.change(localeCode);
+    });
+
+    useEffect(() => {
+        setTimeout(() => { setReady(true) }, 100);
+    }, []);
+
+    const classNames = [ 'side-navigation' ];
+    if (!ready) {
+        classNames.push('hidden');
+    }
+    return (
+        <nav className={classNames.join(' ')}>
+            <ErrorBoundary env={env}>
+                {renderHeader()}
+                {renderNavTree()}
+                {renderBottomButtons()}
+            </ErrorBoundary>
+        </nav>
+    );
+
+    function renderNavTree() {
+        return <NavigationTree {...props} />;
     }
 
-    /**
-     * Return language object from directory
-     *
-     * @param  {String} code
-     *
-     * @return {Object}
-     */
-    getLanguage(code) {
-        let { env } = this.props;
-        let { languageCode, directory } = env.locale;
-        if (!code) {
-            code = languageCode;
-        }
-        return _.find(directory, { code });
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { env } = this.props;
-        let { ready } = this.state;
-        let className = 'side-navigation';
-        if (!ready) {
-            className += ' hidden';
-        }
-        return (
-            <nav className={className}>
-                <ErrorBoundary env={env}>
-                    {this.renderHeader()}
-                    {this.renderNavTree()}
-                    {this.renderBottomButtons()}
-                </ErrorBoundary>
-            </nav>
-        );
-    }
-
-    /**
-     * Render navigation tree
-     *
-     * @return {ReactElement}
-     */
-    renderNavTree() {
-        return <NavigationTree {...this.props} />;
-    }
-
-    /**
-     * Render language and user button
-     *
-     * @return {ReactElement}
-     */
-    renderBottomButtons() {
+    function renderBottomButtons() {
         return (
             <div className="bottom-buttons">
-                {this.renderLanguageButton()}
-                {this.renderCountryButton()}
-                {this.renderUserButton()}
+                {renderLanguageButton()}
+                {renderCountryButton()}
+                {renderUserButton()}
             </div>
         );
     }
 
-    /**
-     * Render language button
-     *
-     * @return {ReactElement}
-     */
-    renderLanguageButton() {
-        let { env } = this.props;
-        let { languageCode, directory } = env.locale;
-        let selected = this.getLanguage();
-        let languages = _.filter(directory, (language) => {
+    function renderLanguageButton() {
+        const languages = _.filter(directory, (language) => {
             return !!language.module;
         });
-        let items = _.map(languages, (language, i) => {
-            let props = {
+        const items = _.map(languages, (language, i) => {
+            const props = {
                 className: 'item',
                 'data-code': language.code,
-                onClick: this.handleLanguageClick,
+                onClick: handleLanguageClick,
             };
-            if (language === selected) {
+            if (language === selectedLanguage) {
                 props.className += ' selected';
                 props.onClick = null;
             }
@@ -122,7 +89,7 @@ class SideNavigation extends PureComponent {
                     <inline>
                         <i className="fa fa-language" />
                         {' '}
-                        {selected.name}
+                        {selectedLanguage.name}
                     </inline>
                     <window>
                         {items}
@@ -132,29 +99,19 @@ class SideNavigation extends PureComponent {
         );
     }
 
-    /**
-     * Render country button
-     *
-     * @return {ReactElement}
-     */
-    renderCountryButton() {
-        let { env } = this.props;
-        let { countryCode } = env.locale;
-        let selected = this.getLanguage();
-        if (_.size(selected.countries) <= 1) {
+    function renderCountryButton() {
+        if (_.size(selectedLanguage.countries) <= 1) {
             return null;
         }
-        if (!countryCode) {
-            countryCode = selected.defaultCountry;
-        }
-        let countryName = selected.countries[countryCode];
-        let items = _.map(selected.countries, (name, code) => {
-            let props = {
+        const selected = countryCode || selectedLanguage.defaultCountry;
+        const countryName = selectedLanguage.countries[selected];
+        const items = _.map(selectedLanguage.countries, (name, code) => {
+            const props = {
                 className: 'item',
                 'data-code': code,
-                onClick: this.handleCountryClick,
+                onClick: handleCountryClick,
             };
-            if (code === countryCode) {
+            if (code === selected) {
                 props.className += ' selected';
                 props.onClick = null;
             }
@@ -178,19 +135,8 @@ class SideNavigation extends PureComponent {
         );
     }
 
-    /**
-     * Render user button
-     *
-     * @return {ReactElement}
-     */
-    renderUserButton() {
-        let { database, route, env, disabled } = this.props;
-        let { t } = env.locale;
-        let menuProps = {
-            database,
-            route,
-            env,
-        };
+    function renderUserButton() {
+        const menuProps = { database, route, env };
         return (
             <div className="button user">
                 <Tooltip upward leftward disabled={disabled}>
@@ -205,39 +151,17 @@ class SideNavigation extends PureComponent {
         )
     }
 
-    /**
-     * Render logo and app name
-     *
-     * @return {ReactElement}
-     */
-    renderHeader() {
-        return (
-            <header>
-                {this.renderLogo()}
-                {this.renderAppName()}
-            </header>
-        );
+    function renderHeader() {
+        return <header>{renderLogo()}{renderAppName()}</header>;
     }
 
-    /**
-     * Render app name
-     *
-     * @return {ReactElement}
-     */
-    renderAppName() {
-        let { env } = this.props;
-        let { t } = env.locale;
+    function renderAppName() {
         return (
             <h2 className="app-name">{t('app-name')}</h2>
         );
     }
 
-    /**
-     * Render logo
-     *
-     * @return {ReactElement}
-     */
-    renderLogo() {
+    function renderLogo() {
         return (
             <svg className="logo" xmlns="http://www.w3.org/2000/svg" viewBox="1000 1000 5080 6299" preserveAspectRatio="xMidYMid" style={{ strokeLinejoin: 'round', strokeWidth: 30 }}>
               <defs className="ClipPathGroup">
@@ -271,41 +195,6 @@ class SideNavigation extends PureComponent {
             </svg>
         );
     }
-
-    /**
-     * Initiate transition on mount
-     */
-    componentDidMount() {
-        setTimeout(() => {
-            this.setState({ ready: true });
-        }, 100);
-    }
-
-    /**
-     * Called when user select a language
-     *
-     * @param  {Event} evt
-     */
-    handleLanguageClick = (evt) => {
-        let { env } = this.props;
-        let code = evt.currentTarget.getAttribute('data-code');
-        let language = this.getLanguage(code);
-        let localeCode = `${language.code}-${language.defaultCountry}`;
-        return env.locale.change(localeCode);
-    }
-
-    /**
-     * Called when user select a country
-     *
-     * @param  {Event} evt
-     */
-    handleCountryClick = (evt) => {
-        let { env } = this.props;
-        let code = evt.currentTarget.getAttribute('data-code');
-        let language = this.getLanguage();
-        let localeCode = `${language.code}-${code}`;
-        return env.locale.change(localeCode);
-    }
 }
 
 SideNavigation.defaultProps = {
@@ -316,18 +205,3 @@ export {
     SideNavigation as default,
     SideNavigation,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    SideNavigation.propTypes = {
-        disabled: PropTypes.bool,
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}
