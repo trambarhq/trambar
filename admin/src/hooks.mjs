@@ -37,8 +37,8 @@ function useErrorHandling() {
 function useSortHandling() {
     const [ sort, setSort ] = useState({ columns: [ 'name' ], directions: [ 'asc' ] });
     const handleSort = useCallback((evt) => {
-        const { columns, direction } = evt;
-        setSort({ columns, direction });
+        const { columns, directions } = evt;
+        setSort({ columns, directions });
     });
     return [ sort, handleSort ];
 }

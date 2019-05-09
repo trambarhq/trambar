@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress, useSaveBuffer } from 'relaks';
-import { useAfterglow, useErrorHandling, useSortHandling, useEditToggle } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditToggle, useErrorHandling } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -28,11 +28,7 @@ async function RepoListPage(props) {
     const { database, route, env, projectID, editing } = props;
     const { t, p, f } = env.locale;
     const [ show ] = useProgress();
-    const selection = useSaveBuffer({
-        original: { adding: [], removing: [] },
-        compare: _.isEqual,
-    });
-    const fullList = useAfterglow(editing);
+    const selection = useSelectionBuffer(editing);
     const confirmation = useRef();
     const db = database.use({ schema: 'global', by: this });
 
@@ -50,17 +46,18 @@ async function RepoListPage(props) {
     }, [ saveSelection, handleCancelClick ]);
     const handleRowClick = useCallback((evt) => {
         const repoID = parseInt(evt.currentTarget.getAttribute('data-repo-id'));
-        toggleRepo(repoID);
-    }, [ toggleRepo ]);
+        selection.toggle(repoID);
+    });
 
     render();
     const currentUserID = await db.start();
     const project = await ProjectFinder.findProject(db, projectID);
     const repos = await RepoFinder.findExistingRepos(db);
+    const linkedRepos = findRepos(repos, project);
+    selection.base(_.map(linkedRepos, 'id'));
     render();
     const servers = await ServerFinder.findServersOfRepos(db, repos);
     render();
-    const linkedRepos = findRepos(props.repos, props.project);
     const statistics = await StatisticsFinder.findDailyActivitiesOfRepos(db, project, linkedRepos);
     render();
 
@@ -110,7 +107,7 @@ async function RepoListPage(props) {
             sortDirections: sort.directions,
             onSort: handleSort,
         };
-        if (fullList) {
+        if (selection.shown) {
             tableProps.expandable = true;
             tableProps.selectable = true;
             tableProps.expanded = !!editing;
@@ -139,29 +136,19 @@ async function RepoListPage(props) {
     }
 
     function renderRows() {
-        let visible;
-        if (fullList) {
-            visible = repos;
-        } else {
-            visible = findRepos(repos, project);
-        }
-        visible = sortRepos(visible, servers, statistics, env, sort);
-        return _.map(visible, renderRow);
+        const visible = (selection.shown) ? repos : linkedRepos;
+        const sorted = sortRepos(visible, servers, statistics, env, sort);
+        return _.map(sorted, renderRow);
     }
 
     function renderRow(repo, i) {
-        const repoIDs = _.get(project, 'repo_ids', []);
-        const existing = _.includes(repoIDs, repo.id);
         const classNames = [];
         let onClick;
-        if (fullList) {
-            if (existing) {
+        if (selection.shown) {
+            if (selection.existing(repo.id)) {
                 classNames.push('fixed');
             }
-            const { adding, removing } = selection.current;
-            const keep = existing && !_.includes(removing, repo.id);
-            const add = !existing && _.includes(adding, repo.id);
-            if (add || keep) {
+            if (selection.keeping(repo.id) || selection.adding(repo.id)) {
                 classNames.push('selected');
             }
             onClick = handleRowClick;
@@ -191,24 +178,11 @@ async function RepoListPage(props) {
         } else {
             const title = p(repo.details.title) || repo.name;
             let url, badge;
-            if (fullList) {
-                // compare against original project object to see if the repo
-                // will be added or removed
-                const { adding, removing } = selection.current;
-                const repoIDs = _.get(project, 'repo_ids', []);
-                let includedBefore = _.includes(repoIDs, repo.id);
-                let includedAfter;
-                if (includedBefore) {
-                    includedAfter = !_.includes(removing, repo.id);
-                } else {
-                    includedAfter = _.includes(adding, repo.id);
-                }
-                if (includedBefore !== includedAfter) {
-                    if (includedAfter) {
-                        badge = <ActionBadge type="add" env={env} />;
-                    } else {
-                        badge = <ActionBadge type="remove" env={env} />;
-                    }
+            if (selection.shown) {
+                if (selection.adding(repo.id)) {
+                    badge = <ActionBadge type="add" env={env} />;
+                } else if (selection.removing(repo.id)) {
+                    badge = <ActionBadge type="remove" env={env} />;
                 }
             } else {
                 // don't create the link when we're editing the list
@@ -332,22 +306,13 @@ async function RepoListPage(props) {
         }
     }
 
-    function toggleRepo(repoID) {
-        let { adding, removing } = selection.current;
-        if (_.includes(project.repo_ids, repoID)) {
-            removing = _.toggle(removing, repoID);
-        } else {
-            adding = _.toggle(adding, repoID);
-        }
-        selection.set({ adding, removing });
-    }
-
     async function saveSelection() {
         const { ask } = confirmation.current;
         const { adding, removing } = selection.current;
 
         if (!_.isEmpty(removing)) {
-            const confirmed = await ask(t('repo-list-confirm-remove-$count', removing.length));
+            const question = t('repo-list-confirm-remove-$count', removing.length);
+            const confirmed = await ask(question);
             if (!confirmed) {
                 return;
             }

@@ -1,179 +1,102 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
+import React, { useRef, useCallback } from 'react';
+import Relaks, { useProgress } from 'relaks';
+import { useSelectionBuffer, useSortHandling, useEditToggle, useErrorHandling } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
-import ComponentRefs from 'common/utils/component-refs.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
-import PushButton from '../widgets/push-button.jsx';
-import ComboButton from '../widgets/combo-button.jsx';
-import SortableTable, { TH } from '../widgets/sortable-table.jsx';
-import UserTooltip from '../tooltips/user-tooltip.jsx';
-import ModifiedTimeTooltip from '../tooltips/modified-time-tooltip.jsx'
-import ActionBadge from '../widgets/action-badge.jsx';
-import ActionConfirmation from '../widgets/action-confirmation.jsx';
-import DataLossWarning from '../widgets/data-loss-warning.jsx';
-import UnexpectedError from '../widgets/unexpected-error.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ComboButton } from '../widgets/combo-button.jsx';
+import { SortableTable, TH } from '../widgets/sortable-table.jsx';
+import { UserTooltip } from '../tooltips/user-tooltip.jsx';
+import { ModifiedTimeTooltip } from '../tooltips/modified-time-tooltip.jsx'
+import { ActionBadge } from '../widgets/action-badge.jsx';
+import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
+import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
+import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 import './server-list-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the Server List page.
- *
- * @extends AsyncComponent
- */
-class ServerListPage extends AsyncComponent {
-    static displayName = 'ServerListPage';
+async function ServerListPage(props) {
+    const { database, route, env, editing } = props;
+    const { t, p, f } = env.locale;
+    const [ show ] = useProgress();
+    const selection = useSelectionBuffer(editing);
+    const confirmation = useRef();
+    const db = database.use({ schema: 'global', by: this });
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env, editing } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let props = {
-            database,
-            route,
-            env,
-            editing,
-        };
-        meanwhile.show(<ServerListPageSync {...props} />);
-        let currentUserID = await db.start();
-        props.servers = await ServerFinder.findAllServers(db);
-        meanwhile.show(<ServerListPageSync {...props} />);
-        props.users = await UserFinder.findActiveUsers(db);
-        return <ServerListPageSync {...props} />;
-    }
-}
-
-/**
- * Synchronous component that actually renders the Server List page.
- *
- * @extends PureComponent
- */
-class ServerListPageSync extends PureComponent {
-    static displayName = 'ServerListPageSync';
-
-    constructor(props) {
-        let { editing } = props;
-        super(props);
-        this.components = ComponentRefs({
-            confirmation: ActionConfirmation
-        });
-        this.state = {
-            sortColumns: [ 'name' ],
-            sortDirections: [ 'asc' ],
-            restoringServerIDs: [],
-            disablingServerIDs: [],
-            hasChanges: false,
-            renderingFullList: editing,
-            problems: {},
-        };
-    }
-
-    /**
-     * Toggle rendering of full list when entering and exiting edit mode
-     *
-     * @param  {Object} props
-     * @param  {Object} state
-     *
-     * @return {Object|null}
-     */
-    static getDerivedStateFromProps(props, state) {
-        let { editing } = props;
-        let { renderingFullList } = state;
-        if (editing && !renderingFullList) {
-            return {
-                renderingFullList: true,
-            };
-        } else if (!editing && renderingFullList) {
-            return {
-                renderingFullList: false,
-                restoringServerIDs: [],
-                disablingServerIDs: [],
-                hasChanges: false,
-                problems: {},
-            };
+    const [ sort, handleSort ] = useSortHandling();
+    const [ problems, setProblems, setUnexpectedError ] = useErrorHandling();
+    const [ handleEditClick, handleCancelClick, handleAddClick ] = useEditToggle(route, {
+        page: 'server-summary-page',
+        params: { serverID: 'new' },
+    });
+    const handleSaveClick = useCallback(async (evt) => {
+        try {
+            setProblems({});
+            await saveSelection();
+            handleCancelClick();
+        } catch (err) {
+            setUnexpectedError(err);
         }
-        return null;
-    }
+    }, [ saveSelection, handleCancelClick ]);
+    const handleRowClick = useCallback((evt) => {
+        const serverID = parseInt(evt.currentTarget.getAttribute('data-server-id'));
+        selection.toggle(serverID);
+    });
 
-    /**
-     * Change editability of page
-     *
-     * @param  {Boolean} edit
-     *
-     * @return {Promise}
-     */
-    setEditability(edit) {
-        let { route } = this.props;
-        let params = _.clone(route.params);
-        params.editing = edit || undefined;
-        return route.replace(route.name, params);
-    }
+    render();
+    const currentUserID = await db.start();
+    const servers = await ServerFinder.findAllServers(db);
+    const activeServers = filterServers(servers);
+    selection.base(_.map(activeServers, 'id'));
+    render();
+    const users = await UserFinder.findActiveUsers(db);
+    render();
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { route, env } = this.props;
-        let { hasChanges, problems } = this.state;
-        let { setters } = this.components;
-        let { t } = env.locale;
-        return (
+    function render() {
+        const { changed } = selection;
+        show(
             <div className="server-list-page">
-                {this.renderButtons()}
+                {renderButtons()}
                 <h2>{t('server-list-title')}</h2>
                 <UnexpectedError>{problems.unexpected}</UnexpectedError>
-                {this.renderTable()}
-                <ActionConfirmation ref={setters.confirmation} env={env} />
-                <DataLossWarning changes={hasChanges} env={env} route={route} />
+                {renderTable()}
+                <ActionConfirmation ref={confirmation} env={env} />
+                <DataLossWarning changes={changed} env={env} route={route} />
             </div>
         );
     }
 
-    /**
-     * Render buttons in top right corner
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, servers, editing } = this.props;
-        let { hasChanges } = this.state;
-        let { t } = env.locale;
+    function renderButtons() {
+        const { changed } = selection;
         if (editing) {
             return (
                 <div className="buttons">
-                    <PushButton onClick={this.handleCancelClick}>
+                    <PushButton onClick={handleCancelClick}>
                         {t('server-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('server-list-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            let preselected = 'add';
-            let empty = _.isEmpty(servers);
+            const preselected = 'add';
+            const empty = _.isEmpty(servers);
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option name="add" onClick={this.handleAddClick}>
+                        <option name="add" onClick={handleAddClick}>
                             {t('server-list-add')}
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton name="edit" className="emphasis" disabled={empty} onClick={this.handleEditClick}>
+                    <PushButton name="edit" className="emphasis" disabled={empty} onClick={handleEditClick}>
                         {t('server-list-edit')}
                     </PushButton>
                 </div>
@@ -181,84 +104,47 @@ class ServerListPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render a table
-     *
-     * @return {ReactElement}
-     */
-    renderTable() {
-        let { editing } = this.props;
-        let { renderingFullList, sortColumns, sortDirections } = this.state;
-        let tableProps = {
-            sortColumns,
-            sortDirections,
-            onSort: this.handleSort,
+    function renderTable() {
+        const tableProps = {
+            sortColumns: sort.columns,
+            sortDirections: sort.directions,
+            onSort: handleSort,
         };
-        if (renderingFullList) {
+        if (selection.shown) {
             tableProps.expandable = true;
             tableProps.selectable = true;
-            tableProps.expanded = editing;
-            tableProps.onClick = this.handleRowClick;
+            tableProps.expanded = !!editing;
+            tableProps.onClick = handleRowClick;
         }
         return (
             <SortableTable {...tableProps}>
-                <thead>
-                    {this.renderHeadings()}
-                </thead>
-                <tbody>
-                    {this.renderRows()}
-                </tbody>
+                <thead>{renderHeadings()}</thead>
+                <tbody>{renderRows()}</tbody>
             </SortableTable>
         );
     }
 
-    /**
-     * Render table headings
-     *
-     * @return {ReactElement}
-     */
-    renderHeadings() {
+    function renderHeadings() {
         return (
             <tr>
-                {this.renderTitleColumn()}
-                {this.renderTypeColumn()}
-                {this.renderOAuthColumn()}
-                {this.renderAPIColumn()}
-                {this.renderUsersColumn()}
-                {this.renderModifiedTimeColumn()}
+                {renderTitleColumn()}
+                {renderTypeColumn()}
+                {renderOAuthColumn()}
+                {renderAPIColumn()}
+                {renderUsersColumn()}
+                {renderModifiedTimeColumn()}
             </tr>
         );
     }
 
-    /**
-     * Render table rows
-     *
-     * @return {Array<ReactElement>}
-     */
-    renderRows() {
-        let { env, servers, users } = this.props;
-        let { renderingFullList, sortColumns, sortDirections } = this.state;
-        if (!renderingFullList) {
-            servers = filterServers(servers);
-        }
-        servers = sortServers(servers, users, env, sortColumns, sortDirections);
-        return _.map(servers, (server) => {
-            return this.renderRow(server);
-        });
+    function renderRows() {
+        const visible = (selection.shown) ? servers : activeServers;
+        const sorted = sortServers(visible, users, env, sort);
+        return _.map(sorted, renderRow);
     }
 
-    /**
-     * Render a table row
-     *
-     * @param  {Object} server
-     *
-     * @return {ReactElement}
-     */
-    renderRow(server) {
-        let { env } = this.props;
-        let { renderingFullList, restoringServerIDs, disablingServerIDs } = this.state;
-        let { t } = env.locale;
-        let classes = [];
+    function renderRow(server) {
+        const classes = [];
         let onClick, title;
         if (server.deleted) {
             classes.push('deleted');
@@ -267,20 +153,16 @@ class ServerListPageSync extends PureComponent {
             classes.push('disabled');
             title = t('server-list-status-disabled');
         }
-        if (renderingFullList) {
-            if (server.deleted || server.disabled) {
-                if (_.includes(restoringServerIDs, server.id)) {
-                    classes.push('selected');
-                }
-            } else {
+        if (selection.shown) {
+            if (selection.existing(server.id)) {
                 classes.push('fixed');
-                if (!_.includes(disablingServerIDs, server.id)) {
-                    classes.push('selected');
-                }
             }
-            onClick = this.handleRowClick;
+            if (selection.keeping(server.id) || selection.adding(server.id)) {
+                classes.push('selected');
+            }
+            onClick = handleRowClick;
         }
-        let props = {
+        const props = {
             className: classes.join(' '),
             'data-server-id': server.id,
             title,
@@ -288,56 +170,34 @@ class ServerListPageSync extends PureComponent {
         };
         return (
             <tr key={server.id} {...props}>
-                {this.renderTitleColumn(server)}
-                {this.renderTypeColumn(server)}
-                {this.renderOAuthColumn(server)}
-                {this.renderAPIColumn(server)}
-                {this.renderUsersColumn(server)}
-                {this.renderModifiedTimeColumn(server)}
+                {renderTitleColumn(server)}
+                {renderTypeColumn(server)}
+                {renderOAuthColumn(server)}
+                {renderAPIColumn(server)}
+                {renderUsersColumn(server)}
+                {renderModifiedTimeColumn(server)}
             </tr>
         );
     }
 
-    /**
-     * Render title column, either the heading or a data cell
-     *
-     * @param  {Object|null} server
-     *
-     * @return {ReactElement}
-     */
-    renderTitleColumn(server) {
-        let { route, env } = this.props;
-        let { renderingFullList, restoringServerIDs, disablingServerIDs } = this.state;
-        let { t, p } = env.locale;
+    function renderTitleColumn(server) {
         if (!server) {
             return <TH id="title">{t('table-heading-title')}</TH>;
         } else {
-            let title = p(server.details.title) || t(`server-type-${server.type}`);
+            const title = p(server.details.title) || t(`server-type-${server.type}`);
             let url, badge;
-            if (renderingFullList) {
-                // add a badge next to the name if we're disabling or
-                // restoring a server
-                let includedBefore, includedAfter;
-                if (server.deleted || server.disabled) {
-                    includedBefore = false;
-                    includedAfter = _.includes(restoringServerIDs, server.id);
-                } else {
-                    includedBefore = true;
-                    includedAfter = !_.includes(disablingServerIDs, server.id);
-                }
-                if (includedBefore !== includedAfter) {
-                    if (includedAfter) {
-                        badge = <ActionBadge type="reactivate" env={env} />;
-                    } else {
-                        badge = <ActionBadge type="disable" env={env} />;
-                    }
+            if (selection.shown) {
+                if (selection.adding(server.id)) {
+                    badge = <ActionBadge type="reactivate" env={env} />;
+                } else if (selection.removing(server.id)) {
+                    badge = <ActionBadge type="disable" env={env} />;
                 }
             } else {
-                let params = { serverID: server.id };
+                const params = { serverID: server.id };
                 url = route.find('server-summary-page', params);
             }
-            let iconName = getServerIcon(server.type);
-            let icon = <i className={`fa fa-${iconName} fa-fw`} />;
+            const iconName = getServerIcon(server.type);
+            const icon = <i className={`fa fa-${iconName} fa-fw`} />;
             return (
                 <td>
                     <a href={url}>{icon} {title}</a>{badge}
@@ -346,16 +206,7 @@ class ServerListPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render type column, either the heading or a data cell
-     *
-     * @param  {Object|null} server
-     *
-     * @return {ReactElement}
-     */
-    renderTypeColumn(server) {
-        let { env } = this.props;
-        let { t } = env.locale;
+    function renderTypeColumn(server) {
         if (!server) {
             return <TH id="type">{t('table-heading-type')}</TH>;
         } else {
@@ -363,65 +214,38 @@ class ServerListPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render column indicating whether oauth authentication is active
-     *
-     * @param  {Object|null} server
-     *
-     * @return {ReactElement}
-     */
-    renderOAuthColumn(server) {
-        let { env } = this.props;
-        let { t } = env.locale;
+    function renderOAuthColumn(server) {
         if (!env.isWiderThan('wide')) {
             return null;
         }
         if (!server) {
             return <TH id="oauth">{t('table-heading-oauth')}</TH>;
         } else {
-            let active = hasOAuthCredentials(server);
+            const active = hasOAuthCredentials(server);
             return <td>{t(`server-list-oauth-${active}`)}</td>
         }
     }
 
-    /**
-     * Render column indicating whether oauth authentication is active
-     *
-     * @param  {Object|null} server
-     *
-     * @return {ReactElement}
-     */
-    renderAPIColumn(server) {
-        let { env } = this.props;
-        let { t } = env.locale;
+    function renderAPIColumn(server) {
         if (!env.isWiderThan('wide')) {
             return null;
         }
         if (!server) {
             return <TH id="api">{t('table-heading-api-access')}</TH>;
         } else {
-            let active = hasAPICredentials(server);
+            const active = hasAPICredentials(server);
             return <td>{t(`server-list-api-access-${active}`)}</td>
         }
     }
 
-    /**
-     * Render users column, either the heading or a data cell
-     *
-     * @param  {Object|null} server
-     *
-     * @return {ReactElement|null}
-     */
-    renderUsersColumn(server) {
-        let { route, env, users } = this.props;
-        let { t } = env.locale;
+    function renderUsersColumn(server) {
         if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!server) {
             return <TH id="users">{t('table-heading-users')}</TH>;
         } else {
-            let props = {
+            const props = {
                 users: findUsers(users, server),
                 route,
                 env,
@@ -430,23 +254,14 @@ class ServerListPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render column showing the last modified time
-     *
-     * @param  {Object|null} server
-     *
-     * @return {ReactElement|null}
-     */
-    renderModifiedTimeColumn(server) {
-        let { env } = this.props;
-        let { t } = env.locale;
+    function renderModifiedTimeColumn(server) {
         if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!server) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            let props = {
+            const props = {
                 time: server.mtime,
                 env,
             };
@@ -454,131 +269,51 @@ class ServerListPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Called when user clicks a table heading
-     *
-     * @param  {Object} evt
-     */
-    handleSort = (evt) => {
-        this.setState({
-            sortColumns: evt.columns,
-            sortDirections: evt.directions
-        });
-    }
+    async function saveSelection() {
+        const { ask } = confirmation.current;
+        const { adding, removing } = selection.current;
 
-    /**
-     * Called when user clicks new button
-     *
-     * @param  {Event} evt
-     */
-    handleAddClick = (evt) => {
-        let { route } = this.props;
-        return route.push('server-summary-page', { serverID: 'new' });
-    }
-
-    /**
-     * Called when user clicks edit button
-     *
-     * @param  {Event} evt
-     */
-    handleEditClick = (evt) => {
-        this.setEditability(true);
-    }
-
-    /**
-     * Called when user clicks cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        this.setEditability(false);
-    }
-
-    /**
-     * Called when user clicks save button
-     *
-     * @param  {Event} evt
-     */
-    handleSaveClick = async (evt) => {
-        let { database, env, servers } = this.props;
-        let { disablingServerIDs, restoringServerIDs } = this.state;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let messages = [
-            t('server-list-confirm-disable-$count', disablingServerIDs.length),
-            t('server-list-confirm-reactivate-$count', restoringServerIDs.length),
-        ];
-        let bypass = [
-            _.isEmpty(disablingServerIDs) ? true : undefined,
-            _.isEmpty(restoringServerIDs) ? true : undefined,
-        ];
-        let confirmed = await confirmation.askSeries(messages, bypass);
-        if (confirmed) {
-            this.setState({ problems: {} });
-            let db = database.use({ schema: 'global', by: this });
-            let currentUserID = await db.start();
-            let serversAfter = [];
-            for (let server of servers) {
-                let flags = {};
-                if (_.includes(disablingServerIDs, server.id)) {
-                    flags.disabled = true;
-                } else if (_.includes(restoringServerIDs, server.id)) {
-                    flags.disabled = flags.deleted = false;
-                } else {
-                    continue;
-                }
-                let serverAfter = _.assign({}, server, flags);
-                serversAfter.push(serverAfter);
-            }
-            try {
-                await db.save({ table: 'server' }, serversAfter);
-                this.setState({ hasChanges: false }, () => {
-                    this.setEditability(false);
-                });
-            } catch (err) {
-                let problems = { unexpected: err.message };
-                this.setState({ problems });
+        if (!_.isEmpty(removing)) {
+            const question = t('server-list-confirm-disable-$count', removing.length);
+            const confirmed = await ask(question);
+            if (!confirmed) {
+                return;
             }
         }
-    }
-
-    /**
-     * Called when user clicks a row in edit mode
-     *
-     * @param  {Event} evt
-     */
-    handleRowClick = (evt) => {
-        let { servers } = this.props;
-        let { disablingServerIDs, restoringServerIDs } = this.state;
-        let serverID = parseInt(evt.currentTarget.getAttribute('data-server-id'));
-        let server = _.find(servers, { id: serverID });
-        if (server.deleted || server.disabled) {
-            if (_.includes(restoringServerIDs, server.id)) {
-                restoringServerIDs = _.without(restoringServerIDs, server.id);
-            } else {
-                restoringServerIDs = _.concat(restoringServerIDs, server.id);
-            }
-        } else {
-            if (_.includes(disablingServerIDs, server.id)) {
-                disablingServerIDs = _.without(disablingServerIDs, server.id);
-            } else {
-                disablingServerIDs = _.concat(disablingServerIDs, server.id);
+        if (!_.isEmpty(adding)) {
+            const question = t('server-list-confirm-reactivate-$count', adding.length);
+            const confirmed = await ask(question);
+            if (!confirmed) {
+                return;
             }
         }
-        let hasChanges = !_.isEmpty(restoringServerIDs) || !_.isEmpty(disablingServerIDs);
-        this.setState({ restoringServerIDs, disablingServerIDs, hasChanges });
+
+        const changes = [];
+        for (let server of servers) {
+            const columns = { id: server.id };
+            if (_.includes(removing, server.id)) {
+                columns.disabled = true;
+            } else if (_.includes(adding, server.id)) {
+                columns.disabled = flags.deleted = false;
+            } else {
+                continue;
+            }
+            changes.push(columns);
+        }
+        const serversAfter = await db.save({ table: 'server' }, changes);
+        return serversAfter;
     }
 }
 
-let filterServers = memoizeWeak(null, function(servers) {
+const filterServers = memoizeWeak(null, function(servers) {
     return _.filter(servers, (server) => {
         return !server.deleted && !server.disabled;
     });
 });
 
-let sortServers = memoizeWeak(null, function(servers, users, env, columns, directions) {
-    let { t, p } = env.locale;
-    columns = _.map(columns, (column) => {
+const sortServers = memoizeWeak(null, function(servers, users, env, sort) {
+    const { t, p } = env.locale;
+    const columns = _.map(sort.columns, (column) => {
         switch (column) {
             case 'title':
                 return (server) => {
@@ -600,7 +335,7 @@ let sortServers = memoizeWeak(null, function(servers, users, env, columns, direc
                 return column;
         }
     });
-    return _.orderBy(servers, columns, directions);
+    return _.orderBy(servers, columns, sort.directions);
 });
 
 function getServerIcon(type) {
@@ -614,7 +349,7 @@ function getServerIcon(type) {
 
 function hasOAuthCredentials(server) {
     if (server && server.settings) {
-        let oauth = server.settings.oauth;
+        const oauth = server.settings.oauth;
         if (oauth) {
             if (oauth.client_id && oauth.client_secret) {
                 return true;
@@ -626,7 +361,7 @@ function hasOAuthCredentials(server) {
 
 function hasAPICredentials(server) {
     if (server && server.settings) {
-        let api = server.settings.api;
+        const api = server.settings.api;
         if (api) {
             if (api.access_token) {
                 return true;
@@ -636,7 +371,7 @@ function hasAPICredentials(server) {
     return false;
 }
 
-let findUsers = memoizeWeak(null, function(users, server) {
+const findUsers = memoizeWeak(null, function(users, server) {
     return _.filter(users, (user) => {
         return _.some(user.external, (link) => {
             if (link.server_id === server.id) {
@@ -646,32 +381,9 @@ let findUsers = memoizeWeak(null, function(users, server) {
     });
 });
 
+const component = Relaks.memo(ServerListPage);
+
 export {
-    ServerListPage as default,
-    ServerListPage,
-    ServerListPageSync,
+    component as default,
+    component as ServerListPage,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ServerListPage.propTypes = {
-        editing: PropTypes.bool,
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    ServerListPageSync.propTypes = {
-        editing: PropTypes.bool,
-        servers: PropTypes.arrayOf(PropTypes.object),
-        users: PropTypes.arrayOf(PropTypes.object),
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}
