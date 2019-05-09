@@ -21,7 +21,7 @@ function ProjectTooltip(props) {
             projectID: project.id
         });
         return (
-            <div className="item" key={i}>
+            <div className="item" key={project.id}>
                 <a href={disabled ? undefined : url}>{title}</a>
             </div>
         );

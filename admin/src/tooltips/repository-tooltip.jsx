@@ -25,7 +25,7 @@ function RepositoryTooltip(props) {
         const iconName = repo.type;
         const name = RepoUtils.getDisplayName(repo, env);
         return (
-            <div className="item" key={i}>
+            <div className="item" key={repo.id}>
                 <a href={url}>
                     <i className={`fa fa-${iconName}`}/>
                     {' '}

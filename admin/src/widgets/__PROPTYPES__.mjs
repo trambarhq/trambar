@@ -6,6 +6,12 @@ import { ActionConfirmation } from './action-confirmation.jsx';
 import { ActivityChart } from './activity-chart.jsx';
 import { ComboButton } from './combo-button.jsx';
 import { DataLossWarning } from './data-loss-warning.jsx';
+import { ImageSelector } from './image-selector.jsx';
+import { InputError } from './input-error.jsx';
+import { InstructionBlock } from './instruction-block.jsx';
+
+import { TextField } from './text-field.jsx';
+import { UnexpectedError } from './unexpected-error.jsx';
 
 ActionBadge.propTypes = {
     type: PropTypes.string.isRequired,
@@ -37,4 +43,26 @@ ImageSelector.propTypes = {
     env: PropTypes.instanceOf(Environment).isRequired,
     payloads: PropTypes.instanceOf(Payloads).isRequired,
     onChange: PropTypes.func,
+};
+InputError.propTypes = {
+    type: PropTypes.oneOf([ 'error', 'warning' ]),
+};
+InstructionBlock.propTypes = {
+    folder: PropTypes.string.isRequired,
+    topic: PropTypes.string.isRequired,
+    hidden: PropTypes.bool,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+
+TaskList.propTypes = {
+    scrollToTaskID: PropTypes.number,
+    server: PropTypes.object,
+    database: PropTypes.instanceOf(Database).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+TextField.propTypes = {
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+UnexpectedError.propTypes = {
+    type: PropTypes.oneOf([ 'error', 'warning' ]),
 };

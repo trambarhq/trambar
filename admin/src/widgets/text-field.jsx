@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React from 'react';
 
 // widgets
 import AutosizeTextArea from 'common/widgets/autosize-text-area.jsx';
@@ -11,9 +11,9 @@ import './text-field.scss';
  * text input.
  */
 function TextField(props) {
-    let { env, children, readOnly } = props;
-    let { t } = env.locale;
-    let classNames = [ 'text-field' ];
+    const { env, children, readOnly } = props;
+    const { t } = env.locale;
+    const classNames = [ 'text-field' ];
     let Input = 'input';
     let inputProps = _.omit(props, 'children', 'env');
     if (props.type === 'textarea') {
@@ -42,13 +42,3 @@ export {
     TextField as default,
     TextField,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    TextField.propTypes = {
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

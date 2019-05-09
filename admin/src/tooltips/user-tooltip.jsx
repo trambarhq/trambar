@@ -30,7 +30,7 @@ function UserTooltip(props) {
             });
         }
         return (
-            <div className="item" key={i}>
+            <div className="item" key={user.id}>
                 <a href={url}>
                     <ProfileImage user={user} env={env} />
                     {' '}
@@ -39,7 +39,7 @@ function UserTooltip(props) {
             </div>
         );
     });
-    const max = 2;
+    const max = 10;
     if (list.length > max) {
         list.splice(max);
         list.push(

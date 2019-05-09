@@ -29,11 +29,3 @@ export {
     UnexpectedError as default,
     UnexpectedError,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    UnexpectedError.propTypes = {
-        type: PropTypes.oneOf([ 'error', 'warning' ]),
-    };
-}

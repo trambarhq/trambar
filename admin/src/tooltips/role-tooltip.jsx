@@ -21,7 +21,7 @@ function RoleTooltip(props) {
             roleID: role.id,
         });
         return (
-            <div className="item" key={i}>
+            <div className="item" key={role.id}>
                 <a href={disabled ? undefined : url}>{title}</a>
             </div>
         );

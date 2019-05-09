@@ -2,8 +2,6 @@ import React, { PureComponent } from 'react';
 
 import Environment from 'common/env/environment.mjs';
 
-module.exports = InputError;
-
 import './input-error.scss';
 
 /**
@@ -11,8 +9,8 @@ import './input-error.scss';
  * provided as its children.
  */
 function InputError(props) {
-    let { children, type } = props;
-    if (!props.children) {
+    const { children, type } = props;
+    if (!children) {
         return null;
     }
     let className = 'input-error';
@@ -34,11 +32,3 @@ export {
     InputError as default,
     InputError,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    InputError.propTypes = {
-        type: PropTypes.oneOf([ 'error', 'warning' ]),
-    };
-}

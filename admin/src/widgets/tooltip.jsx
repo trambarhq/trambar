@@ -1,6 +1,5 @@
 import _ from 'lodash';
-import React, { PureComponent, Children } from 'react';
-import ComponentRefs from 'common/utils/component-refs.mjs';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 
 import './tooltip.scss';
 
@@ -9,77 +8,72 @@ import './tooltip.scss';
  * cursor is over a label. It expects two children: inline and window. The
  * inline element holds the contents that's rendered inline, while the
  * window element holds the contents that appear in the pop-up window.
- *
- * @extends PureComponent
  */
-class Tooltip extends PureComponent {
-    static displayName = 'Tooltip';
+function Tooltip(props) {
+    const { upward, leftward, disabled, className, children } = props;
+    const [ open, setOpen ] = useState(false);
+    const container = useRef();
+    const live = hasContents(children);
+    const active = open && live && !disabled;
 
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            container: HTMLElement,
-        });
-        this.state = {
-            open: false,
-            live: hasContents(this.props),
-        };
-    }
+    const inline = findElement(children, 'inline');
+    const win = findElement(children, 'window');
 
-    /**
-     * Update state when props change
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { disabled } = this.props;
-        let { live, open } = this.state;
-        let liveAfter = hasContents(nextProps);
-        if (liveAfter !== live || nextProps.disabled !== disabled) {
-            let openAfter = open && liveAfter && !nextProps.disabled;
-            this.setState({ live: liveAfter, open: openAfter });
-        }
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { upward, leftward, disabled, className } = this.props;
-        let { live } = this.state;
-        let { setters } = this.components;
-        let classNames = [ 'tooltip' ];
+    const handleLabelClick = useCallback((evt) => {
         if (live && !disabled) {
-            classNames.push('live');
+            setOpen(!open);
         }
-        if (upward) {
-            classNames.push('upward');
+    }, [ open ]);
+    const handleMouseDown = useCallback((evt) => {
+        if (!isInside(evt.target, container.current)) {
+            setOpen(false);
         }
-        if (leftward) {
-            classNames.push('leftward');
+    });
+    const handleKeyDown = useCallback((evt) => {
+        if (evt.keyCode === 27) {
+            setOpen(false);
         }
-        if (className) {
-            classNames.push(className);
+    });
+
+    useEffect(() => {
+        if (active) {
+            document.addEventListener('mousedown', handleMouseDown);
+            document.addEventListener('keydown', handleKeyDown);
+            return () => {
+                document.removeEventListener('mousedown', handleMouseDown);
+                document.removeEventListener('keydown', handleKeyDown);
+            };
         }
-        return (
-            <div ref={setters.container} className={classNames.join(' ')}>
-                {this.renderLabel()}
-                {this.renderWindow()}
-            </div>
-        );
+    }, [ active ])
+
+    const classNames = [ 'tooltip' ];
+    if (live && !disabled) {
+        classNames.push('live');
     }
+    if (upward) {
+        classNames.push('upward');
+    }
+    if (leftward) {
+        classNames.push('leftward');
+    }
+    if (className) {
+        classNames.push(className);
+    }
+    return (
+        <div ref={container} className={classNames.join(' ')}>
+            {renderLabel()}
+            {renderWindow()}
+        </div>
+    );
 
     /**
      * Render label
      *
      * @return {ReactElement}
      */
-    renderLabel() {
-        let inline = this.findElement('inline');
+    function renderLabel() {
         return (
-            <span className="label" onClick={this.handleLabelClick}>
+            <span className="label" onClick={handleLabelClick}>
                 {inline.props.children}
             </span>
         );
@@ -90,103 +84,29 @@ class Tooltip extends PureComponent {
      *
      * @return {ReactElement|null}
      */
-    renderWindow() {
-        let { open } = this.state;
-        if (!open) {
+    function renderWindow() {
+        if (!active) {
             return null;
         }
-        let win = this.findElement('window');
         return (
-            <div className="window-container" onClick={this.handleWindowClick}>
+            <div className="window-container">
                 <div className="window">
                     {win.props.children}
                 </div>
             </div>
         );
     }
-
-    /**
-     * Add/remove handlers depending on whether the tooltip is shown
-     */
-    componentDidUpdate(prevProps, prevState) {
-        let { open } = this.state;
-        if (prevState.open !== open) {
-            if (open) {
-                document.addEventListener('mousedown', this.handleMouseDown);
-                document.addEventListener('keydown', this.handleKeyDown);
-            } else {
-                document.removeEventListener('mousedown', this.handleMouseDown);
-                document.removeEventListener('keydown', this.handleKeyDown);
-            }
-        }
-    }
-
-    /**
-     * Remove handlers on unmount
-     */
-    componentWillUnmount() {
-        let { open } = this.state;
-        if (open) {
-            document.removeEventListener('mousedown', this.handleMouseDown);
-            document.removeEventListener('keydown', this.handleKeyDown);
-        }
-    }
-
-    /**
-     * Look for child by tag name
-     *
-     * @param  {String} tagName
-     *
-     * @return {ReactElement}
-     */
-    findElement(tagName) {
-        let { children } = this.props;
-        children = Children.toArray(children);
-        return _.find(children, { type: tagName });
-    }
-
-    /**
-     * Called when a label is clicked
-     *
-     * @param  {Event} evt
-     */
-    handleLabelClick = (evt) => {
-        let { disabled } = this.props;
-        let { live, open } = this.state;
-        if (live && !disabled) {
-            this.setState({ open: !open });
-        }
-    }
-
-    /**
-     * Called when a mouse button is pressed
-     *
-     * @param  {Event} evt
-     */
-    handleMouseDown = (evt) => {
-        let { container } = this.components;
-        if (!isInside(evt.target, container)) {
-            this.setState({ open: false });
-        }
-    }
-
-    /**
-     * Called when a key is pressed
-     *
-     * @param  {Event} evt
-     */
-    handleKeyDown = (evt) => {
-        if (evt.keyCode === 27) {
-            this.setState({ open: false });
-        }
-    }
 }
 
-function hasContents(props) {
-    let children = Children.toArray(props.children);
-    let win = _.find(children, { type: 'window' });
+function findElement(children, tagName) {
+    children = React.Children.toArray(children);
+    return _.find(children, { type: tagName });
+}
+
+function hasContents(children, props) {
+    const win = findElement(children, 'window');
     if (win) {
-        if (Children.count(win.props.children) > 0) {
+        if (React.Children.count(win.props.children) > 0) {
             return true;
         }
     }

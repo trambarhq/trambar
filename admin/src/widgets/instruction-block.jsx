@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
+import React from 'react';
+import Relaks, { useProgress } from 'relaks';
 import MarkGor from 'mark-gor/react';
 
 // widgets
@@ -8,58 +8,31 @@ import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
 
 import './instruction-block.scss';
 
-class InstructionBlock extends AsyncComponent {
-    static displayName = 'InstructionBlock';
+async function InstructionBlock(props) {
+    const { env, topic, folder, hidden } = props;
+    const { languageCode } = env.locale;
+    const [ show ] = useProgress();
 
-    /**
-     * Render component asynchronously
-     *
-     * @param  {Meanwhile}  meanwhile
-     *
-     * @return {Promise}
-     */
-    async renderAsync(meanwhile) {
-        let { env, topic, folder, hidden } = this.props;
-        let { languageCode } = env.locale;
-        let props = {
-            hidden,
-            env,
-        };
-        props.contents = await loadMarkdown(folder, topic, languageCode);
-        return <InstructionBlockSync {...props} />;
-    }
-}
+    render();
+    const contents = await loadMarkdown(folder, topic, languageCode);
+    render();
 
-/**
- * A box with instructions in it. Instructions are Markdown files stored in
- * src/instructions.
- *
- * @extends PureComponent
- */
-class InstructionBlockSync extends PureComponent {
-    static displayName = 'InstructionBlockSync';
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement|null}
-     */
-    render() {
-        let { hidden, contents } = this.props;
+    function render() {
         if (!contents) {
-            return null;
+            show(null);
+        } else {
+            const classNames = [ 'instruction-block' ];
+            if (hidden) {
+                classNames.push('hidden')
+            }
+            show(
+                <div className={classNames.join(' ')}>
+                    <CollapsibleContainer open={!hidden}>
+                        <div className="contents">{contents}</div>
+                    </CollapsibleContainer>
+                </div>
+            );
         }
-        let classNames = [ 'instruction-block' ];
-        if (hidden) {
-            classNames.push('hidden')
-        }
-        return (
-            <div className={classNames.join(' ')}>
-                <CollapsibleContainer open={!hidden}>
-                    <div className="contents">{contents}</div>
-                </CollapsibleContainer>
-            </div>
-        );
     }
 }
 
@@ -168,29 +141,9 @@ InstructionBlock.defaultProps = {
     hidden: false,
 };
 
+const component = Relaks.memo(InstructionBlock);
+
 export {
-    InstructionBlock as default,
-    InstructionBlock,
-    InstructionBlockSync,
+    component as default,
+    component as InstructionBlock,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    InstructionBlock.propTypes = {
-        folder: PropTypes.string.isRequired,
-        topic: PropTypes.string.isRequired,
-        hidden: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    InstructionBlockSync.propTypes = {
-        hidden: PropTypes.bool,
-        contents: PropTypes.oneOfType([
-            PropTypes.arrayOf(PropTypes.node),
-            PropTypes.node
-        ]),
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}
