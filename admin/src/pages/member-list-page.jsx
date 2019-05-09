@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useCallback } from 'react';
-import Relaks, { useProgress, useSaveBuffer } from 'relaks';
-import { useAfterglow, useErrorHandling, useSortHandling, useEditToggle } from '../hooks.mjs';
+import Relaks, { useProgress } from 'relaks';
+import { useSelectionBuffer, useSortHandling, useEditToggle, useErrorHandling } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -29,11 +29,7 @@ async function MemberListPage(props) {
     const { database, route, env, projectID, editing } = props;
     const { t, p, f } = env.locale;
     const [ show ] = useProgress();
-    const selection = useSaveBuffer({
-        original: { adding: [], removing: [] },
-        compare: _.isEqual,
-    });
-    const fullList = useAfterglow(editing);
+    const selection = useSelectionBuffer(editing);
     const db = database.use({ schema: 'global', by: this });
 
     const [ sort, handleSort ] = useSortHandling();
@@ -67,17 +63,19 @@ async function MemberListPage(props) {
     }, [ rejectPendingUsers ]);
     const handleRowClick = useCallback((evt) => {
         const userID = parseInt(evt.currentTarget.getAttribute('data-user-id'));
-        toggleUser(userID);
-    }, [ toggleUser ]);
+        selection.toggle(userID);
+    });
 
     render();
     const currentUserID = await db.start();
     const project = await ProjectFinder.findProject(db, projectID);
     const users = await UserFinder.findExistingUsers(db);
+    const members = filterUsers(users, project);
+    const membersPlus = filterUsers(users, project, true);
+    selection.base(_.map(members, 'id'));
     render();
     const roles = await RoleFinder.findRolesOfUsers(db, users);
     render();
-    const members = findUsers(users, project);
     const statistics = await StatisticsFinder.findDailyActivitiesOfUsers(db, project, members);
     render();
 
@@ -109,10 +107,7 @@ async function MemberListPage(props) {
                 </div>
             );
         } else {
-            const userIDs = _.get(project, 'user_ids');
-            const membersPending = _.some(users, (user) => {
-                return !_.includes(userIDs, user.id);
-            });
+            const membersPending = _.size(membersPlus) > _.size(members);
             const preselected = (membersPending) ? 'approve' : undefined;
             return (
                 <div key="view" className="buttons">
@@ -142,7 +137,7 @@ async function MemberListPage(props) {
             sortDirections: sort.directions,
             onSort: handleSort,
         };
-        if (fullList) {
+        if (selection.shown) {
             tableProps.expandable = true;
             tableProps.selectable = true;
             tableProps.expanded = !!editing;
@@ -171,24 +166,16 @@ async function MemberListPage(props) {
     }
 
     function renderRows() {
-        let visible;
-        if (fullList) {
-            // list all users when we're editing the list
-            visible = users;
-        } else {
-            // list only those who're in the project--or are trying to join
-            visible = findUsers(users, project);
-        }
-        visible = sortUsers(visible, roles, statistics, env, sort);
-        return _.map(visible, renderRow);
+        const visible = (selection.shown) ? users : membersPlus;
+        const sorted = sortUsers(visible, roles, statistics, env, sort);
+        return _.map(sorted, renderRow);
     }
 
     function renderRow(user) {
-        const existing = _.includes(project.user_ids, user.id);
-        const pending = _.includes(user.requested_project_ids, project.id);
         const classNames = [];
         let title, onClick;
-        if (!existing) {
+        if (!selection.existing(user.id)) {
+            const pending = _.includes(user.requested_project_ids, project.id);
             if (pending) {
                 classNames.push('pending');
                 title = t('member-list-status-pending');
@@ -197,14 +184,11 @@ async function MemberListPage(props) {
                 title = t('member-list-status-non-member');
             }
         }
-        if (fullList) {
-            if (existing || pending) {
+        if (selection.shown) {
+            if (selection.existing(user.id)) {
                 classNames.push('fixed');
             }
-            const { adding, removing } = selection.current;
-            const keep = existing && _.includes(removing, repo.id);
-            const add = !existing && _.includes(adding, repo.id);
-            if (add || keep) {
+            if (selection.keeping(user.id) || selection.adding(user.id)) {
                 classNames.push('selected');
             }
             onClick = handleRowClick;
@@ -235,23 +219,11 @@ async function MemberListPage(props) {
         } else {
             const name = p(user.details.name);
             let url, badge;
-            if (fullList) {
-                // compare against original list if the member will be added or removed
-                const { adding, removing } = selection.current;
-                const userIDs = _.get(project, 'user_ids', []);
-                let includedBefore = _.includes(userIDs, user.id);
-                let includedAfter;
-                if (includedBefore) {
-                    includedAfter = !_.includes(removing, user.id);
-                } else {
-                    includedAfter = _.includes(adding, user.id);
-                }
-                if (includedBefore !== includedAfter) {
-                    if (includedAfter) {
-                        badge = <ActionBadge type="add" env={env} />;
-                    } else {
-                        badge = <ActionBadge type="remove" env={env} />;
-                    }
+            if (selection.shown) {
+                if (selection.adding(user.id)) {
+                    badge = <ActionBadge type="add" env={env} />;
+                } else if (selection.removing(user.id)) {
+                    badge = <ActionBadge type="remove" env={env} />;
                 }
             } else {
                 // don't create the link when we're editing the list
@@ -287,7 +259,7 @@ async function MemberListPage(props) {
         } else {
             const props = {
                 roles: findRoles(roles, user),
-                disabled: fullList,
+                disabled: selection.shown,
                 route,
                 env,
             };
@@ -296,19 +268,16 @@ async function MemberListPage(props) {
     }
 
     function renderEmailColumn(user) {
-        let { env } = this.props;
-        let { fullList } = this.state;
-        let { t } = env.locale;
         if (!env.isWiderThan('wide')) {
             return null;
         }
         if (!user) {
             return <TH id="email">{t('table-heading-email')}</TH>;
         } else {
-            let contents = '-';
-            let email = user.details.email;
+            const contents = '-';
+            const email = user.details.email;
             let url;
-            if (!fullList && email) {
+            if (!selection.shown && email) {
                 url = `mailto:${email}`;
             }
             return <td><a href={url}>{email}</a></td>;
@@ -338,7 +307,7 @@ async function MemberListPage(props) {
         } else {
             const props = {
                 statistics: _.get(statistics, [ user.id, 'last_month' ]),
-                disabled: fullList,
+                disabled: selection.shown,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -354,7 +323,7 @@ async function MemberListPage(props) {
         } else {
             const props = {
                 statistics: _.get(statistics, [ user.id, 'this_month' ]),
-                disabled: fullList,
+                disabled: selection.shown,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -370,7 +339,7 @@ async function MemberListPage(props) {
         } else {
             const props = {
                 statistics: _.get(statistics, [ user.id, 'to_date' ]),
-                disabled: fullList,
+                disabled: selection.shown,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -386,21 +355,11 @@ async function MemberListPage(props) {
         } else {
             const props = {
                 time: user.mtime,
-                disabled: fullList,
+                disabled: selection.shown,
                 env,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
-    }
-
-    function toggleUser(userID) {
-        let { adding, removing } = selection.current;
-        if (_.includes(project.user_ids, userID)) {
-            removing = _.toggle(removing, userID);
-        } else {
-            adding = _.toggle(adding, userID);
-        }
-        selection.set({ adding, removing });
     }
 
     async function saveSelection() {
@@ -426,7 +385,6 @@ async function MemberListPage(props) {
                 requested_project_ids: _.without(user.requested_project_ids, project.id),
             };
         });
-        const currentUserID = await db.start();
         const usersAfter = await db.save({ table: 'user' }, changes);
         return usersAfter;
     }
@@ -476,12 +434,11 @@ const sortUsers = memoizeWeak(null, function(users, roles, statistics, env, sort
     return _.orderBy(users, columns, sort.directions);
 });
 
-const findUsers = memoizeWeak(null, function(users, project) {
-    if (project) {
-        const hash = _.keyBy(users, 'id');
-        const existingUsers = _.filter(_.map(project.user_ids, (id) => {
-            return hash[id];
-        }));
+const filterUsers = memoizeWeak(null, function(users, project, includePending) {
+    const existingUsers = _.filter(users, (user) => {
+        return _.includes(project.user_ids, user.id);
+    });
+    if (includePending) {
         const pendingUsers = _.filter(users, (user) => {
             return _.includes(user.requested_project_ids, project.id);
         });
@@ -491,6 +448,8 @@ const findUsers = memoizeWeak(null, function(users, project) {
         // this will happen right after the project is saved and the the updated
         // users (changed by backend) haven't been retrieved yet
         return _.union(existingUsers, pendingUsers);
+    } else {
+        return existingUsers;
     }
 });
 

@@ -361,7 +361,6 @@ async function RepoListPage(props) {
             id: project.id,
             repo_ids: _.intersection(repoIDsAfter, existingRepoIDs)
         };
-        const currentUserID = await db.start();
         const projectAfter = await db.saveOne({ table: 'project' }, columns);
         return projectAfter;
     }

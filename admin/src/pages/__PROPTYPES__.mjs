@@ -34,3 +34,9 @@ RepoListPage.propTypes = {
     route: PropTypes.instanceOf(Route).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,
 };
+RoleListPage.propTypes = {
+    editing: PropTypes.bool,
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};

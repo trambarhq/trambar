@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useRef, useCallback } from 'react';
-import Relaks, { useProgress, useSaveBuffer } from 'relaks';
-import { useAfterglow, useErrorHandling, useSortHandling, useEditToggle } from '../hooks.mjs';
+import Relaks, { useProgress } from 'relaks';
+import { useSelectionBuffer, useSortHandling, useEditToggle, useErrorHandling } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
@@ -30,11 +30,7 @@ async function ProjectListPage(props) {
     const { database, route, env, editing } = props;
     const { t, p, f } = env.locale;
     const [ show ] = useProgress();
-    const selection = useSaveBuffer({
-        original: { restoring: [], archiving: [] },
-        compare: _.isEqual,
-    });
-    const fullList = useAfterglow(editing);
+    const selection = useSelectionBuffer(editing);
     const confirmation = useRef();
     const db = database.use({ schema: 'global', by: this });
 
@@ -55,12 +51,14 @@ async function ProjectListPage(props) {
     }, [ saveSelection, handleCancelClick ]);
     const handleRowClick = useCallback((evt) => {
         const projectID = parseInt(evt.currentTarget.getAttribute('data-project-id'));
-        toggleProject(projectID);
-    }, [ toggleProject ]);
+        selection.toggle(projectID);
+    });
 
     render();
     const currentUserID = await db.start();
     const projects = await ProjectFinder.findAllProjects(db);
+    const activeProjects = filterProjects(projects);
+    selection.base(_.map(activeProjects, 'id'));
     render();
     const repos = await RepoFinder.findProjectRepos(db, projects);
     render();
@@ -121,7 +119,7 @@ async function ProjectListPage(props) {
             sortDirections: sort.directions,
             onSort: handleSort,
         };
-        if (fullList) {
+        if (selection.shown) {
             tableProps.expandable = true;
             tableProps.selectable = true;
             tableProps.expanded = !!editing;
@@ -151,14 +149,9 @@ async function ProjectListPage(props) {
     }
 
     function renderRows() {
-        let visible;
-        if (fullList) {
-            visible = projects;
-        } else {
-            visible = filterProjects(projects);
-        }
-        visible = sortProjects(visible, users, repos, statistics, env, sort);
-        return _.map(visible, renderRow);
+        const visible = (selection.shown) ? projects : activeProjects;
+        const sorted = sortProjects(visible, users, repos, statistics, env, sort);
+        return _.map(sorted, renderRow);
     }
 
     function renderRow(project) {
@@ -171,15 +164,11 @@ async function ProjectListPage(props) {
             classNames.push('disabled');
             title = t('project-list-status-archived');
         }
-        if (fullList) {
-            const existing = !project.deleted && !project.archived;
-            if (existing) {
+        if (selection.shown) {
+            if (selection.existing(project.id)) {
                 classNames.push('fixed');
             }
-            const { restoring, archiving } = selection.current;
-            const keep = existing && !_.includes(archiving, project.id);
-            const add = !existing && _.includes(restoring, project.id);
-            if (add || keep) {
+            if (selection.adding(project.id) || selection.keeping(project.id)) {
                 classNames.push('selected');
             }
             onClick = handleRowClick;
@@ -210,24 +199,13 @@ async function ProjectListPage(props) {
         } else {
             let title = p(project.details.title) || project.name;
             let url, badge;
-            if (fullList) {
+            if (selection.shown) {
                 // add a badge next to the name if we're archiving or
                 // restoring a project
-                const { restoring, archiving } = selection.current;
-                let includedBefore, includedAfter;
-                if (project.deleted || project.archived) {
-                    includedBefore = false;
-                    includedAfter = _.includes(restoring, project.id);
-                } else {
-                    includedBefore = true;
-                    includedAfter = !_.includes(archiving, project.id);
-                }
-                if (includedBefore !== includedAfter) {
-                    if (includedAfter) {
-                        badge = <ActionBadge type="restore" env={env} />;
-                    } else {
-                        badge = <ActionBadge type="archive" env={env} />;
-                    }
+                if (selection.adding(project.id)) {
+                    badge = <ActionBadge type="restore" env={env} />;
+                } else if (selection.removing(project.id)) {
+                    badge = <ActionBadge type="archive" env={env} />;
                 }
             } else {
                 // link to project summary in non-editing mode
@@ -354,28 +332,17 @@ async function ProjectListPage(props) {
         }
     }
 
-    function toggleProject(projectID) {
-        const project = _.find(projects, { id: projectID })
-        let { restoring, archiving } = selection.current;
-        if (project.deleted || project.archived) {
-            restoring = _.toggle(restoring, project.id);
-        } else {
-            archiving = _.toggle(archiving, project.id);
-        }
-        selection.set({ restoring, archiving });
-    }
-
     async function saveSelection() {
         const { ask } = confirmation.current;
-        const { restoring, archiving } = selection;
-        if (!_.isEmpty(archiving)) {
-            const confirmed = await ask(t('project-list-confirm-archive-$count', archiving.length));
+        const { adding, removing } = selection;
+        if (!_.isEmpty(removing)) {
+            const confirmed = await ask(t('project-list-confirm-archive-$count', removing.length));
             if (!confirmed) {
                 return;
             }
         }
-        if (!_.isEmpty(restoring)) {
-            const confirmed = await ask(t('project-list-confirm-restore-$count', restoring.length));
+        if (!_.isEmpty(adding)) {
+            const confirmed = await ask(t('project-list-confirm-restore-$count', adding.length));
             if (!confirmed) {
                 return;
             }
@@ -383,16 +350,15 @@ async function ProjectListPage(props) {
         const changes = [];
         for (let project of projects) {
             const columns = { id: project.id };
-            if (_.includes(archiving, project.id)) {
+            if (_.includes(removing, project.id)) {
                 columns.archived = true;
-            } else if (_.includes(restoring, project.id)) {
+            } else if (_.includes(adding, project.id)) {
                 columns.archived = columns.deleted = false;
             } else {
                 continue;
             }
             projectsAfter.push(columns);
         }
-        const currentUserID = await db.start();
         const projectsAfter = await db.save({ table: 'project' }, changes);
         return projectsAfter;
     }

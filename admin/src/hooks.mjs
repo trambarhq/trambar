@@ -1,4 +1,6 @@
+import _ from 'lodash';
 import { useState, useCallback } from 'react';
+import { useSaveBuffer } from 'relaks';
 
 function useAfterglow(value, delay) {
     value = !!value;
@@ -60,9 +62,53 @@ function useEditToggle(route, addParams) {
     return handlers;
 }
 
+function useSelectionBuffer(active) {
+    const selection = useSaveBuffer({
+        original: { adding: [], removing: [] },
+        compare: _.isEqual,
+    });
+    selection.shown = useAfterglow(active);
+    selection.base = function(existingIDs) {
+        const { adding, removing } = this.current;
+        this.existingIDs = existingIDs;
+        _.remove(adding, (id) => {
+            return this.existing(id);
+        });
+        _.remove(removing, (id) => {
+            return !this.existing(id);
+        });
+    };
+    selection.existing = function(id) {
+        return _.includes(this.existingIDs, id);
+    };
+    selection.toggle = function(id) {
+        let { adding, removing } = this.current;
+        if (!this.existing(id)) {
+            adding = _.toggle(adding, id);
+        } else {
+            removing = _.toggle(removing, id);
+        }
+        this.set({ adding, removing });
+    };
+    selection.adding = function(id) {
+        const { adding } = this.current;
+        return !this.existing(id) && _.includes(adding, id);
+    }
+    selection.keeping = function(id) {
+        const { removing } = this.current;
+        return this.existing(id) && !_.includes(removing, id);
+    }
+    selection.removing = function(id) {
+        const { removing } = this.current;
+        return this.existing(id) && _.includes(removing, id);
+    }
+    return selection;
+}
+
 export {
     useAfterglow,
     useErrorHandling,
     useSortHandling,
     useEditToggle,
+    useSelectionBuffer,
 };
