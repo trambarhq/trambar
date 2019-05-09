@@ -22,9 +22,6 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 import './member-list-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the Member List page.
- */
 async function MemberListPage(props) {
     const { database, route, env, projectID, editing } = props;
     const { t, p, f } = env.locale;

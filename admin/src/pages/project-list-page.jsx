@@ -23,9 +23,6 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 import './project-list-page.scss';
 
-/**
- * Asynchronous component that renders the Project List page.
- */
 async function ProjectListPage(props) {
     const { database, route, env, editing } = props;
     const { t, p, f } = env.locale;

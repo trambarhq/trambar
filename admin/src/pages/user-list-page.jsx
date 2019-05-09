@@ -1,184 +1,107 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
+import React, { useRef, useCallback } from 'react';
+import Relaks, { useProgress } from 'relaks';
+import { useSelectionBuffer, useSortHandling, useEditToggle, useErrorHandling } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
-import ComponentRefs from 'common/utils/component-refs.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import UserTypes from 'common/objects/types/user-types.mjs';
 
 // widgets
-import PushButton from '../widgets/push-button.jsx';
-import ComboButton from '../widgets/combo-button.jsx';
-import SortableTable, { TH } from '../widgets/sortable-table.jsx';
-import ProfileImage from '../widgets/profile-image.jsx';
-import ProjectTooltip from '../tooltips/project-tooltip.jsx';
-import RoleTooltip from '../tooltips/role-tooltip.jsx';
-import ModifiedTimeTooltip from '../tooltips/modified-time-tooltip.jsx'
-import ActionBadge from '../widgets/action-badge.jsx';
-import ActionConfirmation from '../widgets/action-confirmation.jsx';
-import DataLossWarning from '../widgets/data-loss-warning.jsx';
-import UnexpectedError from '../widgets/unexpected-error.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ComboButton } from '../widgets/combo-button.jsx';
+import { SortableTable, TH } from '../widgets/sortable-table.jsx';
+import { ProfileImage } from '../widgets/profile-image.jsx';
+import { ProjectTooltip } from '../tooltips/project-tooltip.jsx';
+import { RoleTooltip } from '../tooltips/role-tooltip.jsx';
+import { ModifiedTimeTooltip } from '../tooltips/modified-time-tooltip.jsx'
+import { ActionBadge } from '../widgets/action-badge.jsx';
+import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
+import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
+import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 import './user-list-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the User List page.
- *
- * @extends AsyncComponent
- */
-class UserListPage extends AsyncComponent {
-    static displayName = 'UserListPage';
+async function UserListPage(props) {
+    const { database, route, env, projectID, editing } = props;
+    const { t, p, f } = env.locale;
+    const [ show ] = useProgress();
+    const selection = useSelectionBuffer(editing);
+    const confirmation = useRef();
+    const db = database.use({ schema: 'global', by: this });
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env } = this.props;
-        let { editing } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let props = {
-            database,
-            route,
-            env,
-            editing,
-        };
-        meanwhile.show(<UserListPageSync {...props} />);
-        let currentUserID = await db.start();
-        props.users = await UserFinder.findAllUsers(db);
-        meanwhile.show(<UserListPageSync {...props} />);
-        props.projects = await ProjectFinder.findProjectsWithMembers(db, props.users);
-        meanwhile.show(<UserListPageSync {...props} />);
-        props.roles = await RoleFinder.findRolesOfUsers(db, props.users);
-        return <UserListPageSync {...props} />;
-    }
-}
-
-/**
- * Synchronous component that actually renders the User List page.
- *
- * @extends PureComponent
- */
-class UserListPageSync extends PureComponent {
-    static displayName = 'UserListPageSync';
-
-    constructor(props) {
-        let { editing } = props;
-        super(props);
-        this.components = ComponentRefs({
-            confirmation: ActionConfirmation
-        });
-        this.state = {
-            sortColumns: [ 'name' ],
-            sortDirections: [ 'asc' ],
-            restoringUserIDs: [],
-            disablingUserIDs: [],
-            hasChanges: false,
-            renderingFullList: editing,
-            problems: {},
-        };
-    }
-
-    /**
-     * Toggle rendering of full list when entering and exiting edit mode
-     *
-     * @param  {Object} props
-     * @param  {Object} state
-     *
-     * @return {Object|null}
-     */
-    static getDerivedStateFromProps(props, state) {
-        let { editing } = props;
-        let { renderingFullList } = state;
-        if (editing && !renderingFullList) {
-            return {
-                renderingFullList: true,
-            };
-        } else if (!editing && renderingFullList) {
-            return {
-                renderingFullList: false,
-                restoringUserIDs: [],
-                disablingUserIDs: [],
-                hasChanges: false,
-                problems: {},
-            };
+    const [ sort, handleSort ] = useSortHandling();
+    const [ problems, setProblems, setUnexpectedError ] = useErrorHandling();
+    const [ handleEditClick, handleCancelClick, handleAddClick ] = useEditToggle(route, {
+        page: 'user-summary-page',
+        params: { userID: 'new' },
+    });
+    const handleSaveClick = useCallback(async (evt) => {
+        try {
+            setProblems({});
+            await saveSelection();
+            handleCancelClick();
+        } catch (err) {
+            setUnexpectedError(err);
         }
-        return null;
-    }
+    }, [ saveSelection, handleCancelClick ]);
+    const handleRowClick = useCallback((evt) => {
+        const userID = parseInt(evt.currentTarget.getAttribute('data-user-id'));
+        selection.toggle(userID);
+    });
 
-    /**
-     * Change editability of page
-     *
-     * @param  {Boolean} edit
-     *
-     * @return {Promise}
-     */
-    setEditability(edit) {
-        let { route } = this.props;
-        let params = { editing: edit };
-        return route.replace(route.name, params);
-    }
+    render();
+    let currentUserID = await db.start();
+    const users = await UserFinder.findAllUsers(db);
+    const activeUsers = filterUsers(users);
+    selection.base(_.map(activeUsers, 'id'));
+    render();
+    const projects = await ProjectFinder.findProjectsWithMembers(db, props.users);
+    render();
+    const roles = await RoleFinder.findRolesOfUsers(db, props.users);
+    render();
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { route, env } = this.props;
-        let { hasChanges, problems } = this.state;
-        let { setters } = this.components;
-        let { t } = env.locale;
-        return (
+    function render() {
+        const { changed } = selection;
+        show(
             <div className="user-list-page">
-                {this.renderButtons()}
+                {renderButtons()}
                 <h2>{t('user-list-title')}</h2>
                 <UnexpectedError>{problems.unexpected}</UnexpectedError>
-                {this.renderTable()}
-                <ActionConfirmation ref={setters.confirmation} env={env} />
-                <DataLossWarning changes={hasChanges} env={env} route={route} />
+                {renderTable()}
+                <ActionConfirmation ref={confirmation} env={env} />
+                <DataLossWarning changes={changed} env={env} route={route} />
             </div>
         );
     }
 
-    /**
-     * Render buttons in top right corner
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, users, editing } = this.props;
-        let { hasChanges } = this.state;
-        let { t } = env.locale;
+    function renderButtons() {
+        const { changed } = selection;
         if (editing) {
             return (
                 <div className="buttons">
-                    <PushButton onClick={this.handleCancelClick}>
+                    <PushButton onClick={handleCancelClick}>
                         {t('user-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('user-list-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            let empty = _.isEmpty(users);
+            const empty = _.isEmpty(users);
             return (
                 <div className="buttons">
                     <ComboButton>
-                        <option name="add" onClick={this.handleAddClick}>
+                        <option name="add" onClick={handleAddClick}>
                             {t('user-list-add')}
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={empty} onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" disabled={empty} onClick={handleEditClick}>
                         {t('user-list-edit')}
                     </PushButton>
                 </div>
@@ -186,164 +109,101 @@ class UserListPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render a table
-     *
-     * @return {ReactElement}
-     */
-    renderTable() {
-        let { editing } = this.props;
-        let { renderingFullList, sortColumns, sortDirections } = this.state;
-        let tableProps = {
-            sortColumns,
-            sortDirections,
-            onSort: this.handleSort,
+    function renderTable() {
+        const tableProps = {
+            sortColumns: sort.columns,
+            sortDirections: sort.directions,
+            onSort: handleSort,
         };
-        if (renderingFullList) {
-            tableProps.expanded = editing;
+        if (selection.shown) {
+            tableProps.expanded = !!editing;
             tableProps.expandable = true;
             tableProps.selectable = true;
         }
         return (
             <SortableTable {...tableProps}>
-                <thead>
-                    {this.renderHeadings()}
-                </thead>
-                <tbody>
-                    {this.renderRows()}
-                </tbody>
+                <thead>{renderHeadings()}</thead>
+                <tbody>{renderRows()}</tbody>
             </SortableTable>
         );
     }
 
-    /**
-     * Render table headings
-     *
-     * @return {ReactElement}
-     */
-    renderHeadings() {
+    function renderHeadings() {
         return (
             <tr>
-                {this.renderNameColumn()}
-                {this.renderUsernameColumn()}
-                {this.renderTypeColumn()}
-                {this.renderRolesColumn()}
-                {this.renderProjectsColumn()}
-                {this.renderEmailColumn()}
-                {this.renderModifiedTimeColumn()}
+                {renderNameColumn()}
+                {renderUsernameColumn()}
+                {renderTypeColumn()}
+                {renderRolesColumn()}
+                {renderProjectsColumn()}
+                {renderEmailColumn()}
+                {renderModifiedTimeColumn()}
             </tr>
         );
     }
 
-    /**
-     * Render table rows
-     *
-     * @return {Array<ReactElement>}
-     */
-    renderRows() {
-        let { env, users, roles, projects } = this.props;
-        let { renderingFullList, sortColumns, sortDirections } = this.state;
-        if (!renderingFullList) {
-            users = filterUsers(users);
-        }
-        users = sortUsers(users, roles, projects, env, sortColumns, sortDirections);
-        return _.map(users, (user) => {
-            return this.renderRow(user);
-        });
+    function renderRows() {
+        const visible = (selection.shown) ? users : activeUsers;
+        const sorted = sortUsers(visible, roles, projects, env, sort);
+        return _.map(sorted, renderRow);
     }
 
-    /**
-     * Render a table row
-     *
-     * @param  {Object} user
-     *
-     * @return {ReactElement}
-     */
-    renderRow(user) {
-        let { env } = this.props;
-        let { renderingFullList, restoringUserIDs, disablingUserIDs } = this.state;
-        let { t } = env.locale;
-        let classes = [];
+    function renderRow(user) {
+        const classNames = [];
         let onClick, title;
         if (user.deleted) {
-            classes.push('deleted');
+            classNames.push('deleted');
             title = t('user-list-status-deleted');
         } else if (user.disabled) {
-            classes.push('disabled');
+            classNames.push('disabled');
             title = t('user-list-status-disabled');
         }
-        if (renderingFullList) {
-            if (user.deleted || user.disabled) {
-                if (_.includes(restoringUserIDs, user.id)) {
-                    classes.push('selected');
-                }
-            } else {
-                classes.push('fixed');
-                if (!_.includes(disablingUserIDs, user.id)) {
-                    classes.push('selected');
-                }
+        if (selection.shown) {
+            if (selection.existing(user.id)) {
+                classNames.push('fixed');
             }
-            onClick = this.handleRowClick;
+            if (selection.keeping(user.id) || selection.adding(user.id)) {
+                classNames.push('selected');
+            }
+            onClick = handleRowClick;
         }
         let props = {
-            className: classes.join(' '),
+            className: classNames.join(' '),
             'data-user-id': user.id,
             title,
             onClick,
         };
         return (
             <tr key={user.id} {...props}>
-                {this.renderNameColumn(user)}
-                {this.renderUsernameColumn(user)}
-                {this.renderTypeColumn(user)}
-                {this.renderRolesColumn(user)}
-                {this.renderProjectsColumn(user)}
-                {this.renderEmailColumn(user)}
-                {this.renderModifiedTimeColumn(user)}
+                {renderNameColumn(user)}
+                {renderUsernameColumn(user)}
+                {renderTypeColumn(user)}
+                {renderRolesColumn(user)}
+                {renderProjectsColumn(user)}
+                {renderEmailColumn(user)}
+                {renderModifiedTimeColumn(user)}
             </tr>
         );
     }
 
-    /**
-     * Render name column, either the heading or a data cell
-     *
-     * @param  {Object|null} user
-     *
-     * @return {ReactElement}
-     */
-    renderNameColumn(user) {
-        let { route, env } = this.props;
-        let { renderingFullList, restoringUserIDs, disablingUserIDs } = this.state;
-        let { t, p } = env.locale;
+    function renderNameColumn(user) {
         if (!user) {
             return <TH id="name">{t('table-heading-name')}</TH>;
         } else {
-            let name = p(user.details.name);
+            const name = p(user.details.name);
             let url, badge;
-            if (renderingFullList) {
-                // add a badge next to the name if we're approving, restoring or
-                // disabling a user
-                let includedBefore, includedAfter;
-                if (user.deleted || user.disabled) {
-                    includedBefore = false;
-                    includedAfter = _.includes(restoringUserIDs, user.id);
-                } else {
-                    includedBefore = true;
-                    includedAfter = !_.includes(disablingUserIDs, user.id);
-                }
-                if (includedBefore !== includedAfter) {
-                    if (includedAfter) {
-                        badge = <ActionBadge type="reactivate" env={env} />;
-                    } else {
-                        badge = <ActionBadge type="disable" env={env} />;
-                    }
+            if (selection.shown) {
+                if (selection.adding(user.id)) {
+                    badge = <ActionBadge type="reactivate" env={env} />;
+                } else if (selection.removing(user.id)) {
+                    badge = <ActionBadge type="disable" env={env} />;
                 }
             } else {
                 // don't create the link when we're editing the list
-                let params = { userID: user.id }
+                const params = { userID: user.id }
                 url = route.find('user-summary-page', params);
             }
-            let image = <ProfileImage user={user} env={env} />;
+            const image = <ProfileImage user={user} env={env} />;
             return (
                 <td>
                     <a href={url}>{image} {name}</a>{badge}
@@ -352,16 +212,7 @@ class UserListPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render username column, either the heading or a data cell
-     *
-     * @param  {Object|null} user
-     *
-     * @return {ReactElement}
-     */
-    renderUsernameColumn(user) {
-        let { env } = this.props;
-        let { t } = env.locale;
+    function renderUsernameColumn(user) {
         if (!env.isWiderThan('narrow')) {
             return null;
         }
@@ -374,16 +225,7 @@ class UserListPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render Type column, either the heading or a data cell
-     *
-     * @param  {Object|null} user
-     *
-     * @return {ReactElement}
-     */
-    renderTypeColumn(user) {
-        let { env } = this.props;
-        let { t } = env.locale;
+    function renderTypeColumn(user) {
         if (!env.isWiderThan('standard')) {
             return null;
         }
@@ -394,27 +236,16 @@ class UserListPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render projects column, either the heading or a data cell
-     *
-     * @param  {Object|null} user
-     *
-     * @return {ReactElement}
-     */
-    renderProjectsColumn(user) {
-        let { route, env, projects } = this.props;
-        let { renderingFullList } = this.state;
-        let { t } = env.locale;
+    function renderProjectsColumn(user) {
         if (!env.isWiderThan('super-wide')) {
             return null;
         }
         if (!user) {
             return <TH id="projects">{t('table-heading-projects')}</TH>;
         } else {
-            let props = {
+            const props = {
                 projects: findProjects(projects, user),
-                omit: 1,
-                disabled: renderingFullList,
+                disabled: selection.shown,
                 route,
                 env,
             };
@@ -422,26 +253,16 @@ class UserListPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render roles column, either the heading or a data cell
-     *
-     * @param  {Object|null} user
-     *
-     * @return {ReactElement|null}
-     */
-    renderRolesColumn(user) {
-        let { route, env, roles } = this.props;
-        let { renderingFullList } = this.state;
-        let { t } = env.locale;
+    function renderRolesColumn(user) {
         if (!env.isWiderThan('wide')) {
             return null;
         }
         if (!user) {
             return <TH id="roles">{t('table-heading-roles')}</TH>;
         } else {
-            let props = {
+            const props = {
                 roles: findRoles(roles, user),
-                disabled: renderingFullList,
+                disabled: selection.shown,
                 route,
                 env,
             };
@@ -449,17 +270,7 @@ class UserListPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render email column, either the heading or a data cell
-     *
-     * @param  {Object|null} user
-     *
-     * @return {ReactElement}
-     */
-    renderEmailColumn(user) {
-        let { env } = this.props;
-        let { renderingFullList } = this.state;
-        let { t } = env.locale;
+    function renderEmailColumn(user) {
         if (!env.isWiderThan('wide')) {
             return null;
         }
@@ -467,10 +278,10 @@ class UserListPageSync extends PureComponent {
             return <TH id="email">{t('table-heading-email')}</TH>;
         } else {
             let contents = '-';
-            let email = user.details.email;
+            const email = user.details.email;
             if (email) {
                 let url;
-                if (!renderingFullList) {
+                if (!selection.shown) {
                     url = `mailto:${email}`;
                 }
                 contents = <a href={url}>{email}</a>;
@@ -479,152 +290,57 @@ class UserListPageSync extends PureComponent {
         }
     }
 
-
-    /**
-     * Render column showing the last modified time
-     *
-     * @param  {Object|null} user
-     *
-     * @return {ReactElement|null}
-     */
-    renderModifiedTimeColumn(user) {
-        let { env } = this.props;
-        let { renderingFullList } = this.state;
-        let { t } = env.locale;
+    function renderModifiedTimeColumn(user) {
         if (!env.isWiderThan('standard')) {
             return null;
         }
         if (!user) {
             return <TH id="mtime">{t('table-heading-last-modified')}</TH>
         } else {
-            let props = {
+            const props = {
                 time: user.mtime,
-                disabled: renderingFullList,
+                disabled: selection.shown,
                 env,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
     }
 
-    /**
-     * Called when user clicks a table heading
-     *
-     * @param  {Object} evt
-     */
-    handleSort = (evt) => {
-        this.setState({
-            sortColumns: evt.columns,
-            sortDirections: evt.directions
-        });
-    }
-
-    /**
-     * Called when user clicks new button
-     *
-     * @param  {Event} evt
-     */
-    handleAddClick = (evt) => {
-        let { route } = this.props;
-        return route.push('user-summary-page', { userID: 'new' });
-    }
-
-    /**
-     * Called when user clicks edit button
-     *
-     * @param  {Event} evt
-     */
-    handleEditClick = (evt) => {
-        this.setEditability(true);
-    }
-
-    /**
-     * Called when user clicks cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        this.setEditability(false);
-    }
-
-    /**
-     * Called when user clicks save button
-     *
-     * @param  {Event} evt
-     */
-    handleSaveClick = async (evt) => {
-        let { database, env, users } = this.props;
-        let { disablingUserIDs, restoringUserIDs } = this.state;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let messages = [
-            t('user-list-confirm-disable-$count', disablingUserIDs.length),
-            t('user-list-confirm-reactivate-$count', restoringUserIDs.length),
-        ];
-        let bypass = [
-            _.isEmpty(disablingUserIDs) ? true : undefined,
-            _.isEmpty(restoringUserIDs) ? true : undefined,
-        ];
-        let confirmed = await confirmation.askSeries(messages, bypass);
-        if (confirmed) {
-            this.setState({ problems: {} });
-            let db = database.use({ schema: 'global', by: this });
-            let currentUserID = await db.start();
-            let usersAfter = [];
-            for (let user of users) {
-                let flags = {};
-                if (_.includes(disablingUserIDs, user.id)) {
-                    flags.disabled = true;
-                } else if (_.includes(restoringUserIDs, user.id)) {
-                    flags.disabled = flags.deleted = false;
-                } else {
-                    continue;
-                }
-                let userAfter = _.assign({}, user, flags);
-                usersAfter.push(userAfter);
-            }
-            try {
-                await db.save({ table: 'user' }, usersAfter);
-                this.setState({ hasChanges: false }, () => {
-                    this.setEditability(false);
-                });
-            } catch (err) {
-                let problems = { unexpected: err.message };
-                this.setState({ problems });
+    async function saveSelection() {
+        const { ask } = confirmation.current;
+        const { adding, removing } = selection.current;
+        if (!_.isEmpty(removing)) {
+            const question = t('user-list-confirm-disable-$count', removing.length);
+            const confirmed = await ask(question);
+            if (!confirmed) {
+                return;
             }
         }
-    }
-
-    /**
-     * Called when user clicks a row in edit mode
-     *
-     * @param  {Event} evt
-     */
-    handleRowClick = (evt) => {
-        let { users } = this.props;
-        let { restoringUserIDs, disablingUserIDs } = this.state;
-        let userID = parseInt(evt.currentTarget.getAttribute('data-user-id'));
-        let user = _.find(users, { id: userID });
-        if (user.deleted || user.disabled) {
-            if (_.includes(restoringUserIDs, user.id)) {
-                restoringUserIDs = _.without(restoringUserIDs, user.id);
-            } else {
-                restoringUserIDs = _.concat(restoringUserIDs, user.id);
-            }
-        } else {
-            if (_.includes(disablingUserIDs, user.id)) {
-                disablingUserIDs = _.without(disablingUserIDs, user.id);
-            } else {
-                disablingUserIDs = _.concat(disablingUserIDs, user.id);
-            }
+        if (!_.isEmpty(adding)) {
+            const question = t('user-list-confirm-reactivate-$count', adding.length);
+            const confirmed = await ask(question);
         }
-        let hasChanges = !_.isEmpty(restoringUserIDs) || !_.isEmpty(disablingUserIDs);
-        this.setState({ restoringUserIDs, disablingUserIDs, hasChanges });
+
+        const changes = [];
+        for (let user of users) {
+            const columns = { id: user.id };
+            if (_.includes(removing, user.id)) {
+                columns.disabled = true;
+            } else if (_.includes(adding, user.id)) {
+                columns.disabled = columns.deleted = false;
+            } else {
+                continue;
+            }
+            changes.push(columns);
+        }
+        const usersAfter = await db.save({ table: 'user' }, changes);
+        return usersAfter;
     }
 }
 
-let sortUsers = memoizeWeak(null, function(users, roles, projects, env, columns, directions) {
-    let { p } = env.locale;
-    columns = _.map(columns, (column) => {
+let sortUsers = memoizeWeak(null, function(users, roles, projects, env, sort) {
+    const { p } = env.locale;
+    const columns = _.map(sort.columns, (column) => {
         switch (column) {
             case 'name':
                 return (user) => {
@@ -660,55 +376,31 @@ let sortUsers = memoizeWeak(null, function(users, roles, projects, env, columns,
                 return column;
         }
     });
-    return _.orderBy(users, columns, directions);
+    return _.orderBy(users, columns, sort.directions);
 });
 
-let filterUsers = memoizeWeak(null, function(users) {
+const filterUsers = memoizeWeak(null, function(users) {
     return _.filter(users, (user) => {
         return (user.disabled !== true) && (user.deleted !== true);
     });
 });
 
-let findProjects = memoizeWeak(null, function(projects, user) {
+const findProjects = memoizeWeak(null, function(projects, user) {
     return _.filter(projects, (project) => {
         return _.includes(project.user_ids, user.id);
     });
 });
 
-let findRoles = memoizeWeak(null, function(roles, user) {
-    let hash = _.keyBy(roles, 'id');
+const findRoles = memoizeWeak(null, function(roles, user) {
+    const hash = _.keyBy(roles, 'id');
     return _.filter(_.map(user.role_ids, (id) => {
         return hash[id];
     }));
 });
 
+const component = Relaks.memo(UserListPage);
+
 export {
-    UserListPage as default,
-    UserListPage,
-    UserListPageSync,
+    component as default,
+    component as UserListPage,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    UserListPage.propTypes = {
-        editing: PropTypes.bool,
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    UserListPageSync.propTypes = {
-        editing: PropTypes.bool,
-        users: PropTypes.arrayOf(PropTypes.object),
-        projects: PropTypes.arrayOf(PropTypes.object),
-        roles: PropTypes.arrayOf(PropTypes.object),
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

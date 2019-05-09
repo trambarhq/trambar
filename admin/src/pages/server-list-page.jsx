@@ -144,26 +144,26 @@ async function ServerListPage(props) {
     }
 
     function renderRow(server) {
-        const classes = [];
+        const classNames = [];
         let onClick, title;
         if (server.deleted) {
-            classes.push('deleted');
+            classNames.push('deleted');
             title = t('server-list-status-deleted');
         } else if (server.disabled) {
-            classes.push('disabled');
+            classNames.push('disabled');
             title = t('server-list-status-disabled');
         }
         if (selection.shown) {
             if (selection.existing(server.id)) {
-                classes.push('fixed');
+                classNames.push('fixed');
             }
             if (selection.keeping(server.id) || selection.adding(server.id)) {
-                classes.push('selected');
+                classNames.push('selected');
             }
             onClick = handleRowClick;
         }
         const props = {
-            className: classes.join(' '),
+            className: classNames.join(' '),
             'data-server-id': server.id,
             title,
             onClick,

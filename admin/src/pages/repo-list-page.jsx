@@ -21,9 +21,6 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 import './repo-list-page.scss';
 
-/**
- * Asynchronous component that render the Repo List page.
- */
 async function RepoListPage(props) {
     const { database, route, env, projectID, editing } = props;
     const { t, p, f } = env.locale;
