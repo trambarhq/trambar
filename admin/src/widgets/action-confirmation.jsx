@@ -1,154 +1,67 @@
-import _ from 'lodash';
-import Promise from 'bluebird';
-import React, { PureComponent } from 'react';
+import React, { useState, useImperativeHandle, useCallback } from 'react';
 
 // widgets
 import ConfirmationDialogBox from '../dialogs/confirmation-dialog-box.jsx';
 
 /**
  * Component that renders a confirmation dialog box.
- *
- * @extends PureComponent
  */
-class ActionConfirmation extends PureComponent {
-    static displayName = 'ActionConfirmation';
+function ActionConfirmation(props, ref) {
+    const { env } = props;
+    const [ question, setQuestion ] = useState(null);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            showing: false,
-            message: null,
-            resolve: null,
-            promise: null,
-        };
-    }
-
-    /**
-     * Render component
-     *
-     * @return  {ReactElement|null}
-     */
-    render() {
-        let { env } = this.props;
-        let { showing, message } = this.state;
-        let { t } = env.locale;
-        let dialogProps = {
-            show: showing,
-            dangerous: true,
-            env,
-            onConfirm: this.handleConfirm,
-            onCancel: this.handleCancel,
-        };
-        return (
-            <ConfirmationDialogBox {...dialogProps}>
-                {message}
-            </ConfirmationDialogBox>
-        )
-    }
-
-    /**
-     * Show confirmation dialog with given message
-     *
-     * @param  {String|ReactElement} message
-     * @param  {Boolean|undefined} bypass
-     *
-     * @return {Promise<Boolean>}
-     */
-    ask(message, bypass) {
-        let { promise } = this.state;
-        if (typeof(bypass) === 'boolean') {
-            // return without user intervention if the result is provided
-            if (promise) {
-                if (bypass) {
-                    this.handleConfirm();
+    useImperativeHandle(ref, () => {
+        return {
+            ask: async (message) => {
+                let promise, resolve;
+                if (question) {
+                    promise = question.promise;
+                    resolve = question.resolve;
                 } else {
-                    this.handleCancel();
+                    promise = new Promise((f) => { resolve = f });
                 }
+                const newQuestion = {
+                    message,
+                    promise,
+                    resolve,
+                };
+                setQuestion(newQuestion);
                 return promise;
-            } else {
-                return Promise.resolve(bypass);
-            }
+            },
+        };
+    });
+
+    const handleConfirm = useCallback((evt) => {
+        if (question) {
+            setQuestion(null);
+            question.resolve(true);
         }
-        if (promise) {
-            this.setState({ message });
-        } else {
-            let resolve;
-            promise = new Promise((f) => { resolve = f });
-            this.setState({
-                showing: true,
-                message,
-                resolve,
-                promise,
-            });
-            return promise;
+    }, [ question ]);
+    const handleCancel = useCallback((evt) => {
+        if (question) {
+            setQuestion(null);
+            question.resolve(false);
         }
-    }
+    }, [ question ]);
 
-    /**
-     * Ask a series of confirmation questions
-     *
-     * @param  {Array<String|ReactElement>} message
-     * @param  {Array<Boolean|undefined>} bypass
-     *
-     * @return {Promise<Boolean>}
-     */
-    askSeries(messages, bypass) {
-        return Promise.reduce(messages, (confirmed, message, index) => {
-            if (!confirmed) {
-                return false;
-            }
-            return this.ask(message, (bypass) ? bypass[index] : undefined);
-        }, true);
-    }
-
-    /**
-     * Called when user click confirms the action
-     *
-     * @param  {Object} evt
-     */
-    handleConfirm = (evt) => {
-        let { resolve } = this.state;
-        this.setState({
-            showing: false,
-            resolve: null,
-            promise: null,
-        }, () => {
-            if (resolve) {
-                resolve(true);
-            }
-        });
-    }
-
-    /**
-     * Called when user cancels the action
-     *
-     * @param  {Object} evt
-     */
-    handleCancel = (evt) => {
-        let { resolve } = this.state;
-        this.setState({
-            showing: false,
-            resolve: null,
-            promise: null
-        }, () => {
-            if (resolve) {
-                resolve(false);
-            }
-        });
-    }
+    const { t } = env.locale;
+    const dialogProps = {
+        show: !!question,
+        dangerous: true,
+        env,
+        onConfirm: handleConfirm,
+        onCancel: handleCancel,
+    };
+    return (
+        <ConfirmationDialogBox {...dialogProps}>
+            {question ? question.message : undefined}
+        </ConfirmationDialogBox>
+    )
 }
+
+const component = React.forwardRef(ActionConfirmation);
 
 export {
-    ActionConfirmation as default,
-    ActionConfirmation,
+    component as default,
+    component as ActionConfirmation,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ActionConfirmation.propTypes = {
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

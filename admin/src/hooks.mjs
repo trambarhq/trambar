@@ -1,6 +1,20 @@
 import _ from 'lodash';
-import { useState, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useSaveBuffer } from 'relaks';
+
+function useLatest(propValue) {
+    const [ stateValue, setStateValue ] = useState();
+    const stateValueTime = useMemo(() => new Date, [ stateValue ]);
+    const propValueTime = useMemo(() => new Date, [ propValue ]);
+    const latestValue = useMemo(() => {
+        if (stateValueTime > propValueTime) {
+            return stateValue;
+        } else {
+            return propValue;
+        }
+    }, [ stateValueTime, propValueTime ]);
+    return [ latestValue, setStateValue ];
+}
 
 function useAfterglow(value, delay) {
     value = !!value;
@@ -106,6 +120,7 @@ function useSelectionBuffer(active) {
 }
 
 export {
+    useLatest,
     useAfterglow,
     useErrorHandling,
     useSortHandling,

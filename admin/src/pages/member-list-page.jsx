@@ -105,7 +105,7 @@ async function MemberListPage(props) {
             );
         } else {
             const membersPending = _.size(membersPlus) > _.size(members);
-            const preselected = (membersPending) ? 'approve' : undefined;
+            const preselected = (membersPending) ? 'approve' : 'add';
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected}>

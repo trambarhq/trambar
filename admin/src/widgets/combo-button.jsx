@@ -1,63 +1,67 @@
 import _ from 'lodash';
-import React, { PureComponent, Children } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useLatest } from '../hooks';
 
 import './combo-button.scss';
 
 /**
  * A push button with a drop-down menu.
- *
- * @extends PureComponent
  */
-class ComboButton extends PureComponent {
-    static displayName = 'ComboButton';
+function ComboButton(props) {
+    const { preselected, alert, children } = props;
+    const [ open, setOpen ] = useState(false);
+    const [ selected, setSelected ] = useLatest(preselected);
+    const containerNode = useRef();
 
-    constructor(props) {
-        super(props);
-        let { preselected } = this.props;
-        this.state = {
-            open: false,
-            selected: preselected,
-        };
-    }
+    const handleSideButtonClick = useCallback((evt) => {
+        setOpen(!open);
+    }, [ open ]);
+    const handleItemClick = useCallback((evt) => {
+        const name = evt.currentTarget.getAttribute('data-name');
+        setSelected(name);
+        setOpen(false);
+    });
+    const handleBodyMouseDown = useCallback((evt) => {
+        let insideMenu = isInside(evt.target, containerNode.current);
+        if (!insideMenu) {
+            setOpen(false);
+        }
+    });
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        return (
-            <div className="combo-button">
-                {this.renderMainButton()}
-                {this.renderSideButton()}
-                {this.renderMenu()}
-            </div>
-        );
-    }
+    useEffect(() => {
+        // add/remove document-level mousedown handler when menu opens and closes
+        if (open) {
+            const appContainer = document.getElementById('react-container');
+            appContainer.addEventListener('mousedown', handleBodyMouseDown);
+            return () => {
+                appContainer.removeEventListener('mousedown', handleBodyMouseDown);
+            };
+        }
+    }, [ open ]);
 
-    /**
-     * Render main button
-     *
-     * @return {ReactElement}
-     */
-    renderMainButton() {
-        let { alert, children } = this.props;
-        let { selected } = this.state;
-        let options = Children.toArray(children);
+    return (
+        <div className="combo-button" ref={containerNode}>
+            {renderMainButton()}
+            {renderSideButton()}
+            {renderMenu()}
+        </div>
+    );
+
+    function renderMainButton() {
+        const options = React.Children.toArray(children);
         let selectedOption = _.find(options, (option) => {
             return option.props.name === selected;
         });
         if (!selectedOption) {
             selectedOption = _.first(options);
         }
-        let props = _.omit(selectedOption.props, 'separator');
+        const props = _.omit(selectedOption.props, 'separator');
         props.className = props.className ? `main ${props.className}`: 'main';
         if (alert) {
             props.className += ' alert';
         }
         if (!props.onClick) {
-            props.onClick = this.handleSideButtonClick;
+            props.onClick = handleSideButtonClick;
         }
         return (
             <button {...props}>
@@ -66,63 +70,39 @@ class ComboButton extends PureComponent {
         );
     }
 
-    /**
-     * Render side button
-     *
-     * @return {ReactElement}
-     */
-    renderSideButton() {
+    function renderSideButton() {
         return (
-            <button className="side" onClick={this.handleSideButtonClick}>
+            <button className="side" onClick={handleSideButtonClick}>
                 <i className="fa fa-angle-down" />
             </button>
         );
     }
 
-    /**
-     * Render pop-up menu
-     *
-     * @return {ReactElement|null}
-     */
-    renderMenu() {
-        let { children } = this.props;
-        let { open } = this.state;
+    function renderMenu() {
         if (!open) {
             return null;
         }
-        let options = Children.toArray(children);
+        const options = React.Children.toArray(children);
         return (
             <div className="container">
                 <div className="menu">
-                {
-                    _.map(options, (option, i) => {
-                        return this.renderOption(option, i);
-                    })
-                }
+                    {_.map(options, renderOption)}
                 </div>
             </div>
         );
     }
 
-    /**
-     * Render a menu item
-     *
-     * @param  {ReactElement} option
-     * @param  {Number} i
-     *
-     * @return {ReactElement|null}
-     */
-    renderOption(option, i) {
-        let { name, separator, hidden, disabled } = option.props;
+    function renderOption(option, i) {
+        const { name, separator, hidden, disabled } = option.props;
         if (!name || hidden) {
             return null;
         }
-        let itemProps = {
+        const itemProps = {
             'data-name': name,
             className: 'option',
-            onClick: this.handleItemClick,
+            onClick: handleItemClick,
         };
-        let linkProps = _.omit(option.props, 'name', 'separator', 'disabled');
+        const linkProps = _.omit(option.props, 'name', 'separator', 'disabled');
         if (disabled) {
             itemProps.className += ' disabled';
             itemProps.onClick = null;
@@ -140,59 +120,6 @@ class ComboButton extends PureComponent {
         );
     }
 
-    /**
-     * Add/remove document-level mousedown handler when menu opens and closes
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    componentDidUpdate(prevProps, prevState) {
-        let { preselected } = this.props;
-        let { open } = this.state;
-        if (prevProps.preselected !== preselected) {
-            this.setState({ selected: preselected });
-        }
-
-        let appContainer = document.getElementById('react-container');
-        if (!prevState.open && open) {
-            appContainer.addEventListener('mousedown', this.handleBodyMouseDown);
-        } else if (prevState.open && !open) {
-            appContainer.removeEventListener('mousedown', this.handleBodyMouseDown);
-        }
-    }
-
-    /**
-     * Called when user click the side button
-     *
-     * @param  {Object} evt
-     */
-    handleSideButtonClick = (evt) => {
-        let { open } = this.state;
-        this.setState({ open: !open });
-    }
-
-    /**
-     * Called when user closes the menu
-     *
-     * @param  {Object} evt
-     */
-    handleItemClick = (evt) => {
-        let name = evt.currentTarget.getAttribute('data-name');
-        this.setState({ selected: name, open: false });
-    }
-
-    /**
-     * Called when user clicks on the page somewhere
-     *
-     * @param  {Event} evt
-     */
-    handleBodyMouseDown = (evt) => {
-        let containerNode = ReactDOM.findDOMNode(this);
-        let insideMenu = isInside(evt.target, containerNode);
-        if (!insideMenu) {
-            this.setState({ open: false });
-        }
-    }
 }
 
 function isInside(node, container) {
@@ -213,12 +140,3 @@ export {
     ComboButton as default,
     ComboButton,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ComboButton.propType = {
-        preselected: PropTypes.string,
-        alert: PropTypes.bool,
-    };
-}

@@ -40,14 +40,3 @@ export {
     ActionBadge as default,
     ActionBadge
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ActionBadge.propTypes = {
-        type: PropTypes.string.isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}
