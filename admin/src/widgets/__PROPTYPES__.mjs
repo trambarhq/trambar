@@ -9,7 +9,7 @@ import { DataLossWarning } from './data-loss-warning.jsx';
 import { ImageSelector } from './image-selector.jsx';
 import { InputError } from './input-error.jsx';
 import { InstructionBlock } from './instruction-block.jsx';
-
+import { MultilingualTextField } from './multilingual-text-field.jsx';
 import { NavigationTree } from './navigation-tree.jsx'
 import { OptionList } from './option-list.jsx';
 import { ProfileImage } from './profile-image.jsx';
@@ -60,7 +60,13 @@ InstructionBlock.propTypes = {
     hidden: PropTypes.bool,
     env: PropTypes.instanceOf(Environment).isRequired,
 };
-
+MultilingualTextField.propTypes = {
+    type: PropTypes.string,
+    value: PropTypes.oneOfType([ PropTypes.object, PropTypes.string ]),
+    availableLanguageCodes: PropTypes.arrayOf(PropTypes.string),
+    env: PropTypes.instanceOf(Environment).isRequired,
+    onChange: PropTypes.func,
+};
 NavigationTree.propTypes = {
     disabled: PropTypes.bool,
     database: PropTypes.instanceOf(Database).isRequired,
