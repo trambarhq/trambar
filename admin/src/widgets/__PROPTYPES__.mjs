@@ -10,8 +10,13 @@ import { ImageSelector } from './image-selector.jsx';
 import { InputError } from './input-error.jsx';
 import { InstructionBlock } from './instruction-block.jsx';
 
+import { NavigationTree } from './navigation-tree.jsx'
+import { OptionList } from './option-list.jsx';
 import { ProfileImage } from './profile-image.jsx';
-
+import { SideNavigation } from './side-navigation.jsx';
+import { SignOffMenu } from './sign-off-menu.jsx';
+import { SortableTable } from './sortable-table.jsx';
+import { TaskAlertBar } from './task-alert-bar.jsx';
 import { TextField } from './text-field.jsx';
 import { UnexpectedError } from './unexpected-error.jsx';
 
@@ -56,6 +61,12 @@ InstructionBlock.propTypes = {
     env: PropTypes.instanceOf(Environment).isRequired,
 };
 
+NavigationTree.propTypes = {
+    disabled: PropTypes.bool,
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
 OptionList.propTypes = {
     readOnly: PropTypes.bool,
     onOptionClick: PropTypes.func,
