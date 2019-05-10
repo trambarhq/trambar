@@ -84,7 +84,11 @@ SortableTable.propTypes = {
     selectable: PropTypes.bool,
     onSort: PropTypes.func,
 };
-
+TaskAlertBar.propTypes = {
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
 TaskList.propTypes = {
     scrollToTaskID: PropTypes.number,
     server: PropTypes.object,

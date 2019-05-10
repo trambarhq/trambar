@@ -6,23 +6,34 @@ const emptyArray = [];
  * Find system tasks that haven't yet ended
  *
  * @param  {Database} db
- * @param  {String} startTime
- * @param  {Number|undefined} minimum
  *
  * @return {Promise<Array<Task>>}
  */
-async function findActiveTasks(db, startTime, minimum) {
-    return db.find({
+async function findActiveTask(db, startTime) {
+    return db.findOne({
         schema: 'global',
         table: 'task',
         criteria: {
             etime: null,
             deleted: false,
-            newer_than: startTime,
-            limit: 10,
+            failed: false,
+            newer_than: startTime || undefined,
             user_id: null,
-        },
-        minimum
+        }
+    });
+}
+
+async function findFailedTask(db, startTime) {
+    return db.findOne({
+        schema: 'global',
+        table: 'task',
+        criteria: {
+            etime: null,
+            deleted: false,
+            failed: true,
+            newer_than: startTime || undefined,
+            user_id: null,
+        }
     });
 }
 
@@ -54,6 +65,7 @@ async function findServerTasks(db, server, minimum) {
 }
 
 export {
-    findActiveTasks,
+    findActiveTask,
+    findFailedTask,
     findServerTasks,
 };

@@ -64,7 +64,7 @@ async function TaskList(props) {
             <div className="task-list" ref={container}>
                 <SmartList {...smartListProps} />
             </div>
-        );
+        , 'initial');
     }
 
     function renderTask(task) {

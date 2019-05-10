@@ -11,6 +11,7 @@ $lighter-gray: #dddddd;
 $off-white: #eeeeee;
 $orange: #cc6600;
 $bright-yellow: #ffff66;
+$bright-red: #ff3333;
 
 $page-viewport-background-color: $white;
 $focus-outline-color: $light-blue;
@@ -46,7 +47,8 @@ $navigation-menu-button-hover-text-color: $light-blue;
 
 $alert-bar-text-color: lighten($dark-blue, 10%);
 $alert-bar-hover-text-color: $light-blue;
-$alert-bar-progress-bar-color: lighten($dark-blue, 10%);
+$alert-bar-failure-text-color: #ff3333;
+$alert-bar-failure-hover-text-color: $light-red;
 
 $dialog-box-background-color: $dark-blue;
 $dialog-box-text-color: $white;
