@@ -3,8 +3,15 @@ import Database from 'common/data/database.mjs';
 import Route from 'common/routing/route.mjs';
 import Environment from 'common/env/environment.mjs';
 
-import { ErrorPage } from 'error-page.jsx';
-import { MemberListPage } from 'member-list-page.jsx';
+import { ErrorPage } from './error-page.jsx';
+import { MemberListPage } from './member-list-page.jsx';
+import { ProjectListPage } from './project-list-page.jsx';
+import { RepoListPage } from './repo-list-page.jsx';
+import { RoleListPage } from './role-list-page.jsx';
+import { ServerListPage } from './server-list-page.jsx';
+import { StartPage } from './start-page.jsx';
+import { SignInPage } from './sign-in-page.jsx';
+import { UserListPage } from './user-list-page.jsx';
 
 ErrorPage.propTypes = {
     database: PropTypes.instanceOf(Database).isRequired,
@@ -42,6 +49,16 @@ RoleListPage.propTypes = {
 };
 ServerListPage.propTypes = {
     editing: PropTypes.bool,
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+SignInPage.propTypes = {
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+StartPage.propTypes = {
     database: PropTypes.instanceOf(Database).isRequired,
     route: PropTypes.instanceOf(Route).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,
