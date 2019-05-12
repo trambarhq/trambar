@@ -46,11 +46,11 @@ async function MemberListPage(props) {
     }, [ saveSelection, handleCancelClick ]);
     const handleApproveClick = useCallback(async (evt) => {
         try {
-            await updateMemberList();
+            await approvePendingUsers();
         } catch (err) {
             setUnexpectedError(err);
         }
-    }, [ updateMemberList ]);
+    }, [ approvePendingUsers ]);
     const handleRejectClick = useCallback(async(evt) => {
         try {
             await rejectPendingUsers();
@@ -360,16 +360,28 @@ async function MemberListPage(props) {
     }
 
     async function saveSelection() {
-        const { adding, removing } = selection.current;
-        updateMemberList(adding, removing);
+        const existingUserIDs = _.map(users, 'id');
+        const columns = {
+            id: project.id,
+            user_ids: _.intersection(selection.current, existingUserIDs)
+        };
+        const projectAfter = await db.saveOne({ table: 'project' }, columns);
+        return projectAfter;
     }
 
     async function approvePendingUsers() {
         const pendingUsers = _.filter(users, (user) => {
             return _.includes(user.requested_project_ids, project.id);
         });
-        const adding = _.map(pendingUsers, 'id');
-        return updateMemberList(adding, []);
+        const newUserIDs = _.map(pendingUsers, 'id');
+        const userIDs = _.union(project.user_ids, newUserIDs);
+        const existingUserIDs = _.map(users, 'id');
+        const columns = {
+            id: project.id,
+            user_ids: _.intersection(userIDs, existingUserIDs)
+        };
+        const projectAfter = await db.saveOne({ table: 'project' }, columns);
+        return projectAfter;
     }
 
     async function rejectPendingUsers() {
@@ -384,19 +396,6 @@ async function MemberListPage(props) {
         });
         const usersAfter = await db.save({ table: 'user' }, changes);
         return usersAfter;
-    }
-
-    async function updateMemberList(adding, removing) {
-        const userIDs = project.user_ids;
-        const userIDsAfter = _.difference(_.union(userIDs, adding), removing);
-        const existingUserIDs = _.map(users, 'id');
-        const columns = {
-            id: project.id,
-            user_ids: _.intersection(userIDsAfter, existingUserIDs)
-        };
-        const currentUserID = await db.start();
-        const projectAfter = await db.saveOne({ table: 'project' }, columns);
-        return projectAfter;
     }
 }
 

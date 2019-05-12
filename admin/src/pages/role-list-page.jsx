@@ -231,31 +231,38 @@ async function RoleListPage(props) {
     }
 
     async function saveSelection() {
-        const { ask } = confirmation.current;
-        const { adding, removing } = selection.current;
-        if (!_.isEmpty(removing)) {
-            const question = t('role-list-confirm-disable-$count', removing.length);
-            const confirmed = await ask(question);
-            if (!confirmed) {
-                return;
-            }
-        }
-        if (!_.isEmpty(adding)) {
-            const question = t('role-list-confirm-reactivate-$count', adding.length);
-            const confirmed = await ask(question);
-        }
         const changes = [];
+        let remove, add = 0;
         for (let role of roles) {
             const columns = { id: role.id };
-            if (_.includes(removing, role.id)) {
+            if (selection.removing(role.id)) {
                 columns.disabled = true;
-            } else if (_.includes(adding, role.id)) {
+                remove++;
+            } else if (selection.adding(role.id)) {
                 columns.disabled = flags.deleted = false;
+                add++;
             } else {
                 continue;
             }
             changes.push(columns);
         }
+
+        const { ask } = confirmation.current;
+        if (remove) {
+            const question = t('role-list-confirm-disable-$count', remove);
+            const confirmed = await ask(question);
+            if (!confirmed) {
+                return;
+            }
+        }
+        if (add) {
+            const question = t('role-list-confirm-reactivate-$count', add);
+            const confirmed = await ask(question);
+            if (!confirmed) {
+                return;
+            }
+        }
+
         const rolesAfter = await db.save({ table: 'role' }, changes);
         return rolesAfter;
     }

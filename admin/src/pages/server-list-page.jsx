@@ -270,36 +270,38 @@ async function ServerListPage(props) {
     }
 
     async function saveSelection() {
-        const { ask } = confirmation.current;
-        const { adding, removing } = selection.current;
-
-        if (!_.isEmpty(removing)) {
-            const question = t('server-list-confirm-disable-$count', removing.length);
-            const confirmed = await ask(question);
-            if (!confirmed) {
-                return;
-            }
-        }
-        if (!_.isEmpty(adding)) {
-            const question = t('server-list-confirm-reactivate-$count', adding.length);
-            const confirmed = await ask(question);
-            if (!confirmed) {
-                return;
-            }
-        }
-
         const changes = [];
+        let remove = 0, add = 0;
         for (let server of servers) {
             const columns = { id: server.id };
-            if (_.includes(removing, server.id)) {
+            if (selection.remove(server.id)) {
                 columns.disabled = true;
-            } else if (_.includes(adding, server.id)) {
+                remove++;
+            } else if (selection.adding(server.id)) {
                 columns.disabled = flags.deleted = false;
+                add++;
             } else {
                 continue;
             }
             changes.push(columns);
         }
+
+        const { ask } = confirmation.current;
+        if (remove) {
+            const question = t('server-list-confirm-disable-$count', remove);
+            const confirmed = await ask(question);
+            if (!confirmed) {
+                return;
+            }
+        }
+        if (add) {
+            const question = t('server-list-confirm-reactivate-$count', add);
+            const confirmed = await ask(question);
+            if (!confirmed) {
+                return;
+            }
+        }
+
         const serversAfter = await db.save({ table: 'server' }, changes);
         return serversAfter;
     }

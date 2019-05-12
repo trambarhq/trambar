@@ -304,24 +304,23 @@ async function RepoListPage(props) {
     }
 
     async function saveSelection() {
-        const { ask } = confirmation.current;
-        const { adding, removing } = selection.current;
+        const repoIDs = project.repo_ids;
+        const remove = _.size(_.difference(repoIDs, selection.current));
 
-        if (!_.isEmpty(removing)) {
-            const question = t('repo-list-confirm-remove-$count', removing.length);
+        const { ask } = confirmation.current;
+        if (remove) {
+            const question = t('repo-list-confirm-remove-$count', remove);
             const confirmed = await ask(question);
             if (!confirmed) {
                 return;
             }
         }
 
-        const repoIDs = project.repo_ids;
-        const repoIDsAfter = _.difference(_.union(userIDs, adding), removing);
         // remove ids of repo that no longer exist
         const existingRepoIDs = _.map(repos, 'id');
         const columns = {
             id: project.id,
-            repo_ids: _.intersection(repoIDsAfter, existingRepoIDs)
+            repo_ids: _.intersection(selection.current, existingRepoIDs)
         };
         const projectAfter = await db.saveOne({ table: 'project' }, columns);
         return projectAfter;

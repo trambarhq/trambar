@@ -307,32 +307,35 @@ async function UserListPage(props) {
     }
 
     async function saveSelection() {
-        const { ask } = confirmation.current;
-        const { adding, removing } = selection.current;
-        if (!_.isEmpty(removing)) {
-            const question = t('user-list-confirm-disable-$count', removing.length);
-            const confirmed = await ask(question);
-            if (!confirmed) {
-                return;
-            }
-        }
-        if (!_.isEmpty(adding)) {
-            const question = t('user-list-confirm-reactivate-$count', adding.length);
-            const confirmed = await ask(question);
-        }
-
         const changes = [];
+        let remove = 0, add = 0;
         for (let user of users) {
             const columns = { id: user.id };
-            if (_.includes(removing, user.id)) {
+            if (selection.removing(user.id)) {
                 columns.disabled = true;
-            } else if (_.includes(adding, user.id)) {
+                remove++;
+            } else if (selection.adding(user.id)) {
                 columns.disabled = columns.deleted = false;
+                add++;
             } else {
                 continue;
             }
             changes.push(columns);
         }
+
+        const { ask } = confirmation.current;
+        if (remove) {
+            const question = t('user-list-confirm-disable-$count', remove);
+            const confirmed = await ask(question);
+            if (!confirmed) {
+                return;
+            }
+        }
+        if (add) {
+            const question = t('user-list-confirm-reactivate-$count', add);
+            const confirmed = await ask(question);
+        }
+
         const usersAfter = await db.save({ table: 'user' }, changes);
         return usersAfter;
     }

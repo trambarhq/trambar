@@ -330,31 +330,34 @@ async function ProjectListPage(props) {
     }
 
     async function saveSelection() {
-        const { ask } = confirmation.current;
-        const { adding, removing } = selection;
-        if (!_.isEmpty(removing)) {
-            const confirmed = await ask(t('project-list-confirm-archive-$count', removing.length));
-            if (!confirmed) {
-                return;
-            }
-        }
-        if (!_.isEmpty(adding)) {
-            const confirmed = await ask(t('project-list-confirm-restore-$count', adding.length));
-            if (!confirmed) {
-                return;
-            }
-        }
         const changes = [];
+        let remove = 0, add = 0;
         for (let project of projects) {
             const columns = { id: project.id };
-            if (_.includes(removing, project.id)) {
+            if (selection.removing(project.id)) {
                 columns.archived = true;
-            } else if (_.includes(adding, project.id)) {
+                remove++;
+            } else if (selection.adding(project.id)) {
                 columns.archived = columns.deleted = false;
+                add++;
             } else {
                 continue;
             }
-            projectsAfter.push(columns);
+            changes.push(columns);
+        }
+
+        const { ask } = confirmation.current;
+        if (remove) {
+            const confirmed = await ask(t('project-list-confirm-archive-$count', remove));
+            if (!confirmed) {
+                return;
+            }
+        }
+        if (add) {
+            const confirmed = await ask(t('project-list-confirm-restore-$count', add));
+            if (!confirmed) {
+                return;
+            }
         }
         const projectsAfter = await db.save({ table: 'project' }, changes);
         return projectsAfter;

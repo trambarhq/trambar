@@ -78,44 +78,28 @@ function useEditToggle(route, addParams) {
 
 function useSelectionBuffer(active) {
     const selection = useSaveBuffer({
-        original: { adding: [], removing: [] },
-        compare: _.isEqual,
+        compare: (a, b) => {
+            return _.isEmpty(_.xor(a, b));
+        },
+        reset: !active,
     });
     selection.shown = useAfterglow(active);
-    selection.base = function(existingIDs) {
-        const { adding, removing } = this.current;
-        this.existingIDs = existingIDs;
-        _.remove(adding, (id) => {
-            return this.existing(id);
-        });
-        _.remove(removing, (id) => {
-            return !this.existing(id);
-        });
-    };
     selection.existing = function(id) {
-        return _.includes(this.existingIDs, id);
+        return _.includes(this.original, id);
     };
     selection.toggle = function(id) {
-        let { adding, removing } = this.current;
-        if (!this.existing(id)) {
-            adding = _.toggle(adding, id);
-        } else {
-            removing = _.toggle(removing, id);
-        }
-        this.set({ adding, removing });
+        const list = _.toggle(this.current, id);
+        this.set(list);
     };
     selection.adding = function(id) {
-        const { adding } = this.current;
-        return !this.existing(id) && _.includes(adding, id);
-    }
+        return !this.existing(id) && _.includes(this.current, id);
+    };
     selection.keeping = function(id) {
-        const { removing } = this.current;
-        return this.existing(id) && !_.includes(removing, id);
-    }
+        return _.includes(this.current, id);
+    };
     selection.removing = function(id) {
-        const { removing } = this.current;
-        return this.existing(id) && _.includes(removing, id);
-    }
+        return this.existing(id) && !_.includes(this.current, id);
+    };
     return selection;
 }
 
