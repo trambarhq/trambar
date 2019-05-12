@@ -1,52 +1,33 @@
-import React, { PureComponent } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 /**
  * A video component that accepts a stream or blob as a prop. A workaround for
  * scalar-only limitation of regular HTML elements in React.
- *
- * @extends PureComponent
  */
-class LiveVideo extends PureComponent {
-    render() {
-        let { srcObject, ...props } = this.props;
+function LiveVideo(props) {
+    const { srcObject, ...otherProps } = props;
+    const videoRef = useRef();
+
+    useEffect(() => {
+        const video = videoRef.current;
         if (srcObject instanceof Blob) {
             // srcObject is supposed to accept a blob but that's not
             // currently supported by the browsers
-            props.src = this.blobURL = URL.createObjectURL(srcObject);
+            const url = URL.createObjectURL(srcObject);
+            video.url = url;
+            return () => {
+                URL.revokeObjectURL(url);
+            };
+        } else if (srcObject) {
+            video.srcObject = srcObject;
+            video.play();
+            return () => {
+                video.srcObject = null;
+            };
         }
-        return <video ref={this.setNode} {...props} />
-    }
+    }, [ srcObject ]);
 
-    setNode = (node) => {
-        this.node = node;
-    }
-
-    setSrcObject() {
-        let { srcObject } = this.props;
-        if (srcObject) {
-            if (!(srcObject instanceof Blob)) {
-                this.node.srcObject = srcObject;
-            }
-            this.node.play();
-        }
-    }
-
-    componentDidMount() {
-        this.setSrcObject();
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        let { srcObject } = this.props;
-        if (prevProps.srcObject !== srcObject) {
-            this.setSrcObject();
-        }
-    }
-
-    componentWillUnmount() {
-        if (this.blobURL) {
-            URL.revokeObjectURL(this.blobURL);
-        }
-    }
+    return <video ref={videoRef} {...otherProps} />
 }
 
 export {

@@ -291,7 +291,7 @@ class ImageEditor extends PureComponent {
     handleFullImageLoad = (evt) => {
         let { resource } = this.props;
         let { imageCropper } = this.components;
-        let url = evt.target.props.url;
+        let url = evt.target.src;
         this.setState({ loadedImageURL: url });
     }
 }
