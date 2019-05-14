@@ -7,6 +7,7 @@ import { ErrorPage } from './error-page.jsx';
 import { MemberListPage } from './member-list-page.jsx';
 import { ProjectListPage } from './project-list-page.jsx';
 import { RepoListPage } from './repo-list-page.jsx';
+import { RepoSummaryPage } from './repo-summary-page.jsx';
 import { RoleListPage } from './role-list-page.jsx';
 import { RoleSummaryPage } from './role-summary-page.jsx';
 import { ServerListPage } from './server-list-page.jsx';
@@ -37,6 +38,15 @@ ProjectListPage.propTypes = {
 RepoListPage.propTypes = {
     editing: PropTypes.bool,
     projectID: PropTypes.number.isRequired,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+RepoSummaryPage.propTypes = {
+    editing: PropTypes.bool,
+    projectID: PropTypes.number.isRequired,
+    repoID: PropTypes.number.isRequired,
 
     database: PropTypes.instanceOf(Database).isRequired,
     route: PropTypes.instanceOf(Route).isRequired,

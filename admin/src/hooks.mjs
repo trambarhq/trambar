@@ -79,7 +79,7 @@ function useAddHandling(route, redirect) {
     return [ handleAddClick ];
 }
 
-function useReturnHandling(route, page) {
+function useReturnHandling(route, redirect) {
     const handleReturnClick = useCallback((evt) => {
         const page = redirect.page || route.name;
         const params = { ...route.params, ...redirect.params };

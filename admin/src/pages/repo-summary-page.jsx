@@ -1,10 +1,11 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import ComponentRefs from 'common/utils/component-refs.mjs';
+import React, { useState, useCallback } from 'react';
+import Relaks, { useProgress, useSaveBuffer } from 'relaks';
+import { useEditHandling, useReturnHandling, useConfirmation } from '../hooks.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
+import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 
 // widgets
 import PushButton from '../widgets/push-button.jsx';
@@ -21,228 +22,106 @@ import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './repo-summary-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the Repo Summary page.
- *
- * @extends AsyncComponent
- */
-class RepoSummaryPage extends AsyncComponent {
-    static displayName = 'RepoSummaryPage';
+async function RepoSummaryPage(props) {
+    const { database, route, env, projectID, repoID, editing } = props;
+    const { t, p } = env.locale;
+    const db = database.use({ schema: 'global', by: this });
+    const readOnly = !editing;
+    const [ problems, setProblems ] = useState({});
+    const [ confirmationRef, confirm ] = useConfirmation();
+    const [ show ] = useProgress();
+    const draft = useSaveBuffer({
+        save: (base, ours, action) => {
+            switch (action) {
+                case 'restore': return restore(base);
+                default: return save(base, ours);
+            }
+        },
+        remove,
+        compare: _.isEqual,
+        reset: !editing,
+    });
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env, projectID, repoID, editing } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let props = {
-            projectID,
-            database,
-            route,
-            env,
-            editing,
-        };
-        meanwhile.show(<RepoSummaryPageSync {...props} />);
-        let currentUserID = await db.start()
-        props.repo = await RepoFinder.findRepo(db, repoID);
-        meanwhile.show(<RepoSummaryPageSync {...props} />);
-        props.project = await ProjectFinder.findProject(db, projectID);
-        meanwhile.show(<RepoSummaryPageSync {...props} />);
-        props.statistics = await StatisticsFinder.findDailyActivitiesOfRepo(db, props.project, props.repo);
-        return <RepoSummaryPageSync {...props} />;
-    }
-}
+    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
+    const [ handleReturnClick ] = useReturnHandling(route, {
+        page: 'repo-list-page',
+    });
+    const handleRemoveClick = useCallback(async (evt) => {
+        await draft.remove();
+    });
+    const handleRestoreClick = useCallback(async (evt) => {
+        await draft.save('restore');
+    });
+    const handleSaveClick = useCallback(async (evt) => {
+        await draft.save();
+    });
+    const handleTitleChange = useCallback((evt) => {
+        const title = evt.target.value;
+        const detailsBefore = draft.current.details;
+        const detailsAfter = _.decoupleSet(detailsBefore, 'details.title', title);
+        draft.assign({ details: detailsAfter });
+    });
 
-/**
- * Synchronous component that actually renders the Repo Summary page.
- *
- * @extends PureComponent
- */
-class RepoSummaryPageSync extends PureComponent {
-    static displayName = 'RepoSummaryPageSync';
+    render();
+    const currentUserID = await db.start()
+    const system = await SystemFinder.findSystem(db);
+    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    const repo = await RepoFinder.findRepo(db, repoID);
+    render();
+    const project = await ProjectFinder.findProject(db, projectID);
+    render();
+    const statistics = await StatisticsFinder.findDailyActivitiesOfRepo(db, project, repo);
+    render();
 
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            confirmation: ActionConfirmation
-        });
-        this.state = {
-            newRepo: null,
-            saving: false,
-            problems: {},
-        };
-    }
-
-    /**
-     * Reset edit state when edit ends
-     *
-     * @param  {Object} props
-     * @param  {Object} state
-     */
-    static getDerivedStateFromProps(props, state) {
-        let { editing } = props;
-        if (!editing) {
-            return {
-                newRepo: null,
-                hasChanges: false,
-                problems: {},
-            };
-        }
-        return null;
-    }
-
-    /**
-     * Return edited copy of repo object or the original object
-     *
-     * @param  {String} state
-     *
-     * @return {Object}
-     */
-    getRepo(state) {
-        let { repo } = this.props;
-        let { newRepo } = this.state;
-        if (!state || state === 'current') {
-            return newRepo || repo || emptyRepo;
-        } else {
-            return repo || emptyRepo;
-        }
-    }
-
-    /**
-     * Return a property of the repo object
-     *
-     * @param  {String} path
-     * @param  {String} state
-     *
-     * @return {*}
-     */
-    getRepoProperty(path, state) {
-        let repo = this.getRepo(state);
-        return _.get(repo, path);
-    }
-
-    /**
-     * Modify a property of the repo object
-     *
-     * @param  {String} path
-     * @param  {*} value
-     */
-    setRepoProperty(path, value) {
-        let { repo } = this.props;
-        let newRepo = this.getRepo();
-        let newRepoAfter = _.decoupleSet(newRepo, path, value);
-        let hasChanges = true;
-        if (_.isEqual(newRepoAfter, repo)) {
-            newRepoAfter = null;
-            hasChanges = false;
-        }
-        this.setState({ newRepo: newRepoAfter, hasChanges });
-    }
-
-    /**
-     * Change editability of page
-     *
-     * @param  {Boolean} edit
-     *
-     * @return {Promise}
-     */
-    setEditability(edit) {
-        let { route } = this.props;
-        let params = _.clone(route.params);
-        params.editing = edit || undefined;
-        return route.replace(route.name, params);
-    }
-
-    /**
-     * Return to repo list
-     *
-     * @return {Promise}
-     */
-    returnToList() {
-        let { route, projectID } = this.props;
-        let params = { projectID };
-        return route.push('repo-list-page', params);
-    }
-
-    /**
-     * Return list of language codes
-     *
-     * @return {Array<String>}
-     */
-    getInputLanguages() {
-        let { system } = this.props;
-        return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { route, env } = this.props;
-        let { hasChanges, problems } = this.state;
-        let { setters } = this.components;
-        let { t, p } = env.locale;
-        let repo = this.getRepo();
-        let title = p(_.get(repo, 'details.title')) || repo.name;
-        return (
+    function render() {
+        const { changed } = draft;
+        const title = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
+        show(
             <div className="repo-summary-page">
-                {this.renderButtons()}
+                {renderButtons()}
                 <h2>{t('repo-summary-$title', title)}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
-                {this.renderForm()}
-                {this.renderInstructions()}
-                {this.renderChart()}
-                <ActionConfirmation ref={setters.confirmation} env={env} />
-                <DataLossWarning changes={hasChanges} env={env} route={route} />
+                <UnexpectedError error={draft.error} />
+                {renderForm()}
+                {renderInstructions()}
+                {renderChart()}
+                <ActionConfirmation ref={confirmationRef} env={env} />
+                <DataLossWarning changes={changed} env={env} route={route} />
             </div>
         );
     }
 
-    /**
-     * Render buttons in top right corner
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { route, env, project, repo, editing } = this.props;
-        let { hasChanges } = this.state;
-        let { t } = env.locale;
+    function renderButtons() {
+        const { changed } = draft;
         if (editing) {
             return (
                 <div key="edit" className="buttons">
-                    <PushButton onClick={this.handleCancelClick}>
+                    <PushButton onClick={handleCancelClick}>
                         {t('repo-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('repo-summary-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            let active = (project && repo) ? _.includes(project.repo_ids, repo.id) : true;
-            let preselected = (!active) ? 'restore' : undefined;
+            const active = (project && repo) ? _.includes(project.repo_ids, repo.id) : true;
+            const preselected = (!active) ? 'restore' : undefined;
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option name="return" onClick={this.handleReturnClick}>
+                        <option name="return" onClick={handleReturnClick}>
                             {t('repo-summary-return')}
                         </option>
-                        <option name="remove" disabled={!active} onClick={this.handleRemoveClick}>
+                        <option name="remove" disabled={!active} onClick={handleRemoveClick}>
                             {t('repo-summary-remove')}
                         </option>
-                        <option name="restore" hidden={active} onClick={this.handleRestoreClick}>
+                        <option name="restore" hidden={active} onClick={handleRestoreClick}>
                             {t('repo-summary-restore')}
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={handleEditClick}>
                         {t('repo-summary-edit')}
                     </PushButton>
                 </div>
@@ -250,36 +129,24 @@ class RepoSummaryPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render form for entering repo details
-     *
-     * @return {ReactElement}
-     */
-    renderForm() {
+    function renderForm() {
         return (
             <div className="form">
-                {this.renderTitleInput()}
-                {this.renderNameInput()}
-                {this.renderIssueTrackingStatus()}
+                {renderTitleInput()}
+                {renderNameInput()}
+                {renderIssueTrackingStatus()}
             </div>
         );
     }
 
-    /**
-     * Render title input
-     *
-     * @return {ReactElement}
-     */
-    renderTitleInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderTitleInput() {
+        const props = {
             id: 'title',
-            value: this.getRepoProperty('details.title'),
-            availableLanguageCodes: this.getInputLanguages(),
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.title', {}),
+            availableLanguageCodes,
+            readOnly,
             env,
-            onChange: this.handleTitleChange,
+            onChange: handleTitleChange,
         };
         return (
             <MultilingualTextField {...props}>
@@ -288,18 +155,11 @@ class RepoSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render repo name input (read only)
-     *
-     * @return {ReactElement}
-     */
-    renderNameInput() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderNameInput() {
+        const props = {
             id: 'name',
-            value: this.getRepoProperty('name'),
-            readOnly: true,
+            value: _.get(draft.current, 'name', ''),
+            readOnly,
             env,
         };
         return (
@@ -309,23 +169,11 @@ class RepoSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render issue tracker status
-     *
-     * @return {ReactElement}
-     */
-    renderIssueTrackingStatus() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        let issueTrackStatus;
-        if (this.getRepoProperty('details.issues_enabled')) {
-            issueTrackStatus = t('repo-summary-issue-tracker-enabled');
-        } else {
-            issueTrackStatus = t('repo-summary-issue-tracker-disabled');
-        }
-        let props = {
+    function renderIssueTrackingStatus() {
+        const status = _.get(draft.current, 'details.issues_enabled') ? 'enabled' : 'disabled';
+        const props = {
             id: 'issue-tracker',
-            value: issueTrackStatus,
+            value: t(`repo-summary-issue-tracker-${status}`),
             readOnly: true,
             env,
         };
@@ -336,14 +184,8 @@ class RepoSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render instruction box
-     *
-     * @return {ReactElement}
-     */
-    renderInstructions() {
-        let { env, editing } = this.props;
-        let instructionProps = {
+    function renderInstructions() {
+        const instructionProps = {
             folder: 'repo',
             topic: 'repo-summary',
             hidden: !editing,
@@ -356,15 +198,8 @@ class RepoSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render activity chart
-     *
-     * @return {ReactElement}
-     */
-    renderChart() {
-        let { env, statistics } = this.props;
-        let { t } = env.locale;
-        let chartProps = {
+    function renderChart() {
+        const chartProps = {
             statistics,
             env,
         };
@@ -379,165 +214,44 @@ class RepoSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Save project with repo added or removed
-     *
-     * @param  {Boolean} include
-     *
-     * @return {Promise<Project|undefined>}
-     */
-    async changeInclusion(include) {
-        let { database, project, repo } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let repoIDs = project.repo_ids;
-        if (include) {
-            repoIDs = _.union(repoIDs, [ repo.id ]);
-        } else {
-            repoIDs = _.difference(repoIDs, [ repo.id ]);
-        }
-        let projectAfter = _.assign({}, project, { repo_ids: repoIDs });
+    async function remove(base) {
+        await confirm(t('repo-summary-confirm-remove'));
+
+        const repoIDs = _.difference(project.repo_ids, [ base.id ]);
+        const changes = {
+            id: project.id,
+            repo_ids: repoIDs
+        };
+        await db.saveOne({ table: 'project' }, changes);
+        handleReturnClick();
+    }
+
+    async function restore(base) {
+        await confirm(t('repo-summary-confirm-restore'));
+
+        const repoIDs = _.union(project.repo_ids, [ base.id ]);
+        const changes = {
+            id: project.id,
+            repo_ids: repoIDs
+        };
+        await db.saveOne({ table: 'project' }, changes);
+    }
+
+    async function save(base, ours) {
+        setSaving(true);
         try {
-            return db.saveOne({ table: 'project' }, projectAfter);
-        } catch (err) {
-            let problems = { unexpected: err.message };
-            this.setState({ problems });
+            const repoAfter = await db.saveOne({ table: 'repo' }, ours);
+            handleCancelClick();
+            return repoAfter;
+        } finally {
+            setSaving(false);
         }
-    }
-
-    /**
-     * Called when user clicks remove button
-     *
-     * @param  {Event} evt
-     */
-    handleRemoveClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('repo-summary-confirm-remove');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            let projectAfter = await this.changeInclusion(false);
-            if (projectAfter) {
-                await this.returnToList();
-            }
-        }
-    }
-
-    /**
-     * Called when user clicks restore button
-     *
-     * @param  {Event} evt
-     */
-    handleRestoreClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('repo-summary-confirm-restore');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            await this.changeInclusion(true);
-        }
-    }
-
-    /**
-     * Called when user clicks return button
-     *
-     * @param  {Event} evt
-     */
-    handleReturnClick = (evt) => {
-        return this.returnToList();
-    }
-
-    /**
-     * Called when user clicks edit button
-     *
-     * @param  {Event} evt
-     */
-    handleEditClick = (evt) => {
-        return this.setEditability(true);
-    }
-
-    /**
-     * Called when user clicks cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        return this.setEditability(false);
-    }
-
-    /**
-     * Called when user clicks save button
-     *
-     * @param  {Event} evt
-     */
-    handleSaveClick = (evt) => {
-        let { database } = this.props;
-        let { saving } = this.state;
-        if (saving) {
-            return;
-        }
-        let repo = this.getRepo();
-        this.setState({ saving: true, problems: {} }, async () => {
-            try {
-                let db = database.use({ schema: 'global', by: this });
-                let currentUserID = await db.start();
-                let repoAfter = await db.saveOne({ table: 'repo' }, repo);
-                this.setState({ hasChanges: false, saving: false }, () => {
-                    this.setEditability(false);
-                });
-            } catch (err) {
-                let problems = { unexpected: err.message };
-                this.setState({ problems, saving: false });
-            }
-        });
-    }
-
-    /**
-     * Called when user changes the title
-     *
-     * @param  {Event} evt
-     */
-    handleTitleChange = (evt) => {
-        this.setRepoProperty(`details.title`, evt.target.value);
     }
 }
 
-const emptyRepo = {
-    details: {}
-};
+const component = Relaks.memo(RepoSummaryPage);
 
 export {
-    RepoSummaryPage as default,
-    RepoSummaryPage,
-    RepoSummaryPageSync,
+    component as default,
+    component as RepoSummaryPage,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    RepoSummaryPage.propTypes = {
-        editing: PropTypes.bool,
-        projectID: PropTypes.number.isRequired,
-        repoID: PropTypes.number.isRequired,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    RepoSummaryPageSync.propTypes = {
-        editing: PropTypes.bool,
-        projectID: PropTypes.number.isRequired,
-        system: PropTypes.object,
-        repo: PropTypes.object,
-        project: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import Relaks, { useProgress, useSaveBuffer, Cancellation } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useReturnHandling, useConfirmation } from '../hooks.mjs';
+import { useSelectionBuffer, useEditHandling, useAddHandling, useReturnHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
@@ -34,14 +34,14 @@ async function RoleSummaryPage(props) {
     const draft = useSaveBuffer({
         save: (base, ours, action) => {
             switch (action) {
-                case 'restore': return restore();
-                default: return save();
+                case 'restore': return restore(base);
+                default: return save(base, ours);
             }
         },
         remove: (base, ours, action) => {
             switch (action) {
-                case 'disable': return disable();
-                default: return remove();
+                case 'disable': return disable(base);
+                default: return remove(base);
             }
         },
         compare: _.isEqual,
@@ -58,7 +58,7 @@ async function RoleSummaryPage(props) {
     const handleDisableClick = useCallback(async (evt) => {
         await draft.remove('disable');
     });
-    const handleDeleteClick = useCallback(async (evt) => {
+    const handleRemoveClick = useCallback(async (evt) => {
         await draft.remove();
     });
     const handleRestoreClick = useCallback(async (evt) => {
@@ -169,7 +169,7 @@ async function RoleSummaryPage(props) {
                         <option name="archive" disabled={!active} separator onClick={handleDisableClick}>
                             {t('role-summary-disable')}
                         </option>
-                        <option name="delete" disabled={!active} onClick={handleDeleteClick}>
+                        <option name="delete" disabled={!active} onClick={handleRemoveClick}>
                             {t('role-summary-delete')}
                         </option>
                         <option name="reactivate" hidden={active} onClick={handleRestoreClick}>
@@ -352,6 +352,7 @@ async function RoleSummaryPage(props) {
                 await db.save({ table: 'user' }, userChanges);
             }
             handleCancelClick();
+            return roleAfter;
         } catch (err) {
             if (err.statusCode === 409) {
                 setProblems({ name: 'validation-duplicate-role-name' });
