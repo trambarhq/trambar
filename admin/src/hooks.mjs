@@ -61,17 +61,17 @@ function useSortHandling() {
 }
 
 function useEditHandling(route) {
-    const handleEditClick = useCallback(() => {
+    const handleEditClick = useCallback((evt) => {
         route.modify({ editing: true });
     }, [ route ]);
-    const handleCancelClick = useCallback(() => {
+    const handleCancelClick = useCallback((evt) => {
         route.modify({ editing: undefined });
     }, [ route ]);
     return [ handleEditClick, handleCancelClick ];
 }
 
 function useAddHandling(route, redirect) {
-    const handleAddClick = useCallback(() => {
+    const handleAddClick = useCallback((evt) => {
         const page = redirect.page || route.name;
         const params = { ...route.params, ...redirect.params };
         route.push(page, params);
@@ -80,12 +80,20 @@ function useAddHandling(route, redirect) {
 }
 
 function useReturnHandling(route, page) {
-    const handleReturnClick = useCallback(() => {
+    const handleReturnClick = useCallback((evt) => {
         const page = redirect.page || route.name;
         const params = { ...route.params, ...redirect.params };
         route.push(page, params);
     }, [ route ]);
     return [ handleReturnClick ];
+}
+
+function useRowHandling(selection, attr) {
+    const handleRowClick = useCallback((evt) => {
+        const id = parseInt(evt.currentTarget.getAttribute(attr));
+        selection.toggle(id);
+    });
+    return [ handleRowClick ];
 }
 
 function useSelectionBuffer(active, additionalParams) {
@@ -124,5 +132,6 @@ export {
     useEditHandling,
     useAddHandling,
     useReturnHandling,
+    useRowHandling,
     useSelectionBuffer,
 };

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress, useSaveBuffer } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditHandling, useConfirmation } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditHandling, useRowHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -31,12 +31,9 @@ async function RepoListPage(props) {
 
     const [ sort, handleSort ] = useSortHandling();
     const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
+    const [ handleRowClick ] = useRowHandling(selection, 'data-repo-id');
     const handleSaveClick = useCallback(async (evt) => {
         await selection.save();
-    });
-    const handleRowClick = useCallback((evt) => {
-        const repoID = parseInt(evt.currentTarget.getAttribute('data-repo-id'));
-        selection.toggle(repoID);
     });
 
     render();

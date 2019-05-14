@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useCallback } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useRowHandling } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -43,6 +43,7 @@ async function MemberListPage(props) {
         page: 'member-summary-page',
         params: { userID: 'new' },
     });
+    const [ handleRowClick ] = useRowHandling(selection, 'data-user-id');
     const handleSaveClick = async (evt) => {
         await selection.save();
     };
@@ -51,10 +52,6 @@ async function MemberListPage(props) {
     });
     const handleRejectClick = useCallback(async(evt) => {
         await selection.save('reject');
-    });
-    const handleRowClick = useCallback((evt) => {
-        const userID = parseInt(evt.currentTarget.getAttribute('data-user-id'));
-        selection.toggle(userID);
     });
 
     render();

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useConfirmation } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useRowHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
@@ -37,12 +37,9 @@ async function ProjectListPage(props) {
         page: 'project-summary-page',
         params: { 'projectID': 'new' },
     });
+    const [ handleRowClick ] = useRowHandling(selection, 'data-project-id');
     const handleSaveClick = useCallback(async (evt) => {
         await selection.save();
-    });
-    const handleRowClick = useCallback((evt) => {
-        const projectID = parseInt(evt.currentTarget.getAttribute('data-project-id'));
-        selection.toggle(projectID);
     });
 
     render();

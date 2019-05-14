@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useConfirmation } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useRowHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
@@ -33,12 +33,9 @@ async function RoleListPage(props) {
         page: 'role-summary-page',
         params: { roleID: 'new' },
     });
+    const [ handleRowClick ] = useRowHandling(selection, 'data-role-id');
     const handleSaveClick = useCallback(async (evt) => {
         await selection.save();
-    });
-    const handleRowClick = useCallback((evt) => {
-        const roleID = parseInt(evt.currentTarget.getAttribute('data-role-id'));
-        selection.toggle(roleID);
     });
 
     render();

@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useConfirmation } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useRowHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
@@ -34,12 +34,9 @@ async function ServerListPage(props) {
         page: 'server-summary-page',
         params: { serverID: 'new' },
     });
+    const [ handleRowClick ] = useRowHandling(selection, 'data-server-id');
     const handleSaveClick = useCallback(async (evt) => {
         await selection.save();
-    });
-    const handleRowClick = useCallback((evt) => {
-        const serverID = parseInt(evt.currentTarget.getAttribute('data-server-id'));
-        selection.toggle(serverID);
     });
 
     render();
