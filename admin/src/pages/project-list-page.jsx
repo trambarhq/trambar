@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditToggle, useErrorHandling } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
@@ -26,26 +26,20 @@ import './project-list-page.scss';
 async function ProjectListPage(props) {
     const { database, route, env, editing } = props;
     const { t, p, f } = env.locale;
-    const [ show ] = useProgress();
-    const selection = useSelectionBuffer(editing);
-    const confirmation = useRef();
     const db = database.use({ schema: 'global', by: this });
+    const [ show ] = useProgress();
+    const selection = useSelectionBuffer(editing, { save });
+    const [ confirmationRef, confirm ] = useConfirmation();
 
     const [ sort, handleSort ] = useSortHandling();
-    const [ problems, setProblems, setUnexpectedError ] = useErrorHandling();
-    const [ handleEditClick, handleCancelClick, handleAddClick ] = useEditToggle(route, {
+    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
+    const [ handleAddClick ] = useAddHandling(route, {
         page: 'project-summary-page',
         params: { 'projectID': 'new' },
     });
     const handleSaveClick = useCallback(async (evt) => {
-        try {
-            setProblems({});
-            await saveSelection();
-            handleCancelClick();
-        } catch (err) {
-            setUnexpectedError(err);
-        }
-    }, [ saveSelection, handleCancelClick ]);
+        await selection.save();
+    });
     const handleRowClick = useCallback((evt) => {
         const projectID = parseInt(evt.currentTarget.getAttribute('data-project-id'));
         selection.toggle(projectID);
@@ -70,9 +64,9 @@ async function ProjectListPage(props) {
             <div className="project-list-page">
                 {renderButtons()}
                 <h2>{t('project-list-title')}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
+                <UnexpectedError error={selection.error} />
                 {renderTable()}
-                <ActionConfirmation ref={confirmation} env={env} />
+                <ActionConfirmation ref={confirmationRef} env={env} />
                 <DataLossWarning changes={changed} env={env} route={route} />
             </div>
         );
@@ -329,7 +323,7 @@ async function ProjectListPage(props) {
         }
     }
 
-    async function saveSelection() {
+    async function save() {
         const changes = [];
         let remove = 0, add = 0;
         for (let project of projects) {
@@ -345,22 +339,13 @@ async function ProjectListPage(props) {
             }
             changes.push(columns);
         }
-
-        const { ask } = confirmation.current;
         if (remove) {
-            const confirmed = await ask(t('project-list-confirm-archive-$count', remove));
-            if (!confirmed) {
-                return;
-            }
+            await confirm(t('project-list-confirm-archive-$count', remove));
         }
         if (add) {
-            const confirmed = await ask(t('project-list-confirm-restore-$count', add));
-            if (!confirmed) {
-                return;
-            }
+            await confirm(t('project-list-confirm-restore-$count', add));
         }
-        const projectsAfter = await db.save({ table: 'project' }, changes);
-        return projectsAfter;
+        await db.save({ table: 'project' }, changes);
     }
 }
 

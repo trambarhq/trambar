@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditToggle, useErrorHandling } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
@@ -24,25 +24,19 @@ async function ServerListPage(props) {
     const { database, route, env, editing } = props;
     const { t, p, f } = env.locale;
     const [ show ] = useProgress();
-    const selection = useSelectionBuffer(editing);
-    const confirmation = useRef();
     const db = database.use({ schema: 'global', by: this });
+    const selection = useSelectionBuffer(editing, { save });
+    const [ confirmationRef, confirm ] = useConfirmation();
 
     const [ sort, handleSort ] = useSortHandling();
-    const [ problems, setProblems, setUnexpectedError ] = useErrorHandling();
-    const [ handleEditClick, handleCancelClick, handleAddClick ] = useEditToggle(route, {
+    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
+    const [ handleAddClick ] = useAddHandling(route, {
         page: 'server-summary-page',
         params: { serverID: 'new' },
     });
     const handleSaveClick = useCallback(async (evt) => {
-        try {
-            setProblems({});
-            await saveSelection();
-            handleCancelClick();
-        } catch (err) {
-            setUnexpectedError(err);
-        }
-    }, [ saveSelection, handleCancelClick ]);
+        await selection.save();
+    });
     const handleRowClick = useCallback((evt) => {
         const serverID = parseInt(evt.currentTarget.getAttribute('data-server-id'));
         selection.toggle(serverID);
@@ -63,9 +57,9 @@ async function ServerListPage(props) {
             <div className="server-list-page">
                 {renderButtons()}
                 <h2>{t('server-list-title')}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
+                <UnexpectedError error={selection.error} />
                 {renderTable()}
-                <ActionConfirmation ref={confirmation} env={env} />
+                <ActionConfirmation ref={confirmationRef} env={env} />
                 <DataLossWarning changes={changed} env={env} route={route} />
             </div>
         );
@@ -269,7 +263,7 @@ async function ServerListPage(props) {
         }
     }
 
-    async function saveSelection() {
+    async function save() {
         const changes = [];
         let remove = 0, add = 0;
         for (let server of servers) {
@@ -285,25 +279,14 @@ async function ServerListPage(props) {
             }
             changes.push(columns);
         }
-
-        const { ask } = confirmation.current;
         if (remove) {
-            const question = t('server-list-confirm-disable-$count', remove);
-            const confirmed = await ask(question);
-            if (!confirmed) {
-                return;
-            }
+            await confirm(t('server-list-confirm-disable-$count', remove));
         }
         if (add) {
-            const question = t('server-list-confirm-reactivate-$count', add);
-            const confirmed = await ask(question);
-            if (!confirmed) {
-                return;
-            }
+            await confirm(t('server-list-confirm-reactivate-$count', add));
         }
-
-        const serversAfter = await db.save({ table: 'server' }, changes);
-        return serversAfter;
+        await db.save({ table: 'server' }, changes);
+        handleCancelClick();
     }
 }
 

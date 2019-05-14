@@ -11,24 +11,23 @@ function ActionConfirmation(props, ref) {
     const [ question, setQuestion ] = useState(null);
 
     useImperativeHandle(ref, () => {
-        return {
-            ask: async (message) => {
-                let promise, resolve;
-                if (question) {
-                    promise = question.promise;
-                    resolve = question.resolve;
-                } else {
-                    promise = new Promise((f) => { resolve = f });
-                }
-                const newQuestion = {
-                    message,
-                    promise,
-                    resolve,
-                };
-                setQuestion(newQuestion);
-                return promise;
-            },
+        async function ask(message) {
+            let promise, resolve;
+            if (question) {
+                promise = question.promise;
+                resolve = question.resolve;
+            } else {
+                promise = new Promise((f) => { resolve = f });
+            }
+            const newQuestion = {
+                message,
+                promise,
+                resolve,
+            };
+            setQuestion(newQuestion);
+            return promise;
         };
+        return { ask };
     });
 
     const handleConfirm = useCallback((evt) => {

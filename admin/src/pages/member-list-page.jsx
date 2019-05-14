@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useCallback } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditToggle, useErrorHandling } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -25,39 +25,33 @@ import './member-list-page.scss';
 async function MemberListPage(props) {
     const { database, route, env, projectID, editing } = props;
     const { t, p, f } = env.locale;
-    const [ show ] = useProgress();
-    const selection = useSelectionBuffer(editing);
     const db = database.use({ schema: 'global', by: this });
+    const [ show ] = useProgress();
+    const selection = useSelectionBuffer(editing, {
+        save: async function (base, ours, action) {
+            switch (action) {
+                case 'approve': return approvePending();
+                case 'reject': return rejectPending();
+                default: return save();
+            }
+        }
+    });
 
     const [ sort, handleSort ] = useSortHandling();
-    const [ problems, setProblems, setUnexpectedError ] = useErrorHandling();
-    const [ handleEditClick, handleCancelClick, handleAddClick ] = useEditToggle(route, {
+    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
+    const [ handleAddClick ] = useAddHandling(route, {
         page: 'member-summary-page',
         params: { userID: 'new' },
     });
-    const handleSaveClick = useCallback(async (evt) => {
-        try {
-            setProblems({});
-            await saveSelection();
-            handleCancelClick();
-        } catch (err) {
-            setUnexpectedError(err);
-        }
-    }, [ saveSelection, handleCancelClick ]);
+    const handleSaveClick = async (evt) => {
+        await selection.save();
+    };
     const handleApproveClick = useCallback(async (evt) => {
-        try {
-            await approvePendingUsers();
-        } catch (err) {
-            setUnexpectedError(err);
-        }
-    }, [ approvePendingUsers ]);
+        await selection.save('approve');
+    });
     const handleRejectClick = useCallback(async(evt) => {
-        try {
-            await rejectPendingUsers();
-        } catch (err) {
-            setUnexpectedError(err);
-        }
-    }, [ rejectPendingUsers ]);
+        await selection.save('reject');
+    });
     const handleRowClick = useCallback((evt) => {
         const userID = parseInt(evt.currentTarget.getAttribute('data-user-id'));
         selection.toggle(userID);
@@ -82,7 +76,7 @@ async function MemberListPage(props) {
             <div className="member-list-page">
                 {renderButtons()}
                 <h2>{t('member-list-title')}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
+                <UnexpectedError error={selection.error} />
                 {renderTable()}
                 <DataLossWarning changes={changed} env={env} route={route} />
             </div>
@@ -359,17 +353,19 @@ async function MemberListPage(props) {
         }
     }
 
-    async function saveSelection() {
+    async function save() {
+        const userIDsAfter = selection.current;
         const existingUserIDs = _.map(users, 'id');
         const columns = {
             id: project.id,
-            user_ids: _.intersection(selection.current, existingUserIDs)
+            user_ids: _.intersection(userIDsAfter, existingUserIDs)
         };
-        const projectAfter = await db.saveOne({ table: 'project' }, columns);
-        return projectAfter;
+        throw new Error('crap');
+        await db.saveOne({ table: 'project' }, columns);
+        handleCancelClick();
     }
 
-    async function approvePendingUsers() {
+    async function approvePending() {
         const pendingUsers = _.filter(users, (user) => {
             return _.includes(user.requested_project_ids, project.id);
         });
@@ -380,11 +376,10 @@ async function MemberListPage(props) {
             id: project.id,
             user_ids: _.intersection(userIDs, existingUserIDs)
         };
-        const projectAfter = await db.saveOne({ table: 'project' }, columns);
-        return projectAfter;
+        await db.saveOne({ table: 'project' }, columns);
     }
 
-    async function rejectPendingUsers() {
+    async function rejectPending() {
         const pendingUsers = _.filter(users, (user) => {
             return _.includes(user.requested_project_ids, project.id);
         });
@@ -394,8 +389,7 @@ async function MemberListPage(props) {
                 requested_project_ids: _.without(user.requested_project_ids, project.id),
             };
         });
-        const usersAfter = await db.save({ table: 'user' }, changes);
-        return usersAfter;
+        await db.save({ table: 'user' }, changes);
     }
 }
 

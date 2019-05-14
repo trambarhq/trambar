@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress, useSaveBuffer } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditToggle, useErrorHandling } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -24,23 +24,16 @@ import './repo-list-page.scss';
 async function RepoListPage(props) {
     const { database, route, env, projectID, editing } = props;
     const { t, p, f } = env.locale;
-    const [ show ] = useProgress();
-    const selection = useSelectionBuffer(editing);
-    const confirmation = useRef();
     const db = database.use({ schema: 'global', by: this });
+    const [ show ] = useProgress();
+    const selection = useSelectionBuffer(editing, { save });
+    const [ confirmationRef, confirm ]  = useConfirmation();
 
     const [ sort, handleSort ] = useSortHandling();
-    const [ problems, setProblems, setUnexpectedError ] = useErrorHandling();
-    const [ handleEditClick, handleCancelClick ] = useEditToggle(route);
+    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
     const handleSaveClick = useCallback(async (evt) => {
-        try {
-            setProblems({});
-            await saveSelection();
-            handleCancelClick();
-        } catch (err) {
-            setUnexpectedError(err);
-        }
-    }, [ saveSelection, handleCancelClick ]);
+        await selection.save();
+    });
     const handleRowClick = useCallback((evt) => {
         const repoID = parseInt(evt.currentTarget.getAttribute('data-repo-id'));
         selection.toggle(repoID);
@@ -64,16 +57,16 @@ async function RepoListPage(props) {
             <div className="repo-list-page">
                 {renderButtons()}
                 <h2>{t('repo-list-title')}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
+                <UnexpectedError error={selection.error} />
                 {renderTable()}
-                <ActionConfirmation ref={confirmation} env={env} />
+                <ActionConfirmation ref={confirmationRef} env={env} />
                 <DataLossWarning changes={changed} env={env} route={route} />
             </div>
         );
     }
 
     function renderButtons() {
-        let { changed } = selection;
+        const { changed } = selection;
         if (editing) {
             return (
                 <div className="buttons">
@@ -87,7 +80,7 @@ async function RepoListPage(props) {
                 </div>
             );
         } else {
-            let empty = _.isEmpty(repos);
+            const empty = _.isEmpty(repos);
             return (
                 <div className="buttons">
                     <PushButton className="emphasis" disabled={empty} onClick={handleEditClick}>
@@ -303,27 +296,21 @@ async function RepoListPage(props) {
         }
     }
 
-    async function saveSelection() {
-        const repoIDs = project.repo_ids;
-        const remove = _.size(_.difference(repoIDs, selection.current));
-
-        const { ask } = confirmation.current;
+    async function save() {
+        const repoIDsBefore = project.repo_ids;
+        const repoIDsAfter = selection.current;
+        const remove = _.size(_.difference(repoIDsBefore, repoIDsAfter));
         if (remove) {
-            const question = t('repo-list-confirm-remove-$count', remove);
-            const confirmed = await ask(question);
-            if (!confirmed) {
-                return;
-            }
+            await confirm(t('repo-list-confirm-remove-$count', remove));
         }
-
         // remove ids of repo that no longer exist
         const existingRepoIDs = _.map(repos, 'id');
         const columns = {
             id: project.id,
-            repo_ids: _.intersection(selection.current, existingRepoIDs)
+            repo_ids: _.intersection(repoIDsAfter, existingRepoIDs)
         };
-        const projectAfter = await db.saveOne({ table: 'project' }, columns);
-        return projectAfter;
+        await db.saveOne({ table: 'project' }, columns);
+        handleCancelClick();
     }
 }
 

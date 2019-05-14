@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditToggle, useErrorHandling } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
@@ -22,26 +22,20 @@ import './role-list-page.scss';
 async function RoleListPage(props) {
     const { database, route, env, editing } = props;
     const { t, p, f } = env.locale;
-    const [ show ] = useProgress();
-    const selection = useSelectionBuffer(editing);
-    const confirmation = useRef();
     const db = database.use({ schema: 'global', by: this });
+    const [ show ] = useProgress();
+    const selection = useSelectionBuffer(editing, { save });
+    const [ confirmationRef, confirm ] = useConfirmation();
 
     const [ sort, handleSort ] = useSortHandling();
-    const [ problems, setProblems, setUnexpectedError ] = useErrorHandling();
-    const [ handleEditClick, handleCancelClick, handleAddClick ] = useEditToggle(route, {
+    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
+    const [ handleAddClick ] = useAddHandling(route, {
         page: 'role-summary-page',
         params: { roleID: 'new' },
     });
     const handleSaveClick = useCallback(async (evt) => {
-        try {
-            setProblems({});
-            await saveSelection();
-            handleCancelClick();
-        } catch (err) {
-            setUnexpectedError(err);
-        }
-    }, [ saveSelection, handleCancelClick ]);
+        await selection.save();
+    });
     const handleRowClick = useCallback((evt) => {
         const roleID = parseInt(evt.currentTarget.getAttribute('data-role-id'));
         selection.toggle(roleID);
@@ -62,9 +56,9 @@ async function RoleListPage(props) {
             <div className="role-list-page">
                 {renderButtons()}
                 <h2>{t('role-list-title')}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
+                <UnexpectedError error={selection.error} />
                 {renderTable()}
-                <ActionConfirmation ref={confirmation} env={env} />
+                <ActionConfirmation ref={confirmationRef} env={env} />
                 <DataLossWarning changes={changed} env={env} route={route} />
             </div>
         );
@@ -188,7 +182,7 @@ async function RoleListPage(props) {
                     badge = <ActionBadge type="disable" env={env} />;
                 }
             } else {
-                let params = { roleID: role.id };
+                const params = { roleID: role.id };
                 url = route.find('role-summary-page', params);
             }
             return (
@@ -230,7 +224,7 @@ async function RoleListPage(props) {
         }
     }
 
-    async function saveSelection() {
+    async function save() {
         const changes = [];
         let remove, add = 0;
         for (let role of roles) {
@@ -246,25 +240,14 @@ async function RoleListPage(props) {
             }
             changes.push(columns);
         }
-
-        const { ask } = confirmation.current;
         if (remove) {
-            const question = t('role-list-confirm-disable-$count', remove);
-            const confirmed = await ask(question);
-            if (!confirmed) {
-                return;
-            }
+            await confirm(t('role-list-confirm-disable-$count', remove));
         }
         if (add) {
-            const question = t('role-list-confirm-reactivate-$count', add);
-            const confirmed = await ask(question);
-            if (!confirmed) {
-                return;
-            }
+            await confirm(t('role-list-confirm-reactivate-$count', add))
         }
-
-        const rolesAfter = await db.save({ table: 'role' }, changes);
-        return rolesAfter;
+        await db.save({ table: 'role' }, changes);
+        handleCancelClick();
     }
 }
 

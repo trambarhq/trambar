@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import { useState, useMemo, useCallback } from 'react';
-import { useSaveBuffer } from 'relaks';
+import { useState, useMemo, useRef, useCallback } from 'react';
+import { useSaveBuffer, Cancellation } from 'relaks';
 
 function useLatest(propValue) {
     const [ stateValue, setStateValue ] = useState();
@@ -39,13 +39,16 @@ function useAfterglow(value, delay) {
     return state.value;
 }
 
-function useErrorHandling() {
-    const [ problems, setProblems ] = useState({});
-    const setUnxpectedError = useCallback((err) => {
-        const problems = { unexpected: err.message };
-        setProblems(problems);
+function useConfirmation() {
+    const confirmationRef = useRef();
+    const confirm = useCallback(async (question) => {
+        const { ask } = confirmationRef.current;
+        const confirmed = await ask(question);
+        if (!confirmed) {
+            throw new Cancellation;
+        }
     });
-    return [ problems, setProblems, setUnxpectedError ];
+    return [ confirmationRef, confirm ];
 }
 
 function useSortHandling() {
@@ -57,31 +60,41 @@ function useSortHandling() {
     return [ sort, handleSort ];
 }
 
-function useEditToggle(route, addParams) {
+function useEditHandling(route) {
     const handleEditClick = useCallback(() => {
         route.modify({ editing: true });
     }, [ route ]);
     const handleCancelClick = useCallback(() => {
         route.modify({ editing: undefined });
     }, [ route ]);
-
-    const handlers = [ handleEditClick, handleCancelClick ];
-    if (addParams) {
-        const handleAddClick = useCallback(() => {
-            const params = { ...route.params, ...addParams.params };
-            route.push(addParams.page, params);
-        }, [ route ]);
-        handlers.push(handleAddClick);
-    }
-    return handlers;
+    return [ handleEditClick, handleCancelClick ];
 }
 
-function useSelectionBuffer(active) {
+function useAddHandling(route, redirect) {
+    const handleAddClick = useCallback(() => {
+        const page = redirect.page || route.name;
+        const params = { ...route.params, ...redirect.params };
+        route.push(page, params);
+    }, [ route ]);
+    return [ handleAddClick ];
+}
+
+function useReturnHandling(route, page) {
+    const handleReturnClick = useCallback(() => {
+        const page = redirect.page || route.name;
+        const params = { ...route.params, ...redirect.params };
+        route.push(page, params);
+    }, [ route ]);
+    return [ handleReturnClick ];
+}
+
+function useSelectionBuffer(active, additionalParams) {
     const selection = useSaveBuffer({
         compare: (a, b) => {
             return _.isEmpty(_.xor(a, b));
         },
         reset: !active,
+        ...additionalParams,
     });
     selection.shown = useAfterglow(active);
     selection.existing = function(id) {
@@ -106,8 +119,10 @@ function useSelectionBuffer(active) {
 export {
     useLatest,
     useAfterglow,
-    useErrorHandling,
+    useConfirmation,
     useSortHandling,
-    useEditToggle,
+    useEditHandling,
+    useAddHandling,
+    useReturnHandling,
     useSelectionBuffer,
 };

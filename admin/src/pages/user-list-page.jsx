@@ -2,7 +2,7 @@ import _ from 'lodash';
 import Moment from 'moment';
 import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditToggle, useErrorHandling } from '../hooks.mjs';
+import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -27,26 +27,20 @@ import './user-list-page.scss';
 async function UserListPage(props) {
     const { database, route, env, projectID, editing } = props;
     const { t, p, f } = env.locale;
-    const [ show ] = useProgress();
-    const selection = useSelectionBuffer(editing);
-    const confirmation = useRef();
     const db = database.use({ schema: 'global', by: this });
+    const [ show ] = useProgress();
+    const selection = useSelectionBuffer(editing, { save });
+    const [ confirmationRef, confirm ] = useConfirmation();
 
     const [ sort, handleSort ] = useSortHandling();
-    const [ problems, setProblems, setUnexpectedError ] = useErrorHandling();
-    const [ handleEditClick, handleCancelClick, handleAddClick ] = useEditToggle(route, {
+    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
+    const [ handleAddClick ] = useAddHandling(route, {
         page: 'user-summary-page',
         params: { userID: 'new' },
     });
     const handleSaveClick = useCallback(async (evt) => {
-        try {
-            setProblems({});
-            await saveSelection();
-            handleCancelClick();
-        } catch (err) {
-            setUnexpectedError(err);
-        }
-    }, [ saveSelection, handleCancelClick ]);
+        await selection.save();
+    });
     const handleRowClick = useCallback((evt) => {
         const userID = parseInt(evt.currentTarget.getAttribute('data-user-id'));
         selection.toggle(userID);
@@ -69,9 +63,9 @@ async function UserListPage(props) {
             <div className="user-list-page">
                 {renderButtons()}
                 <h2>{t('user-list-title')}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
+                <UnexpectedError error={selection.error} />
                 {renderTable()}
-                <ActionConfirmation ref={confirmation} env={env} />
+                <ActionConfirmation ref={confirmationRef} env={env} />
                 <DataLossWarning changes={changed} env={env} route={route} />
             </div>
         );
@@ -306,7 +300,7 @@ async function UserListPage(props) {
         }
     }
 
-    async function saveSelection() {
+    async function save() {
         const changes = [];
         let remove = 0, add = 0;
         for (let user of users) {
@@ -322,22 +316,14 @@ async function UserListPage(props) {
             }
             changes.push(columns);
         }
-
-        const { ask } = confirmation.current;
         if (remove) {
-            const question = t('user-list-confirm-disable-$count', remove);
-            const confirmed = await ask(question);
-            if (!confirmed) {
-                return;
-            }
+            await confirm(t('user-list-confirm-disable-$count', remove));
         }
         if (add) {
-            const question = t('user-list-confirm-reactivate-$count', add);
-            const confirmed = await ask(question);
+            await confirm(t('user-list-confirm-reactivate-$count', add));
         }
-
-        const usersAfter = await db.save({ table: 'user' }, changes);
-        return usersAfter;
+        await db.save({ table: 'user' }, changes);
+        handleCancelClick();
     }
 }
 
