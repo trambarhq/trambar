@@ -8,17 +8,17 @@ import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs'
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 
 // widgets
-import PushButton from '../widgets/push-button.jsx';
-import ComboButton from '../widgets/combo-button.jsx';
-import InstructionBlock from '../widgets/instruction-block.jsx';
-import TextField from '../widgets/text-field.jsx';
-import MultilingualTextField from '../widgets/multilingual-text-field.jsx';
-import OptionList from '../widgets/option-list.jsx';
-import ActivityChart from '../widgets/activity-chart.jsx';
-import ActionConfirmation from '../widgets/action-confirmation.jsx';
-import DataLossWarning from '../widgets/data-loss-warning.jsx';
-import UnexpectedError from '../widgets/unexpected-error.jsx';
-import ErrorBoundary from 'common/widgets/error-boundary.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ComboButton } from '../widgets/combo-button.jsx';
+import { InstructionBlock } from '../widgets/instruction-block.jsx';
+import { TextField } from '../widgets/text-field.jsx';
+import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
+import { OptionList } from '../widgets/option-list.jsx';
+import { ActivityChart } from '../widgets/activity-chart.jsx';
+import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
+import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
+import { UnexpectedError } from '../widgets/unexpected-error.jsx';
+import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import './repo-summary-page.scss';
 
@@ -57,9 +57,7 @@ async function RepoSummaryPage(props) {
     });
     const handleTitleChange = useCallback((evt) => {
         const title = evt.target.value;
-        const detailsBefore = draft.current.details;
-        const detailsAfter = _.decoupleSet(detailsBefore, 'details.title', title);
-        draft.assign({ details: detailsAfter });
+        draft.set(_.decoupleSet(draft.current, 'details.title', title));
     });
 
     render();

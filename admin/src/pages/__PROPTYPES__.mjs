@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import Database from 'common/data/database.mjs';
 import Route from 'common/routing/route.mjs';
 import Environment from 'common/env/environment.mjs';
+import Payloads from 'common/transport/payloads.mjs';
 
 import { ErrorPage } from './error-page.jsx';
 import { MemberListPage } from './member-list-page.jsx';
@@ -74,6 +75,14 @@ ServerListPage.propTypes = {
     database: PropTypes.instanceOf(Database).isRequired,
     route: PropTypes.instanceOf(Route).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,
+};
+SettingsPage.propTypes = {
+    editing: PropTypes.bool,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+    payloads: PropTypes.instanceOf(Payloads).isRequired,
 };
 SignInPage.propTypes = {
     database: PropTypes.instanceOf(Database).isRequired,

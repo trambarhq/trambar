@@ -48,6 +48,7 @@ async function RoleSummaryPage(props) {
         reset: !editing,
     });
     const userSelection = useSelectionBuffer(editing);
+
     const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
     const [ handleAddClick ] = useAddHandling(route, {
         params: { roleID: 'new' },
@@ -68,37 +69,33 @@ async function RoleSummaryPage(props) {
         await draft.save();
     });
     const handleTitleChange = useCallback((evt) => {
-        const detailsBefore = draft.current.details;
-        const titleBefore = _.get(detailsBefore, 'title', {});
-        const titleAfter = evt.target.value;
-        const detailsAfter = _.decoupleSet(detailsBefore, 'title', titleAfter);
+        const title = evt.target.value;
+        let after = _.decoupleSet(draft.current, 'details.title', title);
+
+        // derive name from title
+        const titleBefore = _.get(draft.current, 'details.title', {});
         const autoNameBefore = SlugGenerator.fromTitle(titleBefore);
-        const autoNameAfter = SlugGenerator.fromTitle(titleAfter);
-        const nameBefore = draft.current.name;
-        const changes = { details: detailsAfter };
+        const autoName = SlugGenerator.fromTitle(title);
+        const nameBefore = _.get(draft.current, 'name', '');
         if (!nameBefore || nameBefore === autoNameBefore) {
-            changes.name = autoNameAfter;
+            after = _.decoupleSet(after, 'name', autoName);
         }
-        draft.assign(changes);
+        draft.assign(after);
     });
     const handleNameChange = useCallback((evt) => {
         const name = evt.target.value;
         const nameTransformed = _.toLower(name).replace(/[^\w\-]+/g, '');
         const nameLimited = nameTransformed.substr(0, 128);
-        draft.assign({ name: nameLimited });
+        draft.set(_.decoupleSet(draft.current, 'name', nameLimited));
     });
     const handleDescriptionChange = useCallback((evt) => {
         const description = evt.target.value;
-        const detailsBefore = draft.current.details;
-        const detailsAfter = _.decoupleSet(detailsBefore, 'description', description);
-        draft.assign({ details: detailsAfter });
+        draft.set(_.decoupleSet(draft.current, 'details.description', description));
     });
     const handleRatingOptionClick = useCallback((evt) => {
         const key = evt.name;
         const rating = messageRatings[key];
-        const settingsBefore = draft.current.settings;
-        const settingsAfter = _.decoupleSet(settingsBefore, 'rating', rating);
-        draft.assign({ settings: settingsAfter });
+        draft.set(_.decoupleSet(draft.current, 'settings.rating', rating));
     });
     const handleUserOptionClick = useCallback((evt) => {
         let userID = parseInt(evt.name);
@@ -262,7 +259,7 @@ async function RoleSummaryPage(props) {
 
     function renderRatingOption(rating, key) {
         const ratingCurr = _.get(draft.current, 'settings.rating', 0);
-        const ratingPrev = _.get(role, 'settings.rating', 0);
+        const ratingPrev = _.get(draft.original, 'settings.rating', 0);
         const props = {
             name: key,
             selected: ratingCurr === rating,
