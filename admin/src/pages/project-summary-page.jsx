@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress, useSaveBuffer, Cancellation } from 'relaks';
+import Relaks, { useProgress, Cancellation } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as ProjectSettings from 'common/objects/settings/project-settings.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
@@ -23,6 +23,7 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 // custom hooks
 import {
+    useDraftBuffer,
     useEditHandling,
     useAddHandling,
     useReturnHandling,
@@ -41,7 +42,7 @@ async function ProjectSummaryPage(props) {
     const [ problems, setProblems ] = useState({});
     const [ confirmationRef, confirm ] = useConfirmation();
     const [ show ] = useProgress();
-    const draft = useSaveBuffer({
+    const draft = useDraftBuffer(editing, {
         save: (base, ours, action) => {
             switch (action) {
                 case 'restore': return restore(base);
@@ -53,9 +54,7 @@ async function ProjectSummaryPage(props) {
                 case 'archive': return archive(base);
                 default: return remove(base);
             }
-        },
-        compare: _.isEqual,
-        reset: !editing,
+        }
     });
 
     const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
@@ -83,21 +82,21 @@ async function ProjectSummaryPage(props) {
     });
     const handleDescriptionChange = useCallback((evt) => {
         const description = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, 'details.description', description));
+        draft.update('details.description', description);
     });
     const handleEmblemChange = useCallback((evt) => {
         const resources = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, 'details.resources', description));
+        draft.update('details.resources', description);
     });
     const handleMembershipOptionClick = useCallback((evt) => {
-        const optsBefore = _.get(draft.current, 'settings.membership', {});
+        const optsBefore = draft.get('settings.membership', {});
         const opts = toggleOption(optsBefore, membershipOptions, evt.name);
-        draft.set(_.decoupleSet(draft.current, 'settings.membership', opts));
+        draft.update('settings.membership', opts);
     });
     const handleAccessControlOptionClick = useCallback((evt) => {
-        const optsBefore = _.get(draft.current, 'settings.access_control', {});
+        const optsBefore = draft.get('settings.access_control', {});
         const opts = toggleOption(optsBefore, accessControlOptions, evt.name);
-        draft.set(_.decoupleSet(draft.current, 'settings.access_control', opts));
+        draft.update('settings.access_control', opts);
     });
 
     render();
@@ -113,7 +112,7 @@ async function ProjectSummaryPage(props) {
 
     function render() {
         const { changed } = draft;
-        const title = p(_.get(draft.current, 'details.title')) || _.get(draft.current, 'name');
+        const title = p(draft.get('details.title')) || draft.get('name');
         show(
             <div className="project-summary-page">
                 {renderButtons()}
@@ -195,7 +194,7 @@ async function ProjectSummaryPage(props) {
     function renderTitleInput() {
         const props = {
             id: 'title',
-            value: _.get(draft.current, 'details.title', {}),
+            value: draft.get('details.title', {}),
             availableLanguageCodes,
             readOnly,
             env,
@@ -211,7 +210,7 @@ async function ProjectSummaryPage(props) {
     function renderNameInput() {
         const props = {
             id: 'name',
-            value: _.get(draft.current, 'name', ''),
+            value: draft.get('name', ''),
             spellCheck: false,
             readOnly,
             env,
@@ -229,7 +228,7 @@ async function ProjectSummaryPage(props) {
         const props = {
             id: 'description',
             type: 'textarea',
-            value: _.get(draft.current, 'details.description', {}),
+            value: draft.get('details.description', {}),
             availableLanguageCodes,
             readOnly,
             env,
@@ -247,7 +246,7 @@ async function ProjectSummaryPage(props) {
             purpose: 'project-emblem',
             desiredWidth: 500,
             desiredHeight: 500,
-            resources: _.get(draft.current, 'details.resources', []),
+            resources: draft.get('details.resources', []),
             readOnly,
             database,
             env,
@@ -275,8 +274,8 @@ async function ProjectSummaryPage(props) {
     }
 
     function renderMembershipOption(option, i) {
-        const optsCurr = _.get(draft.current, 'settings.membership', {});
-        const optsPrev = _.get(draft.original, 'settings.membership', {});
+        const optsCurr = draft.getCurrent('settings.membership', {});
+        const optsPrev = draft.getOriginal('settings.membership', {});
         return renderOption(option, optsCurr, optsPrev, i);
     }
 
@@ -306,8 +305,8 @@ async function ProjectSummaryPage(props) {
     }
 
     function renderAccessControlOption(option, i) {
-        const optsCurr = _.get(draft.current, 'settings.access_control', {});
-        const optsPrev = _.get(draft.original, 'settings.access_control', {});
+        const optsCurr = draft.getCurrent('settings.access_control', {});
+        const optsPrev = draft.getOriginal('settings.access_control', {});
         return renderOption(option, optsCurr, optsPrev, i);
     }
 

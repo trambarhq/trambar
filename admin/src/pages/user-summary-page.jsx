@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress, useSaveBuffer, Cancellation } from 'relaks';
+import Relaks, { useProgress, Cancellation } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -28,6 +28,7 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 // custom hooks
 import {
+    useDraftBuffer,
     useEditHandling,
     useAddHandling,
     useNameHandling,
@@ -46,7 +47,7 @@ async function UserSummaryPage(props) {
     const [ showingSocialLinks, setShowingSocialLinks ] = useState(false);
     const [ confirmationRef, confirm ] = useConfirmation();
     const [ show ] = useProgress();
-    const draft = useSaveBuffer({
+    const draft = useDraftBuffer(editing, {
         save: (base, ours, action) => {
             switch (action) {
                 case 'restore': return restore(base);
@@ -58,9 +59,7 @@ async function UserSummaryPage(props) {
                 case 'disable': return disable(base);
                 default: return remove(base);
             }
-        },
-        compare: _.isEqual,
-        reset: !editing,
+        }
     });
 
     const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
@@ -93,56 +92,56 @@ async function UserSummaryPage(props) {
     });
     const handleEmailChange = useCallback((evt) => {
         const address = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, `details.email`, address));
+        draft.update(`details.email`, address);
     });
     const handlePhoneChange = useCallback((evt) => {
         const number = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, `details.phone`, number));
+        draft.update(`details.phone`, number);
     });
     const handleProfileImageChange = useCallback((evt) => {
         const resources = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, `details.resources`, resources));
+        draft.update(`details.resources`, resources);
     });
     const handleTypeOptionClick = useCallback((evt) => {
         const type = evt.name;
-        draft.set(_.decoupleSet(draft.current, 'type', type));
+        draft.update('type', type);
     });
     const handleRoleOptionClick = useCallback((evt) => {
         const roleID = parseInt(evt.name);
-        const before = _.get(draft.current, 'role_ids', []);
+        const before = draft.get('role_ids', []);
         const after = (roleID) ? _.toggle(before, roleID) : [];
-        draft.set(_.decoupleSet(draft.current, 'role_ids', after));
+        draft.update('role_ids', after);
     });
     const handleSocialLinksToggleClick = useCallback((evt) => {
         setShowingSocialLinks(!showingSocialLinks);
     }, [ showingSocialLinks ]);
     const handleSkypeUsernameChange = useCallback((evt) => {
-        let username = _.trim(evt.target.value);
-        draft.set(_.decoupleSet(draft.current, `details.skype_username`, username));
+        const username = _.trim(evt.target.value);
+        draft.update(`details.skype_username`, username);
     });
     const handleIchatUsernameChange = useCallback((evt) => {
-        let username = _.trim(evt.target.value);
-        draft.set(_.decoupleSet(draft.current, `details.ichat_username`, username));
+        const username = _.trim(evt.target.value);
+        draft.update(`details.ichat_username`, username);
     });
     const handleTwitterUsernameChange = useCallback((evt) => {
-        let username = extractUsername(evt.target.value);
-        draft.set(_.decoupleSet(draft.current, `details.twitter_username`, username));
+        const username = extractUsername(evt.target.value);
+        draft.update(`details.twitter_username`, username);
     });
     const handleLinkedinURLChange = useCallback((evt) => {
-        let url = _.trim(evt.target.value);
-        draft.set(_.decoupleSet(draft.current, `details.linkedin_url`, url));
+        const url = _.trim(evt.target.value);
+        draft.update(`details.linkedin_url`, url);
     });
     const handleGitHubURLChange = useCallback((evt) => {
-        let url = _.trim(evt.target.value);
-        draft.set(_.decoupleSet(draft.current, `details.github_url`, url));
+        const url = _.trim(evt.target.value);
+        draft.update(`details.github_url`, url);
     });
     const handleGitlabURLChange = useCallback((evt) => {
-        let url = _.trim(evt.target.value);
-        draft.set(_.decoupleSet(draft.current, `details.gitlab_url`, url));
+        const url = _.trim(evt.target.value);
+        draft.update(`details.gitlab_url`, url);
     });
     const handleStackoverflowURLChange = useCallback((evt) => {
-        let url = _.trim(evt.target.value);
-        draft.set(_.decoupleSet(draft.current, `details.stackoverflow_url`, url));
+        const url = _.trim(evt.target.value);
+        draft.update(`details.stackoverflow_url`, url);
     });
 
     render();
@@ -243,7 +242,7 @@ async function UserSummaryPage(props) {
 
     function renderNameInput() {
         // not supporting multilingual name yet
-        const name = p(_.get(draft.current, 'details.name'));
+        const name = p(draft.get('details.name'));
         const props = {
             id: 'name',
             value: name,
@@ -258,7 +257,7 @@ async function UserSummaryPage(props) {
     function renderUsernameInput() {
         const props = {
             id: 'username',
-            value: _.get(draft.current, 'username', ''),
+            value: draft.get('username', ''),
             spellCheck: false,
             readOnly,
             env,
@@ -276,7 +275,7 @@ async function UserSummaryPage(props) {
         const props = {
             id: 'email',
             type: 'email',
-            value: _.get(draft.current, 'details.email', ''),
+            value: draft.get('details.email', ''),
             spellCheck: false,
             readOnly,
             env,
@@ -294,7 +293,7 @@ async function UserSummaryPage(props) {
         const props = {
             id: 'phone',
             type: 'tel',
-            value: _.get(draft.current, 'details.phone', ''),
+            value: draft.get('details.phone', ''),
             spellCheck: false,
             readOnly,
             env,
@@ -308,7 +307,7 @@ async function UserSummaryPage(props) {
             purpose: 'profile-image',
             desiredWidth: 500,
             desiredHeight: 500,
-            resources: _.get(draft.current, 'details.resources', []),
+            resources: draft.get('details.resources', []),
             readOnly,
             database,
             env,
@@ -339,8 +338,8 @@ async function UserSummaryPage(props) {
     }
 
     function renderTypeOption(type, i) {
-        const typeCurr = _.get(draft.current, 'type', '');
-        const typePrev = _.get(draft.original, 'type', '');
+        const typeCurr = draft.getCurrent('type', '');
+        const typePrev = draft.getOriginal('type', '');
         const props = {
             name: type,
             selected: (typeCurr === type),
@@ -370,8 +369,8 @@ async function UserSummaryPage(props) {
     }
 
     function renderRoleOption(role, i) {
-        const rolesCurr = _.get(draft.current, 'role_ids', []);
-        const rolesPrev = _.get(draft.original, 'role_ids', []);
+        const rolesCurr = draft.getCurrent('role_ids', []);
+        const rolesPrev = draft.getOriginal('role_ids', []);
         let name, props;
         if (!role) {
             name = t('user-summary-role-none')
@@ -421,7 +420,7 @@ async function UserSummaryPage(props) {
     function renderSkypeNameInput() {
         const props = {
             id: 'skype',
-            value: _.get(draft.current, 'details.skype_username', ''),
+            value: draft.get('details.skype_username', ''),
             spellCheck: false,
             readOnly,
             env,
@@ -433,7 +432,7 @@ async function UserSummaryPage(props) {
     function renderIChatInput() {
         const props = {
             id: 'ichat',
-            value: _.get(draft.current, 'details.ichat_username', ''),
+            value: draft.get('details.ichat_username', ''),
             spellCheck: false,
             readOnly,
             env,
@@ -445,7 +444,7 @@ async function UserSummaryPage(props) {
     function renderTwitterInput() {
         const props = {
             id: 'twitter',
-            value: _.get(draft.current, 'details.twitter_username', ''),
+            value: draft.get('details.twitter_username', ''),
             spellCheck: false,
             readOnly,
             env,
@@ -458,7 +457,7 @@ async function UserSummaryPage(props) {
         const props = {
             id: 'github',
             type: 'url',
-            value: _.get(draft.current, 'details.github_url', ''),
+            value: draft.get('details.github_url', ''),
             spellCheck: false,
             readOnly,
             env,
@@ -471,7 +470,7 @@ async function UserSummaryPage(props) {
         const props = {
             id: 'github',
             type: 'url',
-            value: _.get(draft.current, 'details.gitlab_url', ''),
+            value: draft.get('details.gitlab_url', ''),
             spellCheck: false,
             readOnly,
             env,
@@ -484,7 +483,7 @@ async function UserSummaryPage(props) {
         const props = {
             id: 'linkedin',
             type: 'url',
-            value: _.get(draft.current, 'details.linkedin_url', ''),
+            value: draft.get('details.linkedin_url', ''),
             spellCheck: false,
             readOnly,
             env,
@@ -497,7 +496,7 @@ async function UserSummaryPage(props) {
         const props = {
             id: 'stackoverflow',
             type: 'url',
-            value: _.get(draft.current, 'details.stackoverflow_url', ''),
+            value: draft.get('details.stackoverflow_url', ''),
             spellCheck: false,
             readOnly,
             env,

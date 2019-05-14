@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress, useSaveBuffer } from 'relaks';
+import Relaks, { useProgress } from 'relaks';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 import * as SystemSettings from 'common/objects/settings/system-settings.mjs';
 
@@ -16,6 +16,7 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
 import {
+    useDraftBuffer,
     useEditHandling,
 } from '../hooks.mjs';
 
@@ -28,11 +29,7 @@ async function SettingsPage(props) {
     const readOnly = !editing;
     const [ problems, setProblems ] = useState({});
     const [ show ] = useProgress();
-    const draft = useSaveBuffer({
-        save,
-        compare: _.isEqual,
-        reset: !editing,
-    });
+    const draft = useDraftBuffer(editing, { save });
 
     const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
     const handleSaveClick = useCallback(async (evt) => {
@@ -40,33 +37,33 @@ async function SettingsPage(props) {
     });
     const handleTitleChange = useCallback((evt) => {
         const title = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, 'details.title', title));
+        draft.update('details.title', title);
     });
     const handleCompanyNameChange = useCallback((evt) => {
         const name = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, 'details.company_name', name));
+        draft.update('details.company_name', name);
     });
     const handleAddressChange = useCallback((evt) => {
         const address = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, 'settings.address', address));
+        draft.update('settings.address', address);
     });
     const handlePushRelayChange = useCallback((evt) => {
         const address = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, 'settings.push_relay', address));
+        draft.update('settings.push_relay', address);
     });
     const handleDescriptionChange = useCallback((evt) => {
         const description = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, 'details.description', description));
+        draft.update('details.description', description);
     });
     const handleBackgroundImageChange = useCallback((evt) => {
         const resources = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, 'details.resources', resources));
+        draft.update('details.resources', resources);
     });
     const handleLanguageOptionClick = useCallback((evt) => {
         const lang = evt.name;
-        const listBefore = _.get(draft.current, 'settings.input_languages', []);
-        const listAfter = _.toggle(listBefore, lang);
-        draft.set(_.decoupleSet(draft.current, 'settings.input_languages', listAfter));
+        const listBefore = draft.get('settings.input_languages', []);
+        const list = _.toggle(listBefore, lang);
+        draft.update('settings.input_languages', list);
     });
 
     render();
@@ -135,7 +132,7 @@ async function SettingsPage(props) {
     function renderTitleInput() {
         const props = {
             id: 'title',
-            value: _.get(draft.current, 'details.title', {}),
+            value: draft.get('details.title', {}),
             availableLanguageCodes,
             readOnly,
             env,
@@ -151,7 +148,7 @@ async function SettingsPage(props) {
     function renderCompanyNameInput() {
         const props = {
             id: 'company_name',
-            value: _.get(draft.current, 'details.company_name', ''),
+            value: draft.get('details.company_name', ''),
             readOnly,
             env,
             onChange: handleCompanyNameChange,
@@ -167,7 +164,7 @@ async function SettingsPage(props) {
         const props = {
             id: 'description',
             type: 'textarea',
-            value: _.get(draft.current, 'details.description', {}),
+            value: draft.get('details.description', {}),
             availableLanguageCodes,
             readOnly,
             env,
@@ -185,7 +182,7 @@ async function SettingsPage(props) {
             id: 'address',
             type: 'url',
             spellCheck: false,
-            value: _.get(draft.current, 'settings.address', ''),
+            value: draft.get('settings.address', ''),
             placeholder: 'https://',
             env,
             readOnly,
@@ -203,7 +200,7 @@ async function SettingsPage(props) {
             id: 'relay',
             type: 'url',
             spellCheck: false,
-            value: _.get(draft.current, 'settings.push_relay', ''),
+            value: draft.get('settings.push_relay', ''),
             placeholder: 'https://',
             readOnly,
             env,
@@ -219,7 +216,7 @@ async function SettingsPage(props) {
     function renderBackgroundSelector() {
         const props = {
             purpose: 'background',
-            resources: _.get(draft.current, 'details.resources', []),
+            resources: draft.get('details.resources', []),
             readOnly,
             database,
             payloads,
@@ -247,8 +244,8 @@ async function SettingsPage(props) {
     }
 
     function renderInputLanguage(language, i) {
-        const listCurr = _.get(draft.current, 'settings.input_languages', []);
-        const listPrev = _.get(draft.original, 'settings.input_languages', []);
+        const listCurr = draft.getCurrent('settings.input_languages', []);
+        const listPrev = draft.getOriginal('settings.input_languages', []);
         const pos = _.indexOf(listCurr, language.code) + 1;
         let badge;
         if (pos) {

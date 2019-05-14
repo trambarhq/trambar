@@ -152,6 +152,25 @@ function useSelectionBuffer(active, additionalParams) {
     return selection;
 }
 
+function useDraftBuffer(active, additionalParams) {
+    const draft = useSaveBuffer({
+        compare: _.isEqual,
+        reset: !active,
+        ...additionalParams,
+    });
+    draft.getCurrent = function(key, def) {
+        return _.get(this.current, key, def);
+    };
+    draft.getOriginal = function(key, def) {
+        return _.get(this.original, key, def);
+    };
+    draft.get = draft.getCurrent;
+    draft.update = function(key, value) {
+        this.set(_.decoupleSet(this.current, key, value));
+    };
+    return draft;
+}
+
 export {
     useLatest,
     useAfterglow,
@@ -163,4 +182,5 @@ export {
     useRowHandling,
     useNameHandling,
     useSelectionBuffer,
+    useDraftBuffer,
 };

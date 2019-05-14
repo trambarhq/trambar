@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress, useSaveBuffer, Cancellation } from 'relaks';
+import Relaks, { useProgress, Cancellation } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
@@ -20,6 +20,7 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
 import {
+    useDraftBuffer,
     useSelectionBuffer,
     useEditHandling,
     useAddHandling,
@@ -39,7 +40,7 @@ async function RoleSummaryPage(props) {
     const [ problems, setProblems ] = useState({});
     const [ confirmationRef, confirm ] = useConfirmation();
     const [ show ] = useProgress();
-    const draft = useSaveBuffer({
+    const draft = useDraftBuffer(editing, {
         save: (base, ours, action) => {
             switch (action) {
                 case 'restore': return restore(base);
@@ -51,9 +52,7 @@ async function RoleSummaryPage(props) {
                 case 'disable': return disable(base);
                 default: return remove(base);
             }
-        },
-        compare: _.isEqual,
-        reset: !editing,
+        }
     });
     const userSelection = useSelectionBuffer(editing);
 
@@ -82,12 +81,12 @@ async function RoleSummaryPage(props) {
     });
     const handleDescriptionChange = useCallback((evt) => {
         const description = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, 'details.description', description));
+        draft.update('details.description', description);
     });
     const handleRatingOptionClick = useCallback((evt) => {
         const key = evt.name;
         const rating = messageRatings[key];
-        draft.set(_.decoupleSet(draft.current, 'settings.rating', rating));
+        draft.update('settings.rating', rating);
     });
     const handleUserOptionClick = useCallback((evt) => {
         let userID = parseInt(evt.name);
@@ -110,7 +109,7 @@ async function RoleSummaryPage(props) {
 
     function render() {
         const changed = draft.changed || userSelection.changed;
-        const title = p(_.get(draft.current, 'details.title')) || _.get(draft.current, 'name');
+        const title = p(draft.get('details.title')) || draft.get('name');
         show(
             <div className="role-summary-page">
                 {renderButtons()}
@@ -189,7 +188,7 @@ async function RoleSummaryPage(props) {
     function renderTitleInput() {
         const props = {
             id: 'title',
-            value: _.get(draft.current, 'details.title', {}),
+            value: draft.get('details.title', {}),
             availableLanguageCodes,
             readOnly,
             env,
@@ -205,7 +204,7 @@ async function RoleSummaryPage(props) {
     function renderNameInput() {
         const props = {
             id: 'name',
-            value: _.get(draft.current, 'name', ''),
+            value: draft.get('name', ''),
             spellCheck: false,
             readOnly,
             env,
@@ -222,7 +221,7 @@ async function RoleSummaryPage(props) {
     function renderDescriptionInput() {
         const props = {
             id: 'description',
-            value: _.get(draft.current, 'details.description', {}),
+            value: draft.get('details.description', {}),
             type: 'textarea',
             availableLanguageCodes,
             readOnly,
@@ -250,8 +249,8 @@ async function RoleSummaryPage(props) {
     }
 
     function renderRatingOption(rating, key) {
-        const ratingCurr = _.get(draft.current, 'settings.rating', 0);
-        const ratingPrev = _.get(draft.original, 'settings.rating', 0);
+        const ratingCurr = draft.getCurrent('settings.rating', 0);
+        const ratingPrev = draft.getOriginal('settings.rating', 0);
         const props = {
             name: key,
             selected: ratingCurr === rating,

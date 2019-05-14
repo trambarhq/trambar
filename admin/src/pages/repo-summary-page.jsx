@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress, useSaveBuffer } from 'relaks';
+import Relaks, { useProgress } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
@@ -21,6 +21,7 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 // custom hooks
 import {
+    useDraftBuffer,
     useEditHandling,
     useReturnHandling,
     useConfirmation,
@@ -36,16 +37,14 @@ async function RepoSummaryPage(props) {
     const [ problems, setProblems ] = useState({});
     const [ confirmationRef, confirm ] = useConfirmation();
     const [ show ] = useProgress();
-    const draft = useSaveBuffer({
+    const draft = useDraftBuffer(editing, {
         save: (base, ours, action) => {
             switch (action) {
                 case 'restore': return restore(base);
                 default: return save(base, ours);
             }
         },
-        remove,
-        compare: _.isEqual,
-        reset: !editing,
+        remove
     });
 
     const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
@@ -63,7 +62,7 @@ async function RepoSummaryPage(props) {
     });
     const handleTitleChange = useCallback((evt) => {
         const title = evt.target.value;
-        draft.set(_.decoupleSet(draft.current, 'details.title', title));
+        draft.update('details.title', title);
     });
 
     render();
@@ -146,7 +145,7 @@ async function RepoSummaryPage(props) {
     function renderTitleInput() {
         const props = {
             id: 'title',
-            value: _.get(draft.current, 'details.title', {}),
+            value: draft.get('details.title', {}),
             availableLanguageCodes,
             readOnly,
             env,
@@ -162,7 +161,7 @@ async function RepoSummaryPage(props) {
     function renderNameInput() {
         const props = {
             id: 'name',
-            value: _.get(draft.current, 'name', ''),
+            value: draft.get('name', ''),
             readOnly,
             env,
         };
@@ -174,7 +173,7 @@ async function RepoSummaryPage(props) {
     }
 
     function renderIssueTrackingStatus() {
-        const status = _.get(draft.current, 'details.issues_enabled') ? 'enabled' : 'disabled';
+        const status = draft.get('details.issues_enabled') ? 'enabled' : 'disabled';
         const props = {
             id: 'issue-tracker',
             value: t(`repo-summary-issue-tracker-${status}`),
