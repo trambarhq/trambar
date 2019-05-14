@@ -197,10 +197,7 @@ async function RepoSummaryPage(props) {
     }
 
     function renderChart() {
-        const chartProps = {
-            statistics,
-            env,
-        };
+        const chartProps = { statistics, env };
         return (
             <div className="statistics">
                 <ErrorBoundary env={env}>

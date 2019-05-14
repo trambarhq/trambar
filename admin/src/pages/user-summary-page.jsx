@@ -533,10 +533,7 @@ async function UserSummaryPage(props) {
         if (!projectID || creating) {
             return null;
         }
-        const chartProps = {
-            statistics,
-            env,
-        };
+        const chartProps = { statistics, env };
         return (
             <div className="statistics">
                 <ErrorBoundary env={env}>

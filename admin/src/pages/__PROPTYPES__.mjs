@@ -7,6 +7,7 @@ import Payloads from 'common/transport/payloads.mjs';
 import { ErrorPage } from './error-page.jsx';
 import { MemberListPage } from './member-list-page.jsx';
 import { ProjectListPage } from './project-list-page.jsx';
+import { ProjectSummaryPage } from './project-summary-page.jsx';
 import { RepoListPage } from './repo-list-page.jsx';
 import { RepoSummaryPage } from './repo-summary-page.jsx';
 import { RoleListPage } from './role-list-page.jsx';
@@ -35,6 +36,18 @@ ProjectListPage.propTypes = {
     database: PropTypes.instanceOf(Database).isRequired,
     route: PropTypes.instanceOf(Route).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,
+};
+ProjectSummaryPage.propTypes = {
+    editing: PropTypes.bool,
+    projectID: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.oneOf([ 'new' ]),
+    ]).isRequired,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+    payloads: PropTypes.instanceOf(Payloads).isRequired,
 };
 RepoListPage.propTypes = {
     editing: PropTypes.bool,

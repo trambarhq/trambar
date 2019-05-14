@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import ComponentRefs from 'common/utils/component-refs.mjs';
+import React, { useState, useCallback } from 'react';
+import Relaks, { useProgress, useSaveBuffer, Cancellation } from 'relaks';
+import { useEditHandling, useAddHandling, useReturnHandling, useConfirmation } from '../hooks.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as ProjectSettings from 'common/objects/settings/project-settings.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
@@ -9,314 +9,178 @@ import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 import * as SlugGenerator from 'common/utils/slug-generator.mjs';
 
 // widgets
-import PushButton from '../widgets/push-button.jsx';
-import ComboButton from '../widgets/combo-button.jsx';
-import InstructionBlock from '../widgets/instruction-block.jsx';
-import TextField from '../widgets/text-field.jsx';
-import MultilingualTextField from '../widgets/multilingual-text-field.jsx';
-import OptionList from '../widgets/option-list.jsx';
-import ImageSelector from '../widgets/image-selector.jsx';
-import ActivityChart from '../widgets/activity-chart.jsx';
-import InputError from '../widgets/input-error.jsx';
-import ActionConfirmation from '../widgets/action-confirmation.jsx';
-import DataLossWarning from '../widgets/data-loss-warning.jsx';
-import UnexpectedError from '../widgets/unexpected-error.jsx';
-import ErrorBoundary from 'common/widgets/error-boundary.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ComboButton } from '../widgets/combo-button.jsx';
+import { InstructionBlock } from '../widgets/instruction-block.jsx';
+import { TextField } from '../widgets/text-field.jsx';
+import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
+import { OptionList } from '../widgets/option-list.jsx';
+import { ImageSelector } from '../widgets/image-selector.jsx';
+import { ActivityChart } from '../widgets/activity-chart.jsx';
+import { InputError } from '../widgets/input-error.jsx';
+import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
+import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
+import { UnexpectedError } from '../widgets/unexpected-error.jsx';
+import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import './project-summary-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the Project Summary page.
- *
- * @extends AsyncComponent
- */
-class ProjectSummaryPage extends AsyncComponent {
-    static displayName = 'ProjectSummaryPage';
-
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env, payloads, projectID, editing } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let creating = (projectID === 'new');
-        let props = {
-            database,
-            route,
-            env,
-            payloads,
-            editing: editing || creating,
-            creating,
-        };
-        meanwhile.show(<ProjectSummaryPageSync {...props} />);
-        let currentUserID = await db.start();
-        props.system = await SystemFinder.findSystem(db);
-        if (!creating) {
-            props.project = await ProjectFinder.findProject(db, projectID);
-            meanwhile.show(<ProjectSummaryPageSync {...props} />);
-            props.statistics = await StatisticsFinder.findDailyActivitiesOfProject(db, props.project);
-        }
-        return <ProjectSummaryPageSync {...props} />;
-    }
-}
-
-/**
- * Synchronous component that actually renders the Project Summary page.
- *
- * @extends PureComponent
- */
-class ProjectSummaryPageSync extends PureComponent {
-    static displayName = 'ProjectSummaryPageSync';
-
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            confirmation: ActionConfirmation
-        });
-        this.state = {
-            newProject: null,
-            saving: false,
-            adding: false,
-            problems: {},
-        };
-    }
-
-    /**
-     * Reset edit state when edit ends
-     *
-     * @param  {Object} props
-     * @param  {Object} state
-     */
-    static getDerivedStateFromProps(props, state) {
-        let { editing } = props;
-        if (!editing) {
-            return {
-                newProject: null,
-                hasChanges: false,
-                problems: {},
-            };
-        }
-        return null;
-    }
-
-    /**
-     * Return edited copy of project object or the original object
-     *
-     * @param  {String} state
-     *
-     * @return {Object}
-     */
-    getProject(state) {
-        let { project } = this.props;
-        let { newProject } = this.state;
-        if (!state || state === 'current') {
-            return newProject || project || emptyProject;
-        } else {
-            return project || emptyProject;
-        }
-    }
-
-    /**
-     * Return a prop of the project object
-     *
-     * @param  {String} path
-     * @param  {String} state
-     *
-     * @return {*}
-     */
-    getProjectProperty(path, state) {
-        let project = this.getProject(state);
-        return _.get(project, path);
-    }
-
-    /**
-     * Modify a property of the project object
-     *
-     * @param  {String} path
-     * @param  {*} value
-     */
-    setProjectProperty(path, value) {
-        let { project } = this.props;
-        let newProject = this.getProject('current');
-        let newProjectAfter = _.decoupleSet(newProject, path, value);
-        if (path === 'details.title') {
-            if (!newProject.id) {
-                let autoNameBefore = SlugGenerator.fromTitle(newProject.details.title);
-                let autoNameAfter = SlugGenerator.fromTitle(newProjectAfter.details.title);
-                if (!newProject.name || newProject.name === autoNameBefore) {
-                    newProjectAfter.name = autoNameAfter;
-                }
+async function ProjectSummaryPage(props) {
+    const { database, route, env, payloads, projectID, editing } = props;
+    const { t, p } = env.locale;
+    const db = database.use({ schema: 'global', by: this });
+    const creating = (projectID === 'new');
+    const readOnly = !editing;
+    const [ problems, setProblems ] = useState({});
+    const [ confirmationRef, confirm ] = useConfirmation();
+    const [ show ] = useProgress();
+    const draft = useSaveBuffer({
+        save: (base, ours, action) => {
+            switch (action) {
+                case 'restore': return restore(base);
+                default: return save(base, ours);
             }
-        }
-        if(_.size(newProjectAfter.name) > 128) {
-            newProjectAfter.name = newProjectAfter.name.substr(0, 128);
-        }
-        let hasChanges = true;
-        if (_.isEqual(newProjectAfter, project)) {
-            newProjectAfter = null;
-            hasChanges = false;
-        }
-        this.setState({ newProject: newProjectAfter, hasChanges });
-    }
-
-    /**
-     * Look for problems in project object
-     *
-     * @return {Object}
-     */
-    findProblems() {
-        let problems = {};
-        let newProject = this.getProject();
-        let name = _.toLower(_.trim(newProject.name));
-        let reservedNames = [ 'global', 'admin', 'public', 'srv' ];
-        if (!name) {
-            problems.name = 'validation-required';
-        } else if (_.includes(reservedNames, name)) {
-            problems.name = 'validation-illegal-project-name';
-        }
-        return problems;
-    }
-
-    /**
-     * Change editability of page
-     *
-     * @param  {Boolean} edit
-     * @param  {Object|null}  newProject
-     *
-     * @return {Promise}
-     */
-    async setEditability(edit, newProject) {
-        let { route, creating } = this.props;
-        if (creating && !edit && !newProject) {
-            // return to list when cancelling project creation
-            this.returnToList();
-        } else {
-            let params = _.clone(route.params);
-            params.editing = edit || undefined;
-            if (newProject) {
-                // use id of newly created project
-                params.projectID = newProject.id;
+        },
+        remove: (base, ours, action) => {
+            switch (action) {
+                case 'archive': return archive(base);
+                default: return remove(base);
             }
-            let replaced = await route.replace(route.name, params);
-            if (replaced) {
-                this.setState({ problems: {} });
-            }
+        },
+        compare: _.isEqual,
+        reset: !editing,
+    });
+
+    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
+    const [ handleAddClick ] = useAddHandling(route, {
+        params: { projectID: 'new' },
+    });
+    const [ handleReturnClick ] = useReturnHandling(route, {
+        page: 'project-list-page',
+    });
+    const handleArchiveClick = useCallback(async (evt) => {
+        await draft.remove('archive');
+    });
+    const handleRemoveClick = useCallback(async (evt) => {
+        await draft.remove();
+    });
+    const handleRestoreClick = useCallback(async (evt) => {
+        await draft.save('restore');
+    });
+    const handleSaveClick = useCallback(async (evt) => {
+        await draft.save();
+    });
+    const handleTitleChange = useCallback((evt) => {
+        const title = evt.target.value;
+        let after = _.decoupleSet(draft.current, 'details.title', title);
+
+        // derive name from title
+        const titleBefore = _.get(draft.current, 'details.title', {});
+        const autoNameBefore = SlugGenerator.fromTitle(titleBefore);
+        const autoName = SlugGenerator.fromTitle(title);
+        const nameBefore = _.get(draft.current, 'name', '');
+        if (!nameBefore || nameBefore === autoNameBefore) {
+            after = _.decoupleSet(after, 'name', autoName);
         }
-    }
+        draft.set(after);
+    });
+    const handleNameChange = useCallback((evt) => {
+        const name = evt.target.value;
+        const nameTransformed = _.toLower(name).replace(/[^\w\-]+/g, '');
+        const nameLimited = nameTransformed.substr(0, 128);
+        draft.set(_.decoupleSet(draft.current, 'name', nameLimited));
+    });
+    const handleDescriptionChange = useCallback((evt) => {
+        const description = evt.target.value;
+        draft.set(_.decoupleSet(draft.current, 'details.description', description));
+    });
+    const handleEmblemChange = useCallback((evt) => {
+        const resources = evt.target.value;
+        draft.set(_.decoupleSet(draft.current, 'details.resources', description));
+    });
+    const handleMembershipOptionClick = useCallback((evt) => {
+        const optsBefore = _.get(draft.current, 'settings.membership', {});
+        const opts = toggleOption(optsBefore, membershipOptions, evt.name);
+        draft.set(_.decoupleSet(draft.current, 'settings.membership', opts));
+    });
+    const handleAccessControlOptionClick = useCallback((evt) => {
+        const optsBefore = _.get(draft.current, 'settings.access_control', {});
+        const opts = toggleOption(optsBefore, accessControlOptions, evt.name);
+        draft.set(_.decoupleSet(draft.current, 'settings.access_control', opts));
+    });
 
-    /**
-     * Return to project list
-     *
-     * @return {Promise}
-     */
-    returnToList() {
-        let { route } = this.props;
-        return route.push('project-list-page');
-    }
+    render();
+    const currentUserID = await db.start();
+    const system = await SystemFinder.findSystem(db);
+    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    render();
+    const project = (!creating) ? await ProjectFinder.findProject(db, projectID) : null;
+    draft.base(project || {});
+    render();
+    const statistics = (!creating) ? await StatisticsFinder.findDailyActivitiesOfProject(db, project) : null;
+    render();
 
-    /**
-     * Start creating a new role
-     *
-     * @return {Promise}
-     */
-    startNew() {
-        let { route } = this.props;
-        let params = _.clone(route.params);
-        params.projectID = 'new';
-        return route.replace(route.name, params);
-    }
-
-    /**
-     * Return list of language codes
-     *
-     * @return {Array<String>}
-     */
-    getInputLanguages() {
-        let { system } = this.props;
-        return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { route, env } = this.props;
-        let { hasChanges, problems } = this.state;
-        let { setters } = this.components;
-        let { t, p } = env.locale;
-        let newProject = this.getProject();
-        let title = p(newProject.details.title) || newProject.name;
-        return (
+    function render() {
+        const { changed } = draft;
+        const title = p(_.get(draft.current, 'details.title')) || _.get(draft.current, 'name');
+        show(
             <div className="project-summary-page">
-                {this.renderButtons()}
+                {renderButtons()}
                 <h2>{t('project-summary-$title', title)}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
-                {this.renderForm()}
-                {this.renderInstructions()}
-                {this.renderChart()}
-                <ActionConfirmation ref={setters.confirmation} env={env} />
-                <DataLossWarning changes={hasChanges} route={route} env={env} />
+                <UnexpectedError error={draft.error} />
+                {renderForm()}
+                {renderInstructions()}
+                {renderChart()}
+                <ActionConfirmation ref={confirmationRef} env={env} />
+                <DataLossWarning changes={changed} route={route} env={env} />
             </div>
         );
     }
 
-    /**
-     * Render buttons in top right corner
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, project, editing } = this.props;
-        let { hasChanges, adding } = this.state;
-        let { t, p } = env.locale;
+    function renderButtons() {
+        const { changed } = draft;
         if (editing) {
             // using keys here to force clearing of focus
             return (
                 <div key="edit" className="buttons">
-                    <PushButton onClick={this.handleCancelClick}>
+                    <PushButton onClick={handleCancelClick}>
                         {t('project-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('project-summary-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            let active = (project) ? !project.deleted && !project.archived : true;
+            const active = (project) ? !project.deleted && !project.archived : true;
             let preselected;
             if (active) {
-                preselected = (adding) ? 'add' : 'return';
+                preselected = (creating) ? 'add' : 'return';
             } else {
                 preselected = 'restore';
             }
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option name="return" onClick={this.handleReturnClick}>
+                        <option name="return" onClick={handleReturnClick}>
                             {t('project-summary-return')}
                         </option>
-                        <option name="add" onClick={this.handleAddClick}>
+                        <option name="add" onClick={handleAddClick}>
                             {t('project-summary-add')}
                         </option>
-                        <option name="archive" disabled={!active} separator onClick={this.handleArchiveClick}>
+                        <option name="archive" disabled={!active} separator onClick={handleArchiveClick}>
                             {t('project-summary-archive')}
                         </option>
-                        <option name="delete" disabled={!active} onClick={this.handleDeleteClick}>
+                        <option name="delete" disabled={!active} onClick={handleRemoveClick}>
                             {t('project-summary-delete')}
                         </option>
-                        <option name="restore" hidden={active} onClick={this.handleRestoreClick}>
+                        <option name="restore" hidden={active} onClick={handleRestoreClick}>
                             {t('project-summary-restore')}
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={handleEditClick}>
                         {t('project-summary-edit')}
                     </PushButton>
                 </div>
@@ -324,39 +188,27 @@ class ProjectSummaryPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render form for entering project details
-     *
-     * @return {ReactElement}
-     */
-    renderForm() {
+    function renderForm() {
         return (
             <div className="form">
-                {this.renderTitleInput()}
-                {this.renderNameInput()}
-                {this.renderDescriptionInput()}
-                {this.renderEmblemSelector()}
-                {this.renderMembershipOptions()}
-                {this.renderAccessControlOptions()}
+                {renderTitleInput()}
+                {renderNameInput()}
+                {renderDescriptionInput()}
+                {renderEmblemSelector()}
+                {renderMembershipOptions()}
+                {renderAccessControlOptions()}
             </div>
         );
     }
 
-    /**
-     * Render title input
-     *
-     * @return {ReactElement}
-     */
-    renderTitleInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderTitleInput() {
+        const props = {
             id: 'title',
-            value: this.getProjectProperty('details.title'),
-            availableLanguageCodes: this.getInputLanguages(),
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.title', {}),
+            availableLanguageCodes,
+            readOnly,
             env,
-            onChange: this.handleTitleChange,
+            onChange: handleTitleChange,
         };
         return (
             <MultilingualTextField {...props}>
@@ -365,22 +217,14 @@ class ProjectSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render name input
-     *
-     * @return {ReactElement}
-     */
-    renderNameInput() {
-        let { env, editing } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderNameInput() {
+        const props = {
             id: 'name',
-            value: this.getProjectProperty('name'),
-            readOnly: !editing,
+            value: _.get(draft.current, 'name', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleNameChange,
+            onChange: handleNameChange,
         };
         return (
             <TextField {...props}>
@@ -390,22 +234,15 @@ class ProjectSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render description input
-     *
-     * @return {ReactElement}
-     */
-    renderDescriptionInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderDescriptionInput() {
+        const props = {
             id: 'description',
-            value: this.getProjectProperty('details.description'),
-            availableLanguageCodes: this.getInputLanguages(),
             type: 'textarea',
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.description', {}),
+            availableLanguageCodes,
+            readOnly,
             env,
-            onChange: this.handleDescriptionChange,
+            onChange: handleDescriptionChange,
         };
         return (
             <MultilingualTextField {...props}>
@@ -414,24 +251,17 @@ class ProjectSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render image selector
-     *
-     * @return {ReactElement}
-     */
-    renderEmblemSelector() {
-        let { database, env, payloads, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderEmblemSelector() {
+        const props = {
             purpose: 'project-emblem',
             desiredWidth: 500,
             desiredHeight: 500,
-            resources: this.getProjectProperty('details.resources'),
-            readOnly: !editing,
+            resources: _.get(draft.current, 'details.resources', []),
+            readOnly,
             database,
             env,
             payloads,
-            onChange: this.handleEmblemChange,
+            onChange: handleEmblemChange,
         };
         return (
             <ImageSelector {...props}>
@@ -440,116 +270,58 @@ class ProjectSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render project membership option list
-     *
-     * @return {ReactElement}
-     */
-    renderMembershipOptions() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let memOptsCurr = this.getProjectProperty('settings.membership', 'current') || {};
-        let memOptsPrev = this.getProjectProperty('settings.membership', 'original') || {};
-        let newProject = !!this.getProjectProperty('id');
-        let optionProps = [
-            {
-                name: 'manual',
-                selected: !_.some(memOptsCurr),
-                previous: (newProject) ? !_.some(memOptsPrev) : undefined,
-                children: t('project-summary-new-members-manual'),
-            },
-            {
-                name: 'allow_user_request',
-                selected: memOptsCurr.allow_user_request,
-                previous: memOptsPrev.allow_user_request,
-                children: t('project-summary-new-members-join-user'),
-            },
-            {
-                name: 'approve_user_request',
-                selected: memOptsCurr.approve_user_request,
-                previous: memOptsPrev.approve_user_request,
-                hidden: !memOptsCurr.allow_user_request,
-                children: t('project-summary-new-members-auto-accept-user'),
-            },
-            {
-                name: 'allow_guest_request',
-                selected: memOptsCurr.allow_guest_request,
-                previous: memOptsPrev.allow_guest_request,
-                children: t('project-summary-new-members-join-guest'),
-            },
-            {
-                name: 'approve_guest_request',
-                selected: memOptsCurr.approve_guest_request,
-                previous: memOptsPrev.approve_guest_request,
-                hidden: !memOptsCurr.allow_guest_request,
-                children: t('project-summary-new-members-auto-accept-guest'),
-            },
-        ];
+    function renderMembershipOptions() {
         let listProps = {
-            readOnly: !editing,
-            onOptionClick: this.handleMembershipOptionClick,
+            readOnly,
+            onOptionClick: handleMembershipOptionClick,
         };
         return (
             <OptionList {...listProps}>
                 <label>{t('project-summary-new-members')}</label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+                {_.map(membershipOptions, renderMembershipOption)}
             </OptionList>
         );
     }
 
-    /**
-     * Render project access control option list
-     *
-     * @return {ReactElement}
-     */
-    renderAccessControlOptions() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let acOptsCurr = this.getProjectProperty('settings.access_control', 'current') || {};
-        let acOptsPrev = this.getProjectProperty('settings.access_control', 'original') || {};
-        let newProject = !!this.getProjectProperty('id');
-        let optionProps = [
-            {
-                name: 'members_only',
-                selected: !_.some(acOptsCurr),
-                previous: (newProject) ? !_.some(acOptsPrev) : undefined,
-                children: t('project-summary-access-control-member-only')
-            },
-            {
-                name: 'grant_view_access',
-                selected: acOptsCurr.grant_view_access,
-                previous: acOptsPrev.grant_view_access,
-                children: t('project-summary-access-control-non-member-view')
-            },
-            {
-                name: 'grant_comment_access',
-                selected: acOptsCurr.grant_comment_access,
-                previous: acOptsPrev.grant_comment_access,
-                hidden: !acOptsCurr.grant_view_access,
-                children: t('project-summary-access-control-non-member-comment')
-            },
-        ];
-        let listProps = {
+    function renderMembershipOption(option, i) {
+        const optsCurr = _.get(draft.current, 'settings.membership', {});
+        const optsPrev = _.get(draft.original, 'settings.membership', {});
+        return renderOption(option, optsCurr, optsPrev, i);
+    }
+
+    function renderOption(option, optsCurr, optsPrev, i) {
+        const noneCurr = !_.some(optsCurr);
+        const nonePrev = (creating) ? !_.some(optsPrev) : undefined;
+        const props = {
+            name: option.name,
+            selected: (option.none) ? noneCurr : optsCurr[option.name],
+            previous: (option.none) ? nonePrev : optsPrev[option.name],
+            hidden: option.shownIf && !optsCurr[option.shownIf],
+        };
+        return <option key={i} {...props}>{t(option.label)}</option>;
+    }
+
+    function renderAccessControlOptions() {
+        const listProps = {
             readOnly: !editing,
-            onOptionClick: this.handleAccessControlOptionClick,
+            onOptionClick: handleAccessControlOptionClick,
         };
         return (
             <OptionList {...listProps}>
                 <label>{t('project-summary-access-control')}</label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+                {_.map(accessControlOptions, renderAccessControlOption)}
             </OptionList>
         );
     }
 
-    /**
-     * Render instruction box
-     *
-     * @return {ReactElement}
-     */
-    renderInstructions() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let instructionProps = {
+    function renderAccessControlOption(option, i) {
+        const optsCurr = _.get(draft.current, 'settings.access_control', {});
+        const optsPrev = _.get(draft.original, 'settings.access_control', {});
+        return renderOption(option, optsCurr, optsPrev, i);
+    }
+
+    function renderInstructions() {
+        const props = {
             folder: 'project',
             topic: 'project-summary',
             hidden: !editing,
@@ -557,30 +329,20 @@ class ProjectSummaryPageSync extends PureComponent {
         };
         return (
             <div className="instructions">
-                <InstructionBlock {...instructionProps} />
+                <InstructionBlock {...props} />
             </div>
         );
     }
 
-    /**
-     * Render activity chart
-     *
-     * @return {ReactElement|null}
-     */
-    renderChart() {
-        let { env, statistics, creating } = this.props;
-        let { t } = env.locale;
+    function renderChart() {
         if (creating) {
             return null;
         }
-        let chartProps = {
-            statistics,
-            env,
-        };
+        const props = { statistics, env };
         return (
             <div className="statistics">
                 <ErrorBoundary env={env}>
-                    <ActivityChart {...chartProps}>
+                    <ActivityChart {...props}>
                         {t('project-summary-statistics')}
                     </ActivityChart>
                 </ErrorBoundary>
@@ -588,305 +350,126 @@ class ProjectSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Save project with new flags
-     *
-     * @param  {Object} flags
-     *
-     * @return {Promise<Project>}
-     */
-    changeFlags(flags) {
-        let { database, project } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let projectAfter = _.assign({}, project, flags);
-        return db.saveOne({ table: 'project' }, projectAfter).catch((err) => {
-            let problems = { unexpected: err.message };
-            this.setState({ problems });
-        });
+    async function archive(base) {
+        await confirm(t('project-summary-confirm-archive'));
+        const changes = { id: base.id, archived: true };
+        await db.saveOne({ table: 'project' }, changes);
+        handleReturnClick();
     }
 
-    /**
-     * Called when user select archive project
-     *
-     * @param  {Event} evt
-     */
-    handleArchiveClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('project-summary-confirm-archive');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            let projectAfter = await this.changeFlags({ archived: true });
-            if (projectAfter) {
-                await this.returnToList();
+    async function remove(base) {
+        await confirm(t('project-summary-confirm-delete'));
+        const changes = { id: base.id, deleted: true };
+        await db.saveOne({ table: 'project' }, changes);
+        handleReturnClick();
+    }
+
+    async function restore(base) {
+        await confirm(t('project-summary-confirm-restore'));
+        const changes = { id: base.id, disabled: true, deleted: true };
+        await db.saveOne({ table: 'project' }, changes);
+    }
+
+    async function save(base, ours) {
+        validate(ours);
+        setSaving(true);
+        try {
+            const projectAfter = await db.saveOne({ table: 'project' }, ours);
+            payloads.dispatch(projectAfter);
+            handleCancelClick();
+            return projectAfter;
+        } catch (err) {
+            if (err.statusCode === 409) {
+                setProblems({ name: 'validation-duplicate-project-name' });
+                err = new Cancellation;
             }
+            throw err;
+        } finally {
+            setSaving(false);
         }
     }
 
-    /**
-     * Called when user select delete project
-     *
-     * @param  {Event} evt
-     */
-    handleDeleteClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('project-summary-confirm-delete');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            let projectAfter = await this.changeFlags({ deleted: true });
-            if (projectAfter)  {
-                await this.returnToList();
-            }
+    function validate(ours) {
+        const name = _.toLower(_.trim(ours.name));
+        const reservedNames = [ 'global', 'admin', 'public', 'srv' ];
+        if (!name) {
+            problems.name = 'validation-required';
+        } else if (_.includes(reservedNames, name)) {
+            problems.name = 'validation-illegal-project-name';
         }
-    }
-
-    /**
-     * Called when user select delete project
-     *
-     * @param  {Event} evt
-     */
-    handleRestoreClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('project-summary-confirm-restore');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            await this.changeFlags({ archived: false, deleted: false });
+        setProblems(problems);
+        if (!_.isEmpty(problems)) {
+            throw new Cancellation;
         }
-    }
-
-    /**
-     * Called when user click return button
-     *
-     * @param  {Event} evt
-     */
-    handleReturnClick = async (evt) => {
-        await this.returnToList();
-    }
-
-    /**
-     * Called when user click add button
-     *
-     * @param  {Event} evt
-     */
-    handleAddClick = async (evt) => {
-        await this.startNew();
-    }
-
-    /**
-     * Called when user clicks edit button
-     *
-     * @param  {Event} evt
-     */
-    handleEditClick = async (evt) => {
-        await this.setEditability(true);
-    }
-
-    /**
-     * Called when user clicks cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = async (evt) => {
-        await this.setEditability(false);
-    }
-
-    /**
-     * Called when user clicks save button
-     *
-     * @param  {Event} evt
-     */
-    handleSaveClick = (evt) => {
-        let { database, payloads } = this.props;
-        let { saving } = this.state;
-        if (saving) {
-            return;
-        }
-        let problems = this.findProblems();
-        if (_.some(problems)) {
-            this.setState({ problems });
-            return;
-        }
-        let newProject = _.omit(this.getProject(), 'user_ids', 'repo_ids');
-        this.setState({ saving: true, adding: !newProject.id, problems: {} }, async () => {
-            let schema = 'global';
-            let db = database.use({ schema, by: this });
-            try {
-                let currentUserID = await db.start();
-                let projectAfter = await db.saveOne({ table: 'project' }, newProject);
-                payloads.dispatch(projectAfter);
-                this.setState({ hasChanges: false, saving: false }, () => {
-                    this.setEditability(false, projectAfter);
-                });
-            } catch (err) {
-                let problems = {};
-                if (err.statusCode === 409) {
-                    problems = { name: 'validation-duplicate-project-name' };
-                } else {
-                    problems = { unexpected: err.message };
-                }
-                this.setState({ problems, saving: false });
-            }
-        });
-    }
-
-    /**
-     * Called when user changes the title
-     *
-     * @param  {Object} evt
-     */
-    handleTitleChange = (evt) => {
-        this.setProjectProperty(`details.title`, evt.target.value);
-    }
-
-    /**
-     * Called when user changes the name
-     *
-     * @param  {Event} evt
-     */
-    handleNameChange = (evt) => {
-        let name = _.toLower(evt.target.value).replace(/[^\w\-]+/g, '');
-        this.setProjectProperty(`name`, name);
-    }
-
-    /**
-     * Called when user changes the title
-     *
-     * @param  {Object} evt
-     */
-    handleDescriptionChange = (evt) => {
-        this.setProjectProperty(`details.description`, evt.target.value);
-    }
-
-    /**
-     * Called when user changes the project emblem
-     *
-     * @param  {Object} evt
-     */
-    handleEmblemChange = (evt) => {
-        this.setProjectProperty(`details.resources`, evt.target.value);
-    }
-
-    /**
-     * Called when user clicks an option under membership or access control
-     *
-     * @param  {Object} evt
-     */
-    handleMembershipOptionClick = (evt) => {
-        let memOpts = _.clone(this.getProjectProperty('settings.membership')) || {};
-        switch (evt.name) {
-            case 'manual':
-                memOpts = {};
-                break;
-            case 'allow_user_request':
-                if (memOpts.allow_user_request) {
-                    delete memOpts.allow_user_request;
-                    delete memOpts.approve_user_request;
-                } else {
-                    memOpts.allow_user_request = true;
-                }
-                break;
-            case 'approve_user_request':
-                if (memOpts.approve_user_request) {
-                    delete memOpts.approve_user_request;
-                } else {
-                    memOpts.approve_user_request = true;
-                }
-                break;
-            case 'allow_guest_request':
-                if (memOpts.allow_guest_request) {
-                    delete memOpts.allow_guest_request;
-                    delete memOpts.approve_guest_request;
-                } else {
-                    memOpts.allow_guest_request = true;
-                }
-                break;
-            case 'approve_guest_request':
-                if (memOpts.approve_guest_request) {
-                    delete memOpts.approve_guest_request;
-                } else {
-                    memOpts.approve_guest_request = true;
-                }
-                break;
-        }
-        this.setProjectProperty(`settings.membership`, memOpts);
-    }
-
-    /**
-     * Called when user clicks an option under membership or access control
-     *
-     * @param  {Object} evt
-     */
-    handleAccessControlOptionClick = (evt) => {
-        let acOpts = _.clone(this.getProjectProperty('settings.access_control')) || {};
-        switch (evt.name) {
-            case 'members_only':
-                acOpts = {};
-                break;
-            case 'grant_view_access':
-                if (acOpts.grant_view_access) {
-                    delete acOpts.grant_view_access;
-                } else {
-                    acOpts.grant_view_access = true;
-                }
-                break;
-            case 'grant_comment_access':
-                if (acOpts.grant_comment_access) {
-                    delete acOpts.grant_comment_access;
-                } else {
-                    acOpts.grant_comment_access = true;
-                }
-                break;
-        }
-        this.setProjectProperty(`settings.access_control`, acOpts);
     }
 }
 
-const emptyProject = {
-    details: {},
-    settings: ProjectSettings.default,
-};
+function toggleOption(optsBefore, list, name) {
+    const option = _.find(list, { name });
+    let opts;
+    if (option.none) {
+        opts = {};
+    } else {
+        opts = _.clone(optsBefore);
+        if (opts[option.name]) {
+            delete opts[option.name];
+            for (let depOption of list) {
+                if (depOption.shownIf === option.name) {
+                    delete opts[depOption.name];
+                }
+            }
+        } else {
+            opts[option.name] = true;
+        }
+    }
+    return opts;
+}
+
+const membershipOptions = [
+    {
+        name: 'manual',
+        label: 'project-summary-new-members-manual',
+        none: true
+    },
+    {
+        name: 'allow_user_request',
+        label: 'project-summary-new-members-join-user'
+    },
+    {
+        name: 'approve_user_request',
+        label: 'project-summary-new-members-auto-accept-user',
+        shownIf: 'allow_user_request'
+    },
+    {
+        name: 'allow_guest_request',
+        label: 'project-summary-new-members-join-guest'
+    },
+    {
+        name: 'approve_guest_request',
+        label: 'project-summary-new-members-auto-accept-guest',
+        shownIf: 'allow_guest_request'
+    },
+];
+const accessControlOptions = [
+    {
+        name: 'members_only',
+        label: 'project-summary-access-control-member-only',
+        none: true
+    },
+    {
+        name: 'grant_view_access',
+        label: 'project-summary-access-control-non-member-view'
+    },
+    {
+        name: 'grant_comment_access',
+        label: 'project-summary-access-control-non-member-comment',
+        shownIf: 'grant_view_access'
+    },
+];
+
+const component = Relaks.memo(ProjectSummaryPage);
 
 export {
-    ProjectSummaryPage as default,
-    ProjectSummaryPage,
-    ProjectSummaryPageSync,
+    component as default,
+    component as ProjectSummaryPage,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-import Payloads from 'common/transport/payloads.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ProjectSummaryPage.propTypes = {
-        editing: PropTypes.bool,
-        projectID: PropTypes.oneOfType([
-            PropTypes.number,
-            PropTypes.oneOf([ 'new' ]),
-        ]).isRequired,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-    };
-    ProjectSummaryPageSync.propTypes = {
-        editing: PropTypes.bool,
-        creating: PropTypes.bool,
-        system: PropTypes.object,
-        project: PropTypes.object,
-        statistics: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-    }
-}
