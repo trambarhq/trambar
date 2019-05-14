@@ -80,7 +80,7 @@ async function RoleSummaryPage(props) {
         if (!nameBefore || nameBefore === autoNameBefore) {
             after = _.decoupleSet(after, 'name', autoName);
         }
-        draft.assign(after);
+        draft.set(after);
     });
     const handleNameChange = useCallback((evt) => {
         const name = evt.target.value;
@@ -328,7 +328,7 @@ async function RoleSummaryPage(props) {
     }
 
     async function save(base, ours) {
-        validate();
+        validate(ours);
         setSaving(true);
         try {
             const roleAfter = await db.saveOne({ table: 'role' }, ours);

@@ -1,341 +1,234 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
+import React, { useState, useCallback } from 'react';
+import Relaks, { useProgress, useSaveBuffer, Cancellation } from 'relaks';
+import { useEditHandling, useAddHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
-import ComponentRefs from 'common/utils/component-refs.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
-import UserTypes from 'common/objects/types/user-types.mjs';
+import { UserTypes } from 'common/objects/types/user-types.mjs';
 import * as UserSettings from 'common/objects/settings/user-settings.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 import * as SlugGenerator from 'common/utils/slug-generator.mjs';
 
 // widgets
-import PushButton from '../widgets/push-button.jsx';
-import ComboButton from '../widgets/combo-button.jsx';
-import InstructionBlock from '../widgets/instruction-block.jsx';
-import TextField from '../widgets/text-field.jsx';
-import MultilingualTextField from '../widgets/multilingual-text-field.jsx';
-import OptionList from '../widgets/option-list.jsx';
-import ImageSelector from '../widgets/image-selector.jsx';
-import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
-import ActivityChart from '../widgets/activity-chart.jsx';
-import InputError from '../widgets/input-error.jsx';
-import ActionConfirmation from '../widgets/action-confirmation.jsx';
-import DataLossWarning from '../widgets/data-loss-warning.jsx';
-import UnexpectedError from '../widgets/unexpected-error.jsx';
-import ErrorBoundary from 'common/widgets/error-boundary.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ComboButton } from '../widgets/combo-button.jsx';
+import { InstructionBlock } from '../widgets/instruction-block.jsx';
+import { TextField } from '../widgets/text-field.jsx';
+import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
+import { OptionList } from '../widgets/option-list.jsx';
+import { ImageSelector } from '../widgets/image-selector.jsx';
+import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
+import { ActivityChart } from '../widgets/activity-chart.jsx';
+import { InputError } from '../widgets/input-error.jsx';
+import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
+import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
+import { UnexpectedError } from '../widgets/unexpected-error.jsx';
+import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import './user-summary-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the User/Member Summary page.
- *
- * @extends AsyncComponent
- */
-class UserSummaryPage extends AsyncComponent {
-    static displayName = 'UserSummaryPage';
-
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env, payloads } = this.props;
-        let { projectID, userID, editing } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let creating = (userID === 'new');
-        let props = {
-            database,
-            route,
-            env,
-            payloads,
-            projectID,
-            editing: editing || creating,
-            creating,
-        };
-        meanwhile.show(<UserSummaryPageSync {...props} />);
-        let currentUserID = await db.start();
-        props.system = await SystemFinder.findSystem(db);
-        // load selected user
-        if (!creating) {
-            props.user = await UserFinder.findUser(db, userID);
-        }
-        meanwhile.show(<UserSummaryPageSync {...props} />);
-        props.roles = await RoleFinder.findActiveRoles(db)
-        // load project if project id is provided (i.e. member summary)
-        if (projectID) {
-            meanwhile.show(<UserSummaryPageSync {...props} />);
-            props.project = await ProjectFinder.findProject(db, projectID);
-        }
-        meanwhile.show(<UserSummaryPageSync {...props} />);
-        if (props.project && props.user) {
-            props.statistics = await StatisticsFinder.findDailyActivitiesOfUser(db, props.project, props.user);
-        }
-        return <UserSummaryPageSync {...props} />;
-    }
-}
-
-/**
- * Synchronous component that actually renders the User/Member Summary page.
- *
- * @extends PureComponent
- */
-class UserSummaryPageSync extends PureComponent {
-    static displayName = 'UserSummaryPageSync';
-
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            confirmation: ActionConfirmation
-        });
-        this.state = {
-            newUser: null,
-            hasChanges: false,
-            showingSocialLinks: false,
-            saving: false,
-            adding: false,
-            problems: {},
-        };
-    }
-
-    /**
-     * Reset the edit state when edit ends
-     *
-     * @param  {Object} props
-     * @param  {Object} state
-     */
-    static getDerivedStateFromProps(props, state) {
-        let { editing } = props;
-        if (!editing) {
-            return {
-                newUser: null,
-                hasChanges: false,
-                problems: {}
-            };
-        }
-        return null;
-    }
-
-    /**
-     * Return edited copy of user object or the original object
-     *
-     * @param  {String} state
-     *
-     * @return {Object}
-     */
-    getUser(state) {
-        let { user } = this.props;
-        let { newUser } = this.state;
-        if (!state || state === 'current') {
-            return newUser || user || emptyUser;
-        } else {
-            return user || emptyUser;
-        }
-    }
-
-    /**
-     * Return a property of the user object
-     *
-     * @param  {String} path
-     * @param  {String} state
-     *
-     * @return {*}
-     */
-    getUserProperty(path, state) {
-        let user = this.getUser(state);
-        return _.get(user, path);
-    }
-
-    /**
-     * Modify a property of the user object
-     *
-     * @param  {String} path
-     * @param  {*} value
-     */
-    setUserProperty(path, value) {
-        let { user } = this.props;
-        let newUser = this.getUser('current');
-        let newUserAfter = _.decoupleSet(newUser, path, value);
-        if (path === 'details.name') {
-            let autoNameBefore = SlugGenerator.fromPersonalName(newUser.details.name);
-            let autoNameAfter = SlugGenerator.fromPersonalName(newUserAfter.details.name);
-            if (!newUser.username || newUser.username === autoNameBefore) {
-                newUserAfter.username = autoNameAfter;
+async function UserSummaryPage(props) {
+    const { database, route, env, payloads, projectID, userID, editing } = props;
+    const { t, p } = env.locale;
+    const db = database.use({ schema: 'global', by: this });
+    const creating = (userID === 'new');
+    const readOnly = !editing;
+    const [ problems, setProblems ] = useState({});
+    const [ showingSocialLinks, setShowingSocialLinks ] = useState(false);
+    const [ confirmationRef, confirm ] = useConfirmation();
+    const [ show ] = useProgress();
+    const draft = useSaveBuffer({
+        save: (base, ours, action) => {
+            switch (action) {
+                case 'restore': return restore(base);
+                default: return save(base, ours);
             }
-        }
-        if(_.size(newUserAfter.username) > 128) {
-            newUserAfter.username = newUserAfter.username.substr(0, 128);
-        }
-        let hasChanges = true;
-        if (_.isEqual(newUserAfter, user)) {
-            newUserAfter = null;
-            hasChanges = false;
-        }
-        this.setState({ newUser: newUserAfter, hasChanges });
-    }
-
-    /**
-     * Look for problems in user object
-     *
-     * @return {Object}
-     */
-    findProblems() {
-        let problems = {};
-        let user = this.getUser();
-        if (!user.username) {
-            problems.username = 'validation-required';
-        }
-        if (!user.type) {
-            problems.type = 'validation-required';
-        }
-        return problems;
-    }
-
-    /**
-     * Change editability of page
-     *
-     * @param  {Boolean} edit
-     * @param  {Object|null} newUser
-     *
-     * @return {Promise}
-     */
-    setEditability(edit, newUser) {
-        let { route, creating } = this.props;
-        if (creating && !edit && !newUser) {
-            // return to list when cancelling user creation
-            return this.returnToList();
-        } else {
-            let params = _.clone(route.params);
-            params.editing = edit || undefined;
-            if (newUser) {
-                // use id of newly created user
-                params.userID = newUser.id;
+        },
+        remove: (base, ours, action) => {
+            switch (action) {
+                case 'disable': return disable(base);
+                default: return remove(base);
             }
-            return route.replace(route.name, params);
-        }
-    }
+        },
+        compare: _.isEqual,
+        reset: !editing,
+    });
 
-    /**
-     * Return to user or member list
-     *
-     * @return {Promise}
-     */
-    returnToList() {
-        let { route, projectID } = this.props;
+    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
+    const [ handleAddClick ] = useAddHandling(route, {
+        params: { roleID: 'new' },
+    });
+    const handleReturnClick = useCallback((evt) => {
         if (projectID) {
-            let params = { projectID };
-            return route.push('member-list-page', params);
+            route.push('member-list-page', { projectID });
         } else {
-            return route.push('user-list-page');
+            route.push('user-list-page');
         }
-    }
+    }, [ route ]);
+    const handleDisableClick = useCallback(async (evt) => {
+        await draft.remove('disable');
+    });
+    const handleRemoveClick = useCallback(async (evt) => {
+        await draft.remove();
+    });
+    const handleRestoreClick = useCallback(async (evt) => {
+        await draft.save('restore');
+    });
+    const handleSaveClick = useCallback(async (evt) => {
+        await draft.save();
+    });
+    const handleNameChange = useCallback((evt) => {
+        const name = evt.target.value;
+        let after = _.decoupleSet(draft.current, 'details.name', name);
 
-    /**
-     * Start creating a new role
-     *
-     * @return {Promise}
-     */
-    startNew() {
-        let { route } = this.props;
-        let params = _.clone(route.params);
-        params.userID = 'new';
-        return route.replace(route.name, params);
-    }
+        // derive name from title
+        const nameBefore = _.get(draft.current, 'details.name', {});
+        const autoNameBefore = SlugGenerator.fromTitle(nameBefore);
+        const autoName = SlugGenerator.fromTitle(name);
+        const usernameBefore = _.get(draft.current, 'username', '');
+        if (!usernameBefore || usernameBefore === autoNameBefore) {
+            after = _.decoupleSet(after, 'username', autoName);
+        }
+        draft.set(after);
+    });
+    const handleUsernameChange = useCallback((evt) => {
+        const name = evt.target.value;
+        const nameTransformed = _.toLower(name).replace(/[^\w\-]+/g, '');
+        const nameLimited = nameTransformed.substr(0, 128);
+        draft.set(_.decoupleSet(draft.current, 'username', nameLimited));
+    });
+    const handleEmailChange = useCallback((evt) => {
+        const address = evt.target.value;
+        draft.set(_.decoupleSet(draft.current, `details.email`, address));
+    });
+    const handlePhoneChange = useCallback((evt) => {
+        const number = evt.target.value;
+        draft.set(_.decoupleSet(draft.current, `details.phone`, number));
+    });
+    const handleProfileImageChange = useCallback((evt) => {
+        const resources = evt.target.value;
+        draft.set(_.decoupleSet(draft.current, `details.resources`, resources));
+    });
+    const handleTypeOptionClick = useCallback((evt) => {
+        const type = evt.name;
+        draft.set(_.decoupleSet(draft.current, 'type', type));
+    });
+    const handleRoleOptionClick = useCallback((evt) => {
+        const roleID = parseInt(evt.name);
+        const before = _.get(draft.current, 'role_ids', []);
+        const after = (roleID) ? _.toggle(before, roleID) : [];
+        draft.set(_.decoupleSet(draft.current, 'role_ids', after));
+    });
+    const handleSocialLinksToggleClick = useCallback((evt) => {
+        setShowingSocialLinks(!showingSocialLinks);
+    }, [ showingSocialLinks ]);
+    const handleSkypeUsernameChange = useCallback((evt) => {
+        let username = _.trim(evt.target.value);
+        draft.set(_.decoupleSet(draft.current, `details.skype_username`, username));
+    });
+    const handleIchatUsernameChange = useCallback((evt) => {
+        let username = _.trim(evt.target.value);
+        draft.set(_.decoupleSet(draft.current, `details.ichat_username`, username));
+    });
+    const handleTwitterUsernameChange = useCallback((evt) => {
+        let username = extractUsername(evt.target.value);
+        draft.set(_.decoupleSet(draft.current, `details.twitter_username`, username));
+    });
+    const handleLinkedinURLChange = useCallback((evt) => {
+        let url = _.trim(evt.target.value);
+        draft.set(_.decoupleSet(draft.current, `details.linkedin_url`, url));
+    });
+    const handleGitHubURLChange = useCallback((evt) => {
+        let url = _.trim(evt.target.value);
+        draft.set(_.decoupleSet(draft.current, `details.github_url`, url));
+    });
+    const handleGitlabURLChange = useCallback((evt) => {
+        let url = _.trim(evt.target.value);
+        draft.set(_.decoupleSet(draft.current, `details.gitlab_url`, url));
+    });
+    const handleStackoverflowURLChange = useCallback((evt) => {
+        let url = _.trim(evt.target.value);
+        draft.set(_.decoupleSet(draft.current, `details.stackoverflow_url`, url));
+    });
 
-    /**
-     * Return list of language codes
-     *
-     * @return {Array<String>}
-     */
-    getInputLanguages() {
-        let { system } = this.props;
-        return _.get(system, 'settings.input_languages', [])
-    }
+    render();
+    const currentUserID = await db.start();
+    const system = await SystemFinder.findSystem(db);
+    const user = (!creating) ? await UserFinder.findUser(db, userID) : null;
+    draft.base(user);
+    render();
+    const roles = await RoleFinder.findActiveRoles(db)
+    render();
+    // load project if project id is provided (i.e. member summary)
+    const project = (projectID) ? await ProjectFinder.findProject(db, projectID) : null;
+    render();
+    const statistics = (project && user) ? await StatisticsFinder.findDailyActivitiesOfUser(db, project, user) : null;
+    render();
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { route, env, project, projectID } = this.props;
-        let { hasChanges, problems } = this.state;
-        let { setters } = this.components;
-        let { t, p } = env.locale;
-        let user = this.getUser();
-        let name = p(user.details.name);
-        return (
+    function render() {
+        const { changed } = draft;
+        show(
             <div className="user-summary-page">
-                {this.renderButtons()}
+                {renderButtons()}
                 <h2>{t(projectID ? 'user-summary-member-$name' : 'user-summary-$name', name)}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
-                {this.renderForm()}
-                {this.renderSocialLinksToggle()}
-                {this.renderSocialLinksForm()}
-                {this.renderInstructions()}
-                {this.renderChart()}
-                <ActionConfirmation ref={setters.confirmation} env={env} />
-                <DataLossWarning changes={hasChanges} env={env} route={route} />
+                <UnexpectedError error={draft.error} />
+                {renderForm()}
+                {renderSocialLinksToggle()}
+                {renderSocialLinksForm()}
+                {renderInstructions()}
+                {renderChart()}
+                <ActionConfirmation ref={confirmationRef} env={env} />
+                <DataLossWarning changes={changed} env={env} route={route} />
             </div>
         );
     }
 
-    /**
-     * Render buttons in top right corner
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, user, projectID, editing } = this.props;
-        let { hasChanges, adding } = this.state;
-        let { t } = env.locale;
+    function renderButtons() {
+        const { changed } = draft;
         if (editing) {
             return (
                 <div className="buttons">
-                    <PushButton onClick={this.handleCancelClick}>
+                    <PushButton onClick={handleCancelClick}>
                         {t('user-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t(projectID ? 'user-summary-member-save' : 'user-summary-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            let active = (user) ? !user.deleted && !user.disabled : true;
+            const active = (user) ? !user.deleted && !user.disabled : true;
             let preselected;
             if (active) {
-                preselected = (adding) ? 'add' : 'return';
+                preselected = (creating) ? 'add' : 'return';
             } else {
                 preselected = 'reactivate';
             }
             return (
                 <div className="buttons">
                     <ComboButton preselected={preselected}>
-                        <option name="return" onClick={this.handleReturnClick}>
+                        <option name="return" onClick={handleReturnClick}>
                             {t(projectID ? 'user-summary-member-return' : 'user-summary-return')}
                         </option>
-                        <option name="add" onClick={this.handleAddClick}>
+                        <option name="add" onClick={handleAddClick}>
                             {t('user-summary-add')}
                         </option>
-                        <option name="disable" disabled={!active} separator onClick={this.handleDisableClick}>
+                        <option name="disable" disabled={!active} separator onClick={handleDisableClick}>
                             {t('user-summary-disable')}
                         </option>
-                        <option name="delete" disabled={!active} onClick={this.handleDeleteClick}>
+                        <option name="delete" disabled={!active} onClick={handleRemoveClick}>
                             {t('user-summary-delete')}
                         </option>
-                        <option name="reactivate" hidden={active} onClick={this.handleReactivateClick}>
+                        <option name="reactivate" hidden={active} onClick={handleRestoreClick}>
                             {t('user-summary-reactivate')}
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={handleEditClick}>
                         {t(projectID ? 'user-summary-member-edit' : 'user-summary-edit')}
                     </PushButton>
                 </div>
@@ -343,66 +236,42 @@ class UserSummaryPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render form for entering user details
-     *
-     * @return {ReactElement}
-     */
-    renderForm() {
+    function renderForm() {
         return (
             <div className="form">
-                {this.renderNameInput()}
-                {this.renderUsernameInput()}
-                {this.renderEmailInput()}
-                {this.renderPhoneInput()}
-                {this.renderProfileImageSelector()}
-                {this.renderTypeSelector()}
-                {this.renderRoleSelector()}
+                {renderNameInput()}
+                {renderUsernameInput()}
+                {renderEmailInput()}
+                {renderPhoneInput()}
+                {renderProfileImageSelector()}
+                {renderTypeSelector()}
+                {renderRoleSelector()}
             </div>
         );
     }
 
-    /**
-     * Render name input
-     *
-     * @return {ReactElement}
-     */
-    renderNameInput() {
-        let { env, editing } = this.props;
-        let { t, p } = env.locale;
+    function renderNameInput() {
         // not supporting multilingual name yet
-        let name = p(this.getUserProperty('details.name'));
-        let props = {
+        const name = p(_.get(draft.current, 'details.name'));
+        const props = {
             id: 'name',
             value: name,
-            readOnly: !editing,
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleNameChange,
+            onChange: handleNameChange,
         };
-        return (
-            <TextField {...props}>
-                {t('user-summary-name')}
-            </TextField>
-        );
+        return <TextField {...props}>{t('user-summary-name')}</TextField>;
     }
 
-    /**
-     * Render username input
-     *
-     * @return {ReactElement}
-     */
-    renderUsernameInput() {
-        let { env, editing } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderUsernameInput() {
+        const props = {
             id: 'username',
-            value: this.getUserProperty('username'),
-            readOnly: !editing,
+            value: _.get(draft.current, 'username', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleUsernameChange,
+            onChange: handleUsernameChange,
         };
         return (
             <TextField {...props}>
@@ -412,23 +281,15 @@ class UserSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render e-mail input
-     *
-     * @return {ReactElement}
-     */
-    renderEmailInput() {
-        let { env, editing } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderEmailInput() {
+        const props = {
             id: 'email',
             type: 'email',
-            value: this.getUserProperty('details.email'),
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.email', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleEmailChange,
+            onChange: handleEmailChange,
         };
         return (
             <TextField {...props}>
@@ -438,48 +299,30 @@ class UserSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render phone input
-     *
-     * @return {ReactElement}
-     */
-    renderPhoneInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderPhoneInput() {
+        const props = {
             id: 'phone',
             type: 'tel',
-            value: this.getUserProperty('details.phone'),
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.phone', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handlePhoneChange,
+            onChange: handlePhoneChange,
         };
-        return (
-            <TextField {...props}>
-                {t('user-summary-phone')}
-            </TextField>
-        );
+        return <TextField {...props}>{t('user-summary-phone')}</TextField>;
     }
 
-    /**
-     * Render profile image selector
-     *
-     * @return {ReactElement}
-     */
-    renderProfileImageSelector() {
-        let { database, env, payloads, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderProfileImageSelector() {
+        const props = {
             purpose: 'profile-image',
             desiredWidth: 500,
             desiredHeight: 500,
-            resources: this.getUserProperty('details.resources'),
-            readOnly: !editing,
+            resources: _.get(draft.current, 'details.resources', []),
+            readOnly,
             database,
             env,
             payloads,
-            onChange: this.handleProfileImageChange,
+            onChange: handleProfileImageChange,
         };
         return (
             <ImageSelector {...props}>
@@ -488,28 +331,10 @@ class UserSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render user type selector
-     *
-     * @return {ReactElement}
-     */
-    renderTypeSelector() {
-        let { env, editing } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let userTypeCurr = this.getUserProperty('type', 'current');
-        let userTypePrev = this.getUserProperty('type', 'original');
-        let optionProps = _.map(UserTypes, (type) => {
-            return {
-                name: type,
-                selected: userTypeCurr === type,
-                previous: userTypePrev === type,
-                children: t(`user-summary-type-${type}`),
-            };
-        });
-        let listProps = {
-            readOnly: !editing,
-            onOptionClick: this.handleTypeOptionClick,
+    function renderTypeSelector() {
+        const listProps = {
+            readOnly,
+            onOptionClick: handleTypeOptionClick,
         };
         return (
             <OptionList {...listProps}>
@@ -517,239 +342,181 @@ class UserSummaryPageSync extends PureComponent {
                     {t('user-summary-type')}
                     <InputError>{t(problems.type)}</InputError>
                 </label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+                {_.map(UserTypes, renderTypeOption)}
             </OptionList>
         );
     }
 
-    /**
-     * Render role selector
-     *
-     * @return {ReactElement}
-     */
-    renderRoleSelector() {
-        let { env, roles, editing } = this.props;
-        let { t, p } = env.locale;
-        let userRolesCurr = this.getUserProperty('role_ids', 'current') || [];
-        let userRolesPrev = this.getUserProperty('role_ids', 'original') || [];
-        let newUser = !!this.getUserProperty('id');
-        roles = sortRoles(roles, env);
-        let optionProps = _.map(roles, (role) => {
-            return {
-                name: String(role.id),
-                selected: _.includes(userRolesCurr, role.id),
-                previous: _.includes(userRolesPrev, role.id),
-                children: p(role.details.title) || role.name
-            }
-        });
-        optionProps.unshift({
-            name: 'none',
-            selected: _.isEmpty(userRolesCurr),
-            previous: (newUser) ? _.isEmpty(userRolesPrev) : undefined,
-            children: t('user-summary-role-none')
-        });
-        let listProps = {
-            readOnly: !editing,
-            onOptionClick: this.handleRoleOptionClick,
+    function renderTypeOption(type, i) {
+        const typeCurr = _.get(draft.current, 'type', '');
+        const typePrev = _.get(draft.original, 'type', '');
+        const props = {
+            name: type,
+            selected: (typeCurr === type),
+            previous: (typePrev === type),
         };
+        return (
+            <option key={i} {...props}>
+                {t(`user-summary-type-${type}`)}
+            </option>
+        );
+    }
+
+    function renderRoleSelector() {
+        const listProps = {
+            readOnly,
+            onOptionClick: handleRoleOptionClick,
+        };
+
+        const sorted = sortRoles(roles, env) || [];
+        const withNone = _.concat(null, sorted);
         return (
             <OptionList {...listProps}>
                 <label>{t('user-summary-roles')}</label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+                {_.map(withNone, renderRoleOption)}
             </OptionList>
         );
     }
 
-    /**
-     * Render heading that expands the social links section when clicked
-     *
-     * @return {ReactElement}
-     */
-    renderSocialLinksToggle() {
-        let { env } = this.props;
-        let { showingSocialLinks } = this.state;
-        let { t } = env.locale;
-        let iconName = (showingSocialLinks) ? 'angle-double-up' : 'angle-double-down';
+    function renderRoleOption(role, i) {
+        const rolesCurr = _.get(draft.current, 'role_ids', []);
+        const rolesPrev = _.get(draft.original, 'role_ids', []);
+        let name, props;
+        if (!role) {
+            name = t('user-summary-role-none')
+            props = {
+                name: 'none',
+                selected: _.isEmpty(rolesCurr),
+                previous: (creating) ? _.isEmpty(rolesPrev) : undefined,
+            };
+        } else {
+            name = p(role.details.title) || role.name;
+            props = {
+                name: String(role.id),
+                selected: _.includes(rolesCurr, role.id),
+                previous: _.includes(rolesPrev, role.id),
+            };
+        }
+        return <option key={i} {...props}>{name}</option>;
+    }
+
+    function renderSocialLinksToggle() {
+        const dir = (showingSocialLinks) ? 'up' : 'down';
         return (
-            <h2 className="social-toggle" onClick={this.handleSocialLinksToggleClick}>
+            <h2 className="social-toggle" onClick={handleSocialLinksToggleClick}>
                 {t('user-summary-social-links')}
                 {' '}
-                <i className={`fa fa-${iconName}`} />
+                <i className={`fa fa-angle-double-${dir}`} />
             </h2>
         );
     }
 
-    /**
-     * Render text fields for entering social network accounts
-     *
-     * @return {ReactElement}
-     */
-    renderSocialLinksForm() {
-        let { env, editing } = this.props;
-        let { showingSocialLinks } = this.state;
-        let { t } = env.locale;
-        let user = this.getUser();
-        let readOnly = !editing;
+    function renderSocialLinksForm() {
         return (
             <div className="form social">
                 <CollapsibleContainer open={showingSocialLinks}>
-                    {this.renderSkypeNameInput()}
-                    {this.renderIChatInput()}
-                    {this.renderTwitterInput()}
-                    {this.renderGithubURLInput()}
-                    {this.renderGitlabURLInput()}
-                    {this.renderLinkedInURLInput()}
-                    {this.renderStackoverflowURLInput()}
+                    {renderSkypeNameInput()}
+                    {renderIChatInput()}
+                    {renderTwitterInput()}
+                    {renderGithubURLInput()}
+                    {renderGitlabURLInput()}
+                    {renderLinkedInURLInput()}
+                    {renderStackoverflowURLInput()}
                 </CollapsibleContainer>
             </div>
         );
     }
 
-    /**
-     * Render input for Skype username
-     *
-     * @return {ReactElement}
-     */
-    renderSkypeNameInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderSkypeNameInput() {
+        const props = {
             id: 'skype',
-            value: this.getUserProperty('details.skype_username'),
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.skype_username', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleSkypeUsernameChange,
+            onChange: handleSkypeUsernameChange,
         };
         return <TextField {...props}>{t('user-summary-skype')}</TextField>;
     }
 
-    /**
-     * Render input for iChat username
-     *
-     * @return {ReactElement}
-     */
-    renderIChatInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderIChatInput() {
+        const props = {
             id: 'ichat',
-            value: this.getUserProperty('details.ichat_username'),
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.ichat_username', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleIchatUsernameChange,
+            onChange: handleIchatUsernameChange,
         };
         return <TextField {...props}>{t('user-summary-ichat')}</TextField>;
     }
 
-    /**
-     * Render input for Twitter username
-     *
-     * @return {ReactElement}
-     */
-    renderTwitterInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderTwitterInput() {
+        const props = {
             id: 'twitter',
-            value: this.getUserProperty('details.twitter_username'),
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.twitter_username', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleTwitterUsernameChange,
+            onChange: handleTwitterUsernameChange,
         };
         return <TextField {...props}>{t('user-summary-twitter')}</TextField>;
     }
 
-    /**
-     * Render input for Github URL
-     *
-     * @return {ReactElement}
-     */
-    renderGithubURLInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderGithubURLInput() {
+        const props = {
             id: 'github',
             type: 'url',
-            value: this.getUserProperty('details.github_url'),
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.github_url', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleGitHubURLChange,
+            onChange: handleGitHubURLChange,
         };
         return <TextField {...props}>{t('user-summary-github')}</TextField>;
     }
 
-    /**
-     * Render input for Gitlab URL
-     *
-     * @return {ReactElement}
-     */
-    renderGitlabURLInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderGitlabURLInput() {
+        const props = {
             id: 'github',
             type: 'url',
-            value: this.getUserProperty('details.gitlab_url'),
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.gitlab_url', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleGitlabURLChange,
+            onChange: handleGitlabURLChange,
         };
         return <TextField {...props}>{t('user-summary-gitlab')}</TextField>;
     }
 
-    /**
-     * Render input for Linkedin URL
-     *
-     * @return {ReactElement}
-     */
-    renderLinkedInURLInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderLinkedInURLInput() {
+        const props = {
             id: 'linkedin',
             type: 'url',
-            value: this.getUserProperty('details.linkedin_url'),
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.linkedin_url', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleLinkedinURLChange,
+            onChange: handleLinkedinURLChange,
         };
         return <TextField {...props}>{t('user-summary-linkedin')}</TextField>;
     }
 
-    /**
-     * Render input for Stackoverflow URL
-     *
-     * @return {ReactElement}
-     */
-    renderStackoverflowURLInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderStackoverflowURLInput() {
+        const props = {
             id: 'stackoverflow',
             type: 'url',
-            value: this.getUserProperty('details.stackoverflow_url'),
-            readOnly: !editing,
+            value: _.get(draft.current, 'details.stackoverflow_url', ''),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleStackoverflowURLChange,
+            onChange: handleStackoverflowURLChange,
         };
         return <TextField {...props}>{t('user-summary-stackoverflow')}</TextField>;
     }
 
-    /**
-     * Render instruction box
-     *
-     * @return {ReactElement}
-     */
-    renderInstructions() {
-        let { env, editing } = this.props;
-        let instructionProps = {
+    function renderInstructions() {
+        const instructionProps = {
             folder: 'user',
             topic: 'user-summary',
             hidden: !editing,
@@ -762,21 +529,11 @@ class UserSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render activity chart
-     *
-     * @return {ReactElement|null}
-     */
-    renderChart() {
-        let { env, statistics, projectID, creating } = this.props;
-        let { t } = env.locale;
-        if (!projectID) {
+    function renderChart() {
+        if (!projectID || creating) {
             return null;
         }
-        if (creating) {
-            return null;
-        }
-        let chartProps = {
+        const chartProps = {
             statistics,
             env,
         };
@@ -791,337 +548,84 @@ class UserSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Save user with new flags
-     *
-     * @param  {Object} flags
-     *
-     * @return {Promise<User>}
-     */
-    changeFlags(flags) {
-        let { database, env, user } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let userAfter = _.assign({}, user, flags);
-        return db.saveOne({ table: 'user' }, userAfter).catch((err) => {
-            let problems = { unexpected: err.message };
-            this.setState({ problems });
-        });
+    async function disable(base) {
+        await confirm(t('user-summary-confirm-disable'));
+        const changes = { id: base.id, disabled: true };
+        await db.saveOne({ table: 'user' }, changes);
+        handleReturnClick();
     }
 
-    /**
-     * Called when user clicks disable button
-     *
-     * @param  {Event} evt
-     */
-    handleDisableClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('user-summary-confirm-disable');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            let userAfter = this.changeFlags({ disabled: true });
-            if (userAfter) {
-                return this.returnToList();
-            }
-        }
+    async function remove(base) {
+        await confirm(t('user-summary-confirm-delete'));
+        const changes = { id: base.id, deleted: true };
+        await db.saveOne({ table: 'user' }, changes);
+        handleReturnClick();
     }
 
-    /**
-     * Called when user clicks delete button
-     *
-     * @param  {Event} evt
-     */
-    handleDeleteClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('user-summary-confirm-delete');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            let userAfter = await this.changeFlags({ deleted: true });
-            if (userAfter) {
-                return this.returnToList();
-            }
-        }
+    async function restore(base) {
+        await confirm(t('user-summary-confirm-reactivate'));
+        const changes = { id: base.id, disabled: true, deleted: true };
+        await db.saveOne({ table: 'user' }, changes);
     }
 
-    /**
-     * Called when user clicks disable button
-     *
-     * @param  {Event} evt
-     */
-    handleReactivateClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('user-summary-confirm-reactivate');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            await this.changeFlags({ disabled: false, deleted: false });
-        }
-    }
+    async function save(base, ours) {
+        validate(ours);
+        setSaving(true);
+        try {
+            const userAfter = await db.saveOne({ table: 'user' }, ours);
+            payloads.dispatch(userAfter);
 
-    /**
-     * Called when user click return button
-     *
-     * @param  {Event} evt
-     */
-    handleReturnClick = async (evt) => {
-        await this.returnToList();
-    }
-
-    /**
-     * Called when user click add button
-     *
-     * @param  {Event} evt
-     */
-    handleAddClick = async (evt) => {
-        await this.startNew();
-    }
-
-    /**
-     * Called when user clicks edit button
-     *
-     * @param  {Event} evt
-     */
-    handleEditClick = async (evt) => {
-        await this.setEditability(true);
-    }
-
-    /**
-     * Called when user clicks cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = async (evt) => {
-        await this.setEditability(false);
-    }
-
-    /**
-     * Called when user clicks save button
-     *
-     * @param  {Event} evt
-     */
-    handleSaveClick = (evt) => {
-        let { database, env, payloads, project } = this.props;
-        let { saving } = this.state;
-        if (saving) {
-            return;
-        }
-        let problems = this.findProblems();
-        if (_.some(problems)) {
-            this.setState({ problems });
-            return;
-        }
-        let user = this.getUser();
-        this.setState({ saving: true, adding: !user.id, problems: {} }, async () => {
-            try {
-                let schema = 'global';
-                let db = database.use({ schema, by: this });
-                let currentUserID = await db.start();
-                let userAfter = await db.saveOne({ table: 'user' }, user);
-                payloads.dispatch(userAfter);
-                this.setState({ hasChanges: false, saving: false }, () => {
-                    return this.setEditability(false, userAfter);
-                });
-                if (project) {
-                    // add user to member list if he's not there yet
-                    let userIDs = project.user_ids;
-                    if (!_.includes(userIDs, userAfter.id)) {
-                        let userIDsAfter = _.union(userIDs, [ userAfter.id ]);
-                        let columns = {
-                            id: project.id,
-                            user_ids: userIDsAfter
-                        };
-                        return db.saveOne({ table: 'project' }, columns);
-                    }
+            if (project) {
+                // add user to member list if he's not there yet
+                const userIDs = project.user_ids;
+                if (!_.includes(userIDs, userAfter.id)) {
+                    const userIDsAfter = _.union(userIDs, [ userAfter.id ]);
+                    const changes = {
+                        id: project.id,
+                        user_ids: userIDsAfter
+                    };
+                    await db.saveOne({ table: 'project' }, changes);
                 }
-            } catch (err) {
-                let problems;
-                if (err.statusCode === 409) {
-                    problems = { username: 'validation-duplicate-user-name' };
-                } else {
-                    problems = { unexpected: err.message };
-                }
-                this.setState({ problems, saving: false });
             }
-        });
-    }
-
-    /**
-     * Called when user changes the title
-     *
-     * @param  {Event} evt
-     */
-    handleNameChange = (evt) => {
-        this.setUserProperty(`details.name`, evt.target.value);
-    }
-
-    /**
-     * Called when user changes username
-     *
-     * @param  {Event} evt
-     */
-    handleUsernameChange = (evt) => {
-        let username = _.toLower(evt.target.value).replace(/[^\w\-]+/g, '');
-        this.setUserProperty(`username`, username);
-    }
-
-    /**
-     * Called when user changes email address
-     *
-     * @param  {Event} evt
-     */
-    handleEmailChange = (evt) => {
-        this.setUserProperty(`details.email`, evt.target.value);
-    }
-
-    /**
-     * Called when user changes phone number
-     *
-     * @param  {Event} evt
-     */
-    handlePhoneChange = (evt) => {
-        this.setUserProperty(`details.phone`, evt.target.value);
-    }
-
-    /**
-     * Called when user changes profile image
-     *
-     * @param  {Object} evt
-     */
-    handleProfileImageChange = (evt) => {
-        this.setUserProperty(`details.resources`, evt.target.value);
-    }
-
-    /**
-     * Called when user changes user type
-     *
-     * @param  {Object} evt
-     */
-    handleTypeOptionClick = (evt) => {
-        this.setUserProperty('type', evt.name);
-    }
-
-    /**
-     * Called when user clicks on a role
-     *
-     * @param  {Object} evt
-     */
-    handleRoleOptionClick = (evt) => {
-        let user = this.getUser();
-        let roleIDs = user.role_ids;
-        if (evt.name === 'none') {
-            roleIDs = [];
-        } else {
-            let roleID = parseInt(evt.name);
-            if (_.includes(roleIDs, roleID)) {
-                roleIDs = _.without(roleIDs, roleID);
-            } else {
-                roleIDs = _.concat(roleIDs, roleID);
+            handleCancelClick();
+            return userAfter;
+        } catch (err) {
+            if (err.statusCode === 409) {
+                setProblems({ username: 'validation-duplicate-user-name' });
+                err = new Cancellation;
             }
+            throw err;
+        } finally {
+            setSaving(false);
         }
-        this.setUserProperty('role_ids', roleIDs);
     }
 
-    /**
-     * Called when user clicks on social link heading
-     *
-     * @param  {Event} evt
-     */
-    handleSocialLinksToggleClick = (evt) => {
-        let { showingSocialLinks } = this.state;
-        this.setState({ showingSocialLinks: !showingSocialLinks });
-    }
-
-    /**
-     * Called when user changes Skype username
-     *
-     * @param  {Event} evt
-     */
-    handleSkypeUsernameChange = (evt) => {
-        let username = _.trim(evt.target.value);
-        this.setUserProperty(`details.skype_username`, username);
-    }
-
-    /**
-     * Called when user changes iChat username
-     *
-     * @param  {Event} evt
-     */
-    handleIchatUsernameChange = (evt) => {
-        let username = _.trim(evt.target.value);
-        this.setUserProperty(`details.ichat_username`, username);
-    }
-
-    /**
-     * Called when user changes Twitter username
-     *
-     * @param  {Event} evt
-     */
-    handleTwitterUsernameChange = (evt) => {
-        let username = extractUsername(evt.target.value);
-        this.setUserProperty(`details.twitter_username`, username);
-    }
-
-    /**
-     * Called when user changes Linkedin username
-     *
-     * @param  {Event} evt
-     */
-    handleLinkedinURLChange = (evt) => {
-        let url = _.trim(evt.target.value);
-        this.setUserProperty(`details.linkedin_url`, url);
-    }
-
-    /**
-     * Called when user changes Github username
-     *
-     * @param  {Event} evt
-     */
-    handleGitHubURLChange = (evt) => {
-        let url = _.trim(evt.target.value);
-        this.setUserProperty(`details.github_url`, url);
-    }
-
-    /**
-     * Called when user changes Gitlab username
-     *
-     * @param  {Event} evt
-     */
-    handleGitlabURLChange = (evt) => {
-        let url = _.trim(evt.target.value);
-        this.setUserProperty(`details.gitlab_url`, url);
-    }
-
-    /**
-     * Called when user changes StackOverflow username
-     *
-     * @param  {Event} evt
-     */
-    handleStackoverflowURLChange = (evt) => {
-        let url = _.trim(evt.target.value);
-        this.setUserProperty(`details.stackoverflow_url`, url);
+    function validate(ours) {
+        const problems = {};
+        if (!ours.username) {
+            problems.username = 'validation-required';
+        }
+        if (!ours.type) {
+            problems.type = 'validation-required';
+        }
+        setProblems(problems);
+        if (!_.isEmpty(problems)) {
+            throw new Cancellation;
+        }
     }
 }
 
-let emptyUser = {
-    details: {},
-    settings: UserSettings.default,
-};
-
-let sortRoles = memoizeWeak(null, function(roles, env) {
-    let { p } = env.locale;
-    let name = (role) => {
+const sortRoles = memoizeWeak(null, function(roles, env) {
+    const { p } = env.locale;
+    const name = (role) => {
         return p(role.details.title) || role.name;
     };
     return _.sortBy(roles, name);
 });
 
-let findRoles = memoizeWeak(null, function(roles, user) {
+const findRoles = memoizeWeak(null, function(roles, user) {
     if (user.role_ids) {
-        let hash = _.keyBy(roles, 'id');
+        const hash = _.keyBy(roles, 'id');
         return _.filter(_.map(user.role_ids, (id) => {
             return hash[id];
         }));
@@ -1138,46 +642,9 @@ function extractUsername(text, type) {
     return text;
 }
 
+const component = Relaks.memo(UserSummaryPage);
+
 export {
-    UserSummaryPage as default,
-    UserSummaryPage,
-    UserSummaryPageSync,
+    component as default,
+    component as UserSummaryPage,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-import Payloads from 'common/transport/payloads.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    UserSummaryPage.propTypes = {
-        editing: PropTypes.bool,
-        projectID: PropTypes.number,
-        userID: PropTypes.oneOfType([
-            PropTypes.number,
-            PropTypes.oneOf([ 'new' ]),
-        ]).isRequired,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-    };
-    UserSummaryPageSync.propTypes = {
-        editing: PropTypes.bool,
-        projectID: PropTypes.number,
-        creating: PropTypes.bool,
-        system: PropTypes.object,
-        user: PropTypes.object,
-        roles: PropTypes.arrayOf(PropTypes.object),
-        project: PropTypes.object,
-        statistics: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-    };
-}

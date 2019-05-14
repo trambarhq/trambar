@@ -100,3 +100,16 @@ UserListPage.propTypes = {
     route: PropTypes.instanceOf(Route).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,
 };
+UserSummaryPage.propTypes = {
+    editing: PropTypes.bool,
+    projectID: PropTypes.number,
+    userID: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.oneOf([ 'new' ]),
+    ]).isRequired,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+    payloads: PropTypes.instanceOf(Payloads).isRequired,
+};
