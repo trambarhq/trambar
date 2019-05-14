@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useCallback } from 'react';
 import Relaks, { useProgress, useSaveBuffer } from 'relaks';
-import { useEditHandling } from '../hooks.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 import * as SystemSettings from 'common/objects/settings/system-settings.mjs';
 
@@ -14,6 +13,11 @@ import { OptionList } from '../widgets/option-list.jsx';
 import { ImageSelector } from '../widgets/image-selector.jsx';
 import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
+
+// custom hooks
+import {
+    useEditHandling,
+} from '../hooks.mjs';
 
 import './settings-page.scss';
 

@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { useSaveBuffer, Cancellation } from 'relaks';
+import * as SlugGenerator from 'common/utils/slug-generator.mjs';
 
 function useLatest(propValue) {
     const [ stateValue, setStateValue ] = useState();
@@ -96,6 +97,33 @@ function useRowHandling(selection, attr) {
     return [ handleRowClick ];
 }
 
+function useNameHandling(draft, params) {
+    const { titleKey, nameKey, personal } = params;
+    const method = (personal) ? 'fromPersonalName' : 'fromTitle';
+    const f = SlugGenerator[method];
+    const handleTitleChange = useCallback((evt) => {
+        const title = evt.target.value;
+        let after = _.decoupleSet(draft.current, titleKey, title);
+
+        // derive name from title
+        const titleBefore = _.get(draft.current, titleKey, {});
+        const autoNameBefore = f(titleBefore);
+        const autoName = f(title);
+        const nameBefore = _.get(draft.current, nameKey, '');
+        if (!nameBefore || nameBefore === autoNameBefore) {
+            after = _.decoupleSet(after, nameKey, autoName);
+        }
+        draft.set(after);
+    });
+    const handleNameChange = useCallback((evt) => {
+        const name = evt.target.value;
+        const nameTransformed = _.toLower(name).replace(/[^\w\-]+/g, '');
+        const nameLimited = nameTransformed.substr(0, 128);
+        draft.set(_.decoupleSet(draft.current, nameKey, nameLimited));
+    });
+    return [ handleTitleChange, handleNameChange ];
+}
+
 function useSelectionBuffer(active, additionalParams) {
     const selection = useSaveBuffer({
         compare: (a, b) => {
@@ -133,5 +161,6 @@ export {
     useAddHandling,
     useReturnHandling,
     useRowHandling,
+    useNameHandling,
     useSelectionBuffer,
 };

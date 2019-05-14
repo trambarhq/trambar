@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useCallback } from 'react';
 import Relaks, { useProgress, useSaveBuffer, Cancellation } from 'relaks';
-import { useEditHandling, useAddHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -10,7 +9,6 @@ import { UserTypes } from 'common/objects/types/user-types.mjs';
 import * as UserSettings from 'common/objects/settings/user-settings.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
-import * as SlugGenerator from 'common/utils/slug-generator.mjs';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -27,6 +25,14 @@ import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
+
+// custom hooks
+import {
+    useEditHandling,
+    useAddHandling,
+    useNameHandling,
+    useConfirmation,
+} from '../hooks.mjs';
 
 import './user-summary-page.scss';
 
@@ -80,25 +86,10 @@ async function UserSummaryPage(props) {
     const handleSaveClick = useCallback(async (evt) => {
         await draft.save();
     });
-    const handleNameChange = useCallback((evt) => {
-        const name = evt.target.value;
-        let after = _.decoupleSet(draft.current, 'details.name', name);
-
-        // derive name from title
-        const nameBefore = _.get(draft.current, 'details.name', {});
-        const autoNameBefore = SlugGenerator.fromTitle(nameBefore);
-        const autoName = SlugGenerator.fromTitle(name);
-        const usernameBefore = _.get(draft.current, 'username', '');
-        if (!usernameBefore || usernameBefore === autoNameBefore) {
-            after = _.decoupleSet(after, 'username', autoName);
-        }
-        draft.set(after);
-    });
-    const handleUsernameChange = useCallback((evt) => {
-        const name = evt.target.value;
-        const nameTransformed = _.toLower(name).replace(/[^\w\-]+/g, '');
-        const nameLimited = nameTransformed.substr(0, 128);
-        draft.set(_.decoupleSet(draft.current, 'username', nameLimited));
+    const [ handleNameChange, handleUsernameChange ] = useNameHandling(draft, {
+        titleKey: 'details.name',
+        nameKey: 'username',
+        personal: true
     });
     const handleEmailChange = useCallback((evt) => {
         const address = evt.target.value;

@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useCallback } from 'react';
 import Relaks, { useProgress, useSaveBuffer } from 'relaks';
-import { useEditHandling, useReturnHandling, useConfirmation } from '../hooks.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
@@ -19,6 +18,13 @@ import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
+
+// custom hooks
+import {
+    useEditHandling,
+    useReturnHandling,
+    useConfirmation,
+} from '../hooks.mjs';
 
 import './repo-summary-page.scss';
 

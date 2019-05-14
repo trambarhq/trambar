@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import React, { useRef, useCallback } from 'react';
 import Relaks, { useProgress } from 'relaks';
-import { useSelectionBuffer, useSortHandling, useEditHandling, useAddHandling, useRowHandling, useConfirmation } from '../hooks.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
@@ -20,6 +19,16 @@ import { ActionBadge } from '../widgets/action-badge.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
+
+// custom hooks
+import {
+    useSelectionBuffer, 
+    useSortHandling,
+    useEditHandling,
+    useAddHandling,
+    useRowHandling,
+    useConfirmation,
+} from '../hooks.mjs';
 
 import './project-list-page.scss';
 

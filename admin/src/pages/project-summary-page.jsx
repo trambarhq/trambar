@@ -1,12 +1,10 @@
 import _ from 'lodash';
 import React, { useState, useCallback } from 'react';
 import Relaks, { useProgress, useSaveBuffer, Cancellation } from 'relaks';
-import { useEditHandling, useAddHandling, useReturnHandling, useConfirmation } from '../hooks.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as ProjectSettings from 'common/objects/settings/project-settings.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
-import * as SlugGenerator from 'common/utils/slug-generator.mjs';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -22,6 +20,15 @@ import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
+
+// custom hooks
+import {
+    useEditHandling,
+    useAddHandling,
+    useReturnHandling,
+    useNameHandling,
+    useConfirmation,
+} from '../hooks.mjs';
 
 import './project-summary-page.scss';
 
@@ -70,25 +77,9 @@ async function ProjectSummaryPage(props) {
     const handleSaveClick = useCallback(async (evt) => {
         await draft.save();
     });
-    const handleTitleChange = useCallback((evt) => {
-        const title = evt.target.value;
-        let after = _.decoupleSet(draft.current, 'details.title', title);
-
-        // derive name from title
-        const titleBefore = _.get(draft.current, 'details.title', {});
-        const autoNameBefore = SlugGenerator.fromTitle(titleBefore);
-        const autoName = SlugGenerator.fromTitle(title);
-        const nameBefore = _.get(draft.current, 'name', '');
-        if (!nameBefore || nameBefore === autoNameBefore) {
-            after = _.decoupleSet(after, 'name', autoName);
-        }
-        draft.set(after);
-    });
-    const handleNameChange = useCallback((evt) => {
-        const name = evt.target.value;
-        const nameTransformed = _.toLower(name).replace(/[^\w\-]+/g, '');
-        const nameLimited = nameTransformed.substr(0, 128);
-        draft.set(_.decoupleSet(draft.current, 'name', nameLimited));
+    const [ handleTitleChange, handleNameChange ] = useNameHandling(draft, {
+        titleKey: 'details.title',
+        nameKey: 'name',
     });
     const handleDescriptionChange = useCallback((evt) => {
         const description = evt.target.value;
