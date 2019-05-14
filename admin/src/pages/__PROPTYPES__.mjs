@@ -8,6 +8,7 @@ import { MemberListPage } from './member-list-page.jsx';
 import { ProjectListPage } from './project-list-page.jsx';
 import { RepoListPage } from './repo-list-page.jsx';
 import { RoleListPage } from './role-list-page.jsx';
+import { RoleSummaryPage } from './role-summary-page.jsx';
 import { ServerListPage } from './server-list-page.jsx';
 import { StartPage } from './start-page.jsx';
 import { SignInPage } from './sign-in-page.jsx';
@@ -43,6 +44,17 @@ RepoListPage.propTypes = {
 };
 RoleListPage.propTypes = {
     editing: PropTypes.bool,
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+RoleSummaryPage.propTypes = {
+    editing: PropTypes.bool,
+    roleID: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.oneOf([ 'new' ]),
+    ]).isRequired,
+
     database: PropTypes.instanceOf(Database).isRequired,
     route: PropTypes.instanceOf(Route).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,
