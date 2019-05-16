@@ -1,147 +1,93 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useCallback } from 'react';
 
 // widgets
-import SettingsPanel from '../widgets/settings-panel.jsx';
-import PushButton from '../widgets/push-button.jsx';
-import TextField from '../widgets/text-field.jsx';
+import { SettingsPanel } from '../widgets/settings-panel.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { TextField } from '../widgets/text-field.jsx';
 
 import './user-info-panel.scss';
 
 /**
  * Panel for entering the user's basic personal information.
- *
- * @extends PureComponent
  */
-class UserInfoPanel extends PureComponent {
-    static displayName = 'UserInfoPanel';
+function UserInfoPanel(props) {
+    const { env, userDraft } = props;
+    const { t, p } = env.locale;
 
-    /**
-     * Return a property of the user object
-     *
-     * @param  {String} path
-     *
-     * @return {*}
-     */
-    getUserProperty(path) {
-        let { currentUser } = this.props;
-        return _.get(currentUser, path);
-    }
+    const handleNameChange = useCallback((evt) => {
+        const name = evt.target.value;
+        userDraft.update('details.name', name);
+    });
+    const handleEmailChange = useCallback((evt) => {
+        const address = evt.target.value;
+        userDraft.update('details.email', address);
+    });
+    const handlePhoneChange = useCallback((evt) => {
+        const number = evt.target.value;
+        userDraft.update('details.phone', number);
+    });
+    const handleGenderChange = useCallback((evt) => {
+        const gender = evt.target.value;
+        userDraft.update('details.gender', gender || undefined);
+    });
 
-    /**
-     * Change a property of the user object
-     *
-     * @param  {String} path
-     * @param  {*} value
-     */
-    setUserProperty(path, value) {
-        let { currentUser, onChange } = this.props;
-        if (!currentUser) {
-            return;
-        }
-        let userAfter = _.decoupleSet(currentUser, path, value);
-        if (onChange) {
-            onChange({
-                type: 'change',
-                target: this,
-                user: userAfter
-            });
-        }
-    }
+    return (
+        <SettingsPanel className="user-info">
+            <header>
+                <i className="fa fa-user-circle" /> {t('settings-user-information')}
+            </header>
+            <body>
+                {renderNameInput()}
+                {renderEmailInput()}
+                {renderPhoneInput()}
+                {renderGenderSelector()}
+            </body>
+        </SettingsPanel>
+    );
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        return (
-            <SettingsPanel className="user-info">
-                <header>
-                    <i className="fa fa-user-circle" /> {t('settings-user-information')}
-                </header>
-                <body>
-                    {this.renderNameInput()}
-                    {this.renderEmailInput()}
-                    {this.renderPhoneInput()}
-                    {this.renderGenderSelector()}
-                </body>
-            </SettingsPanel>
-        );
-    }
-
-    /**
-     * Render name input
-     *
-     * @return {ReactElement}
-     */
-    renderNameInput() {
-        let { env } = this.props;
-        let { t, p } = env.locale;
-        let name = this.getUserProperty('details.name')
-        let props = {
+    function renderNameInput() {
+        const name = userDraft.get('details.name');
+        const props = {
             id: 'name',
             value: p(name),
             env,
-            onChange: this.handleNameChange,
+            onChange: handleNameChange,
         };
         return <TextField {...props}>{t('user-info-name')}</TextField>;
     }
 
-    /**
-     * Render name input
-     *
-     * @return {ReactElement}
-     */
-    renderEmailInput() {
-        let { env } = this.props;
-        let { t, p } = env.locale;
-        let props = {
+    function renderEmailInput() {
+        const props = {
             id: 'email',
-            value: this.getUserProperty('details.email'),
+            value: userDraft.get('details.email'),
             env,
-            onChange: this.handleEmailChange,
+            onChange: handleEmailChange,
         };
         return <TextField {...props}>{t('user-info-email')}</TextField>;
     }
 
-    /**
-     * Render name input
-     *
-     * @return {ReactElement}
-     */
-    renderPhoneInput() {
-        let { env } = this.props;
-        let { t, p } = env.locale;
-        let props = {
+    function renderPhoneInput() {
+        const props = {
             id: 'email',
-            value: this.getUserProperty('details.phone'),
+            value: userDraft.get('details.phone'),
             env,
-            onChange: this.handlePhoneChange,
+            onChange: handlePhoneChange,
         };
         return <TextField {...props}>{t('user-info-phone')}</TextField>;
     }
 
-    /**
-     * Render gender select box
-     *
-     * @return {ReactElement}
-     */
-    renderGenderSelector() {
-        let { env } = this.props;
-        let { t, p } = env.locale;
-        let selectProps = {
+    function renderGenderSelector() {
+        const props = {
             id: 'gender',
-            value: this.getUserProperty('details.gender') || '',
+            value: userDraft.get('details.gender', ''),
             size: 3,
-            onChange: this.handleGenderChange,
+            onChange: handleGenderChange,
         };
         return (
             <div className="gender-selector">
                 <label htmlFor="gender">{t('user-info-gender')}</label>
-                <select {...selectProps}>
+                <select {...props}>
                     <option value="male">{t('user-info-gender-male')}</option>
                     <option value="female">{t('user-info-gender-female')}</option>
                     <option value="">{t('user-info-gender-unspecified')}</option>
@@ -149,61 +95,9 @@ class UserInfoPanel extends PureComponent {
             </div>
         );
     }
-
-    /**
-     * Called when user changes his name
-     *
-     * @param  {Event} evt
-     */
-    handleNameChange = (evt) => {
-        let text = evt.target.value;
-        this.setUserProperty(`details.name`, text);
-    }
-
-    /**
-     * Called when user changes his email
-     *
-     * @param  {Event} evt
-     */
-    handleEmailChange = (evt) => {
-        let text = evt.target.value;
-        this.setUserProperty(`details.email`, text);
-    }
-
-    /**
-     * Called when user changes his email
-     *
-     * @param  {Event} evt
-     */
-    handlePhoneChange = (evt) => {
-        let text = evt.target.value;
-        this.setUserProperty(`details.phone`, text);
-    }
-
-    /**
-     * Called when user changes his gender
-     *
-     * @param  {Event} evt
-     */
-    handleGenderChange = (evt) => {
-        let text = evt.target.value;
-        this.setUserProperty(`details.gender`, text || undefined);
-    }
 }
 
 export {
     UserInfoPanel as default,
     UserInfoPanel,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    UserInfoPanel.propTypes = {
-        currentUser: PropTypes.object,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        onChange: PropTypes.func,
-    }
-}

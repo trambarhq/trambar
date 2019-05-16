@@ -128,9 +128,9 @@ function SettingsPageSync(props) {
 
     function renderProjectPanel() {
         const props = {
+            userDraft,
             system,
-            currentUser,
-            currentProject,
+            project: currentProject,
             projectLinks,
             database,
             route,

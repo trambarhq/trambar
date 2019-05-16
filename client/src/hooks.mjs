@@ -1,6 +1,29 @@
 import _ from 'lodash';
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { useSaveBuffer } from 'relaks';
+import { useSaveBuffer, Cancellation } from 'relaks';
+
+function useConfirmation() {
+    const confirmationRef = useRef();
+    const confirm = useCallback(async (question, cancelable) => {
+        const { ask } = confirmationRef.current;
+        const confirmed = await ask(question, cancelable);
+        if (!confirmed) {
+            throw new Cancellation;
+        }
+    });
+    return [ confirmationRef, confirm ];
+}
+
+function useDialogHandling() {
+    const [ open, setOpen ] = useState(false);
+    const handleOpen = useCallback(() => {
+        setOpen(true);
+    });
+    const handleClose = useCallback(() => {
+        setOpen(false);
+    });
+    return [ open, handleOpen, handleClose ];
+}
 
 function useDraftBuffer(active, additionalParams) {
     const draft = useSaveBuffer({
@@ -23,9 +46,10 @@ function useDraftBuffer(active, additionalParams) {
         this.update(key, value ? undefined : true);
     };
     return draft;
-
 }
 
 export {
+    useConfirmation,
+    useDialogHandling,
     useDraftBuffer,
 };

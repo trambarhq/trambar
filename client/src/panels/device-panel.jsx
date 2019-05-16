@@ -1,78 +1,58 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useCallback} from 'react';
+import { Cancellation } from 'relaks';
 
 // widgets
-import SettingsPanel from '../widgets/settings-panel.jsx';
-import PushButton from '../widgets/push-button.jsx';
-import ConfirmationDialogBox from '../dialogs/confirmation-dialog-box';
+import { SettingsPanel } from '../widgets/settings-panel.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
+
+// custom hooks
+import {
+    useConfirmation,
+} from '../hooks';
 
 import './device-panel.scss';
 
 /**
  * Panel listing mobile devices currently attached to the user's account.
- *
- * @extends PureComponent
  */
-class DevicePanel extends PureComponent {
-    static displayName = 'DevicePanel';
+function DevicePanel(props) {
+    const { database, env, devices } = props;
+    const { t } = env.locale;
+    const [ confirmationRef, confirm ] = useConfirmation();
+    const title = t('settings-device' + (_.size(devices) !== 1 ? 's' : ''));
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            confirmingRevocation: false,
-            selectedDeviceID: null,
-        };
-    }
+    const handleRevokeClick = useCallback(async (evt) => {
+        const deviceID = parseInt(evt.currentTarget.getAttribute('data-device-id'));
+        const device = _.find(devices, { id: deviceID });
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement|null}
-     */
-    render() {
-        let { env, devices } = this.props;
-        let { t } = env.locale;
-        let title;
-        if (_.size(devices) === 1) {
-            title = t('settings-device');
-        } else {
-            title = t('settings-devices');
+        try {
+            await confirm(t('mobile-device-revoke-are-you-sure'));
+
+            const db = database.use({ schema: 'global', by: this });
+            await db.removeOne({ table: 'device' }, device);
+            await db.endMobileSession(device.session_handle);
+        } catch (err) {
+            if (!(err instanceof Cancellation)) {
+                throw err;
+            }
         }
-        return (
-            <SettingsPanel className="device">
-                <header>
-                    <i className="fa fa-tablet" /> {title}
-                </header>
-                <body>
-                    {this.renderDevices()}
-                    {this.renderDialogBox()}
-                </body>
-            </SettingsPanel>
-        );
-    }
+    }, [ database, devices ]);
 
-    /**
-     * Render list of projects
-     *
-     * @return {Array<ReactElement>}
-     */
-    renderDevices() {
-        let { devices } = this.props;
-        return _.map(devices, (device) => {
-            return this.renderDevice(device);
-        });
-    }
+    return (
+        <SettingsPanel className="device">
+            <header>
+                <i className="fa fa-tablet" /> {title}
+            </header>
+            <body>
+                {_.map(devices, renderDevice)}
+                <ActionConfirmation ref={confirmationRef} env={env} />
+            </body>
+        </SettingsPanel>
+    );
 
-    /**
-     * Render a project option, with additional links if it's the current project
-     *
-     * @param  {Device} link
-     *
-     * @return {ReactElement}
-     */
-    renderDevice(device) {
-        let { env } = this.props;
-        let { t } = env.locale;
+    function renderDevice(device) {
         let deviceName = formatDeviceName(device);
         return (
             <div key={device.id} className="device-option-button selected">
@@ -81,7 +61,7 @@ class DevicePanel extends PureComponent {
                 </div>
                 <div className="text">
                     <span className="name">{deviceName}</span>
-                    <div data-device-id={device.id} className="revoke" onClick={this.handleRevokeClick}>
+                    <div data-device-id={device.id} className="revoke" onClick={handleRevokeClick}>
                         <i className="fa fa-ban" />
                         {' '}
                         <span>{t('mobile-device-revoke')}</span>
@@ -90,69 +70,10 @@ class DevicePanel extends PureComponent {
             </div>
         );
     }
-
-    /**
-     * Render sign out dialog box
-     *
-     * @return {ReactElement|null}
-     */
-    renderDialogBox() {
-        let { env } = this.props;
-        let { confirmingRevocation } = this.state;
-        let { t } = env.locale;
-        let props = {
-            show: confirmingRevocation,
-            env,
-            onClose: this.handleDialogClose,
-            onConfirm: this.handleRevokeConfirm,
-        };
-        return (
-            <ConfirmationDialogBox {...props}>
-                {t('mobile-device-revoke-are-you-sure')}
-            </ConfirmationDialogBox>
-        );
-    }
-
-    /**
-     * Called when user clicks revoke button
-     *
-     * @param  {Event} evt
-     */
-    handleRevokeClick = (evt) => {
-        let selectedDeviceID = parseInt(evt.currentTarget.getAttribute('data-device-id'));
-        this.setState({ confirmingRevocation: true, selectedDeviceID });
-    }
-
-    /**
-     * Called when user confirm his intention to remove authorization
-     *
-     * @param  {Object} evt
-     */
-    handleRevokeConfirm = async (evt) => {
-        let { database, devices } = this.props;
-        let { selectedDeviceID } = this.state;
-        let device = _.find(devices, { id: selectedDeviceID });
-        let db = database.use({ schema: 'global', by: this });
-        try {
-            await db.removeOne({ table: 'device' }, device);
-            await db.endMobileSession(device.session_handle);
-        } finally {
-            this.handleDialogClose();
-        }
-    }
-
-    /**
-     * Called when user closes dialog box
-     *
-     * @param  {Object} evt
-     */
-    handleDialogClose = (evt) => {
-        this.setState({ confirmingRevocation: false });
-    }
 }
 
 function DeviceIcon(props) {
-    let { type } = props;
+    const { type } = props;
     let icon;
     switch (type) {
         case 'ios':
@@ -168,7 +89,7 @@ function DeviceIcon(props) {
 }
 
 function formatDeviceName(device) {
-    let manufacturer = device.details.manufacturer;
+    const manufacturer = device.details.manufacturer;
     let name = device.details.display_name || device.details.name;
     if (!_.includes(_.toLower(name), _.toLower(manufacturer))) {
         name = `${manufacturer} ${name}`;
@@ -180,19 +101,3 @@ export {
     DevicePanel as default,
     DevicePanel,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    DevicePanel.propTypes = {
-        devices: PropTypes.arrayOf(PropTypes.object),
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}
