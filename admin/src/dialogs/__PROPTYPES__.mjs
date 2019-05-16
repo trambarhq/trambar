@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
-import Database from 'common/data/database.mjs';
-import Environment from 'common/env/environment.mjs';
-import Payloads from 'common/transport/payloads.mjs';
+import { Database } from 'common/data/database.mjs';
+import { Environment } from 'common/env/environment.mjs';
+import { Payloads } from 'common/transport/payloads.mjs';
 
 import { ConfirmationDialogBox } from './confirmation-dialog-box.jsx';
 import { ImageAlbumDialogBox } from './image-album-dialog-box.jsx';

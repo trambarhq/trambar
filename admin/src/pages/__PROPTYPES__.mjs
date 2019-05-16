@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-import Payloads from 'common/transport/payloads.mjs';
+import { Database } from 'common/data/database.mjs';
+import { Route } from 'common/routing/route.mjs';
+import { Environment } from 'common/env/environment.mjs';
+import { Payloads } from 'common/transport/payloads.mjs';
 
 import { ErrorPage } from './error-page.jsx';
 import { MemberListPage } from './member-list-page.jsx';
@@ -15,6 +15,7 @@ import { RoleSummaryPage } from './role-summary-page.jsx';
 import { ServerListPage } from './server-list-page.jsx';
 import { ServerSummaryPage } from './server-summary-page.jsx';
 import { StartPage } from './start-page.jsx';
+import { SettingsPage } from './settings-page.jsx';
 import { SignInPage } from './sign-in-page.jsx';
 import { UserListPage } from './user-list-page.jsx';
 import { UserSummaryPage } from './user-summary-page.jsx';

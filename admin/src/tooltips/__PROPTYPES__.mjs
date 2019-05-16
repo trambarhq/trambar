@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
+import { Route } from 'common/routing/route.mjs';
+import { Environment } from 'common/env/environment.mjs';
 
 import { ActivityTooltip } from './activity-tooltip.jsx';
 import { ModifiedTimeTooltip } from './modified-time-tooltip.jsx';
