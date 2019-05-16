@@ -66,6 +66,16 @@ class Route {
         }
     }
 
+    async confirm() {
+        for (let callback of this.callbacks) {
+            const proceed = await callback();
+            if (proceed === false) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     async modify(params) {
         params = _.assign({}, this.params, params);
         return this.replace(this.name, params);

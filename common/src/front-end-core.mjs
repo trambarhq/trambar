@@ -595,4 +595,5 @@ async function updateBackendProgress(destination, payloads) {
 
 export {
     start as default,
+    start as FrontEndCore,
 };
