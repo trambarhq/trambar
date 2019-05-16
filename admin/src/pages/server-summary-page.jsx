@@ -1,331 +1,229 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import ReactDOM from 'react-dom';
-import { AsyncComponent } from 'relaks';
+import React, { useState, useCallback } from 'react';
+import Relaks, { useProgress, Cancellation } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
-import ComponentRefs from 'common/utils/component-refs.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
 import { ServerTypes, IntegratedServerTypes } from 'common/objects/types/server-types.mjs';
 import * as ServerSettings from 'common/objects/settings/server-settings.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
-import * as SlugGenerator from 'common/utils/slug-generator.mjs';
 
 // widgets
-import PushButton from '../widgets/push-button.jsx';
-import ComboButton from '../widgets/combo-button.jsx';
-import InstructionBlock from '../widgets/instruction-block.jsx';
-import TextField from '../widgets/text-field.jsx';
-import MultilingualTextField from '../widgets/multilingual-text-field.jsx';
-import OptionList from '../widgets/option-list.jsx';
-import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
-import TaskList from '../widgets/task-list.jsx';
-import InputError from '../widgets/input-error.jsx';
-import ActionConfirmation from '../widgets/action-confirmation.jsx';
-import DataLossWarning from '../widgets/data-loss-warning.jsx';
-import UnexpectedError from '../widgets/unexpected-error.jsx';
-import ErrorBoundary from 'common/widgets/error-boundary.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ComboButton } from '../widgets/combo-button.jsx';
+import { InstructionBlock } from '../widgets/instruction-block.jsx';
+import { TextField } from '../widgets/text-field.jsx';
+import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
+import { OptionList } from '../widgets/option-list.jsx';
+import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
+import { TaskList } from '../widgets/task-list.jsx';
+import { InputError } from '../widgets/input-error.jsx';
+import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
+import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
+import { UnexpectedError } from '../widgets/unexpected-error.jsx';
+import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
+
+// custom hooks
+import {
+    useDraftBuffer,
+    useEditHandling,
+    useAddHandling,
+    useReturnHandling,
+    useNameHandling,
+    useConfirmation,
+} from '../hooks.mjs';
 
 import './server-summary-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the Server Summary page.
- *
- * @extends AsyncComponent
- */
-class ServerSummaryPage extends AsyncComponent {
-    static displayName = 'ServerSummaryPage';
-
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env } = this.props;
-        let { serverID, editing, scrollToTaskID } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let creating = (serverID === 'new');
-        let props = {
-            database,
-            route,
-            env,
-            editing: editing || creating,
-            creating,
-            scrollToTaskID,
-        };
-        meanwhile.show(<ServerSummaryPageSync {...props} />);
-        let currentUserID = await db.start();
-        props.system = await SystemFinder.findSystem(db);
-        if (!creating) {
-            props.server = await ServerFinder.findServer(db, serverID)
+async function ServerSummaryPage(props) {
+    const { database, route, env, serverID, editing, scrollToTaskID } = props;
+    const { t, p, languageCode } = env.locale;
+    const db = database.use({ schema: 'global', by: this });
+    const creating = (serverID === 'new');
+    const readOnly = !editing;
+    const [ adding, setAdding ] = useState(false);
+    const [ problems, setProblems ] = useState({});
+    const [ credentialsChanged, setCredentialsChanged ] = useState(false);
+    const [ confirmationRef, confirm ] = useConfirmation();
+    const [ show ] = useProgress();
+    const draft = useDraftBuffer(editing, {
+        save: (base, ours, action) => {
+            switch (action) {
+                case 'restore': return restore(base);
+                default: return save(base, ours);
+            }
+        },
+        remove: (base, ours, action) => {
+            switch (action) {
+                case 'disable': return disable(base);
+                default: return remove(base);
+            }
         }
-        meanwhile.show(<ServerSummaryPageSync {...props} />);
-        props.roles = await RoleFinder.findActiveRoles(db);
-        return <ServerSummaryPageSync {...props} />;
-    }
-}
+    });
 
-/**
- * Synchronous component that actually renders the Server Summary page.
- *
- * @extends PureComponent
- */
-class ServerSummaryPageSync extends PureComponent {
-    static displayName = 'ServerSummaryPageSync';
+    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
+    const [ handleAddClick ] = useAddHandling(route, {
+        params: { serverID: 'new' },
+    });
+    const [ handleReturnClick ] = useReturnHandling(route, {
+        page: 'server-list-page',
+    });
+    const handleDisableClick = useCallback(async (evt) => {
+        await draft.remove('disable');
+    });
+    const handleDeleteClick = useCallback(async (evt) => {
+        await draft.remove();
+    });
+    const handleRestoreClick = useCallback(async (evt) => {
+        await draft.save('restore');
+    });
+    const handleSaveClick = useCallback(async (evt) => {
+        await draft.save();
+    });
+    const handleAcquireClick = useCallback((evt) => {
+        openOAuthPopup('activation');
+    }, [ openOAuthPopup ]);
+    const handleTestClick = useCallback((evt) => {
+        openOAuthPopup('test');
+    }, [ openOAuthPopup ]);
+    const [ handleTitleChange, handleNameChange ] = useNameHandling(draft, {
+        titleKey: 'details.title',
+        nameKey: 'name',
+    });
+    const handleTypeOptionClick = useCallback((evt) => {
+        const typeBefore = draft.get('type');
+        const type = evt.name;
+        draft.update('type', type);
 
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            confirmation: ActionConfirmation
+        // derive title from type
+        const autoTitleBefore = t(`server-type-${typeBefore}`);
+        const autoTitleAfter = t(`server-type-${type}`);
+        const title = draft.get('details.title');
+        if (!title || title === autoTitleBefore) {
+            const titles = _.set({}, languageCode, autoTitleAfter);
+            draft.update('details.title', titles);
+        }
+    });
+    const handleGitlabUserOptionClick = useCallback((evt) => {
+        const option = _.find(gitlabImportOptions, (option) => {
+            return evt.name === `${option.type}-${option.value}`;
         });
-        this.state = {
-            newServer: null,
-            hasChanges: false,
-            saving: false,
-            adding: false,
-            credentialsChanged: false,
-            problems: {},
-        };
-    }
-
-    /**
-     * Reset edit state when edit ends
-     *
-     * @param  {Object} props
-     * @param  {Object} state
-     */
-    static getDerivedStateFromProps(props, state) {
-        let { editing } = props;
-        if (!editing) {
-            return {
-                newServer: null,
-                hasChanges: false,
-                problems: {},
-            };
+        const typeBefore = draft.get(`settings.user.mapping.${option.type}`);
+        let type;
+        if (option.value && typeBefore !== option.value) {
+            type = option.value;
         }
-        return null;
-    }
-
-    /**
-     * Return edited copy of server object or the original object
-     *
-     * @param  {String} state
-     *
-     * @return {Object}
-     */
-    getServer(state) {
-        let { server } = this.props;
-        let { newServer } = this.state;
-        if (!state || state === 'current') {
-            return newServer || server || emptyServer;
+        draft.update(`settings.user.mapping.${option.type}`, type);
+    })
+    const handleOAuthUserOptionClick = useCallback((evt) => {
+        const option = _.find(gitlabImportOptions, (option) => {
+            return evt.name === `${option.value}`;
+        });
+        const typeBefore = draft.get('settings.user.type');
+        let type;
+        if (option.value && typeBefore !== option.value) {
+            type = option.value;
+        }
+        draft.update('settings.user.type', typeAfter);
+    });
+    const handleRoleOptionClick = useCallback((evt) => {
+        const roleIDsBefore = draft.get('settings.user.role_ids', []);
+        const options = getRoleOptions(roles, env);
+        const option = _.find(options, { name: evt.name });
+        let roleIDs;
+        if (option.none) {
+            roleIDs = [];
         } else {
-            return server || emptyServer;
+            roleIDs = _.toggle(roleIDsBefore, option.value);
         }
-    }
+        draft.update('settings.user.role_ids', roleIDs);
+    }, [ roles, env ]);
+    const handleWhitelistChange = useCallback((evt) => {
+        const whitelist = evt.target.value.replace(/\s*[;,]\s*/g, '\n');
+        draft.update('settings.user.whitelist', whitelist);
+    });
+    const handleApiTokenChange = useCallback((evt) => {
+        const token = evt.target.value;
+        draft.update('settings.api.token', token);
+    });
+    const handleOAuthURLChange = useCallback((evt) => {
+        const url = evt.target.value;
+        draft.update('settings.oauth.base_url', url);
 
-    /**
-     * Return a property of the server object
-     *
-     * @param  {String} path
-     * @param  {String} state
-     *
-     * @return {*}
-     */
-    getServerProperty(path, state) {
-        let server = this.getServer(state);
-        return _.get(server, path);
-    }
-
-    /**
-     * Modify a property of the server object
-     *
-     * @param  {String} path
-     * @param  {*} value
-     */
-    setServerProperty(path, value) {
-        let { env, server } = this.props;
-        let { t, p, languageCode } = env.locale;
-        let newServer = this.getServer();
-        let newServerAfter = _.decoupleSet(newServer, path, value);
-        if (path === 'type') {
-            // derive title from type
-            let autoTitleBefore = t(`server-type-${newServer.type}`);
-            let autoTitleAfter = t(`server-type-${newServerAfter.type}`);
-            let title = p(newServer.details.title);
-            if (!title || title === autoTitleBefore) {
-                newServerAfter = _.decoupleSet(newServerAfter, `details.title.${languageCode}`, autoTitleAfter);
-            }
-        }
-        if (path === 'details.title' || path === 'type') {
-            // derive name from title
-            let autoNameBefore = SlugGenerator.fromTitle(newServer.details.title);
-            let autoNameAfter = SlugGenerator.fromTitle(newServerAfter.details.title);
-            if (!newServer.name || newServer.name === autoNameBefore) {
-                newServerAfter.name = autoNameAfter;
-            }
-        }
-        if (path === 'settings.user.type') {
-            if (!value) {
-                newServerAfter = _.decoupleSet(newServerAfter, 'settings.user.role_ids', undefined);
-            }
-        }
-        if(_.size(newServerAfter.name) > 128) {
-            newServerAfter.name = newServerAfter.name.substr(0, 128);
-        }
-        let hasChanges = true;
-        if (_.isEqual(newServerAfter, server)) {
-            newServerAfter = null;
-            hasChanges = false;
-        }
-        this.setState({ newServer: newServerAfter, hasChanges });
-    }
-
-    /**
-     * Look for problems in server object
-     *
-     * @return {Object}
-     */
-    findProblems() {
-        let problems = {};
-        let newServer = this.getServer();
-        if (!newServer.name) {
-            problems.name = 'validation-required';
-        }
-        if (!newServer.type) {
-            problems.type = 'validation-required';
-        }
-        let oauth = newServer.settings.oauth;
-        if (oauth) {
-            if (oauth.client_id && !oauth.client_secret) {
-                problems.client_secret = 'validation-required';
-            }
-            if (!oauth.client_id && oauth.client_secret) {
-                problems.client_id = 'validation-required';
-            }
-            if ((oauth.client_id || oauth.client_secret) && !oauth.base_url) {
-                if (newServer.type === 'gitlab') {
-                    problems.base_url = 'validation-required';
-                }
-            }
-        }
-        return problems;
-    }
-
-    /**
-     * Change editability of page
-     *
-     * @param  {Boolean} edit
-     * @param  {Object}  newServer
-     *
-     * @return {Promise}
-     */
-    setEditability(edit, newServer) {
-        let { route, creating } = this.props;
-        if (creating && !edit && !newServer) {
-            // return to list when cancelling server creation
-            return this.returnToList();
+        // make sure the URL isn't localhost, which points to the Docker container
+        let newProblems;
+        if (/https?:\/\/localhost\b/.test(url)) {
+            newProblems = _.assign({}, problems, {
+                base_url: 'validation-localhost-is-wrong'
+            });
         } else {
-            let params = _.clone(route.params);
-            params.editing = edit || undefined;
-            if (newServer) {
-                // use id of newly created server
-                params.serverID = newServer.id;
-            }
-            return route.replace(route.name, params);
+            newProblems = _.omit(problems, 'base_url');
         }
-    }
+        setProblems(newProblems);
+    }, [ problems ]);
+    const handleOAuthIDChange = useCallback((evt) => {
+        const id = evt.target.value;
+        draft.update('settings.oauth.client_id', id);
+    });
+    const handleOAuthSecretChange = useCallback((evt) => {
+        const secret = evt.target.value;
+        draft.update('settings.oauth.client_secret', secret);
+    });
+    const handleTaskSelectionClear = useCallback(() => {
+        route.unanchor();
+    }, [ route ]);
 
-    /**
-     * Return to repo list
-     *
-     * @return {Promise}
-     */
-    returnToList() {
-        let { route } = this.props;
-        return route.push('server-list-page');
-    }
+    render();
+    const currentUserID = await db.start();
+    const system = await SystemFinder.findSystem(db);
+    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    render();
+    const server = (!creating) ? await ServerFinder.findServer(db, serverID) : null;
+    draft.base(server || {});
+    render();
+    const roles = await RoleFinder.findActiveRoles(db);
+    render();
 
-    /**
-     * Start creating a new role
-     *
-     * @return {Promise}
-     */
-    startNew() {
-        let { route } = this.props;
-        let params = _.clone(route.params);
-        params.serverID = 'new';
-        return route.replace(route.name, params);
-    }
-
-    /**
-     * Return list of language codes
-     *
-     * @return {Array<String>}
-     */
-    getInputLanguages() {
-        let { system } = this.props;
-        return _.get(system, 'settings.input_languages', [])
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { route, env } = this.props;
-        let { hasChanges, problems } = this.state;
-        let { setters } = this.components;
-        let { t, p } = env.locale;
-        let server = this.getServer();
-        let title = p(_.get(server, 'details.title'));
-        if (!title && server.type) {
-            title = t(`server-type-${server.type}`);
+    function render() {
+        const { changed } = draft;
+        let title = p(draft.get('details.title'));
+        const type = draft.get('type');
+        if (!title && type) {
+            title = t(`server-type-${type}`);
         }
-        return (
+        show(
             <div className="server-summary-page">
-                {this.renderButtons()}
+                {renderButtons()}
                 <h2>{t('server-summary-member-$name', title)}</h2>
-                <UnexpectedError>{problems.unexpected}</UnexpectedError>
-                {this.renderForm()}
-                {this.renderInstructions()}
-                {this.renderTaskList()}
-                <ActionConfirmation ref={setters.confirmation} env={env} />
-                <DataLossWarning changes={hasChanges} env={env} route={route} />
+                <UnexpectedError error={draft.error} />
+                {renderForm()}
+                {renderInstructions()}
+                {renderTaskList()}
+                <ActionConfirmation ref={confirmationRef} env={env} />
+                <DataLossWarning changes={changed} env={env} route={route} />
             </div>
         );
     }
 
-    /**
-     * Render buttons in top right corner
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, editing } = this.props;
-        let { hasChanges, adding, credentialsChanged } = this.state;
-        let { t } = env.locale;
+    function renderButtons() {
+        const { changed } = draft;
         if (editing) {
             return (
                 <div key="edit" className="buttons">
-                    <PushButton onClick={this.handleCancelClick}>
+                    <PushButton onClick={handleCancelClick}>
                         {t('server-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!hasChanges} onClick={this.handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('server-summary-save')}
                     </PushButton>
                 </div>
             );
         } else {
-            let server = this.getServer();
-            let active = !server.deleted && !server.disabled;
-            let hasIntegration = _.includes(IntegratedServerTypes, server.type);
-            let hasAccessToken = !!_.get(server, 'settings.api.access_token');
-            let hasOAuthCredentials = !!(_.get(server, 'settings.oauth.client_id') && _.get(server, 'settings.oauth.client_secret'));
+            const active = (server) ? !server.deleted && !server.disabled : true;
+            const hasIntegration = _.includes(IntegratedServerTypes, _.get(server, 'type'));
+            const hasAccessToken = !!_.get(server, 'settings.api.access_token');
+            const hasOAuthCredentials = !!(_.get(server, 'settings.oauth.client_id') && _.get(server, 'settings.oauth.client_secret'));
             let preselected, alert;
             if (active) {
                 if (hasIntegration && !hasAccessToken && hasOAuthCredentials) {
@@ -342,30 +240,30 @@ class ServerSummaryPageSync extends PureComponent {
             return (
                 <div key="view" className="buttons">
                     <ComboButton preselected={preselected} alert={alert}>
-                        <option name="return" onClick={this.handleReturnClick}>
+                        <option name="return" onClick={handleReturnClick}>
                             {t('server-summary-return')}
                         </option>
-                        <option name="add" onClick={this.handleAddClick}>
+                        <option name="add" onClick={handleAddClick}>
                             {t('server-summary-add')}
                         </option>
-                        <option name="acquire" disabled={!active || !hasIntegration} separator onClick={this.handleAcquireClick}>
+                        <option name="acquire" disabled={!active || !hasIntegration} separator onClick={handleAcquireClick}>
                             {t('server-summary-acquire')}
                         </option>
-                        <option name="test" disabled={!active || !hasOAuthCredentials} onClick={this.handleTestClick}>
+                        <option name="test" disabled={!active || !hasOAuthCredentials} onClick={handleTestClick}>
                             {t('server-summary-test-oauth')}
                         </option>
-                        <option name="disable" disabled={!active} separator onClick={this.handleDisableClick}>
+                        <option name="disable" disabled={!active} separator onClick={handleDisableClick}>
                             {t('server-summary-disable')}
                         </option>
-                        <option name="delete" disabled={!active} onClick={this.handleDeleteClick}>
+                        <option name="delete" disabled={!active} onClick={handleDeleteClick}>
                             {t('server-summary-delete')}
                         </option>
-                        <option name="reactivate" hidden={active} onClick={this.handleReactivateClick}>
+                        <option name="reactivate" hidden={active} onClick={handleRestoreClick}>
                             {t('server-summary-reactivate')}
                         </option>
                     </ComboButton>
                     {' '}
-                    <PushButton className="emphasis" onClick={this.handleEditClick}>
+                    <PushButton className="emphasis" onClick={handleEditClick}>
                         {t('server-summary-edit')}
                     </PushButton>
                 </div>
@@ -373,60 +271,32 @@ class ServerSummaryPageSync extends PureComponent {
         }
     }
 
-    /**
-     * Render form for entering server details
-     *
-     * @return {ReactElement}
-     */
-    renderForm() {
+    function renderForm() {
         return (
             <div className="form">
-                {this.renderTypeSelector()}
-                {this.renderTitleInput()}
-                {this.renderNameInput()}
-                {this.renderUserOptions()}
-                {this.renderWhitelist()}
-                {this.renderRoleSelector()}
-                {this.renderSiteURL()}
-                {this.renderOAuthCallbackURL()}
-                {this.renderDeauthorizeCallbackURL()}
-                {this.renderPrivacyPolicyURL()}
-                {this.renderTermsAndConditionsURL()}
-                {this.renderGitlabURLInput()}
-                {this.renderOAuthClientIDInput()}
-                {this.renderOAuthClientSecretInput()}
-                {this.renderAPIStatus()}
+                {renderTypeSelector()}
+                {renderTitleInput()}
+                {renderNameInput()}
+                {renderUserOptions()}
+                {renderWhitelist()}
+                {renderRoleSelector()}
+                {renderSiteURL()}
+                {renderOAuthCallbackURL()}
+                {renderDeauthorizeCallbackURL()}
+                {renderPrivacyPolicyURL()}
+                {renderTermsAndConditionsURL()}
+                {renderGitlabURLInput()}
+                {renderOAuthClientIDInput()}
+                {renderOAuthClientSecretInput()}
+                {renderAPIStatus()}
             </div>
         );
     }
 
-    /**
-     * Render type selector
-     *
-     * @return {ReactElement}
-     */
-    renderTypeSelector() {
-        let { env, editing } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let typeCurr = this.getServerProperty('type', 'current');
-        let typePrev = this.getServerProperty('type', 'original');
-        let optionProps = _.map(ServerTypes, (type) => {
-            let icon = getServerIcon(type);
-            return {
-                name: type,
-                selected: typeCurr === type,
-                previous: typePrev === type,
-                children: [
-                    <i className={`fa fa-${icon} fa-fw`} key={0}/>,
-                    ' ',
-                    t(`server-type-${type}`)
-                ],
-            };
-        });
-        let listProps = {
-            readOnly: !editing,
-            onOptionClick: this.handleTypeOptionClick,
+    function renderTypeSelector() {
+        const listProps = {
+            readOnly,
+            onOptionClick: handleTypeOptionClick,
         };
         return (
             <OptionList {...listProps}>
@@ -434,26 +304,44 @@ class ServerSummaryPageSync extends PureComponent {
                     {t('server-summary-type')}
                     <InputError>{t(problems.type)}</InputError>
                 </label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+                {_.map(ServerTypes, renderServerType)}
             </OptionList>
         );
     }
 
-    /**
-     * Render title input
-     *
-     * @return {ReactElement}
-     */
-    renderTitleInput() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let props = {
+    function renderServerType(type, i) {
+        const typeCurr = draft.getCurrent('type', 'current');
+        const typePrev = draft.getOriginal('type', 'original');
+        const props = {
+            name: type,
+            selected: typeCurr === type,
+            previous: typePrev === type,
+        };
+        let icon;
+        switch (type) {
+            case 'facebook':
+                icon = 'facebook-official';
+                break;
+            default:
+                icon = type;
+        }
+        return (
+            <option key={i} {...props}>
+                <i className={`fa fa-${icon} fa-fw`} key={0}/>
+                {' '}
+                {t(`server-type-${type}`)}
+            </option>
+        );
+    }
+
+    function renderTitleInput() {
+        const props = {
             id: 'title',
-            value: this.getServerProperty('details.title'),
-            availableLanguageCodes: this.getInputLanguages(),
-            readOnly: !editing,
+            value: draft.get('details.title'),
+            availableLanguageCodes,
+            readOnly,
             env,
-            onChange: this.handleTitleChange,
+            onChange: handleTitleChange,
         };
         return (
             <MultilingualTextField {...props}>
@@ -462,22 +350,14 @@ class ServerSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render name input
-     *
-     * @return {ReactElement}
-     */
-    renderNameInput() {
-        let { env, editing } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderNameInput() {
+        const props = {
             id: 'name',
-            value: this.getServerProperty('name'),
-            readOnly: !editing,
+            value: draft.get('name'),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleNameChange,
+            onChange: handleNameChange,
         };
         return (
             <TextField {...props}>
@@ -487,237 +367,153 @@ class ServerSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render user creation options
-     *
-     * @return {ReactElement}
-     */
-    renderUserOptions() {
-        let serverType = this.getServerProperty('type');
+    function renderUserOptions() {
+        const serverType = draft.get('type');
         switch (serverType) {
-            case 'gitlab': return this.renderGitlabUserOptions();
-            default: return this.renderOAuthUserOptions();
+            case 'gitlab': return renderGitlabUserOptions();
+            default: return renderOAuthUserOptions();
         }
     }
 
-    /**
-     * Render user creation options for Gitlab
-     *
-     * @return {ReactElement}
-     */
-    renderGitlabUserOptions() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let userOptsCurr = this.getServerProperty('settings.user', 'current') || {};
-        let userOptsPrev = this.getServerProperty('settings.user', 'original') || {};
-        let newServer = !!this.getServerProperty('id');
-        let optionProps = [
-            {
-                name: 'import-admin-disabled',
-                selected: !_.get(userOptsCurr, 'mapping.admin'),
-                previous: (newServer) ? !_.get(userOptsPrev, 'mapping.admin') : undefined,
-                children: t('server-summary-user-import-gitlab-admin-disabled')
-            },
-            {
-                name: 'import-admin-as-admin',
-                selected: _.get(userOptsCurr, 'mapping.admin') === 'admin',
-                previous: _.get(userOptsPrev, 'mapping.admin') === 'admin',
-                children: <span>{t('server-summary-gitlab-admin')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-admin`)}</span>
-            },
-            {
-                name: 'import-admin-as-moderator',
-                selected: _.get(userOptsCurr, 'mapping.admin') === 'moderator',
-                previous: _.get(userOptsPrev, 'mapping.admin') === 'moderator',
-                children: <span>{t('server-summary-gitlab-admin')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-moderator`)}</span>
-            },
-            {
-                name: 'import-admin-as-regular-user',
-                selected: _.get(userOptsCurr, 'mapping.admin') === 'regular',
-                previous: _.get(userOptsPrev, 'mapping.admin') === 'regular',
-                children: <span>{t('server-summary-gitlab-admin')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-regular`)}</span>
-            },
-            {
-                name: 'import-user-disabled',
-                selected: !_.get(userOptsCurr, 'mapping.user'),
-                previous: (newServer) ? !_.get(userOptsPrev, 'mapping.user') : undefined,
-                children: t('server-summary-user-import-gitlab-user-disabled')
-            },
-            {
-                name: 'import-user-as-moderator',
-                selected: _.get(userOptsCurr, 'mapping.user') === 'moderator',
-                previous: _.get(userOptsPrev, 'mapping.user') === 'moderator',
-                children: <span>{t('server-summary-gitlab-regular-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-moderator`)}</span>
-            },
-            {
-                name: 'import-user-as-regular-user',
-                selected: _.get(userOptsCurr, 'mapping.user') === 'regular',
-                previous: _.get(userOptsPrev, 'mapping.user') === 'regular',
-                children: <span>{t('server-summary-gitlab-regular-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-regular`)}</span>
-            },
-            {
-                name: 'import-user-as-guest',
-                selected: _.get(userOptsCurr, 'mapping.user') === 'guest',
-                previous: _.get(userOptsPrev, 'mapping.user') === 'guest',
-                children: <span>{t('server-summary-gitlab-regular-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-guest`)}</span>
-            },
-            {
-                name: 'import-external-user-disabled',
-                selected: !_.get(userOptsCurr, 'mapping.external_user'),
-                previous: (newServer) ? !_.get(userOptsPrev, 'mapping.external_user') : undefined,
-                children: t('server-summary-user-import-gitlab-external-user-disabled')
-            },
-            {
-                name: 'import-external-user-as-regular-user',
-                selected: _.get(userOptsCurr, 'mapping.external_user') === 'regular',
-                previous: _.get(userOptsPrev, 'mapping.external_user') === 'regular',
-                children: <span>{t('server-summary-gitlab-external-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-regular`)}</span>
-            },
-            {
-                name: 'import-external-user-as-guest',
-                selected: _.get(userOptsCurr, 'mapping.external_user') === 'guest',
-                previous: _.get(userOptsPrev, 'mapping.external_user') === 'guest',
-                children: <span>{t('server-summary-gitlab-external-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-guest`)}</span>
-            },
-        ];
-        let listProps = {
-            readOnly: !editing,
-            onOptionClick: this.handleGitlabUserOptionClick,
+    function renderGitlabUserOptions() {
+        const listProps = {
+            readOnly,
+            onOptionClick: handleGitlabUserOptionClick,
         };
         return (
             <OptionList {...listProps}>
-                <label>
-                    {t('server-summary-new-users')}
-                </label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+                <label>{t('server-summary-new-users')}</label>
+                {_.map(gitlabImportOptions, renderGitlabUserOption)}
             </OptionList>
         );
     }
 
-    /**
-     * Render user creation options for basic OAuth provider
-     *
-     * @return {ReactElement}
-     */
-    renderOAuthUserOptions() {
-        let { env, editing } = this.props;
-        let { t } = env.locale;
-        let userOptsCurr = this.getServerProperty('settings.user', 'current') || {};
-        let userOptsPrev = this.getServerProperty('settings.user', 'original') || {};
-        let newServer = !!this.getServerProperty('id');
-        let optionProps = [
-            {
-                name: 'import-disabled',
-                selected: !userOptsCurr.type,
-                previous: (newServer) ? !userOptsPrev.type : undefined,
-                children: t('server-summary-user-import-disabled')
-            },
-            {
-                name: 'import-user-as-guest',
-                selected: userOptsCurr.type === 'guest',
-                previous: userOptsPrev.type === 'guest',
-                children: <span>{t('server-summary-new-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-guest`)}</span>
-            },
-            {
-                name: 'import-user-as-regular-user',
-                selected: userOptsCurr.type === 'regular',
-                previous: userOptsPrev.type === 'regular',
-                children: <span>{t('server-summary-new-user')} <i className="fa fa-arrow-right" /> {t(`server-summary-user-type-regular`)}</span>
-            },
-        ];
-        let listProps = {
+    function renderGitlabUserOption(option, i) {
+        const typeCurr = draft.getCurrent(`settings.user.mapping.${option.type}`, null);
+        const typePrev = draft.getOriginal(`settings.user.mapping.${option.type}`, null);
+        const props = {
+            name: `${option.type}-${option.value}`,
+            selected: typeCurr === option.value,
+            previous: (!creating) ? typePrev === option.value : undefined,
+        };
+        let label;
+        if (option.label instanceof Array) {
+            label = (
+                <span>
+                    {t(option.label[0])}
+                    {' '}
+                    <i className="fa fa-arrow-right" />
+                    {' '}
+                    {t(option.label[1])}
+                </span>
+            );
+        } else {
+            label = t(option.label);
+        }
+        return <option key={i} {...props}>{label}</option>;
+    }
+
+    function renderOAuthUserOptions() {
+        const listProps = {
             readOnly: !editing,
-            onOptionClick: this.handleOAuthUserOptionClick,
+            onOptionClick: handleOAuthUserOptionClick,
         };
         return (
             <OptionList {...listProps}>
-                <label>
-                    {t('server-summary-new-users')}
-                </label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+                <label>{t('server-summary-new-users')}</label>
+                {_.map(oauthImportOptions, renderOAuthUserOption)}
             </OptionList>
         );
     }
 
-    /**
-     * Render user white list
-     *
-     * @return {ReactElement}
-     */
-    renderWhitelist() {
-        let { env, editing } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let serverType = this.getServerProperty('type');
+    function renderOAuthUserOption(option, i) {
+        const typeCurr = draft.getCurrent('settings.user.type', null);
+        const typePrev = draft.getOriginal('settings.user.type', null);
+        const props = {
+            name: `${option.value}`,
+            selected: typeCurr === option.value,
+            previous: (!creating) ? typePrev === option.value : undefined,
+        };
+        let label;
+        if (option.label instanceof Array) {
+            label = (
+                <span>
+                    {t(option.label[0])}
+                    {' '}
+                    <i className="fa fa-arrow-right" />
+                    {' '}
+                    {t(option.label[1])}
+                </span>
+            );
+        } else {
+            label = t(option.label);
+        }
+        return <option key={i} {...props}>{label}</option>;
+    }
+
+    function renderWhitelist() {
+        const serverType = draft.get('type');
         if (serverType === 'gitlab') {
             return null;
         }
-        let userOpts = this.getServerProperty('settings.user', 'current') || {};
-        if (!userOpts.type) {
+        const userType = draft.get('settings.user.type', '');
+        if (!userType) {
             return null;
         }
         let props = {
             id: 'whitelist',
-            value: this.getServerProperty('settings.user.whitelist'),
-            readOnly: !editing,
+            value: draft.get('settings.user.whitelist'),
             type: 'textarea',
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleWhitelistChange,
+            onChange: handleWhitelistChange,
         };
-        return (
-            <TextField {...props}>
-                {t('server-summary-whitelist')}
-            </TextField>
-        );
+        return <TextField {...props}>{t('server-summary-whitelist')}</TextField>;
     }
 
-    /**
-     * Render role selector
-     *
-     * @return {ReactElement}
-     */
-    renderRoleSelector() {
-        let { env, roles, editing } = this.props;
-        let { t, p } = env.locale;
-        let userRolesCurr = this.getServerProperty('settings.user.role_ids', 'current') || [];
-        let userRolesPrev = this.getServerProperty('settings.user.role_ids', 'original') || [];
-        let newServer = !!this.getServerProperty('id');
-        roles = sortRoles(roles, env);
-        let optionProps = _.map(roles, (role) => {
-            let name = p(role.details.title) || p.name;
-            return {
-                name: String(role.id),
-                selected: _.includes(userRolesCurr, role.id),
-                previous: _.includes(userRolesPrev, role.id),
-                children: <span>{t('server-summary-new-user')} <i className="fa fa-arrow-right" /> {name}</span>
-            };
-        });
-        optionProps.unshift({
-            name: 'none',
-            selected: _.isEmpty(userRolesCurr),
-            previous: (newServer) ? _.isEmpty(userRolesPrev) : undefined,
-            children: t('server-summary-role-none')
-        });
-        let listProps = {
-            readOnly: !editing,
-            onOptionClick: this.handleRoleOptionClick,
+    function renderRoleSelector() {
+        const listProps = {
+            readOnly,
+            onOptionClick: handleRoleOptionClick,
         };
+        const options = getRoleOptions(roles, env);
         return (
             <OptionList {...listProps}>
                 <label>{t('server-summary-roles')}</label>
-                {_.map(optionProps, (props, i) => <option key={i} {...props} /> )}
+                {_.map(options, renderRoleOption)}
             </OptionList>
-        )
+        );
     }
 
-    /**
-     * Render read-only input for site URL
-     *
-     * @return {ReactElement}
-     */
-    renderSiteURL() {
-        let { env, system } = this.props;
-        let { t } = env.locale;
+    function renderRoleOption(option, i) {
+        const rolesCurr = draft.getCurrent('settings.user.role_ids', []);
+        const rolesPrev = draft.getOriginal('settings.user.role_ids', []);
+        const setCurr = (option.none) ? _.isEmpty(rolesCurr) : _.includes(rolesCurr, option.value);
+        const setPrev = (option.none) ? _.isEmpty(rolesPrev) : _.includes(rolesPrev, option.value);
+        const props = {
+            name: option.name,
+            selected: setCurr,
+            previous: (!creating) ? setPrev : undefined,
+        };
+        let label;
+        if (option.label instanceof Array) {
+            label = (
+                <span>
+                    {t(option.label[0])}
+                    {' '}
+                    <i className="fa fa-arrow-right" />
+                    {' '}
+                    {option.label[1]}
+                </span>
+            );
+        } else {
+            label = t(option.label);
+        }
+        return <option key={i} {...props}>{label}</option>;
+    }
+
+    function renderSiteURL() {
         let address = _.get(system, 'settings.address');
         let warning;
         if (!address) {
@@ -726,7 +522,7 @@ class ServerSummaryPageSync extends PureComponent {
             }
             address = window.location.origin;
         }
-        let props = {
+        const props = {
             id: 'oauth_callback',
             value: address,
             readOnly: true,
@@ -740,97 +536,50 @@ class ServerSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render read-only input for OAuth callback URL
-     *
-     * @return {ReactElement|null}
-     */
-    renderOAuthCallbackURL() {
-        let { env, system } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let serverType = this.getServerProperty('type');
+    function renderOAuthCallbackURL() {
+        const type = draft.get('type');
         let address = _.get(system, 'settings.address');
         if (!address) {
             address = window.location.origin;
         }
-        let url = `${address}/srv/session/${serverType || '...'}/callback/`;
-        let props = {
+        const url = `${address}/srv/session/${type || '...'}/callback/`;
+        const props = {
             id: 'oauth_callback',
             value: url,
             readOnly: true,
             env,
         };
-        let phrase = 'server-summary-oauth-callback-url';
-        switch (serverType) {
-            case 'dropbox':
-                phrase = 'server-summary-oauth-redirect-uri';
-                break;
-            case 'facebook':
-                phrase = 'server-summary-oauth-redirect-uri';
-                break;
-            case 'github':
-                phrase = 'server-summary-oauth-callback-url';
-                break;
-            case 'gitlab':
-                phrase = 'server-summary-oauth-redirect-uri';
-                break;
-            case 'google':
-                phrase = 'server-summary-oauth-redirect-uri';
-                break;
-            case 'windows':
-                phrase = 'server-summary-oauth-redirect-url';
-                break;
-        }
-        return (
-            <TextField {...props}>
-                {t(phrase)}
-            </TextField>
-        );
+        const variants = {
+            dropbox: 'redirect-uri',
+            facebook: 'redirect-uri',
+            gitlab: 'redirect-uri',
+            google: 'redirect-uri',
+        };
+        const phrase = `server-summary-oauth-${variants[type] || 'redirect-url'}`;
+        return <TextField {...props}>{t(phrase)}</TextField>;
     }
 
-    /**
-     * Render read-only input for deauthorize callback URL
-     *
-     * @return {ReactElement|null}
-     */
-    renderDeauthorizeCallbackURL() {
-        let { env, system } = this.props;
-        let { t } = env.locale;
-        let serverType = this.getServerProperty('type');
-        let needed = [ 'facebook' ];
-        if (!_.includes(needed, serverType)) {
+    function renderDeauthorizeCallbackURL() {
+        const type = draft.get('type');
+        const needed = [ 'facebook' ];
+        if (!_.includes(needed, type)) {
             return null;
         }
-        let address = _.get(system, 'settings.address');
-        if (!address) {
-            address = window.location.origin;
-        }
-        let url = `${address}/srv/session/${serverType || '...'}/deauthorize/`;
-        let props = {
+        const address = _.get(system, 'settings.address', window.location.origin);
+        const url = `${address}/srv/session/${type || '...'}/deauthorize/`;
+        const props = {
             id: 'deauthize_callback',
             value: url,
             readOnly: true,
             env,
         };
-        return (
-            <TextField {...props}>
-                {t('server-summary-oauth-deauthorize-callback-url')}
-            </TextField>
-        );
+        return <TextField {...props}>{t('server-summary-oauth-deauthorize-callback-url')}</TextField>;
     }
 
-    /**
-     * Render read-only input for generic privacy policy URL
-     *
-     * @return {ReactElement|null}
-     */
-    renderPrivacyPolicyURL() {
-        let { env, system } = this.props;
-        let { t } = env.locale;
-        let serverType = this.getServerProperty('type');
-        let needed = [ 'facebook', 'google', 'windows' ];
-        if (!_.includes(needed, serverType)) {
+    function renderPrivacyPolicyURL() {
+        const type = draft.get('type');
+        const needed = [ 'facebook', 'google', 'windows' ];
+        if (!_.includes(needed, type)) {
             return null;
         }
         let warning;
@@ -839,8 +588,8 @@ class ServerSummaryPageSync extends PureComponent {
             warning = t('server-summary-system-address-missing');
             address = window.location.origin;
         }
-        let url = `${address}/srv/session/privacy/`;
-        let props = {
+        const url = `${address}/srv/session/privacy/`;
+        const props = {
             id: 'oauth_privacy',
             value: url,
             readOnly: true,
@@ -854,17 +603,10 @@ class ServerSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render read-only input for terms and conditions URL
-     *
-     * @return {ReactElement|null}
-     */
-    renderTermsAndConditionsURL() {
-        let { env, system } = this.props;
-        let { t } = env.locale;
-        let serverType = this.getServerProperty('type');
-        let needed = [ 'facebook', 'google', 'windows' ];
-        if (!_.includes(needed, serverType)) {
+    function renderTermsAndConditionsURL() {
+        const type = draft.get('type');
+        const needed = [ 'facebook', 'google', 'windows' ];
+        if (!_.includes(needed, type)) {
             return null;
         }
         let warning;
@@ -873,8 +615,8 @@ class ServerSummaryPageSync extends PureComponent {
             warning = t('server-summary-system-address-missing');
             address = window.location.origin;
         }
-        let url = `${address}/srv/session/terms/`;
-        let props = {
+        const url = `${address}/srv/session/terms/`;
+        const props = {
             id: 'oauth_terms',
             value: url,
             readOnly: true,
@@ -888,27 +630,19 @@ class ServerSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render input for OAuth base URL (Gitlab only)
-     *
-     * @return {ReactElement}
-     */
-    renderGitlabURLInput() {
-        let { env, system, editing } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let serverType = this.getServerProperty('type');
-        let props = {
+    function renderGitlabURLInput() {
+        const type = draft.get('type');
+        const props = {
             id: 'oauth_token',
             type: 'url',
-            value: this.getServerProperty('settings.oauth.base_url'),
-            readOnly: !editing,
+            value: draft.get('settings.oauth.base_url'),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleOAuthURLChange,
+            onChange: handleOAuthURLChange,
         };
         return (
-            <CollapsibleContainer open={serverType === 'gitlab'}>
+            <CollapsibleContainer open={type === 'gitlab'}>
                 <TextField {...props}>
                     {t('server-summary-oauth-gitlab-url')}
                     <InputError>{t(problems.base_url)}</InputError>
@@ -917,44 +651,23 @@ class ServerSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render input for OAuth client id
-     *
-     * @return {ReactElement}
-     */
-    renderOAuthClientIDInput() {
-        let { env, editing } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderOAuthClientIDInput() {
+        const type = draft.get('type');
+        const props = {
             id: 'oauth_id',
-            value: this.getServerProperty('settings.oauth.client_id'),
-            readOnly: !editing,
+            value: draft.get('settings.oauth.client_id'),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleOAuthIDChange,
+            onChange: handleOAuthIDChange,
         };
-        let phrase = 'server-summary-oauth-client-id';
-        switch (this.getServerProperty('type')) {
-            case 'dropbox':
-                phrase = 'server-summary-oauth-app-key';
-                break;
-            case 'facebook':
-                phrase = 'server-summary-oauth-app-id';
-                break;
-            case 'github':
-                phrase = 'server-summary-oauth-client-id';
-                break;
-            case 'gitlab':
-                phrase = 'server-summary-oauth-application-id';
-                break;
-            case 'google':
-                phrase = 'server-summary-oauth-client-id';
-                break;
-            case 'windows':
-                phrase = 'server-summary-oauth-application-id';
-                break;
-        }
+        const variants = {
+            dropbox: 'app-key',
+            facebook: 'app-id',
+            gitlab: 'application-id',
+            windows: 'application-id',
+        };
+        const phrase = `server-summary-oauth-${variants[type] || 'client-id'}`;
         return (
             <TextField {...props}>
                 {t(phrase)}
@@ -963,44 +676,23 @@ class ServerSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render input for OAuth client secret
-     *
-     * @return {ReactElement}
-     */
-    renderOAuthClientSecretInput() {
-        let { env, editing } = this.props;
-        let { problems } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderOAuthClientSecretInput() {
+        const type = draft.get('type');
+        const props = {
             id: 'oauth_secret',
-            value: this.getServerProperty('settings.oauth.client_secret'),
-            readOnly: !editing,
+            value: draft.get('settings.oauth.client_secret'),
             spellCheck: false,
+            readOnly,
             env,
-            onChange: this.handleOAuthSecretChange,
+            onChange: handleOAuthSecretChange,
         };
-        let phrase = 'server-summary-oauth-client-secret';
-        switch (this.getServerProperty('type')) {
-            case 'dropbox':
-                phrase = 'server-summary-oauth-app-secret';
-                break;
-            case 'facebook':
-                phrase = 'server-summary-oauth-app-secret';
-                break;
-            case 'github':
-                phrase = 'server-summary-oauth-client-secret';
-                break;
-            case 'gitlab':
-                phrase = 'server-summary-oauth-application-secret';
-                break;
-            case 'google':
-                phrase = 'server-summary-oauth-client-secret';
-                break;
-            case 'windows':
-                phrase = 'server-summary-oauth-application-secret';
-                break;
-        }
+        const variants = {
+            dropbox: 'app-secret',
+            facebook: 'app-secret',
+            gitlab: 'application-secret',
+            windows: 'application-secret',
+        };
+        const phrase = `server-summary-oauth-${variants[type] || 'client-secret'}`;
         return (
             <TextField {...props}>
                 {t(phrase)}
@@ -1009,18 +701,11 @@ class ServerSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render API integration status
-     *
-     * @return {ReactElement}
-     */
-    renderAPIStatus() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        let serverType = this.getServerProperty('type');
+    function renderAPIStatus() {
+        const type = draft.get('type');
         let apiAccess;
-        if (_.includes(IntegratedServerTypes, serverType)) {
-            let token = this.getServerProperty('settings.api.access_token');
+        if (_.includes(IntegratedServerTypes, type)) {
+            let token = draft.get('settings.api.access_token');
             if (token) {
                 apiAccess = t('server-summary-api-access-acquired');
             } else {
@@ -1029,36 +714,23 @@ class ServerSummaryPageSync extends PureComponent {
         } else {
             apiAccess = t('server-summary-api-access-not-applicable');
         }
-        let props = {
+        const props = {
             id: 'access',
             value: apiAccess,
             readOnly: true,
             env,
         };
-        return (
-            <TextField {...props}>
-                {t('server-summary-api-access')}
-            </TextField>
-        );
+        return <TextField {...props}>{t('server-summary-api-access')}</TextField>;
     }
 
-    /**
-     * Render instruction box
-     *
-     * @return {ReactElement}
-     */
-    renderInstructions() {
-        let { env, editing } = this.props;
-        let instructionProps = {
+    function renderInstructions() {
+        const type = draft.get('type');
+        const instructionProps = {
             folder: 'server',
-            topic: 'server-summary',
+            topic: 'server-summary' + (type ? `-${type}` : ''),
             hidden: !editing,
             env,
         };
-        let serverType = this.getServerProperty('type');
-        if (serverType) {
-            instructionProps.topic += `-${serverType}`;
-        }
         return (
             <div className="instructions">
                 <InstructionBlock {...instructionProps} />
@@ -1066,27 +738,20 @@ class ServerSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render task history
-     *
-     * @return {ReactElement|null}
-     */
-    renderTaskList() {
-        let { database, route, env, server, scrollToTaskID } = this.props;
-        let { t } = env.locale;
+    function renderTaskList() {
         if (!server) {
             return null;
         }
-        let hasIntegration = _.includes(IntegratedServerTypes, server.type);
+        const hasIntegration = _.includes(IntegratedServerTypes, server.type);
         if (!hasIntegration) {
             return null;
         }
-        let historyProps = {
+        const historyProps = {
             server,
             database,
             env,
             scrollToTaskID,
-            onSelectionClear: this.handleTaskSelectionClear,
+            onSelectionClear: handleTaskSelectionClear,
         };
         return (
             <div className="task-history">
@@ -1098,86 +763,54 @@ class ServerSummaryPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Save user with new flags
-     *
-     * @param  {Object} flags
-     *
-     * @return {Promise<Role>}
-     */
-    changeFlags(flags) {
-        let { database, server } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let serverAfter = _.assign({}, server, flags);
-        return db.saveOne({ table: 'server' }, serverAfter).catch((err) => {
-            let problems = { unexpected: err.message };
-            this.setState({ problems });
-        });
+    async function save(base, ours) {
+        validate(ours);
+        setSaving(true);
+        try {
+            const serverAfter = await db.saveOne({ table: 'server' }, ours);
+            handleCancelClick();
+            return serverAfter;
+        } catch (err) {
+            if (err.statusCode === 409) {
+                setProblems({ name: 'validation-duplicate-server-name' });
+                err = new Cancellation;
+            }
+            throw err;
+        } finally {
+            setSaving(false);
+        }
     }
 
-    /**
-     * Called when user clicks disable button
-     *
-     * @param  {Event} evt
-     */
-    handleDisableClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('server-summary-confirm-disable');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            let serverAfter = await this.changeFlags({ disabled: true });
-            if (serverAfter) {
-                await this.returnToList();
+    function validate(ours) {
+        const problems = {};
+        if (!ours.name) {
+            problems.name = 'validation-required';
+        }
+        if (!ours.type) {
+            problems.type = 'validation-required';
+        }
+        let oauth = _.get(ours.settings, 'oauth');
+        if (oauth) {
+            if (oauth.client_id && !oauth.client_secret) {
+                problems.client_secret = 'validation-required';
+            }
+            if (!oauth.client_id && oauth.client_secret) {
+                problems.client_id = 'validation-required';
+            }
+            if ((oauth.client_id || oauth.client_secret) && !oauth.base_url) {
+                if (ours.type === 'gitlab') {
+                    problems.base_url = 'validation-required';
+                }
             }
         }
-    }
-
-    /**
-     * Called when user clicks delete button
-     *
-     * @param  {Event} evt
-     */
-    handleDeleteClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('server-summary-confirm-delete');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            let serverAfter = await this.changeFlags({ deleted: true });
-            if (serverAfter) {
-                await this.returnToList();
-            }
+        setProblems(problems);
+        if (!_.isEmpty(problems)) {
+            throw new Cancellation;
         }
     }
 
-    /**
-     * Called when user clicks reactive button
-     *
-     * @param  {Event} evt
-     */
-    handleReactivateClick = async (evt) => {
-        let { env } = this.props;
-        let { confirmation } = this.components;
-        let { t } = env.locale;
-        let message = t('server-summary-confirm-reactivate');
-        let confirmed = await confirmation.ask(message);
-        if (confirmed) {
-            await this.changeFlags({ disabled: false, deleted: false });
-        }
-    }
-
-    /**
-     * Open a pop-window to OAuth redirection URL
-     *
-     * @param  {String} type
-     */
-    openOAuthPopup(type) {
-        let { database, env } = this.props;
-        let server = this.getServer();
-        let url = database.getOAuthURL(server, type);
+    function openOAuthPopup(type) {
+        const url = database.getOAuthURL(server, type);
         let width = 800;
         let height = 600;
         let { screenLeft, screenTop, outerWidth, outerHeight } = window;
@@ -1190,350 +823,116 @@ class ServerSummaryPageSync extends PureComponent {
             menubar: 'no',
             status: 'no',
         };
-        let pairs = _.map(options, (value, name) => {
+        const pairs = _.map(options, (value, name) => {
             return `${name}=${value}`;
         });
         window.open(url, 'api-access-oauth', pairs.join(','));
     }
-
-    /**
-     * Called when user clicks on "Acquire API access" button
-     *
-     * @param  {Event} evt
-     */
-    handleAcquireClick = (evt) => {
-        this.openOAuthPopup('activation');
-    }
-
-    /**
-     * Called when user clicks on "Test OAuth" button
-     *
-     * @param  {Event} evt
-     */
-    handleTestClick = (evt) => {
-        this.openOAuthPopup('test');
-    }
-
-    /**
-     * Called when user click return button
-     *
-     * @param  {Event} evt
-     */
-    handleReturnClick = (evt) => {
-        return this.returnToList();
-    }
-
-    /**
-     * Called when user click add button
-     *
-     * @param  {Event} evt
-     */
-    handleAddClick = (evt) => {
-        return this.startNew();
-    }
-
-    /**
-     * Called when server clicks edit button
-     *
-     * @param  {Event} evt
-     */
-    handleEditClick = (evt) => {
-        return this.setEditability(true);
-    }
-
-    /**
-     * Called when server clicks cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        return this.setEditability(false);
-    }
-
-    /**
-     * Called when server clicks save button
-     *
-     * @param  {Event} evt
-     */
-    handleSaveClick = (evt) => {
-        let { database } = this.props;
-        let { saving } = this.state;
-        if (saving) {
-            return;
-        }
-        let problems = this.findProblems();
-        if (_.some(problems)) {
-            this.setState({ problems });
-            return;
-        }
-        let server = this.getServer();
-        let oauthBefore = this.getServerProperty('settings.oauth', 'original');
-        let oauthAfter = this.getServerProperty('settings.oauth', 'current');
-        let credentialsChanged = !_.isEqual(oauthBefore, oauthAfter);
-        this.setState({ saving: true, adding: !server.id, credentialsChanged, problems: {} }, async () => {
-            try {
-                let db = database.use({ schema: 'global', by: this });
-                let currentUserID = await db.start();
-                let serverAfter = await db.saveOne({ table: 'server' }, server);
-                this.setState({ hasChanges: false, saving: false }, () => {
-                    return this.setEditability(false, serverAfter);
-                });
-            } catch (err) {
-                let problems;
-                if (err.statusCode === 409) {
-                    problems = { name: 'validation-duplicate-server-name' };
-                } else {
-                    problems = { unexpected: err.message };
-                }
-                this.setState({ problems, saving: false });
-            }
-        });
-    }
-
-    /**
-     * Called when user changes server title
-     *
-     * @param  {Object} evt
-     */
-    handleTitleChange = (evt) => {
-        this.setServerProperty(`details.title`, evt.target.value);
-    }
-
-    /**
-     * Called when user changes server name
-     *
-     * @param  {Object} evt
-     */
-    handleNameChange = (evt) => {
-        let name = _.toLower(evt.target.value).replace(/[^\w\-]+/g, '');
-        this.setServerProperty(`name`, name);
-    }
-
-    /**
-     * Called when user changes server type
-     *
-     * @param  {Object} evt
-     */
-    handleTypeOptionClick = (evt) => {
-        this.setServerProperty(`type`, evt.name);
-    }
-
-    /**
-     * Called when user changes the white list
-     *
-     * @param  {Object} evt
-     */
-    handleWhitelistChange = (evt) => {
-        let whitelist = evt.target.value.replace(/\s*[;,]\s*/g, '\n');
-        this.setServerProperty(`settings.user.whitelist`, whitelist);
-    }
-
-    /**
-     * Called when user changes API token
-     *
-     * @param  {Event} evt
-     */
-    handleApiTokenChange = (evt) => {
-        this.setServerProperty(`settings.api.token`, evt.target.value);
-    }
-
-    /**
-     * Called when user changes OAuth base URL
-     *
-     * @param  {Event} evt
-     */
-    handleOAuthURLChange = (evt) => {
-        let { problems } = this.state;
-        let url = evt.target.value;
-        this.setServerProperty(`settings.oauth.base_url`, url);
-
-        // make sure the URL isn't localhost, which points to the Docker container
-        if (/https?:\/\/localhost\b/.test(url)) {
-            problems = _.assign({}, problems, {
-                base_url: 'validation-localhost-is-wrong'
-            });
-        } else {
-            problems = _.omit(problems, 'base_url');
-        }
-        this.setState({ problems });
-    }
-
-    /**
-     * Called when user changes OAuth client id
-     *
-     * @param  {Event} evt
-     */
-    handleOAuthIDChange = (evt) => {
-        this.setServerProperty(`settings.oauth.client_id`, evt.target.value);
-    }
-
-    /**
-     * Called when user changes OAuth client secret
-     *
-     * @param  {Event} evt
-     */
-    handleOAuthSecretChange = (evt) => {
-        this.setServerProperty(`settings.oauth.client_secret`, evt.target.value);
-    }
-
-    /**
-     * Called when user clicks one of the user options
-     *
-     * @param  {Object} evt
-     */
-    handleGitlabUserOptionClick = (evt) => {
-        let mapping = this.getServerProperty('settings.user.mapping') || {};
-        mapping = _.clone(mapping);
-        switch (evt.name) {
-            case 'import-admin-disabled':
-                mapping.admin = undefined;
-                break;
-            case 'import-admin-as-regular-user':
-                mapping.admin = (mapping.admin !== 'regular') ? 'regular' : undefined;
-                break;
-            case 'import-admin-as-moderator':
-                mapping.admin = (mapping.admin !== 'moderator') ? 'moderator' : undefined;
-                break;
-            case 'import-admin-as-admin':
-                mapping.admin = (mapping.admin !== 'admin') ? 'admin' : undefined;
-                break;
-            case 'import-user-disabled':
-                mapping.user = undefined;
-                break;
-            case 'import-user-as-guest':
-                mapping.user = (mapping.user !== 'guest') ? 'guest' : undefined;
-                break;
-            case 'import-user-as-regular-user':
-                mapping.user = (mapping.user !== 'regular') ? 'regular' : undefined;
-                break;
-            case 'import-user-as-moderator':
-                mapping.user = (mapping.user !== 'moderator') ? 'moderator' : undefined;
-                break;
-            case 'import-external-user-disabled':
-                mapping.external_user = undefined;
-                break;
-            case 'import-external-user-as-guest':
-                mapping.external_user = (mapping.external_user !== 'guest') ? 'guest' : undefined;
-                break;
-            case 'import-external-user-as-regular-user':
-                mapping.external_user = (mapping.external_user !== 'regular') ? 'regular' : undefined;
-                break;
-        }
-        this.setServerProperty('settings.user.mapping', mapping);
-    }
-
-    /**
-     * Called when user clicks one of the user options
-     *
-     * @param  {Object} evt
-     */
-    handleOAuthUserOptionClick = (evt) => {
-        let type = this.getServerProperty('settings.user.type');
-        switch (evt.name) {
-            case 'import-disabled':
-                type = undefined;
-                break;
-            case 'import-user-as-guest':
-                type = (type !== 'guest') ? 'guest' : undefined;
-                break;
-            case 'import-user-as-regular-user':
-                type = (type !== 'regular') ? 'regular' : undefined;
-                break;
-        }
-        this.setServerProperty('settings.user.type', type);
-    }
-
-    /**
-     * Called when user clicks on a role
-     *
-     * @param  {Object} evt
-     */
-    handleRoleOptionClick = (evt) => {
-        let server = this.getServer();
-        let roleIDs = _.get(server, 'settings.user.role_ids', []);
-        if (evt.name === 'none') {
-            roleIDs = [];
-        } else {
-            let roleID = parseInt(evt.name);
-            if (_.includes(roleIDs, roleID)) {
-                roleIDs = _.without(roleIDs, roleID);
-            } else {
-                roleIDs = _.concat(roleIDs, roleID);
-            }
-        }
-        this.setServerProperty('settings.user.role_ids', roleIDs);
-    }
-
-    /**
-     * Called when user has scrolled away from selected task
-     */
-    handleTaskSelectionClear() {
-        let { route } = this.props;
-        route.unanchor();
-    }
 }
 
-const emptyServer = {
-    details: {},
-    settings: ServerSettings.default,
-};
+const gitlabImportOptions = [
+    {
+        type: 'admin',
+        label: 'server-summary-user-import-gitlab-admin-disabled',
+        value: null,
+    },
+    {
+        type: 'admin',
+        label: [ 'server-summary-gitlab-admin', 'server-summary-user-type-admin' ],
+        value: 'admin',
+    },
+    {
+        type: 'admin',
+        label: [ 'server-summary-gitlab-admin', 'server-summary-user-type-moderator' ],
+        value: 'moderator',
+    },
+    {
+        type: 'admin',
+        label: [ 'server-summary-gitlab-admin', 'server-summary-user-type-regular' ],
+        value: 'regular',
+    },
+    {
+        type: 'user',
+        label: 'server-summary-user-import-gitlab-user-disabled',
+        value: null,
+    },
+    {
+        type: 'user',
+        label: [ 'server-summary-gitlab-regular-user', 'server-summary-user-type-moderator' ],
+        value: 'moderator',
+    },
+    {
+        type: 'user',
+        label: [ 'server-summary-gitlab-regular-user', 'server-summary-user-type-regular' ],
+        value: 'regular',
+    },
+    {
+        type: 'user',
+        label: [ 'server-summary-gitlab-regular-user', 'server-summary-user-type-guest' ],
+        value: 'guest',
+    },
+    {
+        type: 'external_user',
+        label: 'server-summary-user-import-gitlab-external-user-disabled',
+        value: null,
+    },
+    {
+        type: 'external_user',
+        label: [ 'server-summary-gitlab-external-user', 'server-summary-user-type-regular' ],
+        value: 'regular',
+    },
+    {
+        type: 'external_user',
+        label: [ 'server-summary-gitlab-external-user', 'server-summary-user-type-guest' ],
+        value: 'guest',
+    },
+];
 
-function renderOption(props, i) {
-    return <option key={i} {...props} />;
+const oauthImportOptions = [
+    {
+        label: 'server-summary-user-import-disabled',
+        value: null,
+    },
+    {
+        label: [ 'server-summary-new-user', 'server-summary-user-type-regular' ],
+        value: 'regular',
+    },
+    {
+        label: [ 'server-summary-new-user', 'server-summary-user-type-guest' ],
+        value: 'guest',
+    },
+];
+
+function getRoleOptions(roles, env) {
+    const { p } = env.locale;
+    const sorted = sortRoles(roles, env);
+    const options = _.map(sorted, (role) => {
+        const name = p(role.details.title) || p.name;
+        return {
+            name: `role-${role.id}`,
+            value: role.id,
+            label: [ 'server-summary-new-user', name ],
+        };
+    });
+    options.unshift({
+        name: `role-null`,
+        none: true,
+        label: 'server-summary-role-none'
+    });
+    return options;
 }
 
-function getServerIcon(type) {
-    switch (type) {
-        case 'facebook':
-            return 'facebook-official';
-        default:
-            return type;
-    }
-}
-
-let sortRoles = memoizeWeak(null, function(roles, env) {
-    let { p } = env.locale;
-    let name = (role) => {
+const sortRoles = memoizeWeak(null, function(roles, env) {
+    const { p } = env.locale;
+    const name = (role) => {
         return p(role.details.title) || role.name;
     };
     return _.sortBy(roles, name);
 });
 
+const component = Relaks.memo(ServerSummaryPage);
+
 export {
-    ServerSummaryPage as default,
-    ServerSummaryPage,
-    ServerSummaryPageSync,
+    component as default,
+    component as ServerSummaryPage,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ServerSummaryPage.propTypes = {
-        editing: PropTypes.bool,
-        serverID: PropTypes.oneOfType([
-            PropTypes.number,
-            PropTypes.oneOf([ 'new' ]),
-        ]).isRequired,
-        scrollToTaskID: PropTypes.number,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    ServerSummaryPageSync.propTypes = {
-        editing: PropTypes.bool,
-        creating: PropTypes.bool,
-        system: PropTypes.object,
-        server: PropTypes.object,
-        roles: PropTypes.arrayOf(PropTypes.object),
-        scrollToTaskID: PropTypes.number,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

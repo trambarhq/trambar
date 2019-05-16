@@ -19,11 +19,12 @@ import { ModifiedTimeTooltip } from '../tooltips/modified-time-tooltip.jsx'
 import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
+// custom hooks
 import {
     useSelectionBuffer,
     useSortHandling,
     useEditHandling,
-    useAddHandling, 
+    useAddHandling,
     useRowHandling,
 } from '../hooks.mjs';
 

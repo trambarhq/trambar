@@ -13,9 +13,11 @@ import { RepoSummaryPage } from './repo-summary-page.jsx';
 import { RoleListPage } from './role-list-page.jsx';
 import { RoleSummaryPage } from './role-summary-page.jsx';
 import { ServerListPage } from './server-list-page.jsx';
+import { ServerSummaryPage } from './server-summary-page.jsx';
 import { StartPage } from './start-page.jsx';
 import { SignInPage } from './sign-in-page.jsx';
 import { UserListPage } from './user-list-page.jsx';
+import { UserSummaryPage } from './user-summary-page.jsx';
 
 ErrorPage.propTypes = {
     database: PropTypes.instanceOf(Database).isRequired,
@@ -85,6 +87,18 @@ RoleSummaryPage.propTypes = {
 };
 ServerListPage.propTypes = {
     editing: PropTypes.bool,
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+ServerSummaryPage.propTypes = {
+    editing: PropTypes.bool,
+    serverID: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.oneOf([ 'new' ]),
+    ]).isRequired,
+    scrollToTaskID: PropTypes.number,
+
     database: PropTypes.instanceOf(Database).isRequired,
     route: PropTypes.instanceOf(Route).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,

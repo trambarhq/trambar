@@ -1,6 +1,4 @@
-import React, { PureComponent } from 'react';
-
-import Environment from 'common/env/environment.mjs';
+import React from 'react';
 
 import './input-error.scss';
 
