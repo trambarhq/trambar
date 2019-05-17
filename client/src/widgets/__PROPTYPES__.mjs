@@ -13,11 +13,16 @@ import { DiagnosticsSection } from './diagnostics-section.jsx';
 import { DropZone } from './drop-zone.jsx';
 import { DurationIndicator } from './duration-indicator.jsx';
 import { EmptyMessage } from './empty-message.jsx';
-import { HeaderButton, FileButton } from './header-button.jsx';
+import { HeaderButton } from './header-button.jsx';
 import { Link } from './link.jsx';
 import { MediaButton, Direction } from './media-button.jsx';
 import { MediaPlaceholder } from './media-placeholder.jsx';
-
+import { MediaToolbar } from './media-toolbar.jsx';
+import { MultipleUserNames } from './multiple-user-names.jsx';
+import { OptionButton } from './option-button.jsx';
+import { ProfileImage } from './profile-image.jsx';
+import { PushButton } from './push-button.jsx';
+import { QRCode } from './qr-code.jsx';
 import { ReactionMediaToolbar } from './reaction-media-toolbar.jsx';
 import { ReactionProgress } from './reaction-progress.jsx';
 import { ReactionToolbar } from './reaction-toolbar.jsx';
@@ -91,7 +96,7 @@ HeaderButton.propTypes = {
     disabled: PropTypes.bool,
     onClick: PropTypes.func,
 };
-FileButton.propTypes = {
+HeaderButton.File.propTypes = {
     label: PropTypes.string,
     icon: PropTypes.string,
     hidden: PropTypes.bool,
@@ -124,6 +129,58 @@ MediaPlaceholder.propTypes = {
     env: PropTypes.instanceOf(Environment).isRequired,
 };
 
+MediaToolbar.propTypes = {
+    story: PropTypes.object.isRequired,
+    capturing: PropTypes.oneOf([ 'image', 'video', 'audio' ]),
+    env: PropTypes.instanceOf(Environment).isRequired,
+    onAction: PropTypes.func,
+};
+MultipleUserNames.propTypes = {
+    label: PropTypes.string,
+    title: PropTypes.string,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
+    popupLimit: PropTypes.number,
+
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+OptionButton.propTypes = {
+    label: PropTypes.node,
+    id: PropTypes.string,
+    icon: PropTypes.string,
+    iconOn: PropTypes.string,
+    iconOff: PropTypes.string,
+    url: PropTypes.string,
+    target: PropTypes.string,
+    hidden: PropTypes.bool,
+    selected: PropTypes.bool,
+    disabled: PropTypes.bool,
+    onClick: PropTypes.func,
+};
+ProfileImage.propTypes = {
+    user: PropTypes.object,
+    size: PropTypes.oneOf([ 'small', 'medium', 'large' ]),
+};
+PushButton.propTypes = {
+    label: PropTypes.string,
+    icon: PropTypes.string,
+    hidden: PropTypes.bool,
+    disabled: PropTypes.bool,
+    emphasized: PropTypes.bool,
+    onClick: PropTypes.func,
+};
+PushButton.File.propTypes = {
+    label: PropTypes.string,
+    icon: PropTypes.string,
+    hidden: PropTypes.bool,
+    disabled: PropTypes.bool,
+    emphasized: PropTypes.bool,
+    multiple: PropTypes.bool,
+    onChange: PropTypes.func,
+};
+QRCode.propTypes = {
+    text: PropTypes.string,
+    scale: PropTypes.number,
+};
 ReactionMediaToolbar.propTypes = {
     reaction: PropTypes.object.isRequired,
     capturing: PropTypes.oneOf([ 'image', 'video', 'audio' ]),

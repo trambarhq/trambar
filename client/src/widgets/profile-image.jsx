@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import * as BlobManager from 'common/transport/blob-manager.mjs';
-import ResourceView from 'common/widgets/resource-view.jsx';
+import { ResourceView }  from 'common/widgets/resource-view.jsx';
 
 import Icon from 'octicons/build/svg/person.svg';
 
@@ -12,14 +12,14 @@ import './profile-image.scss';
  * it renders a placeholder graphic.
  */
 function ProfileImage(props) {
-    let { env, href, user, size } = props;
-    let className = `profile-image ${size}`;
-    let resources = _.get(user, 'details.resources');
-    let profileImage = _.find(resources, { type: 'image' });
+    const { env, href, user, size } = props;
+    const className = `profile-image ${size}`;
+    const resources = _.get(user, 'details.resources');
+    const profileImage = _.find(resources, { type: 'image' });
     let image;
     if (profileImage) {
-        let width = imageResolutions[size];
-        let props = {
+        const width = imageResolutions[size];
+        const props = {
             resource: profileImage,
             showMosaic: true,
             width: width,
@@ -37,7 +37,7 @@ function ProfileImage(props) {
     }
 }
 
-let imageResolutions = {
+const imageResolutions = {
     small: 24,
     medium: 48,
     large: 96,
@@ -51,13 +51,3 @@ export {
     ProfileImage as default,
     ProfileImage,
 };
-
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ProfileImage.propTypes = {
-        user: PropTypes.object,
-        size: PropTypes.oneOf([ 'small', 'medium', 'large' ]),
-    };
-}
