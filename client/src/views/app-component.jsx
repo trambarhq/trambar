@@ -1,41 +1,33 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useCallback } from 'react';
 import MarkGor from 'mark-gor/react';
 
 // widgets
-import ResourceView from 'common/widgets/resource-view.jsx';
+import { ResourceView } from 'common/widgets/resource-view.jsx';
 
 import './app-component.scss';
 
 /**
  * Widget for displaying component description.
- *
- * @extends PureComponent
  */
-class AppComponent extends PureComponent {
-    static displayName = 'AppComponent';
+function AppComponent(props) {
+    const { env, component, onSelect } = props;
+    const { p } = env.locale;
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        return (
-            <div className="app-component" onClick={this.handleClick}>
-                {this.renderPicture()}
-                {this.renderText()}
-            </div>
-        );
-    }
+    const handleClick = useCallback((evt) => {
+        if (onSelect) {
+            onSelect({ component });
+        }
+    }, [ component, onSelect ]);
 
-    /**
-     * Render icon or image
-     *
-     * @return {ReactElement}
-     */
-    renderPicture() {
-        let { env, component } = this.props;
+    return (
+        <div className="app-component" onClick={handleClick}>
+            {renderPicture()}
+            {renderText()}
+        </div>
+    );
+
+    function renderPicture() {
         if (component.image) {
             return (
                 <div className="picture">
@@ -43,9 +35,9 @@ class AppComponent extends PureComponent {
                 </div>
             );
         } else {
-            let icon = component.icon || {};
-            let iconClassName = icon.class || 'fa-cubes';
-            let style = {
+            const icon = component.icon || {};
+            const iconClassName = icon.class || 'fa-cubes';
+            const style = {
                 color: icon.color,
                 backgroundColor: icon.backgroundColor,
             };
@@ -59,16 +51,9 @@ class AppComponent extends PureComponent {
         }
     }
 
-    /**
-     * Render text description of component, formatted as Markdown
-     *
-     * @return {ReactElement}
-     */
-    renderText() {
-        let { env, component } = this.props;
-        let { text } = component;
-        let { p } = env.locale;
-        let elements = MarkGor.parse(p(text));
+    function renderText() {
+        const { text } = component;
+        const elements = MarkGor.parse(p(text));
         return (
             <div className="description">
                 <div className="description-contents">
@@ -80,37 +65,9 @@ class AppComponent extends PureComponent {
             </div>
         );
     }
-
-    /**
-     * Called when user clicks on component description
-     *
-     * @param  {Event} evt
-     */
-    handleClick = (evt) => {
-        let { component, onSelect } = this.props;
-        if (onSelect) {
-            onSelect({
-                type: 'select',
-                target: this,
-                component,
-            });
-        }
-    }
 }
 
 export {
     AppComponent as default,
     AppComponent,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    AppComponent.propTypes = {
-        component: PropTypes.object.isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        onSelect: PropTypes.func,
-    };
-}
