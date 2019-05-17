@@ -1,298 +1,156 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import ComponentRefs from 'common/utils/component-refs.mjs';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 
 // widgets
-import Link from './link.jsx';
-import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
-import CalendarBar from './calendar-bar.jsx';
-import RoleFilterBar from './role-filter-bar.jsx';
-import SearchBar from './search-bar.jsx';
-import ErrorBoundary from 'common/widgets/error-boundary.jsx';
+import { Link } from './link.jsx';
+import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
+import { CalendarBar } from './calendar-bar.jsx';
+import { RoleFilterBar } from './role-filter-bar.jsx';
+import { SearchBar } from './search-bar.jsx';
+import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import './top-navigation.scss';
 
 /**
  * Expandable navigation bar at the top of the user interface.
- *
- * @extends PureComponent
  */
-class TopNavigation extends PureComponent {
-    static displayName = 'TopNavigation';
-
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            container: HTMLDivElement,
+function TopNavigation(props) {
+    const { database, route, env, payloads, settings, makingRequests } = props;
+    const isHidden = !_.get(settings, 'navigation.top', true);
+    const [ height, setHeight ] = useState();
+    const containerRef = useRef();
+    const selectedControl = useMemo(() => {
+        return _.find(controls, (control) => {
+            const keys = _.keys(control.params);
+            const params = _.pick(route.params, keys);
+            return !_.isEmpty(params);
         });
-        let hidden = !_.get(props.settings, 'navigation.top', true);
-        this.state = {
-            height: (hidden) ? 0 : 'auto',
-        };
-    }
+    }, [ route ]);
 
-    /**
-     * Return true if top nav is supposed to be hidden
-     *
-     * @param  {Object|undefined} props
-     *
-     * @return {Boolean}
-     */
-    isHidden(props) {
-        let { settings } = props || this.props;
-        return !_.get(settings, 'navigation.top', true);
-    }
-
-    /**
-     * Return control required by route
-     *
-     * @return {String|null}
-     */
-    getSelectedControl() {
-        let { route } = this.props;
-        let params = route.params;
-        if (params.search != undefined) {
-            return 'search';
-        } else if (params.date != undefined) {
-            return 'calendar';
-        } else if (params.roleIDs != undefined) {
-            return 'filter';
+    useEffect(() => {
+        const contentHeight = containerRef.current.offsetHeight;
+        if (isHidden) {
+            setHeight(contentHeight);
+            setTimeout(() => {
+                setHeight(0);
+            }, 0);
+        } else {
+            setHeight(contentHeight);
+            setTimeout(() => {
+                setHeight('auto');
+            }, 1000);
         }
-        return null;
-    }
+    }, [ isHidden ]);
 
-    /**
-     * Return URL for activating/deactivating control
-     *
-     * @param  {String} control
-     *
-     * @return {String|null}
-     */
-    getControlURL(control) {
-        let { route, settings } = this.props;
-        let selected = this.getSelectedControl();
-        let controlSettings = _.get(settings, control);
-        if (!controlSettings) {
-            return null;
-        }
-        let params = _.clone(controlSettings.route) || {};
-        if (control !== selected) {
-            // add empty parameters to trigger the control's activation
-            switch (control) {
-                case 'search':
-                    params.search = '';
-                    break;
-                case 'calendar':
-                    params.date = '';
-                    break;
-                case 'filter':
-                    params.roleIDs = [];
-                    break;
-            }
-        }
-        let url = route.find(route.name, params);
-        return url;
-    }
+    return (
+        <header className="top-navigation" style={{ height }}>
+            <div ref={containerRef} className="container">
+                {renderButtonBar()}
+                {renderCollapsibleControl()}
+            </div>
+        </header>
+    );
 
-    /**
-     * Change this.state.height when this.props.hidden changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { container } = this.components;
-        let hiddenBefore = this.isHidden();
-        let hiddenAfter = this.isHidden(nextProps);
-        if (hiddenBefore !== hiddenAfter) {
-            let contentHeight = container.offsetHeight;
-            if (hiddenAfter) {
-                // hiding navigation:
-                //
-                // render with height = contentHeight, then
-                // render with height = 0 immediately
-                this.setState({ height: contentHeight });
-                setTimeout(() => {
-                    if (this.isHidden()) {
-                        this.setState({ height: 0 });
-                    }
-                }, 0);
-            } else {
-                // showing navigation:
-                //
-                // render with height = contentHeight, then
-                // render with height = auto after a second
-                this.setState({ height: contentHeight });
-                setTimeout(() => {
-                    if (!this.isHidden()) {
-                        this.setState({ height: 'auto' });
-                    }
-                }, 1000);
-            }
-        }
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { height } = this.state;
-        let { setters } = this.components;
-        return (
-            <header className="top-navigation" style={{ height }}>
-                <div ref={setters.container} className="container">
-                    {this.renderButtonBar()}
-                    {this.renderCollapsibleControl()}
-                </div>
-            </header>
-        );
-    }
-
-    /**
-     * Render buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtonBar() {
-        let { database, payloads, env, makingRequests } = this.props;
-        let selected = this.getSelectedControl();
-        let calendarProps = {
-            icon: 'calendar',
-            className: 'calendar-btn',
-            url: this.getControlURL('calendar'),
-            active: (selected === 'calendar'),
-        };
-        let filterProps = {
-            icon: 'filter',
-            className: 'filter-btn',
-            url: this.getControlURL('filter'),
-            active: (selected === 'filter'),
-        };
-        let searchProps = {
-            icon: 'search',
-            className: 'search-btn',
-            url: this.getControlURL('search'),
-            active: (selected === 'search'),
-        };
-        let connectionProps = {
+    function renderButtonBar() {
+        const connectionProps = {
             uploading: payloads.uploading,
             searching: makingRequests,
             env,
         };
         return (
             <div>
-                <Button {...calendarProps} />
-                <Button {...filterProps} />
-                <Button {...searchProps} />
+                {_.map(controls, renderButton)}
                 <ConnectionIndicator {...connectionProps}/>
             </div>
         );
     }
 
-    /**
-     * Render collapsible UI controls
-     *
-     * @return {ReactElement}
-     */
-    renderCollapsibleControl() {
-        let { env } = this.props;
-        let selected = this.getSelectedControl();
+    function renderButton(control, i) {
+        const { name, icon } = control;
+        const controlSettings = _.get(settings, name);
+        const className = `${name}-btn`;
+        const active = (selectedControl && selectedControl.name === name);
+        let url;
+        if (controlSettings) {
+            const params = { ...controlSettings.route };
+            if (!active) {
+                // add empty parameters to trigger the control's activation
+                _.assign(params, control.params);
+            }
+            url = route.find(route.name, params);
+        }
+        const props = { icon, className, active, url };
+        return <Button key={i} {...props} />
+    }
+
+    function renderCollapsibleControl() {
+        let contents;
+        if (selectedControl) {
+            const { name, component: Control } = selectedControl;
+            const controlSettings = _.get(settings, name, {});
+            let props = {
+                settings: controlSettings,
+                database,
+                route,
+                env,
+            };
+            contents = <Control {...props} />;
+        }
         return (
-            <CollapsibleContainer open={!!selected}>
-                <ErrorBoundary env={env}>
-                    {this.renderControl()}
-                </ErrorBoundary>
+            <CollapsibleContainer open={!!selectedControl}>
+                <ErrorBoundary env={env}>{contents}</ErrorBoundary>
             </CollapsibleContainer>
         );
     }
-
-    /**
-     * Render one of the controls
-     *
-     * @return {ReactElement}
-     */
-    renderControl() {
-        let selected = this.getSelectedControl();
-        switch (selected) {
-            case 'calendar': return this.renderCalendarBar();
-            case 'filter': return this.renderRoleFilterBar();
-            case 'search': return this.renderSearchBar();
-        }
-    }
-
-    /**
-     * Render a list of calendars covering the project period
-     *
-     * @return {ReactElement}
-     */
-    renderCalendarBar() {
-        let { database, route, env, settings } = this.props;
-        let props = {
-            settings: settings.calendar,
-            database,
-            route,
-            env,
-        };
-        return <CalendarBar {...props} />;
-    }
-
-    /**
-     * Render a list of roles
-     *
-     * @return {ReactElement}
-     */
-    renderRoleFilterBar() {
-        let { database, route, env, settings } = this.props;
-        let props = {
-            settings: settings.filter,
-            database,
-            route,
-            env,
-        };
-        return <RoleFilterBar {...props} />;
-    }
-
-    /**
-     * Render search bar
-     *
-     * @return {ReactElement}
-     */
-    renderSearchBar() {
-        let { database, route, env, settings } = this.props;
-        let props = {
-            settings: settings.search,
-            database,
-            route,
-            env,
-        };
-        return <SearchBar {...props} />;
-    }
 }
 
+const controls = [
+    {
+        name: 'calendar',
+        icon: 'calendar',
+        params: { date: '' },
+        component: CalendarBar,
+    },
+    {
+        name: 'filter',
+        icon: 'filter',
+        params: { roleIDs: [] },
+        component: RoleFilterBar,
+    },
+    {
+        name: 'search',
+        icon: 'search',
+        params: { search: '' },
+        component: SearchBar,
+    },
+];
+
 function Button(props) {
-    let { url, icon, className, active } = props;
-    className = 'button' + ((className) ? ` ${className}` : '');
+    const { url, icon, className, active } = props;
+    const classNames = [ 'button' ];
+    if (className) {
+        classNames.push(className);
+    }
     if (active) {
-        className += ` active`;
+        classNames.push('active');
     }
     if (!url) {
-        className += ` disabled`;
+        classNames.push('disabled');
     }
     return (
-        <Link className={className} url={url}>
+        <Link className={classNames.join(' ')} url={url}>
             <i className={`fa fa-${icon}`} />
         </Link>
     );
 }
 
 function ConnectionIndicator(props) {
-    let { env, uploading, searching } = props;
-    let { t } = env.locale;
+    const { env, uploading, searching } = props;
+    const { t } = env.locale;
     if (uploading) {
-        let size = _.fileSize(uploading.bytes);
-        let count = uploading.files;
-        let title = t('upload-progress-uploading-$count-files-$size-remaining', count, size);
+        const size = _.fileSize(uploading.bytes);
+        const count = uploading.files;
+        const title = t('upload-progress-uploading-$count-files-$size-remaining', count, size);
         return (
             <span className="connection" title={title}>
                 <i className="fa fa-cloud-upload"/>
@@ -320,21 +178,3 @@ export {
     TopNavigation as default,
     TopNavigation,
 };
-
-import Database from 'common/data/database.mjs';
-import Payloads from 'common/transport/payloads.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    TopNavigation.propTypes = {
-        settings: PropTypes.object.isRequired,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

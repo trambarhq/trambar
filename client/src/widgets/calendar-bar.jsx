@@ -23,7 +23,7 @@ async function CalendarBar(props) {
     render();
     const currentUserID = await db.start();
     const currentUser = await UserFinder.findUser(db, currentUserID);
-    const params = _.clone(settings.statistics);
+    const params = { ...settings.statistics };
     if (params.user_id === 'current') {
         params.user_id = currentUser.id;
     }

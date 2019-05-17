@@ -229,7 +229,6 @@ class FrontEnd extends PureComponent {
             codePush.addEventListener('change', this.handleCodePushChange);
         }
         window.addEventListener('beforeunload', this.handleBeforeUnload);
-        Time.updateRelativeTime(true);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -411,8 +410,6 @@ class FrontEnd extends PureComponent {
         let extra = { locale, address, widthDefinitions, codePush };
         let env = new Environment(envMonitor, extra);
         this.setState({ env });
-
-        Time.updateRelativeTime(!env.paused);
     }
 
     /**

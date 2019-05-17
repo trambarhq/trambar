@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import { Database } from 'common/data/database.mjs';
 import { Route } from 'common/routing/route.mjs';
 import { Environment } from 'common/env/environment.mjs';
+import { Payloads } from 'common/transport/payloads.mjs';
 
 import { AuthorNames } from './author-names.jsx';
 import { BottomNavigation } from './bottom-navigation.jsx';
@@ -16,6 +17,11 @@ import { HeaderButton, FileButton } from './header-button.jsx';
 import { Link } from './link.jsx';
 import { MediaButton, Direction } from './media-button.jsx';
 import { MediaPlaceholder } from './media-placeholder.jsx';
+
+import { TextToolbar } from './text-toolbar.jsx';
+import { Time } from './time.jsx';
+import { TopNavigation } from './top-navigation.jsx';
+import { VolumeIndicator } from './volume-indicator.jsx';
 
 AuthorNames.propTypes = {
     authors: PropTypes.arrayOf(PropTypes.object),
@@ -108,4 +114,28 @@ Direction.propTypes = {
 MediaPlaceholder.propTypes = {
     showHints: PropTypes.bool,
     env: PropTypes.instanceOf(Environment).isRequired,
+};
+
+TextToolbar.propTypes = {
+    story: PropTypes.object.isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+    onAction: PropTypes.func,
+};
+Time.propTypes = {
+    time: PropTypes.string,
+    compact: PropTypes.bool,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+TopNavigation.propTypes = {
+    settings: PropTypes.object.isRequired,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    payloads: PropTypes.instanceOf(Payloads).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+VolumeIndicator.propTypes = {
+    type: PropTypes.oneOf([ 'bar', 'gauge' ]),
+    volume: PropTypes.number,
+    recording: PropTypes.bool,
 };

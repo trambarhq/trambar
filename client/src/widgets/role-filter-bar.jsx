@@ -123,6 +123,7 @@ const findUsers = memoizeWeak(null, function(users, role) {
 
 export {
     RoleFilterBar as default,
+    RoleFilterBar,
     RoleFilterBarSync,
 };
 
