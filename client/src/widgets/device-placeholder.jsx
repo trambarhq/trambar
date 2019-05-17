@@ -7,10 +7,10 @@ import './device-placeholder.scss';
  * isn't ready or available.
  */
 function DevicePlaceholder(props) {
-    let { icon, blocked } = props;
-    let className = 'device-placeholder';
+    const { icon, blocked } = props;
+    const className = [ 'device-placeholder' ];
     if (blocked) {
-        className += ' blocked';
+        classNames.push('blocked');
     }
     return (
         <div className={className}>
@@ -26,12 +26,3 @@ export {
     DevicePlaceholder as default,
     DevicePlaceholder,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    DevicePlaceholder.propTypes = {
-        blocked: PropTypes.bool,
-        icon: PropTypes.oneOf([ 'camera', 'video-camera', 'microphone' ]).isRequired,
-    };
-}

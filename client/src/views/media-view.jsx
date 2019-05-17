@@ -7,7 +7,7 @@ import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 import { MediaButton } from '../widgets/media-button.jsx';
 import { MediaDialogBox } from '../dialogs/media-dialog-box';
 import { ResourceView } from 'common/widgets/resource-view.jsx';
-import { DurationIndicator } from '../widgets/duration-indicator.jsx';
+import { formatDuration } from '../widgets/duration-indicator.jsx';
 
 import {
     useDialogHandling,
@@ -159,7 +159,7 @@ function MediaView(props) {
                         <i className="fa fa-play-circle-o" />
                     </div>
                     <div className="duration">
-                        {DurationIndicator.format(resource.duration)}
+                        {DurationIndicator(resource.duration)}
                     </div>
                 </div>
             </div>
@@ -181,7 +181,7 @@ function MediaView(props) {
                         <i className={`fa fa-${action}-circle`} />
                     </div>
                     <div className="duration">
-                        {DurationIndicator.format(resource.duration)}
+                        {DurationIndicator(resource.duration)}
                     </div>
                 </div>
             </div>

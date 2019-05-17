@@ -46,14 +46,3 @@ export {
     AuthorNames as default,
     AuthorNames,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    AuthorNames.propTypes = {
-        authors: PropTypes.arrayOf(PropTypes.object),
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

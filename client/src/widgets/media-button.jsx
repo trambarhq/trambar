@@ -6,7 +6,7 @@ import './media-button.scss';
  * Stateless component that renders a button for adding/removing attached media.
  */
 function MediaButton(props) {
-    let { label, hidden, disabled, onClick } = props;
+    const { label, hidden, disabled, onClick } = props;
     if (hidden) {
         return null;
     }
@@ -26,11 +26,11 @@ MediaButton.Direction = Direction;
  * selected one.
  */
 function Direction(props) {
-    let { index, count, hidden, onBackwardClick, onForwardClick } = props;
+    const { index, count, hidden, onBackwardClick, onForwardClick } = props;
     if (hidden) {
         return null;
     }
-    let text = `${index + 1} / ${count}`;
+    const text = `${index + 1} / ${count}`;
     return (
         <div className="media-direction">
             <label className="backward-button" onClick={onBackwardClick}>
@@ -45,7 +45,7 @@ function Direction(props) {
 }
 
 function buttonClasses(props) {
-    let classNames = [ 'media-button' ];
+    const classNames = [ 'media-button' ];
     if (props.className) {
         classNames.push(props.className);
     }
@@ -56,7 +56,7 @@ function buttonClasses(props) {
 }
 
 function iconClasses(props) {
-    let classNames = [];
+    const classNames = [];
     if (props.icon) {
         classNames.push('fa', `fa-${props.icon}`);
     }
@@ -66,24 +66,5 @@ function iconClasses(props) {
 export {
     MediaButton as default,
     MediaButton,
+    Direction,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    MediaButton.propTypes = {
-        label: PropTypes.string,
-        icon: PropTypes.string,
-        hidden: PropTypes.bool,
-        highlighted: PropTypes.bool,
-        disabled: PropTypes.bool,
-        onChange: PropTypes.func,
-    };
-    Direction.propTypes = {
-        index: PropTypes.number,
-        count: PropTypes.number,
-        hidden: PropTypes.bool,
-        onBackwardClick: PropTypes.func,
-        onForwardClick: PropTypes.func,
-    };
-}

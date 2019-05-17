@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 
 import './duration-indicator.scss';
 
@@ -7,39 +7,19 @@ import './duration-indicator.scss';
  * recording is true, indicating that a device is actively capturing video
  * or audio.
  */
-class DurationIndicator extends PureComponent {
-    static displayName = 'DurationIndicator';
+function DurationIndicator(props) {
+    const { duration, recording } = props;
 
-    static format(ms) {
-        if (typeof(ms) !== 'number') {
-            return '';
-        }
-        let seconds = ms / 1000;
-        let hh = Math.floor(seconds / 3600).toString().padStart(2, '0');
-        let mm = Math.floor(seconds / 60 % 60).toString().padStart(2, '0');
-        let ss = Math.floor(seconds % 60).toString().padStart(2, '0');
-        return `${hh}:${mm}:${ss}`;
-    }
+    return (
+        <div className="duration-indicator">
+            <span className="duration">
+                {formatDuration(duration)}
+            </span>
+            {renderBlinker()}
+        </div>
+    );
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { duration } = this.props;
-        return (
-            <div className="duration-indicator">
-                <span className="duration">
-                    {DurationIndicator.format(duration)}
-                </span>
-                {this.renderBlinker()}
-            </div>
-        );
-    }
-
-    renderBlinker() {
-        let { recording } = this.props;
+    function renderBlinker() {
         if (recording) {
             return (
                 <span className="icon blinking">
@@ -50,6 +30,17 @@ class DurationIndicator extends PureComponent {
     }
 }
 
+function formatDuration(ms) {
+    if (typeof(ms) !== 'number') {
+        return '';
+    }
+    let seconds = ms / 1000;
+    let hh = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    let mm = Math.floor(seconds / 60 % 60).toString().padStart(2, '0');
+    let ss = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${hh}:${mm}:${ss}`;
+}
+
 DurationIndicator.defaultProps = {
     recording: false,
 };
@@ -57,13 +48,5 @@ DurationIndicator.defaultProps = {
 export {
     DurationIndicator as default,
     DurationIndicator,
+    formatDuration,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    DurationIndicator.propTypes = {
-        duration: PropTypes.number,
-        recording: PropTypes.bool,
-    };
-}

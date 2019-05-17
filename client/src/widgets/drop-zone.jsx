@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import './drop-zone.scss';
 
@@ -6,99 +6,49 @@ import './drop-zone.scss';
  * A component that renders an outline when the user has dragged files from
  * the OS's file manager over it. Children passed to it are rendered within
  * its HTML node. When files are dropped, it'll fire an onDrop event.
- *
- * @extends PureComponent
  */
-class DropZone extends PureComponent {
-    static displayName = 'DropZone';
+function DropZone(props) {
+    const { children, onDrop } = props;
+    const [ active, setActive ] = useState(false);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            active: false
-        };
-    }
+    const handleDragEnter = useCallback((evt) => {
+        setActive(true);
+    });
+    const handleDragLeave = useCallback((evt) => {
+        setActive(false);
+    });
+    const handleDragOver = useCallback((evt) => {
+        evt.preventDefault();
+    });
+    const handleDrop = useCallback((evt) => {
+        evt.preventDefault();
+        if (active) {
+            const { files, items } = evt.dataTransfer;
+            if (onDrop) {
+                onDrop({ files, items });
+            }
+        }
+        setActive(false);
+        return null;
+    }, [ onDrop ]);
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { children } = this.props;
-        return (
-            <div className="drop-zone" onDragEnter={this.handleDragEnter}>
-                {children}
-                {this.renderOverlay()}
-            </div>
-        );
-    }
+    return (
+        <div className="drop-zone" onDragEnter={handleDragEnter}>
+            {children}
+            {renderOverlay()}
+        </div>
+    );
 
-    /**
-     * Render border over zone when there's an item over it
-     *
-     * @return {ReactElement|null}
-     */
-    renderOverlay() {
-        let { active } = this.state;
+    function renderOverlay() {
         if (!active) {
             return null;
         }
-        let handlers = {
-            onDragLeave: this.handleDragLeave,
-            onDragOver: this.handleDragOver,
-            onDrop: this.handleDrop,
+        const handlers = {
+            onDragLeave: handleDragLeave,
+            onDragOver: handleDragOver,
+            onDrop: handleDrop,
         };
         return <div className="overlay" {...handlers} />;
-    }
-
-    /**
-     * Called when user drag item into zone
-     *
-     * @param  {Event} evt
-     */
-    handleDragEnter = (evt) => {
-        this.setState({ active: true });
-    }
-
-    /**
-     * Called when user drag item out of zone
-     *
-     * @param  {Event} evt
-     */
-    handleDragLeave = (evt) => {
-        this.setState({ active: false });
-    }
-
-    /**
-     * Called when user moves the item within the zone
-     *
-     * @param  {Event} evt
-     */
-    handleDragOver = (evt) => {
-        evt.preventDefault();
-    }
-
-    /**
-     * Called when user releases the item
-     *
-     * @param  {Event} evt
-     */
-    handleDrop = (evt) => {
-        let { onDrop } = this.props;
-        let { active } = this.state;
-        evt.preventDefault();
-        if (active) {
-            if (onDrop) {
-                onDrop({
-                    type: 'drop',
-                    files: evt.dataTransfer.files,
-                    items: evt.dataTransfer.items,
-                });
-            }
-        }
-        this.setState({ active: false });
-        return null;
     }
 }
 
@@ -106,11 +56,3 @@ export {
     DropZone as default,
     DropZone,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    DropZone.propTypes = {
-        onDrop: PropTypes.func,
-    };
-}

@@ -9,18 +9,26 @@ import './device-selector.scss';
  * with front and back camera).
  */
 function DeviceSelector(props) {
-    let { env } = props;
-    let { t } = env.locale;
-    let devices = _.filter(env.devices, { kind: `${props.type}input` });
+    const { env, type, onSelect } = props;
+    const { t } = env.locale;
+    const devices = _.filter(env.devices, { kind: `${type}input` });
     if (devices.length < 2) {
         return null;
     }
-    let frontBack = (devices.length === 2) && _.every(devices, (device) => {
+    const frontBack = (devices.length === 2) && _.every(devices, (device) => {
         if (/front|back/i.test(device.label)) {
             return true;
         }
     });
-    let options = _.map(devices, (device, index) => {
+    return (
+        <div className="device-selector">
+            <select onChange={onSelect}>
+                {_.map(devices, renderOption)}
+            </select>
+        </div>
+    );
+
+    function renderOption(device) {
         let label;
         if (props.type === 'video') {
             if (frontBack) {
@@ -35,19 +43,12 @@ function DeviceSelector(props) {
         } else if (type === 'audio') {
             label = t('device-selector-mic-$number', index + 1);
         }
-        let optionProps = {
+        const optionProps = {
             value: device.deviceId,
             selected: device.deviceId === props.selectedDeviceID,
         };
         return <option key={index} {...optionProps}>{label}</option>;
-    });
-    return (
-        <div className="device-selector">
-            <select onChange={props.onSelect}>
-                {options}
-            </select>
-        </div>
-    );
+    }
 }
 
 /**

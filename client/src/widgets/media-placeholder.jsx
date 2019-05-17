@@ -8,8 +8,8 @@ import './media-placeholder.scss';
  * there aren't any attach media.
  */
 function MediaPlaceholder(props) {
-    let { env, showHints } = props;
-    let { t } = env.locale;
+    const { env, showHints } = props;
+    const { t } = env.locale;
     let phraseIDs;
     if (env.pointingDevice === 'mouse') {
         if (showHints) {
@@ -19,35 +19,23 @@ function MediaPlaceholder(props) {
             ]
         }
     }
-    let messages = _.map(phraseIDs, (phraseID, index) => {
-        let style = {
-            animationDelay: `${10 * index}s`
-        };
-        return (
-            <div key={index} className="message" style={style}>
-                {t(phraseID)}
-            </div>
-        )
-    });
     return (
         <div className="media-placeholder">
-            {messages}
+            {_.map(phraseIDs, renderMessage)}
         </div>
     );
+
+    function renderMessage(phraseID, i) {
+        const style = { animationDelay: `${10 * i}s` };
+        return (
+            <div key={i} className="message" style={style}>
+                {t(phraseID)}
+            </div>
+        );
+    }
 }
 
 export {
     MediaPlaceholder as default,
     MediaPlaceholder,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    MediaPlaceholder.propTypes = {
-        showHints: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}
