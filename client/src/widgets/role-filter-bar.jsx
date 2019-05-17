@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
+import React from 'react';
+import Relaks, { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -14,68 +14,33 @@ import './role-filter-bar.scss';
 /**
  * Asynchronous component that retrieve data needed by the role filter bar,
  * namely the list of roles and list of project members.
- *
- * @extends AsyncComponent
  */
-class RoleFilterBar extends AsyncComponent {
-    static displayName = 'RoleFilterBar';
+async function RoleFilterBar(props) {
+    const { database, route, env, settings } = props;
+    const db = database.use({ by: this });
+    const [ show ] = useProgress();
 
-    /**
-     * Render component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, route, env, settings } = this.props;
-        let db = database.use({ by: this });
-        let props = {
-            settings,
-            route,
-            env,
-        };
-        // don't let the component be empty initially
-        meanwhile.show(<RoleFilterBarSync {...props} />, 'initial');
-        let currentUserID = await db.start();
-        props.project = await ProjectFinder.findCurrentProject(db);
-        props.users = await UserFinder.findProjectMembers(db, props.project);
-        props.roles = await RoleFinder.findRolesOfUsers(db, props.users);
-        return <RoleFilterBarSync {...props} />;
-    }
-}
+    // don't let the component be empty initially
+    render();
+    const currentUserID = await db.start();
+    const project = await ProjectFinder.findCurrentProject(db);
+    const users = await UserFinder.findProjectMembers(db, project);
+    const roles = await RoleFinder.findRolesOfUsers(db, users);
+    render();
 
-class RoleFilterBarSync extends PureComponent {
-    static displayName = 'RoleFilterBarSync';
-
-    /**
-     * Render component
-     *
-     * @return {[type]}
-     */
-    render() {
-        return (
+    function render() {
+        show(
             <div className="role-filter-bar">
-                {this.renderButtons()}
+                {renderButtons()}
             </div>
-        );
-    }
+        , 'initial');
+    };
 
-    /**
-     * Render buttons
-     *
-     * @return {Array<ReactElement>|ReactElement}
-     */
-    renderButtons() {
-        let { env, roles } = this.props;
+    function renderButtons() {
         if (!_.isEmpty(roles)) {
-            return _.map(roles, (role) => {
-                return this.renderButton(role);
-            });
-        } else {
-            // render a blank button to maintain spacing
-            // show "No roles" if database query yielded nothing
-            let props = {
+            return _.map(roles, renderButton);
+        } else if (roles) {
+            const props = {
                 role: (roles !== null) ? null : undefined,
                 env,
             };
@@ -83,30 +48,18 @@ class RoleFilterBarSync extends PureComponent {
         }
     }
 
-    /**
-     * Render button for given role
-     *
-     * @param  {Object} role
-     *
-     * @return {ReactElement}
-     */
-    renderButton(role) {
-        let { route, env, users, settings } = this.props;
-        let roleUsers = findUsers(users, role);
-        let params = _.clone(settings.route || {});
-        if (_.includes(route.params.roleIDs, role.id)) {
-            params.roleIDs = _.without(route.params.roleIDs, role.id);
-        } else {
-            params.roleIDs = _.concat(route.params.roleIDs, role.id);
-        }
-        let url = route.find(route.name, params);
-        let props = {
+    function renderButton(role) {
+        const roleIDsBefore = route.params.roleIDs;
+        const roleUsers = findUsers(users, role);
+        const roleIDs = _.toggle(roleIDsBefore, role.id);
+        const params = { ...settings.route, roleIDs };
+        const url = route.find(route.name, params);
+        const props = {
             role,
             users: roleUsers,
             url,
-            selected: _.includes(route.params.roleIDs, role.id),
+            selected: _.includes(roleIDsBefore, role.id),
             env,
-            onRoleClick: this.handleRoleClick,
         };
         return <RoleFilterButton key={role.id} {...props} />;
     }
@@ -121,33 +74,9 @@ const findUsers = memoizeWeak(null, function(users, role) {
     }
 });
 
+const component = Relaks.memo(RoleFilterBar);
+
 export {
-    RoleFilterBar as default,
-    RoleFilterBar,
-    RoleFilterBarSync,
+    component as default,
+    component as RoleFilterBar,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    RoleFilterBar.propTypes = {
-        settings: PropTypes.object.isRequired,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    RoleFilterBarSync.propTypes = {
-        settings: PropTypes.object.isRequired,
-        project: PropTypes.object,
-        roles: PropTypes.arrayOf(PropTypes.object),
-        users: PropTypes.arrayOf(PropTypes.object),
-
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}

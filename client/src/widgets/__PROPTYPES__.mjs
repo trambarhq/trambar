@@ -18,6 +18,14 @@ import { Link } from './link.jsx';
 import { MediaButton, Direction } from './media-button.jsx';
 import { MediaPlaceholder } from './media-placeholder.jsx';
 
+import { ReactionMediaToolbar } from './reaction-media-toolbar.jsx';
+import { ReactionProgress } from './reaction-progress.jsx';
+import { ReactionToolbar } from './reaction-toolbar.jsx';
+import { RoleFilterBar } from './role-filter-bar.jsx';
+import { RoleFilterButton } from './role-filter-button.jsx';
+import { StoryEmblem } from './story-emblem.jsx';
+import { StoryProgress } from './story-progress.jsx';
+import { TextField } from './text-field.jsx';
 import { TextToolbar } from './text-toolbar.jsx';
 import { Time } from './time.jsx';
 import { TopNavigation } from './top-navigation.jsx';
@@ -116,6 +124,53 @@ MediaPlaceholder.propTypes = {
     env: PropTypes.instanceOf(Environment).isRequired,
 };
 
+ReactionMediaToolbar.propTypes = {
+    reaction: PropTypes.object.isRequired,
+    capturing: PropTypes.oneOf([ 'image', 'video', 'audio' ]),
+    env: PropTypes.instanceOf(Environment).isRequired,
+    onAction: PropTypes.func,
+};
+ReactionProgress.propTypes = {
+    status: PropTypes.object,
+    reaction: PropTypes.object.isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+ReactionToolbar.propTypes = {
+    access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]),
+    currentUser: PropTypes.object,
+    reactions: PropTypes.arrayOf(PropTypes.object),
+    respondents: PropTypes.arrayOf(PropTypes.object),
+    addingComment: PropTypes.bool,
+    disabled: PropTypes.bool,
+    env: PropTypes.instanceOf(Environment).isRequired,
+    onAction: PropTypes.func,
+}
+RoleFilterBar.propTypes = {
+    settings: PropTypes.object.isRequired,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+RoleFilterButton.propTypes = {
+    role: PropTypes.object,
+    users: PropTypes.arrayOf(PropTypes.object),
+    selected: PropTypes.bool,
+    url: PropTypes.string,
+
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+StoryEmblem.propTypes = {
+    story: PropTypes.object.isRequired,
+};
+StoryProgress.propTypes = {
+    status: PropTypes.object,
+    story: PropTypes.object.isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+TextField.propTypes = {
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
 TextToolbar.propTypes = {
     story: PropTypes.object.isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,

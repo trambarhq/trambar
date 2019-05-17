@@ -10,9 +10,8 @@ import './story-emblem.scss';
  * "#yippeekiyay" explosion.
  */
 function StoryEmblem(props) {
-    let { story } = props;
-    let { type, tags } = story;
-    let { state } = story.details;
+    const { story } = props;
+    const { type, tags } = story;
     if (_.includes(tags, '#yippeekiyay')) {
         return (
             <div className="story-emblem die-hard">
@@ -21,21 +20,22 @@ function StoryEmblem(props) {
         );
     }
 
-    let className = 'story-emblem';
+    const classNames = [ 'story-emblem' ];
     if (_.includes(GitStoryTypes, type)) {
-        className += ' git';
+        classNames.push('git');
     } else {
         return null;
     }
     let Icon = StoryIcons[type];
     if (type === 'issue') {
+        const { state } = story.details;
         Icon = StoryIcons[type + '.' + state];
     }
     if (!Icon) {
         return null;
     }
     return (
-        <div className={className}>
+        <div className={classNames.join(' ')}>
             <Icon className={type} />
         </div>
     );
@@ -45,11 +45,3 @@ export {
     StoryEmblem as default,
     StoryEmblem,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    StoryEmblem.propTypes = {
-        story: PropTypes.object.isRequired,
-    };
-}
