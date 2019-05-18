@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useState } from 'react';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import Merger from 'common/data/merger.mjs';
 
@@ -11,100 +11,54 @@ import ErrorBoundary from 'common/widgets/error-boundary.jsx';
 
 import './reaction-list.scss';
 
-/**
- * A list of reactions to a story. Parent component must supply all needed data.
- *
- * @extends PureComponent
- */
-class ReactionList extends PureComponent {
-    static displayName = 'ReactionList';
+function ReactionList(props) {
+    const { database, payloads, route, env } = props;
+    const { access, story, reactions, respondents, repo, currentUser } = props;
+    const { highlightReactionID, scrollToReactionID } = props;
+    const [ hiddenReactionIDs, setHiddenReactionIDs ] = useState([]);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            hiddenReactionIDs: [],
-        };
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { reactions, currentUser } = this.props;
-        let { highlightReactionID, scrollToReactionID } = this.props;
-        let anchorReactionID = scrollToReactionID || highlightReactionID;
-        let props = {
-            items: sortReactions(reactions, currentUser),
-            behind: 5,
-            ahead: 10,
-            anchor: (anchorReactionID) ? `reaction-${anchorReactionID}` : undefined,
-            offset: 4,
-            inverted: true,
-            fresh: false,
-            noReset: true,
-
-            onIdentity: this.handleReactionIdentity,
-            onTransition: this.handleReactionTransition,
-            onRender: this.handleReactionRender,
-            onBeforeAnchor: this.handleReactionBeforeAnchor,
-        }
-        return (
-            <div className="reaction-list">
-                <SmartList {...props} />
-            </div>
-        );
-    }
-
-    /**
-     * Called when SmartList wants an item's id
-     *
-     * @param  {Object} evt
-     *
-     * @return {String|undefined}
-     */
-    handleReactionIdentity = (evt) => {
+    const handleReactionIdentity = (evt) => {
         if (evt.alternative) {
-            let { database } = this.props;
-            let location = { table: 'reaction' };
-            let temporaryID = database.findTemporaryID(location, evt.item.id);
-            if (temporaryID) {
-                return `reaction-${temporaryID}`;
-            }
+            const location = { table: 'reaction' };
+            const tempID = database.findTemporaryID(location, evt.item.id);
+            return getAnchor(tempID);
         } else {
-            return `reaction-${evt.item.id}`;
+            return getAnchor(evt.item.id);
         }
-    }
-
-    /**
-     * Called when SmartList wants to know if it should use transition effect
-     *
-     * @param  {Object} evt
-     *
-     * @return {Boolean}
-     */
-    handleReactionTransition = (evt) => {
+    };
+    const handleReactionTransition = (evt) => {
         // don't transition in comment editor with a temporary object
-        if (evt.item.id < 1) {
-            return false;
-        }
-        return true;
-    }
+        return (evt.item.id >= 1);
+    };
+    const handleReactionRender = (evt) => {
+        return renderReaction(evt.item);
+    };
+    const handleReactionBeforeAnchor = (evt) => {
+        setHiddenReactionIDs(_.map(evt.items, 'id'));
+    };
 
-    /**
-     * Called when SmartList wants to render an item
-     *
-     * @param  {Object} evt
-     *
-     * @return {ReactElement}
-     */
-    handleReactionRender = (evt) => {
-        let { database, route, payloads, env } = this.props;
-        let { currentUser, story, respondents, repo } = this.props;
-        let { access, highlightReactionID } = this.props;
-        let { onFinish } = this.props;
-        let reaction = evt.item;
+    const smartListProps = {
+        items: sortReactions(reactions, currentUser),
+        behind: 5,
+        ahead: 10,
+        anchor: getAnchor(scrollToReactionID || highlightReactionID),
+        offset: 4,
+        inverted: true,
+        fresh: false,
+        noReset: true,
+
+        onIdentity: handleReactionIdentity,
+        onTransition: handleReactionTransition,
+        onRender: handleReactionRender,
+        onBeforeAnchor: handleReactionBeforeAnchor,
+    }
+    return (
+        <div className="reaction-list">
+            <SmartList {...smartListProps} />
+        </div>
+    );
+
+    function renderReaction(reaction) {
         let isUserDraft = false;
         let isNewComment = false;
         let highlighting = false;
@@ -128,8 +82,8 @@ class ReactionList extends PureComponent {
             // always use 0 as the key for new comment by current user, so
             // the keyboard focus isn't taken away when autosave occurs
             // (and the comment gains an id)
-            let key = (isNewComment) ? 0 : reaction.id;
-            let props = {
+            const key = (isNewComment) ? 0 : reaction.id;
+            const props = {
                 reaction,
                 story,
                 currentUser,
@@ -145,12 +99,11 @@ class ReactionList extends PureComponent {
                 </ErrorBoundary>
             );
         } else {
-            let respondent = findRespondent(respondents, reaction);
-            let props = {
+            const props = {
                 access,
                 highlighting,
                 reaction,
-                respondent,
+                respondent: findRespondent(respondents, reaction),
                 story,
                 repo,
                 currentUser,
@@ -166,22 +119,16 @@ class ReactionList extends PureComponent {
         }
     }
 
-    /**
-     * Called when SmartList notice new items were rendered off screen
-     *
-     * @param  {Object} evt
-     */
-    handleReactionBeforeAnchor = (evt) => {
-        let hiddenReactionIDs = _.map(evt.items, 'id');
-        this.setState({ hiddenReactionIDs });
+    function getAnchor(reactionID) {
+        return (reactionID) ? `reaction-${reactionID}` : undefined
     }
 }
 
 const sortReactions = memoizeWeak(null, function(reactions, currentUser) {
     // reactions are positioned from bottom up
     // place reactions with later ptime at towards the front of the list
-    let sortedReactions = _.orderBy(reactions, [ 'ptime', 'id' ], [ 'desc', 'desc' ]);
-    let ownUnpublished = _.remove(sortedReactions, { user_id: currentUser, ptime: null });
+    const sortedReactions = _.orderBy(reactions, [ 'ptime', 'id' ], [ 'desc', 'desc' ]);
+    const ownUnpublished = _.remove(sortedReactions, { user_id: currentUser, ptime: null });
     // move unpublished comment of current user to beginning, so it shows up
     // at the bottom
     _.each(ownUnpublished, (reaction) => {
@@ -200,30 +147,3 @@ export {
     ReactionList as default,
     ReactionList,
 };
-
-import Database from 'common/data/database.mjs';
-import Payloads from 'common/transport/payloads.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ReactionList.propTypes = {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        highlightReactionID: PropTypes.number,
-        scrollToReactionID: PropTypes.number,
-        story: PropTypes.object.isRequired,
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        respondents: PropTypes.arrayOf(PropTypes.object),
-        repo: PropTypes.object,
-        currentUser: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onFinish: PropTypes.func,
-    };
-}
