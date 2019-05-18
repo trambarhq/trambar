@@ -370,26 +370,40 @@ class PeoplePageSync extends PureComponent {
             roleIDs,
             search,
         } = this.props;
-        let list = (selectedUser) ? selectedUserStories : visibleUsers;
-        if (!_.isEmpty(list)) {
-            return null;
-        }
-        if (!list) {
-            // props.users and props.stories are null when they're being loaded
-            return <LoadingAnimation />;
-        } else {
+        if (selectedUser) {
             let phrase;
             if (date) {
-                phrase = 'people-no-stories-on-date';
+                phrase = 'news-no-stories-on-date';
             } else if (!_.isEmpty(roleIDs)) {
-                phrase = 'people-no-users-by-role';
+                phrase = 'news-no-stories-by-role';
             } else if (search) {
-                phrase = 'people-no-stories-found';
+                phrase = 'news-no-stories-found';
             } else {
-                phrase = 'people-no-users-yet';
+                phrase = 'news-no-stories-yet';
             }
             let props = { phrase, env };
             return <EmptyMessage {...props} />;
+        } else {
+            if (!_.isEmpty(visibleUsers)) {
+                return null;
+            }
+            if (!visibleUsers) {
+                // props.users and props.stories are null when they're being loaded
+                return <LoadingAnimation />;
+            } else {
+                let phrase;
+                if (date) {
+                    phrase = 'people-no-stories-on-date';
+                } else if (!_.isEmpty(roleIDs)) {
+                    phrase = 'people-no-users-by-role';
+                } else if (search) {
+                    phrase = 'people-no-stories-found';
+                } else {
+                    phrase = 'people-no-users-yet';
+                }
+                let props = { phrase, env };
+                return <EmptyMessage {...props} />;
+            }
         }
     }
 }
