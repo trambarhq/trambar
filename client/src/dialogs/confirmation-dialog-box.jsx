@@ -1,67 +1,42 @@
 import React, { PureComponent } from 'react';
 
 // widgets
-import Overlay from 'common/widgets/overlay.jsx';
-import PushButton from '../widgets/push-button.jsx';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
 
 import './confirmation-dialog-box.scss';
 
 /**
  * Dialog box for asking the user for a confirmation of an action.
- *
- * @extends PureComponent
  */
-class ConfirmationDialogBox extends PureComponent {
-    static displayName = 'ConfirmationDialogBox';
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show, onClose, onCancel } = this.props;
-        if (!onClose) {
-            onClose = onCancel;
-        }
-        let overlayProps = { show, onBackgroundClick: onClose};
-        return (
-            <Overlay {...overlayProps}>
-                <div className="confirmation-dialog-box">
-                    {this.renderMessage()}
-                    {this.renderButtons()}
-                </div>
-            </Overlay>
-        );
+function ConfirmationDialogBox(props) {
+    const { env, show, children, onCancel, onConfirm } = props;
+    const { t } = env.locale;
+    let { onClose } = props;
+    if (!onClose) {
+        onClose = onCancel;
     }
+    const overlayProps = { show, onBackgroundClick: onClose};
+    return (
+        <Overlay {...overlayProps}>
+            <div className="confirmation-dialog-box">
+                {renderMessage()}
+                {renderButtons()}
+            </div>
+        </Overlay>
+    );
 
-    /**
-     * Render message
-     *
-     * @return {ReactElement}
-     */
-    renderMessage() {
-        let { children } = this.props;
+    function renderMessage() {
         return <div className="message">{children}</div>;
     }
 
-    /**
-     * Render buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, onClose, onCancel, onConfirm } = this.props;
-        if (!onClose) {
-            onClose = onCancel;
-        }
-        let { t } = env.locale;
-        let cancelProps = {
+    function renderButtons() {
+        const cancelProps = {
             label: t('confirmation-cancel'),
             onClick: onClose,
             hidden: !onClose,
         };
-        let confirmProps = {
+        const confirmProps = {
             label: t('confirmation-confirm'),
             onClick: onConfirm,
             hidden: !onConfirm,
@@ -80,16 +55,3 @@ export {
     ConfirmationDialogBox as default,
     ConfirmationDialogBox,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ConfirmationDialogBox.propTypes = {
-        show: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment).isRequired,
-        onClose: PropTypes.func,
-        onConfirm: PropTypes.func,
-    };
-}

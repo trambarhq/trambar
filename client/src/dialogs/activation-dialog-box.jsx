@@ -1,132 +1,105 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import React, { PureComponent } from 'react';
+import React, { useState, useCallback } from 'react';
 
 // widgets
-import Overlay from 'common/widgets/overlay.jsx';
-import PushButton from '../widgets/push-button.jsx';
-import TextField from '../widgets/text-field.jsx';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { TextField } from '../widgets/text-field.jsx';
 
 import './activation-dialog-box.scss';
 
 /**
  * Dialog box for manually entering the activation code.
- *
- * @extends PureComponent
  */
-class ActivationDialogBox extends PureComponent {
-    static displayName = 'ActivationDialogBox';
+function ActivationDialogBox(props) {
+    const { env, show, onCancel, onConfirm } = props;
+    const { t } = env.locale;
+    const [ address, setAddress ] = useState('');
+    const [ code, setCode ] = useState('');
+    const [ schema, setSchema ] = useState('');
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            address: '',
-            code: '',
-            schema: '',
-        };
-    }
+    const handleCancelClick = useCallback((evt) => {
+        if (onCancel) {
+            onCancel({});
+        }
+    });
+    const handleOKClick = useCallback((evt) => {
+        if (onConfirm) {
+            const codeCleaned = _.replace(code, /\s+/g, '');
+            onConfirm({ address, code: codeCleaned, schema });
+        }
+    });
+    const handleAddressChange = useCallback((evt) => {
+        const address = _.replace(evt.target.value, /\s+/g, '');
+        setAddress(address);
+    });
+    const handleCodeChange = useCallback((evt) => {
+        const code = _.replace(_.toUpper(evt.target.value), /[^0-9A-F ]/g, '');
+        if (_.replace(code, /\s+/g, '').length <= 16) {
+            setCode(code);
+        }
+    });
+    const handleSchemaChange = useCallback((evt) => {
+        const schema = _.toLower(_.replace(evt.target.value, /[^\w\-]/g, ''));
+        setSchema(schema);
+    });
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show, onCancel } = this.props;
-        let overlayProps = { show, onBackgroundClick: onCancel };
-        return (
-            <Overlay {...overlayProps}>
-                <div className="activation-dialog-box">
-                    {this.renderForm()}
-                    <div className="controls">
-                        {this.renderButtons()}
-                    </div>
+    const overlayProps = { show, onBackgroundClick: onCancel };
+    return (
+        <Overlay {...overlayProps}>
+            <div className="activation-dialog-box">
+                {renderForm()}
+                <div className="controls">
+                    {renderButtons()}
                 </div>
-            </Overlay>
-        );
-    }
+            </div>
+        </Overlay>
+    );
 
-    /**
-     * Render form
-     *
-     * @return {ReactElement}
-     */
-    renderForm() {
+    function renderForm() {
         return (
             <div className="container">
-                {this.renderAddressInput()}
-                {this.renderCodeInput()}
-                {this.renderSchemaInput()}
+                {renderAddressInput()}
+                {renderCodeInput()}
+                {renderSchemaInput()}
             </div>
         );
     }
 
-    /**
-     * Render input for entering address
-     *
-     * @return {ReactElement}
-     */
-    renderAddressInput() {
-        let { env } = this.props;
-        let { address } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderAddressInput() {
+        const props = {
             id: 'address',
             type: 'url',
             value: address,
             env,
-            onChange: this.handleAddressChange,
+            onChange: handleAddressChange,
         };
         return <TextField {...props}>{t('activation-address')}</TextField>;
     }
 
-    /**
-     * Render input for activation code
-     *
-     * @return {ReactElement}
-     */
-    renderCodeInput() {
-        let { env } = this.props;
-        let { code } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderCodeInput() {
+        const props = {
             id: 'code',
             value: code,
             spellCheck: false,
             env,
-            onChange: this.handleCodeChange,
+            onChange: handleCodeChange,
         };
         return <TextField {...props}>{t('activation-code')}</TextField>;
     }
 
-    /**
-     * Render input for schema
-     *
-     * @return {ReactElement}
-     */
-    renderSchemaInput() {
-        let { env } = this.props;
-        let { schema } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderSchemaInput() {
+        const props = {
             id: 'schema',
             value: schema,
             spellCheck: false,
             env,
-            onChange: this.handleSchemaChange,
+            onChange: handleSchemaChange,
         };
         return <TextField {...props}>{t('activation-schema')}</TextField>;
     }
 
-    /**
-     * Render buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env } = this.props;
-        let { address, code, schema } = this.state;
-        let { t } = env.locale;
+    function renderButtons() {
         let acceptable = true;
         if (!/^[0-9A-F]{16}$/i.test(_.replace(code, /\s/g, ''))) {
             acceptable = false;
@@ -137,16 +110,16 @@ class ActivationDialogBox extends PureComponent {
         if (!/\w+/.test(schema)) {
             acceptable = false;
         }
-        let cancelProps = {
+        const cancelProps = {
             label: t('activation-cancel'),
             emphasized: false,
-            onClick: this.handleCancelClick,
+            onClick: handleCancelClick,
         };
-        let confirmProps = {
+        const confirmProps = {
             label: t('activation-ok'),
             emphasized: true,
             disabled: !acceptable,
-            onClick: this.handleOKClick,
+            onClick: handleOKClick,
         };
         return (
             <div className="buttons">
@@ -157,94 +130,9 @@ class ActivationDialogBox extends PureComponent {
             </div>
         );
     }
-
-    /**
-     * Called when user clicks the cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        let { onCancel } = this.props;
-        if (onCancel) {
-            onCancel({
-                type: 'cancel',
-                target: this,
-            });
-        }
-    }
-
-    /**
-     * Called when user clicks the open button
-     *
-     * @param  {Event} evt
-     */
-    handleOKClick = (evt) => {
-        let { onConfirm } = this.props;
-        let { address, code, schema } = this.state;
-        if (onConfirm) {
-            onConfirm({
-                type: 'close',
-                target: this,
-                address,
-                code: _.replace(code, /\s+/g, ''),
-                schema,
-            });
-        }
-    }
-
-    /**
-     * Called when user changes the server address
-     *
-     * @param  {Event} evt
-     */
-    handleAddressChange = (evt) => {
-        let address = evt.target.value;
-        address = _.replace(address, /\s+/g, '');
-        this.setState({ address });
-    }
-
-    /**
-     * Called when user changes the activation code
-     *
-     * @param  {Event} evt
-     */
-    handleCodeChange = (evt) => {
-        let code = evt.target.value;
-        code = _.replace(_.toUpper(code), /[^0-9A-F ]/g, '');
-        if (_.replace(code, /\s+/g, '').length <= 16) {
-            this.setState({ code });
-        }
-    }
-
-    /**
-     * Called when user changes the schema
-     *
-     * @param  {Event} evt
-     */
-    handleSchemaChange = (evt) => {
-        let schema = evt.target.value;
-        schema = _.replace(schema, /[^\w\-]/g, '');
-        schema = _.toLower(schema);
-        this.setState({ schema });
-    }
 }
 
 export {
     ActivationDialogBox as default,
     ActivationDialogBox,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    ActivationDialogBox.propTypes = {
-        show: PropTypes.bool,
-
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onConfirm: PropTypes.func,
-        onCancel: PropTypes.func,
-    };
-}
