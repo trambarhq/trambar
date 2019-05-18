@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
 
