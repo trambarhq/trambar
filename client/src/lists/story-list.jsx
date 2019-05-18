@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { useState } from 'react';
 import Relaks, { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';

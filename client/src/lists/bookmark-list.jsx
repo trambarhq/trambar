@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
 import React, { useState } from 'react';
 import Relaks, { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
@@ -167,7 +166,7 @@ async function BookmarkList(props) {
                     access,
                     story,
                     bookmark,
-                    reactions: storyReactions,
+                    reactions: findReactions(reactions, story),
                     authors: findAuthors(authors, story),
                     respondents: findRespondents(respondents, reactions, story),
                     recommendations: findRecommendations(recommendations, story),
