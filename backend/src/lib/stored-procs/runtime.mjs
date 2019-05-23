@@ -279,6 +279,7 @@ function __init__() {
 export {
     findChanges,
     isEqual,
+    sendNotification,
     sendChangeNotification,
     sendCleanNotification,
     matchObject,

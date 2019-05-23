@@ -158,8 +158,9 @@ class Database {
         if (!wait) {
             wait = 10000;
         }
+        let now;
         do {
-            const now = new Date;
+            now = new Date;
             try {
                 const found = await this.schemaExists(schema);
                 if (found) {

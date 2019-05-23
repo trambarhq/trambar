@@ -200,8 +200,9 @@ async function handleHTPasswdRequest(req, res) {
         let handle = _.toLower(req.body.handle);
         let username = _.trim(_.toLower(req.body.username));
         let password = _.trim(req.body.password);
+        await findHtpasswdRecord(username, password);
+
         let session = await findSession(handle);
-        let matched = await findHtpasswdRecord(username, password);
         let user = await findUserByName(username);
         let sessionAfter = await authorizeUser(session, user, {}, true);
         let result = {
@@ -209,6 +210,7 @@ async function handleHTPasswdRequest(req, res) {
         };
         sendJSON(res, result);
     } catch (err) {
+        console.log(err);
         sendErrorJSON(res, err);
     }
 }
@@ -869,8 +871,11 @@ async function findMatchingUser(server, account) {
 async function findHtpasswdRecord(username, password) {
     try {
         let htpasswdPath = process.env.HTPASSWD_PATH;
-        let data = await FS.readFileAsync(htpasswdPath, 'utf-8');
-        let successful = await HtpasswdJS.authenticate(username, password, data);
+        let successful = await HtpasswdJS.authenticate({
+            username,
+            password,
+            file: htpasswdPath,
+        });
         if (successful !== true) {
             await Bluebird.delay(Math.random() * 1000);
             throw new HTTPError(401);
