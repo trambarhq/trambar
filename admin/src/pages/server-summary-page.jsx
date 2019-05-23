@@ -19,66 +19,103 @@ import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 import { TaskList } from '../widgets/task-list.jsx';
 import { InputError } from '../widgets/input-error.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
-import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 // custom hooks
 import {
     useDraftBuffer,
-    useEditHandling,
-    useAddHandling,
-    useReturnHandling,
-    useNameHandling,
+    useAutogenID,
+    useNavigation,
     useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './server-summary-page.scss';
 
 async function ServerSummaryPage(props) {
-    const { database, route, env, serverID, editing, scrollToTaskID } = props;
-    const { t, p, languageCode } = env.locale;
-    const db = database.use({ schema: 'global', by: this });
+    const { database, serverID } = props;
     const creating = (serverID === 'new');
-    const readOnly = !editing;
+    const [ show ] = useProgress();
+
+    render();
+    const db = database.use({ schema: 'global' });
+    const currentUserID = await db.start();
+    const system = await SystemFinder.findSystem(db);
+    render();
+    const server = (!creating) ? await ServerFinder.findServer(db, serverID) : null;
+    render();
+    const roles = await RoleFinder.findActiveRoles(db);
+    render();
+
+    function render() {
+        const sprops = { system, server, roles, creating };
+        show(<ServerSummaryPageSync {...sprops} {...props} />);
+    }
+}
+
+function ServerSummaryPageSync(props) {
+    const { system, server, roles, creating } = props;
+    const { database, route, env, editing, scrollToTaskID } = props;
+    const { t, p, languageCode } = env.locale;
+    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    const readOnly = !(editing || creating);
     const [ adding, setAdding ] = useState(false);
     const [ problems, setProblems ] = useState({});
     const [ credentialsChanged, setCredentialsChanged ] = useState(false);
-    const [ confirmationRef, confirm ] = useConfirmation();
-    const [ show ] = useProgress();
-    const draft = useDraftBuffer(editing, {
+    const draft = useDraftBuffer({
+        original: server || {},
         save: (base, ours, action) => {
             switch (action) {
-                case 'restore': return restore(base);
-                default: return save(base, ours);
+                case 'restore': return restoreServer(base);
+                default: return saveServer(base, ours);
             }
         },
         remove: (base, ours, action) => {
             switch (action) {
-                case 'disable': return disable(base);
-                default: return remove(base);
+                case 'disable': return disableServer(base);
+                default: return removeServer(base);
             }
+        },
+        reset: readOnly
+    });
+    const navigation = useNavigation(route, {
+        add: { params: { serverID: 'new' } },
+        return: { page: 'server-list-page' },
+    })
+    const [ confirmationRef, confirm ] = useConfirmation();
+    useDataLossWarning(route, env, confirm, () => draft.unsaved);
+
+    const handleEditClick = useCallback((evt) => navigation.edit());
+    const handleCancelClick = useCallback((evt) => {
+        if (creating) {
+            navigation.return();
+        } else {
+            navigation.cancel();
         }
     });
-
-    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
-    const [ handleAddClick ] = useAddHandling(route, {
-        params: { serverID: 'new' },
-    });
-    const [ handleReturnClick ] = useReturnHandling(route, {
-        page: 'server-list-page',
-    });
+    const handleAddClick = useCallback((evt) => navigation.add());
+    const handleReturnClick = useCallback((evt) => navigation.return());
     const handleDisableClick = useCallback(async (evt) => {
-        await draft.remove('disable');
+        if (await draft.remove('disable')) {
+            navigation.return();
+        }
     });
     const handleDeleteClick = useCallback(async (evt) => {
-        await draft.remove();
+        if (await draft.remove()) {
+            navigation.return();
+        }
     });
     const handleRestoreClick = useCallback(async (evt) => {
         await draft.save('restore');
     });
     const handleSaveClick = useCallback(async (evt) => {
-        await draft.save();
+        if (await draft.save()) {
+            if (creating) {
+                setAdding(true);
+            }
+            navigation.done({ serverID: draft.current.id });
+        }
     });
     const handleAcquireClick = useCallback((evt) => {
         openOAuthPopup('activation');
@@ -86,7 +123,7 @@ async function ServerSummaryPage(props) {
     const handleTestClick = useCallback((evt) => {
         openOAuthPopup('test');
     }, [ openOAuthPopup ]);
-    const [ handleTitleChange, handleNameChange ] = useNameHandling(draft, {
+    const [ handleTitleChange, handleNameChange ] = useAutogenID(draft, {
         titleKey: 'details.title',
         nameKey: 'name',
     });
@@ -98,10 +135,18 @@ async function ServerSummaryPage(props) {
         // derive title from type
         const autoTitleBefore = t(`server-type-${typeBefore}`);
         const autoTitleAfter = t(`server-type-${type}`);
-        const title = draft.get('details.title');
+        const title = p(draft.get('details.title'));
         if (!title || title === autoTitleBefore) {
             const titles = _.set({}, languageCode, autoTitleAfter);
             draft.update('details.title', titles);
+        }
+
+        // derive name from type
+        const autoNameBefore = typeBefore;
+        const autoNameAfter = type;
+        const name = draft.get('name');
+        if (!name || name === autoNameBefore) {
+            draft.update('name', autoNameAfter);
         }
     });
     const handleGitlabUserOptionClick = useCallback((evt) => {
@@ -173,53 +218,25 @@ async function ServerSummaryPage(props) {
         route.unanchor();
     }, [ route ]);
 
-    render();
-    const currentUserID = await db.start();
-    const system = await SystemFinder.findSystem(db);
-    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
-    render();
-    const server = (!creating) ? await ServerFinder.findServer(db, serverID) : null;
-    draft.base(server || {});
-    render();
-    const roles = await RoleFinder.findActiveRoles(db);
-    render();
-
-    function render() {
-        const { changed } = draft;
-        let title = p(draft.get('details.title'));
-        const type = draft.get('type');
-        if (!title && type) {
-            title = t(`server-type-${type}`);
-        }
-        show(
-            <div className="server-summary-page">
-                {renderButtons()}
-                <h2>{t('server-summary-member-$name', title)}</h2>
-                <UnexpectedError error={draft.error} />
-                {renderForm()}
-                {renderInstructions()}
-                {renderTaskList()}
-                <ActionConfirmation ref={confirmationRef} env={env} />
-                <DataLossWarning changes={changed} env={env} route={route} />
-            </div>
-        );
+    let title = p(draft.get('details.title'));
+    const type = draft.get('type');
+    if (!title && type) {
+        title = t(`server-type-${type}`);
     }
+    return (
+        <div className="server-summary-page">
+            {renderButtons()}
+            <h2>{t('server-summary-member-$name', title)}</h2>
+            <UnexpectedError error={draft.error} />
+            {renderForm()}
+            {renderInstructions()}
+            {renderTaskList()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
     function renderButtons() {
-        const { changed } = draft;
-        if (editing) {
-            return (
-                <div key="edit" className="buttons">
-                    <PushButton onClick={handleCancelClick}>
-                        {t('server-summary-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
-                        {t('server-summary-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
+        if (readOnly) {
             const active = (server) ? !server.deleted && !server.disabled : true;
             const hasIntegration = _.includes(IntegratedServerTypes, _.get(server, 'type'));
             const hasAccessToken = !!_.get(server, 'settings.api.access_token');
@@ -265,6 +282,19 @@ async function ServerSummaryPage(props) {
                     {' '}
                     <PushButton className="emphasis" onClick={handleEditClick}>
                         {t('server-summary-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            const { unsaved } = draft;
+            return (
+                <div key="edit" className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('server-summary-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                        {t('server-summary-save')}
                     </PushButton>
                 </div>
             );
@@ -415,7 +445,7 @@ async function ServerSummaryPage(props) {
 
     function renderOAuthUserOptions() {
         const listProps = {
-            readOnly: !editing,
+            readOnly,
             onOptionClick: handleOAuthUserOptionClick,
         };
         return (
@@ -728,7 +758,7 @@ async function ServerSummaryPage(props) {
         const instructionProps = {
             folder: 'server',
             topic: 'server-summary' + (type ? `-${type}` : ''),
-            hidden: !editing,
+            hidden: readOnly,
             env,
         };
         return (
@@ -763,12 +793,33 @@ async function ServerSummaryPage(props) {
         );
     }
 
-    async function save(base, ours) {
-        validate(ours);
-        setSaving(true);
+    async function disableServer(base) {
+        await confirm(t('server-summary-confirm-disable'));
+        const changes = { id: base.id, disabled: true };
+        const db = database.use({ schema: 'global' });
+        await db.saveOne({ table: 'server' }, changes);
+    }
+
+    async function removeServer(base) {
+        await confirm(t('server-summary-confirm-delete'));
+        const changes = { id: base.id, deleted: true };
+        const db = database.use({ schema: 'global' });
+        await db.saveOne({ table: 'server' }, changes);
+    }
+
+    async function restoreServer(base) {
+        await confirm(t('server-summary-confirm-reactivate'));
+        const changes = { id: base.id, disabled: false, deleted: false };
+        const db = database.use({ schema: 'global' });
+        await db.saveOne({ table: 'server' }, changes);
+    }
+
+    async function saveServer(base, ours) {
         try {
+            validateServerInfo(ours);
+
+            const db = database.use({ schema: 'global' });
             const serverAfter = await db.saveOne({ table: 'server' }, ours);
-            handleCancelClick();
             return serverAfter;
         } catch (err) {
             if (err.statusCode === 409) {
@@ -776,12 +827,10 @@ async function ServerSummaryPage(props) {
                 err = new Cancellation;
             }
             throw err;
-        } finally {
-            setSaving(false);
         }
     }
 
-    function validate(ours) {
+    function validateServerInfo(ours) {
         const problems = {};
         if (!ours.name) {
             problems.name = 'validation-required';

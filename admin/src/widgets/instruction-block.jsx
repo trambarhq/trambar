@@ -46,8 +46,8 @@ async function InstructionBlock(props) {
  * @return {Promise<ReactElement>}
  */
 async function loadMarkdown(folder, topic, lang) {
-    let text = await loadText(folder, topic, lang);
-    let contents = MarkGor.parse(text);
+    const text = await loadText(folder, topic, lang);
+    const contents = MarkGor.parse(text);
     return loadImages(contents, folder);
 }
 
@@ -61,16 +61,19 @@ async function loadMarkdown(folder, topic, lang) {
  * @return {Promise}
  */
 async function loadText(folder, topic, lang) {
-    let module;
     try {
-        module = await import(`../instructions/${folder}/${topic}.${lang}.md`);
+        const module = await import(`../instructions/${folder}/${topic}.${lang}.md`);
+        return module.default || '';
     } catch (err) {
         if (process.env.NODE_ENV !== 'production') {
             console.log(`Missing instructions for topic "${topic}" in language "${lang}"`);
         }
-        module = await import(`../instructions/${folder}/${topic}.en.md`);
+        if (lang !== 'en') {
+            return loadText(folder, topic, 'en');
+        } else {
+            return '';
+        }
     }
-    return module.default || '';
 }
 
 /**
@@ -85,17 +88,18 @@ async function loadImages(element, folder) {
     if (typeof(element) === 'string') {
         return element;
     } else if (element instanceof Array) {
-        let results = [];
+        const results = [];
         for (let e of element) {
-            let result = await loadImages(e, folder);
+            const result = await loadImages(e, folder);
             results.push(result)
         }
         return results;
     } else if (element.type === 'img') {
-        let filename = element.props.src;
+        const filename = element.props.src;
         if (filename && !/^\w+:/.test(filename)) {
             try {
-                let url = await import(`../instructions/${folder}/${filename}`);
+                const module = await import(`../instructions/${folder}/${filename}`);
+                const url = module.default;
                 return React.cloneElement(element, { src: url });
             } catch (err) {
                 if (process.env.NODE_ENV !== 'production') {
@@ -105,11 +109,12 @@ async function loadImages(element, folder) {
         }
         return element;
     } else if (element.type === 'a') {
-        let url = element.props.href;
+        const url = element.props.href;
         if (url && !/^\w+:/.test(url)) {
             try {
-                let fileURL = await import(`../instructions/${folder}/${url}`);
-                let props = { href: url };
+                const module = await import(`../instructions/${folder}/${url}`);
+                const fileURL = module.default;
+                const props = { href: url };
                 if (/\.html$/.test(url)) {
                     props.target = '_blank';
                 } else {
@@ -126,9 +131,9 @@ async function loadImages(element, folder) {
             return React.cloneElement(element, { target: '_blank' });
         }
     } else if (element.props && !_.isEmpty(element.props.children)) {
-        let newChildren = [];
+        const newChildren = [];
         for (let child of element.props.children) {
-            let newChild = await loadImages(child, folder);
+            const newChild = await loadImages(child, folder);
             newChildren.push(newChild);
         }
         return React.cloneElement(element, {}, newChildren);

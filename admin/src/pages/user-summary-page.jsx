@@ -22,70 +22,112 @@ import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 import { ActivityChart } from '../widgets/activity-chart.jsx';
 import { InputError } from '../widgets/input-error.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
-import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 // custom hooks
 import {
     useDraftBuffer,
-    useEditHandling,
-    useAddHandling,
-    useNameHandling,
+    useNavigation,
+    useAutogenID,
     useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './user-summary-page.scss';
 
 async function UserSummaryPage(props) {
     const { database, route, env, payloads, projectID, userID, editing } = props;
+    const creating = (userID === 'new');
+    const [ show ] = useProgress();
+
+    render();
+    const db = database.use({ schema: 'global' });
+    const currentUserID = await db.start();
+    const system = await SystemFinder.findSystem(db);
+    const user = (!creating) ? await UserFinder.findUser(db, userID) : null;
+    render();
+    const roles = await RoleFinder.findActiveRoles(db)
+    render();
+    // load project if project id is provided (i.e. member summary)
+    const project = (projectID) ? await ProjectFinder.findProject(db, projectID) : null;
+    render();
+    const statistics = (project && user) ? await StatisticsFinder.findDailyActivitiesOfUser(db, project, user) : null;
+    render();
+
+    function render() {
+        const sprops = { system, user, roles, project, statistics, creating };
+        show(<UserSummaryPageSync {...sprops} {...props} />);
+    }
+}
+
+function UserSummaryPageSync(props) {
+    const { system, user, roles, project, statistics, creating } = props;
+    const { database, route, env, payloads, projectID, editing } = props;
     const { t, p } = env.locale;
     const db = database.use({ schema: 'global', by: this });
-    const creating = (userID === 'new');
-    const readOnly = !editing;
+    const readOnly = !(editing || creating);
+    const [ adding, setAdding ] = useState(false);
     const [ problems, setProblems ] = useState({});
     const [ showingSocialLinks, setShowingSocialLinks ] = useState(false);
-    const [ confirmationRef, confirm ] = useConfirmation();
-    const [ show ] = useProgress();
-    const draft = useDraftBuffer(editing, {
+    const draft = useDraftBuffer({
+        original: user || {},
         save: (base, ours, action) => {
             switch (action) {
-                case 'restore': return restore(base);
-                default: return save(base, ours);
+                case 'restore': return restoreUser(base);
+                default: return saveUser(base, ours);
             }
         },
         remove: (base, ours, action) => {
             switch (action) {
-                case 'disable': return disable(base);
-                default: return remove(base);
+                case 'disable': return disableUser(base);
+                default: return removeUser(base);
             }
+        },
+        reset: readOnly,
+    });
+    const navigation = useNavigation(route, {
+        add: { params: { userID: 'new' } },
+        return: {
+            page: (projectID) ? 'member-list-page' : 'user-list-page',
+            params: (projectID) ? { projectID } : {},
         }
     });
+    const [ confirmationRef, confirm ] = useConfirmation();
+    useDataLossWarning(route, env, confirm, () => draft.unsaved);
 
-    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
-    const [ handleAddClick ] = useAddHandling(route, {
-        params: { roleID: 'new' },
-    });
-    const handleReturnClick = useCallback((evt) => {
-        if (projectID) {
-            route.push('member-list-page', { projectID });
+    const handleEditClick = useCallback(() => navigation.edit());
+    const handleCancelClick = useCallback(() => {
+        if (creating) {
+            navigation.return();
         } else {
-            route.push('user-list-page');
+            navigation.cancel()
         }
-    }, [ route ]);
+    });
+    const handleAddClick = useCallback(() => navigation.add());
+    const handleReturnClick = useCallback(() => navigation.return());
     const handleDisableClick = useCallback(async (evt) => {
-        await draft.remove('disable');
+        if (await draft.remove('disable')) {
+            navigation.return();
+        }
     });
     const handleRemoveClick = useCallback(async (evt) => {
-        await draft.remove();
+        if (await draft.remove()) {
+            navigation.return();
+        }
     });
     const handleRestoreClick = useCallback(async (evt) => {
-        await draft.save('restore');
+        draft.save('restore');
     });
     const handleSaveClick = useCallback(async (evt) => {
-        await draft.save();
+        if (await draft.save()) {
+            if (creating) {
+                setAdding(true);
+            }
+            navigation.done({ userID: draft.current.id });
+        }
     });
-    const [ handleNameChange, handleUsernameChange ] = useNameHandling(draft, {
+    const [ handleNameChange, handleUsernameChange ] = useAutogenID(draft, {
         titleKey: 'details.name',
         nameKey: 'username',
         personal: true
@@ -144,57 +186,26 @@ async function UserSummaryPage(props) {
         draft.update(`details.stackoverflow_url`, url);
     });
 
-    render();
-    const currentUserID = await db.start();
-    const system = await SystemFinder.findSystem(db);
-    const user = (!creating) ? await UserFinder.findUser(db, userID) : null;
-    draft.base(user);
-    render();
-    const roles = await RoleFinder.findActiveRoles(db)
-    render();
-    // load project if project id is provided (i.e. member summary)
-    const project = (projectID) ? await ProjectFinder.findProject(db, projectID) : null;
-    render();
-    const statistics = (project && user) ? await StatisticsFinder.findDailyActivitiesOfUser(db, project, user) : null;
-    render();
-
-    function render() {
-        const { changed } = draft;
-        show(
-            <div className="user-summary-page">
-                {renderButtons()}
-                <h2>{t(projectID ? 'user-summary-member-$name' : 'user-summary-$name', name)}</h2>
-                <UnexpectedError error={draft.error} />
-                {renderForm()}
-                {renderSocialLinksToggle()}
-                {renderSocialLinksForm()}
-                {renderInstructions()}
-                {renderChart()}
-                <ActionConfirmation ref={confirmationRef} env={env} />
-                <DataLossWarning changes={changed} env={env} route={route} />
-            </div>
-        );
-    }
+    return (
+        <div className="user-summary-page">
+            {renderButtons()}
+            <h2>{t(projectID ? 'user-summary-member-$name' : 'user-summary-$name', name)}</h2>
+            <UnexpectedError error={draft.error} />
+            {renderForm()}
+            {renderSocialLinksToggle()}
+            {renderSocialLinksForm()}
+            {renderInstructions()}
+            {renderChart()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
     function renderButtons() {
-        const { changed } = draft;
-        if (editing) {
-            return (
-                <div className="buttons">
-                    <PushButton onClick={handleCancelClick}>
-                        {t('user-summary-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
-                        {t(projectID ? 'user-summary-member-save' : 'user-summary-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
+        if (readOnly) {
             const active = (user) ? !user.deleted && !user.disabled : true;
             let preselected;
             if (active) {
-                preselected = (creating) ? 'add' : 'return';
+                preselected = (adding) ? 'add' : 'return';
             } else {
                 preselected = 'reactivate';
             }
@@ -220,6 +231,19 @@ async function UserSummaryPage(props) {
                     {' '}
                     <PushButton className="emphasis" onClick={handleEditClick}>
                         {t(projectID ? 'user-summary-member-edit' : 'user-summary-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            const { unsaved } = draft;
+            return (
+                <div className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('user-summary-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                        {t(projectID ? 'user-summary-member-save' : 'user-summary-save')}
                     </PushButton>
                 </div>
             );
@@ -509,7 +533,7 @@ async function UserSummaryPage(props) {
         const instructionProps = {
             folder: 'user',
             topic: 'user-summary',
-            hidden: !editing,
+            hidden: readOnly,
             env,
         };
         return (
@@ -535,30 +559,28 @@ async function UserSummaryPage(props) {
         );
     }
 
-    async function disable(base) {
+    async function disableUser(base) {
         await confirm(t('user-summary-confirm-disable'));
         const changes = { id: base.id, disabled: true };
         await db.saveOne({ table: 'user' }, changes);
-        handleReturnClick();
     }
 
-    async function remove(base) {
+    async function removeUser(base) {
         await confirm(t('user-summary-confirm-delete'));
         const changes = { id: base.id, deleted: true };
         await db.saveOne({ table: 'user' }, changes);
-        handleReturnClick();
     }
 
-    async function restore(base) {
+    async function restoreUser(base) {
         await confirm(t('user-summary-confirm-reactivate'));
-        const changes = { id: base.id, disabled: true, deleted: true };
+        const changes = { id: base.id, disabled: false, deleted: false };
         await db.saveOne({ table: 'user' }, changes);
     }
 
-    async function save(base, ours) {
-        validate(ours);
-        setSaving(true);
+    async function saveUser(base, ours) {
         try {
+            validateUserInfo(ours);
+
             const userAfter = await db.saveOne({ table: 'user' }, ours);
             payloads.dispatch(userAfter);
 
@@ -574,7 +596,6 @@ async function UserSummaryPage(props) {
                     await db.saveOne({ table: 'project' }, changes);
                 }
             }
-            handleCancelClick();
             return userAfter;
         } catch (err) {
             if (err.statusCode === 409) {
@@ -582,12 +603,10 @@ async function UserSummaryPage(props) {
                 err = new Cancellation;
             }
             throw err;
-        } finally {
-            setSaving(false);
         }
     }
 
-    function validate(ours) {
+    function validateUserInfo(ours) {
         const problems = {};
         if (!ours.username) {
             problems.username = 'validation-required';

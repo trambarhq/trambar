@@ -8,7 +8,6 @@ import { ActionBadge } from './action-badge.jsx';
 import { ActionConfirmation } from './action-confirmation.jsx';
 import { ActivityChart } from './activity-chart.jsx';
 import { ComboButton } from './combo-button.jsx';
-import { DataLossWarning } from './data-loss-warning.jsx';
 import { ImageSelector } from './image-selector.jsx';
 import { InputError } from './input-error.jsx';
 import { InstructionBlock } from './instruction-block.jsx';
@@ -38,11 +37,6 @@ ActivityChart.propTypes = {
 ComboButton.propType = {
     preselected: PropTypes.string,
     alert: PropTypes.bool,
-};
-DataLossWarning.propTypes = {
-    route: PropTypes.instanceOf(Route).isRequired,
-    env: PropTypes.instanceOf(Environment).isRequired,
-    changes: PropTypes.bool,
 };
 ImageSelector.propTypes = {
     purpose: PropTypes.string,

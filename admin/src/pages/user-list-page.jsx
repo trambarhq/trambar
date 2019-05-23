@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Relaks, { useProgress } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -18,80 +18,80 @@ import { RoleTooltip } from '../tooltips/role-tooltip.jsx';
 import { ModifiedTimeTooltip } from '../tooltips/modified-time-tooltip.jsx'
 import { ActionBadge } from '../widgets/action-badge.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
-import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
 import {
     useSelectionBuffer,
-    useSortHandling,
-    useEditHandling,
-    useAddHandling,
-    useRowHandling,
+    useSortHandler,
+    useNavigation,
+    useRowToggle,
     useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './user-list-page.scss';
 
 async function UserListPage(props) {
-    const { database, route, env, projectID, editing } = props;
-    const { t, p, f } = env.locale;
-    const db = database.use({ schema: 'global', by: this });
+    const { database } = props;
     const [ show ] = useProgress();
-    const selection = useSelectionBuffer(editing, { save });
-    const [ confirmationRef, confirm ] = useConfirmation();
-
-    const [ sort, handleSort ] = useSortHandling();
-    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
-    const [ handleAddClick ] = useAddHandling(route, {
-        page: 'user-summary-page',
-        params: { userID: 'new' },
-    });
-    const [ handleRowClick ] = useRowHandling(selection, 'data-user-id');
-    const handleSaveClick = useCallback(async (evt) => {
-        await selection.save();
-    });
 
     render();
-    let currentUserID = await db.start();
+    const db = database.use({ schema: 'global' });
+    const currentUserID = await db.start();
     const users = await UserFinder.findAllUsers(db);
-    const activeUsers = filterUsers(users);
-    selection.base(_.map(activeUsers, 'id'));
     render();
-    const projects = await ProjectFinder.findProjectsWithMembers(db, props.users);
+    const projects = await ProjectFinder.findProjectsWithMembers(db, users);
     render();
-    const roles = await RoleFinder.findRolesOfUsers(db, props.users);
+    const roles = await RoleFinder.findRolesOfUsers(db, users);
     render();
 
     function render() {
-        const { changed } = selection;
-        show(
-            <div className="user-list-page">
-                {renderButtons()}
-                <h2>{t('user-list-title')}</h2>
-                <UnexpectedError error={selection.error} />
-                {renderTable()}
-                <ActionConfirmation ref={confirmationRef} env={env} />
-                <DataLossWarning changes={changed} env={env} route={route} />
-            </div>
-        );
+        const sprops = { users, projects, roles };
+        show(<UserListPageSync {...sprops} {...props} />);
     }
+}
+
+function UserListPageSync(props) {
+    const { users, projects, roles } = props;
+    const { database, route, env, projectID, editing } = props;
+    const { t, p, f } = env.locale;
+    const readOnly = !editing;
+    const activeUsers = filterUsers(users);
+    const selection = useSelectionBuffer({
+        original: _.map(activeUsers, 'id'),
+        save: saveUserSelection,
+        reset: readOnly,
+    });
+    const navigation = useNavigation(route, {
+        add: { page: 'user-summary-page', params: { userID: 'new' } },
+    });
+    const [ confirmationRef, confirm ] = useConfirmation();
+    useDataLossWarning(route, env, confirm, () => selection.changed);
+
+    const [ sort, handleSort ] = useSortHandler();
+    const handleRowClick = useRowToggle(selection, 'data-user-id');
+    const handleEditClick = useCallback((evt) => navigation.edit());
+    const handleCancelClick = useCallback((evt) => navigation.cancel());
+    const handleAddClick = useCallback((evt) => navigation.add());
+    const handleSaveClick = useCallback(async (evt) => {
+        if (await selection.save()) {
+            navigation.done();
+        }
+    });
+
+    return (
+        <div className="user-list-page">
+            {renderButtons()}
+            <h2>{t('user-list-title')}</h2>
+            <UnexpectedError error={selection.error} />
+            {renderTable()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
     function renderButtons() {
-        const { changed } = selection;
-        if (editing) {
-            return (
-                <div className="buttons">
-                    <PushButton onClick={handleCancelClick}>
-                        {t('user-list-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
-                        {t('user-list-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
+        if (readOnly) {
             const empty = _.isEmpty(users);
             return (
                 <div className="buttons">
@@ -106,6 +106,19 @@ async function UserListPage(props) {
                     </PushButton>
                 </div>
             );
+        } else {
+            const { changed } = selection;
+            return (
+                <div className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('user-list-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
+                        {t('user-list-save')}
+                    </PushButton>
+                </div>
+            );
         }
     }
 
@@ -116,7 +129,7 @@ async function UserListPage(props) {
             onSort: handleSort,
         };
         if (selection.shown) {
-            tableProps.expanded = !!editing;
+            tableProps.expanded = !readOnly;
             tableProps.expandable = true;
             tableProps.selectable = true;
         }
@@ -306,7 +319,7 @@ async function UserListPage(props) {
         }
     }
 
-    async function save() {
+    async function saveUserSelection() {
         const changes = [];
         let remove = 0, add = 0;
         for (let user of users) {
@@ -328,12 +341,12 @@ async function UserListPage(props) {
         if (add) {
             await confirm(t('user-list-confirm-reactivate-$count', add));
         }
+        const db = database.use({ schema: 'global' });
         await db.save({ table: 'user' }, changes);
-        handleCancelClick();
     }
 }
 
-let sortUsers = memoizeWeak(null, function(users, roles, projects, env, sort) {
+const sortUsers = memoizeWeak(null, function(users, roles, projects, env, sort) {
     const { p } = env.locale;
     const columns = _.map(sort.columns, (column) => {
         switch (column) {

@@ -16,44 +16,76 @@ import { ActivityTooltip } from '../tooltips/activity-tooltip.jsx';
 import { RoleTooltip } from '../tooltips/role-tooltip.jsx';
 import { ActionBadge } from '../widgets/action-badge.jsx';
 import { ModifiedTimeTooltip } from '../tooltips/modified-time-tooltip.jsx'
-import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
+import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
 import {
     useSelectionBuffer,
-    useSortHandling,
-    useEditHandling,
-    useAddHandling,
-    useRowHandling,
+    useSortHandler,
+    useRowToggle,
+    useNavigation,
+    useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './member-list-page.scss';
 
 async function MemberListPage(props) {
     const { database, route, env, projectID, editing } = props;
-    const { t, p, f } = env.locale;
-    const db = database.use({ schema: 'global', by: this });
     const [ show ] = useProgress();
-    const selection = useSelectionBuffer(editing, {
+
+    render();
+    const db = database.use({ schema: 'global' });
+    const currentUserID = await db.start();
+    const project = await ProjectFinder.findProject(db, projectID);
+    const users = await UserFinder.findExistingUsers(db);
+    render();
+    const roles = await RoleFinder.findRolesOfUsers(db, users);
+    render();
+    const members = filterUsers(users, project);
+    const statistics = await StatisticsFinder.findDailyActivitiesOfUsers(db, project, members);
+    render();
+
+    function render() {
+        const sprops = { project, users, roles, statistics };
+        show(<MemberListPageSync {...sprops} {...props} />);
+    }
+}
+
+function MemberListPageSync(props) {
+    const { project, users, roles, statistics } = props;
+    const { database, route, env, editing } = props;
+    const { t, p, f } = env.locale;
+    const readOnly = !editing;
+    const members = filterUsers(users, project);
+    const membersPlus = filterUsers(users, project, true);
+    const selection = useSelectionBuffer({
+        original: _.map(members, 'id'),
         save: async function (base, ours, action) {
             switch (action) {
-                case 'approve': return approvePending();
-                case 'reject': return rejectPending();
-                default: return save();
+                case 'approve': return approvePendingUsers();
+                case 'reject': return rejectPendingUsers();
+                default: return saveUserSelection();
             }
-        }
+        },
+        reset: readOnly,
     });
+    const navigation = useNavigation(route, {
+        add: { page: 'member-summary-page', params: { userID: 'new' } },
+    });
+    const [ confirmationRef, confirm ] = useConfirmation();
+    useDataLossWarning(route, env, confirm, () => selection.unsaved);
 
-    const [ sort, handleSort ] = useSortHandling();
-    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
-    const [ handleAddClick ] = useAddHandling(route, {
-        page: 'member-summary-page',
-        params: { userID: 'new' },
-    });
-    const [ handleRowClick ] = useRowHandling(selection, 'data-user-id');
+    const [ sort, handleSort ] = useSortHandler();
+    const handleRowClick = useRowToggle(selection, 'data-user-id');
+    const handleEditClick = useCallback((evt) => navigation.edit());
+    const handleCancelClick = useCallback((evt) => navigation.cancel());
+    const handleAddClick = useCallback((evt) => navigation.add());
     const handleSaveClick = async (evt) => {
-        await selection.save();
+        if (await selection.save()) {
+            navigation.done();
+        }
     };
     const handleApproveClick = useCallback(async (evt) => {
         await selection.save('approve');
@@ -62,34 +94,18 @@ async function MemberListPage(props) {
         await selection.save('reject');
     });
 
-    render();
-    const currentUserID = await db.start();
-    const project = await ProjectFinder.findProject(db, projectID);
-    const users = await UserFinder.findExistingUsers(db);
-    const members = filterUsers(users, project);
-    const membersPlus = filterUsers(users, project, true);
-    selection.base(_.map(members, 'id'));
-    render();
-    const roles = await RoleFinder.findRolesOfUsers(db, users);
-    render();
-    const statistics = await StatisticsFinder.findDailyActivitiesOfUsers(db, project, members);
-    render();
-
-    function render() {
-        const { changed } = selection;
-        show (
-            <div className="member-list-page">
-                {renderButtons()}
-                <h2>{t('member-list-title')}</h2>
-                <UnexpectedError error={selection.error} />
-                {renderTable()}
-                <DataLossWarning changes={changed} env={env} route={route} />
-            </div>
-        );
-    }
+    const { changed } = selection;
+    return (
+        <div className="member-list-page">
+            {renderButtons()}
+            <h2>{t('member-list-title')}</h2>
+            <UnexpectedError error={selection.error} />
+            {renderTable()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
     function renderButtons() {
-        const { changed } = selection;
         if (editing) {
             return (
                 <div key="edit" className="buttons">
@@ -358,19 +374,18 @@ async function MemberListPage(props) {
         }
     }
 
-    async function save() {
+    async function saveUserSelection() {
         const userIDsAfter = selection.current;
         const existingUserIDs = _.map(users, 'id');
         const columns = {
             id: project.id,
             user_ids: _.intersection(userIDsAfter, existingUserIDs)
         };
-        throw new Error('crap');
+        const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'project' }, columns);
-        handleCancelClick();
     }
 
-    async function approvePending() {
+    async function approvePendingUsers() {
         const pendingUsers = _.filter(users, (user) => {
             return _.includes(user.requested_project_ids, project.id);
         });
@@ -381,10 +396,11 @@ async function MemberListPage(props) {
             id: project.id,
             user_ids: _.intersection(userIDs, existingUserIDs)
         };
+        const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'project' }, columns);
     }
 
-    async function rejectPending() {
+    async function rejectPendingUsers() {
         const pendingUsers = _.filter(users, (user) => {
             return _.includes(user.requested_project_ids, project.id);
         });
@@ -394,6 +410,7 @@ async function MemberListPage(props) {
                 requested_project_ids: _.without(user.requested_project_ids, project.id),
             };
         });
+        const db = database.use({ schema: 'global' });
         await db.save({ table: 'user' }, changes);
     }
 }

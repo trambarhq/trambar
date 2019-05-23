@@ -11,29 +11,53 @@ import { TextField } from '../widgets/text-field.jsx';
 import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
 import { OptionList } from '../widgets/option-list.jsx';
 import { ImageSelector } from '../widgets/image-selector.jsx';
-import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
 import {
     useDraftBuffer,
-    useEditHandling,
+    useNavigation,
 } from '../hooks.mjs';
 
 import './settings-page.scss';
 
 async function SettingsPage(props) {
-    const { database, route, env, payloads, editing } = props;
-    const { t, p, directory } = env.locale;
+    const { database } = props;
+    const [ show ] = useProgress();
+
+    render();
     const db = database.use({ schema: 'global', by: this });
+    const currentUserID = await db.start();
+    const system = await SystemFinder.findSystem(db);
+    render();
+
+    function render() {
+        const sprops = { system };
+        show(<SettingsPageSync {...sprops} {...props} />);
+    }
+}
+
+function SettingsPageSync(props) {
+    const { system, editing } = props;
+    const { database, route, env, payloads } = props;
+    const { t, p, directory } = env.locale;
+    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !editing;
     const [ problems, setProblems ] = useState({});
-    const [ show ] = useProgress();
-    const draft = useDraftBuffer(editing, { save });
+    const draft = useDraftBuffer({
+        original: system,
+        prefill: getDefaultSystem,
+        save: saveSystem,
+        reset: readOnly,
+    });
+    const navigation = useNavigation(route, {});
 
-    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
+    const handleEditClick = useCallback((evt) => navigation.edit());
+    const handleCancelClick = useCallback((evt) => navigation.cancel());
     const handleSaveClick = useCallback(async (evt) => {
-        await draft.save();
+        if (await draft.save()) {
+            navigation.done();
+        }
     });
     const handleTitleChange = useCallback((evt) => {
         const title = evt.target.value;
@@ -66,49 +90,36 @@ async function SettingsPage(props) {
         draft.update('settings.input_languages', list);
     });
 
-    render();
-    const currentUserID = await db.start();
-    let system = await SystemFinder.findSystem(db);
-    if (_.isEmpty(system)) {
-        system = getDefault();
-    }
-    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
-    draft.base(system);
-    render();
-
-    function render() {
-        show(
-            <div className="settings-page">
-                {renderButtons()}
-                <h2>{t('settings-title')}</h2>
-                <UnexpectedError error={draft.error} />
-                {renderForm()}
-                {renderInstructions()}
-            </div>
-        );
-    }
+    return (
+        <div className="settings-page">
+            {renderButtons()}
+            <h2>{t('settings-title')}</h2>
+            <UnexpectedError error={draft.error} />
+            {renderForm()}
+            {renderInstructions()}
+        </div>
+    );
 
     function renderButtons() {
-        const { changed } = draft;
-        if (editing) {
+        const { unsaved } = draft;
+        if (readOnly) {
             // using keys here to force clearing of focus
+            return (
+                <div key="view" className="buttons">
+                    <PushButton className="emphasis" onClick={handleEditClick}>
+                        {t('settings-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
             return (
                 <div key="edit" className="buttons">
                     <PushButton onClick={handleCancelClick}>
                         {t('settings-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
                         {t('settings-save')}
-                    </PushButton>
-                    <DataLossWarning changes={changed} env={env} route={route} />
-                </div>
-            );
-        } else {
-            return (
-                <div key="view" className="buttons">
-                    <PushButton className="emphasis" onClick={handleEditClick}>
-                        {t('settings-edit')}
                     </PushButton>
                 </div>
             );
@@ -267,7 +278,7 @@ async function SettingsPage(props) {
         const instructionProps = {
             folder: 'settings',
             topic: 'settings',
-            hidden: !editing,
+            hidden: readOnly,
             env,
         };
         return (
@@ -277,34 +288,32 @@ async function SettingsPage(props) {
         );
     }
 
-    async function save(base, ours) {
-        saveSaving(true);
-        try {
-            const systemAfter = await db.saveOne({ table: 'system' }, ours);
-            payloads.dispatch(systemAfter);
-            handleCancelClick();
-        } finally {
-            saveSaving(false);
+    function getDefaultSystem(base) {
+        if (_.isEmpty(base)) {
+            // use timezone to determine default relay
+            const tzOffset = (new Date()).getTimezoneOffset() / 60;
+            let defaultRelay;
+            if (-5 <= tzOffset && tzOffset <= 0) {
+                defaultRelay = 'https://eu-west-1.push.trambar.io';
+            } else {
+                defaultRelay = 'https://us-east-1.push.trambar.io';
+            }
+            return {
+                details: {},
+                settings: {
+                    address: window.location.protocol + '//' + window.location.host,
+                    push_relay: defaultRelay,
+                }
+            };
         }
     }
-}
 
-function getDefault() {
-    // use timezone to determine default relay
-    const tzOffset = (new Date()).getTimezoneOffset() / 60;
-    let defaultRelay;
-    if (-5 <= tzOffset && tzOffset <= 0) {
-        defaultRelay = 'https://eu-west-1.push.trambar.io';
-    } else {
-        defaultRelay = 'https://us-east-1.push.trambar.io';
+    async function saveSystem(base, ours) {
+        const db = database.use({ schema: 'global', by: this });
+        const systemAfter = await db.saveOne({ table: 'system' }, ours);
+        payloads.dispatch(systemAfter);
+        return systemAfter;
     }
-    return {
-        details: {},
-        settings: {
-            address: window.location.protocol + '//' + window.location.host,
-            push_relay: defaultRelay,
-        }
-    };
 }
 
 const component = Relaks.memo(SettingsPage);

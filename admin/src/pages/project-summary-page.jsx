@@ -17,66 +17,100 @@ import { ImageSelector } from '../widgets/image-selector.jsx';
 import { ActivityChart } from '../widgets/activity-chart.jsx';
 import { InputError } from '../widgets/input-error.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
-import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 // custom hooks
 import {
     useDraftBuffer,
-    useEditHandling,
-    useAddHandling,
-    useReturnHandling,
-    useNameHandling,
+    useAutogenID,
+    useNavigation,
     useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './project-summary-page.scss';
 
 async function ProjectSummaryPage(props) {
     const { database, route, env, payloads, projectID, editing } = props;
-    const { t, p } = env.locale;
-    const db = database.use({ schema: 'global', by: this });
     const creating = (projectID === 'new');
-    const readOnly = !editing;
-    const [ problems, setProblems ] = useState({});
-    const [ confirmationRef, confirm ] = useConfirmation();
     const [ show ] = useProgress();
-    const draft = useDraftBuffer(editing, {
+
+    render();
+    const db = database.use({ schema: 'global' });
+    const currentUserID = await db.start();
+    const system = await SystemFinder.findSystem(db);
+    render();
+    const project = (!creating) ? await ProjectFinder.findProject(db, projectID) : null;
+    render();
+    const statistics = (!creating) ? await StatisticsFinder.findDailyActivitiesOfProject(db, project) : null;
+    render();
+
+    function render() {
+        const sprops = { system, project, statistics, creating };
+        show (<ProjectSummaryPageSync {...sprops} {...props} />);
+    }
+}
+
+function ProjectSummaryPageSync(props) {
+    const { system, project, statistics } = props;
+    const { database, route, env, payloads, editing, creating } = props;
+    const { t, p } = env.locale;
+    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
+    const readOnly = !(editing || creating);
+    const [ adding, setAdding ] = useState(false);
+    const [ problems, setProblems ] = useState({});
+    const draft = useDraftBuffer({
+        original: project || {},
         save: (base, ours, action) => {
             switch (action) {
-                case 'restore': return restore(base);
-                default: return save(base, ours);
+                case 'restore': return restoreProject(base);
+                default: return saveProject(base, ours);
             }
         },
         remove: (base, ours, action) => {
             switch (action) {
-                case 'archive': return archive(base);
-                default: return remove(base);
+                case 'archive': return archiveProject(base);
+                default: return removeProject(base);
             }
+        },
+        reset: readOnly,
+    });
+    const navigation = useNavigation(route, {
+        add: { params: { projectID: 'new' } },
+        return: { page: 'project-list-page' },
+    })
+    const [ confirmationRef, confirm ] = useConfirmation();
+    useDataLossWarning(route, env, confirm, () => draft.unsaved);
+
+    const handleEditClick = useCallback((evt) => navigation.edit());
+    const handleCancelClick = useCallback((evt) => navigation.cancel());
+    const handleAddClick = useCallback((evt) => navigation.add());
+    const handleReturnClick = useCallback((evt) => navigation.return());
+    const handleArchiveClick = useCallback(async (evt) => {
+        if (await draft.remove('archive')) {
+            navigation.return();
         }
     });
-
-    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
-    const [ handleAddClick ] = useAddHandling(route, {
-        params: { projectID: 'new' },
-    });
-    const [ handleReturnClick ] = useReturnHandling(route, {
-        page: 'project-list-page',
-    });
-    const handleArchiveClick = useCallback(async (evt) => {
-        await draft.remove('archive');
-    });
     const handleRemoveClick = useCallback(async (evt) => {
-        await draft.remove();
+        if (await draft.remove()) {
+            navigation.return();
+        }
     });
     const handleRestoreClick = useCallback(async (evt) => {
         await draft.save('restore');
     });
     const handleSaveClick = useCallback(async (evt) => {
-        await draft.save();
+        if (await draft.save()) {
+            if (creating) {
+                setAdding(true);
+                navigation.done({ projectID: draft.current.id });
+            } else {
+                navigation.done();
+            }
+        }
     });
-    const [ handleTitleChange, handleNameChange ] = useNameHandling(draft, {
+    const [ handleTitleChange, handleNameChange ] = useAutogenID(draft, {
         titleKey: 'details.title',
         nameKey: 'name',
     });
@@ -86,7 +120,7 @@ async function ProjectSummaryPage(props) {
     });
     const handleEmblemChange = useCallback((evt) => {
         const resources = evt.target.value;
-        draft.update('details.resources', description);
+        draft.update('details.resources', resources);
     });
     const handleMembershipOptionClick = useCallback((evt) => {
         const optsBefore = draft.get('settings.membership', {});
@@ -99,54 +133,26 @@ async function ProjectSummaryPage(props) {
         draft.update('settings.access_control', opts);
     });
 
-    render();
-    const currentUserID = await db.start();
-    const system = await SystemFinder.findSystem(db);
-    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
-    render();
-    const project = (!creating) ? await ProjectFinder.findProject(db, projectID) : null;
-    draft.base(project || {});
-    render();
-    const statistics = (!creating) ? await StatisticsFinder.findDailyActivitiesOfProject(db, project) : null;
-    render();
-
-    function render() {
-        const { changed } = draft;
-        const title = p(draft.get('details.title')) || draft.get('name');
-        show(
-            <div className="project-summary-page">
-                {renderButtons()}
-                <h2>{t('project-summary-$title', title)}</h2>
-                <UnexpectedError error={draft.error} />
-                {renderForm()}
-                {renderInstructions()}
-                {renderChart()}
-                <ActionConfirmation ref={confirmationRef} env={env} />
-                <DataLossWarning changes={changed} route={route} env={env} />
-            </div>
-        );
-    }
+    const title = p(draft.get('details.title')) || draft.get('name');
+    return (
+        <div className="project-summary-page">
+            {renderButtons()}
+            <h2>{t('project-summary-$title', title)}</h2>
+            <UnexpectedError error={draft.error} />
+            {renderForm()}
+            {renderInstructions()}
+            {renderChart()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
     function renderButtons() {
-        const { changed } = draft;
-        if (editing) {
+        if (readOnly) {
             // using keys here to force clearing of focus
-            return (
-                <div key="edit" className="buttons">
-                    <PushButton onClick={handleCancelClick}>
-                        {t('project-summary-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
-                        {t('project-summary-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
             const active = (project) ? !project.deleted && !project.archived : true;
             let preselected;
             if (active) {
-                preselected = (creating) ? 'add' : 'return';
+                preselected = (adding) ? 'add' : 'return';
             } else {
                 preselected = 'restore';
             }
@@ -172,6 +178,19 @@ async function ProjectSummaryPage(props) {
                     {' '}
                     <PushButton className="emphasis" onClick={handleEditClick}>
                         {t('project-summary-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            const { unsaved } = draft;
+            return (
+                <div key="edit" className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('project-summary-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                        {t('project-summary-save')}
                     </PushButton>
                 </div>
             );
@@ -293,7 +312,7 @@ async function ProjectSummaryPage(props) {
 
     function renderAccessControlOptions() {
         const listProps = {
-            readOnly: !editing,
+            readOnly,
             onOptionClick: handleAccessControlOptionClick,
         };
         return (
@@ -314,7 +333,7 @@ async function ProjectSummaryPage(props) {
         const props = {
             folder: 'project',
             topic: 'project-summary',
-            hidden: !editing,
+            hidden: readOnly,
             env,
         };
         return (
@@ -340,33 +359,34 @@ async function ProjectSummaryPage(props) {
         );
     }
 
-    async function archive(base) {
+    async function archiveProject(base) {
         await confirm(t('project-summary-confirm-archive'));
         const changes = { id: base.id, archived: true };
+        const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'project' }, changes);
-        handleReturnClick();
     }
 
-    async function remove(base) {
+    async function removeProject(base) {
         await confirm(t('project-summary-confirm-delete'));
         const changes = { id: base.id, deleted: true };
+        const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'project' }, changes);
-        handleReturnClick();
     }
 
-    async function restore(base) {
+    async function restoreProject(base) {
         await confirm(t('project-summary-confirm-restore'));
         const changes = { id: base.id, disabled: true, deleted: true };
+        const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'project' }, changes);
     }
 
-    async function save(base, ours) {
-        validate(ours);
-        setSaving(true);
+    async function saveProject(base, ours) {
         try {
+            validateProjectInfo(ours);
+
+            const db = database.use({ schema: 'global' });
             const projectAfter = await db.saveOne({ table: 'project' }, ours);
             payloads.dispatch(projectAfter);
-            handleCancelClick();
             return projectAfter;
         } catch (err) {
             if (err.statusCode === 409) {
@@ -374,12 +394,10 @@ async function ProjectSummaryPage(props) {
                 err = new Cancellation;
             }
             throw err;
-        } finally {
-            setSaving(false);
         }
     }
 
-    function validate(ours) {
+    function validateProjectInfo(ours) {
         const name = _.toLower(_.trim(ours.name));
         const reservedNames = [ 'global', 'admin', 'public', 'srv' ];
         if (!name) {

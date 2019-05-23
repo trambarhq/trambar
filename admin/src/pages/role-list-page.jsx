@@ -13,78 +13,78 @@ import { UserTooltip } from '../tooltips/user-tooltip.jsx';
 import { ModifiedTimeTooltip } from '../tooltips/modified-time-tooltip.jsx'
 import { ActionBadge } from '../widgets/action-badge.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
-import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
 import {
     useSelectionBuffer,
-    useSortHandling,
-    useEditHandling,
-    useAddHandling,
-    useRowHandling,
+    useSortHandler,
+    useRowToggle,
+    useNavigation,
     useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './role-list-page.scss';
 
 async function RoleListPage(props) {
-    const { database, route, env, editing } = props;
-    const { t, p, f } = env.locale;
-    const db = database.use({ schema: 'global', by: this });
+    const { database } = props;
     const [ show ] = useProgress();
-    const selection = useSelectionBuffer(editing, { save });
-    const [ confirmationRef, confirm ] = useConfirmation();
-
-    const [ sort, handleSort ] = useSortHandling();
-    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
-    const [ handleAddClick ] = useAddHandling(route, {
-        page: 'role-summary-page',
-        params: { roleID: 'new' },
-    });
-    const [ handleRowClick ] = useRowHandling(selection, 'data-role-id');
-    const handleSaveClick = useCallback(async (evt) => {
-        await selection.save();
-    });
 
     render();
+    const db = database.use({ schema: 'global' });
     const currentUserID = await db.start();
     const roles = await RoleFinder.findAllRoles(db);
-    const activeRoles = filterRoles(roles);
-    selection.base(_.map(activeRoles, 'id'));
     render();
     const users = await UserFinder.findUsersWithRoles(db, roles);
     render();
 
     function render() {
-        const { changed } = selection;
-        show(
-            <div className="role-list-page">
-                {renderButtons()}
-                <h2>{t('role-list-title')}</h2>
-                <UnexpectedError error={selection.error} />
-                {renderTable()}
-                <ActionConfirmation ref={confirmationRef} env={env} />
-                <DataLossWarning changes={changed} env={env} route={route} />
-            </div>
-        );
+        const sprops = { roles, users };
+        show(<RoleListPageSync {...sprops} {...props} />);
     }
+}
+
+function RoleListPageSync(props) {
+    const { roles, users } = props;
+    const { database, route, env, editing } = props;
+    const { t, p, f } = env.locale;
+    const readOnly = !editing;
+    const activeRoles = filterRoles(roles);
+    const selection = useSelectionBuffer({
+        original: _.map(activeRoles, 'id'),
+        save: saveRoleSelection,
+        reset: readOnly,
+    });
+    const navigation = useNavigation(route, {
+        add: { page: 'role-summary-page', params: { roleID: 'new' } },
+    });
+    const [ confirmationRef, confirm ] = useConfirmation();
+    useDataLossWarning(route, env, confirm, () => selection.unsaved);
+
+    const [ sort, handleSort ] = useSortHandler();
+    const handleRowClick = useRowToggle(selection, 'data-role-id');
+    const handleEditClick = useCallback((evt) => navigation.edit());
+    const handleCancelClick = useCallback((evt) => navigation.cancel());
+    const handleAddClick = useCallback((evt) => navigation.add());
+    const handleSaveClick = useCallback(async (evt) => {
+        if (await selection.save()) {
+            navigation.done();
+        }
+    });
+
+    return (
+        <div className="role-list-page">
+            {renderButtons()}
+            <h2>{t('role-list-title')}</h2>
+            <UnexpectedError error={selection.error} />
+            {renderTable()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
     function renderButtons() {
-        const { changed } = selection;
-        if (editing) {
-            return (
-                <div className="buttons">
-                    <PushButton onClick={handleCancelClick}>
-                        {t('role-list-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
-                        {t('role-list-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
+        if (readOnly) {
             const preselected = 'add';
             const empty = _.isEmpty(roles);
             return (
@@ -97,6 +97,19 @@ async function RoleListPage(props) {
                     {' '}
                     <PushButton className="emphasis" disabled={empty} onClick={handleEditClick}>
                         {t('role-list-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            const { unsaved } = selection;
+            return (
+                <div className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('role-list-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                        {t('role-list-save')}
                     </PushButton>
                 </div>
             );
@@ -230,7 +243,7 @@ async function RoleListPage(props) {
         }
     }
 
-    async function save() {
+    async function saveRoleSelection() {
         const changes = [];
         let remove, add = 0;
         for (let role of roles) {
@@ -252,8 +265,8 @@ async function RoleListPage(props) {
         if (add) {
             await confirm(t('role-list-confirm-reactivate-$count', add))
         }
+        const db = database.use({ schema: 'global' });
         await db.save({ table: 'role' }, changes);
-        handleCancelClick();
     }
 }
 

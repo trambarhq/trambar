@@ -67,13 +67,17 @@ class Route {
     }
 
     async confirm() {
-        for (let callback of this.callbacks) {
-            const proceed = await callback();
-            if (proceed === false) {
-                return false;
+        try {
+            for (let callback of this.callbacks) {
+                const proceed = await callback();
+                if (proceed === false) {
+                    return false;
+                }
             }
+            return true;
+        } catch (err) {
+            return false;
         }
-        return true;
     }
 
     async modify(params) {

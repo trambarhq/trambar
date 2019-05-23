@@ -17,45 +17,28 @@ import { ActivityTooltip } from '../tooltips/activity-tooltip.jsx';
 import { ModifiedTimeTooltip } from '../tooltips/modified-time-tooltip.jsx'
 import { ActionBadge } from '../widgets/action-badge.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
-import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
 import {
-    useSelectionBuffer, 
-    useSortHandling,
-    useEditHandling,
-    useAddHandling,
-    useRowHandling,
+    useSelectionBuffer,
+    useSortHandler,
+    useRowToggle,
+    useNavigation,
     useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './project-list-page.scss';
 
 async function ProjectListPage(props) {
-    const { database, route, env, editing } = props;
-    const { t, p, f } = env.locale;
-    const db = database.use({ schema: 'global', by: this });
+    const { database } = props;
     const [ show ] = useProgress();
-    const selection = useSelectionBuffer(editing, { save });
-    const [ confirmationRef, confirm ] = useConfirmation();
-
-    const [ sort, handleSort ] = useSortHandling();
-    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
-    const [ handleAddClick ] = useAddHandling(route, {
-        page: 'project-summary-page',
-        params: { 'projectID': 'new' },
-    });
-    const [ handleRowClick ] = useRowHandling(selection, 'data-project-id');
-    const handleSaveClick = useCallback(async (evt) => {
-        await selection.save();
-    });
 
     render();
+    const db = database.use({ schema: 'global' });
     const currentUserID = await db.start();
     const projects = await ProjectFinder.findAllProjects(db);
-    const activeProjects = filterProjects(projects);
-    selection.base(_.map(activeProjects, 'id'));
     render();
     const repos = await RepoFinder.findProjectRepos(db, projects);
     render();
@@ -65,34 +48,52 @@ async function ProjectListPage(props) {
     render();
 
     function render() {
-        const { changed } = selection;
-        show(
-            <div className="project-list-page">
-                {renderButtons()}
-                <h2>{t('project-list-title')}</h2>
-                <UnexpectedError error={selection.error} />
-                {renderTable()}
-                <ActionConfirmation ref={confirmationRef} env={env} />
-                <DataLossWarning changes={changed} env={env} route={route} />
-            </div>
-        );
+        const sprops = { projects, repos, users, statistics };
+        show(<ProjectListPageSync {...sprops} {...props} />);
     }
+}
+
+function ProjectListPageSync(props) {
+    const { projects, repos, users, statistics } = props;
+    const { database, route, env, editing } = props;
+    const { t, p, f } = env.locale;
+    const readOnly = !editing;
+    const activeProjects = filterProjects(projects);
+    const selection = useSelectionBuffer({
+        original: _.map(activeProjects, 'id'),
+        save: saveProjectSelection,
+        reset: readOnly,
+    });
+    const navigation = useNavigation(route, {
+        add: { page: 'project-summary-page', params: { 'projectID': 'new' } },
+    });
+    const [ confirmationRef, confirm ] = useConfirmation();
+    useDataLossWarning(route, env, confirm, () => selection.unsaved);
+
+    const [ sort, handleSort ] = useSortHandler();
+    const handleRowClick = useRowToggle(selection, 'data-project-id');
+    const handleEditClick = useCallback((evt) => navigation.edit());
+    const handleCancelClick = useCallback((evt) => navigation.cancel());
+    const handleAddClick = useCallback((evt) => navigation.add());
+    const handleSaveClick = useCallback(async (evt) => {
+        if (await selection.save()) {
+            navigation.done();
+        }
+    });
+
+    const { changed } = selection;
+    return (
+        <div className="project-list-page">
+            {renderButtons()}
+            <h2>{t('project-list-title')}</h2>
+            <UnexpectedError error={selection.error} />
+            {renderTable()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
     function renderButtons() {
-        const { changed } = selection;
-        if (editing) {
-            return (
-                <div className="buttons">
-                    <PushButton onClick={handleCancelClick}>
-                        {t('project-list-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
-                        {t('project-list-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
+        if (readOnly) {
             const empty = _.isEmpty(projects);
             return (
                 <div className="buttons">
@@ -104,6 +105,19 @@ async function ProjectListPage(props) {
                     {' '}
                     <PushButton className="emphasis" disabled={empty} onClick={handleEditClick}>
                         {t('project-list-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            const { unsaved } = selection;
+            return (
+                <div className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('project-list-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                        {t('project-list-save')}
                     </PushButton>
                 </div>
             );
@@ -329,7 +343,7 @@ async function ProjectListPage(props) {
         }
     }
 
-    async function save() {
+    async function saveProjectSelection() {
         const changes = [];
         let remove = 0, add = 0;
         for (let project of projects) {
@@ -351,6 +365,7 @@ async function ProjectListPage(props) {
         if (add) {
             await confirm(t('project-list-confirm-restore-$count', add));
         }
+        const db = database.use({ schema: 'global' });
         await db.save({ table: 'project' }, changes);
     }
 }

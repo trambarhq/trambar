@@ -14,78 +14,79 @@ import { UserTooltip } from '../tooltips/user-tooltip.jsx';
 import { ModifiedTimeTooltip } from '../tooltips/modified-time-tooltip.jsx'
 import { ActionBadge } from '../widgets/action-badge.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
-import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
 import {
     useSelectionBuffer,
-    useSortHandling,
-    useEditHandling,
-    useAddHandling,
-    useRowHandling,
+    useSortHandler,
+    useRowToggle,
+    useNavigation,
     useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './server-list-page.scss';
 
 async function ServerListPage(props) {
-    const { database, route, env, editing } = props;
-    const { t, p, f } = env.locale;
+    const { database } = props;
     const [ show ] = useProgress();
-    const db = database.use({ schema: 'global', by: this });
-    const selection = useSelectionBuffer(editing, { save });
-    const [ confirmationRef, confirm ] = useConfirmation();
-
-    const [ sort, handleSort ] = useSortHandling();
-    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
-    const [ handleAddClick ] = useAddHandling(route, {
-        page: 'server-summary-page',
-        params: { serverID: 'new' },
-    });
-    const [ handleRowClick ] = useRowHandling(selection, 'data-server-id');
-    const handleSaveClick = useCallback(async (evt) => {
-        await selection.save();
-    });
 
     render();
+    const db = database.use({ schema: 'global' });
     const currentUserID = await db.start();
     const servers = await ServerFinder.findAllServers(db);
-    const activeServers = filterServers(servers);
-    selection.base(_.map(activeServers, 'id'));
     render();
     const users = await UserFinder.findActiveUsers(db);
     render();
 
     function render() {
-        const { changed } = selection;
-        show(
-            <div className="server-list-page">
-                {renderButtons()}
-                <h2>{t('server-list-title')}</h2>
-                <UnexpectedError error={selection.error} />
-                {renderTable()}
-                <ActionConfirmation ref={confirmationRef} env={env} />
-                <DataLossWarning changes={changed} env={env} route={route} />
-            </div>
-        );
+        const sprops = { servers, users };
+        show(<ServerListPageSync {...sprops} {...props} />);
     }
+}
+
+function ServerListPageSync(props) {
+    const { servers, users } = props;
+    const { database, route, env, editing } = props;
+    const { t, p, f } = env.locale;
+    const readOnly = !editing;
+    const activeServers = filterServers(servers);
+    const selection = useSelectionBuffer({
+        original: _.map(activeServers, 'id'),
+        save: saveSelection,
+        reset: readOnly,
+    });
+    const navigation = useNavigation(route, {
+        add: { page: 'server-summary-page', params: { serverID: 'new' } },
+    });
+    const [ confirmationRef, confirm ] = useConfirmation();
+    useDataLossWarning(route, env, confirm, () => selection.unsaved);
+
+    const [ sort, handleSort ] = useSortHandler();
+    const handleRowClick = useRowToggle(selection, 'data-server-id');
+    const handleEditClick = useCallback((evt) => navigation.edit());
+    const handleCancelClick = useCallback((evt) => navigation.cancel());
+    const handleAddClick = useCallback((evt) => navigation.add());
+    const handleSaveClick = useCallback(async (evt) => {
+        if (await selection.save()) {
+            navigation.done();
+        }
+    });
+
+    return (
+        <div className="server-list-page">
+            {renderButtons()}
+            <h2>{t('server-list-title')}</h2>
+            <UnexpectedError error={selection.error} />
+            {renderTable()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
     function renderButtons() {
-        const { changed } = selection;
-        if (editing) {
-            return (
-                <div className="buttons">
-                    <PushButton onClick={handleCancelClick}>
-                        {t('server-list-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
-                        {t('server-list-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
+        const { unsaved } = selection;
+        if (readOnly) {
             const preselected = 'add';
             const empty = _.isEmpty(servers);
             return (
@@ -101,6 +102,18 @@ async function ServerListPage(props) {
                     </PushButton>
                 </div>
             );
+        } else {
+            return (
+                <div className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('server-list-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                        {t('server-list-save')}
+                    </PushButton>
+                </div>
+            );
         }
     }
 
@@ -113,7 +126,7 @@ async function ServerListPage(props) {
         if (selection.shown) {
             tableProps.expandable = true;
             tableProps.selectable = true;
-            tableProps.expanded = !!editing;
+            tableProps.expanded = !readOnly;
             tableProps.onClick = handleRowClick;
         }
         return (
@@ -269,7 +282,7 @@ async function ServerListPage(props) {
         }
     }
 
-    async function save() {
+    async function saveSelection() {
         const changes = [];
         let remove = 0, add = 0;
         for (let server of servers) {
@@ -291,8 +304,8 @@ async function ServerListPage(props) {
         if (add) {
             await confirm(t('server-list-confirm-reactivate-$count', add));
         }
+        const db = database.use({ schema: 'global' });
         await db.save({ table: 'server' }, changes);
-        handleCancelClick();
     }
 }
 

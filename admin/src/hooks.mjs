@@ -1,58 +1,24 @@
 import _ from 'lodash';
-import { useState, useMemo, useRef, useCallback } from 'react';
-import { useSaveBuffer, Cancellation } from 'relaks';
+import { useState, useCallback, useEffect } from 'react';
+import { useLatest, useAfterglow, useConfirmation, useSelectionBuffer, useDraftBuffer } from 'common/hooks.mjs';
 import * as SlugGenerator from 'common/utils/slug-generator.mjs';
 
-function useLatest(propValue) {
-    const [ stateValue, setStateValue ] = useState();
-    const stateValueTime = useMemo(() => new Date, [ stateValue ]);
-    const propValueTime = useMemo(() => new Date, [ propValue ]);
-    const latestValue = useMemo(() => {
-        if (stateValueTime > propValueTime) {
-            return stateValue;
-        } else {
-            return propValue;
-        }
-    }, [ stateValueTime, propValueTime ]);
-    return [ latestValue, setStateValue ];
-}
-
-function useAfterglow(value, delay) {
-    value = !!value;
-    const [ state, setState ] = useState({ value });
-    if (state.value != value) {
-        if (value) {
-            // truthy takes effect immediately
-            state.value = value;
-            if (state.timeout) {
-                clearTimeout(state.timeout);
-                state.timeout = 0;
+function useDataLossWarning(route, env, confirm, hasChanged) {
+    useEffect(() => {
+        const { t } = env.locale;
+        const confirmChange = (evt) => {
+            if (hasChanged()) {
+                return confirm(t('confirmation-data-loss'));
             }
-        } else {
-            // falsy takes effect after a delay
-            if (!state.timeout) {
-                state.timeout = setTimeout(() => {
-                    setState({ value, timeout: 0 });
-                }, delay || 500);
-            }
-        }
-    }
-    return state.value;
+        };
+        route.keep(confirmChange);
+        return () => {
+            route.free(confirmChange);
+        };
+    }, [ route, env ]);
 }
 
-function useConfirmation() {
-    const confirmationRef = useRef();
-    const confirm = useCallback(async (question) => {
-        const { ask } = confirmationRef.current;
-        const confirmed = await ask(question);
-        if (!confirmed) {
-            throw new Cancellation;
-        }
-    });
-    return [ confirmationRef, confirm ];
-}
-
-function useSortHandling() {
+function useSortHandler() {
     const [ sort, setSort ] = useState({ columns: [ 'name' ], directions: [ 'asc' ] });
     const handleSort = useCallback((evt) => {
         const { columns, directions } = evt;
@@ -61,43 +27,39 @@ function useSortHandling() {
     return [ sort, handleSort ];
 }
 
-function useEditHandling(route) {
-    const handleEditClick = useCallback((evt) => {
+function useNavigation(route, redirects) {
+    const [ object ] = useState({});
+    object.edit = () => {
         route.modify({ editing: true });
-    }, [ route ]);
-    const handleCancelClick = useCallback((evt) => {
+    };
+    object.cancel = () => {
         route.modify({ editing: undefined });
-    }, [ route ]);
-    return [ handleEditClick, handleCancelClick ];
-}
-
-function useAddHandling(route, redirect) {
-    const handleAddClick = useCallback((evt) => {
-        const page = redirect.page || route.name;
-        const params = { ...route.params, ...redirect.params };
+    };
+    object.done = (params) => {
+        route.modify({ editing: undefined, ...params });
+    };
+    object.add = () => {
+        const page = redirects.add.page || route.name;
+        const params = { ...route.params, ...redirects.add.params };
         route.push(page, params);
-    }, [ route ]);
-    return [ handleAddClick ];
-}
-
-function useReturnHandling(route, redirect) {
-    const handleReturnClick = useCallback((evt) => {
-        const page = redirect.page || route.name;
-        const params = { ...route.params, ...redirect.params };
+    };
+    object.return = () => {
+        const page = redirects.return.page || route.name;
+        const params = { ...route.params, ...redirects.return.params };
         route.push(page, params);
-    }, [ route ]);
-    return [ handleReturnClick ];
+    };
+    return object;
 }
 
-function useRowHandling(selection, attr) {
+function useRowToggle(selection, attr) {
     const handleRowClick = useCallback((evt) => {
         const id = parseInt(evt.currentTarget.getAttribute(attr));
         selection.toggle(id);
     });
-    return [ handleRowClick ];
+    return handleRowClick;
 }
 
-function useNameHandling(draft, params) {
+function useAutogenID(draft, params) {
     const { titleKey, nameKey, personal } = params;
     const method = (personal) ? 'fromPersonalName' : 'fromTitle';
     const f = SlugGenerator[method];
@@ -124,63 +86,15 @@ function useNameHandling(draft, params) {
     return [ handleTitleChange, handleNameChange ];
 }
 
-function useSelectionBuffer(active, additionalParams) {
-    const selection = useSaveBuffer({
-        compare: (a, b) => {
-            return _.isEmpty(_.xor(a, b));
-        },
-        reset: !active,
-        ...additionalParams,
-    });
-    selection.shown = useAfterglow(active);
-    selection.existing = function(id) {
-        return _.includes(this.original, id);
-    };
-    selection.toggle = function(id) {
-        const list = _.toggle(this.current, id);
-        this.set(list);
-    };
-    selection.adding = function(id) {
-        return !this.existing(id) && _.includes(this.current, id);
-    };
-    selection.keeping = function(id) {
-        return _.includes(this.current, id);
-    };
-    selection.removing = function(id) {
-        return this.existing(id) && !_.includes(this.current, id);
-    };
-    return selection;
-}
-
-function useDraftBuffer(active, additionalParams) {
-    const draft = useSaveBuffer({
-        compare: _.isEqual,
-        reset: !active,
-        ...additionalParams,
-    });
-    draft.getCurrent = function(key, def) {
-        return _.get(this.current, key, def);
-    };
-    draft.getOriginal = function(key, def) {
-        return _.get(this.original, key, def);
-    };
-    draft.get = draft.getCurrent;
-    draft.update = function(key, value) {
-        this.set(_.decoupleSet(this.current, key, value));
-    };
-    return draft;
-}
-
 export {
     useLatest,
     useAfterglow,
     useConfirmation,
-    useSortHandling,
-    useEditHandling,
-    useAddHandling,
-    useReturnHandling,
-    useRowHandling,
-    useNameHandling,
+    useDataLossWarning,
+    useNavigation,
+    useSortHandler,
+    useRowToggle,
+    useAutogenID,
     useSelectionBuffer,
     useDraftBuffer,
 };

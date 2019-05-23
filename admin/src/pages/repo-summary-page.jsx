@@ -15,7 +15,6 @@ import { MultilingualTextField } from '../widgets/multilingual-text-field.jsx';
 import { OptionList } from '../widgets/option-list.jsx';
 import { ActivityChart } from '../widgets/activity-chart.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
-import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
@@ -30,14 +29,37 @@ import {
 import './repo-summary-page.scss';
 
 async function RepoSummaryPage(props) {
-    const { database, route, env, projectID, repoID, editing } = props;
+    const { database, projectID, repoID } = props;
+    const [ show ] = useProgress();
+
+    render();
+    const db = database.use({ schema: 'global' });
+    const currentUserID = await db.start()
+    const system = await SystemFinder.findSystem(db);
+    const repo = await RepoFinder.findRepo(db, repoID);
+    render();
+    const project = await ProjectFinder.findProject(db, projectID);
+    render();
+    const statistics = await StatisticsFinder.findDailyActivitiesOfRepo(db, project, repo);
+    render();
+
+    function render() {
+        const sprops = { system, repo, project, statistics };
+        return <RepoSummaryPageSync {...sprops} {...props} />;
+    }
+}
+
+async function RepoSummaryPage(props) {
+    const { system, repo, project, statistics } = props;
+    const { database, route, env, editing } = props;
     const { t, p } = env.locale;
-    const db = database.use({ schema: 'global', by: this });
+    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !editing;
     const [ problems, setProblems ] = useState({});
     const [ confirmationRef, confirm ] = useConfirmation();
     const [ show ] = useProgress();
     const draft = useDraftBuffer(editing, {
+        original: repo,
         save: (base, ours, action) => {
             switch (action) {
                 case 'restore': return restore(base);
@@ -65,49 +87,22 @@ async function RepoSummaryPage(props) {
         draft.update('details.title', title);
     });
 
-    render();
-    const currentUserID = await db.start()
-    const system = await SystemFinder.findSystem(db);
-    const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
-    const repo = await RepoFinder.findRepo(db, repoID);
-    render();
-    const project = await ProjectFinder.findProject(db, projectID);
-    render();
-    const statistics = await StatisticsFinder.findDailyActivitiesOfRepo(db, project, repo);
-    render();
-
-    function render() {
-        const { changed } = draft;
-        const title = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
-        show(
-            <div className="repo-summary-page">
-                {renderButtons()}
-                <h2>{t('repo-summary-$title', title)}</h2>
-                <UnexpectedError error={draft.error} />
-                {renderForm()}
-                {renderInstructions()}
-                {renderChart()}
-                <ActionConfirmation ref={confirmationRef} env={env} />
-                <DataLossWarning changes={changed} env={env} route={route} />
-            </div>
-        );
-    }
+    const { changed } = draft;
+    const title = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
+    return (
+        <div className="repo-summary-page">
+            {renderButtons()}
+            <h2>{t('repo-summary-$title', title)}</h2>
+            <UnexpectedError error={draft.error} />
+            {renderForm()}
+            {renderInstructions()}
+            {renderChart()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
     function renderButtons() {
-        const { changed } = draft;
-        if (editing) {
-            return (
-                <div key="edit" className="buttons">
-                    <PushButton onClick={handleCancelClick}>
-                        {t('repo-summary-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
-                        {t('repo-summary-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
+        if (readOnly) {
             const active = (project && repo) ? _.includes(project.repo_ids, repo.id) : true;
             const preselected = (!active) ? 'restore' : undefined;
             return (
@@ -126,6 +121,18 @@ async function RepoSummaryPage(props) {
                     {' '}
                     <PushButton className="emphasis" onClick={handleEditClick}>
                         {t('repo-summary-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            return (
+                <div key="edit" className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('repo-summary-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
+                        {t('repo-summary-save')}
                     </PushButton>
                 </div>
             );

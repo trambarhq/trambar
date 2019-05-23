@@ -15,81 +15,97 @@ import { ActivityTooltip } from '../tooltips/activity-tooltip.jsx';
 import { ModifiedTimeTooltip } from '../tooltips/modified-time-tooltip.jsx'
 import { ActionBadge } from '../widgets/action-badge.jsx';
 import { ActionConfirmation } from '../widgets/action-confirmation.jsx';
-import { DataLossWarning } from '../widgets/data-loss-warning.jsx';
 import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 
 // custom hooks
 import {
     useSelectionBuffer,
-    useSortHandling,
-    useEditHandling,
-    useRowHandling,
+    useSortHandler,
+    useRowToggle,
+    useNavigation,
     useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './repo-list-page.scss';
 
 async function RepoListPage(props) {
-    const { database, route, env, projectID, editing } = props;
-    const { t, p, f } = env.locale;
-    const db = database.use({ schema: 'global', by: this });
+    const { database, projectID } = props;
     const [ show ] = useProgress();
-    const selection = useSelectionBuffer(editing, { save });
-    const [ confirmationRef, confirm ]  = useConfirmation();
-
-    const [ sort, handleSort ] = useSortHandling();
-    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
-    const [ handleRowClick ] = useRowHandling(selection, 'data-repo-id');
-    const handleSaveClick = useCallback(async (evt) => {
-        await selection.save();
-    });
 
     render();
+    const db = database.use({ schema: 'global' });
     const currentUserID = await db.start();
     const project = await ProjectFinder.findProject(db, projectID);
     const repos = await RepoFinder.findExistingRepos(db);
-    const linkedRepos = findRepos(repos, project);
-    selection.base(_.map(linkedRepos, 'id'));
     render();
     const servers = await ServerFinder.findServersOfRepos(db, repos);
     render();
+    const linkedRepos = findRepos(repos, project);
     const statistics = await StatisticsFinder.findDailyActivitiesOfRepos(db, project, linkedRepos);
     render();
 
     function render() {
-        const { changed } = selection;
-        show(
-            <div className="repo-list-page">
-                {renderButtons()}
-                <h2>{t('repo-list-title')}</h2>
-                <UnexpectedError error={selection.error} />
-                {renderTable()}
-                <ActionConfirmation ref={confirmationRef} env={env} />
-                <DataLossWarning changes={changed} env={env} route={route} />
-            </div>
-        );
+        const sprops = { project, repos, servers, statistics };
+        show(<RepoListPageSync {...sprops} {...props} />);
     }
+}
+
+function RepoListPageSync(props) {
+    const { project, repos, servers, statistics } = props;
+    const { database, route, env, editing } = props;
+    const { t, p, f } = env.locale;
+    const readOnly = !editing;
+    const linkedRepos = findRepos(repos, project);
+    const selection = useSelectionBuffer({
+        original: _.map(linkedRepos, 'id'),
+        save: saveRepoSelection,
+        reset: readOnly,
+    });
+    const navigation = useNavigation(route, {});
+    const [ confirmationRef, confirm ]  = useConfirmation();
+    useDataLossWarning(route, env, confirm, () => selection.unsaved);
+
+    const [ sort, handleSort ] = useSortHandler();
+    const handleRowClick = useRowToggle(selection, 'data-repo-id');
+    const handleEditClick = useCallback((evt) => navigation.edit());
+    const handleCancelClick  = useCallback((evt) => navigation.cancel());
+    const handleSaveClick = useCallback(async (evt) => {
+        if (await selection.save()) {
+            navigation.done();
+        }
+    });
+
+    return (
+        <div className="repo-list-page">
+            {renderButtons()}
+            <h2>{t('repo-list-title')}</h2>
+            <UnexpectedError error={selection.error} />
+            {renderTable()}
+            <ActionConfirmation ref={confirmationRef} env={env} />
+        </div>
+    );
 
     function renderButtons() {
-        const { changed } = selection;
-        if (editing) {
+        if (readOnly) {
+            const empty = _.isEmpty(repos);
+            return (
+                <div className="buttons">
+                    <PushButton className="emphasis" disabled={empty} onClick={handleEditClick}>
+                        {t('repo-list-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            const { unsaved } = selection;
             return (
                 <div className="buttons">
                     <PushButton onClick={handleCancelClick}>
                         {t('repo-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
                         {t('repo-list-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
-            const empty = _.isEmpty(repos);
-            return (
-                <div className="buttons">
-                    <PushButton className="emphasis" disabled={empty} onClick={handleEditClick}>
-                        {t('repo-list-edit')}
                     </PushButton>
                 </div>
             );
@@ -105,7 +121,7 @@ async function RepoListPage(props) {
         if (selection.shown) {
             tableProps.expandable = true;
             tableProps.selectable = true;
-            tableProps.expanded = !!editing;
+            tableProps.expanded = !readOnly;
         }
         return (
             <SortableTable {...tableProps}>
@@ -301,7 +317,7 @@ async function RepoListPage(props) {
         }
     }
 
-    async function save() {
+    async function saveRepoSelection() {
         const repoIDsBefore = project.repo_ids;
         const repoIDsAfter = selection.current;
         const remove = _.size(_.difference(repoIDsBefore, repoIDsAfter));
@@ -314,6 +330,7 @@ async function RepoListPage(props) {
             id: project.id,
             repo_ids: _.intersection(repoIDsAfter, existingRepoIDs)
         };
+        const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'project' }, columns);
         handleCancelClick();
     }
