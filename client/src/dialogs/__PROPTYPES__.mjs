@@ -46,6 +46,27 @@ MediaDialogBox.propTypes = {
 
     onClose: PropTypes.func,
 };
+MembershipRequestDialogBox.propTypes = {
+    show: PropTypes.bool,
+    currentUser: PropTypes.object,
+    project: PropTypes.object,
+
+    env: PropTypes.instanceOf(Environment).isRequired,
+
+    onConfirm: PropTypes.func,
+    onRevoke: PropTypes.func,
+    onClose: PropTypes.func,
+    onProceed: PropTypes.func,
+};
+MobileSetupDialogBox.propTypes = {
+    show: PropTypes.bool,
+    system: PropTypes.object,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+
+    onClose: PropTypes.func,
+};
 
 ProjectDescriptionDialogBox.propTypes = {
     show: PropTypes.bool,

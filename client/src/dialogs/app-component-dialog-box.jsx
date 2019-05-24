@@ -2,9 +2,9 @@ import React, { PureComponent } from 'react';
 import MarkGor from 'mark-gor/react';
 
 // widgets
-import Overlay from 'common/widgets/overlay.jsx';
-import PushButton from '../widgets/push-button.jsx';
-import ResourceView from 'common/widgets/resource-view.jsx';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ResourceView } from 'common/widgets/resource-view.jsx';
 
 import './app-component-dialog-box.scss';
 
@@ -12,22 +12,19 @@ import './app-component-dialog-box.scss';
  * Dialog box for displaying the description of an app component in full.
  */
 function AppComponentDialogBox(props) {
-    const { env, component, show, onClose } = props;
+    const { env, component, onClose } = props;
     const { t, p } = env.locale;
     if (!component) {
         return null;
     }
-    const overlayProps = { show, onBackgroundClick: onClose };
     return (
-        <Overlay {...overlayProps}>
-            <div className="app-component-dialog-box">
-                <div className="contents">
-                    {renderPicture()}
-                    {renderText()}
-                </div>
-                {renderButtons()}
+        <div className="app-component-dialog-box">
+            <div className="contents">
+                {renderPicture()}
+                {renderText()}
             </div>
-        </Overlay>
+            {renderButtons()}
+        </div>
     );
 
     function renderPicture() {
@@ -74,7 +71,9 @@ function AppComponentDialogBox(props) {
     }
 }
 
+const component = Overlay.create(AppComponentDialogBox);
+
 export {
-    AppComponentDialogBox as default,
-    AppComponentDialogBox,
+    component as default,
+    component as AppComponentDialogBox,
 };

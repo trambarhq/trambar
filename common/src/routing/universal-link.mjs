@@ -1,7 +1,10 @@
 const baseURL = 'https://trambar.io';
 
 function createActivationURL(address, schema, activationCode) {
-    let hostPath = address.replace('://', '/');
+    if (!address || !schema || !activationCode) {
+        return;
+    }
+    const hostPath = address.replace('://', '/');
     return `${baseURL}/${hostPath}/?ac=${activationCode}&p=${schema}`;
 }
 

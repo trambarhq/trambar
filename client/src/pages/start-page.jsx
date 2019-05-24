@@ -915,11 +915,11 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestConfirm = (evt) => {
-        let { database, currentUser } = this.props;
-        let { project } = evt.target.props;
+        const { database, currentUser } = this.props;
+        const { project } = evt;
         if (!_.includes(currentUser.requested_project_ids, project.id)) {
-            let db = database.use({ schema: 'global', by: this });
-            let userAfter = _.clone(currentUser);
+            const db = database.use({ schema: 'global', by: this });
+            const userAfter = _.clone(currentUser);
             userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ project.id ]);
             db.saveOne({ table: 'user' }, userAfter);
         }
@@ -931,12 +931,12 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestRevoke = (evt) => {
-        let { database, currentUser } = this.props;
-        let { project } = evt.target.props;
+        const { database, currentUser } = this.props;
+        const { project } = evt;
         if (_.includes(currentUser.requested_project_ids, project.id)) {
-            let userAfter = _.clone(currentUser);
+            const userAfter = _.clone(currentUser);
             userAfter.requested_project_ids = _.without(userAfter.requested_project_ids, project.id);
-            let db = database.use({ schema: 'global', by: this });
+            const db = database.use({ schema: 'global', by: this });
             db.saveOne({ table: 'user' }, userAfter);
         }
     }
@@ -956,7 +956,7 @@ class StartPageSync extends PureComponent {
      * @param  {Event} evt
      */
     handleMembershipRequestProceed = (evt) => {
-        let { project } = evt.target.props;
+        const { project } = evt;
         this.navigateToProject('', project.name);
     }
 

@@ -10,20 +10,17 @@ import './confirmation-dialog-box.scss';
  * Dialog box for asking the user for a confirmation of an action.
  */
 function ConfirmationDialogBox(props) {
-    const { env, show, children, onCancel, onConfirm } = props;
+    const { env, children, onCancel, onConfirm } = props;
     const { t } = env.locale;
     let { onClose } = props;
     if (!onClose) {
         onClose = onCancel;
     }
-    const overlayProps = { show, onBackgroundClick: onClose};
     return (
-        <Overlay {...overlayProps}>
-            <div className="confirmation-dialog-box">
-                {renderMessage()}
-                {renderButtons()}
-            </div>
-        </Overlay>
+        <div className="confirmation-dialog-box">
+            {renderMessage()}
+            {renderButtons()}
+        </div>
     );
 
     function renderMessage() {
@@ -51,7 +48,9 @@ function ConfirmationDialogBox(props) {
     }
 }
 
+const component = Overlay.create(ConfirmationDialogBox);
+
 export {
-    ConfirmationDialogBox as default,
-    ConfirmationDialogBox,
+    component as default,
+    component as ConfirmationDialogBox,
 };

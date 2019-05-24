@@ -1,65 +1,58 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useState, useCallback } from 'react';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import Overlay from 'common/widgets/overlay.jsx';
-import PushButton from '../widgets/push-button.jsx';
-import ResourceView from 'common/widgets/resource-view.jsx';
-import Scrollable from '../widgets/scrollable.jsx';
-import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ResourceView } from 'common/widgets/resource-view.jsx';
+import { Scrollable } from '../widgets/scrollable.jsx';
+import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 
 import './membership-request-dialog-box.scss';
 
 /**
  * Dialog box for requesting membership to a project.
- *
- * @extends PureComponent
  */
-class MembershipRequestDialogBox extends PureComponent {
-    static displayName = 'MembershipRequestDialogBox';
+function MembershipRequestDialogBox(props) {
+    const { env, project, currentUser } = props;
+    const { onConfirm, onRevoke, onProceed, onClose } = props;
+    const { t, p, g } = env.locale;
+    const [ userJustJoined, setUserJustJoined ] = useState(false);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            userJustJoined: false
-        };
-    }
+    const handleJoinClick = useCallback((evt) => {
+        setUserJustJoined(true);
+        if (onConfirm) {
+            onConfirm({ project });
+        }
+    }, [ onConfirm ]);
+    const handleWithdrawClick = useCallback((evt) => {
+        if (onRevoke) {
+            onRevoke({ project });
+        }
+    }, [ onRevoke ]);
+    const handleProceedClick = useCallback((evt) => {
+        if (onProceed) {
+            onProceed({ project });
+        }
+    }, [ onProceed ]);
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show } = this.props;
-        let overlayProps = { show, onBackgroundClick: this.handleCloseClick };
-        let classNames = [ 'membership-request-dialog-box' ];
-        return (
-            <Overlay {...overlayProps}>
-                <div className={classNames.join(' ')}>
-                    {this.renderText()}
-                    {this.renderMessage()}
-                    {this.renderButtons()}
-                </div>
-            </Overlay>
-        );
-    }
+    const classNames = [ 'membership-request-dialog-box' ];
+    return (
+        <div className={classNames.join(' ')}>
+            {renderText()}
+            {renderMessage()}
+            {renderButtons()}
+        </div>
+    );
 
-    /**
-     * Render description of project
-     *
-     * @return {ReactElement|null}
-     */
-    renderText() {
-        let { env, project } = this.props;
+    function renderText() {
         if (!project) {
             return null;
         }
-        let { p } = env.locale;
-        let { name } = project;
-        let { title, description, resources } = project.details;
-        let image = _.find(resources, { type: 'image' });
+        const { name } = project;
+        const { title, description, resources } = project.details;
+        const image = _.find(resources, { type: 'image' });
         return (
             <Scrollable>
                 <div className="title">{p(title) || name}</div>
@@ -73,20 +66,12 @@ class MembershipRequestDialogBox extends PureComponent {
         );
     }
 
-    /**
-     * Render message about member status
-     *
-     * @return {ReactElement|null}
-     */
-    renderMessage() {
-        let { env, project, currentUser } = this.props;
+    function renderMessage() {
         if (!project || !currentUser) {
             return null;
         }
-        let { userJustJoined } = this.state;
-        let { t, g } = env.locale;
-        let you = UserUtils.getDisplayName(currentUser, env);
-        let gender = UserUtils.getGender(currentUser);
+        const you = UserUtils.getDisplayName(currentUser, env);
+        const gender = UserUtils.getGender(currentUser);
         g(you, gender);
         let className = '', icon = '', message = '';
         if (UserUtils.isMember(currentUser, project)) {
@@ -113,22 +98,15 @@ class MembershipRequestDialogBox extends PureComponent {
         );
     }
 
-    /**
-     * Render buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env, project, currentUser } = this.props;
-        let { t } = env.locale;
+    function renderButtons() {
         if (UserUtils.isMember(currentUser, project)) {
-            let cancelButtonProps = {
+            const cancelButtonProps = {
                 label: t('membership-request-cancel'),
-                onClick: this.handleCloseClick,
+                onClick: onClose,
             };
-            let proceedButtonProps = {
+            const proceedButtonProps = {
                 label: t('membership-request-proceed'),
-                onClick: this.handleProceedClick,
+                onClick: handleProceedClick,
                 emphasized: true,
             };
             return (
@@ -138,17 +116,17 @@ class MembershipRequestDialogBox extends PureComponent {
                 </div>
             );
         } else if (UserUtils.isPendingMember(currentUser, project)) {
-            let cancelButtonProps = {
+            const cancelButtonProps = {
                 label: t('membership-request-cancel'),
-                onClick: this.handleCloseClick,
+                onClick: onClose,
             };
-            let withdrawButtonProps = {
+            const withdrawButtonProps = {
                 label: t('membership-request-withdraw'),
-                onClick: this.handleWithdrawClick,
+                onClick: handleWithdrawClick,
             };
-            let browseButtonProps = {
+            const browseButtonProps = {
                 label: t('membership-request-browse'),
-                onClick: this.handleProceedClick,
+                onClick: handleProceedClick,
                 hidden: !UserUtils.canViewProject(currentUser, project),
                 emphasized: true,
             };
@@ -160,19 +138,19 @@ class MembershipRequestDialogBox extends PureComponent {
                 </div>
             );
         } else {
-            let cancelButtonProps = {
+            const cancelButtonProps = {
                 label: t('membership-request-cancel'),
-                onClick: this.handleCloseClick,
+                onClick: onClose,
             };
-            let browseButtonProps = {
+            const browseButtonProps = {
                 label: t('membership-request-browse'),
-                onClick: this.handleProceedClick,
+                onClick: handleProceedClick,
                 hidden: !UserUtils.canViewProject(currentUser, project),
                 emphasized: !UserUtils.canJoinProject(currentUser, project),
             };
-            let joinButtonProps = {
+            const joinButtonProps = {
                 label: t('membership-request-join'),
-                onClick: this.handleJoinClick,
+                onClick: handleJoinClick,
                 hidden: !UserUtils.canJoinProject(currentUser, project),
                 emphasized: true,
             };
@@ -185,77 +163,11 @@ class MembershipRequestDialogBox extends PureComponent {
             );
         }
     }
-
-    /**
-     * Called when user click join button
-     *
-     * @param  {Event} evt
-     */
-    handleJoinClick = (evt) => {
-        let { onConfirm } = this.props;
-        this.setState({ userJustJoined: true });
-        if (onConfirm) {
-            onConfirm({ type: 'confirm', target: this });
-        }
-    }
-
-    /**
-     * Called when user click withdraw button
-     *
-     * @param  {Event} evt
-     */
-    handleWithdrawClick = (evt) => {
-        let { onRevoke } = this.props;
-        if (onRevoke) {
-            onRevoke({ type: 'revoke', target: this });
-        }
-    }
-
-    /**
-     * Called when user click cancel or ok button or outside the dialog box
-     *
-     * @param  {Event} evt
-     */
-    handleCloseClick = (evt) => {
-        let { onClose } = this.props;
-        if (onClose) {
-            onClose({ type: 'cancel', target: this });
-        }
-    }
-
-    /**
-     * Called when user click proceed button
-     *
-     * @param  {Event} evt
-     */
-    handleProceedClick = (evt) => {
-        let { onProceed } = this.props;
-        if (onProceed) {
-            onProceed({ type: 'proceed', target: this });
-        }
-    }
 }
+
+const component = Overlay.create(MembershipRequestDialogBox);
 
 export {
-    MembershipRequestDialogBox as default,
-    MembershipRequestDialogBox,
+    component as default,
+    component as MembershipRequestDialogBox,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    MembershipRequestDialogBox.propTypes = {
-        show: PropTypes.bool,
-        currentUser: PropTypes.object,
-        project: PropTypes.object,
-
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onConfirm: PropTypes.func,
-        onRevoke: PropTypes.func,
-        onClose: PropTypes.func,
-        onProceed: PropTypes.func,
-    };
-}

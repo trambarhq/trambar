@@ -1,132 +1,57 @@
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
+import React, { useEffect } from 'react';
+import Relaks, { useProgress } from 'relaks';
 import * as UniversalLink from 'common/routing/universal-link.mjs';
 import * as DeviceFinder from 'common/objects/finders/device-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
-import Overlay from 'common/widgets/overlay.jsx';
-import PushButton from '../widgets/push-button.jsx';
-import QRCode from '../widgets/qr-code.jsx';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { QRCode } from '../widgets/qr-code.jsx';
 
 import './mobile-setup-dialog-box.scss';
 
-class MobileSetupDialogBox extends PureComponent {
-    static displayName = 'MobileSetupDialogBox';
+async function MobileSetupDialogBox(props) {
+    const { database, env, system, onClose } = props;
+    const { t } = env.locale;
+    const [ show ] = useProgress();
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show, onClose } = this.props;
-        let overlayProps = { show, onBackgroundClick: onClose };
-        let formProps = _.omit(this.props, 'show');
-        return (
-            <Overlay {...overlayProps}>
-                <MobileSetupForm {...formProps} />
-            </Overlay>
-        );
-    }
-}
-
-/**
- * Dialog box that displays a QR-code for mobile activation.
- *
- * @extends AsyncComponent
- */
-class MobileSetupForm extends AsyncComponent {
-    static displayName = 'MobileSetupForm';
-
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { database, env, system, onClose } = this.props;
-        let db = database.use({ by: this });
-        let props = {
-            activationCode: undefined,
-            currentUser: undefined,
-            devices: undefined,
-
-            system,
-            database,
-            env,
-            onClose,
+    useEffect(() => {
+        return () => {
+            database.releaseMobileSession();
         };
-        meanwhile.show(<MobileSetupFormSync {...props} />);
-        let currentUserID = await db.start();
-        props.currentUser = await UserFinder.findUser(db, currentUserID);
-        props.activationCode = await db.beginMobileSession('client')
-        meanwhile.show(<MobileSetupFormSync {...props} />);
-        props.devices = await DeviceFinder.findUserDevices(db, props.currentUser);
-        return <MobileSetupFormSync {...props} />;
-    }
+    }, []);
 
-    /**
-     * Release the mobile session, assuming the device has acquired it
-     */
-    componentWillUnmount() {
-        let { database } = this.props;
-        let db = database.use({ by: this });
-        db.releaseMobileSession();
-    }
-}
+    render();
+    const db = database.use();
+    const currentUserID = await db.start();
+    const currentUser = await UserFinder.findUser(db, currentUserID);
+    const activationCode = await db.beginMobileSession('client')
+    render();
+    const devices = await DeviceFinder.findUserDevices(db, currentUser);
+    render();
 
-class MobileSetupFormSync extends PureComponent {
-    static displayName = 'MobileSetupFormSyncSync';
-
-    /**
-     * Check for change in props.devices
-     */
-    componentWillReceiveProps(nextProps) {
-        let { devices, onClose } = this.props;
-        if (nextProps.devices !== devices) {
-            let handle = nextProps.activationCode;
-            if (handle) {
-                if (_.some(nextProps.devices, { session_handle: handle })) {
-                    // a device has acquire the session--close dialog box automatically
-                    if (onClose) {
-                        onClose({
-                            type: 'close',
-                            target: this,
-                        });
-                    }
-                }
-            }
+    if (_.some(devices, { session_handle: activationCode })) {
+        // a device has acquire the session--close dialog box automatically
+        if (onClose) {
+            onClose({});
         }
     }
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { database, env, system, activationCode, onClose } = this.props;
-        let { t } = env.locale;
+    function render() {
         let { address, schema } = database.context;
-        let systemAddress = _.get(system, 'settings.address');
+        const systemAddress = _.get(system, 'settings.address');
         if (!systemAddress) {
             // use the address in the system object if there's one
             address = systemAddress;
         }
-        let url;
-        if (activationCode) {
-            url = UniversalLink.createActivationURL(address, schema, activationCode);
-            console.log(url);
-        }
-        let closeButtonProps = {
+        const url = UniversalLink.createActivationURL(address, schema, activationCode);
+        const closeButtonProps = {
             label: t('mobile-setup-close'),
             emphasized: true,
             onClick: onClose,
         };
-        return (
+        show(
             <div className="mobile-setup-dialog-box">
                 <div className="contents">
                     <QRCode text={url} scale={6} />
@@ -155,24 +80,11 @@ function insertSpacers(s) {
     return _.toUpper(parts.join(' '));
 }
 
+const component = Overlay.create(
+    Relaks.memo(MobileSetupDialogBox)
+);
+
 export {
-    MobileSetupDialogBox as default,
-    MobileSetupDialogBox,
+    component as default,
+    component as MobileSetupDialogBox,
 };
-
-import Database from 'common/data/database.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    MobileSetupDialogBox.propTypes = {
-        show: PropTypes.bool,
-        system: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onClose: PropTypes.func,
-    };
-}
