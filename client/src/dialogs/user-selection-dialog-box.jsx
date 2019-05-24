@@ -1,5 +1,4 @@
-import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useCallback } from 'react';
 
 // widgets
 import Overlay from 'common/widgets/overlay.jsx';
@@ -7,69 +6,52 @@ import PushButton from '../widgets/push-button.jsx';
 import Scrollable from '../widgets/scrollable.jsx';
 import UserSelectionList from '../lists/user-selection-list.jsx';
 
+// custom hooks
+import {
+    useSelectionBuffer,
+} from '../hooks';
+
 import './user-selection-dialog-box.scss';
 
 /**
  * Dialog box for selecting users from a list.
- *
- * @extends PureComponent
  */
-class UserSelectionDialogBox extends PureComponent {
-    static displayName = 'UserSelectionDialogBox';
+function UserSelectionDialogBox(props) {
+    const { database, route, env, disabled, selection, onSelect, onCancel } = props;
+    const { t } = env.locale;
+    const userSelection = useSelectionBuffer({
+        original: selection,
+    });
 
-    constructor(props) {
-        let { selection } = props;
-        super(props);
-        this.state = {
-            selection,
-        };
-    }
-
-    /**
-     * Update selection in state if necessary
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { selection } = this.props;
-        if (nextProps.selection !== selection) {
-            this.setState({ selection: nextProps.selection });
+    const handleListSelect = useCallback((evt) => {
+        userSelection.set(evt.selection)
+    });
+    const handleOKClick = useCallback((evt) => {
+        if (onSelect) {
+            onSelect({ selection: userSelection.current });
         }
-    }
+    });
+    const handleCancelClick = useCallback((evt) => {
+        if (onCancel) {
+            onCancel({});
+        }
+    });
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show } = this.props;
-        let overlayProps = { show, onBackgroundClick: this.handleCancelClick };
-        return (
-            <Overlay {...overlayProps}>
-                <div className="user-selection-dialog-box">
-                    {this.renderList()}
-                    {this.renderButtons()}
-                </div>
-            </Overlay>
-        );
-    }
+    return (
+        <div className="user-selection-dialog-box">
+            {renderList()}
+            {renderButtons()}
+        </div>
+    );
 
-    /**
-     * Render list of users
-     *
-     * @return {ReactElement}
-     */
-    renderList() {
-        let { database, route, env, disabled } = this.props;
-        let { selection } = this.state;
-        let listProps = {
-            selection,
+    function renderList() {
+        const listProps = {
+            selection: userSelection.current,
             disabled,
             database,
             route,
             env,
-            onSelect: this.handleListSelect,
+            onSelect: handleListSelect,
         };
         return (
             <Scrollable>
@@ -78,21 +60,14 @@ class UserSelectionDialogBox extends PureComponent {
         );
     }
 
-    /**
-     * Render cancel and OK buttons
-     *
-     * @return {ReactElement}
-     */
-    renderButtons() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        let cancelButtonProps = {
+    function renderButtons() {
+        const cancelButtonProps = {
             label: t('selection-cancel'),
-            onClick: this.handleCancelClick,
+            onClick: handleCancelClick,
         };
-        let okButtonProps = {
+        const okButtonProps = {
             label: t('selection-ok'),
-            onClick: this.handleOKClick,
+            onClick: handleOKClick,
             emphasized: true,
         };
         return (
@@ -102,75 +77,11 @@ class UserSelectionDialogBox extends PureComponent {
             </div>
         );
     }
-
-    /**
-     * Called when user select or unselect another user
-     *
-     * @param  {Object} evt
-     */
-    handleListSelect = (evt) => {
-        let { selection } = this.state;
-        if (!_.isEqual(selection, evt.selection)) {
-            selection = evt.selection;
-            this.setState({ selection });
-        }
-    }
-
-    /**
-     * Called when user click OK button
-     *
-     * @param  {Event} evt
-     */
-    handleOKClick = (evt) => {
-        let { onSelect } = this.props;
-        let { selection } = this.state;
-        if (onSelect) {
-            onSelect({
-                type: 'select',
-                target: this,
-                selection,
-            });
-        }
-    }
-
-    /**
-     * Called when user click cancel button or outside the dialog box
-     *
-     * @param  {Event} evt
-     */
-    handleCancelClick = (evt) => {
-        let { onCancel } = this.props;
-        if (onCancel) {
-            onCancel({
-                type: 'cancel',
-                target: this,
-            });
-        }
-    }
 }
+
+const component = Overlay.create(UserSelectionDialogBox);
 
 export {
-    UserSelectionDialogBox as default,
-    UserSelectionDialogBox,
+    component as default,
+    component as UserSelectionDialogBox,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    UserSelectionDialogBox.propTypes = {
-        show: PropTypes.bool,
-        selection: PropTypes.arrayOf(PropTypes.number).isRequired,
-        disabled: PropTypes.arrayOf(PropTypes.number),
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onSelect: PropTypes.func,
-        onCancel: PropTypes.func,
-    };
-}

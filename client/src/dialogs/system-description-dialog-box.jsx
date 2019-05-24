@@ -12,23 +12,14 @@ import './system-description-dialog-box.scss';
  * Dialog box for displaying the system description.
  */
 function SystemDescriptionDialogBox(props) {
-    const { env, system, show, onClose } = props;
-    const overlayProps = { show,  onBackgroundClick: handleCloseClick };
+    const { env, system, onClose } = props;
     const { t, p } = env.locale;
 
-    const handleCloseClick = useCallback((evt) => {
-        if (onClose) {
-            onClose({});
-        }
-    });
-
     return (
-        <Overlay {...overlayProps}>
-            <div className="system-description-dialog-box">
-                {renderText()}
-                {renderButtons()}
-            </div>
-        </Overlay>
+        <div className="system-description-dialog-box">
+            {renderText()}
+            {renderButtons()}
+        </div>
     );
 
     function renderText() {
@@ -48,7 +39,7 @@ function SystemDescriptionDialogBox(props) {
         const closeButtonProps = {
             label: t('project-description-close'),
             emphasized: true,
-            onClick: handleCloseClick,
+            onClick: onClose,
         };
         return (
             <div className="buttons">
@@ -58,7 +49,9 @@ function SystemDescriptionDialogBox(props) {
     }
 }
 
+const component = Overlay.create(SystemDescriptionDialogBox);
+
 export {
-    SystemDescriptionDialogBox as default,
-    SystemDescriptionDialogBox,
+    component as default,
+    component as SystemDescriptionDialogBox,
 };

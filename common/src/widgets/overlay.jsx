@@ -198,6 +198,18 @@ class Overlay extends PureComponent {
     }
 }
 
+Overlay.create = function(Component) {
+    const displayName = Component.displayName || Component.name || 'Component';
+    const newComponent = function (props) {
+        const { show, onCancel, onClose } = props;
+        const overlayProps = { show, onBackgroundClick: onCancel || onClose };
+        const contents = (show) ? <Component {...props} /> : undefined;
+        return <Overlay {...overlayProps}>{contents}</Overlay>;
+    };
+    newComponent.displayName = `Overlay(${displayName})`;
+    return newComponent;
+};
+
 export {
     Overlay as default,
     Overlay,

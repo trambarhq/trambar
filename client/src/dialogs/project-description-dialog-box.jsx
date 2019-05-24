@@ -11,27 +11,16 @@ import './project-description-dialog-box.scss';
 
 /**
  * Dialog box for displaying a project's description in full.
- *
- * @extends PureComponent
  */
 function ProjectDescriptionDialogBox(props) {
-    const { env, project, show, onClose } = props;
+    const { env, project, onClose } = props;
     const { t, p } = env.locale;
 
-    const handleCloseClick = useCallback((evt) => {
-        if (onClose) {
-            onClose({});
-        }
-    });
-
-    const overlayProps = { show, onBackgroundClick: handleCloseClick };
     return (
-        <Overlay {...overlayProps}>
-            <div className="project-description-dialog-box">
-                {renderText()}
-                {renderButtons()}
-            </div>
-        </Overlay>
+        <div className="project-description-dialog-box">
+            {renderText()}
+            {renderButtons()}
+        </div>
     );
 
     function renderText() {
@@ -55,7 +44,7 @@ function ProjectDescriptionDialogBox(props) {
         const closeButtonProps = {
             label: t('project-description-close'),
             emphasized: true,
-            onClick: handleCloseClick,
+            onClick: onClose,
         };
         return (
             <div className="buttons">
@@ -65,7 +54,9 @@ function ProjectDescriptionDialogBox(props) {
     }
 }
 
+const component = Overlay.create(ProjectDescriptionDialogBox);
+
 export {
-    ProjectDescriptionDialogBox as default,
-    ProjectDescriptionDialogBox,
+    component as default,
+    component as ProjectDescriptionDialogBox,
 };

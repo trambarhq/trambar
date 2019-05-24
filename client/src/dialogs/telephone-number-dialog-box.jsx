@@ -13,16 +13,13 @@ import './telephone-number-dialog-box.scss';
  * Dialog box that displays a phone number and a QR code for dialing that number.
  */
 function TelephoneNumberDialogBox(props) {
-    const { env, show, number, onClose } = props;
+    const { env, number, onClose } = props;
     const { t } = env.locale;
-    const overlayProps = { show, onBackgroundClick: onClose };
     return (
-        <Overlay {...overlayProps}>
-            <div className="telephone-number-dialog-box">
-                {renderContents()}
-                {renderButtons()}
-            </div>
-        </Overlay>
+        <div className="telephone-number-dialog-box">
+            {renderContents()}
+            {renderButtons()}
+        </div>
     );
 
     function renderContents() {
@@ -49,7 +46,9 @@ function TelephoneNumberDialogBox(props) {
     }
 }
 
+const component = Overlay.create(TelephoneNumberDialogBox);
+
 export {
-    TelephoneNumberDialogBox as default,
-    TelephoneNumberDialogBox,
+    component as default,
+    component as TelephoneNumberDialogBox,
 };

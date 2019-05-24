@@ -169,7 +169,7 @@ function ServerSummaryPageSync(props) {
         if (option.value && typeBefore !== option.value) {
             type = option.value;
         }
-        draft.update('settings.user.type', typeAfter);
+        draft.update('settings.user.type', type);
     });
     const handleRoleOptionClick = useCallback((evt) => {
         const roleIDsBefore = draft.get('settings.user.role_ids', []);
@@ -572,6 +572,7 @@ function ServerSummaryPageSync(props) {
         if (!address) {
             address = window.location.origin;
         }
+        address = _.trimEnd(address, '/');
         const url = `${address}/srv/session/${type || '...'}/callback/`;
         const props = {
             id: 'oauth_callback',

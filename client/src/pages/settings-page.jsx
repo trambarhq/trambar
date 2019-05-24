@@ -69,10 +69,10 @@ function SettingsPageSync(props) {
     const { database, route, env, payloads } = props;
     const { currentUser, currentProject, projectLinks, devices, repos, system } = props;
     const db = database.use({ schema: 'global', by: this });
-    const userDraft = useDraftBuffer(true, {
+    const userDraft = useDraftBuffer({
         original: currentUser || {},
         autosave: AUTOSAVE_DURATION,
-        save,
+        save: saveUser,
     });
 
     const handleKonamiCode = useCallback((evt) => {
@@ -221,7 +221,7 @@ function SettingsPageSync(props) {
         return <LanguagePanel {...props} />;
     }
 
-    async function save(base, ours) {
+    async function saveUser(base, ours) {
         const userAfter = await db.saveOne({ table: 'user' }, ours);
         payloads.dispatch(userAfter);
         return userAfter;

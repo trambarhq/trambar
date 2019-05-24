@@ -249,7 +249,6 @@ function ProjectPanel(props) {
         const props = {
             show: managingProjects,
             projectLinks,
-            route,
             env,
             onDelete: handleProjectDelete,
             onCancel: handleManagementDialogClose,
