@@ -511,42 +511,42 @@ async function authorizeUser(session, user, details, activate) {
  * @return {Promise<Object>}
  */
 async function authenticateThruPassport(req, res, system, server, params) {
-    return new Promise((resolve, reject) => {
-        let provider = req.params.provider;
-        // query variables are send as the state parameter
-        let query = _.reduce(params, (query, value, name) => {
-            if (query) {
-                query += '&';
-            }
-            query += name + '=' + value;
-            return query;
-        }, '');
-        let address = _.get(system, 'settings.address');
-        if (!address) {
-            throw new HTTPError(400, { message: 'Missing site address' });
+    const provider = req.params.provider;
+    // query variables are send as the state parameter
+    const query = _.reduce(params, (query, value, name) => {
+        if (query) {
+            query += '&';
         }
-        let settings = addServerSpecificSettings(server, {
-            clientID: server.settings.oauth.client_id,
-            clientSecret: server.settings.oauth.client_secret,
-            baseURL: server.settings.oauth.base_url,
-            callbackURL: `${address}/srv/session/${provider}/callback/`,
-        });
-        let options = addServerSpecificOptions(server, params, {
-            session: false,
-            state: query,
-        });
+        query += name + '=' + value;
+        return query;
+    }, '');
+    const address = _.get(system, 'settings.address');
+    if (!address) {
+        throw new HTTPError(400, { message: 'Missing site address' });
+    }
+    const settings = addServerSpecificSettings(server, {
+        clientID: server.settings.oauth.client_id,
+        clientSecret: server.settings.oauth.client_secret,
+        baseURL: server.settings.oauth.base_url,
+        callbackURL: `${address}/srv/session/${provider}/callback/`,
+    });
+    const options = addServerSpecificOptions(server, params, {
+        session: false,
+        state: query,
+    });
 
+    const Strategy = await findPassportPlugin(server);
+    const account = new Promise((resolve, reject) => {
         // create strategy object, resolving promise when we have the profile
-        let Strategy = findPassportPlugin(server);
-        let strategy = new Strategy(settings, (accessToken, refreshToken, profile, done) => {
+        const strategy = new Strategy(settings, (accessToken, refreshToken, profile, done) => {
             // just resolve the promise--no need to call done() since we're not
             // using Passport as an Express middleware
             resolve({ accessToken, refreshToken, profile });
         });
+
         // trigger Passport middleware manually
         Passport.use(strategy);
-        let authType = server.type;
-        let auth = Passport.authenticate(strategy.name, options, (err, user, info) => {
+        const auth = Passport.authenticate(strategy.name, options, (err, user, info) => {
             // if this callback is called, then authentication has failed, since
             // the callback passed to Strategy() resolves the promise and does
             // not invoke done()
@@ -575,6 +575,7 @@ async function authenticateThruPassport(req, res, system, server, params) {
         });
         auth(req, res);
     });
+    return account;
 }
 
 /**
@@ -897,10 +898,10 @@ async function findHtpasswdRecord(username, password) {
  *
  * @param  {Server} server
  *
- * @return {Function}
+ * @return {Promise<Function>}
  */
-function findPassportPlugin(server) {
-    let plugins = {
+async function findPassportPlugin(server) {
+    const plugins = {
         dropbox: 'passport-dropbox-oauth2',
         facebook: 'passport-facebook',
         github: 'passport-github',
@@ -908,13 +909,12 @@ function findPassportPlugin(server) {
         google: 'passport-google-oauth2',
         windows: 'passport-windowslive',
     };
-    let module = require(plugins[server.type]);
-    if (!(module instanceof Function)) {
-        if (module.Strategy) {
-            module = module.Strategy;
-        }
+    const module = await import(plugins[server.type]);
+    if (module.default) {
+        return module.default;
+    } else if (module.Strategy) {
+        return module.Strategy;
     }
-    return module;
 }
 
 /**

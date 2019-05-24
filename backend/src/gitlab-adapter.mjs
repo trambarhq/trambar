@@ -27,7 +27,6 @@ import {
     PeriodicTaskMaintainHooks,
     PeriodicTaskImportRepos,
     PeriodicTaskImportUsers,
-    PeriodicTaskImportWikis,
     PeriodicTaskImportRepoEvents,
     PeriodicTaskUpdateMilestones,
     PeriodicTaskRetryFailedExports,
