@@ -1,274 +1,104 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
-import RelaksMediaCapture from 'relaks-media-capture';
+import React, { useCallback } from 'react';
+import Relaks, { useProgress } from 'relaks';
 
 // widgets
-import Overlay from 'common/widgets/overlay.jsx';
-import PushButton from '../widgets/push-button.jsx';
-import DevicePlaceholder from '../widgets/device-placeholder.jsx';
-import DurationIndicator from '../widgets/duration-indicator.jsx';
-import VolumeIndicator from '../widgets/volume-indicator.jsx';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { DevicePlaceholder } from '../widgets/device-placeholder.jsx';
+import { DurationIndicator } from '../widgets/duration-indicator.jsx';
+import { VolumeIndicator } from '../widgets/volume-indicator.jsx';
+
+// custom hooks
+import {
+    useMediaCapture,
+    useStreamHandling,
+} from '../hooks';
 
 import './audio-capture-dialog-box-browser.scss';
 
 /**
  * Dialog box for capturing a audio in the web browser.
- *
- * @extends AsyncComponent
  */
-class AudioCaptureDialogBoxBrowser extends AsyncComponent {
-    constructor(props) {
-        super(props);
-        let options = {
-            video: false,
-            audio: true,
-            watchVolume: true,
-            segmentDuration: 5000,
-        };
-        this.capture = new RelaksMediaCapture(options);
-        this.capture.addEventListener('chunk', this.handleCaptureChunk);
-        this.capture.addEventListener('end', this.handleCaptureEnd);
-        this.stream = null;
-    }
+async function AudioCaptureDialogBoxBrowser(props) {
+    const { env, payloads, onCapture, onClose } = props;
+    const { t } = env.locale;
+    const [ show ] = useProgress(50, 50);
+    const stream = useStreamHandling(payloads);
+    const capture = useMediaCapture({
+        video: false,
+        audio: true,
+        watchVolume: true,
+        segmentDuration: 5000,
+    }, stream);
 
-    /**
-     * Render component asynchronously
-     *
-     * @param  {Meanwhile}  meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let { env, show } = this.props;
-        meanwhile.delay(50, 50);
-        let props = {
-            env,
-            show,
-            onStart: this.handleStart,
-            onStop: this.handleStop,
-            onPause: this.handlePause,
-            onResume: this.handleResume,
-            onClear: this.handleClear,
-            onChoose: this.handleChoose,
-            onAccept: this.handleAccept,
-            onCancel: this.handleCancel,
-        };
-        if (show) {
-            this.capture.activate();
-            do {
-                props.status = this.capture.status;
-                props.devices = this.capture.devices;
-                props.chosenDeviceID = this.capture.chosenDeviceID;
-                props.duration = this.capture.duration;
-                props.volume = (this.capture.volume < 5) ? 0 : this.capture.volume;
-                props.capturedImage = this.capture.capturedImage;
-                props.capturedAudio = this.capture.capturedAudio;
-                meanwhile.show(<AudioCaptureDialogBoxBrowserSync {...props} />);
-                await this.capture.change();
-            } while (this.capture.active);
-        }
-        return <AudioCaptureDialogBoxBrowserSync {...props} />;
-    }
-
-    /**
-     * Deactivate media capture object when dialog box is hidden
-     */
-    componentDidUpdate(prevProps, prevState) {
-        if (prevProps.show) {
-            setTimeout(() => {
-                let { show } = this.props;
-                if (!show) {
-                    this.capture.deactivate();
-                    this.capture.clear();
-                }
-            }, 500);
-        }
-    }
-
-    /**
-     * Deactivate media capture object when component unmounts
-     */
-    componentWillUnmount() {
-        this.capture.deactivate();
-    }
-
-    /**
-     * Called when user wants to start recording
-     *
-     * @param  {Event} evt
-     */
-    handleStart = (evt) => {
-        let { payloads } = this.props;
-        this.stream = payloads.stream();
-        this.stream.start();
-        this.capture.start();
-    }
-
-    /**
-     * Called when user wants to stop recording
-     *
-     * @param  {Event} evt
-     */
-    handleStop = (evt) => {
-        this.capture.stop();
-    }
-
-    /**
-     * Called when user wants to pause recording
-     *
-     * @param  {Event} evt
-     */
-    handlePause = (evt) => {
-        this.capture.pause();
-    }
-
-    /**
-     * Called when user wants to resume recording
-     *
-     * @param  {Event} evt
-     */
-    handleResume = (evt) => {
-        this.capture.resume();
-    }
-
-    /**
-     * Called when user wants to start over
-     *
-     * @param  {Event} evt
-     */
-    handleClear = (evt) => {
-        this.capture.clear();
-        if (this.stream) {
-            this.stream.cancel();
-            this.stream = null;
-        }
-    }
-
-    /**
-     * Called when user selects a different input device
-     *
-     * @param  {Object} evt
-     */
-    handleChoose = (evt) => {
-        this.capture.choose(evt.id);
-    }
-
-    /**
-     * Called when user closes the dialog box
-     *
-     * @param  {Event} evt
-     */
-    handleCancel = (evt) => {
-        let { onClose } = this.props;
+    const handleStartClick = useCallback((evt) => {
+        stream.start();
+        capture.start();
+    });
+    const handleStopClick = useCallback((evt) => capture.stop());
+    const handlePauseClick = useCallback((evt) => capture.pause());
+    const handleResumeClick = useCallback((evt) => capture.resume());
+    const handleRetakeClick = useCallback((evt) => {
+        capture.clear();
+        stream.cancel();
+    });
+    const handleCancelClick = useCallback((evt) => {
         if (onClose) {
-            onClose({
-                type: 'cancel',
-                target: this,
-            });
+            onClose({});
         }
-    }
-
-    /**
-     * Called when user accepts the recorded audio
-     *
-     * @param  {Event} evt
-     */
-    handleAccept = (evt) => {
-        let { payloads, onCapture } = this.props;
+    }, [ onClose ]);
+    const handleAcceptClick = useCallback((evt) => {
         if (onCapture) {
-            let { capturedAudio } = this.capture;
-            let payload = payloads.add('audio');
-            payload.attachStream(this.stream);
-            let resource = {
+            const { capturedAudio } = capture;
+            const payload = payloads.add('audio');
+            payload.attachStream(stream.current);
+            const resource = {
                 type: 'audio',
                 payload_token: payload.id,
                 duration: capturedAudio.duration,
-                format: _.last(_.split(this.capture.options.audioMIMEType, '/')),
+                format: _.last(_.split(capture.options.audioMIMEType, '/')),
                 bitrates: {
-                    audio: this.capture.options.audioBitsPerSecond,
+                    audio: capture.options.audioBitsPerSecond,
                 }
             };
-            onCapture({
-                type: 'capture',
-                target: this,
-                resource
-            });
+            onCapture({ resource });
         }
-        this.capture.deactivate();
-        this.handleCancel();
-    }
-
-    /**
-     * Called after a chunk of audio has been recorded
-     *
-     * @param  {Object} evt
-     */
-    handleCaptureChunk = (evt) => {
-        if (this.stream) {
-            this.stream.push(evt.blob);
+        if (onClose) {
+            onClose({});
         }
-    }
+    }, [ payloads, onClose, onCapture ]);
+    const handleDeviceSelection = useCallback((evt) => capture.choose(evt.id));
 
-    /**
-     * Called when recording endeds, after the last chunk was received
-     *
-     * @param  {Object} evt
-     */
-    handleCaptureEnd = (evt) => {
-        if (this.stream) {
-            this.stream.close();
-        }
-    }
-}
+    do {
+        render();
+        await capture.change();
+    } while (capture.active);
 
-/**
- * Synchronous component that actually draws the interface
- *
- * @extends PureComponent
- */
-class AudioCaptureDialogBoxBrowserSync extends PureComponent {
-    static displayName = 'AudioCaptureDialogBoxBrowserSync';
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { show } = this.props;
-        let overlayProps = { show, onBackgroundClick: this.handleCancelClick };
-        return (
-            <Overlay {...overlayProps}>
-                <div className="audio-capture-dialog-box">
-                    <div className="container">
-                        {this.renderView()}
+    function render() {
+        show(
+            <div className="audio-capture-dialog-box">
+                <div className="container">
+                    {renderView()}
+                </div>
+                <div className="controls">
+                    <div className="left">
+                        {renderDuration()}
                     </div>
-                    <div className="controls">
-                        <div className="left">
-                            {this.renderDuration()}
-                        </div>
-                        <div className="right">
-                            {this.renderButtons()}
-                        </div>
+                    <div className="right">
+                        {renderButtons()}
                     </div>
                 </div>
-            </Overlay>
+            </div>
         );
     }
 
-    /**
-     * Render either playback control for captured audio or volume bar
-     *
-     * @return {ReactElement}
-     */
-    renderView() {
-        let { status, capturedAudio } = this.props;
+    function renderView() {
+        const { status, capturedAudio } = capture;
         switch (status) {
             case 'acquiring':
             case 'denied':
-                let placeholderProps = {
+                const placeholderProps = {
                     blocked: (status === 'denied'),
                     icon: 'microphone',
                 };
@@ -277,9 +107,9 @@ class AudioCaptureDialogBoxBrowserSync extends PureComponent {
             case 'previewing':
             case 'capturing':
             case 'paused':
-                return this.renderVolume();
+                return renderVolume();
             case 'captured':
-                let previewAudioProps = {
+                const previewAudioProps = {
                     className: 'preview',
                     src: capturedAudio.url,
                     controls: true,
@@ -288,45 +118,30 @@ class AudioCaptureDialogBoxBrowserSync extends PureComponent {
         }
     }
 
-    /**
-     * Render a dropdown if there're multiple devices
-     *
-     * @return {ReactElement|null}
-     */
-    renderDeviceSelector() {
-        let { env, devices, chosenDeviceID, onChoose } = this.props;
+    function renderDeviceSelector() {
+        const { devices, chosenDeviceID } = capture;
         let props = {
             type: 'audio',
             chosenDeviceID,
             devices,
             env,
-            onSelect: onChoose,
+            onSelect: handleDeviceSelection,
         };
         return <DeviceSelector {...props} />;
     }
 
-    /**
-     * Render duration when we're recording
-     *
-     * @return {ReactElement|null}
-     */
-    renderDuration() {
-        let { status, duration } = this.props;
+    function renderDuration() {
+        const { status, duration } = capture;
         if (typeof(duration) !== 'number') {
             return null;
         }
-        let durationProps = { duration, recording: (status === 'capturing') };
+        const durationProps = { duration, recording: (status === 'capturing') };
         return <DurationIndicator {...durationProps} />
     }
 
-    /**
-     * Show microphone volume
-     *
-     * @return {ReactElement}
-     */
-    renderVolume() {
-        let { status, volume } = this.props;
-        let volumeProps = {
+    function renderVolume() {
+        const { status, volume } = capture;
+        const volumeProps = {
             type: 'gauge',
             volume,
             recording: (status === 'capturing')
@@ -334,27 +149,20 @@ class AudioCaptureDialogBoxBrowserSync extends PureComponent {
         return <VolumeIndicator {...volumeProps} />;
     }
 
-    /**
-     * Render buttons
-     *
-     * @return {[type]}
-     */
-    renderButtons() {
-        let { env, status } = this.props;
-        let { onCancel, onStart, onPause, onResume, onStop, onClear, onAccept } = this.props;
-        let { t } = env.locale;
+    function renderButtons() {
+        const { status } = capture;
         switch (status) {
             case 'acquiring':
             case 'denied':
             case 'initiating':
             case 'previewing':
-                let cancelButtonProps = {
+                const cancelButtonProps = {
                     label: t('audio-capture-cancel'),
-                    onClick: onCancel,
+                    onClick: handleCancelClick,
                 };
-                let startButtonProps = {
+                const startButtonProps = {
                     label: t('audio-capture-start'),
-                    onClick: onStart,
+                    onClick: handleStartClick,
                     disabled: (status !== 'previewing'),
                     emphasized: (status === 'previewing'),
                 };
@@ -365,13 +173,13 @@ class AudioCaptureDialogBoxBrowserSync extends PureComponent {
                     </div>
                 );
             case 'capturing':
-                let pauseButtonProps = {
+                const pauseButtonProps = {
                     label: t('audio-capture-pause'),
-                    onClick: onPause,
+                    onClick: handlePauseClick,
                 };
-                let stopButtonProps = {
+                const stopButtonProps = {
                     label: t('audio-capture-stop'),
-                    onClick: onStop,
+                    onClick: handleStopClick,
                     emphasized: true
                 };
                 return (
@@ -381,14 +189,14 @@ class AudioCaptureDialogBoxBrowserSync extends PureComponent {
                     </div>
                 );
             case 'paused':
-                let resumeButtonProps = {
+                const resumeButtonProps = {
                     label: t('audio-capture-resume'),
-                    onClick: onResume,
+                    onClick: handleResumeClick,
                     emphasized: true
                 };
-                let stopButton2Props = {
+                const stopButton2Props = {
                     label: t('audio-capture-stop'),
-                    onClick: onStop,
+                    onClick: handleStopClick,
                 };
                 return (
                     <div className="buttons">
@@ -397,13 +205,13 @@ class AudioCaptureDialogBoxBrowserSync extends PureComponent {
                     </div>
                 );
             case 'captured':
-                let retakeButtonProps = {
+                const retakeButtonProps = {
                     label: t('audio-capture-rerecord'),
-                    onClick: onClear,
+                    onClick: handleRetakeClick,
                 };
-                let acceptButtonProps = {
+                const acceptButtonProps = {
                     label: t('audio-capture-accept'),
-                    onClick: onAccept,
+                    onClick: handleAcceptClick,
                     emphasized: true,
                 };
                 return (
@@ -416,57 +224,11 @@ class AudioCaptureDialogBoxBrowserSync extends PureComponent {
     }
 }
 
+const component = Overlay.create(
+    Relaks.memo(AudioCaptureDialogBoxBrowser)
+);
+
 export {
-    AudioCaptureDialogBoxBrowser as default,
-    AudioCaptureDialogBoxBrowser,
-    AudioCaptureDialogBoxBrowserSync,
+    component as default,
+    component as AudioCaptureDialogBoxBrowser,
 };
-
-import Payloads from 'common/transport/payloads.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    AudioCaptureDialogBoxBrowser.propTypes = {
-        show: PropTypes.bool,
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onClose: PropTypes.func,
-        onCapture: PropTypes.func,
-    };
-    AudioCaptureDialogBoxBrowserSync.propTypes = {
-        show: PropTypes.bool,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        status: PropTypes.oneOf([
-            'acquiring',
-            'denied',
-            'initiating',
-            'previewing',
-            'capturing',
-            'paused',
-            'captured',
-        ]),
-        capturedAudio: PropTypes.shape({
-            url: PropTypes.string.isRequired,
-            blob: PropTypes.instanceOf(Blob).isRequired,
-        }),
-        duration: PropTypes.number,
-        devices: PropTypes.arrayOf(PropTypes.shape({
-            id: PropTypes.string,
-            label: PropTypes.string,
-        })),
-        chosenDeviceID: PropTypes.string,
-
-        onChoose: PropTypes.func,
-        onCancel: PropTypes.func,
-        onStart: PropTypes.func,
-        onStop: PropTypes.func,
-        onPause: PropTypes.func,
-        onResume: PropTypes.func,
-        onClear: PropTypes.func,
-        onAccept: PropTypes.func,
-    };
-}

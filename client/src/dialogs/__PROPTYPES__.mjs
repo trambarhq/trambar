@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import Database from 'common/data/database.mjs';
 import Route from 'common/routing/route.mjs';
 import Environment from 'common/env/environment.mjs';
+import Payloads from 'common/transport/payloads.mjs';
 
 ActivationDialogBox.propTypes = {
     show: PropTypes.bool,
@@ -17,7 +18,14 @@ AppComponentDialogBox.propTypes = {
     env: PropTypes.instanceOf(Environment).isRequired,
     onClose: PropTypes.func,
 };
+AudioCaptureDialogBoxBrowser.propTypes = {
+    show: PropTypes.bool,
+    payloads: PropTypes.instanceOf(Payloads).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
 
+    onClose: PropTypes.func,
+    onCapture: PropTypes.func,
+};
 ConfirmationDialogBox.propTypes = {
     show: PropTypes.bool,
     env: PropTypes.instanceOf(Environment).isRequired,
@@ -67,7 +75,14 @@ MobileSetupDialogBox.propTypes = {
 
     onClose: PropTypes.func,
 };
+PhotoCaptureDialogBoxBrowser.propTypes = {
+    show: PropTypes.bool,
+    payloads: PropTypes.instanceOf(Payloads).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
 
+    onClose: PropTypes.func,
+    onCapture: PropTypes.func,
+};
 ProjectDescriptionDialogBox.propTypes = {
     show: PropTypes.bool,
     project: PropTypes.object.isRequired,
@@ -99,4 +114,12 @@ TelephoneNumberDialogBox.propTypes = {
     env: PropTypes.instanceOf(Environment).isRequired,
 
     onClose: PropTypes.func,
+};
+VideoCaptureDialogBoxBrowser.propTypes = {
+    show: PropTypes.bool,
+    payloads: PropTypes.instanceOf(Payloads).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+
+    onClose: PropTypes.func,
+    onCapture: PropTypes.func,
 };
