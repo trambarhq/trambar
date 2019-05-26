@@ -1,275 +1,180 @@
 import _ from 'lodash';
-import React, { PureComponent, Children } from 'react';
+import React, { useMemo, useRef, useCallback, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import ScrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
-import ComponentRefs from 'common/utils/component-refs.mjs';
 import TopLevelMouseTrap from 'common/utils/top-level-mouse-trap.mjs';
 
 import './pop-up-menu.scss';
 
 /**
  * A button that opens a pop-up menu when clicked.
- *
- * @extends PureComponent
  */
-class PopUpMenu extends PureComponent {
-    static displayName = 'PopUpMenu';
-
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            container: HTMLDivElement,
-            menu: HTMLDivElement,
-        });
-        this.state = {
-            open: false,
-        };
-    }
-
-    /**
-     * Find child by tag name
-     *
-     * @return {tagName}
-     */
-    getContents(tagName) {
-        let { children } = this.props;
-        children = Children.toArray(children);
-        let child = _.find(children, { type: tagName });
-        if (child) {
-            return child.props.children;
-        }
-    }
-
-    /**
-     * Close menu
-     */
-    close() {
-        return this.setState({ open: false });
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { className } = this.props;
-        let { open } = this.state;
-        let { setters } = this.components;
-        let props = {
-            ref: setters.container,
-            className: 'pop-up-menu' + ((className) ? ` ${className}` : ''),
-            onMouseDown: this.handleMouseDown,
-        }
-        if (open) {
-            props.className += ' open';
-        }
-        return (
-            <span {...props}>
-                {this.renderButton()}
-                {this.renderMenu()}
-            </span>
-        );
-    }
-
-    /**
-     * Render button for opening the menu
-     *
-     * @return {ReactElement}
-     */
-    renderButton() {
-        let { disabled } = this.props;
-        let className = 'button';
-        if (!disabled) {
-            className += ' active';
-        }
-        return (
-            <span className={className} onClick={this.handleButtonClick}>
-                {this.getContents('button')}
-            </span>
-        );
-    }
-
-    /**
-     * Render the menu if it's open
-     *
-     * @return {ReactElement}
-     */
-    renderMenu() {
-        let { className, popOut } = this.props;
-        let { open } = this.state;
-        let { setters, container } = this.components;
-        if (!open || !container) {
-            return null;
-        }
+function PopUpMenu(props) {
+    const { className, children, open, name, disabled, popOut } = props;
+    const { onOpen, onClose } = props;
+    const containerRef = useRef();
+    const menuRef = useRef();
+    const popOutContainer = useMemo(() => {
         if (popOut) {
-            let page = getPageNode();
-            let nodePos = getRelativePosition(container, page);
-            let style = {
-                position: 'absolute',
-                left: nodePos.left + container.offsetWidth,
-                top: nodePos.top,
-            };
-            className = 'pop-up-menu' + ((className) ? ` ${className}` : '');
-            let element = (
-                <div className={className} style={style}>
-                    <div className="container">
-                        <div ref={setters.menu} className="menu" onClick={this.handleMenuClick}>
-                            {this.getContents('menu')}
-                        </div>
-                    </div>
-                </div>
-            );
-            this.addPopOutContainer();
-            return ReactDOM.createPortal(element, this.popOutContainer);
-        } else {
-            return (
-                <div className="container">
-                    <div ref={setters.menu} className="menu">
-                        {this.getContents('menu')}
-                    </div>
-                </div>
-            );
+            const node = document.createElement('DIV');
+            node.style.left = '0';
+            node.style.top = '0';
+            node.style.position = 'absolute';
+            return node;
         }
-    }
+    }, [ popOut ]);
 
-    /**
-     * Add/remove document-level mousedown handler when menu opens and closes
-     *
-     * @param  {Object} prevProps
-     * @param  {Object} prevState
-     */
-    componentDidUpdate(prevProps, prevState) {
-        let { open } = this.state;
-        let { menu } = this.components;
-        if (!prevState.open && open) {
-            TopLevelMouseTrap.addEventListener('mousedown', this.handleTopLevelMouseDown);
-        } else if (prevState.open && !open) {
-            TopLevelMouseTrap.removeEventListener('mousedown', this.handleTopLevelMouseDown);
+    const handleButtonClick = useCallback((evt) => {
+        if (!disabled) {
+            if (!open) {
+                if (onOpen) {
+                    onOpen({ name });
+                }
+            } else {
+                if (onClose) {
+                    onClose({ name });
+                }
+            }
         }
-        if (open && !prevProps.open) {
+    }, [ disabled, open, onOpen, onClose ]);
+    const handleMouseDown = useCallback((evt) => {
+        // stop event propagation when the menu itself is clicked so the
+        // top-level mouse down handler won't close it
+        evt.stopPropagation();
+    });
+
+    useEffect(() => {
+        if (popOutContainer) {
+            const page = getPageNode();
+            page.appendChild(popOutContainer);
+            return () => {
+                page.removeChild(popOutContainer);
+            };
+        }
+    }, [ popOutContainer ])
+    useEffect(() => {
+        if (open) {
             setTimeout(() => {
-                if (menu) {
-                    let options = {
+                if (menuRef.current) {
+                    const options = {
                         behavior: 'smooth',
                         scrollMode: 'if-needed',
                         block: 'end',
                     };
-                    ScrollIntoViewIfNeeded(menu, options);
+                    ScrollIntoViewIfNeeded(menuRef.current, options);
                 }
             }, 50);
-        }
-    }
 
-    /**
-     * Remove mousedown handler on unmount
-     */
-    componentWillUnmount() {
-        TopLevelMouseTrap.removeEventListener('mousedown', this.handleTopLevelMouseDown);
-        this.removePopOutContainer();
-    }
-
-    /**
-     * Add pop-out container, used when menu cannot be positioned relatively
-     * due to parent container having overflow of hidden or scroll
-     */
-    addPopOutContainer() {
-        if (!this.popOutContainer) {
-            let page = getPageNode();
-            this.popOutContainer = document.createElement('DIV');
-            this.popOutContainer.style.left = '0';
-            this.popOutContainer.style.top = '0';
-            page.appendChild(this.popOutContainer);
-            this.popOutContainer.style.position = 'absolute';
-        }
-    }
-
-    /**
-     * Remove pop-out container if there's one
-     */
-    removePopOutContainer() {
-        if (this.popOutContainer) {
-            this.popOutContainer.parentNode.removeChild(this.popOutContainer);
-            this.popOutContainer = null;
-        }
-    }
-
-    /**
-     * Trigger onOpen or onClose event
-     *
-     * @param  {Boolean} open
-     */
-    triggerEvent(open) {
-        let { onOpen, onClose } = this.props;
-        if (open) {
-            if (onOpen) {
-                onOpen({
-                    type: 'open',
-                    target: this,
-                });
-            }
-        } else {
-            if (onClose) {
-                onClose({
-                    type: 'close',
-                    target: this,
-                });
+            const handleMouseDown = (evt) => {
+                if (evt.button !== 0) {
+                    return;
+                }
+                if (onClose) {
+                    onClose({});
+                }
+            };
+            TopLevelMouseTrap.addEventListener('mousedown', handleMouseDown);
+            return () => {
+                TopLevelMouseTrap.removeEventListener('mousedown', handleMouseDown);
             }
         }
-    }
+    }, [ open, onClose ])
 
-    /**
-     * Called when user clicks the corner button
-     *
-     * @param  {Event} evt
-     */
-    handleButtonClick = (evt) => {
-        let { disabled } = this.props;
-        let { open } = this.state;
+    const classNames = [ 'pop-up-menu' ];
+    if (className) {
+        classNames.push(className);
+    }
+    if (open) {
+        classNames.push('open');
+    }
+    const spanProps = {
+        className: classNames.join(' '),
+        onMouseDown: handleMouseDown,
+    };
+    return (
+        <span ref={containerRef} {...spanProps}>
+            {renderButton()}
+            {renderMenu()}
+        </span>
+    );
+
+    function renderButton() {
+        const classNames = [ 'button' ];
         if (!disabled) {
-            this.triggerEvent(!open);
-            this.setState({ open: !open });
+            classNames.join('active');
+        }
+        const props = {
+            className: classNames.join(' '),
+            onClick: handleButtonClick,
+        };
+        return  <span {...props}>{renderContents('button')}</span>;
+    }
+
+    function renderMenu() {
+        if (!open) {
+            return null;
+        }
+        if (popOut) {
+            const page = getPageNode();
+            const nodePos = getRelativePosition(containerRef.current, page);
+            const classNames = [ 'pop-up-menu' ];
+            if (className) {
+                classNames.join(className);
+            }
+            const props = {
+                className: classNames.join(' '),
+                style: {
+                    position: 'absolute',
+                    left: nodePos.left + containerRef.current.offsetWidth,
+                    top: nodePos.top,
+                }
+            };
+            const element = (
+                <div {...props}>
+                    <div className="container">
+                        <div ref={menuRef} className="menu" onClick={handleMenuClick}>
+                            {renderContents('menu')}
+                        </div>
+                    </div>
+                </div>
+            );
+            const popOutContainer = addPopOutContainer();
+            return ReactDOM.createPortal(element, popOutContainer);
+        } else {
+            return (
+                <div className="container">
+                    <div ref={menuRef} className="menu">
+                        {renderContents('menu')}
+                    </div>
+                </div>
+            );
         }
     }
 
-    /**
-     * Stop event propagation when the menu itself is clicked so the handler
-     * below won't close it
-     *
-     * @param  {Event} evt
-     */
-    handleMouseDown = (evt) => {
-        evt.stopPropagation();
-    }
-
-    /**
-     * Called when user clicks on the page somewhere
-     *
-     * @param  {Event} evt
-     */
-    handleTopLevelMouseDown = (evt) => {
-        if (evt.button !== 0) {
-            return;
+    function renderContents(tagName) {
+        const list = React.Children.toArray(children);
+        let child = _.find(list, { type: tagName });
+        if (child) {
+            return child.props.children;
         }
-        this.setState({ open: false });
-        this.triggerEvent(false);
     }
 }
 
 function getRelativePosition(node, container) {
-    let rect1 = node.getBoundingClientRect()
-    let rect2 = container.getBoundingClientRect();
-    let left = rect1.left - rect2.left + container.scrollLeft;
-    let top = rect1.top - rect2.top + container.scrollTop;
+    const rect1 = node.getBoundingClientRect()
+    const rect2 = container.getBoundingClientRect();
+    const left = rect1.left - rect2.left + container.scrollLeft;
+    const top = rect1.top - rect2.top + container.scrollTop;
     return { left, top };
 }
 
 function getPageNode() {
-    let container = document.getElementById('react-container');
+    const container = document.getElementById('react-container');
     return container.getElementsByClassName('page-container')[0];
 }
 
 PopUpMenu.defaultProps = {
+    open: false,
     disabled: false,
     popOut: false,
 };
@@ -278,12 +183,3 @@ export {
     PopUpMenu as default,
     PopUpMenu,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    PopUpMenu.propTypes = {
-        disabled: PropTypes.bool,
-        popOut: PropTypes.bool,
-    };
-}

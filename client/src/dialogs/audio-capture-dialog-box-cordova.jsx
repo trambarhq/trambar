@@ -56,7 +56,7 @@ function AudioCaptureDialogBoxCordova(props) {
             }
         };
 
-        async startCapture() {
+        async function startCapture() {
             const capture = navigator.device.capture;
             if (capture) {
                 await requestPermissions();

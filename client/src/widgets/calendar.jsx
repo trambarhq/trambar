@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
+import React from 'react';
 
 import './calendar.scss';
 

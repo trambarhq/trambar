@@ -46,7 +46,7 @@ function PhotoCaptureDialogBoxCordova(props) {
             }
         };
 
-        async startCapture() {
+        async function startCapture() {
             const camera = navigator.camera;
             if (camera) {
                 let direction;

@@ -69,6 +69,14 @@ CoauthoringButton.propTypes = {
     onSelect: PropTypes.func,
     onRemove: PropTypes.func,
 };
+CornerPopUp.ropType = {
+    open: PropTYpes.bool,
+    disabled: PropTypes.bool,
+    name: PropTypes.string,
+
+    onOpen: PropTypes.func,
+    onClose: PropTypes.func,
+};
 DevicePlaceholder.propTypes = {
     blocked: PropTypes.bool,
     icon: PropTypes.oneOf([ 'camera', 'video-camera', 'microphone' ]).isRequired,
@@ -155,6 +163,15 @@ OptionButton.propTypes = {
     selected: PropTypes.bool,
     disabled: PropTypes.bool,
     onClick: PropTypes.func,
+};
+PopUpMenu.propTypes = {
+    open: PropTYpes.bool,
+    disabled: PropTypes.bool,
+    name: PropTypes.string,
+    popOut: PropTypes.bool,
+
+    onOpen: PropTypes.func,
+    onClose: PropTypes.func,
 };
 ProfileImage.propTypes = {
     user: PropTypes.object,

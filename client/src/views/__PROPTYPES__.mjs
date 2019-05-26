@@ -38,3 +38,21 @@ NotificationView.propTypes = {
 
     onClick: PropTypes.func,
 };
+
+UserView.propTypes = {
+    user: PropTypes.object,
+    roles: PropTypes.arrayOf(PropTypes.object),
+    stories: PropTypes.arrayOf(PropTypes.object),
+    options: PropTypes.object.isRequired,
+    dailyActivities: PropTypes.object,
+    currentUser: PropTypes.object,
+    selectedDate: PropTypes.string,
+    search: PropTypes.string,
+    link: PropTypes.oneOf([ 'user', 'team' ]),
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+
+    onOptionChange: PropTypes.func,
+};
