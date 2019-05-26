@@ -25,24 +25,24 @@ function ConfirmationDialogBox(props) {
     }, [ onConfirm ]);
 
     return (
-        <Overlay show={show} onBackgroundClick={handleCancelClick}>
-            <div className="confirmation-dialog-box">
-                <div className="message">{children}</div>
-                <div className="buttons">
-                    <PushButton className="cancel" onClick={handleCancelClick}>
-                        {t('confirmation-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className={dangerous ? 'danger' : 'emphasis'} onClick={handleConfirmClick}>
-                        {t('confirmation-confirm')}
-                    </PushButton>
-                </div>
+        <div className="confirmation-dialog-box">
+            <div className="message">{children}</div>
+            <div className="buttons">
+                <PushButton className="cancel" onClick={handleCancelClick}>
+                    {t('confirmation-cancel')}
+                </PushButton>
+                {' '}
+                <PushButton className={dangerous ? 'danger' : 'emphasis'} onClick={handleConfirmClick}>
+                    {t('confirmation-confirm')}
+                </PushButton>
             </div>
-        </Overlay>
+        </div>
     );
 }
 
+const component = Overlay.create(ConfirmationDialogBox);
+
 export {
-    ConfirmationDialogBox as default,
-    ConfirmationDialogBox,
+    component as default,
+    component as ConfirmationDialogBox,
 };

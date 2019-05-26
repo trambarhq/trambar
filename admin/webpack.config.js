@@ -25,9 +25,12 @@ var folders = _.mapValues({
 }, resolve);
 if (event !== 'start') {
     console.log(`Output folder: ${folders.output}`);
-    if (FS.lstatSync(folders.output).isSymbolicLink()) {
-        var actualFolder = FS.readlinkSync(folders.output);
-        console.log(`Actual output folder: ${actualFolder}`);
+    try {
+        if (FS.lstatSync(folders.output).isSymbolicLink()) {
+            var actualFolder = FS.readlinkSync(folders.output);
+            console.log(`Actual output folder: ${actualFolder}`);
+        }
+    } catch (err) {
     }
 }
 

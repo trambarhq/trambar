@@ -48,12 +48,10 @@ function ImageCroppingDialogBox(props) {
     }, [ ratio, image ]);
 
     return (
-        <Overlay show={show}>
-            <div className="image-cropping-dialog-box">
-                {renderImage()}
-                {renderButtons()}
-            </div>
-        </Overlay>
+        <div className="image-cropping-dialog-box">
+            {renderImage()}
+            {renderButtons()}
+        </div>
     );
 
     function renderImage() {
@@ -161,7 +159,9 @@ function getDefault(image) {
     return round(rect);
 }
 
+const component = Overlay.create(ImageCroppingDialogBox);
+
 export {
-    ImageCroppingDialogBox as default,
-    ImageCroppingDialogBox,
+    component as default,
+    component as ImageCroppingDialogBox,
 };

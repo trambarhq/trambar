@@ -4,9 +4,9 @@ import * as MediaLoader from 'common/media/media-loader.mjs';
 import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
 // widgets
-import ImageCroppingDialogBox from '../dialogs/image-cropping-dialog-box.jsx';
-import ImageAlbumDialogBox from '../dialogs/image-album-dialog-box.jsx';
-import ResourceView from 'common/widgets/resource-view.jsx';
+import { ImageCroppingDialogBox } from '../dialogs/image-cropping-dialog-box.jsx';
+import { ImageAlbumDialogBox } from '../dialogs/image-album-dialog-box.jsx';
+import { ResourceView } from 'common/widgets/resource-view.jsx';
 
 import './image-selector.scss';
 

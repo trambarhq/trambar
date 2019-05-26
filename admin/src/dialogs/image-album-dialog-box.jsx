@@ -13,17 +13,7 @@ import { ResourceView } from 'common/widgets/resource-view.jsx';
 
 import './image-album-dialog-box.scss';
 
-function ImageAlbumDialogBox(props) {
-    const { show, ...albumProps } = props;
-    const { onCancel } = props;
-    return (
-        <Overlay show={show} onBackgroundClick={onCancel}>
-            <ImageAlbum {...albumProps} />
-        </Overlay>
-    );
-}
-
-const ImageAlbum = Relaks.memo(async function ImageAlbum(props) {
+async function ImageAlbumDialogBox(props) {
     const { database, env, payloads, image, purpose } = props;
     const { onSelect, onCancel } = props;
     const { t } = env.locale;
@@ -267,13 +257,17 @@ const ImageAlbum = Relaks.memo(async function ImageAlbum(props) {
         });
         await db.save({ table: 'picture' }, changes);
     }
-});
+}
 
 const sortPictures = memoizeWeak(null, function(pictures) {
     return _.orderBy(pictures, 'mtime', 'desc');
 });
 
+const component = Overlay.create(
+    Relaks.memo(ImageAlbumDialogBox)
+);
+
 export {
-    ImageAlbumDialogBox as default,
-    ImageAlbumDialogBox,
+    component as default,
+    component as ImageAlbumDialogBox,
 };
