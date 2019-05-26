@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 import MarkGor from 'mark-gor/react';
 
 // widgets

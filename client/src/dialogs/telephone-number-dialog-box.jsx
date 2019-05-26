@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 
 import { Environment } from 'common/env/environment.mjs';
 
