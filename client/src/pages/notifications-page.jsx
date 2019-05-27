@@ -1,98 +1,48 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
+import React from 'react';
+import Relaks, { useProgress } from 'relaks';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as NotificationFinder from 'common/objects/finders/notification-finder.mjs';
 
 // widgets
-import PageContainer from '../widgets/page-container.jsx';
-import NotificationList from '../lists/notification-list.jsx';
-import LoadingAnimation from '../widgets/loading-animation.jsx';
-import EmptyMessage from '../widgets/empty-message.jsx';
+import { PageContainer } from '../widgets/page-container.jsx';
+import { NotificationList } from '../lists/notification-list.jsx';
+import { LoadingAnimation } from '../widgets/loading-animation.jsx';
+import { EmptyMessage } from '../widgets/empty-message.jsx';
 
 import './notifications-page.scss';
 
 /**
  * Asynchronous component that retrieves data needed by the Notifications page.
- *
- * @extends AsyncComponent
  */
-class NotificationsPage extends AsyncComponent {
-    static displayName = 'NotificationsPage';
+async function NotificationsPage(props) {
+    const { database, route, env, date, scrollToNotificationID } = props;
+    const [ show ] = useProgress();
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let {
-            database,
-            route,
-            env,
-            date,
-            scrollToNotificationID,
-        } = this.props;
-        let db = database.use({ by: this });
-        let props = {
-            date,
-            scrollToNotificationID,
-            database,
-            route,
-            env,
-        };
-        meanwhile.show(<NotificationsPageSync {...props} />);
-        let currentUserID = await db.start();
-        props.currentUser = await UserFinder.findUser(db, currentUserID);
-        if (date) {
-            props.notifications = await NotificationFinder.findNotificationsForUserOnDate(db, props.currentUser, date);
-        } else {
-            props.notifications = await NotificationFinder.findNotificationsForUser(db, props.currentUser);
-        }
-        return <NotificationsPageSync {...props} />;
+    render();
+    const db = database.use();
+    const currentUserID = await db.start();
+    const currentUser = await UserFinder.findUser(db, currentUserID);
+    let notifications;
+    if (date) {
+        notifications = await NotificationFinder.findNotificationsForUserOnDate(db, currentUser, date);
+    } else {
+        notifications = await NotificationFinder.findNotificationsForUser(db, currentUser);
     }
-}
+    render();
 
-/**
- * Synchronous component that actually renders the Notifications page.
- *
- * @extends PureComponent
- */
-class NotificationsPageSync extends PureComponent {
-    static displayName = 'NotificationsPageSync';
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        return (
+    function render() {
+        show(
             <PageContainer className="notifications-page">
-                {this.renderList()}
-                {this.renderEmptyMessage()}
+                {renderList()}
+                {renderEmptyMessage()}
             </PageContainer>
         );
     }
 
-    /**
-     * Render list of notifications
-     *
-     * @return {ReactElement}
-     */
-    renderList() {
-        let {
-            database,
-            route,
-            env,
-            notifications,
-            currentUser,
-            scrollToNotificationID,
-        } = this.props;
-        let listProps = {
+    function renderList() {
+        const listProps = {
             notifications,
             currentUser,
             database,
@@ -103,18 +53,12 @@ class NotificationsPageSync extends PureComponent {
         return <NotificationList {...listProps} />;
     }
 
-    /**
-     * Render a message if there're no notifications
-     *
-     * @return {ReactElement|null}
-     */
-    renderEmptyMessage() {
-        let { env, notifications, date } = this.props;
+    function renderEmptyMessage() {
         if (!_.isEmpty(notifications)) {
             return null;
         }
         if (!notifications) {
-            // props.notifications is null when they're being loaded
+            // props.notifications is undefined when they're being loaded
             return <LoadingAnimation />;
         } else {
             let phrase;
@@ -123,40 +67,15 @@ class NotificationsPageSync extends PureComponent {
             } else {
                 phrase = 'notifications-no-notifications-yet';
             }
-            let props = { phrase, env };
+            const props = { phrase, env };
             return <EmptyMessage {...props} />;
         }
     }
 }
 
+const component = Relaks.memo(NotificationsPage);
+
 export {
-    NotificationsPage as default,
-    NotificationsPage,
-    NotificationsPageSync,
+    component as default,
+    component as NotificationsPage,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    NotificationsPage.propTypes = {
-        date: PropTypes.string,
-        scrollToNotificationID: PropTypes.number,
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-    NotificationsPageSync.propTypes = {
-        date: PropTypes.string,
-        scrollToNotificationID: PropTypes.number,
-        notifications: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object,
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-    };
-}
