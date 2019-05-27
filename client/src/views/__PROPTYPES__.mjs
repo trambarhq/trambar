@@ -39,6 +39,27 @@ NotificationView.propTypes = {
     onClick: PropTypes.func,
 };
 
+UserStatistics.propTypes = {
+    chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
+    chartRange: PropTypes.oneOf([ 'biweekly', 'monthly', 'full' ]),
+    dailyActivities: PropTypes.object,
+    selectedDate: PropTypes.string,
+    user: PropTypes.object,
+
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+UserViewOptions.propTypes = {
+    section: PropTypes.oneOf([ 'main', 'statistics', 'both' ]),
+    user: PropTypes.object,
+    options: PropTypes.object.isRequired,
+    selectedDate: PropTypes.string,
+
+    env: PropTypes.instanceOf(Environment).isRequired,
+
+    onChange: PropTypes.func,
+    onComplete: PropTypes.func,
+};
 UserView.propTypes = {
     user: PropTypes.object,
     roles: PropTypes.arrayOf(PropTypes.object),

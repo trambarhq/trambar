@@ -1,65 +1,99 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React, { useState, useCallback } from 'react';
 
 // widgets
-import OptionButton from '../widgets/option-button.jsx';
-import TelephoneNumberDialogBox from '../dialogs/telephone-number-dialog-box';
+import { OptionButton } from '../widgets/option-button.jsx';
+import { TelephoneNumberDialogBox } from '../dialogs/telephone-number-dialog-box';
 
 import './user-view-options.scss';
 
 /**
  * Component that lists a user's social links. It also handles options for
  * different statistics views.
- *
- * @extends PureComponent
  */
-class UserViewOptions extends PureComponent {
-    static displayName = 'UserViewOptions';
+function UserViewOptions(props) {
+    const { env, user, options, section, selectedDate } = props;
+    const { onChange, onComplete } = props;
+    const { t } = env.locale;
+    const [ showingPhoneNumber, showPhoneNumber ] = useState(false);
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            showingPhoneNumber: false,
-        };
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { section } = this.props;
-        if (section === 'both') {
-            return (
-                <div className="user-view-options">
-                    {this.renderButtons('main')}
-                    <div className="border" />
-                    {this.renderButtons('statistics')}
-                </div>
-            );
-        } else {
-            return (
-                <div className="user-view-options">
-                    {this.renderButtons(section)}
-                </div>
-            );
+    const handlePhoneClick = useCallback((evt) => {
+        if (env.platform === 'browser') {
+            evt.preventDefault();
+            showPhoneNumber(true);
         }
+    });
+    const handlePhoneDialogClose = useCallback((evt) => {
+        showPhoneNumber(false);
+        if (onComplete) {
+            onComplete({});
+        }
+    }, [ onComplete ]);
+    const handleBiweeklyActivitiesClick = useCallback((evt) => {
+        const newOptions = {
+            ...options,
+            chartRange: 'biweekly',
+            chartType: options.chartType || 'bar'
+        };
+        if (onChange) {
+            onChange({ options: newOptions });
+        }
+        if (onComplete) {
+            onComplete({});
+        }
+    }, [ options, onChange, onComplete ]);
+    const handleMonthlyActivitiesClick = useCallback((evt) => {
+        const newOptions = {
+            ...options,
+            chartRange: 'monthly',
+            chartType: options.chartType || 'bar'
+        };
+        if (onChange) {
+            onChange({ options: newOptions });
+        }
+        if (onComplete) {
+            onComplete({});
+        }
+    }, [ options, onChange, onComplete ]);
+    const handleActivitiesToDateClick = useCallback((evt) => {
+        const newOptions = {
+            ...options,
+            chartRange: 'full',
+            chartType: options.chartType || 'bar'
+        };
+        if (onChange) {
+            onChange({ options: newOptions });
+        }
+        if (onComplete) {
+            onComplete({});
+        }
+    }, [ options, onChange, onComplete ]);
+    const handleLinkClick = useCallback((evt) => {
+        if (onComplete) {
+            onComplete({});
+        }
+    }, [ onComplete ]);
+
+    if (section === 'both') {
+        return (
+            <div className="user-view-options">
+                {renderButtons('main')}
+                <div className="border" />
+                {renderButtons('statistics')}
+            </div>
+        );
+    } else {
+        return (
+            <div className="user-view-options">
+                {renderButtons(section)}
+            </div>
+        );
     }
 
-    /**
-     * Render buttons
-     *
-     * @param  {String} section
-     *
-     * @return {ReactElement}
-     */
-    renderButtons(section) {
-        let { env, user, options, selectedDate } = this.props;
-        let { t } = env.locale;
-        let details = _.get(user, 'details', {});
+    function renderButtons(section) {
+        const details = _.get(user, 'details', {});
         if (section === 'main') {
-            let {
+            const {
                 phone,
                 email,
                 skype_username: skypeUsername,
@@ -70,73 +104,73 @@ class UserViewOptions extends PureComponent {
                 linkedin_url: linkedinURL,
                 stackoverflow_url: stackoverflowURL,
             } = _.get(user, 'details', {});
-            let phoneProps = {
+            const phoneProps = {
                 label: t('action-contact-by-phone'),
                 icon: 'phone-square',
                 url: `tel:${phone}`,
                 hidden: !phone,
-                onClick: this.handlePhoneClick,
+                onClick: handlePhoneClick,
             };
-            let emailProps = {
+            const emailProps = {
                 label: t('action-contact-by-email'),
                 icon: 'envelope',
                 url: `mailto:${email}`,
                 hidden: !email,
-                onClick: this.handleLinkClick,
+                onClick: handleLinkClick,
             };
-            let skypeProps = {
+            const skypeProps = {
                 label: t('action-contact-by-skype'),
                 icon: 'skype',
                 url: `skype:${skypeUsername}?chat`,
                 hidden: !skypeUsername,
-                onClick: this.handleLinkClick,
+                onClick: handleLinkClick,
             };
-            let ichatProps = {
+            const ichatProps = {
                 label: t('action-contact-by-ichat'),
                 icon: 'apple',
                 url: `ichat:${ichatUsername}`,
                 hidden: !ichatUsername,
-                onClick: this.handleLinkClick,
+                onClick: handleLinkClick,
             };
-            let twitterProps = {
+            const twitterProps = {
                 label: t('action-contact-by-twitter'),
                 icon: 'twitter',
                 url: `https://twitter.com/${twitterUsername}`,
                 target: '_blank',
                 hidden: !twitterUsername,
-                onClick: this.handleLinkClick,
+                onClick: handleLinkClick,
             };
-            let gitlabProps = {
+            const gitlabProps = {
                 label: t('action-view-gitlab-page'),
                 icon: 'gitlab',
                 url: gitlabURL,
                 target: '_blank',
                 hidden: !gitlabURL,
-                onClick: this.handleLinkClick,
+                onClick: handleLinkClick,
             };
-            let githubProps = {
+            const githubProps = {
                 label: t('action-view-github-page'),
                 icon: 'github',
                 url: githubURL,
                 target: '_blank',
                 hidden: !githubURL,
-                onClick: this.handleLinkClick,
+                onClick: handleLinkClick,
             };
-            let linkedInProps = {
+            const linkedInProps = {
                 label: t('action-view-linkedin-page'),
                 icon: 'linkedin',
                 url: linkedinURL,
                 target: '_blank',
                 hidden: !linkedinURL,
-                onClick: this.handleLinkClick,
+                onClick: handleLinkClick,
             };
-            let stackOverflowProps = {
+            const stackOverflowProps = {
                 label: t('action-view-stackoverflow-page'),
                 icon: 'stack-overflow',
                 url: stackoverflowURL,
                 target: '_blank',
                 hidden: !stackoverflowURL,
-                onClick: this.handleLinkClick,
+                onClick: handleLinkClick,
             };
             return (
                 <div className={section}>
@@ -149,25 +183,25 @@ class UserViewOptions extends PureComponent {
                     <OptionButton {...githubProps} />
                     <OptionButton {...linkedInProps} />
                     <OptionButton {...stackOverflowProps} />
-                    {this.renderPhoneDialog()}
+                    {renderPhoneDialog()}
                 </div>
             );
         } else {
-            let biweekly = (selectedDate) ? 'biweekly' : '14-days';
-            let twoWeekProps = {
+            const biweekly = (selectedDate) ? 'biweekly' : '14-days';
+            const twoWeekProps = {
                 label: t(`option-statistics-${biweekly}`),
                 selected: options.chartRange === 'biweekly' || !options.chartRange,
-                onClick: this.handleBiweeklyActivitiesClick,
+                onClick: handleBiweeklyActivitiesClick,
             };
-            let lastMonthProps = {
+            const lastMonthProps = {
                 label: t('option-statistics-monthly'),
                 selected: options.chartRange === 'monthly',
-                onClick: this.handleMonthlyActivitiesClick,
+                onClick: handleMonthlyActivitiesClick,
             };
-            let toDateProps = {
+            const toDateProps = {
                 label: t('option-statistics-to-date'),
                 selected: options.chartRange === 'full',
-                onClick: this.handleActivitiesToDateClick,
+                onClick: handleActivitiesToDateClick,
             };
             return (
                 <div className={section}>
@@ -179,125 +213,15 @@ class UserViewOptions extends PureComponent {
         }
     }
 
-    /**
-     * Render dialog box showing telephone number
-     *
-     * @return {ReactElement|null}
-     */
-    renderPhoneDialog() {
-        let { env, user } = this.props;
-        let { showingPhoneNumber } = this.state;
-        let { phone } = user.details;
-        let dialogProps = {
+    function renderPhoneDialog() {
+        const { phone } = user.details;
+        const dialogProps = {
             show: showingPhoneNumber,
             number: phone,
             env,
-            onClose: this.handlePhoneDialogClose,
+            onClose: handlePhoneDialogClose,
         };
         return <TelephoneNumberDialogBox {...dialogProps} />;
-    }
-
-    /**
-     * Inform parent component that new options have been selected
-     *
-     * @param  {Object} changes
-     */
-    triggerChangeEvent(changes) {
-        let { options, onChange } = this.props;
-        options = _.assign({}, options, changes);
-        if (onChange) {
-            onChange({
-                type: 'change',
-                target: this,
-                options
-            });
-        }
-    }
-
-    /**
-     * Inform parent component that some action has taken place
-     *
-     * @param  {Object} changes
-     */
-    triggerCompleteEvent() {
-        let { onComplete } = this.props;
-        if (onComplete) {
-            onComplete({
-                type: 'complete',
-                target: this,
-            });
-        }
-    }
-
-    /**
-     * Called when user click on "contact by phone"
-     *
-     * @param  {Event} evt
-     */
-    handlePhoneClick = (evt) => {
-        let { env } = this.props;
-        if (env.platform === 'browser') {
-            evt.preventDefault();
-            this.setState({ showingPhoneNumber: true });
-        }
-    }
-
-    /**
-     * Called when user closes telephone number dialog
-     *
-     * @param  {Event} evt
-     */
-    handlePhoneDialogClose = (evt) => {
-        this.setState({ showingPhoneNumber: false });
-        this.triggerCompleteEvent();
-    }
-
-    /**
-     * Called when user clicks biweekly activities button
-     *
-     * @param  {Event} evt
-     */
-    handleBiweeklyActivitiesClick = (evt) => {
-        let { options } = this.props;
-        let chartRange = 'biweekly';
-        let chartType = options.chartType || 'bar';
-        this.triggerChangeEvent({ chartRange, chartType });
-        this.triggerCompleteEvent();
-    }
-
-    /**
-     * Called when user clicks monthly activities button
-     *
-     * @param  {Event} evt
-     */
-    handleMonthlyActivitiesClick = (evt) => {
-        let { options } = this.props;
-        let chartRange = 'monthly';
-        let chartType = options.chartType || 'bar';
-        this.triggerChangeEvent({ chartRange, chartType });
-        this.triggerCompleteEvent();
-    }
-
-    /**
-     * Called when user clicks activities to-date button
-     *
-     * @param  {Event} evt
-     */
-    handleActivitiesToDateClick = (evt) => {
-        let { options } = this.props;
-        let chartRange = 'full';
-        let chartType = options.chartType || 'bar';
-        this.triggerChangeEvent({ chartRange, chartType });
-        this.triggerCompleteEvent();
-    }
-
-    /**
-     * Called when user clicks a link
-     *
-     * @param  {Event} evt
-     */
-    handleLinkClick = (evt) => {
-        this.triggerCompleteEvent();
     }
 }
 
@@ -309,21 +233,3 @@ export {
     UserViewOptions as default,
     UserViewOptions,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    UserViewOptions.propTypes = {
-        section: PropTypes.oneOf([ 'main', 'statistics', 'both' ]),
-        user: PropTypes.object,
-        options: PropTypes.object.isRequired,
-        selectedDate: PropTypes.string,
-
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onChange: PropTypes.func,
-        onComplete: PropTypes.func,
-    };
-}
