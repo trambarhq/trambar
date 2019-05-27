@@ -83,3 +83,11 @@ SettingsPage.propTypes = {
     route: PropTypes.instanceOf(Route).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,
 };
+StartPage.propTypes = {
+    transitionOut: PropTypes.bool,
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+
+    onTransitionOut: PropTypes.func,
+};

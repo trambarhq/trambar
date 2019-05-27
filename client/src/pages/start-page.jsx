@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import React, { PureComponent } from 'react';
-import { AsyncComponent } from 'relaks';
+import React, { useState, useCallback } from 'react';
+import Relaks, { useProgress } from 'relaks';
 import HTTPRequest from 'common/transport/http-request.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as UniversalLink from 'common/routing/universal-link.mjs';
@@ -13,253 +13,275 @@ import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
+import { Scrollable } from '../widgets/scrollable.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+import { ProfileImage } from '../widgets/profile-image.jsx';
+import { ResourceView } from 'common/widgets/resource-view.jsx';
+import { MembershipRequestDialogBox } from '../dialogs/membership-request-dialog-box.jsx';
+import { QRScannerDialogBox } from '../dialogs/qr-scanner-dialog-box.jsx';
+import { ActivationDialogBox } from '../dialogs/activation-dialog-box.jsx';
+import { LoadingAnimation } from '../widgets/loading-animation.jsx';
+import { EmptyMessage } from '../widgets/empty-message.jsx';
 import Logo from '../../assets/trambar-logo.svg';
-import Scrollable from '../widgets/scrollable.jsx';
-import PushButton from '../widgets/push-button.jsx';
-import ProfileImage from '../widgets/profile-image.jsx';
-import ResourceView from 'common/widgets/resource-view.jsx';
-import MembershipRequestDialogBox from '../dialogs/membership-request-dialog-box.jsx';
-import QRScannerDialogBox from '../dialogs/qr-scanner-dialog-box.jsx';
-import ActivationDialogBox from '../dialogs/activation-dialog-box.jsx';
-import LoadingAnimation from '../widgets/loading-animation.jsx';
-import EmptyMessage from '../widgets/empty-message.jsx';
 
 import './start-page.scss';
 
-/**
- * Asynchronous component that retrieves data needed by the Start page.
- *
- * @extends AsyncComponent
- */
-class StartPage extends AsyncComponent {
-    static displayName = 'StartPage';
-    static useTransition = true;
+async function StartPage(props) {
+    const { database, route, env, transitionOut, activationCode, onTransitionOut } = props;
+    const { t, p, g } = env.locale;
+    const [ show, cancel, delay ] = useProgress();
+    const [ sessionStart ] = useState({});
+    const [ selectedProjectName, setSelectedProjectName ] = useState('');
+    const [ transitionMethod, setTransitionMethod ] = useState('fast');
+    const [ scanningQRCode, scanQRCode ] = useState(false);
+    const [ enteringManually, enterManually ] = useState(false);
+    const [ addingServer, addServer ] = useState(false);
+    const [ errors, setErrors ] = useState({});
 
-    /**
-     * Render the component asynchronously
-     *
-     * @param  {Meanwhile} meanwhile
-     *
-     * @return {Promise<ReactElement>}
-     */
-    async renderAsync(meanwhile) {
-        let {
-            database,
-            route,
-            env,
-            transitionOut,
-            activationCode,
-            onTransitionOut,
-        } = this.props;
-        let db = database.use({ schema: 'global', by: this });
-        let props = {
-            transitionOut,
-            database,
-            route,
-            env,
-            onTransitionOut,
+    const handleOAuthButtonClick = useCallback(async (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        const url = evt.currentTarget.getAttribute('href');
+        const providerID = evt.currentTarget.getAttribute('data-id');
+        await openPopUpWindow(url);
+        const db = database.use();
+        try {
+            await db.checkAuthorization();
+        } catch (err) {
+            const newErrors = {};
+            newErrors[`oauth-${providerID}`] = err;
+            setErrors(newErrors);
+        }
+    }, [ database ]);
+    const handleUnknownProjectClick = useCallback((evt) => {
+        const name = evt.currentTarget.getAttribute('data-project-name');
+        setSelectedProjectName(name);
+    });
+    const handleMembershipRequestConfirm = async (evt) => {
+        const { project } = evt;
+        const projectIDs = currentUser.requested_project_ids;
+        if (!_.includes(projectIDs, project.id)) {
+            const changes = {
+                id: currentUser.id,
+                requested_project_ids: _.concat(projectIDs, project.id)
+            };
+            const db = database.use({ schema: 'global' });
+            await db.saveOne({ table: 'user' }, changes);
+        }
+    };
+    const handleMembershipRequestRevoke = async (evt) => {
+        const { project } = evt;
+        const projectIDs = currentUser.requested_project_ids;
+        if (_.includes(projectIDs, project.id)) {
+            const changes = {
+                id: currentUser.id,
+                requested_project_ids: _.without(projectIDs, project.id),
+            };
+            const db = database.use({ schema: 'global' });
+            await db.saveOne({ table: 'user' }, changes);
+        }
+    };
+    const handleMembershipRequestClose = (evt) => {
+        setSelectedProjectName(null);
+    };
+    const handleMembershipRequestProceed = (evt) => {
+        const { project } = evt;
+        navigateToProject('', project.name);
+    };
+    const handleScanClick = useCallback((evt) => {
+        scanQRCode(true);
+    });
+    const handleManualClick = useCallback((evt) => {
+        enterManually(true);
+    });
+    const handleAddClick = useCallback((evt) => {
+        addServer(true);
+    });
+    const handleReturnClick = useCallback((evt) => {
+        addServer(false);
+    });
+    const handleCancelScan = useCallback((evt) => {
+        scanQRCode(false);
+        setErrors({});
+    });
+    const handleScanResult = useCallback((evt) => {
+        const params = UniversalLink.parseActivationURL(evt.result);
+        activateMobileSession(params)
+    }, [ activateMobileSession ]);
+    const handleActivationCancel = useCallback((evt) => {
+        enterManually(false);
+    });
+    const handleActivationConfirm = useCallback((evt) => {
+        const params = {
+            address: evt.address,
+            schema: evt.schema,
+            activationCode: evt.code,
         };
-        if (!db.authorized) {
-            if (env.platform === 'browser') {
-                // start authorization process--will receive system description
-                // and list of OAuth providers along with links
-                meanwhile.show(<StartPageSync {...props} />);
-                let info = await db.beginSession('client');
-                // we'll load the system object again, through the regular
-                // data retrieval mechanism, once we have gain access
-                //
-                // save a copy so that we can keep displaying the
-                // background image and project description while loading
-                // occurs
-                this.sessionStartSystem = info.system;
-                props.system = info.system;
-                props.servers = info.servers;
-            } else if (env.platform === 'cordova') {
-                this.sessionStartSystem = {};
-                props.projectLinks = await ProjectLinkFinder.findActiveLinks(db);
-            }
-        } else {
-            // handle things normally after we've gained authorization
-            if (env.platform === 'browser') {
-                if (this.sessionStartSystem) {
-                    props.system = this.sessionStartSystem;
-
-                    // need to adjust the progressive rendering delay since Relaks
-                    // by default disables it once a page has fully rendered
-                    meanwhile.delay(undefined, 500);
-                }
-                meanwhile.show(<StartPageSync {...props} />);
-                let currentUserID = await db.start();
-                props.currentUser = await UserFinder.findUser(db, currentUserID);
-                meanwhile.show(<StartPageSync {...props} />);
-                props.system = await SystemFinder.findSystem(db);
-                meanwhile.show(<StartPageSync {...props} />);
-                props.projects = await ProjectFinder.findActiveProjects(db, 1);
-                meanwhile.show(<StartPageSync {...props} />);
-                props.projectLinks = await ProjectLinkFinder.findActiveLinks(db);
-            } else if (env.platform === 'cordova') {
-                if (this.sessionStartSystem) {
-                    // save reason as above; we can let the QR scanner screen
-                    // linger for a little bit longer
-                    meanwhile.delay(undefined, 1000);
-                }
-                meanwhile.show(<StartPageSync {...props} />);
-                let currentUserID = await db.start();
-                props.currentUser = await UserFinder.findUser(db, currentUserID);
-                // we don't need the rest when we're transitioning out
-                if (!transitionOut) {
-                    meanwhile.show(<StartPageSync {...props} />);
-                    props.system = await SystemFinder.findSystem(db);
-                    meanwhile.show(<StartPageSync {...props} />);
-                    props.projects = await ProjectFinder.findActiveProjects(db, 1);
-                    meanwhile.show(<StartPageSync {...props} />);
-                    props.projectLinks = await ProjectLinkFinder.findActiveLinks(db);
+        activateMobileSession(params);
+    }, [ activateMobileSession ]);
+    const handleTransitionEnd = useCallback((evt) => {
+        if (evt.propertyName === 'opacity') {
+            if (/start\-page/.test(evt.target.className)) {
+                if (onTransitionOut) {
+                    onTransitionOut({});
                 }
             }
         }
-        return <StartPageSync {...props} />;
-    }
-}
+    }, [ onTransitionOut ]);
 
-/**
- * Synchronous component that actually renders the Start page.
- *
- * @extends PureComponent
- */
-class StartPageSync extends PureComponent {
-    static displayName = 'StartPageSync';
-
-    constructor(props) {
-        let { env } = props;
-        super(props);
-        this.state = {
-            selectedProjectName: '',
-            transitionMethod: 'fast',
-        };
+    render();
+    const db = database.use({ schema: 'global' });
+    let currentUser;
+    let system;
+    let servers;
+    let projects;
+    let projectLinks;
+    if (!db.authorized) {
         if (env.platform === 'browser') {
-            _.assign(this.state, {
-                oauthErrors: {},
-            });
+            // start authorization process--will receive system description
+            // and list of OAuth providers along with links
+            render();
+            const info = await db.beginSession('client');
+            // we'll load the system object again, through the regular
+            // data retrieval mechanism, once we have gain access
+            //
+            // save a copy so that we can keep displaying the
+            // background image and project description while loading
+            // occurs
+            sessionStart.system = info.system;
+            system = info.system;
+            servers = info.servers;
         } else if (env.platform === 'cordova') {
-            _.assign(this.state, {
-                scanningQRCode: false,
-                enteringManually: false,
-                activationError: null,
-                addingServer: false,
-                lastError: null,
-            });
+            sessionStart.system = {};
+            projectLinks = await ProjectLinkFinder.findActiveLinks(db);
+        }
+    } else {
+        // handle things normally after we've gained authorization
+        if (env.platform === 'browser') {
+            if (sessionStart.system) {
+                system = sessionStart.system;
+
+                // need to adjust the progressive rendering delay since Relaks
+                // by default disables it once a page has fully rendered
+                delay(undefined, 500);
+            }
+            render();
+            const currentUserID = await db.start();
+            currentUser = await UserFinder.findUser(db, currentUserID);
+            render();
+            system = await SystemFinder.findSystem(db);
+            render();
+            projects = await ProjectFinder.findActiveProjects(db, 1);
+            render();
+            projectLinks = await ProjectLinkFinder.findActiveLinks(db);
+        } else if (env.platform === 'cordova') {
+            if (sessionStart.system) {
+                // save reason as above; we can let the QR scanner screen
+                // linger for a little bit longer
+                delay(undefined, 1000);
+            }
+            render();
+            const currentUserID = await db.start();
+            currentUser = await UserFinder.findUser(db, currentUserID);
+            // we don't need the rest when we're transitioning out
+            if (!transitionOut) {
+                render();
+                system = await SystemFinder.findSystem(db);
+                render();
+                projects = await ProjectFinder.findActiveProjects(db, 1);
+                render();
+                projectLinks = await ProjectLinkFinder.findActiveLinks(db);
+            }
+        }
+    }
+    render();
+
+    function render() {
+        if (env.platform === 'browser') {
+            show(renderForBrowser());
+        } else if (env.platform === 'cordova') {
+            show(renderForCordova());
         }
     }
 
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        let { env } = this.props;
-        if (env.platform === 'browser') {
-            return this.renderForBrowser();
-        } else if (env.platform === 'cordova') {
-            return this.renderForCordova();
-        }
-    }
-
-    /**
-     * Render component (browser)
-     *
-     * @return {ReactElement}
-     */
-    renderForBrowser() {
-        let { env, system, transitionOut } = this.props;
-        let { transitionMethod } = this.state;
-        let { t } = env.locale;
-        let pageProps = { className: 'start-page browser' };
-        let style;
+    function renderForBrowser() {
+        const classNames = [ 'start-page browser' ];
+        const style = {};
         if (system) {
-            let resources = _.get(system, 'details.resources');
-            let backgroundImage = _.find(resources, { type: 'image' });
+            const resources = _.get(system, 'details.resources');
+            const backgroundImage = _.find(resources, { type: 'image' });
             if (backgroundImage) {
-                let imageURL = ResourceUtils.getImageURL(backgroundImage, { width: 1024, quality: 40 }, env);
-                pageProps.style = { backgroundImage: `url(${imageURL})` };
+                const imageURL = ResourceUtils.getImageURL(backgroundImage, { width: 1024, quality: 40 }, env);
+                style.backgroundImage = `url(${imageURL})`;
             }
         }
+        let onTransitionEnd;
         if (transitionOut) {
-            pageProps.className += ` transition-out-${transitionMethod}`;
-            pageProps.onTransitionEnd = this.handleTransitionEnd;
+            classNames.push(`transition-out-${transitionMethod}`);
+            onTransitionEnd = handleTransitionEnd;
         }
+        const props = {
+            className: classNames.join(' '),
+            onTransitionEnd,
+            style,
+        };
         return (
-            <div {...pageProps}>
+            <div {...props}>
                 <div className="bar">
                     <h1 className="welcome">{t('start-welcome')}</h1>
                     <div className="content-area">
-                        {this.renderDescription()}
-                        {this.renderChoices()}
+                        {renderDescription()}
+                        {renderChoices()}
                     </div>
                 </div>
-                {this.renderProjectDialog()}
+                {renderProjectDialog()}
             </div>
         );
     }
 
-    /**
-     * Render component (Cordova)
-     *
-     * @return {ReactElement}
-     */
-    renderForCordova() {
-        let { database, transitionOut } = this.props;
-        let { transitionMethod, addingServer } = this.state;
-        let pageProps = { className: 'start-page cordova' };
+    function renderForCordova() {
+        const classNames = [ 'start-page', 'cordova' ];
         if (transitionOut) {
-            pageProps.className += ` transition-out-${transitionMethod}`;
-            pageProps.onTransitionEnd = this.handleTransitionEnd;
+            classNames.push(`transition-out-${transitionMethod}`)
+            const props = {
+                className: classNames.join(' '),
+                onTransitionEnd: handleTransitionEnd,
+            };
+            let contents;
             if (transitionMethod === 'slow') {
                 // render a greeting during long transition
-                return (
-                    <div {...pageProps}>
-                        {this.renderMobileGreeting()}
-                    </div>
-                );
-            } else {
-                return <div {...pageProps} />;
+                contents = renderMobileGreeting();
             }
+            return <div {...props}>{contents}</div>;
         }
         if (!database.authorized || addingServer) {
             // render only instructions for gaining access
             return (
-                <div {...pageProps}>
-                    {this.renderTitle()}
-                    {this.renderActivationControls()}
-                    {this.renderAvailableServers()}
+                <div className={classNames.join(' ')}>
+                    {renderTitle()}
+                    {renderActivationControls()}
+                    {renderAvailableServers()}
                 </div>
             );
         } else {
             // render project list, followed by activation instructions
             return (
-                <div {...pageProps}>
-                    {this.renderTitle()}
-                    {this.renderProjectButtons()}
-                    {this.renderEmptyMessage()}
-                    {this.renderActivationSelector()}
-                    {this.renderProjectDialog()}
+                <div className={classNames.join(' ')}>
+                    {renderTitle()}
+                    {renderProjectButtons()}
+                    {renderEmptyMessage()}
+                    {renderActivationSelector()}
+                    {renderProjectDialog()}
                 </div>
             );
         }
     }
 
-    /**
-     * Render text describing the system
-     *
-     * @return {ReactElement|null}
-     */
-    renderDescription() {
-        let { env, system } = this.props;
-        let { t, p } = env.locale;
+    function renderDescription() {
         if (!system || !system.details) {
             return null;
         }
-        let { title, description } = system.details;
+        const { title, description } = system.details;
         return (
             <div className="section description">
                 <h2>{p(title) || t('start-system-title-default')}</h2>
@@ -270,16 +292,7 @@ class StartPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render either the name of the system the user has logged into or the
-     * app name
-     *
-     * @return {ReactElement|null}
-     */
-    renderTitle() {
-        let { database, env, system } = this.props;
-        let { addingServer } = this.state;
-        let { t, p } = env.locale;
+    function renderTitle() {
         let title;
         if (addingServer) {
             title = t('start-activation-new-server');
@@ -297,31 +310,23 @@ class StartPageSync extends PureComponent {
         return <h2 className="title">{title}</h2>;
     }
 
-    /**
-     * Render welcome
-     *
-     * @return {ReactElement|null}
-     */
-    renderMobileGreeting() {
-        let { env, currentUser } = this.props;
-        let { scanningQRCode, enteringManually } = this.state;
-        let { t } = env.locale;
-        let className = 'welcome';
+    function renderMobileGreeting() {
+        const classNames = 'welcome';
         if (scanningQRCode || enteringManually) {
             let name;
             if (currentUser) {
                 name = UserUtils.getDisplayName(currentUser, env);
-                className += ' user';
+                classNames.push('user');
             } else {
                 name = '\u00a0';
             }
-            let imageProps = {
+            const imageProps = {
                 user: currentUser,
                 size: 'large',
                 env,
             };
             return (
-                <div className={className}>
+                <div className={classNames.join(' ')}>
                     <h3>{t('start-welcome-again')}</h3>
                     <ProfileImage {...imageProps} />
                     <h4 className="name">{name}</h4>
@@ -329,38 +334,26 @@ class StartPageSync extends PureComponent {
             );
         } else {
             return (
-                <div className={className}>
+                <div className={classNames.join(' ')}>
                     <h3>{t('start-welcome')}</h3>
                 </div>
             );
         }
     }
 
-    /**
-     * Render instructions plus buttons
-     *
-     * @return {ReactElement}
-     */
-    renderActivationControls() {
+    function renderActivationControls() {
         return (
             <div>
-                {this.renderActivationInstructions()}
-                {this.renderActivationButtons()}
-                {this.renderQRScannerDialogBox()}
-                {this.renderActivationDialogBox()}
+                {renderActivationInstructions()}
+                {renderActivationButtons()}
+                {renderQRScannerDialogBox()}
+                {renderActivationDialogBox()}
             </div>
         );
     }
 
-    /**
-     * Render instructions for gaining access on mobile device
-     *
-     * @return {ReactElement}
-     */
-    renderActivationInstructions() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        let ui = {
+    function renderActivationInstructions() {
+        const ui = {
             settings: (
                 <span key="0" className="ui">
                     {t('bottom-nav-settings')}
@@ -386,22 +379,15 @@ class StartPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render buttons for scanning QR code or manual entry of session info
-     *
-     * @return {ReactElement}
-     */
-    renderActivationButtons() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        let manualProps = {
+    function renderActivationButtons() {
+        const manualProps = {
             label: t('start-activation-manual'),
-            onClick: this.handleManualClick,
+            onClick: handleManualClick,
         };
-        let scanProps = {
+        const scanProps = {
             label: t('start-activation-scan-code'),
             emphasized: true,
-            onClick: this.handleScanClick,
+            onClick: handleScanClick,
         };
         return (
             <div className="activation-buttons">
@@ -415,17 +401,10 @@ class StartPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render button for adding new server
-     *
-     * @return {ReactElement}
-     */
-    renderActivationSelector() {
-        let { env } = this.props;
-        let { t } = env.locale;
-        let addProps = {
+    function renderActivationSelector() {
+        const addProps = {
             label: t('start-activation-add-server'),
-            onClick: this.handleAddClick,
+            onClick: handleAddClick,
         };
         return (
             <div className="activation-buttons">
@@ -436,157 +415,82 @@ class StartPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render list of buttons, either OAuth providers or available projects
-     *
-     * @return {ReactElement|null}
-     */
-    renderChoices() {
-        let { database } = this.props;
+    function renderChoices() {
         if (!database.authorized) {
-            return this.renderOAuthButtons();
+            return renderOAuthButtons();
         } else {
-            return this.renderProjectButtons();
+            return renderProjectButtons();
         }
     }
 
-    /**
-     * Render a message if there're no servers or projects
-     *
-     * @return {ReactElement|null}
-     */
-    renderEmptyMessage() {
-        let { database, env, servers, projects } = this.props;
-        if (!database.authorized) {
-            if (!_.isEmpty(servers)) {
-                return null;
-            }
-            if (servers) {
-                let props = { phrase: 'start-no-servers', env };
-                return <EmptyMessage {...props} />;
-            }
-        } else {
-            if (!_.isEmpty(projects)) {
-                return null;
-            }
-            if (!projects) {
-                return <LoadingAnimation />;
-            } else {
-                let props = { phrase: 'start-no-projects', env };
-                return <EmptyMessage {...props} />;
-            }
-        }
-    }
-
-    /**
-     * Render OAuth buttons
-     *
-     * @return {ReactElement|null}
-     */
-    renderOAuthButtons() {
-        let { env, servers } = this.props;
-        let { t } = env.locale;
-        servers = sortServers(servers, env);
+    function renderOAuthButtons() {
+        const sorted = sortServers(servers, env);
         return (
             <div className="section buttons">
                 <h2>{t('start-social-login')}</h2>
                 <Scrollable>
-                    {this.renderEmptyMessage()}
-                    <p>
-                        {_.map(servers, this.renderOAuthButton.bind(this))}
-                    </p>
+                    {renderEmptyMessage()}
+                    <p>{_.map(sorted, renderOAuthButton)}</p>
                 </Scrollable>
             </div>
         );
     }
 
-    /**
-     * Render a button for logging in through OAuth
-     *
-     * @param  {Object} server
-     * @param  {Number} i
-     *
-     * @return {ReactElement}
-     */
-    renderOAuthButton(server, i) {
-        let { database, env } = this.props;
-        let { oauthErrors } = this.state;
-        let { title } = server.details;
-        let { t, p } = env.locale;
-        let icon = getServerIcon(server.type);
-        let url = database.getOAuthURL(server);
-        let props = {
-            className: 'oauth-button',
+    function renderOAuthButton(server, i) {
+        const { title } = server.details;
+        const icon = getServerIcon(server.type);
+        const url = database.getOAuthURL(server);
+        const classNames = [ 'oauth-button' ];
+        const error = errors[`oauth-${server.id}`];
+        let label;
+        if (!error) {
+            label = p(title) || t(`server-type-${server.type}`);
+        } else {
+            label = t(`start-error-${error.reason}`);
+            classNames.push('error');
+        }
+        const props = {
+            className: classNames.join(' '),
             href: url,
-            onClick: this.handleOAuthButtonClick,
             target: '_blank',
             'data-id': server.id,
+            onClick: handleOAuthButtonClick,
         };
-        let error = oauthErrors[server.id];
-        if (error) {
-            let text = t(`start-error-${error.reason}`);
-            props.className += ' error';
-            return (
-                <a key={i} {...props}>
-                    <span className="icon">
-                        <i className={`fa fa-fw fa-${icon}`}></i>
-                    </span>
-                    <span className="error">{text}</span>
-                </a>
-            );
-        } else {
-            return (
-                <a key={i} {...props}>
-                    <span className="icon">
-                        <i className={`fa fa-fw fa-${icon}`}></i>
-                    </span>
-                    <span className="label">
-                        {p(title) || t(`server-type-${server.type}`)}
-                    </span>
-                </a>
-            );
-        }
+        return (
+            <a key={i} {...props}>
+                <span className="icon">
+                    <i className={`fa fa-fw fa-${icon}`}></i>
+                </span>
+                <span className="label">{label}</span>
+            </a>
+        );
     }
 
-    /**
-     * Render project buttons
-     *
-     * @return {ReactElement}
-     */
-    renderProjectButtons() {
-        let { env, projects } = this.props;
-        let { t } = env.locale;
-        projects = sortProjects(projects, env);
+    function renderProjectButtons() {
+        const sorted = sortProjects(projects, env);
         if (env.platform == 'browser') {
             return (
                 <div className="section buttons">
-                    <h2>{projects ? t('start-projects') : ''}</h2>
+                    <h2>{sorted ? t('start-projects') : ''}</h2>
                     <Scrollable>
-                        {this.renderEmptyMessage()}
-                        {_.map(projects, this.renderProjectButton.bind(this))}
+                        {renderEmptyMessage()}
+                        {_.map(sorted, renderProjectButton)}
                     </Scrollable>
                 </div>
             );
         } else if (env.platform === 'cordova') {
             return (
                 <div className="projects">
-                    {this.renderEmptyMessage()}
-                    {_.map(projects, this.renderProjectButton.bind(this))}
+                    {renderEmptyMessage()}
+                    {_.map(sorted, renderProjectButton)}
                 </div>
             );
         }
     }
 
-    /**
-     * Render a project button
-     *
-     * @return {ReactElement}
-     */
-    renderProjectButton(project, i) {
-        let { env, route, projectLinks, currentUser } = this.props;
-        let { t, p } = env.locale;
-        let { name } = project;
-        let { description, title, resources } = project.details;
+    function renderProjectButton(project, i) {
+        const { name } = project;
+        const { description, title, resources } = project.details;
 
         // project picture
         let icon;
@@ -595,7 +499,7 @@ class StartPageSync extends PureComponent {
             icon = <ResourceView resource={image} width={56} height={56} env={env} />;
         } else {
             // use logo, with alternating background color
-            let num = (project.id % 5) + 1;
+            const num = (project.id % 5) + 1;
             icon = <div className={`default v${num}`}><Logo /></div>;
         }
 
@@ -608,7 +512,7 @@ class StartPageSync extends PureComponent {
         }
 
         // don't show dialog box if user has previously visited the project
-        let skipDialog = _.some(projectLinks, {
+        const skipDialog = _.some(projectLinks, {
             address: route.context.address,
             schema: project.name,
         });
@@ -617,7 +521,7 @@ class StartPageSync extends PureComponent {
             linkProps = {
                 'data-project-name': project.name,
                 className: 'project-button',
-                onClick: this.handleUnknownProjectClick,
+                onClick: handleUnknownProjectClick,
             };
         } else {
             linkProps = {
@@ -646,27 +550,40 @@ class StartPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render available servers if there are any
-     *
-     * @return {ReactElement|null}
-     */
-    renderAvailableServers() {
-        let { database, env, projectLinks } = this.props;
-        let { t } = env.locale;
-        let servers = _.uniq(_.map(projectLinks, 'address')).sort();
-        if (_.isEmpty(servers)) {
+    function renderEmptyMessage() {
+        if (!database.authorized) {
+            if (!_.isEmpty(servers)) {
+                return null;
+            }
+            if (servers) {
+                return <EmptyMessage phrase="start-no-servers" env={env} />;
+            }
+        } else {
+            if (!_.isEmpty(projects)) {
+                return null;
+            }
+            if (!projects) {
+                return <LoadingAnimation />;
+            } else {
+                return <EmptyMessage phrase="start-no-projects" env={env} />;
+            }
+        }
+    }
+
+    function renderAvailableServers() {
+        if (_.isEmpty(projectLinks)) {
             return null;
         }
-        let returnProps = {
+        const addresses = _.uniq(_.map(projectLinks, 'address')).sort();
+        const returnProps = {
             label: t('start-activation-return'),
             hidden: !database.authorized,
-            onClick: this.handleReturnClick,
+            onClick: handleReturnClick,
         };
         return (
             <div className="other-servers">
                 <h2 className="title">{t('start-activation-others-servers')}</h2>
-                <ul>{_.map(servers, this.renderServerLink.bind(this))}</ul>
+                <ul>{_.map(addresses, renderServerLink)}</ul>
                 <div className="activation-buttons">
                     <div className="right">
                         <PushButton {...returnProps} />
@@ -676,18 +593,9 @@ class StartPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render server link
-     *
-     * @param  {String} server
-     * @param  {Number} key
-     *
-     * @return {ReactElement}
-     */
-    renderServerLink(server, key) {
-        let { route, addingServer } = this.props;
-        let context = { cors: true, address: server };
-        let url = route.find('start-page', {}, context);
+    function renderServerLink(address, key) {
+        const context = { cors: true, address };
+        const url = route.find('start-page', {}, context);
         return (
             <li key={key}>
                 <a href={url}>
@@ -697,47 +605,32 @@ class StartPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render dialog box for joining a project
-     *
-     * @return {ReactElement|null}
-     */
-    renderProjectDialog() {
-        let { database, route, env, projects, currentUser, transitionOut } = this.props;
-        let { selectedProjectName } = this.state;
-        let selectedProject = _.find(projects, { name: selectedProjectName });
-        let dialogProps = {
+    function renderProjectDialog() {
+        const selectedProject = _.find(projects, { name: selectedProjectName });
+        const dialogProps = {
             show: !!selectedProject && !transitionOut,
             currentUser,
             project: selectedProject,
             database,
             route,
             env,
-            onConfirm: this.handleMembershipRequestConfirm,
-            onRevoke: this.handleMembershipRequestRevoke,
-            onClose: this.handleMembershipRequestClose,
-            onProceed: this.handleMembershipRequestProceed,
+            onConfirm: handleMembershipRequestConfirm,
+            onRevoke: handleMembershipRequestRevoke,
+            onClose: handleMembershipRequestClose,
+            onProceed: handleMembershipRequestProceed,
         };
         return <MembershipRequestDialogBox {...dialogProps} />;
     }
 
-    /**
-     * Render QR scanner dialog box if we're scanning a QR code
-     *
-     * @return {ReactElement|null}
-     */
-    renderQRScannerDialogBox() {
-        let { env } = this.props;
-        let { scanningQRCode, activationError } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderQRScannerDialogBox() {
+        const props = {
             show: scanningQRCode,
             error: activationError,
             env,
-            onCancel: this.handleCancelScan,
-            onResult: this.handleScanResult,
+            onCancel: handleCancelScan,
+            onResult: handleScanResult,
         };
-        let ui = {
+        const ui = {
             settings: (
                 <span key="0" className="ui">
                     {t('bottom-nav-settings')}
@@ -758,47 +651,30 @@ class StartPageSync extends PureComponent {
         );
     }
 
-    /**
-     * Render QR scanner dialog box if we're scanning a QR code
-     *
-     * @return {ReactElement|null}
-     */
-    renderActivationDialogBox() {
-        let { env } = this.props;
-        let { enteringManually, activationError } = this.state;
-        let { t } = env.locale;
-        let props = {
+    function renderActivationDialogBox() {
+        const props = {
             show: enteringManually,
             error: activationError,
             env,
-            onCancel: this.handleActivationCancel,
-            onConfirm: this.handleActivationConfirm,
+            onCancel: handleActivationCancel,
+            onConfirm: handleActivationConfirm,
         };
         return (
             <ActivationDialogBox {...props} />
         );
     }
 
-    /**
-     * Gain access to server using an activation code
-     *
-     * @param  {Object} params
-     *
-     * @return {Promise}
-     */
-    async activateMobileSession(params) {
-        let { database, route } = this.props;
-        let { address, schema, activationCode } = params || {};
-        let db = database.use({ address, schema });
-        clearTimeout(this.invalidCodeTimeout);
+    async function activateMobileSession(params) {
+        const { address, schema, activationCode } = params || {};
+        const db = database.use({ address, schema });
         try {
-            let userID = await db.acquireMobileSession(activationCode);
+            const userID = await db.acquireMobileSession(activationCode);
             if (schema) {
-                this.navigateToProject(address, schema);
+                navigateToProject(address, schema);
             }
 
             // create entry in device table
-            let device = {
+            const device = {
                 type: getDeviceType(),
                 uuid: getDeviceUUID(),
                 details: getDeviceDetails(),
@@ -809,256 +685,56 @@ class StartPageSync extends PureComponent {
         } catch (err) {
             db.releaseMobileSession();
             this.setState({ activationError: err });
-            this.invalidCodeTimeout = setTimeout(() => {
+            setTimeout(() => {
                 this.setState({ activationError: null });
             }, 5000);
             throw err;
         }
     }
 
-    /**
-     * Navigate to the news page of a project
-     *
-     * @param  {String} address
-     * @param  {String} schema
-     *
-     * @return {Promise<Boolean>}
-     */
-    async navigateToProject(address, schema) {
-        let { database, route, projectLinks } = this.props;
-        let context = { schema };
+    async function navigateToProject(address, schema) {
+        const context = { schema };
         if (address) {
             context.address = address;
             context.cors = true;
         }
-        let bookmarked = _.some(projectLinks, { address, schema });
+        const bookmarked = _.some(projectLinks, { address, schema });
         if (!bookmarked) {
-            this.setState({ transitionMethod: 'slow' });
+            setTransitionMethod('slow');
         }
         return route.push('news-page', {}, context);
     }
+}
 
-    /**
-     * Open a popup window to OAuth provider
-     *
-     * @param  {String} url
-     *
-     * @return {Promise}
-     */
-    async openPopUpWindow(url) {
-        return new Promise((resolve, reject) => {
-            let width = 800;
-            let height = 600;
-            let options = {
-                width,
-                height,
-                left: window.screenLeft + Math.round((window.outerWidth - width) / 2),
-                top: window.screenTop + Math.round((window.outerHeight - height) / 2),
-                toolbar: 'no',
-                menubar: 'no',
-                status: 'no',
-            };
-            let pairs = _.map(options, (value, name) => {
-                return `${name}=${value}`;
-            });
-            let win = window.open(url, 'login', pairs.join(','));
-            if (win) {
-                win.location = url;
-                let interval = setInterval(() => {
-                    if (win.closed) {
-                        clearInterval(interval);
-                        resolve();
-                    }
-                }, 50);
-            } else {
-                reject(new Error('Unable to open popup'))
-            }
-        });
-    }
-
-    /**
-     * Called when user clicks on one of the OAuth buttons
-     *
-     * @param  {Event} evt
-     */
-    handleOAuthButtonClick = async (evt) => {
-        let { database } = this.props;
-        let { oauthErrors } = this.state;
-        evt.preventDefault();
-        evt.stopPropagation();
-        let url = evt.currentTarget.getAttribute('href');
-        let providerID = evt.currentTarget.getAttribute('data-id');
-        await this.openPopUpWindow(url);
-        let db = database.use({ by: this });
-        try {
-            await db.checkAuthorization();
-        } catch (err) {
-            oauthErrors = _.clone(oauthErrors);
-            oauthErrors[providerID] = err;
-            this.setState({ oauthErrors });
-        }
-    }
-
-    /**
-     * Called when user clicks on a project that hasn't visited earlier
-     *
-     * @param  {Event} evt
-     */
-    handleUnknownProjectClick = (evt) => {
-        let selectedProjectName = evt.currentTarget.getAttribute('data-project-name');
-        this.setState({ selectedProjectName });
-    }
-
-    /**
-     * Called when user chooses to join a project
-     *
-     * @param  {Event} evt
-     */
-    handleMembershipRequestConfirm = (evt) => {
-        const { database, currentUser } = this.props;
-        const { project } = evt;
-        if (!_.includes(currentUser.requested_project_ids, project.id)) {
-            const db = database.use({ schema: 'global', by: this });
-            const userAfter = _.clone(currentUser);
-            userAfter.requested_project_ids = _.union(userAfter.requested_project_ids, [ project.id ]);
-            db.saveOne({ table: 'user' }, userAfter);
-        }
-    }
-
-    /**
-     * Called when user chooses to cancel a join request
-     *
-     * @param  {Event} evt
-     */
-    handleMembershipRequestRevoke = (evt) => {
-        const { database, currentUser } = this.props;
-        const { project } = evt;
-        if (_.includes(currentUser.requested_project_ids, project.id)) {
-            const userAfter = _.clone(currentUser);
-            userAfter.requested_project_ids = _.without(userAfter.requested_project_ids, project.id);
-            const db = database.use({ schema: 'global', by: this });
-            db.saveOne({ table: 'user' }, userAfter);
-        }
-    }
-
-    /**
-     * Called when user clicks outside the project dialog box or the cancel button
-     *
-     * @param  {Event} evt
-     */
-    handleMembershipRequestClose = (evt) => {
-        this.setState({ selectedProjectName: null });
-    }
-
-    /**
-     * Called when user clicks the proceed button
-     *
-     * @param  {Event} evt
-     */
-    handleMembershipRequestProceed = (evt) => {
-        const { project } = evt;
-        this.navigateToProject('', project.name);
-    }
-
-    /**
-     * Called when user clicks scan button
-     *
-     * @param  {Event} evt
-     */
-    handleScanClick = (evt) => {
-        this.setState({ scanningQRCode: true, qrCodeStatus: 'pending' });
-    }
-
-    /**
-     * Called when user clicks manual button
-     *
-     * @param  {Event} evt
-     */
-    handleManualClick = (evt) => {
-        this.setState({ enteringManually: true });
-    }
-
-    /**
-     * Called when user clicks add server button
-     *
-     * @param  {Event} evt
-     */
-    handleAddClick = (evt) => {
-        this.setState({ addingServer: true });
-    }
-
-    /**
-     * Called when user clicks return button
-     *
-     * @param  {Event} evt
-     */
-    handleReturnClick = (evt) => {
-        this.setState({ addingServer: false });
-    }
-
-    /**
-     * Called when user cancel scanning
-     *
-     * @param  {Object} evt
-     */
-    handleCancelScan = (evt) => {
-        this.setState({ scanningQRCode: false, activationError: null });
-        if (this.invalidCodeTimeout) {
-            clearTimeout(this.invalidCodeTimeout);
-        }
-    }
-
-    /**
-     * Called when user has successful scanned a code
-     *
-     * @param  {Object} evt
-     */
-    handleScanResult = (evt) => {
-        let params = UniversalLink.parseActivationURL(evt.result);
-        this.activateMobileSession(params)
-    }
-
-    /**
-     * Called when user closes the activation dialog box
-     *
-     * @param  {Object} evt
-     */
-    handleActivationCancel = (evt) => {
-        this.setState({ enteringManually: false });
-    }
-
-    /**
-     * Called when user clicks OK in the activation dialog box
-     *
-     * @param  {Object} evt
-     */
-    handleActivationConfirm = (evt) => {
-        let params = {
-            address: evt.address,
-            schema: evt.schema,
-            activationCode: evt.code,
+async function openPopUpWindow(url) {
+    return new Promise((resolve, reject) => {
+        let width = 800;
+        let height = 600;
+        let options = {
+            width,
+            height,
+            left: window.screenLeft + Math.round((window.outerWidth - width) / 2),
+            top: window.screenTop + Math.round((window.outerHeight - height) / 2),
+            toolbar: 'no',
+            menubar: 'no',
+            status: 'no',
         };
-        this.activateMobileSession(params);
-    }
-
-    /**
-     * Called when transition out is complete
-     *
-     * @param  {TransitionEvent} evt
-     */
-    handleTransitionEnd = (evt) => {
-        let { onTransitionOut } = this.props;
-        if (evt.propertyName === 'opacity') {
-            if (/start\-page/.test(evt.target.className)) {
-                if (onTransitionOut) {
-                    onTransitionOut({
-                        type: 'transitionout',
-                        target: this,
-                    });
+        let pairs = _.map(options, (value, name) => {
+            return `${name}=${value}`;
+        });
+        let win = window.open(url, 'login', pairs.join(','));
+        if (win) {
+            win.location = url;
+            let interval = setInterval(() => {
+                if (win.closed) {
+                    clearInterval(interval);
+                    resolve();
                 }
-            }
+            }, 50);
+        } else {
+            reject(new Error('Unable to open popup'))
         }
-    }
+    });
 }
 
 function getServerIcon(type) {
@@ -1071,14 +747,14 @@ function getServerIcon(type) {
 }
 
 const sortProjects = memoizeWeak(null, function(projects, env) {
-    let { p } = env.locale;
+    const { p } = env.locale;
     return _.sortBy(projects, (project) => {
         return p(project.details.title) || project.name;
     });
 });
 
 const sortServers = memoizeWeak(null, function(servers, env) {
-    let { p } = env.locale;
+    const { p } = env.locale;
     return _.sortBy(servers, (server) => {
         return p(server.details.title) || server.name;
     });
@@ -1105,7 +781,7 @@ function getDeviceType() {
  * @return {String}
  */
 function getDeviceUUID() {
-    let device = window.device;
+    const device = window.device;
     if (device) {
         return device.uuid;
     }
@@ -1121,7 +797,7 @@ function getDeviceUUID() {
  * @return {Object}
  */
 function getDeviceDetails() {
-    let device = window.device;
+    const device = window.device;
     if (device) {
         let manufacturer = device.manufacturer;
         let name = device.model;
@@ -1139,39 +815,11 @@ function getDeviceDetails() {
     return {};
 }
 
+const component = Relaks.memo(StartPage);
+
+component.useTransition = true;
+
 export {
-    StartPage as default,
-    StartPage,
-    StartPageSync,
+    component as default,
+    component as StartPage,
 };
-
-import Database from 'common/data/database.mjs';
-import Route from 'common/routing/route.mjs';
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    StartPage.propTypes = {
-        transitionOut: PropTypes.bool,
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onTransitionOut: PropTypes.func,
-    };
-    StartPageSync.propTypes = {
-        transitionOut: PropTypes.bool,
-        currentUser: PropTypes.object,
-        system: PropTypes.object,
-        servers: PropTypes.arrayOf(PropTypes.object),
-        projects: PropTypes.arrayOf(PropTypes.object),
-        projectLinks: PropTypes.arrayOf(PropTypes.object),
-
-        database: PropTypes.instanceOf(Database).isRequired,
-        route: PropTypes.instanceOf(Route).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onTransitionOut: PropTypes.func,
-    };
-}
