@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React, { useState } from 'react';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
@@ -21,8 +21,6 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 // custom hooks
 import {
     useDraftBuffer,
-    useEditHandling,
-    useReturnHandling,
     useConfirmation,
 } from '../hooks.mjs';
 
@@ -55,34 +53,33 @@ async function RepoSummaryPage(props) {
     const { t, p } = env.locale;
     const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !editing;
-    const [ problems, setProblems ] = useState({});
+    const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     const [ show ] = useProgress();
     const draft = useDraftBuffer(editing, {
         original: repo,
-        save: (base, ours, action) => {
-            switch (action) {
-                case 'restore': return restore(base);
-                default: return save(base, ours);
-            }
-        },
-        remove
+        save: saveRepo,
     });
 
-    const [ handleEditClick, handleCancelClick ] = useEditHandling(route);
-    const [ handleReturnClick ] = useReturnHandling(route, {
-        page: 'repo-list-page',
+    const handleEditClick = useListener((evt) => {
+        route.push({ editing: true });
     });
-    const handleRemoveClick = useCallback(async (evt) => {
-        await draft.remove();
+    const handleCancelClick = useListener((evt) => {
+        route.push({ editing: undefined });
     });
-    const handleRestoreClick = useCallback(async (evt) => {
-        await draft.save('restore');
+    const handleReturnClick = useListener((evt) => {
+        route.push('repo-list-page', { projectID: project.id });
     });
-    const handleSaveClick = useCallback(async (evt) => {
-        await draft.save();
+    const handleRemoveClick = useListener(async (evt) => {
+        await run(removeRepo);
     });
-    const handleTitleChange = useCallback((evt) => {
+    const handleRestoreClick = useListener(async (evt) => {
+        await run(restoreRepo);
+    });
+    const handleSaveClick = useListener(async (evt) => {
+        await run(draft.save);
+    });
+    const handleTitleChange = useListener((evt) => {
         const title = evt.target.value;
         draft.update('details.title', title);
     });
@@ -93,7 +90,7 @@ async function RepoSummaryPage(props) {
         <div className="repo-summary-page">
             {renderButtons()}
             <h2>{t('repo-summary-$title', title)}</h2>
-            <UnexpectedError error={draft.error} />
+            <UnexpectedError error={error} />
             {renderForm()}
             {renderInstructions()}
             {renderChart()}
@@ -221,22 +218,21 @@ async function RepoSummaryPage(props) {
         );
     }
 
-    async function remove(base) {
+    async function removeRepo() {
         await confirm(t('repo-summary-confirm-remove'));
 
-        const repoIDs = _.difference(project.repo_ids, [ base.id ]);
+        const repoIDs = _.difference(project.repo_ids, [ repo.id ]);
         const changes = {
             id: project.id,
             repo_ids: repoIDs
         };
         await db.saveOne({ table: 'project' }, changes);
-        handleReturnClick();
     }
 
-    async function restore(base) {
+    async function restoreRepo() {
         await confirm(t('repo-summary-confirm-restore'));
 
-        const repoIDs = _.union(project.repo_ids, [ base.id ]);
+        const repoIDs = _.union(project.repo_ids, [ repo.id ]);
         const changes = {
             id: project.id,
             repo_ids: repoIDs
@@ -244,15 +240,9 @@ async function RepoSummaryPage(props) {
         await db.saveOne({ table: 'project' }, changes);
     }
 
-    async function save(base, ours) {
-        setSaving(true);
-        try {
-            const repoAfter = await db.saveOne({ table: 'repo' }, ours);
-            handleCancelClick();
-            return repoAfter;
-        } finally {
-            setSaving(false);
-        }
+    async function saveRepo(base, ours) {
+        const repoAfter = await db.saveOne({ table: 'repo' }, ours);
+        return repoAfter;
     }
 }
 

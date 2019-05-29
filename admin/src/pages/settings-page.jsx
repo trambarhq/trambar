@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React, { useState } from 'react';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 import * as SystemSettings from 'common/objects/settings/system-settings.mjs';
 
@@ -16,7 +16,6 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 // custom hooks
 import {
     useDraftBuffer,
-    useNavigation,
 } from '../hooks.mjs';
 
 import './settings-page.scss';
@@ -50,40 +49,44 @@ function SettingsPageSync(props) {
         save: saveSystem,
         reset: readOnly,
     });
-    const navigation = useNavigation(route, {});
+    const [ error, run ] = useErrorCatcher();
 
-    const handleEditClick = useCallback((evt) => navigation.edit());
-    const handleCancelClick = useCallback((evt) => navigation.cancel());
-    const handleSaveClick = useCallback(async (evt) => {
-        if (await draft.save()) {
-            navigation.done();
+    const handleEditClick = useListener((evt) => {
+        route.replace({ editing: true });
+    });
+    const handleCancelClick = useListener((evt) => {
+        route.replace({ editing: false });
+    });
+    const handleSaveClick = useListener(async (evt) => {
+        if (await run(draft.save)) {
+            handleCancelClick();
         }
     });
-    const handleTitleChange = useCallback((evt) => {
+    const handleTitleChange = useListener((evt) => {
         const title = evt.target.value;
         draft.update('details.title', title);
     });
-    const handleCompanyNameChange = useCallback((evt) => {
+    const handleCompanyNameChange = useListener((evt) => {
         const name = evt.target.value;
         draft.update('details.company_name', name);
     });
-    const handleAddressChange = useCallback((evt) => {
+    const handleAddressChange = useListener((evt) => {
         const address = evt.target.value;
         draft.update('settings.address', address);
     });
-    const handlePushRelayChange = useCallback((evt) => {
+    const handlePushRelayChange = useListener((evt) => {
         const address = evt.target.value;
         draft.update('settings.push_relay', address);
     });
-    const handleDescriptionChange = useCallback((evt) => {
+    const handleDescriptionChange = useListener((evt) => {
         const description = evt.target.value;
         draft.update('details.description', description);
     });
-    const handleBackgroundImageChange = useCallback((evt) => {
+    const handleBackgroundImageChange = useListener((evt) => {
         const resources = evt.target.value;
         draft.update('details.resources', resources);
     });
-    const handleLanguageOptionClick = useCallback((evt) => {
+    const handleLanguageOptionClick = useListener((evt) => {
         const lang = evt.name;
         const listBefore = draft.get('settings.input_languages', []);
         const list = _.toggle(listBefore, lang);
@@ -94,7 +97,7 @@ function SettingsPageSync(props) {
         <div className="settings-page">
             {renderButtons()}
             <h2>{t('settings-title')}</h2>
-            <UnexpectedError error={draft.error} />
+            <UnexpectedError error={error} />
             {renderForm()}
             {renderInstructions()}
         </div>

@@ -27,30 +27,6 @@ function useSortHandler() {
     return [ sort, handleSort ];
 }
 
-function useNavigation(route, redirects) {
-    const [ object ] = useState({});
-    object.edit = () => {
-        route.modify({ editing: true });
-    };
-    object.cancel = () => {
-        route.modify({ editing: undefined });
-    };
-    object.done = (params) => {
-        route.modify({ editing: undefined, ...params });
-    };
-    object.add = () => {
-        const page = redirects.add.page || route.name;
-        const params = { ...route.params, ...redirects.add.params };
-        route.push(page, params);
-    };
-    object.return = () => {
-        const page = redirects.return.page || route.name;
-        const params = { ...route.params, ...redirects.return.params };
-        route.push(page, params);
-    };
-    return object;
-}
-
 function useRowToggle(selection, attr) {
     const handleRowClick = useCallback((evt) => {
         const id = parseInt(evt.currentTarget.getAttribute(attr));
@@ -91,7 +67,6 @@ export {
     useAfterglow,
     useConfirmation,
     useDataLossWarning,
-    useNavigation,
     useSortHandler,
     useRowToggle,
     useAutogenID,

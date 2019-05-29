@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { useState, useCallback, useEffect } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React, { useState } from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 import * as TaskFinder from 'common/objects/finders/task-finder.mjs';
 
 import './task-alert-bar.scss';
@@ -17,12 +17,12 @@ async function TaskAlertBar(props) {
     const [ show ] = useProgress();
     const db = database.use({ schema: 'global', by: this });
 
-    const handleClick = useCallback((evt) => {
+    const handleClick = useListener((evt) => {
         if (selectedTask.failed) {
             setLastErrorTime(selectedTask.mtime);
             localStorage.last_error_time = selectedTask.mtime;
         }
-    }, [ selectedTask ]);
+    });
 
     render();
     let selectedTask;

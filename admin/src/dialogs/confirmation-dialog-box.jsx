@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -13,16 +14,16 @@ function ConfirmationDialogBox(props) {
     const { env, show, dangerous, children, onCancel, onConfirm } = props;
     const { t } = env.locale;
 
-    const handleCancelClick = useCallback((evt) => {
+    const handleCancelClick = useListener((evt) => {
         if (onCancel) {
             onCancel({});
         }
-    }, [ onCancel ]);
-    const handleConfirmClick = useCallback((evt) => {
+    });
+    const handleConfirmClick = useListener((evt) => {
         if (onConfirm) {
             onConfirm({});
         }
-    }, [ onConfirm ]);
+    });
 
     return (
         <div className="confirmation-dialog-box">

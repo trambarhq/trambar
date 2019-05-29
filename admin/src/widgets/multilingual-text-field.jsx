@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useMemo, useCallback, useImperativeHandle, useEffect } from 'react';
+import React, { useState, useMemo, useImperativeHandle, useEffect } from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import AutosizeTextArea from 'common/widgets/autosize-text-area.jsx';
@@ -52,7 +53,7 @@ function MultilingualTextField(props, ref) {
         return instance;
     });
 
-    const handleTextChange = useCallback((evt) => {
+    const handleTextChange = useListener((evt) => {
         const text = evt.target.value;
         let newValue;
         if (text) {
@@ -86,13 +87,13 @@ function MultilingualTextField(props, ref) {
         if (onChange) {
             onChange({ type: 'change', target: instance });
         }
-    }, [ value, selectedLanguageCode, availableLanguageCodes, onChange ]);
-    const handleLanguageClick = useCallback((evt) => {
+    });
+    const handleLanguageClick = useListener((evt) => {
         const lang = evt.currentTarget.lang;
         setSelectedLanguageCode(lang);
         setHoverState(null);
     });
-    const handleLanguageMouseOver = useCallback((evt) => {
+    const handleLanguageMouseOver = useListener((evt) => {
         const tab = evt.currentTarget;
         const tabs = tab.parentNode;
         const tabsRect = tabs.getBoundingClientRect();
@@ -101,13 +102,13 @@ function MultilingualTextField(props, ref) {
         const lang = tab.lang;
         setHoverState({ languageCode: lang, arrowPosition: pos });
     });
-    const handleLanguageMouseOut = useCallback((evt) => {
+    const handleLanguageMouseOut = useListener((evt) => {
         let tab = evt.currentTarget;
         let lang = tab.lang;
         if (lang === hoverState.languageCode) {
             setHoverState(null);
         }
-    }, [ hoverState ]);
+    });
 
     useEffect(() => {
         // switch to the language of the new locale if it's

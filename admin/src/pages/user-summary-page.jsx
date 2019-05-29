@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress, Cancellation } from 'relaks';
+import React, { useState } from 'react';
+import Relaks, { useProgress, useListener, useErrorCatcher, Cancellation } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -28,7 +28,6 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 // custom hooks
 import {
     useDraftBuffer,
-    useNavigation,
     useAutogenID,
     useConfirmation,
     useDataLossWarning,
@@ -72,59 +71,52 @@ function UserSummaryPageSync(props) {
     const [ showingSocialLinks, setShowingSocialLinks ] = useState(false);
     const draft = useDraftBuffer({
         original: user || {},
-        save: (base, ours, action) => {
-            switch (action) {
-                case 'restore': return restoreUser(base);
-                default: return saveUser(base, ours);
-            }
-        },
-        remove: (base, ours, action) => {
-            switch (action) {
-                case 'disable': return disableUser(base);
-                default: return removeUser(base);
-            }
-        },
+        save: saveUser,
         reset: readOnly,
     });
-    const navigation = useNavigation(route, {
-        add: { params: { userID: 'new' } },
-        return: {
-            page: (projectID) ? 'member-list-page' : 'user-list-page',
-            params: (projectID) ? { projectID } : {},
-        }
-    });
+    const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     useDataLossWarning(route, env, confirm, () => draft.unsaved);
 
-    const handleEditClick = useCallback(() => navigation.edit());
-    const handleCancelClick = useCallback(() => {
+    const handleEditClick = useListener(() => {
+        route.replace({ editing: true });
+    });
+    const handleCancelClick = useListener(() => {
         if (creating) {
-            navigation.return();
+            handleReturnClick();
         } else {
-            navigation.cancel()
+            route.replace({ editing: undefined });
         }
     });
-    const handleAddClick = useCallback(() => navigation.add());
-    const handleReturnClick = useCallback(() => navigation.return());
-    const handleDisableClick = useCallback(async (evt) => {
-        if (await draft.remove('disable')) {
-            navigation.return();
+    const handleAddClick = useListener(() => {
+        route.replace({ userID: 'new' });
+    });
+    const handleReturnClick = useListener(() => {
+        if (projectID) {
+            route.replace('member-list-page', { projectID });
+        } else {
+            route.replace('user-list-page');
         }
     });
-    const handleRemoveClick = useCallback(async (evt) => {
-        if (await draft.remove()) {
-            navigation.return();
+    const handleDisableClick = useListener(async (evt) => {
+        if (await run(disableUser)) {
+            handleReturnClick();
         }
     });
-    const handleRestoreClick = useCallback(async (evt) => {
-        draft.save('restore');
+    const handleRemoveClick = useListener(async (evt) => {
+        if (await run(removeUser)) {
+            handleReturnClick();
+        }
     });
-    const handleSaveClick = useCallback(async (evt) => {
+    const handleRestoreClick = useListener(async (evt) => {
+        await run(restoreUser);
+    });
+    const handleSaveClick = useListener(async (evt) => {
         if (await draft.save()) {
             if (creating) {
                 setAdding(true);
             }
-            navigation.done({ userID: draft.current.id });
+            route.replace({ editing: undefined, userID: draft.current.id });
         }
     });
     const [ handleNameChange, handleUsernameChange ] = useAutogenID(draft, {
@@ -132,56 +124,56 @@ function UserSummaryPageSync(props) {
         nameKey: 'username',
         personal: true
     });
-    const handleEmailChange = useCallback((evt) => {
+    const handleEmailChange = useListener((evt) => {
         const address = evt.target.value;
         draft.update(`details.email`, address);
     });
-    const handlePhoneChange = useCallback((evt) => {
+    const handlePhoneChange = useListener((evt) => {
         const number = evt.target.value;
         draft.update(`details.phone`, number);
     });
-    const handleProfileImageChange = useCallback((evt) => {
+    const handleProfileImageChange = useListener((evt) => {
         const resources = evt.target.value;
         draft.update(`details.resources`, resources);
     });
-    const handleTypeOptionClick = useCallback((evt) => {
+    const handleTypeOptionClick = useListener((evt) => {
         const type = evt.name;
         draft.update('type', type);
     });
-    const handleRoleOptionClick = useCallback((evt) => {
+    const handleRoleOptionClick = useListener((evt) => {
         const roleID = parseInt(evt.name);
         const before = draft.get('role_ids', []);
         const after = (roleID) ? _.toggle(before, roleID) : [];
         draft.update('role_ids', after);
     });
-    const handleSocialLinksToggleClick = useCallback((evt) => {
+    const handleSocialLinksToggleClick = useListener((evt) => {
         setShowingSocialLinks(!showingSocialLinks);
-    }, [ showingSocialLinks ]);
-    const handleSkypeUsernameChange = useCallback((evt) => {
+    });
+    const handleSkypeUsernameChange = useListener((evt) => {
         const username = _.trim(evt.target.value);
         draft.update(`details.skype_username`, username);
     });
-    const handleIchatUsernameChange = useCallback((evt) => {
+    const handleIchatUsernameChange = useListener((evt) => {
         const username = _.trim(evt.target.value);
         draft.update(`details.ichat_username`, username);
     });
-    const handleTwitterUsernameChange = useCallback((evt) => {
+    const handleTwitterUsernameChange = useListener((evt) => {
         const username = extractUsername(evt.target.value);
         draft.update(`details.twitter_username`, username);
     });
-    const handleLinkedinURLChange = useCallback((evt) => {
+    const handleLinkedinURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
         draft.update(`details.linkedin_url`, url);
     });
-    const handleGitHubURLChange = useCallback((evt) => {
+    const handleGitHubURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
         draft.update(`details.github_url`, url);
     });
-    const handleGitlabURLChange = useCallback((evt) => {
+    const handleGitlabURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
         draft.update(`details.gitlab_url`, url);
     });
-    const handleStackoverflowURLChange = useCallback((evt) => {
+    const handleStackoverflowURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
         draft.update(`details.stackoverflow_url`, url);
     });
@@ -190,7 +182,7 @@ function UserSummaryPageSync(props) {
         <div className="user-summary-page">
             {renderButtons()}
             <h2>{t(projectID ? 'user-summary-member-$name' : 'user-summary-$name', name)}</h2>
-            <UnexpectedError error={draft.error} />
+            <UnexpectedError error={error} />
             {renderForm()}
             {renderSocialLinksToggle()}
             {renderSocialLinksForm()}
@@ -559,21 +551,21 @@ function UserSummaryPageSync(props) {
         );
     }
 
-    async function disableUser(base) {
+    async function disableUser() {
         await confirm(t('user-summary-confirm-disable'));
-        const changes = { id: base.id, disabled: true };
+        const changes = { id: user.id, disabled: true };
         await db.saveOne({ table: 'user' }, changes);
     }
 
-    async function removeUser(base) {
+    async function removeUser() {
         await confirm(t('user-summary-confirm-delete'));
-        const changes = { id: base.id, deleted: true };
+        const changes = { id: user.id, deleted: true };
         await db.saveOne({ table: 'user' }, changes);
     }
 
-    async function restoreUser(base) {
+    async function restoreUser() {
         await confirm(t('user-summary-confirm-reactivate'));
-        const changes = { id: base.id, disabled: false, deleted: false };
+        const changes = { id: user.id, disabled: false, deleted: false };
         await db.saveOne({ table: 'user' }, changes);
     }
 

@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useListener } from 'relaks';
 
 import './tooltip.scss';
 
@@ -19,17 +20,17 @@ function Tooltip(props) {
     const inline = findElement(children, 'inline');
     const win = findElement(children, 'window');
 
-    const handleLabelClick = useCallback((evt) => {
+    const handleLabelClick = useListener((evt) => {
         if (live && !disabled) {
             setOpen(!open);
         }
-    }, [ open ]);
-    const handleMouseDown = useCallback((evt) => {
+    });
+    const handleMouseDown = useListener((evt) => {
         if (!isInside(evt.target, container.current)) {
             setOpen(false);
         }
     });
-    const handleKeyDown = useCallback((evt) => {
+    const handleKeyDown = useListener((evt) => {
         if (evt.keyCode === 27) {
             setOpen(false);
         }

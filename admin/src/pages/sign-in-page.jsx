@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback, useEffect } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React, { useState, useEffect } from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 import Moment from 'moment';
 import * as HTTPRequest from 'common/transport/http-request.mjs';
 
@@ -22,7 +22,7 @@ async function SignInPage(props) {
     const [ savedCredentials, setSavedCredentials ] = useState(false);
     const db = database.use({ by: this });
 
-    const handleOAuthButtonClick = useCallback(async (evt) => {
+    const handleOAuthButtonClick = useListener(async (evt) => {
         evt.preventDefault();
         const url = evt.currentTarget.getAttribute('href');
         const serverID = parseInt(evt.currentTarget.getAttribute('data-id'))
@@ -35,17 +35,16 @@ async function SignInPage(props) {
             newErrors[serverID] = err;
             setErrors(newErrors);
         }
-    })
-
-    const handleUsernameChange = useCallback((evt) => {
+    });
+    const handleUsernameChange = useListener((evt) => {
         const text = evt.target.value;
         setUsername(text);
     });
-    const handlePasswordChange = useCallback((evt) => {
+    const handlePasswordChange = useListener((evt) => {
         const text = evt.target.value;
         setPassowrd(text);
     });
-    const handleFormSubmit = useCallback(async (evt) => {
+    const handleFormSubmit = useListener(async (evt) => {
         evt.preventDefault();
         if (!canSubmitForm()) {
             return;

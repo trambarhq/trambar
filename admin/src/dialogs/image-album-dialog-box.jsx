@@ -1,7 +1,6 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React, { useState } from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as MediaLoader from 'common/media/media-loader.mjs';
 import * as PictureFinder from 'common/objects/finders/picture-finder.mjs';
@@ -24,55 +23,55 @@ async function ImageAlbumDialogBox(props) {
     const [ deletionCandidateIDs, setDeletionCandidateIDs ] = useState([]);
     const [ isDropTarget, setIsDropTarget ] = useState(false);
 
-    const handleManageClick = useCallback((evt) => {
+    const handleManageClick = useListener((evt) => {
         setManagingImages(true);
     });
-    const handleDoneClick = useCallback((evt) => {
+    const handleDoneClick = useListener((evt) => {
         setManagingImages(false);
         setDeletionCandidateIDs([]);
     });
-    const handleCancelClick = useCallback((evt) => {
+    const handleCancelClick = useListener((evt) => {
         if (onCancel) {
             onCancel({});
         }
-    }, [ onCancel ]);
-    const handleSelectClick = useCallback((evt) => {
+    });
+    const handleSelectClick = useListener((evt) => {
         const selectedPicture = getSelectedPicture();
         if (onSelect && selectedPicture) {
             onSelect({ image: selectedPicture.details });
         }
-    }, [ onSelect, getSelectedPicture ]);
-    const handleUploadChange = useCallback(async (evt) => {
+    });
+    const handleUploadChange = useListener(async (evt) => {
         // make copy of array since it'll disappear when event handler exits
         const files = _.slice(evt.target.files);
         if (files.length) {
             await uploadPictures(files);
         }
-    }, [ uploadPictures ]);
-    const handleDragEnter = useCallback((evt) => {
+    });
+    const handleDragEnter = useListener((evt) => {
         setIsDropTarget(true);
     });
-    const handleDragLeave = useCallback((evt) => {
+    const handleDragLeave = useListener((evt) => {
         setIsDropTarget(false);
     });
-    const handleDragOver = useCallback((evt) => {
+    const handleDragOver = useListener((evt) => {
         // allow drop
         evt.preventDefault();
     });
-    const handleDrop = useCallback(async (evt) => {
+    const handleDrop = useListener(async (evt) => {
         const files = _.slice(evt.dataTransfer.files);
         evt.preventDefault();
         await uploadPictures(files);
         setIsDropTarget(false);
-    }, [ uploadPictures ]);
-    const handleRemoveClick = useCallback(async (evt) => {
+    });
+    const handleRemoveClick = useListener(async (evt) => {
         await removePictures();
         setDeletionCandidateIDs([]);
-    }, [ removePictures ]);
-    const handleImageClick = useCallback((evt) => {
+    });
+    const handleImageClick = useListener((evt) => {
         let pictureID = parseInt(evt.currentTarget.getAttribute('data-picture-id'));
         selectPicture(pictureID);
-    }, [ selectPicture ]);
+    });
 
     render();
     const pictures = await PictureFinder.findPictures(db, purpose);

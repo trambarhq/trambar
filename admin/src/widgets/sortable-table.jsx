@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useListener } from 'relaks';
 
 import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
 
@@ -28,7 +29,7 @@ function SortableTable(props) {
         setTransition(true);
     }, [])
 
-    const handleClick = useCallback((evt) => {
+    const handleClick = useListener((evt) => {
         const target = evt.target;
         const th = findHeaderNode(evt.target);
         if (th && onSort) {
@@ -50,7 +51,7 @@ function SortableTable(props) {
             directions.unshift(dir);
             onSort({ columns, directions });
         }
-    }, [ sortColumns, sortDirections, onSort ]);
+    });
 
     let thead = findChild(children, 'thead');
     let tbody = findChild(children, 'tbody');

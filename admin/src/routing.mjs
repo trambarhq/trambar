@@ -1,4 +1,4 @@
-var NumberOrNew = {
+const NumberOrNew = {
     from: (s) => {
         return (s === 'new') ? s : parseInt(s);
     },
@@ -7,7 +7,7 @@ var NumberOrNew = {
     },
 };
 
-var routes = {
+const routes = {
     'member-list-page': {
         path: '/projects/${projectID}/members/',
         query: {

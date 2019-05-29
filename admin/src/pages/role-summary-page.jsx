@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress, Cancellation } from 'relaks';
+import React, { useState } from 'react';
+import Relaks, { useProgress, useListener, useErrorCatcher, Cancellation } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
@@ -22,7 +22,6 @@ import {
     useDraftBuffer,
     useSelectionBuffer,
     useAutogenID,
-    useNavigation,
     useConfirmation,
     useDataLossWarning,
 } from '../hooks.mjs';
@@ -59,18 +58,7 @@ function RoleSummaryPageSync(props) {
     const [ problems, setProblems ] = useState({});
     const draft = useDraftBuffer({
         original: role || {},
-        save: (base, ours, action) => {
-            switch (action) {
-                case 'restore': return restoreRole(base);
-                default: return saveRole(base, ours);
-            }
-        },
-        remove: (base, ours, action) => {
-            switch (action) {
-                case 'disable': return disableRole(base);
-                default: return removeRole(base);
-            }
-        },
+        save: saveRole,
         reset: readOnly,
     });
     const members = _.filter(users, (user) => {
@@ -80,55 +68,58 @@ function RoleSummaryPageSync(props) {
         original: _.map(members, 'id'),
         reset: readOnly,
     });
-    const navigation = useNavigation(route, {
-        add: { params: { roleID: 'new' } },
-        return: { page: 'role-list-page' },
-    });
+    const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     useDataLossWarning(route, env, confirm, () => draft.unsaved);
 
-    const handleEditClick = useCallback((evt) => navigation.edit());
-    const handleCancelClick = useCallback((evt) => navigation.cancel());
-    const handleAddClick = useCallback((evt) => navigation.add());
-    const handleReturnClick = useCallback((evt) => navigation.return());
-    const handleDisableClick = useCallback(async (evt) => {
-        if (await draft.remove('disable')) {
-            navigation.return();
+    const handleEditClick = useListener((evt) => {
+        route.replace({ editing: true });
+    });
+    const handleCancelClick = useListener((evt) => {
+        route.replace({ editing: undefined });
+    });
+    const handleAddClick = useListener((evt) => {
+        route.push({ roleID: 'new' });
+    });
+    const handleReturnClick = useListener((evt) => {
+        route.push('role-list-page', { projectID: project.id });
+    });
+    const handleDisableClick = useListener(async (evt) => {
+        if (await run(disableRole)) {
+            handleReturnClick();
         }
     });
-    const handleRemoveClick = useCallback(async (evt) => {
-        if (await draft.remove()) {
-            navigation.return();
+    const handleRemoveClick = useListener(async (evt) => {
+        if (await run(removeRole)) {
+            handleReturnClick();
         }
     });
-    const handleRestoreClick = useCallback(async (evt) => {
-        await draft.save('restore');
+    const handleRestoreClick = useListener(async (evt) => {
+        await run(restoreRole);
     });
-    const handleSaveClick = useCallback(async (evt) => {
+    const handleSaveClick = useListener(async (evt) => {
         if (await draft.save()) {
             if (creating) {
                 setAdding(true);
-                navigation.done({ roleID: draft.current.id });
-            } else {
-                navigation.done();
             }
+            await route.replace({ editing: undefined, roleID: draft.current.id });
         }
     });
     const [ handleTitleChange, handleNameChange ] = useAutogenID(draft, {
         titleKey: 'details.title',
         nameKey: 'name',
     });
-    const handleDescriptionChange = useCallback((evt) => {
+    const handleDescriptionChange = useListener((evt) => {
         const description = evt.target.value;
         draft.update('details.description', description);
     });
-    const handleRatingOptionClick = useCallback((evt) => {
+    const handleRatingOptionClick = useListener((evt) => {
         const key = evt.name;
         const rating = messageRatings[key];
         draft.update('settings.rating', rating);
     });
-    const handleUserOptionClick = useCallback((evt) => {
-        let userID = parseInt(evt.name);
+    const handleUserOptionClick = useListener((evt) => {
+        const userID = parseInt(evt.name);
         userSelection.toggle(userID);
     });
 
@@ -137,7 +128,7 @@ function RoleSummaryPageSync(props) {
         <div className="role-summary-page">
             {renderButtons()}
             <h2>{t('role-summary-$title', title)}</h2>
-            <UnexpectedError error={draft.error} />
+            <UnexpectedError error={error} />
             {renderForm()}
             {renderInstructions()}
             <ActionConfirmation ref={confirmationRef} env={env} />
@@ -319,23 +310,23 @@ function RoleSummaryPageSync(props) {
         );
     }
 
-    async function disableRole(base) {
+    async function disableRole() {
         await confirm(t('role-summary-confirm-disable'));
-        const changes = { id: base.id, disabled: true };
+        const changes = { id: role.id, disabled: true };
         const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'role' }, changes);
     }
 
-    async function removeRole(base) {
+    async function removeRole() {
         await confirm(t('role-summary-confirm-delete'));
-        const changes = { id: base.id, deleted: true };
+        const changes = { id: role.id, deleted: true };
         const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'role' }, changes);
     }
 
-    async function restoreRole(base) {
+    async function restoreRole() {
         await confirm(t('role-summary-confirm-reactivate'));
-        const changes = { id: base.id, disabled: false, deleted: false };
+        const changes = { id: role.id, disabled: false, deleted: false };
         const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'role' }, changes);
     }

@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
@@ -17,9 +17,9 @@ async function SignOffMenu(props) {
     const [ show ] = useProgress();
     const db = database.use({ schema: 'global', by: this });
 
-    const handleSignOff = useCallback((evt) => {
+    const handleSignOff = useListener((evt) => {
         database.endSession();
-    }, [ database ]);
+    });
 
     render();
     let user;

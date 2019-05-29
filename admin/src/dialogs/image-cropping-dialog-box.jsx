@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useMemo, useCallback } from 'react';
-import { useSaveBuffer } from 'relaks';
+import React from 'react';
+import { useListener, useSaveBuffer } from 'relaks';
 import * as ImageCropping from 'common/media/image-cropping.mjs';
 import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
@@ -24,28 +24,28 @@ function ImageCroppingDialogBox(props) {
         compare: _.isEqual,
     });
 
-    const handleChange = useCallback((evt) => {
+    const handleChange = useListener((evt) => {
         clippingRect.set(round(evt.rect));
     });
-    const handleCancelClick = useCallback((evt) => {
+    const handleCancelClick = useListener((evt) => {
         if (onCancel) {
             onCancel({});
         }
         clippingRect.reset();
-    }, [ onCancel ]);
-    const handleSelectClick = useCallback((evt) => {
+    });
+    const handleSelectClick = useListener((evt) => {
         if (onSelect) {
             onSelect({ clippingRect: clippingRect.current });
         }
-    }, [ onSelect ]);
-    const handleZoomInClick = useCallback((evt) => {
+    });
+    const handleZoomInClick = useListener((evt) => {
         const rect = resize(clippingRect.current, 0.9, ratio, image);
         clippingRect.set(rect);
-    }, [ ratio, image ]);
-    const handleZoomOutClick = useCallback((evt) => {
+    });
+    const handleZoomOutClick = useListener((evt) => {
         const rect = resize(clippingRect.current, 1 / 0.9, ratio, image);
         clippingRect.set(rect);
-    }, [ ratio, image ]);
+    });
 
     return (
         <div className="image-cropping-dialog-box">

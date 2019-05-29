@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React, { useState, useRef, useEffect } from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as TaskFinder from 'common/objects/finders/task-finder.mjs';
 
@@ -22,21 +22,21 @@ async function TaskList(props) {
     const container = useRef();
     const db = database.use({ schema: 'global', by: this });
 
-    const handleTaskIdentity = useCallback((evt) => {
+    const handleTaskIdentity = useListener((evt) => {
         return `task-${evt.item.id}`;
     });
-    const handleTaskRender = useCallback((evt) => {
+    const handleTaskRender = useListener((evt) => {
         if (evt.needed) {
             return renderTask(evt.item);
         } else {
             return <div className="task" />;
         }
-    }, [ renderTask ]);
-    const handleTaskClick = useCallback((evt) => {
+    });
+    const handleTaskClick = useListener((evt) => {
         let taskID = parseInt(evt.currentTarget.getAttribute('data-task-id'));
         const list = _.toggle(expandedTaskIDs, taskID);
         setExpandedTaskIDs(list);
-    }, [ expandedTaskIDs ]);
+    });
 
     useEffect(() => {
         if (scrollToTaskID) {

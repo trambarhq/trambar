@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress, Cancellation } from 'relaks';
+import React, { useState } from 'react';
+import Relaks, { useProgress, useListener, useErrorCatcher, Cancellation } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
@@ -26,7 +26,6 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 import {
     useDraftBuffer,
     useAutogenID,
-    useNavigation,
     useConfirmation,
     useDataLossWarning,
 } from '../hooks.mjs';
@@ -65,69 +64,61 @@ function ServerSummaryPageSync(props) {
     const [ credentialsChanged, setCredentialsChanged ] = useState(false);
     const draft = useDraftBuffer({
         original: server || {},
-        save: (base, ours, action) => {
-            switch (action) {
-                case 'restore': return restoreServer(base);
-                default: return saveServer(base, ours);
-            }
-        },
-        remove: (base, ours, action) => {
-            switch (action) {
-                case 'disable': return disableServer(base);
-                default: return removeServer(base);
-            }
-        },
+        save: saveServer,
         reset: readOnly
     });
-    const navigation = useNavigation(route, {
-        add: { params: { serverID: 'new' } },
-        return: { page: 'server-list-page' },
-    })
+    const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     useDataLossWarning(route, env, confirm, () => draft.unsaved);
 
-    const handleEditClick = useCallback((evt) => navigation.edit());
-    const handleCancelClick = useCallback((evt) => {
+    const handleEditClick = useListener((evt) => {
+        route.replace({ editing: true });
+    });
+    const handleCancelClick = useListener((evt) => {
         if (creating) {
-            navigation.return();
+            handleReturnClick();
         } else {
-            navigation.cancel();
+            route.replace({ editing: undefined });
         }
     });
-    const handleAddClick = useCallback((evt) => navigation.add());
-    const handleReturnClick = useCallback((evt) => navigation.return());
-    const handleDisableClick = useCallback(async (evt) => {
-        if (await draft.remove('disable')) {
-            navigation.return();
+    const handleAddClick = useListener((evt) => {
+        route.push({ serverID: 'new' });
+    });
+    const handleReturnClick = useListener((evt) => {
+        route.push('server-list-page');
+    });
+    const handleDisableClick = useListener(async (evt) => {
+        if (await run(disableServer)) {
+            handleReturnClick();
         }
     });
-    const handleDeleteClick = useCallback(async (evt) => {
-        if (await draft.remove()) {
-            navigation.return();
+    const handleDeleteClick = useListener(async (evt) => {
+        if (await run(removeServer)) {
+            handleReturnClick();
         }
     });
-    const handleRestoreClick = useCallback(async (evt) => {
-        await draft.save('restore');
+    const handleRestoreClick = useListener(async (evt) => {
+        await run(restoreServer);
     });
-    const handleSaveClick = useCallback(async (evt) => {
-        if (await draft.save()) {
+    const handleSaveClick = useListener(async (evt) => {
+        if (await run(draft.save)) {
             if (creating) {
                 setAdding(true);
             }
-            navigation.done({ serverID: draft.current.id });
+            route.replace({ editing: undefined, serverID: draft.current.id });
         }
     });
-    const handleAcquireClick = useCallback((evt) => {
+    const handleAcquireClick = useListener((evt) => {
         openOAuthPopup('activation');
-    }, [ openOAuthPopup ]);
-    const handleTestClick = useCallback((evt) => {
+    });
+    const handleTestClick = useListener((evt) => {
         openOAuthPopup('test');
-    }, [ openOAuthPopup ]);
+    });
     const [ handleTitleChange, handleNameChange ] = useAutogenID(draft, {
         titleKey: 'details.title',
         nameKey: 'name',
     });
-    const handleTypeOptionClick = useCallback((evt) => {
+    const handleTypeOptionClick = useListener((evt) => {
         const typeBefore = draft.get('type');
         const type = evt.name;
         draft.update('type', type);
@@ -149,7 +140,7 @@ function ServerSummaryPageSync(props) {
             draft.update('name', autoNameAfter);
         }
     });
-    const handleGitlabUserOptionClick = useCallback((evt) => {
+    const handleGitlabUserOptionClick = useListener((evt) => {
         const option = _.find(gitlabImportOptions, (option) => {
             return evt.name === `${option.type}-${option.value}`;
         });
@@ -160,7 +151,7 @@ function ServerSummaryPageSync(props) {
         }
         draft.update(`settings.user.mapping.${option.type}`, type);
     })
-    const handleOAuthUserOptionClick = useCallback((evt) => {
+    const handleOAuthUserOptionClick = useListener((evt) => {
         const option = _.find(gitlabImportOptions, (option) => {
             return evt.name === `${option.value}`;
         });
@@ -171,7 +162,7 @@ function ServerSummaryPageSync(props) {
         }
         draft.update('settings.user.type', type);
     });
-    const handleRoleOptionClick = useCallback((evt) => {
+    const handleRoleOptionClick = useListener((evt) => {
         const roleIDsBefore = draft.get('settings.user.role_ids', []);
         const options = getRoleOptions(roles, env);
         const option = _.find(options, { name: evt.name });
@@ -182,16 +173,16 @@ function ServerSummaryPageSync(props) {
             roleIDs = _.toggle(roleIDsBefore, option.value);
         }
         draft.update('settings.user.role_ids', roleIDs);
-    }, [ roles, env ]);
-    const handleWhitelistChange = useCallback((evt) => {
+    });
+    const handleWhitelistChange = useListener((evt) => {
         const whitelist = evt.target.value.replace(/\s*[;,]\s*/g, '\n');
         draft.update('settings.user.whitelist', whitelist);
     });
-    const handleApiTokenChange = useCallback((evt) => {
+    const handleApiTokenChange = useListener((evt) => {
         const token = evt.target.value;
         draft.update('settings.api.token', token);
     });
-    const handleOAuthURLChange = useCallback((evt) => {
+    const handleOAuthURLChange = useListener((evt) => {
         const url = evt.target.value;
         draft.update('settings.oauth.base_url', url);
 
@@ -205,18 +196,18 @@ function ServerSummaryPageSync(props) {
             newProblems = _.omit(problems, 'base_url');
         }
         setProblems(newProblems);
-    }, [ problems ]);
-    const handleOAuthIDChange = useCallback((evt) => {
+    });
+    const handleOAuthIDChange = useListener((evt) => {
         const id = evt.target.value;
         draft.update('settings.oauth.client_id', id);
     });
-    const handleOAuthSecretChange = useCallback((evt) => {
+    const handleOAuthSecretChange = useListener((evt) => {
         const secret = evt.target.value;
         draft.update('settings.oauth.client_secret', secret);
     });
-    const handleTaskSelectionClear = useCallback(() => {
-        route.unanchor();
-    }, [ route ]);
+    const handleTaskSelectionClear = useListener(() => {
+        // TODO
+    });
 
     let title = p(draft.get('details.title'));
     const type = draft.get('type');
@@ -227,7 +218,7 @@ function ServerSummaryPageSync(props) {
         <div className="server-summary-page">
             {renderButtons()}
             <h2>{t('server-summary-member-$name', title)}</h2>
-            <UnexpectedError error={draft.error} />
+            <UnexpectedError error={error} />
             {renderForm()}
             {renderInstructions()}
             {renderTaskList()}
@@ -794,23 +785,23 @@ function ServerSummaryPageSync(props) {
         );
     }
 
-    async function disableServer(base) {
+    async function disableServer() {
         await confirm(t('server-summary-confirm-disable'));
-        const changes = { id: base.id, disabled: true };
+        const changes = { id: server.id, disabled: true };
         const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'server' }, changes);
     }
 
-    async function removeServer(base) {
+    async function removeServer() {
         await confirm(t('server-summary-confirm-delete'));
-        const changes = { id: base.id, deleted: true };
+        const changes = { id: server.id, deleted: true };
         const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'server' }, changes);
     }
 
-    async function restoreServer(base) {
+    async function restoreServer() {
         await confirm(t('server-summary-confirm-reactivate'));
-        const changes = { id: base.id, disabled: false, deleted: false };
+        const changes = { id: server.id, disabled: false, deleted: false };
         const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'server' }, changes);
     }

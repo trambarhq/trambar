@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 
 import './start-page.scss';
@@ -11,9 +11,9 @@ async function StartPage(props) {
     const [ show ] = useProgress();
     const db = database.use({ by: this });
 
-    const handleAnimationEnd = useCallback((evt) => {
+    const handleAnimationEnd = useListener((evt) => {
         route.replace('settings-page', { editing: true });
-    }, [ route ]);
+    });
 
     render();
     const currentUserID = await db.start();

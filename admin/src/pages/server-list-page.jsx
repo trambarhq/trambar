@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { useRef, useCallback } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React, { useRef } from 'react';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
@@ -21,7 +21,6 @@ import {
     useSelectionBuffer,
     useSortHandler,
     useRowToggle,
-    useNavigation,
     useConfirmation,
     useDataLossWarning,
 } from '../hooks.mjs';
@@ -57,20 +56,24 @@ function ServerListPageSync(props) {
         save: saveSelection,
         reset: readOnly,
     });
-    const navigation = useNavigation(route, {
-        add: { page: 'server-summary-page', params: { serverID: 'new' } },
-    });
+    const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     useDataLossWarning(route, env, confirm, () => selection.unsaved);
 
     const [ sort, handleSort ] = useSortHandler();
     const handleRowClick = useRowToggle(selection, 'data-server-id');
-    const handleEditClick = useCallback((evt) => navigation.edit());
-    const handleCancelClick = useCallback((evt) => navigation.cancel());
-    const handleAddClick = useCallback((evt) => navigation.add());
-    const handleSaveClick = useCallback(async (evt) => {
-        if (await selection.save()) {
-            navigation.done();
+    const handleEditClick = useListener((evt) => {
+        route.replace({ editing: true });
+    });
+    const handleCancelClick = useListener((evt) => {
+        route.replace({ editing: undefined });
+    });
+    const handleAddClick = useListener((evt) => {
+        route.push('server-summary-page', { serverID: 'new' });
+    });
+    const handleSaveClick = useListener(async (evt) => {
+        if (await run(selection.save)) {
+            handleCancelClick();
         }
     });
 
@@ -78,7 +81,7 @@ function ServerListPageSync(props) {
         <div className="server-list-page">
             {renderButtons()}
             <h2>{t('server-list-title')}</h2>
-            <UnexpectedError error={selection.error} />
+            <UnexpectedError error={error} />
             {renderTable()}
             <ActionConfirmation ref={confirmationRef} env={env} />
         </div>

@@ -39,20 +39,22 @@ class Route {
     }
 
     async push(name, params, context) {
+        if (name instanceof Object) {
+            // overload method to permit adding params to the current page
+            return this.push(this.name, { ...this.params, ...name });
+        }
         return this.routeManager.push(name, params, context);
     }
 
     async replace(name, params, context) {
+        if (name instanceof Object) {
+            return this.replace(this.name, { ...this.params, ...name });
+        }
         return this.routeManager.replace(name, params, context);
     }
 
     match(url) {
         return this.routeManager.match(url);
-    }
-
-    reanchor(params) {
-        params = _.assign({}, this.params, params);
-        return this.replace(this.name, params);
     }
 
     keep(callback) {
@@ -78,11 +80,6 @@ class Route {
         } catch (err) {
             return false;
         }
-    }
-
-    async modify(params) {
-        params = _.assign({}, this.params, params);
-        return this.replace(this.name, params);
     }
 };
 

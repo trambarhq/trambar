@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React, { useState, useRef } from 'react';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -24,7 +24,6 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 import {
     useSelectionBuffer,
     useSortHandler,
-    useNavigation,
     useRowToggle,
     useConfirmation,
     useDataLossWarning,
@@ -63,20 +62,24 @@ function UserListPageSync(props) {
         save: saveUserSelection,
         reset: readOnly,
     });
-    const navigation = useNavigation(route, {
-        add: { page: 'user-summary-page', params: { userID: 'new' } },
-    });
+    const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     useDataLossWarning(route, env, confirm, () => selection.changed);
 
     const [ sort, handleSort ] = useSortHandler();
     const handleRowClick = useRowToggle(selection, 'data-user-id');
-    const handleEditClick = useCallback((evt) => navigation.edit());
-    const handleCancelClick = useCallback((evt) => navigation.cancel());
-    const handleAddClick = useCallback((evt) => navigation.add());
-    const handleSaveClick = useCallback(async (evt) => {
-        if (await selection.save()) {
-            navigation.done();
+    const handleEditClick = useListener((evt) => {
+        route.replace({ editing: true });
+    });
+    const handleCancelClick = useListener((evt) => {
+        route.replace({ editing: undefined });
+    });
+    const handleAddClick = useListener((evt) => {
+        route.push('user-summary-page', { userID: 'new' });
+    });
+    const handleSaveClick = useListener(async (evt) => {
+        if (await run(selection.save)) {
+            handleCancelClick();
         }
     });
 
@@ -84,7 +87,7 @@ function UserListPageSync(props) {
         <div className="user-list-page">
             {renderButtons()}
             <h2>{t('user-list-title')}</h2>
-            <UnexpectedError error={selection.error} />
+            <UnexpectedError error={error} />
             {renderTable()}
             <ActionConfirmation ref={confirmationRef} env={env} />
         </div>

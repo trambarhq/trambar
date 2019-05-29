@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 import SortableTable from './sortable-table.jsx';
 
@@ -13,7 +14,7 @@ import './option-list.scss';
 function OptionList(props) {
     const { readOnly, children, onOptionClick } = props;
 
-    const handleClick = useCallback((evt) => {
+    const handleClick = useListener((evt) => {
         const name = evt.currentTarget.getAttribute('data-name');
         if (onOptionClick) {
             onOptionClick({

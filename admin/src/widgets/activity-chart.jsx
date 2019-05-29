@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
 import Chartist from 'common/widgets/chartist.jsx';
 import Moment from 'moment';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
@@ -14,26 +14,6 @@ import './activity-chart.scss';
 function ActivityChart(props) {
     const { env, statistics, children } = props;
     const { t } = env.locale;
-
-    const handleDraw = useCallback((cxt) => {
-        // move y-axis to the right side
-        if(cxt.type === 'label' && cxt.axis.units.pos === 'y') {
-            cxt.element.attr({
-                x: cxt.axis.chartRect.width() + 20
-            });
-        }
-        // style grid line differently when it's the first day
-        // of the month or today
-        if (cxt.type === 'grid' && cxt.axis.units.pos === 'x') {
-            const date = cxt.axis.ticks[cxt.index];
-            const day = getDay(date);
-            if (day === 1) {
-                cxt.element.addClass('month-start');
-            } else if (date === env.date) {
-                cxt.element.addClass('today');
-            }
-        }
-    });
 
     return (
         <div className="activity-chart">
@@ -97,7 +77,7 @@ function ActivityChart(props) {
                     }
                 },
             },
-            onDraw: handleDraw,
+            onDraw: draw,
         };
         const width = Math.round(labels.length * 0.75) + 'em';
         return (
@@ -133,6 +113,25 @@ function ActivityChart(props) {
         return <div className="legend">{items}</div>;
     }
 
+    function draw(cxt) {
+        // move y-axis to the right side
+        if(cxt.type === 'label' && cxt.axis.units.pos === 'y') {
+            cxt.element.attr({
+                x: cxt.axis.chartRect.width() + 20
+            });
+        }
+        // style grid line differently when it's the first day
+        // of the month or today
+        if (cxt.type === 'grid' && cxt.axis.units.pos === 'x') {
+            const date = cxt.axis.ticks[cxt.index];
+            const day = getDay(date);
+            if (day === 1) {
+                cxt.element.addClass('month-start');
+            } else if (date === env.date) {
+                cxt.element.addClass('today');
+            }
+        }
+    }
 }
 
 function LegendItem(props) {

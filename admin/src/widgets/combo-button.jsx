@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useListener } from 'relaks';
 import { useLatest } from '../hooks';
 
 import './combo-button.scss';
@@ -13,15 +14,15 @@ function ComboButton(props) {
     const [ selected, setSelected ] = useLatest(preselected);
     const containerNode = useRef();
 
-    const handleSideButtonClick = useCallback((evt) => {
+    const handleSideButtonClick = useListener((evt) => {
         setOpen(!open);
-    }, [ open ]);
-    const handleItemClick = useCallback((evt) => {
+    });
+    const handleItemClick = useListener((evt) => {
         const name = evt.currentTarget.getAttribute('data-name');
         setSelected(name);
         setOpen(false);
     });
-    const handleBodyMouseDown = useCallback((evt) => {
+    const handleBodyMouseDown = useListener((evt) => {
         let insideMenu = isInside(evt.target, containerNode.current);
         if (!insideMenu) {
             setOpen(false);

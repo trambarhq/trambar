@@ -1,11 +1,12 @@
 import _ from 'lodash';
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useListener } from 'relaks';
 
 // widgets
-import NavigationTree from './navigation-tree.jsx';
-import Tooltip from './tooltip.jsx';
-import SignOffMenu from './sign-off-menu.jsx';
-import ErrorBoundary from 'common/widgets/error-boundary.jsx';
+import { NavigationTree } from './navigation-tree.jsx';
+import { Tooltip } from './tooltip.jsx';
+import { SignOffMenu } from './sign-off-menu.jsx';
+import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 
 import './side-navigation.scss';
 
@@ -19,13 +20,13 @@ function SideNavigation(props) {
     const [ ready, setReady ] = useState(false);
     const selectedLanguage = _.find(directory, { code: languageCode });
 
-    const handleLanguageClick = useCallback((evt) => {
+    const handleLanguageClick = useListener((evt) => {
         const code = evt.currentTarget.getAttribute('data-code');
         const language = _.find(directory, { code });
         const localeCode = `${language.code}-${language.defaultCountry}`;
         return env.locale.change(localeCode);
-    }, [ env ]);
-    const handleCountryClick = useCallback((evt) => {
+    });
+    const handleCountryClick = useListener((evt) => {
         const code = evt.currentTarget.getAttribute('data-code');
         const localeCode = `${selectedLanguage.code}-${code}`;
         return env.locale.change(localeCode);

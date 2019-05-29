@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useRef, useCallback } from 'react';
-import Relaks, { useProgress, useSaveBuffer } from 'relaks';
+import React, { useRef } from 'react';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -22,7 +22,6 @@ import {
     useSelectionBuffer,
     useSortHandler,
     useRowToggle,
-    useNavigation,
     useConfirmation,
     useDataLossWarning,
 } from '../hooks.mjs';
@@ -62,17 +61,21 @@ function RepoListPageSync(props) {
         save: saveRepoSelection,
         reset: readOnly,
     });
-    const navigation = useNavigation(route, {});
+    const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ]  = useConfirmation();
     useDataLossWarning(route, env, confirm, () => selection.unsaved);
 
     const [ sort, handleSort ] = useSortHandler();
     const handleRowClick = useRowToggle(selection, 'data-repo-id');
-    const handleEditClick = useCallback((evt) => navigation.edit());
-    const handleCancelClick  = useCallback((evt) => navigation.cancel());
-    const handleSaveClick = useCallback(async (evt) => {
+    const handleEditClick = useListener((evt) => {
+        route.replace({ editing: true });
+    });
+    const handleCancelClick  = useListener((evt) => {
+        route.replace({ editing: undefined });
+    });
+    const handleSaveClick = useListener(async (evt) => {
         if (await selection.save()) {
-            navigation.done();
+            handleCancelClick();
         }
     });
 
@@ -80,7 +83,7 @@ function RepoListPageSync(props) {
         <div className="repo-list-page">
             {renderButtons()}
             <h2>{t('repo-list-title')}</h2>
-            <UnexpectedError error={selection.error} />
+            <UnexpectedError error={error} />
             {renderTable()}
             <ActionConfirmation ref={confirmationRef} env={env} />
         </div>
@@ -317,21 +320,17 @@ function RepoListPageSync(props) {
         }
     }
 
-    async function saveRepoSelection() {
-        const repoIDsBefore = project.repo_ids;
-        const repoIDsAfter = selection.current;
-        const remove = _.size(_.difference(repoIDsBefore, repoIDsAfter));
+    async function saveRepoSelection(base, ours) {
+        const remove = _.size(_.difference(base, ours));
         if (remove) {
             await confirm(t('repo-list-confirm-remove-$count', remove));
         }
-        // remove ids of repo that no longer exist
-        const existingRepoIDs = _.map(repos, 'id');
-        const columns = {
+        const changes = {
             id: project.id,
-            repo_ids: _.intersection(repoIDsAfter, existingRepoIDs)
+            repo_ids: ours,
         };
         const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'project' }, columns);
+        await db.saveOne({ table: 'project' }, changes);
         handleCancelClick();
     }
 }

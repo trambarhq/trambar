@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useImperativeHandle, useCallback } from 'react';
+import React, { useState, useImperativeHandle } from 'react';
+import { useListener } from 'relaks';
 import * as MediaLoader from 'common/media/media-loader.mjs';
 import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
@@ -28,31 +29,31 @@ function ImageSelector(props, ref) {
         return instance;
     });
 
-    const handleChooseClick = useCallback((evt) => {
+    const handleChooseClick = useListener((evt) => {
         setShowingAlbum(true);
     });
-    const handleCropClick = useCallback((evt) => {
+    const handleCropClick = useListener((evt) => {
         setCropping(true);
     });
-    const handleAlbumDialogCancel = useCallback((evt) => {
+    const handleAlbumDialogCancel = useListener((evt) => {
         setShowingAlbum(false);
     });
-    const handleCroppingDialogCancel = useCallback((evt) => {
+    const handleCroppingDialogCancel = useListener((evt) => {
         setCropping(false);
     });
-    const handleImageSelect = useCallback((evt) => {
+    const handleImageSelect = useListener((evt) => {
         const newImage = _.clone(evt.image);
         newImage.type = 'image';
         setShowingAlbum(false);
         setImage(newImage);
-    }, [ setImage ]);
-    const handleImageSectionSelect = useCallback((evt) => {
+    });
+    const handleImageSectionSelect = useListener((evt) => {
         const newImage = _.clone(image);
         newImage.clip = evt.clippingRect;
         setCropping(false);
         setImage(newImage);
-    }, [ setImage, image ]);
-    const handleUploadChange = useCallback(async (evt) => {
+    });
+    const handleUploadChange = useListener(async (evt) => {
         const file = evt.target.files[0];
         if (file) {
             const payload = payloads.add('image').attachFile(file);
@@ -66,8 +67,8 @@ function ImageSelector(props, ref) {
             };
             setImage(newImage);
         }
-    }, [ payloads, setImage ]);
-    const handleImageClick = useCallback((evt) => {
+    });
+    const handleImageClick = useListener((evt) => {
         // open URL in pop-up instead of a tab
         const url = evt.currentTarget.href;
         if (url) {

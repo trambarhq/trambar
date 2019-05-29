@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress, Cancellation } from 'relaks';
+import React, { useState } from 'react';
+import Relaks, { useProgress, useListener, useErrorCatcher, Cancellation } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as ProjectSettings from 'common/objects/settings/project-settings.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
@@ -24,7 +24,6 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 import {
     useDraftBuffer,
     useAutogenID,
-    useNavigation,
     useConfirmation,
     useDataLossWarning,
 } from '../hooks.mjs';
@@ -62,72 +61,64 @@ function ProjectSummaryPageSync(props) {
     const [ problems, setProblems ] = useState({});
     const draft = useDraftBuffer({
         original: project || {},
-        save: (base, ours, action) => {
-            switch (action) {
-                case 'restore': return restoreProject(base);
-                default: return saveProject(base, ours);
-            }
-        },
-        remove: (base, ours, action) => {
-            switch (action) {
-                case 'archive': return archiveProject(base);
-                default: return removeProject(base);
-            }
-        },
+        save: saveProject,
         reset: readOnly,
     });
-    const navigation = useNavigation(route, {
-        add: { params: { projectID: 'new' } },
-        return: { page: 'project-list-page' },
-    })
+    const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
     useDataLossWarning(route, env, confirm, () => draft.unsaved);
 
-    const handleEditClick = useCallback((evt) => navigation.edit());
-    const handleCancelClick = useCallback((evt) => navigation.cancel());
-    const handleAddClick = useCallback((evt) => navigation.add());
-    const handleReturnClick = useCallback((evt) => navigation.return());
-    const handleArchiveClick = useCallback(async (evt) => {
-        if (await draft.remove('archive')) {
-            navigation.return();
+    const handleEditClick = useListener((evt) => {
+        route.replace({ editing: true });
+    });
+    const handleCancelClick = useListener((evt) => {
+        route.replace({ editing: undefined });
+    });
+    const handleAddClick = useListener((evt) => {
+        route.push({ editing: true, projectID: 'new' });
+    });
+    const handleReturnClick = useListener((evt) => {
+        route.push('project-list-page');
+    });
+    const handleArchiveClick = useListener(async (evt) => {
+        if (await run(archiveProject)) {
+            handleReturnClick();
         }
     });
-    const handleRemoveClick = useCallback(async (evt) => {
-        if (await draft.remove()) {
-            navigation.return();
+    const handleRemoveClick = useListener(async (evt) => {
+        if (await run(removeProject)) {
+            handleReturnClick();
         }
     });
-    const handleRestoreClick = useCallback(async (evt) => {
-        await draft.save('restore');
+    const handleRestoreClick = useListener(async (evt) => {
+        await run(restoreProject);
     });
-    const handleSaveClick = useCallback(async (evt) => {
+    const handleSaveClick = useListener(async (evt) => {
         if (await draft.save()) {
             if (creating) {
                 setAdding(true);
-                navigation.done({ projectID: draft.current.id });
-            } else {
-                navigation.done();
             }
+            route.replace({ editing: undefined, projectID: draft.current.id });
         }
     });
     const [ handleTitleChange, handleNameChange ] = useAutogenID(draft, {
         titleKey: 'details.title',
         nameKey: 'name',
     });
-    const handleDescriptionChange = useCallback((evt) => {
+    const handleDescriptionChange = useListener((evt) => {
         const description = evt.target.value;
         draft.update('details.description', description);
     });
-    const handleEmblemChange = useCallback((evt) => {
+    const handleEmblemChange = useListener((evt) => {
         const resources = evt.target.value;
         draft.update('details.resources', resources);
     });
-    const handleMembershipOptionClick = useCallback((evt) => {
+    const handleMembershipOptionClick = useListener((evt) => {
         const optsBefore = draft.get('settings.membership', {});
         const opts = toggleOption(optsBefore, membershipOptions, evt.name);
         draft.update('settings.membership', opts);
     });
-    const handleAccessControlOptionClick = useCallback((evt) => {
+    const handleAccessControlOptionClick = useListener((evt) => {
         const optsBefore = draft.get('settings.access_control', {});
         const opts = toggleOption(optsBefore, accessControlOptions, evt.name);
         draft.update('settings.access_control', opts);
@@ -138,7 +129,7 @@ function ProjectSummaryPageSync(props) {
         <div className="project-summary-page">
             {renderButtons()}
             <h2>{t('project-summary-$title', title)}</h2>
-            <UnexpectedError error={draft.error} />
+            <UnexpectedError error={error} />
             {renderForm()}
             {renderInstructions()}
             {renderChart()}
@@ -359,23 +350,23 @@ function ProjectSummaryPageSync(props) {
         );
     }
 
-    async function archiveProject(base) {
+    async function archiveProject() {
         await confirm(t('project-summary-confirm-archive'));
-        const changes = { id: base.id, archived: true };
+        const changes = { id: project.id, archived: true };
         const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'project' }, changes);
     }
 
-    async function removeProject(base) {
+    async function removeProject() {
         await confirm(t('project-summary-confirm-delete'));
-        const changes = { id: base.id, deleted: true };
+        const changes = { id: project.id, deleted: true };
         const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'project' }, changes);
     }
 
-    async function restoreProject(base) {
+    async function restoreProject() {
         await confirm(t('project-summary-confirm-restore'));
-        const changes = { id: base.id, disabled: true, deleted: true };
+        const changes = { id: project.id, disabled: true, deleted: true };
         const db = database.use({ schema: 'global' });
         await db.saveOne({ table: 'project' }, changes);
     }
