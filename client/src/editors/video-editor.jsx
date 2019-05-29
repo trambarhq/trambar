@@ -1,8 +1,8 @@
 import React from 'react';
 
 // widgets
-import ImageEditor from '../editors/image-editor.jsx';
-import DurationIndicator from '../widgets/duration-indicator.jsx';
+import { ImageEditor } from '../editors/image-editor.jsx';
+import { DurationIndicator } from '../widgets/duration-indicator.jsx';
 
 import './video-editor.scss';
 
@@ -11,7 +11,7 @@ import './video-editor.scss';
  * preview image. The duration of the video is overlayed over the image.
  */
 function VideoEditor(props) {
-    let { duration } = props;
+    const { duration } = props;
     return (
         <ImageEditor {...props}>
             <div className="video-duration">
@@ -25,7 +25,3 @@ export {
     VideoEditor as default,
     VideoEditor,
 };
-
-if (process.env.NODE_ENV !== 'production') {
-    VideoEditor.propTypes = ImageEditor.propTypes;
-}

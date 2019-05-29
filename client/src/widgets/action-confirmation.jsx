@@ -1,5 +1,5 @@
 import React, { useState, useImperativeHandle } from 'react';
-import { useListener } = from 'relaks';
+import { useListener } from 'relaks';
 
 // widgets
 import ConfirmationDialogBox from '../dialogs/confirmation-dialog-box.jsx';

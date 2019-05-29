@@ -4,10 +4,10 @@ import { useListener } from 'relaks';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
-import Overlay from 'common/widgets/overlay.jsx';
-import PushButton from './push-button.jsx';
-import Scrollable from './scrollable.jsx';
-import ProfileImage from './profile-image.jsx';
+import { Overlay } from 'common/widgets/overlay.jsx';
+import { PushButton } from './push-button.jsx';
+import { Scrollable } from './scrollable.jsx';
+import { ProfileImage } from './profile-image.jsx';
 
 import './multiple-user-names.scss';
 

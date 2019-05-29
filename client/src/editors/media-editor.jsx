@@ -1,67 +1,106 @@
 import _ from 'lodash';
-import Promise from 'bluebird';
-import React, { PureComponent } from 'react';
+import React, { useState, useCallback } from 'react';
 
 // widgets
-import MediaButton from '../widgets/media-button.jsx';
-import ImageEditor from '../editors/image-editor.jsx';
-import VideoEditor from '../editors/video-editor.jsx';
-import AudioEditor from '../editors/audio-editor.jsx';
+import { MediaButton } from '../widgets/media-button.jsx';
+import { ImageEditor } from '../editors/image-editor.jsx';
+import { VideoEditor } from '../editors/video-editor.jsx';
+import { AudioEditor } from '../editors/audio-editor.jsx';
 
 import './media-editor.scss';
 
 /**
  * Component for adjusting a media resource attached to a story or reaction.
- *
- * @extends PureComponent
  */
-class MediaEditor extends PureComponent {
-    static displayName = 'MediaEditor';
+function MediaEditor(props) {
+    const { env, payloads, resources, resourceIndex, allowEmbedding, allowShifting, children } = props;
+    const { t } = env.locale;
+    const resource = _.get(resources, resourceIndex);
 
-    /**
-     * Render component
-     *
-     * @return {ReactELement}
-     */
-    render() {
-        let { env, resources, resourceIndex, children } = this.props;
-        let resource = _.get(resources, resourceIndex);
-        if (!resource) {
-            let placeholder;
-            if (env.isWiderThan('double-col')) {
-                placeholder = children;
-            }
-            return (
-                <div className="media-editor empty">
-                    {placeholder}
-                </div>
-            );
-        } else {
-            return (
-                <div key={resourceIndex} className="media-editor">
-                    <div className="resource">
-                        {this.renderResource(resource)}
-                        {this.renderNavigation()}
-                    </div>
-                </div>
-            );
+    const handleShiftClick = useCallback((evt) => {
+        if (resourceIndex < 1) {
+            return;
         }
+        const resourcesAfter = _.slice(resources);
+        resourcesAfter.splice(resourceIndex, 1);
+        resourcesAfter.splice(resourceIndex - 1, 0, resource);
+        if (onChange) {
+            return onChange({
+                resources: resourcesAfter,
+                selection: resourceIndex - 1
+            });
+        }
+    }, [ resource, resources, resourceIndex ]);
+    const handleRemoveClick = useCallback((evt) => {
+        const resourcesAfter = _.slice(resources);
+        resourcesAfter.splice(resourceIndex, 1);
+        let newIndex = resourceIndex;
+        if (resourceIndex >= resources.length) {
+            newIndex = resources.length - 1;
+        }
+        if (onChange) {
+            return onChange({
+                resources: resourcesAfter,
+                selection: newIndex
+            });
+        }
+        if (resource && resource.payload_token) {
+            payloads.cancel(resource.payload_token);
+        }
+    }, [ payloads, resource, resources, resourceIndex, onChange ]);
+    const handleEmbedClick = useCallback((evt) => {
+        if (onEmbed) {
+            onEmbed({ resource });
+        }
+    }, [ resource, onEmbed ])
+    const handleBackwardClick = useCallback((evt) => {
+        if (resourceIndex > 0) {
+            if (onChange) {
+                return onChange({ resources, selection: resourceIndex - 1 });
+            }
+        }
+    }, [ resourceIndex, onChange ]);
+    const handleForwardClick = useCallback((evt) => {
+        if (resourceIndex < _.size(resources) - 1) {
+            if (onChange) {
+                return onChange({ resources, selection: resourceIndex - 1 });
+            }
+        }
+    }, [ resourceIndex, resources, onChange ]);
+    const handleResourceChange = useCallback((evt) => {
+        const resourcesAfter = _.slice(resources);
+        resourcesAfter[resourceIndex] = evt.resource;
+        if (onChange) {
+            return onChange({
+                resources: resourcesAfter,
+                selection: resourceIndex
+            });
+        }
+    }, [ resources, resourceIndex ]);
+
+    if (!resource) {
+        let placeholder;
+        if (env.isWiderThan('double-col')) {
+            placeholder = children;
+        }
+        return <div className="media-editor empty">{placeholder}</div>;
+    } else {
+        return (
+            <div key={resourceIndex} className="media-editor">
+                <div className="resource">
+                    {renderResource(resource)}
+                    {renderNavigation()}
+                </div>
+            </div>
+        );
     }
 
-    /**
-     * Render editor for the given resource
-     *
-     * @param  {Object} resource
-     *
-     * @return {ReactElement}
-     */
-    renderResource(resource) {
-        let { payloads, env } = this.props;
-        let props = {
+    function renderResource(resource) {
+        const props = {
             resource,
             payloads,
             env,
-            onChange: this.handleResourceChange,
+            onChange: handleResourceChange,
         };
         switch (resource.type) {
             case 'image':
@@ -74,48 +113,35 @@ class MediaEditor extends PureComponent {
         }
     }
 
-    /**
-     * Render navigation bar for selecting resource
-     *
-     * @return {ReactElement}
-     */
-    renderNavigation() {
-        let {
-            env,
-            resources,
-            resourceIndex,
-            allowEmbedding,
-            allowShifting,
-        } = this.props;
-        let { t } = env.locale;
-        let resourceCount = _.size(resources);
+    function renderNavigation() {
+        const resourceCount = _.size(resources);
         if (resourceCount === 0) {
             return null;
         }
-        let removeProps = {
+        const removeProps = {
             label: t('media-editor-remove'),
             icon: 'remove',
-            onClick: this.handleRemoveClick,
+            onClick: handleRemoveClick,
         };
-        let embedProps = {
+        const embedProps = {
             label: t('media-editor-embed'),
             icon: 'code',
             hidden: !allowEmbedding,
-            onClick: this.handleEmbedClick,
+            onClick: handleEmbedClick,
         };
-        let shiftProps = {
+        const shiftProps = {
             label: t('media-editor-shift'),
             icon: 'chevron-left',
             hidden: !allowShifting || !(resourceCount > 1),
             disabled: !(resourceIndex > 0),
-            onClick: this.handleShiftClick,
+            onClick: handleShiftClick,
         };
-        let directionProps = {
+        const directionProps = {
             index: resourceIndex,
             count: resourceCount,
             hidden: !(resourceCount > 1),
-            onBackwardClick: this.handleBackwardClick,
-            onForwardClick: this.handleForwardClick,
+            onBackwardClick: handleBackwardClick,
+            onForwardClick: handleForwardClick,
         };
         return (
             <div className="navigation">
@@ -130,155 +156,9 @@ class MediaEditor extends PureComponent {
             </div>
         );
     }
-
-    /**
-     * Call onChange handler
-     *
-     * @param  {Array<Object>} resources
-     * @param  {Number} selection
-     */
-    triggerChangeEvent(resources, selection) {
-        let { onChange } = this.props;
-        if (onChange) {
-            return onChange({
-                type: 'change',
-                target: this,
-                resources,
-                selection,
-            });
-        }
-    }
-
-    /**
-     * Call onEmbed handler
-     *
-     * @param  {Object} resource
-     */
-    triggerEmbedEvent(resource) {
-        let { onEmbed } = this.props;
-        if (onEmbed) {
-            onEmbed({
-                type: 'embed',
-                target: this,
-                resource,
-            });
-        }
-    }
-
-    /**
-     * Called when user clicks shift button
-     *
-     * @param  {Event} evt
-     */
-    handleShiftClick = (evt) => {
-        let { resources, resourceIndex } = this.props;
-        if (resourceIndex < 1) {
-            return;
-        }
-        let res = resources[resourceIndex];
-        resources = _.slice(resources);
-        resources.splice(resourceIndex, 1);
-        resources.splice(resourceIndex - 1, 0, res);
-        this.triggerChangeEvent(resources, resourceIndex - 1);
-    }
-
-    /**
-     * Called when user clicks remove button
-     *
-     * @param  {Event} evt
-     */
-    handleRemoveClick = (evt) => {
-        let { payloads, resources, resourceIndex } = this.props;
-        let res = resources[resourceIndex];
-        resources = _.slice(resources);
-        resources.splice(resourceIndex, 1);
-        let newIndex = resourceIndex;
-        if (resourceIndex >= resources.length) {
-            newIndex = resources.length - 1;
-        }
-        this.triggerChangeEvent(resources, newIndex);
-        if (res && res.payload_token) {
-            payloads.cancel(res.payload_token);
-        }
-    }
-
-    /**
-     * Called when user clicks embed button
-     *
-     * @param  {Event} evt
-     *
-     * @return {Promise}
-     */
-    handleEmbedClick = (evt) => {
-        let { resources, resourceIndex } = this.props;
-        let res = resources[resourceIndex];
-        this.triggerEmbedEvent(res);
-    }
-
-    /**
-     * Called when user clicks backward button
-     *
-     * @param  {Event} evt
-     *
-     * @return {Promise<Number>}
-     */
-    handleBackwardClick = (evt) => {
-        let { resources, resourceIndex } = this.props;
-        if (resourceIndex <= 0) {
-            return;
-        }
-        this.triggerChangeEvent(resources, resourceIndex - 1);
-    }
-
-    /**
-     * Called when user clicks forward button
-     *
-     * @param  {Event} evt
-     *
-     * @return {Promise<Number>}
-     */
-    handleForwardClick = (evt) => {
-        let { resources, resourceIndex } = this.props;
-        if (resourceIndex >= _.size(resources) - 1) {
-            return;
-        }
-        this.triggerChangeEvent(resources, resourceIndex + 1);
-    }
-
-    /**
-     * Called when a resource has been edited
-     *
-     * @param  {Object} evt
-     */
-    handleResourceChange = (evt) => {
-        let { resources, resourceIndex } = this.props;
-        resources = _.slice(resources);
-        resources[resourceIndex] = evt.resource;
-        this.triggerChangeEvent(resources, resourceIndex);
-    }
 }
 
 export {
     MediaEditor as default,
     MediaEditor,
 };
-
-import Environment from 'common/env/environment.mjs';
-import Payloads from 'common/transport/payloads.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    MediaEditor.propTypes = {
-        allowEmbedding: PropTypes.bool,
-        allowShifting: PropTypes.bool,
-        resources: PropTypes.arrayOf(PropTypes.object),
-        resourceIndex: PropTypes.number,
-
-        payloads: PropTypes.instanceOf(Payloads).isRequired,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onChange: PropTypes.func.isRequired,
-        onEmbed: PropTypes.func,
-    };
-}
