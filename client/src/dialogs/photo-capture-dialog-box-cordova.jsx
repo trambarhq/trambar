@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import React, { useEffect } from 'react';
+import React from 'react';
+import { useAsyncEffect } from 'relaks';
 import * as MediaLoader from 'common/media/media-loader.mjs';
 import CordovaFile from 'common/transport/cordova-file.mjs';
 
@@ -11,42 +12,42 @@ function PhotoCaptureDialogBoxCordova(props) {
     const { payloads, cameraDirection, show } = props;
     const { onClose, onCapture, onCapturePending, onCaptureError } = props;
 
-    useEffect(() => {
-        const handleSuccess = async (imageURL) => {
-            const file = new CordovaFile(imageURL);
-            if (onClose) {
-                onClose({});
-            }
-            if (onCapturePending) {
-                onCapturePending({ resourceType: 'image' });
-            }
-            try {
-                await file.obtainMetadata();
-                const meta = await MediaLoader.getImageMetadata(file);
-                const payload = payloads.add('image').attachFile(file);
-                const res = {
-                    type: 'image',
-                    payload_token: payload.id,
-                    format: meta.format,
-                    width: meta.width,
-                    height: meta.height,
-                };
-                if (onCapture) {
-                    onCapture({ resource });
+    useAsyncEffect(async () => {
+        if (show) {
+            const handleSuccess = async (imageURL) => {
+                const file = new CordovaFile(imageURL);
+                if (onClose) {
+                    onClose({});
                 }
-            } catch (err) {
-                if (onCaptureError) {
-                    onCaptureError({ error: err });
+                if (onCapturePending) {
+                    onCapturePending({ resourceType: 'image' });
+                }
+                try {
+                    await file.obtainMetadata();
+                    const meta = await MediaLoader.getImageMetadata(file);
+                    const payload = payloads.add('image').attachFile(file);
+                    const res = {
+                        type: 'image',
+                        payload_token: payload.id,
+                        format: meta.format,
+                        width: meta.width,
+                        height: meta.height,
+                    };
+                    if (onCapture) {
+                        onCapture({ resource });
+                    }
+                } catch (err) {
+                    if (onCaptureError) {
+                        onCaptureError({ error: err });
+                    }
                 }
             }
-        }
-        const handleFailure = (message) => {
-            if (onClose) {
-                onClose({});
-            }
-        };
+            const handleFailure = (message) => {
+                if (onClose) {
+                    onClose({});
+                }
+            };
 
-        async function startCapture() {
             const camera = navigator.camera;
             if (camera) {
                 let direction;
@@ -66,10 +67,6 @@ function PhotoCaptureDialogBoxCordova(props) {
                 };
                 camera.getPicture(handleSuccess, handleFailure, options);
             }
-        }
-
-        if (show) {
-            startCapture();
         }
     }, [ show ]);
 

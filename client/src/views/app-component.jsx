@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 import MarkGor from 'mark-gor/react';
 
 // widgets
@@ -14,11 +15,11 @@ function AppComponent(props) {
     const { env, component, onSelect } = props;
     const { p } = env.locale;
 
-    const handleClick = useCallback((evt) => {
+    const handleClick = useListener((evt) => {
         if (onSelect) {
             onSelect({ component });
         }
-    }, [ component, onSelect ]);
+    });
 
     return (
         <div className="app-component" onClick={handleClick}>

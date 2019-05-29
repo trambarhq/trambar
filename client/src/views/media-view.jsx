@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useListener } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
@@ -34,17 +35,17 @@ function MediaView(props) {
         }
     });
 
-    const handleBackwardClick = useCallback((evt) => {
+    const handleBackwardClick = useListener((evt) => {
         if (resourceIndex > 0) {
             setSelectedIndex(resourceIndex - 1);
         }
-    }, [ resourceIndex ])
-    const handleForwardClick = useCallback((evt) => {
+    });
+    const handleForwardClick = useListener((evt) => {
         if (resourceIndex < maxResourceIndex) {
             setSelectedIndex(resourceIndex + 1);
         }
-    }, [ resourceIndex, maxResourceIndex ]);
-    const handleAudioClick = useCallback((evt) => {
+    });
+    const handleAudioClick = useListener((evt) => {
         if (!audioURL) {
             const version = _.first(_.keys(resource.versions)) || null;
             const audioURL = ResourceUtils.getAudioURL(resource, { version }, env);
@@ -52,8 +53,8 @@ function MediaView(props) {
         } else {
             setAudioURL(null);
         }
-    }, [ resource, audioURL ]);
-    const handleAudioEnded = useCallback((evt) => {
+    });
+    const handleAudioEnded = useListener((evt) => {
         setAudioURL(null);
     });
     const [ showingDialogBox, handleImageClick, handleDialogClose ] = useDialogHandling();

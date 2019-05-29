@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -15,31 +16,31 @@ function SocialNetworkPanel(props) {
     const { env, userDraft } = props;
     const { t } = env.locale;
 
-    const handleSkypeUsernameChange = useCallback((evt) => {
+    const handleSkypeUsernameChange = useListener((evt) => {
         const username = _.trim(evt.target.value);
         userDraft.update('details.skype_username', username);
     });
-    const handleIchatUsernameChange = useCallback((evt) => {
+    const handleIchatUsernameChange = useListener((evt) => {
         const username = _.trim(evt.target.value);
         userDraft.update('details.ichat_username', username);
     });
-    const handleTwitterUsernameChange = useCallback((evt) => {
+    const handleTwitterUsernameChange = useListener((evt) => {
         const username = extractUsername(evt.target.value);
         userDraft.update('details.twitter_username', username);
     });
-    const handleLinkedinURLChange = useCallback((evt) => {
+    const handleLinkedinURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
         userDraft.update('details.linkedin_url', url);
     })
-    const handleGitHubURLChange = useCallback((evt) => {
+    const handleGitHubURLChange = useListener((evt) => {
         const url = _.trim(evt.target.value);
         userDraft.update('details.github_url', url);
     });
-    const handleGitlabURLChange = useCallback((evt) => {
+    const handleGitlabURLChange = useListener((evt) => {
         let url = _.trim(evt.target.value);
         userDraft.update('details.gitlab_url', url);
     });
-    const handleStackoverflowURLChange = useCallback((evt) => {
+    const handleStackoverflowURLChange = useListener((evt) => {
         let url = _.trim(evt.target.value);
         userDraft.update('details.stackoverflow_url', url);
     });

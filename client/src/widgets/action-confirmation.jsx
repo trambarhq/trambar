@@ -1,4 +1,5 @@
-import React, { useState, useImperativeHandle, useCallback } from 'react';
+import React, { useState, useImperativeHandle } from 'react';
+import { useListener } = from 'relaks';
 
 // widgets
 import ConfirmationDialogBox from '../dialogs/confirmation-dialog-box.jsx';
@@ -34,18 +35,18 @@ function ActionConfirmation(props, ref) {
         return { ask };
     });
 
-    const handleConfirm = useCallback((evt) => {
+    const handleConfirm = useListener((evt) => {
         if (question) {
             setQuestion(null);
             question.resolve(true);
         }
-    }, [ question ]);
-    const handleCancel = useCallback((evt) => {
+    });
+    const handleCancel = useListener((evt) => {
         if (question) {
             setQuestion(null);
             question.resolve(false);
         }
-    }, [ question ]);
+    });
 
     const { t } = env.locale;
     const dialogProps = {

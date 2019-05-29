@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { HeaderButton } from './header-button.jsx';
@@ -12,13 +13,13 @@ function ChartToolbar(props) {
     const { env, chartType, onAction } = props;
     const { t } = env.locale;
 
-    const handleClick = useCallback((evt) => {
+    const handleClick = useListener((evt) => {
         const value = evt.currentTarget.getAttribute('data-type');
         const action = 'chart-type-set';
         if (onAction) {
             onAction({ action, value });
         }
-    }, [ onAction ]);
+    });
 
     const barChartProps = {
         label: t('statistics-bar'),

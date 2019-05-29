@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { OptionButton } from '../widgets/option-button.jsx';
@@ -17,19 +18,19 @@ function UserViewOptions(props) {
     const { t } = env.locale;
     const [ showingPhoneNumber, showPhoneNumber ] = useState(false);
 
-    const handlePhoneClick = useCallback((evt) => {
+    const handlePhoneClick = useListener((evt) => {
         if (env.platform === 'browser') {
             evt.preventDefault();
             showPhoneNumber(true);
         }
     });
-    const handlePhoneDialogClose = useCallback((evt) => {
+    const handlePhoneDialogClose = useListener((evt) => {
         showPhoneNumber(false);
         if (onComplete) {
             onComplete({});
         }
-    }, [ onComplete ]);
-    const handleBiweeklyActivitiesClick = useCallback((evt) => {
+    });
+    const handleBiweeklyActivitiesClick = useListener((evt) => {
         const newOptions = {
             ...options,
             chartRange: 'biweekly',
@@ -41,8 +42,8 @@ function UserViewOptions(props) {
         if (onComplete) {
             onComplete({});
         }
-    }, [ options, onChange, onComplete ]);
-    const handleMonthlyActivitiesClick = useCallback((evt) => {
+    });
+    const handleMonthlyActivitiesClick = useListener((evt) => {
         const newOptions = {
             ...options,
             chartRange: 'monthly',
@@ -54,8 +55,8 @@ function UserViewOptions(props) {
         if (onComplete) {
             onComplete({});
         }
-    }, [ options, onChange, onComplete ]);
-    const handleActivitiesToDateClick = useCallback((evt) => {
+    });
+    const handleActivitiesToDateClick = useListener((evt) => {
         const newOptions = {
             ...options,
             chartRange: 'full',
@@ -67,12 +68,12 @@ function UserViewOptions(props) {
         if (onComplete) {
             onComplete({});
         }
-    }, [ options, onChange, onComplete ]);
-    const handleLinkClick = useCallback((evt) => {
+    });
+    const handleLinkClick = useListener((evt) => {
         if (onComplete) {
             onComplete({});
         }
-    }, [ onComplete ]);
+    });
 
     if (section === 'both') {
         return (

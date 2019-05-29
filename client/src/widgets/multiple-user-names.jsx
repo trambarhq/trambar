@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
@@ -21,17 +22,17 @@ function MultipleUserNames(props) {
     const [ showingPopUp, showPopUp ] = useState(false);
     const [ showingDialogBox, showDialogBox ] = useState(false);
 
-    const handleMouseEnter = useCallback((evt) => {
+    const handleMouseEnter = useListener((evt) => {
         showPopUp(true);
     });
-    const handleMouseLeave = useCallback((evt) => {
+    const handleMouseLeave = useListener((evt) => {
         showPopUp(false);
     });
-    const handleClick = useCallback((evt) => {
+    const handleClick = useListener((evt) => {
         showPopUp(false);
         showDialogBox(true);
     });
-    const handleDialogBoxClose = useCallback((evt) => {
+    const handleDialogBoxClose = useListener((evt) => {
         showDialogBox(false);
     });
 

@@ -1,14 +1,15 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
 
-import CollapsibleContainer from 'common/widgets/collapsible-container.jsx';
+import { CollapsibleContainer } from 'common/widgets/collapsible-container.jsx';
 
 function DiagnosticsSection(props) {
     const { hidden, label, children } = props;
     const [ open, setOpen ] = useState(false);
 
-    const handleLabelClick = useCallback((evt) => {
+    const handleLabelClick = useListener((evt) => {
         setOpen(!open);
-    }, [ open ]);
+    });
 
     if (hidden) {
         return null;

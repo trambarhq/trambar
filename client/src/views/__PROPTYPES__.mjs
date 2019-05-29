@@ -38,6 +38,28 @@ NotificationView.propTypes = {
 
     onClick: PropTypes.func,
 };
+ReactionViewOptions.propTypes = {
+    access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+    currentUser: PropTypes.object.isRequired,
+    reaction: PropTypes.object.isRequired,
+    story: PropTypes.object.isRequired,
+    options: PropTypes.object.isRequired,
+
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+ReactionView.propTypes = {
+    access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+    highlighting: PropTypes.bool,
+    reaction: PropTypes.object.isRequired,
+    respondent: PropTypes.object,
+    story: PropTypes.object.isRequired,
+    currentUser: PropTypes.object.isRequired,
+    repo: PropTypes.object,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
 
 UserStatistics.propTypes = {
     chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),

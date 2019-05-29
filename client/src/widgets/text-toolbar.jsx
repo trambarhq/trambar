@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import HeaderButton from './header-button.jsx';
@@ -12,7 +13,7 @@ function TextToolbar(props) {
     const { env, story, onAction } = props;
     const { t } = env.locale;
 
-    const handleClick = useCallback((evt) => {
+    const handleClick = useListener((evt) => {
         const type = evt.currentTarget.getAttribute('data-type');
         let action, value;
         if (type === 'markdown') {
@@ -25,7 +26,7 @@ function TextToolbar(props) {
         if (onAction) {
             onAction({ action, value });
         }
-    }, [ story, onAction ]);
+    });
 
     const markdownProps = {
         label: t('story-markdown'),

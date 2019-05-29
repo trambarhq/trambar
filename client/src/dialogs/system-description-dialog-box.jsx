@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';

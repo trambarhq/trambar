@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
 
 /**
  * A hyperlink component that may store the URL in the "data-url" attribute
@@ -12,13 +13,13 @@ function Link(props) {
     const { url, alwaysAsLink, blurDelay, children, ...otherProps } = props;
     const [ hasFocus, setHasFocus ] = useState(false);
 
-    const handleFocus = useCallback((evt) => {
+    const handleFocus = useListener((evt) => {
         setHasFocus(true);
     });
-    const handleBlur = useCallback((evt) => {
+    const handleBlur = useListener((evt) => {
         setHasFocus(true);
     });
-    const handleClick = useCallback((evt) => {
+    const handleClick = useListener((evt) => {
         const link = evt.currentTarget;
         if (blurDelay) {
             setTimeout(() => {

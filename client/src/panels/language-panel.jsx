@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -17,21 +18,21 @@ function LanguagePanel(props) {
         return !!language.module;
     });
 
-    const handleLanguageClick = useCallback((evt) => {
+    const handleLanguageClick = useListener((evt) => {
         const code = evt.currentTarget.id;
         if (code !== languageCode) {
             const language = _.find(directory, { code });
             const localeCode = `${language.code}-${language.defaultCountry}`;
             env.locale.change(localeCode);
         }
-    }, [ env ]);
-    const handleCountryChange = useCallback((evt) => {
+    });
+    const handleCountryChange = useListener((evt) => {
         const code = evt.currentTarget.value;
         if (code !== countryCode) {
             const localeCode = `${languageCode}-${code}`;
             env.locale.change(localeCode);
         }
-    }, [ env ]);
+    });
 
     return (
         <SettingsPanel className="language">

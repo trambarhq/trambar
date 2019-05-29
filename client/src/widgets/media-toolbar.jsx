@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
-
+import React from 'react';
+import { useListener } from 'relaks';
 // widgets
 import { HeaderButton } from './header-button.jsx';
 
@@ -18,7 +18,7 @@ function MediaToolbar(props) {
     const canCaptureAudio = _.includes(env.recorders, 'audio');
     const resources = _.get(story, 'details.resources', []);
 
-    const handleClick = useCallback((evt) => {
+    const handleClick = useListener((evt) => {
         const action = evt.currentTarget.getAttribute('data-action');
         if (onAction) {
             if (action === 'markdown-set') {
@@ -28,8 +28,8 @@ function MediaToolbar(props) {
                 onAction({ action });
             }
         }
-    }, [ story ]);
-    const handleFileChange = useCallback((evt) => {
+    });
+    const handleFileChange = useListener((evt) => {
         const files = evt.target.files;
         if (onAction) {
             if (!_.isEmpty(files)) {

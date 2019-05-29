@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { HeaderButton } from './header-button.jsx';
@@ -16,7 +17,7 @@ function CoauthoringButton(props) {
     const { t } = env.locale;
     const [ selecting, setSelecting ] = useState(false);
 
-    const handleClick = useCallback((evt) => {
+    const handleClick = useListener((evt) => {
         if (coauthoring) {
             if (onRemove) {
                 onRemove({});
@@ -24,16 +25,16 @@ function CoauthoringButton(props) {
         } else {
             setSelecting(true);
         }
-    }, [ onRemove ]);
-    const handleCancel = useCallback((evt) => {
+    });
+    const handleCancel = useListener((evt) => {
         setSelecting(false);
     });
-    const handleSelect = useCallback((evt) => {
+    const handleSelect = useListener((evt) => {
         if (onSelect) {
             onSelect({ selection: evt.selection });
         }
         setSelecting(false);
-    }, [ onSelect ]);
+    });
 
     let icon, label;
     if (coauthoring) {

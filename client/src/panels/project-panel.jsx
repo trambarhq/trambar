@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback, useEffect } from 'react';
-import { Cancellation } from 'relaks';
+import React, { useState, useEffect } from 'react';
+import { useListener, Cancellation } from 'relaks';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
@@ -30,7 +30,7 @@ function ProjectPanel(props) {
     const [ wasMember ] = useState(isMember);
     const [ confirmationRef, confirm ] = useConfirmation();
 
-    const handleProjectOptionClick = useCallback((evt) => {
+    const handleProjectOptionClick = useListener((evt) => {
         const key = evt.currentTarget.getAttribute('data-key');
         const link = _.find(projectLinks, { key });
         if (link) {
@@ -43,21 +43,21 @@ function ProjectPanel(props) {
             };
             route.replace('settings-page', {}, context);
         }
-    }, [ route, projectLinks ])
-    const handleAddClick = useCallback((evt) => {
+    });
+    const handleAddClick = useListener((evt) => {
         route.push('start-page', {}, { schema: null });
     });
-    const handleJoinClick = useCallback((evt) => {
+    const handleJoinClick = useListener((evt) => {
         const projectIDsBefore = userDraft.get('requested_project_ids', []);
         const projectIDs = _.union(projectIDsBefore, [ project.id ]);
         userDraft.update('requested_project_ids', projectIDs);
-    }, [ project ]);
-    const handleCancelJoinClick = useCallback((evt) => {
+    });
+    const handleCancelJoinClick = useListener((evt) => {
         const projectIDsBefore = userDraft.get('requested_project_ids', []);
         const projectIDs = _.difference(projectIDsBefore, [ project.id ]);
         userDraft.update('requested_project_ids', projectIDs);
-    }, [ project ]);
-    const handleSignOutClick = useCallback(async (evt) => {
+    });
+    const handleSignOutClick = useListener(async (evt) => {
         try {
             await confirm(t('project-management-sign-out-are-you-sure'));
 
@@ -71,8 +71,8 @@ function ProjectPanel(props) {
                 throw err;
             }
         }
-    }, [ database, route, projectLinks ]);
-    const handleProjectDelete = useCallback(async (evt) => {
+    });
+    const handleProjectDelete = useListener(async (evt) => {
         // redirect to start page if the current project was removed
         const { address, schema } = route.context;
         const removingCurrent = _.includes(evt.selection, `${address}/${schema}`);
@@ -83,7 +83,7 @@ function ProjectPanel(props) {
         } else {
             handleManagementDialogClose();
         }
-    }, [ database, route, projectLinks ]);
+    });
     const [ showingSystem, handleSystemClick, handleSystemDialogClose ] = useDialogHandling();
     const [ showingProject, handleProjectClick, handleProjectDialogClose ] = useDialogHandling();
     const [ activatingDevice, handleActivateClick, handleActivationDialogClose ] = useDialogHandling();

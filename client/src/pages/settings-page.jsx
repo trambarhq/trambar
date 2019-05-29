@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback, useEffect } from 'react';
-import Relaks, { useProgress, useSaveBuffer } from 'relaks';
+import React, { useEffect } from 'react';
+import Relaks, { useProgress, useSaveBuffer, useListener } from 'relaks';
 import * as KonamiCode from 'common/utils/konami-code.mjs';
 import * as DeviceFinder from 'common/objects/finders/device-finder.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -75,7 +75,7 @@ function SettingsPageSync(props) {
         save: saveUser,
     });
 
-    const handleKonamiCode = useCallback((evt) => {
+    const handleKonamiCode = useListener((evt) => {
         userDraft.update('settings.development.show_panel', true);
     });
 

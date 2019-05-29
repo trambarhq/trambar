@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import React, { useState, useCallback } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React, { useState } from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 import HTTPRequest from 'common/transport/http-request.mjs';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as UniversalLink from 'common/routing/universal-link.mjs';
@@ -38,7 +38,7 @@ async function StartPage(props) {
     const [ addingServer, addServer ] = useState(false);
     const [ errors, setErrors ] = useState({});
 
-    const handleOAuthButtonClick = useCallback(async (evt) => {
+    const handleOAuthButtonClick = useListener(async (evt) => {
         evt.preventDefault();
         evt.stopPropagation();
         const url = evt.currentTarget.getAttribute('href');
@@ -52,74 +52,55 @@ async function StartPage(props) {
             newErrors[`oauth-${providerID}`] = err;
             setErrors(newErrors);
         }
-    }, [ database ]);
-    const handleUnknownProjectClick = useCallback((evt) => {
+    });
+    const handleUnknownProjectClick = useListener((evt) => {
         const name = evt.currentTarget.getAttribute('data-project-name');
         setSelectedProjectName(name);
     });
-    const handleMembershipRequestConfirm = async (evt) => {
-        const { project } = evt;
-        const projectIDs = currentUser.requested_project_ids;
-        if (!_.includes(projectIDs, project.id)) {
-            const changes = {
-                id: currentUser.id,
-                requested_project_ids: _.concat(projectIDs, project.id)
-            };
-            const db = database.use({ schema: 'global' });
-            await db.saveOne({ table: 'user' }, changes);
-        }
-    };
-    const handleMembershipRequestRevoke = async (evt) => {
-        const { project } = evt;
-        const projectIDs = currentUser.requested_project_ids;
-        if (_.includes(projectIDs, project.id)) {
-            const changes = {
-                id: currentUser.id,
-                requested_project_ids: _.without(projectIDs, project.id),
-            };
-            const db = database.use({ schema: 'global' });
-            await db.saveOne({ table: 'user' }, changes);
-        }
-    };
-    const handleMembershipRequestClose = (evt) => {
+    const handleMembershipRequestConfirm = useListener(async (evt) => {
+        toggleMembership(evt.project);
+    });
+    const handleMembershipRequestRevoke = useListener(async (evt) => {
+        toggleMembership(evt.project);
+    });
+    const handleMembershipRequestClose = useListener((evt) => {
         setSelectedProjectName(null);
-    };
-    const handleMembershipRequestProceed = (evt) => {
-        const { project } = evt;
-        navigateToProject('', project.name);
-    };
-    const handleScanClick = useCallback((evt) => {
+    });
+    const handleMembershipRequestProceed = useListener((evt) => {
+        navigateToProject('', evt.project.name);
+    });
+    const handleScanClick = useListener((evt) => {
         scanQRCode(true);
     });
-    const handleManualClick = useCallback((evt) => {
+    const handleManualClick = useListener((evt) => {
         enterManually(true);
     });
-    const handleAddClick = useCallback((evt) => {
+    const handleAddClick = useListener((evt) => {
         addServer(true);
     });
-    const handleReturnClick = useCallback((evt) => {
+    const handleReturnClick = useListener((evt) => {
         addServer(false);
     });
-    const handleCancelScan = useCallback((evt) => {
+    const handleCancelScan = useListener((evt) => {
         scanQRCode(false);
         setErrors({});
     });
-    const handleScanResult = useCallback((evt) => {
+    const handleScanResult = useListener((evt) => {
         const params = UniversalLink.parseActivationURL(evt.result);
         activateMobileSession(params)
-    }, [ activateMobileSession ]);
-    const handleActivationCancel = useCallback((evt) => {
+    });
+    const handleActivationCancel = useListener((evt) => {
         enterManually(false);
     });
-    const handleActivationConfirm = useCallback((evt) => {
+    const handleActivationConfirm = useListener((evt) => {
         const params = {
             address: evt.address,
             schema: evt.schema,
             activationCode: evt.code,
         };
         activateMobileSession(params);
-    }, [ activateMobileSession ]);
-    const handleTransitionEnd = useCallback((evt) => {
+    });
+    const handleTransitionEnd = useListener((evt) => {
         if (evt.propertyName === 'opacity') {
             if (/start\-page/.test(evt.target.className)) {
                 if (onTransitionOut) {
@@ -127,7 +108,7 @@ async function StartPage(props) {
                 }
             }
         }
-    }, [ onTransitionOut ]);
+    });
 
     render();
     const db = database.use({ schema: 'global' });
@@ -690,6 +671,16 @@ async function StartPage(props) {
             }, 5000);
             throw err;
         }
+    }
+
+    async function toggleMembership(project) {
+        const projectIDs = currentUser.requested_project_ids;
+        const changes = {
+            id: currentUser.id,
+            requested_project_ids: _.toggle(projectIDs, project.id),
+        };
+        const db = database.use({ schema: 'global' });
+        await db.saveOne({ table: 'user' }, changes);
     }
 
     async function navigateToProject(address, schema) {

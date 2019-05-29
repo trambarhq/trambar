@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
@@ -20,22 +21,22 @@ function MembershipRequestDialogBox(props) {
     const { t, p, g } = env.locale;
     const [ userJustJoined, setUserJustJoined ] = useState(false);
 
-    const handleJoinClick = useCallback((evt) => {
+    const handleJoinClick = useListener((evt) => {
         setUserJustJoined(true);
         if (onConfirm) {
             onConfirm({ project });
         }
-    }, [ onConfirm ]);
-    const handleWithdrawClick = useCallback((evt) => {
+    });
+    const handleWithdrawClick = useListener((evt) => {
         if (onRevoke) {
             onRevoke({ project });
         }
-    }, [ onRevoke ]);
-    const handleProceedClick = useCallback((evt) => {
+    });
+    const handleProceedClick = useListener((evt) => {
         if (onProceed) {
             onProceed({ project });
         }
-    }, [ onProceed ]);
+    });
 
     const classNames = [ 'membership-request-dialog-box' ];
     return (

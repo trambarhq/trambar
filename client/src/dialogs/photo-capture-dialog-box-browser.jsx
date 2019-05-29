@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -31,14 +31,14 @@ async function PhotoCaptureDialogBoxBrowser(props) {
         captureImageOnly: true,
     });
 
-    const handleSnapClick = useCallback((evt) => capture.snap());
-    const handleRetakeClick = useCallback((evt) => capture.clear());
-    const handleCancelClick = useCallback((evt) => {
+    const handleSnapClick = useListener((evt) => capture.snap());
+    const handleRetakeClick = useListener((evt) => capture.clear());
+    const handleCancelClick = useListener((evt) => {
         if (onClose) {
             onClose({});
         }
-    }, [ onClose ]);
-    const handleAcceptClick = useCallback((evt) => {
+    });
+    const handleAcceptClick = useListener((evt) => {
         if (onCapture) {
             const { capturedImage } = capture;
             const payload = payloads.prepare('image');
@@ -52,11 +52,9 @@ async function PhotoCaptureDialogBoxBrowser(props) {
             };
             onCapture({ resource });
         }
-        if (onClose) {
-            onClose({});
-        }
-    }, [ payloads, onCapture, onClose ])
-    const handleDeviceSelection = useCallback((evt) => capture.choose(evt.id));
+        handleCancelClick();
+    })
+    const handleDeviceSelection = useListener((evt) => capture.choose(evt.id));
 
     do {
         render();

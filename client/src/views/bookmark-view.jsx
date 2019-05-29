@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets

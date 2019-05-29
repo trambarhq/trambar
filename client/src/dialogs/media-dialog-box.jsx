@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import React, { useState, useReducer, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useListener } from 'relaks';
 import Hammer from 'hammerjs';
 import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
@@ -17,23 +18,13 @@ import './media-dialog-box.scss';
 function MediaDialogBox(props) {
     const { env, resources, selectedIndex, onClose } = props;
     const { t } = env.locale;
-    const [ resourceIndex, changeResourceIndex ] = useReducer((index, value) => {
-        if (value === 'inc') {
-            index++;
-        } else if (value === 'dec') {
-            index--;
-        } else {
-            index = value;
-        }
-        index = _.clamp(index, 0, resources.length - 1);
-        return index;
-    }, selectedIndex);
+    const [ resourceIndex, setResourceIndex ] = useState(selectedIndex);
 
-    const handleThumbnailClick = useCallback((evt) => {
+    const handleThumbnailClick = useListener((evt) => {
         const index = parseInt(evt.currentTarget.getAttribute('data-index'));
-        changeResourceIndex(index);
+        setResourceIndex(index);
     });
-    const handleDownloadClick = useCallback((evt) => {
+    const handleDownloadClick = useListener((evt) => {
         let resource = resources[resourceIndex];
         if (resource) {
             // create a link then simulate a click
@@ -50,17 +41,17 @@ function MediaDialogBox(props) {
             link.click();
         }
     }, [ resourceIndex ]);
-    const handleKeyDown = useCallback((evt) => {
+    const handleKeyDown = useListener((evt) => {
         if (evt.keyCode === 39) {           // right arrow
-            changeResourceIndex('inc');
+            changeResourceIndex(+1);
         } else if (evt.keyCode == 37) {     // left arrow
-            changeResourceIndex('dec');
+            changeResourceIndex(-1);
         } else {
             return;
         }
         evt.preventDefault();
     });
-    const handleMouseWheel = useCallback((evt) => {
+    const handleMouseWheel = useListener((evt) => {
         let delta;
         if (Math.abs(evt.deltaX) >= Math.abs(evt.deltaY)) {
             delta = evt.deltaX;
@@ -68,19 +59,19 @@ function MediaDialogBox(props) {
             delta = evt.deltaY;
         }
         if (delta > 0) {
-            changeResourceIndex('inc');
+            changeResourceIndex(+1);
         } else if (delta < 0) {
-            changeResourceIndex('dec');
+            changeResourceIndex(-1);
         } else {
             return;
         }
         evt.preventDefault();
     });
-    const handleSwipeLeft = useCallback((evt) => {
-        changeResourceIndex('inc');
+    const handleSwipeLeft = useListener((evt) => {
+        changeResourceIndex(+1);
     });
-    const handleSwipeRight = useCallback((evt) => {
-        changeResourceIndex('dec');
+    const handleSwipeRight = useListener((evt) => {
+        changeResourceIndex(-1);
     });
 
     useEffect(() => {
@@ -250,6 +241,13 @@ function MediaDialogBox(props) {
                 <PushButton {...closeButtonProps} />
             </div>
         );
+    }
+
+    function changeResourceIndex(change) {
+        const newIndex = _.clamp(resourceIndex + change, 0, resources.length);
+        if (resourceIndex !== newIndex)  {
+            setResourceIndex(newIndex);
+        }
     }
 }
 

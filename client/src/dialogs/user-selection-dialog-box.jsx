@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import Overlay from 'common/widgets/overlay.jsx';
@@ -23,15 +24,15 @@ function UserSelectionDialogBox(props) {
         original: selection,
     });
 
-    const handleListSelect = useCallback((evt) => {
+    const handleListSelect = useListener((evt) => {
         userSelection.set(evt.selection)
     });
-    const handleOKClick = useCallback((evt) => {
+    const handleOKClick = useListener((evt) => {
         if (onSelect) {
             onSelect({ selection: userSelection.current });
         }
     });
-    const handleCancelClick = useCallback((evt) => {
+    const handleCancelClick = useListener((evt) => {
         if (onCancel) {
             onCancel({});
         }

@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
 import * as RoleUtils from 'common/objects/utils/role-utils.mjs';
 import * as TagScanner from 'common/utils/tag-scanner.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
@@ -30,7 +31,7 @@ function UserView(props) {
     const chartRange = options.chartRange || defaultChartRange;
     const [ openMenu, setOpenMenu ] = useState('');
 
-    const handleAction = useCallback((evt) => {
+    const handleAction = useListener((evt) => {
         switch (evt.action) {
             case 'chart-type-set':
                 const newOptions = _.clone(options);
@@ -48,19 +49,19 @@ function UserView(props) {
                 }
                 break;
         }
-    }, [ options, onOptionChange ]);
-    const handleOptionChange = useCallback((evt) => {
+    });
+    const handleOptionChange = useListener((evt) => {
         if (onOptionChange) {
             onOptionChange({ user, options: evt.options });
         }
-    }, [ onOptionChange ]);
-    const handleOptionComplete = useCallback((evt) => {
+    });
+    const handleOptionComplete = useListener((evt) => {
         setOpenMenu('');
     });
-    const handleMenuOpen = useCallback((evt) => {
+    const handleMenuOpen = useListener((evt) => {
         setOpenMenu(evt.name);
     });
-    const handleMenuClose = useCallback((evt) => {
+    const handleMenuClose = useListener((evt) => {
         setOpenMenu('');
     });
 

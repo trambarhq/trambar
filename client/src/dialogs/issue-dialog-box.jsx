@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import React, { useRef, useMemo, useCallback } from 'react';
+import React, { useRef, useMemo } from 'react';
+import { useListener } from 'relaks';
 import * as TagScanner from 'common/utils/tag-scanner.mjs';
 import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
@@ -42,17 +43,17 @@ function IssueDialogBox(props) {
     const selectedRepoID = draft.get('repo_id');
     const selectedRepo = _.find(availableRepos, { id: selectedRepoID });
 
-    const handleDeleteClick = useCallback((evt) => {
+    const handleDeleteClick = useListener((evt) => {
         if (onConfirm) {
             onConfirm({ issue: null });
         }
     });
-    const handleCancelClick = useCallback((evt) => {
+    const handleCancelClick = useListener((evt) => {
         if (onCancel) {
             onCancel({});
         }
     });
-    const handleOKClick = useCallback((evt) => {
+    const handleOKClick = useListener((evt) => {
         const newIssue = _.clone(draft.current);
         // make sure the selected labels exist in the selected repo only
         newIssue.labels = _.intersection(newIssue.labels, selectedRepo.details.labels);
@@ -60,15 +61,15 @@ function IssueDialogBox(props) {
             onConfirm({ issue: newIssue });
         }
     });
-    const handleTitleChange = useCallback((evt) => {
+    const handleTitleChange = useListener((evt) => {
         const text = evt.target.value;
         draft.update('title', text);
     });
-    const handleRepoChange = useCallback((evt) => {
+    const handleRepoChange = useListener((evt) => {
         const repoID = parseInt(evt.target.value);
         draft.update('repo_id', repoID);
     });
-    const handleTagClick = useCallback((evt) => {
+    const handleTagClick = useListener((evt) => {
         const label = evt.target.getAttribute('data-label');
         const labelsBefore = draft.get('labels', []);
         const labels = _.toggle(labelsBefore, label);

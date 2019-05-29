@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
+import { useListener } from 'relaks';
 import Chartist, { Svg } from 'common/widgets/chartist.jsx';
 import Moment from 'moment';
 import { memoizeWeak, memoizeStrong } from 'common/utils/memoize.mjs';
@@ -74,13 +75,13 @@ function UserStatistics(props) {
         });
     }, [ dates, series, localeCode ]);
 
-    const handleChartClick = useCallback((evt) => {
+    const handleChartClick = useListener((evt) => {
         const date = evt.target.getAttribute('data-date');
         if (date) {
             // go to the user's personal page on that date
             route.push('person-page', { selectedUserID: user.id, date });
         }
-    }, [ route, user ]);
+    });
 
     return (
         <div className="user-statistics">

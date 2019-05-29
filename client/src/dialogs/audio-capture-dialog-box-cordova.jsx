@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useEffect } from 'react';
+import React from 'react';
+import { useAsyncEffect } from 'relaks';
 import * as MediaLoader from 'common/media/media-loader.mjs';
 import CordovaFile from 'common/transport/cordova-file.mjs';
 
@@ -11,52 +12,51 @@ function AudioCaptureDialogBoxCordova(props) {
     const { payloads, show } = props;
     const { onClose, onCapture, onCapturePending, onCaptureError } = props;
 
-    useEffect(() => {
-        const handleSuccess = async (mediaFiles) => {
-            if (onClose) {
-                onClose({});
-            }
-
-            const mediaFile = mediaFiles[0];
-            if (mediaFile) {
-                if (onCapturePending) {
-                    onCapturePending({ resourceType: 'audio' });
+    useAsyncEffect(async () => {
+        if (show) {
+            const handleSuccess = async (mediaFiles) => {
+                if (onClose) {
+                    onClose({});
                 }
-                try {
-                    const mediaFileData = await MediaLoader.getFormatData(mediaFile);
-                    const file = new CordovaFile(mediaFile.fullPath);
-                    const [ type, format ] = _.split(mediaFile.type, '/');
-                    const payload = payloads.add('audio');
-                    payload.attachFile(file);
-                    const res = {
-                        type: 'audio',
-                        payload_token: payload.id,
-                        format: format,
-                        width: mediaFileData.width,
-                        height: mediaFileData.height,
-                        filename: mediaFile.name,
-                        duration: mediaFileData.duration * 1000,
-                    };
-                    if (onCapture) {
-                        onCapture({ resource });
+                const mediaFile = mediaFiles[0];
+                if (mediaFile) {
+                    if (onCapturePending) {
+                        onCapturePending({ resourceType: 'audio' });
                     }
-                } catch (err) {
-                    if (onCaptureError) {
-                        onCaptureError({ error: err });
+                    try {
+                        const mediaFileData = await MediaLoader.getFormatData(mediaFile);
+                        const file = new CordovaFile(mediaFile.fullPath);
+                        const [ type, format ] = _.split(mediaFile.type, '/');
+                        const payload = payloads.add('audio');
+                        payload.attachFile(file);
+                        const res = {
+                            type: 'audio',
+                            payload_token: payload.id,
+                            format: format,
+                            width: mediaFileData.width,
+                            height: mediaFileData.height,
+                            filename: mediaFile.name,
+                            duration: mediaFileData.duration * 1000,
+                        };
+                        if (onCapture) {
+                            onCapture({ resource });
+                        }
+                    } catch (err) {
+                        if (onCaptureError) {
+                            onCaptureError({ error: err });
+                        }
                     }
                 }
-            }
-        };
-        const handleFailure = (err) => {
-            if (onClose) {
-                onClose({});
-            }
-            if (onCaptureError) {
-                onCaptureError({ error: err });
-            }
-        };
+            };
+            const handleFailure = (err) => {
+                if (onClose) {
+                    onClose({});
+                }
+                if (onCaptureError) {
+                    onCaptureError({ error: err });
+                }
+            };
 
-        async function startCapture() {
             const capture = navigator.device.capture;
             if (capture) {
                 await requestPermissions();
@@ -66,10 +66,6 @@ function AudioCaptureDialogBoxCordova(props) {
                 };
                 capture.captureAudio(handleSuccess, handleFailure, options);
             }
-        }
-
-        if (show) {
-            startCapture();
         }
     }, [ show ]);
 

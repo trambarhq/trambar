@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
+import { useListener } from 'relaks';
 import * as FocusManager from 'common/utils/focus-manager.mjs';
 
 // widgets
@@ -23,34 +24,34 @@ function UserImagePanel(props) {
     const existingResources = userDraft.get('details.resources', []);
     const existingImage = _.find(existingResources, { type: 'image' });
 
-    const handleCancelClick = useCallback((evt) => {
+    const handleCancelClick = useListener((evt) => {
         setAction('');
         setNewImage(null);
     });
-    const handleAdjustClick = useCallback((evt) => {
+    const handleAdjustClick = useListener((evt) => {
         setAction('adjust');
     });
-    const handleReplaceClick = useCallback((evt) => {
+    const handleReplaceClick = useListener((evt) => {
         setAction('replace');
     });
-    const handleTakeClick = useCallback((evt) => {
+    const handleTakeClick = useListener((evt) => {
         importerRef.current.capture('image');
     });
-    const handleFileChange = useCallback(async (evt) => {
+    const handleFileChange = useListener(async (evt) => {
         const { files } = evt.target;
         importerRef.current.importFiles(files);
     });
-    const handleSaveClick = useCallback((evt) => {
+    const handleSaveClick = useListener((evt) => {
         if (newImage) {
             userDraft.update('details.resources', [ newImage ]);
             setNewImage(null);
             setAction('')
         }
-    }, [ newImage ]);
-    const handleImageChange = useCallback((evt) => {
+    });
+    const handleImageChange = useListener((evt) => {
         setNewImage(evt.resource);
     });
-    const handleChange = useCallback((evt) => {
+    const handleChange = useListener((evt) => {
         const image = evt.resources[0];
         if (image) {
             setNewImage(image);

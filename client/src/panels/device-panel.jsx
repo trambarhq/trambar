@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback} from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 import { Cancellation } from 'relaks';
 
 // widgets
@@ -23,7 +24,7 @@ function DevicePanel(props) {
     const [ confirmationRef, confirm ] = useConfirmation();
     const title = t('settings-device' + (_.size(devices) !== 1 ? 's' : ''));
 
-    const handleRevokeClick = useCallback(async (evt) => {
+    const handleRevokeClick = useListener(async (evt) => {
         const deviceID = parseInt(evt.currentTarget.getAttribute('data-device-id'));
         const device = _.find(devices, { id: deviceID });
 
@@ -38,7 +39,7 @@ function DevicePanel(props) {
                 throw err;
             }
         }
-    }, [ database, devices ]);
+    });
 
     return (
         <SettingsPanel className="device">

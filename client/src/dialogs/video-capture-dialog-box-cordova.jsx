@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useEffect } from 'react';
+import React from 'react';
+import { useAsyncEffect } from 'relaks';
 import * as MediaLoader from 'common/media/media-loader.mjs';
 import CordovaFile from 'common/transport/cordova-file.mjs';
 
@@ -11,68 +12,68 @@ function VideoCaptureDialogBoxCordova(props) {
     const { payloads, show } = props;
     const { onClose, onCapture, onCapturePending, onCaptureError } = props;
 
-    useEffect(() => {
-        const handleCaptureSuccess = async (mediaFiles) => {
-            if (onClose) {
-                onClose({});
-            }
-            const mediaFile = mediaFiles[0];
-            if (mediaFile) {
-                if (onCapturePending) {
-                    onCapturePending({ resourceType: 'video' });
+    useAsyncEffect(async () => {
+        if (show) {
+            const handleCaptureSuccess = async (mediaFiles) => {
+                if (onClose) {
+                    onClose({});
                 }
-                try {
-                    const mediaFileData = await MediaLoader.getFormatData(mediaFile);
-                    let fullPath;
-                    if (cordova.platformId === 'windows') {
-                        fullPath = mediaFile.localURL;
-                    } else {
-                        fullPath = mediaFile.fullPath;
+                const mediaFile = mediaFiles[0];
+                if (mediaFile) {
+                    if (onCapturePending) {
+                        onCapturePending({ resourceType: 'video' });
                     }
-                    const file = new CordovaFile(fullPath, mediaFile.type, mediaFile.size);
-                    const payload = payloads.add('video');
-                    payload.attachFile(file);
-
-                    const res = {
-                        type: 'video',
-                        payload_token: payload.id,
-                        format: MediaLoader.extractFileFormat(mediaFile.type),
-                        filename: mediaFile.name,
-                        duration: mediaFileData.duration * 1000,
-                    };
                     try {
-                        const thumbnailURL = await createThumbnail(file);
-                        const posterFile = new CordovaFile(thumbnailURL);
-                        const poster = await MediaLoader.getImageMetadata(posterFile);
-                        payload.attachFile(posterFile, 'poster');
-                        // use the poster's width and height, as they're
-                        // corrected for camera orientation
-                        res.width = poster.width;
-                        res.height = poster.height;
+                        const mediaFileData = await MediaLoader.getFormatData(mediaFile);
+                        let fullPath;
+                        if (cordova.platformId === 'windows') {
+                            fullPath = mediaFile.localURL;
+                        } else {
+                            fullPath = mediaFile.fullPath;
+                        }
+                        const file = new CordovaFile(fullPath, mediaFile.type, mediaFile.size);
+                        const payload = payloads.add('video');
+                        payload.attachFile(file);
+
+                        const res = {
+                            type: 'video',
+                            payload_token: payload.id,
+                            format: MediaLoader.extractFileFormat(mediaFile.type),
+                            filename: mediaFile.name,
+                            duration: mediaFileData.duration * 1000,
+                        };
+                        try {
+                            const thumbnailURL = await createThumbnail(file);
+                            const posterFile = new CordovaFile(thumbnailURL);
+                            const poster = await MediaLoader.getImageMetadata(posterFile);
+                            payload.attachFile(posterFile, 'poster');
+                            // use the poster's width and height, as they're
+                            // corrected for camera orientation
+                            res.width = poster.width;
+                            res.height = poster.height;
+                        } catch (err) {
+                            // can't generate thumbnail--let the server do it
+                            payload.attachStep('main', 'poster')
+                        }
+                        if (onCapture) {
+                            onCapture({ resource });
+                        }
                     } catch (err) {
-                        // can't generate thumbnail--let the server do it
-                        payload.attachStep('main', 'poster')
-                    }
-                    if (onCapture) {
-                        onCapture({ resource });
-                    }
-                } catch (err) {
-                    if (onCaptureError) {
-                        onCaptureError({ error: err });
+                        if (onCaptureError) {
+                            onCaptureError({ error: err });
+                        }
                     }
                 }
-            }
-        };
-        const handleFailure = (err) => {
-            if (onClose) {
-                onClose({});
-            }
-            if (onCaptureError) {
-                onCaptureError({ error: err });
-            }
-        };
+            };
+            const handleFailure = (err) => {
+                if (onClose) {
+                    onClose({});
+                }
+                if (onCaptureError) {
+                    onCaptureError({ error: err });
+                }
+            };
 
-        async function startCapture() {
             const capture = navigator.device.capture;
             if (capture) {
                 await requestPermissions();
@@ -82,10 +83,6 @@ function VideoCaptureDialogBoxCordova(props) {
                 };
                 capture.captureVideo(handleSuccess, handleFailure, options);
             }
-        }
-
-        if (show) {
-            startCapture();
         }
     }, [ show ]);
 }

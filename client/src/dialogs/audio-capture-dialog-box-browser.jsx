@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
-import Relaks, { useProgress } from 'relaks';
+import React from 'react';
+import Relaks, { useProgress, useListener } from 'relaks';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -32,23 +32,23 @@ async function AudioCaptureDialogBoxBrowser(props) {
         segmentDuration: 5000,
     }, stream);
 
-    const handleStartClick = useCallback((evt) => {
+    const handleStartClick = useListener((evt) => {
         stream.start();
         capture.start();
     });
-    const handleStopClick = useCallback((evt) => capture.stop());
-    const handlePauseClick = useCallback((evt) => capture.pause());
-    const handleResumeClick = useCallback((evt) => capture.resume());
-    const handleRetakeClick = useCallback((evt) => {
+    const handleStopClick = useListener((evt) => capture.stop());
+    const handlePauseClick = useListener((evt) => capture.pause());
+    const handleResumeClick = useListener((evt) => capture.resume());
+    const handleRetakeClick = useListener((evt) => {
         capture.clear();
         stream.cancel();
     });
-    const handleCancelClick = useCallback((evt) => {
+    const handleCancelClick = useListener((evt) => {
         if (onClose) {
             onClose({});
         }
-    }, [ onClose ]);
-    const handleAcceptClick = useCallback((evt) => {
+    });
+    const handleAcceptClick = useListener((evt) => {
         if (onCapture) {
             const { capturedAudio } = capture;
             const payload = payloads.add('audio');
@@ -67,8 +67,8 @@ async function AudioCaptureDialogBoxBrowser(props) {
         if (onClose) {
             onClose({});
         }
-    }, [ payloads, onClose, onCapture ]);
-    const handleDeviceSelection = useCallback((evt) => capture.choose(evt.id));
+    });
+    const handleDeviceSelection = useListener((evt) => capture.choose(evt.id));
 
     do {
         render();

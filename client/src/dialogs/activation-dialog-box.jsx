@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -18,28 +19,28 @@ function ActivationDialogBox(props) {
     const [ code, setCode ] = useState('');
     const [ schema, setSchema ] = useState('');
 
-    const handleCancelClick = useCallback((evt) => {
+    const handleCancelClick = useListener((evt) => {
         if (onCancel) {
             onCancel({});
         }
     });
-    const handleOKClick = useCallback((evt) => {
+    const handleOKClick = useListener((evt) => {
         if (onConfirm) {
             const codeCleaned = _.replace(code, /\s+/g, '');
             onConfirm({ address, code: codeCleaned, schema });
         }
     });
-    const handleAddressChange = useCallback((evt) => {
+    const handleAddressChange = useListener((evt) => {
         const address = _.replace(evt.target.value, /\s+/g, '');
         setAddress(address);
     });
-    const handleCodeChange = useCallback((evt) => {
+    const handleCodeChange = useListener((evt) => {
         const code = _.replace(_.toUpper(evt.target.value), /[^0-9A-F ]/g, '');
         if (_.replace(code, /\s+/g, '').length <= 16) {
             setCode(code);
         }
     });
-    const handleSchemaChange = useCallback((evt) => {
+    const handleSchemaChange = useListener((evt) => {
         const schema = _.toLower(_.replace(evt.target.value, /[^\w\-]/g, ''));
         setSchema(schema);
     });

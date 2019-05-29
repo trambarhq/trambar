@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useMemo, useRef, useCallback, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
+import { useListener } from 'relaks';
 import ReactDOM from 'react-dom';
 import ScrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
 import TopLevelMouseTrap from 'common/utils/top-level-mouse-trap.mjs';
@@ -24,7 +25,7 @@ function PopUpMenu(props) {
         }
     }, [ popOut ]);
 
-    const handleButtonClick = useCallback((evt) => {
+    const handleButtonClick = useListener((evt) => {
         if (!disabled) {
             if (!open) {
                 if (onOpen) {
@@ -36,8 +37,8 @@ function PopUpMenu(props) {
                 }
             }
         }
-    }, [ disabled, open, onOpen, onClose ]);
-    const handleMouseDown = useCallback((evt) => {
+    });
+    const handleMouseDown = useListener((evt) => {
         // stop event propagation when the menu itself is clicked so the
         // top-level mouse down handler won't close it
         evt.stopPropagation();

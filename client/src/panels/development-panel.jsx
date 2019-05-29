@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useCallback, useEffect } from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -17,16 +18,16 @@ function DevelopmentPanel(props) {
     const [ selectedDeploymentName, setSelectedDeploymentName ] = useState({});
     const deploymentNames = (env.codePush) ? env.codePush.getDeploymentNames() : [];
 
-    const handleDevelopmentOptionClick = useCallback((evt) => {
+    const handleDevelopmentOptionClick = useListener((evt) => {
         const optionName = evt.currentTarget.id;
         userDraft.toggle(`settings.development.${optionName}`)
     });
-    const handleDeploymentOptionClick = useCallback((evt) => {
+    const handleDeploymentOptionClick = useListener((evt) => {
         const name = evt.currentTarget.id;
         env.codePush.saveDeploymentName(name);
         setSelectedDeploymentName(name);
     });
-    const handleShowClick = useCallback((evt) => {
+    const handleShowClick = useListener((evt) => {
         route.push('diagnostics-page');
     }, [ route ]);
 

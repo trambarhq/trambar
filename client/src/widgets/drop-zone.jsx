@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
 
 import './drop-zone.scss';
 
@@ -11,16 +12,16 @@ function DropZone(props) {
     const { children, onDrop } = props;
     const [ active, setActive ] = useState(false);
 
-    const handleDragEnter = useCallback((evt) => {
+    const handleDragEnter = useListener((evt) => {
         setActive(true);
     });
-    const handleDragLeave = useCallback((evt) => {
+    const handleDragLeave = useListener((evt) => {
         setActive(false);
     });
-    const handleDragOver = useCallback((evt) => {
+    const handleDragOver = useListener((evt) => {
         evt.preventDefault();
     });
-    const handleDrop = useCallback((evt) => {
+    const handleDrop = useListener((evt) => {
         evt.preventDefault();
         if (active) {
             const { files, items } = evt.dataTransfer;
@@ -30,7 +31,7 @@ function DropZone(props) {
         }
         setActive(false);
         return null;
-    }, [ onDrop ]);
+    });
 
     return (
         <div className="drop-zone" onDragEnter={handleDragEnter}>

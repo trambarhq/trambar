@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 import NotificationTypes, { AdminNotificationTypes } from 'common/objects/types/notification-types.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
@@ -21,7 +22,7 @@ function WebAlertPanel(props) {
         types = _.without(types, AdminNotificationTypes);
     }
 
-    const handleOptionClick = useCallback((evt) => {
+    const handleOptionClick = useListener((evt) => {
         const optionName = evt.currentTarget.id;
         userDraft.toggle(`settings.web_alert.${optionName}`);
     });

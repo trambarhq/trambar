@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -24,18 +25,18 @@ function ProjectManagementDialogBox(props) {
         original: _.map(projectLinks, 'key')
     });
 
-    const handleProjectClick = useCallback((evt) => {
+    const handleProjectClick = useListener((evt) => {
         const key = evt.currentTarget.id;
         projectSelection.toggle(key);
     });
-    const handleRemoveClick = useCallback((evt) => {
+    const handleRemoveClick = useListener((evt) => {
         if (onDelete) {
             const links = _.filter(projectLinks, (link) => {
                 return projectSelection.removing(link.key);
             });
             onDelete({ selection: _.map(links, 'name') });
         }
-    }, [ onDelete ]);
+    });
 
     return (
         <div className="project-management-dialog-box">

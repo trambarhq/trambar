@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { SettingsPanel } from '../widgets/settings-panel.jsx';
@@ -15,19 +16,19 @@ function UserInfoPanel(props) {
     const { env, userDraft } = props;
     const { t, p } = env.locale;
 
-    const handleNameChange = useCallback((evt) => {
+    const handleNameChange = useListener((evt) => {
         const name = evt.target.value;
         userDraft.update('details.name', name);
     });
-    const handleEmailChange = useCallback((evt) => {
+    const handleEmailChange = useListener((evt) => {
         const address = evt.target.value;
         userDraft.update('details.email', address);
     });
-    const handlePhoneChange = useCallback((evt) => {
+    const handlePhoneChange = useListener((evt) => {
         const number = evt.target.value;
         userDraft.update('details.phone', number);
     });
-    const handleGenderChange = useCallback((evt) => {
+    const handleGenderChange = useListener((evt) => {
         const gender = evt.target.value;
         userDraft.update('details.gender', gender || undefined);
     });

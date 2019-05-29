@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { HeaderButton } from './header-button.jsx';
@@ -23,7 +24,7 @@ function ReactionToolbar(props) {
         }
     });
 
-    const handleLikeClick = useCallback((evt) => {
+    const handleLikeClick = useListener((evt) => {
         if (onAction) {
             if (userLike) {
                 onAction({ action: 'like-remove', like: userLike });
@@ -32,7 +33,7 @@ function ReactionToolbar(props) {
             }
         }
     });
-    const handleCommentClick = useCallback((evt) => {
+    const handleCommentClick = useListener((evt) => {
         if (onAction) {
             onAction({ action: 'reaction-add' });
         }

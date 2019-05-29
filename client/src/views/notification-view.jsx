@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback } from 'react';
+import React from 'react';
+import { useListener } from 'relaks';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
@@ -14,7 +15,7 @@ import './notification-view.scss';
 function NotificationView(props) {
     const { route, env, user, notification, onClick } = props;
 
-    const handleClick = useCallback((evt) => {
+    const handleClick = useListener((evt) => {
         if (onClick) {
             onClick({  notification });
         }
