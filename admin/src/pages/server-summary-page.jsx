@@ -1,9 +1,10 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher, Cancellation } from 'relaks';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
+import * as ServerSaver from 'common/objects/savers/server-saver.mjs';
 import { ServerTypes, IntegratedServerTypes } from 'common/objects/types/server-types.mjs';
 import * as ServerSettings from 'common/objects/settings/server-settings.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
@@ -26,6 +27,7 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 import {
     useDraftBuffer,
     useAutogenID,
+    useValidation,
     useConfirmation,
     useDataLossWarning,
 } from '../hooks.mjs';
@@ -38,13 +40,12 @@ async function ServerSummaryPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global' });
-    const currentUserID = await db.start();
-    const system = await SystemFinder.findSystem(db);
+    const currentUserID = await database.start();
+    const system = await SystemFinder.findSystem(database);
     render();
-    const server = (!creating) ? await ServerFinder.findServer(db, serverID) : null;
+    const server = (!creating) ? await ServerFinder.findServer(database, serverID) : null;
     render();
-    const roles = await RoleFinder.findActiveRoles(db);
+    const roles = await RoleFinder.findActiveRoles(database);
     render();
 
     function render() {
@@ -60,16 +61,15 @@ function ServerSummaryPageSync(props) {
     const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !(editing || creating);
     const [ adding, setAdding ] = useState(false);
-    const [ problems, setProblems ] = useState({});
     const [ credentialsChanged, setCredentialsChanged ] = useState(false);
     const draft = useDraftBuffer({
         original: server || {},
-        save: saveServer,
-        reset: readOnly
+        reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
+    const [ problems, reportProblems ] = useValidation();
     const [ confirmationRef, confirm ] = useConfirmation();
-    useDataLossWarning(route, env, confirm, () => draft.unsaved);
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
@@ -87,32 +87,74 @@ function ServerSummaryPageSync(props) {
     const handleReturnClick = useListener((evt) => {
         route.push('server-list-page');
     });
-    const handleDisableClick = useListener(async (evt) => {
-        if (await run(disableServer)) {
+    const handleDisableClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('server-summary-confirm-disable'));
+            await ServerSaver.disableServer(database, server);
             handleReturnClick();
-        }
+        });
     });
-    const handleDeleteClick = useListener(async (evt) => {
-        if (await run(removeServer)) {
+    const handleDeleteClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('server-summary-confirm-delete'));
+            await ServerSaver.removeServer(database, server);
             handleReturnClick();
-        }
+        });
     });
-    const handleRestoreClick = useListener(async (evt) => {
-        await run(restoreServer);
+    const handleRestoreClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('server-summary-confirm-reactivate'));
+            await ServerSaver.restoreServer(database, server);
+        });
     });
-    const handleSaveClick = useListener(async (evt) => {
-        if (await run(draft.save)) {
-            if (creating) {
-                setAdding(true);
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            try {
+                const problems = {};
+                if (!draft.get('name')) {
+                    problems.name = 'validation-required';
+                }
+                if (!draft.get('type')) {
+                    problems.type = 'validation-required';
+                }
+                let oauth = draft.get('settings.oauth');
+                if (oauth) {
+                    if (oauth.client_id && !oauth.client_secret) {
+                        problems.client_secret = 'validation-required';
+                    }
+                    if (!oauth.client_id && oauth.client_secret) {
+                        problems.client_id = 'validation-required';
+                    }
+                    if ((oauth.client_id || oauth.client_secret) && !oauth.base_url) {
+                        if (ours.type === 'gitlab') {
+                            problems.base_url = 'validation-required';
+                        }
+                    }
+                }
+                reportProblems(problems);
+
+                const serverAfter = await ServerSaver.saveServer(database, draft.current);
+                if (creating) {
+                    setAdding(true);
+                }
+                warnDataLoss(false);
+                route.replace({ editing: undefined, serverID: serverAfter.id });
+            } catch (err) {
+                if (err.statusCode === 409) {
+                    reportProblems({ name: 'validation-duplicate-server-name' });
+                } else {
+                    throw err;
+                }
             }
-            route.replace({ editing: undefined, serverID: draft.current.id });
-        }
+        });
     });
     const handleAcquireClick = useListener((evt) => {
-        openOAuthPopup('activation');
+        const url = database.getOAuthURL(server, 'activation');
+        openPopupWindow(url);
     });
     const handleTestClick = useListener((evt) => {
-        openOAuthPopup('test');
+        const url = database.getOAuthURL(server, 'test');
+        openPopupWindow(url);
     });
     const [ handleTitleChange, handleNameChange ] = useAutogenID(draft, {
         titleKey: 'details.title',
@@ -209,6 +251,8 @@ function ServerSummaryPageSync(props) {
         // TODO
     });
 
+    warnDataLoss(draft.changed);
+
     let title = p(draft.get('details.title'));
     const type = draft.get('type');
     if (!title && type) {
@@ -277,14 +321,14 @@ function ServerSummaryPageSync(props) {
                 </div>
             );
         } else {
-            const { unsaved } = draft;
+            const { changed } = draft;
             return (
                 <div key="edit" className="buttons">
                     <PushButton onClick={handleCancelClick}>
                         {t('server-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('server-summary-save')}
                     </PushButton>
                 </div>
@@ -784,91 +828,6 @@ function ServerSummaryPageSync(props) {
             </div>
         );
     }
-
-    async function disableServer() {
-        await confirm(t('server-summary-confirm-disable'));
-        const changes = { id: server.id, disabled: true };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'server' }, changes);
-    }
-
-    async function removeServer() {
-        await confirm(t('server-summary-confirm-delete'));
-        const changes = { id: server.id, deleted: true };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'server' }, changes);
-    }
-
-    async function restoreServer() {
-        await confirm(t('server-summary-confirm-reactivate'));
-        const changes = { id: server.id, disabled: false, deleted: false };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'server' }, changes);
-    }
-
-    async function saveServer(base, ours) {
-        try {
-            validateServerInfo(ours);
-
-            const db = database.use({ schema: 'global' });
-            const serverAfter = await db.saveOne({ table: 'server' }, ours);
-            return serverAfter;
-        } catch (err) {
-            if (err.statusCode === 409) {
-                setProblems({ name: 'validation-duplicate-server-name' });
-                err = new Cancellation;
-            }
-            throw err;
-        }
-    }
-
-    function validateServerInfo(ours) {
-        const problems = {};
-        if (!ours.name) {
-            problems.name = 'validation-required';
-        }
-        if (!ours.type) {
-            problems.type = 'validation-required';
-        }
-        let oauth = _.get(ours.settings, 'oauth');
-        if (oauth) {
-            if (oauth.client_id && !oauth.client_secret) {
-                problems.client_secret = 'validation-required';
-            }
-            if (!oauth.client_id && oauth.client_secret) {
-                problems.client_id = 'validation-required';
-            }
-            if ((oauth.client_id || oauth.client_secret) && !oauth.base_url) {
-                if (ours.type === 'gitlab') {
-                    problems.base_url = 'validation-required';
-                }
-            }
-        }
-        setProblems(problems);
-        if (!_.isEmpty(problems)) {
-            throw new Cancellation;
-        }
-    }
-
-    function openOAuthPopup(type) {
-        const url = database.getOAuthURL(server, type);
-        let width = 800;
-        let height = 600;
-        let { screenLeft, screenTop, outerWidth, outerHeight } = window;
-        let options = {
-            width,
-            height,
-            left: screenLeft + Math.round((outerWidth - width) / 2),
-            top: screenTop + Math.round((outerHeight - height) / 2),
-            toolbar: 'no',
-            menubar: 'no',
-            status: 'no',
-        };
-        const pairs = _.map(options, (value, name) => {
-            return `${name}=${value}`;
-        });
-        window.open(url, 'api-access-oauth', pairs.join(','));
-    }
 }
 
 const gitlabImportOptions = [
@@ -970,6 +929,25 @@ const sortRoles = memoizeWeak(null, function(roles, env) {
     };
     return _.sortBy(roles, name);
 });
+
+function openPopupWindow(url) {
+    const width = 800;
+    const height = 600;
+    const { screenLeft, screenTop, outerWidth, outerHeight } = window;
+    const options = {
+        width,
+        height,
+        left: screenLeft + Math.round((outerWidth - width) / 2),
+        top: screenTop + Math.round((outerHeight - height) / 2),
+        toolbar: 'no',
+        menubar: 'no',
+        status: 'no',
+    };
+    const pairs = _.map(options, (value, name) => {
+        return `${name}=${value}`;
+    });
+    window.open(url, 'api-access-oauth', pairs.join(','));
+}
 
 const component = Relaks.memo(ServerSummaryPage);
 

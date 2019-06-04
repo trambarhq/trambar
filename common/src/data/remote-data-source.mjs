@@ -208,6 +208,9 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Array<Object>>}
      */
     async save(location, objects, options) {
+        if (objects.length === 0) {
+            return [];
+        }
         let storage = this.addStorage(new Storage(location, objects, options));
         if (storage.local) {
             await this.updateLocalDatabase(storage);
@@ -238,6 +241,9 @@ class RemoteDataSource extends EventEmitter {
      * @return {Promise<Array<Object>>}
      */
     async remove(location, objects) {
+        if (objects.length === 0) {
+            return [];
+        }
         let removal = this.addRemoval(new Removal(location, objects));
         if (removal.local) {
             await this.updateLocalDatabase(removal);

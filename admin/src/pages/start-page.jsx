@@ -9,15 +9,14 @@ async function StartPage(props) {
     const { database, route, env } = props;
     const { t } = env.locale;
     const [ show ] = useProgress();
-    const db = database.use({ by: this });
 
     const handleAnimationEnd = useListener((evt) => {
         route.replace('settings-page', { editing: true });
     });
 
     render();
-    const currentUserID = await db.start();
-    const system = await SystemFinder.findSystem(db);
+    const currentUserID = await database.start();
+    const system = await SystemFinder.findSystem(database);
     if (!_.isEmpty(system)) {
         await route.replace('project-list-page');
         return null;

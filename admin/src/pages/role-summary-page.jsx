@@ -1,10 +1,12 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher, Cancellation } from 'relaks';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
+import * as RoleSaver from 'common/objects/savers/role-saver.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UserSaver from 'common/objects/savers/user-saver.mjs';
 
 // widgets
 import { PushButton } from '../widgets/push-button.jsx';
@@ -22,6 +24,7 @@ import {
     useDraftBuffer,
     useSelectionBuffer,
     useAutogenID,
+    useValidation,
     useConfirmation,
     useDataLossWarning,
 } from '../hooks.mjs';
@@ -34,12 +37,11 @@ async function RoleSummaryPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global' });
-    const currentUserID = await db.start();
-    const system = await SystemFinder.findSystem(db);
-    const role = !creating ? await RoleFinder.findRole(db, roleID) : null;
+    const currentUserID = await database.start();
+    const system = await SystemFinder.findSystem(database);
+    const role = !creating ? await RoleFinder.findRole(database, roleID) : null;
     render();
-    const users = await UserFinder.findActiveUsers(db);
+    const users = await UserFinder.findActiveUsers(database);
     render();
 
     function render() {
@@ -55,10 +57,8 @@ function RoleSummaryPageSync(props) {
     const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !editing && !creating;
     const [ adding, setAdding ] = useState(false);
-    const [ problems, setProblems ] = useState({});
     const draft = useDraftBuffer({
         original: role || {},
-        save: saveRole,
         reset: readOnly,
     });
     const members = _.filter(users, (user) => {
@@ -68,9 +68,10 @@ function RoleSummaryPageSync(props) {
         original: _.map(members, 'id'),
         reset: readOnly,
     });
+    const [ problems, reportProblems ] = useValidation();
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
-    useDataLossWarning(route, env, confirm, () => draft.unsaved);
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
@@ -84,26 +85,59 @@ function RoleSummaryPageSync(props) {
     const handleReturnClick = useListener((evt) => {
         route.push('role-list-page', { projectID: project.id });
     });
-    const handleDisableClick = useListener(async (evt) => {
-        if (await run(disableRole)) {
+    const handleDisableClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('role-summary-confirm-disable'));
+            await RoleSaver.disableRole(database, role);
             handleReturnClick();
-        }
+        });
     });
-    const handleRemoveClick = useListener(async (evt) => {
-        if (await run(removeRole)) {
+    const handleRemoveClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('role-summary-confirm-delete'));
+            await RoleSaver.removeRole(database, role);
             handleReturnClick();
-        }
+        });
     });
-    const handleRestoreClick = useListener(async (evt) => {
-        await run(restoreRole);
+    const handleRestoreClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('role-summary-confirm-reactivate'));
+            await RoleSaver.restoreRole(database, role);
+        });
     });
-    const handleSaveClick = useListener(async (evt) => {
-        if (await draft.save()) {
-            if (creating) {
-                setAdding(true);
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            try {
+                const problems = {};
+                const name = draft.get('name');
+                if (!name) {
+                    problems.name = 'validation-required';
+                }
+                reportProblems(problems);
+
+                const roleAfter = await RoleSaver.saveRole(database, draft.current);
+                const addition = _.filter(users, (user) => {
+                    return userSelection.adding(user.id);
+                });
+                const removal = _.filter(users, (user) => {
+                    return userSelection.removing(user.id);
+                });
+                await UserSaver.addToRoleLists(database, addition, roleAfter.id);
+                await UserSaver.removeFromRoleLists(database, removal, roleAfter.id);
+
+                if (creating) {
+                    setAdding(true);
+                }
+                warnDataLoss(false);
+                route.replace({ editing: undefined, roleID: roleAfter.id });
+            } catch (err) {
+                if (err.statusCode === 409) {
+                    reportProblems({ name: 'validation-duplicate-role-name' });
+                } else {
+                    throw err;
+                }
             }
-            await route.replace({ editing: undefined, roleID: draft.current.id });
-        }
+        });
     });
     const [ handleTitleChange, handleNameChange ] = useAutogenID(draft, {
         titleKey: 'details.title',
@@ -122,6 +156,8 @@ function RoleSummaryPageSync(props) {
         const userID = parseInt(evt.name);
         userSelection.toggle(userID);
     });
+
+    warnDataLoss(draft.changed || userSelection.changed);
 
     const title = p(draft.get('details.title')) || draft.get('name');
     return (
@@ -170,14 +206,14 @@ function RoleSummaryPageSync(props) {
                 </div>
             );
         } else {
-            const unsaved = draft.unsaved || userSelection.unsaved;
+            const changed = draft.changed || userSelection.changed;
             return (
                 <div className="buttons">
                     <PushButton onClick={handleCancelClick}>
                         {t('role-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('role-summary-save')}
                     </PushButton>
                 </div>
@@ -308,70 +344,6 @@ function RoleSummaryPageSync(props) {
                 <InstructionBlock {...instructionProps} />
             </div>
         );
-    }
-
-    async function disableRole() {
-        await confirm(t('role-summary-confirm-disable'));
-        const changes = { id: role.id, disabled: true };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'role' }, changes);
-    }
-
-    async function removeRole() {
-        await confirm(t('role-summary-confirm-delete'));
-        const changes = { id: role.id, deleted: true };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'role' }, changes);
-    }
-
-    async function restoreRole() {
-        await confirm(t('role-summary-confirm-reactivate'));
-        const changes = { id: role.id, disabled: false, deleted: false };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'role' }, changes);
-    }
-
-    async function saveRole(base, ours) {
-        try {
-            validateRoleInfo(ours);
-
-            const db = database.use({ schema: 'global' });
-            const roleAfter = await db.saveOne({ table: 'role' }, ours);
-
-            let userChanges = [];
-            for (let user of users) {
-                const columns = { id: user.id };
-                if (userSelection.adding(user.id)) {
-                    columns.role_ids = _.union(user.role_ids, [ roleAfter.id ]);
-                } else if (userSelection.removing(user.id)) {
-                    columns.role_ids = _.difference(user.role_ids, [ roleAfter.id ]);
-                } else {
-                    continue;
-                }
-                userChanges.push(columns);
-            }
-            if (!_.isEmpty(userChanges)) {
-                await db.save({ table: 'user' }, userChanges);
-            }
-            return roleAfter;
-        } catch (err) {
-            if (err.statusCode === 409) {
-                setProblems({ name: 'validation-duplicate-role-name' });
-                err = new Cancellation;
-            }
-            throw err;
-        }
-    }
-
-    function validateRoleInfo(ours) {
-        const problems = {};
-        if (!ours.name) {
-            problems.name = 'validation-required';
-        }
-        setProblems(problems);
-        if (!_.isEmpty(problems)) {
-            throw new Cancellation;
-        }
     }
 }
 

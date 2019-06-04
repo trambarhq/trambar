@@ -26,7 +26,6 @@ async function NavigationTree(props) {
         action: '',
     });
     const [ show ] = useProgress();
-    const db = database.use({ schema: 'global', by: this });
 
     useEffect(() => {
         const interval = repositionArrow();
@@ -37,12 +36,12 @@ async function NavigationTree(props) {
 
     render();
     const { projectID, userID, roleID, repoID, serverID } = route.params;
-    const currentUserID = await db.start();
-    const project =  _.isFinite(projectID) ? await ProjectFinder.findProject(db, projectID) : null;
-    const user = _.isFinite(userID) ? await UserFinder.findUser(db, userID) : null;
-    const role = _.isFinite(roleID) ? await RoleFinder.findRole(db, roleID) : null;
-    const repo = _.isFinite(repoID) ? await RepoFinder.findRepo(db, repoID) : null;
-    const server = _.isFinite(serverID) ? await ServerFinder.findServer(db, serverID) : null;
+    const currentUserID = await database.start();
+    const project =  _.isFinite(projectID) ? await ProjectFinder.findProject(database, projectID) : null;
+    const user = _.isFinite(userID) ? await UserFinder.findUser(database, userID) : null;
+    const role = _.isFinite(roleID) ? await RoleFinder.findRole(database, roleID) : null;
+    const repo = _.isFinite(repoID) ? await RepoFinder.findRepo(database, repoID) : null;
+    const server = _.isFinite(serverID) ? await ServerFinder.findServer(database, serverID) : null;
     render();
 
     function render() {

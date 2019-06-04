@@ -5,6 +5,7 @@ import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
+import * as RepoSaver from 'common/objects/savers/repo-saver.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 
@@ -33,15 +34,14 @@ async function RepoListPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global' });
-    const currentUserID = await db.start();
-    const project = await ProjectFinder.findProject(db, projectID);
-    const repos = await RepoFinder.findExistingRepos(db);
+    const currentUserID = await database.start();
+    const project = await ProjectFinder.findProject(database, projectID);
+    const repos = await RepoFinder.findExistingRepos(database);
     render();
-    const servers = await ServerFinder.findServersOfRepos(db, repos);
+    const servers = await ServerFinder.findServersOfRepos(database, repos);
     render();
     const linkedRepos = findRepos(repos, project);
-    const statistics = await StatisticsFinder.findDailyActivitiesOfRepos(db, project, linkedRepos);
+    const statistics = await StatisticsFinder.findDailyActivitiesOfRepos(database, project, linkedRepos);
     render();
 
     function render() {
@@ -58,12 +58,13 @@ function RepoListPageSync(props) {
     const linkedRepos = findRepos(repos, project);
     const selection = useSelectionBuffer({
         original: _.map(linkedRepos, 'id'),
-        save: saveRepoSelection,
+        save: (base, ours) => {
+        },
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ]  = useConfirmation();
-    useDataLossWarning(route, env, confirm, () => selection.unsaved);
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
     const handleRowClick = useRowToggle(selection, 'data-repo-id');
@@ -73,11 +74,21 @@ function RepoListPageSync(props) {
     const handleCancelClick  = useListener((evt) => {
         route.replace({ editing: undefined });
     });
-    const handleSaveClick = useListener(async (evt) => {
-        if (await selection.save()) {
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            const removal = _.filter(repos, (repo) => {
+                return selection.removing(repo.id);
+            });
+            if (removal.length > 0) {
+                await confirm(t('repo-list-confirm-remove-$count', removal.removal));
+            }
+            await ProjectSaver.saveRepoList(database, project, ours);
+            warnDataLoss(false);
             handleCancelClick();
-        }
+        });
     });
+
+    warnDataLoss(selection.changed);
 
     return (
         <div className="repo-list-page">
@@ -100,14 +111,14 @@ function RepoListPageSync(props) {
                 </div>
             );
         } else {
-            const { unsaved } = selection;
+            const { changed } = selection;
             return (
                 <div className="buttons">
                     <PushButton onClick={handleCancelClick}>
                         {t('repo-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('repo-list-save')}
                     </PushButton>
                 </div>
@@ -269,6 +280,7 @@ function RepoListPageSync(props) {
         } else {
             const props = {
                 statistics: _.get(statistics, [ repo.id, 'last_month' ]),
+                disabled: selection.shown,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -284,6 +296,7 @@ function RepoListPageSync(props) {
         } else {
             const props = {
                 statistics: _.get(statistics, [ repo.id, 'this_month' ]),
+                disabled: selection.shown,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -314,24 +327,11 @@ function RepoListPageSync(props) {
         } else {
             const props = {
                 time: repo.mtime,
+                disabled: selection.shown,
                 env,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
-    }
-
-    async function saveRepoSelection(base, ours) {
-        const remove = _.size(_.difference(base, ours));
-        if (remove) {
-            await confirm(t('repo-list-confirm-remove-$count', remove));
-        }
-        const changes = {
-            id: project.id,
-            repo_ids: ours,
-        };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'project' }, changes);
-        handleCancelClick();
     }
 }
 

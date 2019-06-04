@@ -3,6 +3,7 @@ import React, { useRef } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
+import * as RoleSaver from 'common/objects/savers/role-saver.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
@@ -31,11 +32,10 @@ async function RoleListPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global' });
-    const currentUserID = await db.start();
-    const roles = await RoleFinder.findAllRoles(db);
+    const currentUserID = await database.start();
+    const roles = await RoleFinder.findAllRoles(database);
     render();
-    const users = await UserFinder.findUsersWithRoles(db, roles);
+    const users = await UserFinder.findUsersWithRoles(database, roles);
     render();
 
     function render() {
@@ -52,12 +52,11 @@ function RoleListPageSync(props) {
     const activeRoles = filterRoles(roles);
     const selection = useSelectionBuffer({
         original: _.map(activeRoles, 'id'),
-        save: saveRoleSelection,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
-    useDataLossWarning(route, env, confirm, () => selection.unsaved);
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
     const handleRowClick = useRowToggle(selection, 'data-role-id');
@@ -70,11 +69,28 @@ function RoleListPageSync(props) {
     const handleAddClick = useListener((evt) => {
         route.push('role-summary-page', { roleID: 'new' });
     });
-    const handleSaveClick = useListener(async (evt) => {
-        if (await run(selection.save)) {
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            const removal = _.filter(roles, (role) => {
+                return selection.removing(role.id);
+            });
+            const addition = _.filter(roles, (role) => {
+                return selection.adding(role.id);
+            });
+            if (removal.length > 0) {
+                await confirm(t('role-list-confirm-disable-$count', removal.length));
+            }
+            if (addition.length > 0) {
+                await confirm(t('role-list-confirm-reactivate-$count', addition.length));
+            }
+            await RoleSaver.disableRoles(database, removal);
+            await RoleSaver.restoreRoles(database, addition);
+            warnDataLoss(false);
             handleCancelClick();
-        }
+        });
     });
+
+    warnDataLoss(selection.changed);
 
     return (
         <div className="role-list-page">
@@ -104,14 +120,14 @@ function RoleListPageSync(props) {
                 </div>
             );
         } else {
-            const { unsaved } = selection;
+            const { changed } = selection;
             return (
                 <div className="buttons">
                     <PushButton onClick={handleCancelClick}>
                         {t('role-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('role-list-save')}
                     </PushButton>
                 </div>
@@ -224,6 +240,7 @@ function RoleListPageSync(props) {
         } else {
             const props = {
                 users: findUsers(users, role),
+                disabled: selection.shown,
                 route,
                 env,
             };
@@ -240,36 +257,11 @@ function RoleListPageSync(props) {
         } else {
             const props = {
                 time: role.mtime,
+                disabled: selection.shown,
                 env,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
-    }
-
-    async function saveRoleSelection() {
-        const changes = [];
-        let remove, add = 0;
-        for (let role of roles) {
-            const columns = { id: role.id };
-            if (selection.removing(role.id)) {
-                columns.disabled = true;
-                remove++;
-            } else if (selection.adding(role.id)) {
-                columns.disabled = flags.deleted = false;
-                add++;
-            } else {
-                continue;
-            }
-            changes.push(columns);
-        }
-        if (remove) {
-            await confirm(t('role-list-confirm-disable-$count', remove));
-        }
-        if (add) {
-            await confirm(t('role-list-confirm-reactivate-$count', add))
-        }
-        const db = database.use({ schema: 'global' });
-        await db.save({ table: 'role' }, changes);
     }
 }
 

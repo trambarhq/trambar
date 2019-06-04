@@ -20,7 +20,6 @@ async function TaskList(props) {
     const [ show ] = useProgress();
     const [ expandedTaskIDs, setExpandedTaskIDs ] = useState((scrollToTaskID) ? [ scrollToTaskID ] : []);
     const container = useRef();
-    const db = database.use({ schema: 'global', by: this });
 
     const handleTaskIdentity = useListener((evt) => {
         return `task-${evt.item.id}`;
@@ -45,8 +44,8 @@ async function TaskList(props) {
     }, [])
 
     render();
-    const currentUserID = await db.start();
-    const tasks = await TaskFinder.findServerTasks(db, server);
+    const currentUserID = await database.start();
+    const tasks = await TaskFinder.findServerTasks(database, server);
     render();
 
     function render() {

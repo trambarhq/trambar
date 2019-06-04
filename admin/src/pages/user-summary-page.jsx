@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher, Cancellation } from 'relaks';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
@@ -41,17 +41,16 @@ async function UserSummaryPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global' });
-    const currentUserID = await db.start();
-    const system = await SystemFinder.findSystem(db);
-    const user = (!creating) ? await UserFinder.findUser(db, userID) : null;
+    const currentUserID = await database.start();
+    const system = await SystemFinder.findSystem(database);
+    const user = (!creating) ? await UserFinder.findUser(database, userID) : null;
     render();
-    const roles = await RoleFinder.findActiveRoles(db)
+    const roles = await RoleFinder.findActiveRoles(database)
     render();
     // load project if project id is provided (i.e. member summary)
-    const project = (projectID) ? await ProjectFinder.findProject(db, projectID) : null;
+    const project = (projectID) ? await ProjectFinder.findProject(database, projectID) : null;
     render();
-    const statistics = (project && user) ? await StatisticsFinder.findDailyActivitiesOfUser(db, project, user) : null;
+    const statistics = (project && user) ? await StatisticsFinder.findDailyActivitiesOfUser(database, project, user) : null;
     render();
 
     function render() {
@@ -64,19 +63,17 @@ function UserSummaryPageSync(props) {
     const { system, user, roles, project, statistics, creating } = props;
     const { database, route, env, payloads, projectID, editing } = props;
     const { t, p } = env.locale;
-    const db = database.use({ schema: 'global', by: this });
     const readOnly = !(editing || creating);
     const [ adding, setAdding ] = useState(false);
     const [ problems, setProblems ] = useState({});
     const [ showingSocialLinks, setShowingSocialLinks ] = useState(false);
     const draft = useDraftBuffer({
         original: user || {},
-        save: saveUser,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
-    useDataLossWarning(route, env, confirm, () => draft.unsaved);
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const handleEditClick = useListener(() => {
         route.replace({ editing: true });
@@ -99,25 +96,59 @@ function UserSummaryPageSync(props) {
         }
     });
     const handleDisableClick = useListener(async (evt) => {
-        if (await run(disableUser)) {
+        run(async () => {
+            await confirm(t('user-summary-confirm-disable'));
+            await UserSaver.disableUser(database, user);
             handleReturnClick();
-        }
+        });
     });
     const handleRemoveClick = useListener(async (evt) => {
-        if (await run(removeUser)) {
+        run(async () => {
+            await confirm(t('user-summary-confirm-delete'));
+            await UserSaver.removeUser(database, user);
             handleReturnClick();
-        }
+        });
     });
     const handleRestoreClick = useListener(async (evt) => {
-        await run(restoreUser);
+        run(async () => {
+            await confirm(t('user-summary-confirm-reactivate'));
+            await UserSaver.restoreUser(database, user);
+        });
     });
     const handleSaveClick = useListener(async (evt) => {
-        if (await draft.save()) {
-            if (creating) {
-                setAdding(true);
+        run(async () => {
+            try {
+                const problems = {};
+                if (!draft.get('username')) {
+                    problems.username = 'validation-required';
+                }
+                if (!draft.get('type')) {
+                    problems.type = 'validation-required';
+                }
+                setProblems(problems);
+                if (_.isEmpty(problems)) {
+                    const userAfter = await UserSaver.saveUSer(database, draft.current);
+                    payloads.dispatch(userAfter);
+
+                    // add user to member list if he's not there yet
+                    if (project && !_.includes(project.user_ids, userAfter.id)) {
+                        await ProjectSaver.addToUserList(database, project, userAfter.id);
+                    }
+
+                    warnDataLoss(false);
+                    if (creating) {
+                        setAdding(true);
+                    }
+                    route.replace({ editing: undefined, userID: userAfter.id });
+                }
+            } catch (err) {
+                if (err.statusCode === 409) {
+                    setProblems({ username: 'validation-duplicate-user-name' });
+                } else {
+                    throw err;
+                }
             }
-            route.replace({ editing: undefined, userID: draft.current.id });
-        }
+        });
     });
     const [ handleNameChange, handleUsernameChange ] = useAutogenID(draft, {
         titleKey: 'details.name',
@@ -178,6 +209,8 @@ function UserSummaryPageSync(props) {
         draft.update(`details.stackoverflow_url`, url);
     });
 
+    warnDataLoss(draft.changed);
+
     return (
         <div className="user-summary-page">
             {renderButtons()}
@@ -227,14 +260,14 @@ function UserSummaryPageSync(props) {
                 </div>
             );
         } else {
-            const { unsaved } = draft;
+            const { changed } = draft;
             return (
                 <div className="buttons">
                     <PushButton onClick={handleCancelClick}>
                         {t('user-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t(projectID ? 'user-summary-member-save' : 'user-summary-save')}
                     </PushButton>
                 </div>
@@ -549,67 +582,6 @@ function UserSummaryPageSync(props) {
                 </ErrorBoundary>
             </div>
         );
-    }
-
-    async function disableUser() {
-        await confirm(t('user-summary-confirm-disable'));
-        const changes = { id: user.id, disabled: true };
-        await db.saveOne({ table: 'user' }, changes);
-    }
-
-    async function removeUser() {
-        await confirm(t('user-summary-confirm-delete'));
-        const changes = { id: user.id, deleted: true };
-        await db.saveOne({ table: 'user' }, changes);
-    }
-
-    async function restoreUser() {
-        await confirm(t('user-summary-confirm-reactivate'));
-        const changes = { id: user.id, disabled: false, deleted: false };
-        await db.saveOne({ table: 'user' }, changes);
-    }
-
-    async function saveUser(base, ours) {
-        try {
-            validateUserInfo(ours);
-
-            const userAfter = await db.saveOne({ table: 'user' }, ours);
-            payloads.dispatch(userAfter);
-
-            if (project) {
-                // add user to member list if he's not there yet
-                const userIDs = project.user_ids;
-                if (!_.includes(userIDs, userAfter.id)) {
-                    const userIDsAfter = _.union(userIDs, [ userAfter.id ]);
-                    const changes = {
-                        id: project.id,
-                        user_ids: userIDsAfter
-                    };
-                    await db.saveOne({ table: 'project' }, changes);
-                }
-            }
-            return userAfter;
-        } catch (err) {
-            if (err.statusCode === 409) {
-                setProblems({ username: 'validation-duplicate-user-name' });
-                err = new Cancellation;
-            }
-            throw err;
-        }
-    }
-
-    function validateUserInfo(ours) {
-        const problems = {};
-        if (!ours.username) {
-            problems.username = 'validation-required';
-        }
-        if (!ours.type) {
-            problems.type = 'validation-required';
-        }
-        setProblems(problems);
-        if (!_.isEmpty(problems)) {
-            throw new Cancellation;
-        }
     }
 }
 

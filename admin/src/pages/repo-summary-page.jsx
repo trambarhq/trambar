@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
+import * as RepoSaver from 'common/objects/savers/repo-saver.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 
@@ -21,7 +22,9 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 // custom hooks
 import {
     useDraftBuffer,
+    useValidation,
     useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './repo-summary-page.scss';
@@ -31,14 +34,13 @@ async function RepoSummaryPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global' });
-    const currentUserID = await db.start()
-    const system = await SystemFinder.findSystem(db);
-    const repo = await RepoFinder.findRepo(db, repoID);
+    const currentUserID = await database.start()
+    const system = await SystemFinder.findSystem(database);
+    const repo = await RepoFinder.findRepo(database, repoID);
     render();
-    const project = await ProjectFinder.findProject(db, projectID);
+    const project = await ProjectFinder.findProject(database, projectID);
     render();
-    const statistics = await StatisticsFinder.findDailyActivitiesOfRepo(db, project, repo);
+    const statistics = await StatisticsFinder.findDailyActivitiesOfRepo(database, project, repo);
     render();
 
     function render() {
@@ -53,13 +55,15 @@ async function RepoSummaryPage(props) {
     const { t, p } = env.locale;
     const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !editing;
-    const [ error, run ] = useErrorCatcher();
-    const [ confirmationRef, confirm ] = useConfirmation();
     const [ show ] = useProgress();
     const draft = useDraftBuffer(editing, {
         original: repo,
-        save: saveRepo,
+        reset: readOnly,
     });
+    const [ error, run ] = useErrorCatcher();
+    const [ problems, reportProblems ] = useValidation();
+    const [ confirmationRef, confirm ] = useConfirmation();
+    const warnDataLoss = useDataLossWarning()
 
     const handleEditClick = useListener((evt) => {
         route.push({ editing: true });
@@ -70,19 +74,31 @@ async function RepoSummaryPage(props) {
     const handleReturnClick = useListener((evt) => {
         route.push('repo-list-page', { projectID: project.id });
     });
-    const handleRemoveClick = useListener(async (evt) => {
-        await run(removeRepo);
+    const handleRemoveClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('repo-summary-confirm-remove'));
+            await ProjectSaver.removeFromRepoList(database, project, repo.id);
+        });
     });
-    const handleRestoreClick = useListener(async (evt) => {
-        await run(restoreRepo);
+    const handleRestoreClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('repo-summary-confirm-restore'));
+            await ProjectSaver.addToRepoList(database, project, repo.id);
+        });
     });
-    const handleSaveClick = useListener(async (evt) => {
-        await run(draft.save);
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            await RepoSaver.saveRepo(database, draft.current);
+            warnDataLoss(false);
+            handleCancelClick();
+        });
     });
     const handleTitleChange = useListener((evt) => {
         const title = evt.target.value;
         draft.update('details.title', title);
     });
+
+    warnDataLoss(draft.changed);
 
     const { changed } = draft;
     const title = p(_.get(repo, 'details.title')) || _.get(repo, 'name');
@@ -216,33 +232,6 @@ async function RepoSummaryPage(props) {
                 </ErrorBoundary>
             </div>
         );
-    }
-
-    async function removeRepo() {
-        await confirm(t('repo-summary-confirm-remove'));
-
-        const repoIDs = _.difference(project.repo_ids, [ repo.id ]);
-        const changes = {
-            id: project.id,
-            repo_ids: repoIDs
-        };
-        await db.saveOne({ table: 'project' }, changes);
-    }
-
-    async function restoreRepo() {
-        await confirm(t('repo-summary-confirm-restore'));
-
-        const repoIDs = _.union(project.repo_ids, [ repo.id ]);
-        const changes = {
-            id: project.id,
-            repo_ids: repoIDs
-        };
-        await db.saveOne({ table: 'project' }, changes);
-    }
-
-    async function saveRepo(base, ours) {
-        const repoAfter = await db.saveOne({ table: 'repo' }, ours);
-        return repoAfter;
     }
 }
 

@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ServerFinder from 'common/objects/finders/server-finder.mjs';
+import * as ServerSaver from 'common/objects/savers/server-saver.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 
 // widgets
@@ -32,11 +33,10 @@ async function ServerListPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global' });
-    const currentUserID = await db.start();
-    const servers = await ServerFinder.findAllServers(db);
+    const currentUserID = await database.start();
+    const servers = await ServerFinder.findAllServers(database);
     render();
-    const users = await UserFinder.findActiveUsers(db);
+    const users = await UserFinder.findActiveUsers(database);
     render();
 
     function render() {
@@ -53,12 +53,11 @@ function ServerListPageSync(props) {
     const activeServers = filterServers(servers);
     const selection = useSelectionBuffer({
         original: _.map(activeServers, 'id'),
-        save: saveSelection,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
-    useDataLossWarning(route, env, confirm, () => selection.unsaved);
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
     const handleRowClick = useRowToggle(selection, 'data-server-id');
@@ -71,11 +70,28 @@ function ServerListPageSync(props) {
     const handleAddClick = useListener((evt) => {
         route.push('server-summary-page', { serverID: 'new' });
     });
-    const handleSaveClick = useListener(async (evt) => {
-        if (await run(selection.save)) {
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            const removal = _.filter(servers, (server) => {
+                return selection.removing(server.id);
+            });
+            const addition = _.filter(servers, (server) => {
+                return selection.adding(server.id);
+            });
+            if (removal.length > 0) {
+                await confirm(t('server-list-confirm-disable-$count', removal.length));
+            }
+            if (addition.length > 0) {
+                await confirm(t('server-list-confirm-reactivate-$count', addition.length));
+            }
+            await ServerSaver.disableServers(database, removal);
+            await ServerSaver.restoreServers(database, addition);
+            warnDataLoss(false);
             handleCancelClick();
-        }
+        });
     });
+
+    warnDataLoss(selection.changed);
 
     return (
         <div className="server-list-page">
@@ -88,7 +104,6 @@ function ServerListPageSync(props) {
     );
 
     function renderButtons() {
-        const { unsaved } = selection;
         if (readOnly) {
             const preselected = 'add';
             const empty = _.isEmpty(servers);
@@ -106,13 +121,14 @@ function ServerListPageSync(props) {
                 </div>
             );
         } else {
+            const { changed } = selection;
             return (
                 <div className="buttons">
                     <PushButton onClick={handleCancelClick}>
                         {t('server-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('server-list-save')}
                     </PushButton>
                 </div>
@@ -263,6 +279,7 @@ function ServerListPageSync(props) {
         } else {
             const props = {
                 users: findUsers(users, server),
+                disabled: selection.shown,
                 route,
                 env,
             };
@@ -279,36 +296,11 @@ function ServerListPageSync(props) {
         } else {
             const props = {
                 time: server.mtime,
+                disabled: selection.shown,
                 env,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
-    }
-
-    async function saveSelection() {
-        const changes = [];
-        let remove = 0, add = 0;
-        for (let server of servers) {
-            const columns = { id: server.id };
-            if (selection.remove(server.id)) {
-                columns.disabled = true;
-                remove++;
-            } else if (selection.adding(server.id)) {
-                columns.disabled = flags.deleted = false;
-                add++;
-            } else {
-                continue;
-            }
-            changes.push(columns);
-        }
-        if (remove) {
-            await confirm(t('server-list-confirm-disable-$count', remove));
-        }
-        if (add) {
-            await confirm(t('server-list-confirm-reactivate-$count', add));
-        }
-        const db = database.use({ schema: 'global' });
-        await db.save({ table: 'server' }, changes);
     }
 }
 

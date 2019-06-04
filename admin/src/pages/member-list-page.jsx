@@ -3,6 +3,7 @@ import React from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
 import * as RoleFinder from 'common/objects/finders/role-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
@@ -35,15 +36,14 @@ async function MemberListPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global' });
-    const currentUserID = await db.start();
-    const project = await ProjectFinder.findProject(db, projectID);
-    const users = await UserFinder.findExistingUsers(db);
+    const currentUserID = await database.start();
+    const project = await ProjectFinder.findProject(database, projectID);
+    const users = await UserFinder.findExistingUsers(database);
     render();
-    const roles = await RoleFinder.findRolesOfUsers(db, users);
+    const roles = await RoleFinder.findRolesOfUsers(database, users);
     render();
     const members = filterUsers(users, project);
-    const statistics = await StatisticsFinder.findDailyActivitiesOfUsers(db, project, members);
+    const statistics = await StatisticsFinder.findDailyActivitiesOfUsers(database, project, members);
     render();
 
     function render() {
@@ -61,12 +61,11 @@ function MemberListPageSync(props) {
     const membersPlus = filterUsers(users, project, true);
     const selection = useSelectionBuffer({
         original: _.map(members, 'id'),
-        save: saveUserSelection,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
-    useDataLossWarning(route, env, confirm, () => selection.unsaved);
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
     const handleRowClick = useRowToggle(selection, 'data-user-id');
@@ -80,16 +79,31 @@ function MemberListPageSync(props) {
         route.push('member-summary-page', { userID: 'new' });
     });
     const handleSaveClick = async (evt) => {
-        if (await run(selection.save)) {
+        run(async () => {
+            await ProjectSaver.updateMemberList(database, project, selection.current);
+            warnDataLoss(false);
             handleCancelClick();
-        }
+        });
     };
-    const handleApproveClick = useListener(async (evt) => {
-        await run(approvePendingUsers);
+    const handleApproveClick = useListener((evt) => {
+        run(async () => {
+            const pendingUsers = _.filter(users, (user) => {
+                return _.includes(user.requested_project_ids, project.id);
+            });
+            const pendingUserIDs = _.map(pendingUsers, 'id');
+            await ProjectSaver.addToMemberList(database, project, pendingUserIDs);
+        });
     });
-    const handleRejectClick = useListener(async(evt) => {
-        await run(rejectPendingUsers);
+    const handleRejectClick = useListener((evt) => {
+        run(async () => {
+            const pendingUsers = _.filter(users, (user) => {
+                return _.includes(user.requested_project_ids, project.id);
+            });
+            await UserSaver.removeRequestedProject(database, pendingUsers, project.id);
+        });
     });
+
+    warnDataLoss(selection.changed);
 
     return (
         <div className="member-list-page">
@@ -102,19 +116,7 @@ function MemberListPageSync(props) {
     );
 
     function renderButtons() {
-        if (editing) {
-            return (
-                <div key="edit" className="buttons">
-                    <PushButton onClick={handleCancelClick}>
-                        {t('member-list-cancel')}
-                    </PushButton>
-                    {' '}
-                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
-                        {t('member-list-save')}
-                    </PushButton>
-                </div>
-            );
-        } else {
+        if (readOnly) {
             const membersPending = _.size(membersPlus) > _.size(members);
             const preselected = (membersPending) ? 'approve' : 'add';
             return (
@@ -133,6 +135,19 @@ function MemberListPageSync(props) {
                     {' '}
                     <PushButton className="emphasis" onClick={handleEditClick}>
                         {t('member-list-edit')}
+                    </PushButton>
+                </div>
+            );
+        } else {
+            const { changed } = selection;
+            return (
+                <div key="edit" className="buttons">
+                    <PushButton onClick={handleCancelClick}>
+                        {t('member-list-cancel')}
+                    </PushButton>
+                    {' '}
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
+                        {t('member-list-save')}
                     </PushButton>
                 </div>
             );
@@ -368,44 +383,6 @@ function MemberListPageSync(props) {
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
-    }
-
-    async function saveUserSelection(base, ours) {
-        const existingUserIDs = _.map(users, 'id');
-        const columns = {
-            id: project.id,
-            user_ids: ours,
-        };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'project' }, columns);
-    }
-
-    async function approvePendingUsers() {
-        const pendingUsers = _.filter(users, (user) => {
-            return _.includes(user.requested_project_ids, project.id);
-        });
-        const pendingUserIDs = _.map(pendingUsers, 'id');
-        const userIDs = _.union(selection.original, pendingUserIDs);
-        const changes = {
-            id: project.id,
-            user_ids: userIDs,
-        };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'project' }, changes);
-    }
-
-    async function rejectPendingUsers() {
-        const pendingUsers = _.filter(users, (user) => {
-            return _.includes(user.requested_project_ids, project.id);
-        });
-        const changes = _.map(pendingUsers, (user) => {
-            return {
-                id: user.id,
-                requested_project_ids: _.without(user.requested_project_ids, project.id),
-            };
-        });
-        const db = database.use({ schema: 'global' });
-        await db.save({ table: 'user' }, changes);
     }
 }
 

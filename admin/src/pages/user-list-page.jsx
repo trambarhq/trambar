@@ -36,13 +36,12 @@ async function UserListPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global' });
-    const currentUserID = await db.start();
-    const users = await UserFinder.findAllUsers(db);
+    const currentUserID = await database.start();
+    const users = await UserFinder.findAllUsers(database);
     render();
-    const projects = await ProjectFinder.findProjectsWithMembers(db, users);
+    const projects = await ProjectFinder.findProjectsWithMembers(database, users);
     render();
-    const roles = await RoleFinder.findRolesOfUsers(db, users);
+    const roles = await RoleFinder.findRolesOfUsers(database, users);
     render();
 
     function render() {
@@ -59,12 +58,11 @@ function UserListPageSync(props) {
     const activeUsers = filterUsers(users);
     const selection = useSelectionBuffer({
         original: _.map(activeUsers, 'id'),
-        save: saveUserSelection,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
-    useDataLossWarning(route, env, confirm, () => selection.changed);
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
     const handleRowClick = useRowToggle(selection, 'data-user-id');
@@ -78,10 +76,27 @@ function UserListPageSync(props) {
         route.push('user-summary-page', { userID: 'new' });
     });
     const handleSaveClick = useListener(async (evt) => {
-        if (await run(selection.save)) {
+        run(async () => {
+            const removal = _.filter(users, (user) => {
+                return selection.removing(user.id);
+            });
+            const addition = _.filter(users, (user) => {
+                return selection.adding(user.id);
+            });
+            if (removal.length > 0) {
+                await confirm(t('user-list-confirm-disable-$count', removal.length));
+            }
+            if (addition.length > 0) {
+                await confirm(t('user-list-confirm-reactivate-$count', addition.length));
+            }
+            await UserSaver.disableUsers(databse, removal);
+            await UserSaver.restoreUsers(databse, addition);
+            warnDataLoss(false);
             handleCancelClick();
-        }
+        });
     });
+
+    warnDataLoss(selection.changed);
 
     return (
         <div className="user-list-page">
@@ -320,32 +335,6 @@ function UserListPageSync(props) {
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
-    }
-
-    async function saveUserSelection() {
-        const changes = [];
-        let remove = 0, add = 0;
-        for (let user of users) {
-            const columns = { id: user.id };
-            if (selection.removing(user.id)) {
-                columns.disabled = true;
-                remove++;
-            } else if (selection.adding(user.id)) {
-                columns.disabled = columns.deleted = false;
-                add++;
-            } else {
-                continue;
-            }
-            changes.push(columns);
-        }
-        if (remove) {
-            await confirm(t('user-list-confirm-disable-$count', remove));
-        }
-        if (add) {
-            await confirm(t('user-list-confirm-reactivate-$count', add));
-        }
-        const db = database.use({ schema: 'global' });
-        await db.save({ table: 'user' }, changes);
     }
 }
 

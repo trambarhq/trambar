@@ -2,6 +2,7 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
+import * as SystemSaver from 'common/objects/savers/system-saver.mjs';
 import * as SystemSettings from 'common/objects/settings/system-settings.mjs';
 
 // widgets
@@ -16,6 +17,9 @@ import { UnexpectedError } from '../widgets/unexpected-error.jsx';
 // custom hooks
 import {
     useDraftBuffer,
+    useValidation,
+    useConfirmation,
+    useDataLossWarning,
 } from '../hooks.mjs';
 
 import './settings-page.scss';
@@ -25,9 +29,8 @@ async function SettingsPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global', by: this });
-    const currentUserID = await db.start();
-    const system = await SystemFinder.findSystem(db);
+    const currentUserID = await database.start();
+    const system = await SystemFinder.findSystem(database);
     render();
 
     function render() {
@@ -42,14 +45,14 @@ function SettingsPageSync(props) {
     const { t, p, directory } = env.locale;
     const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !editing;
-    const [ problems, setProblems ] = useState({});
     const draft = useDraftBuffer({
         original: system,
         prefill: getDefaultSystem,
-        save: saveSystem,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
+    const [ confirmationRef, confirm ] = useConfirmation();
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
@@ -57,10 +60,13 @@ function SettingsPageSync(props) {
     const handleCancelClick = useListener((evt) => {
         route.replace({ editing: false });
     });
-    const handleSaveClick = useListener(async (evt) => {
-        if (await run(draft.save)) {
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            const systemAfter = await SystemSaver.saveSystem(database, draft.current);
+            payloads.dispatch(systemAfter);
+            warnDataLoss(false);
             handleCancelClick();
-        }
+        });
     });
     const handleTitleChange = useListener((evt) => {
         const title = evt.target.value;
@@ -93,6 +99,8 @@ function SettingsPageSync(props) {
         draft.update('settings.input_languages', list);
     });
 
+    warnDataLoss(draft.changed);
+
     return (
         <div className="settings-page">
             {renderButtons()}
@@ -104,7 +112,6 @@ function SettingsPageSync(props) {
     );
 
     function renderButtons() {
-        const { unsaved } = draft;
         if (readOnly) {
             // using keys here to force clearing of focus
             return (
@@ -115,13 +122,14 @@ function SettingsPageSync(props) {
                 </div>
             );
         } else {
+            const { changed } = draft;
             return (
                 <div key="edit" className="buttons">
                     <PushButton onClick={handleCancelClick}>
                         {t('settings-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('settings-save')}
                     </PushButton>
                 </div>
@@ -290,32 +298,25 @@ function SettingsPageSync(props) {
             </div>
         );
     }
+}
 
-    function getDefaultSystem(base) {
-        if (_.isEmpty(base)) {
-            // use timezone to determine default relay
-            const tzOffset = (new Date()).getTimezoneOffset() / 60;
-            let defaultRelay;
-            if (-5 <= tzOffset && tzOffset <= 0) {
-                defaultRelay = 'https://eu-west-1.push.trambar.io';
-            } else {
-                defaultRelay = 'https://us-east-1.push.trambar.io';
-            }
-            return {
-                details: {},
-                settings: {
-                    address: window.location.protocol + '//' + window.location.host,
-                    push_relay: defaultRelay,
-                }
-            };
+function getDefaultSystem(base) {
+    if (_.isEmpty(base)) {
+        // use timezone to determine default relay
+        const tzOffset = (new Date()).getTimezoneOffset() / 60;
+        let defaultRelay;
+        if (-5 <= tzOffset && tzOffset <= 0) {
+            defaultRelay = 'https://eu-west-1.push.trambar.io';
+        } else {
+            defaultRelay = 'https://us-east-1.push.trambar.io';
         }
-    }
-
-    async function saveSystem(base, ours) {
-        const db = database.use({ schema: 'global', by: this });
-        const systemAfter = await db.saveOne({ table: 'system' }, ours);
-        payloads.dispatch(systemAfter);
-        return systemAfter;
+        return {
+            details: {},
+            settings: {
+                address: window.location.protocol + '//' + window.location.host,
+                push_relay: defaultRelay,
+            }
+        };
     }
 }
 

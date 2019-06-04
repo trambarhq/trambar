@@ -15,7 +15,6 @@ async function SignOffMenu(props) {
     const { database, route, env } = props;
     const { t } = env.locale;
     const [ show ] = useProgress();
-    const db = database.use({ schema: 'global', by: this });
 
     const handleSignOff = useListener((evt) => {
         database.endSession();
@@ -23,14 +22,14 @@ async function SignOffMenu(props) {
 
     render();
     let user;
-    if (db.authorized) {
-        const currentUserID = await db.start();
-        user = await UserFinder.findUser(db, currentUserID);
+    if (database.authorized) {
+        const currentUserID = await database.start();
+        user = await UserFinder.findUser(database, currentUserID);
         render();
     }
 
     function render() {
-        if (!db.authorized) {
+        if (!database.authorized) {
             show(null);
         } else {
             const url = (user) ? route.find('user-summary-page', { userID: user.id }) : undefined;

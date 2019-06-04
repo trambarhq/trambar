@@ -1,9 +1,10 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener } from 'relaks';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as MediaLoader from 'common/media/media-loader.mjs';
 import * as PictureFinder from 'common/objects/finders/picture-finder.mjs';
+import * as PictureSaver from 'common/objects/savers/picture-saver.mjs';
 
 // widgets
 import { Overlay } from 'common/widgets/overlay.jsx';
@@ -16,12 +17,12 @@ async function ImageAlbumDialogBox(props) {
     const { database, env, payloads, image, purpose } = props;
     const { onSelect, onCancel } = props;
     const { t } = env.locale;
-    const db = database.use({ schema: 'global', by: this });
     const [ show ] = useProgress();
     const [ managingImages, setManagingImages ] = useState(false);
     const [ selectedPictureID, setSelectedPictureID ] = useState(0);
     const [ deletionCandidateIDs, setDeletionCandidateIDs ] = useState([]);
     const [ isDropTarget, setIsDropTarget ] = useState(false);
+    const [ error, run ] = useErrorCatcher();
 
     const handleManageClick = useListener((evt) => {
         setManagingImages(true);
@@ -36,17 +37,16 @@ async function ImageAlbumDialogBox(props) {
         }
     });
     const handleSelectClick = useListener((evt) => {
-        const selectedPicture = getSelectedPicture();
+        const selectedPicture = _.find(pictures, { id: selectedPictureID });
         if (onSelect && selectedPicture) {
             onSelect({ image: selectedPicture.details });
         }
     });
-    const handleUploadChange = useListener(async (evt) => {
+    const handleUploadChange = useListener((evt) => {
         // make copy of array since it'll disappear when event handler exits
-        const files = _.slice(evt.target.files);
-        if (files.length) {
-            await uploadPictures(files);
-        }
+        run(async () => {
+            await PictureSaver.uploadPictures(database, payloads, evt.target.files);
+        });
     });
     const handleDragEnter = useListener((evt) => {
         setIsDropTarget(true);
@@ -58,19 +58,35 @@ async function ImageAlbumDialogBox(props) {
         // allow drop
         evt.preventDefault();
     });
-    const handleDrop = useListener(async (evt) => {
-        const files = _.slice(evt.dataTransfer.files);
-        evt.preventDefault();
-        await uploadPictures(files);
+    const handleDrop = useListener((evt) => {
+        run(async () => {
+            evt.preventDefault();
+            await PictureSaver.uploadPictures(database, payloads, evt.dataTransfer.files);
+        });
         setIsDropTarget(false);
     });
-    const handleRemoveClick = useListener(async (evt) => {
-        await removePictures();
-        setDeletionCandidateIDs([]);
+    const handleRemoveClick = useListener((evt) => {
+        run(async () => {
+            const removal = _.filter(pictures, (picture) => {
+                return _.includes(deletionCandidateIDs, picture.id);
+            });
+            await PictureSaver.removePictures(database, removal);
+            setDeletionCandidateIDs([]);
+        });
     });
     const handleImageClick = useListener((evt) => {
         let pictureID = parseInt(evt.currentTarget.getAttribute('data-picture-id'));
-        selectPicture(pictureID);
+        if (managingImages) {
+            const newList = _.toggle(deletionCandidateIDs, pictureID);
+            setDeletionCandidateIDs(newList);
+        } else {
+            const picture = _.find(pictures, { id: pictureID });
+            if (!picture || (image && picture.url === image.url)) {
+                setSelectedPictureID(0);
+            } else {
+                setSelectedPictureID(pictureID);
+            }
+        }
     });
 
     render();
@@ -198,63 +214,6 @@ async function ImageAlbumDialogBox(props) {
             onDrop: handleDrop,
         };
         return <div {...props} />;
-    }
-
-    function selectPicture(pictureID) {
-        if (managingImages) {
-            const newList = _.toggle(deletionCandidateIDs, pictureID);
-            setDeletionCandidateIDs(newList);
-        } else {
-            const picture = _.find(pictures, { id: pictureID });
-            if (!picture || (image && picture.url === image.url)) {
-                setSelectedPictureID(0);
-            } else {
-                setSelectedPictureID(pictureID);
-            }
-        }
-    }
-
-    function getSelectedPicture() {
-        return _.find(pictures, { id: selectedPictureID });
-    }
-
-    async function uploadPictures(files) {
-        const currentUserID = await db.start();
-        const newPictures = [];
-        // create a picture object for each file, attaching payloads to them
-        for (let file of files) {
-            if (/^image\//.test(file.type)) {
-                const payload = payloads.add('image').attachFile(file);
-                const meta = await MediaLoader.getImageMetadata(file);
-                newPictures.push({
-                    purpose,
-                    user_id: currentUserID,
-                    details: {
-                        payload_token: payload.id,
-                        width: meta.width,
-                        height: meta.height,
-                        format: meta.format,
-                    },
-                });
-            }
-        }
-        // save picture objects
-        const savedPictures = await db.save({ table: 'picture' }, newPictures);
-        for (let savedPicture of savedPictures) {
-            // send the payload
-            payloads.dispatch(savedPicture);
-        }
-    }
-
-    async function removePictures() {
-        const selectedPictures = _.filter(pictures, (picture) => {
-            return _.includes(deletionCandidateIDs, picture.id);
-        });
-        const currentUserID = await db.start();
-        const changes = _.map(selectedPictures, (picture) => {
-            return { id: picture.id, deleted: true };
-        });
-        await db.save({ table: 'picture' }, changes);
     }
 }
 

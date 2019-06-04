@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import Relaks, { useProgress, useListener, useErrorCatcher, Cancellation } from 'relaks';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
 import * as ProjectSettings from 'common/objects/settings/project-settings.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
@@ -24,6 +25,7 @@ import { ErrorBoundary } from 'common/widgets/error-boundary.jsx';
 import {
     useDraftBuffer,
     useAutogenID,
+    useValidation,
     useConfirmation,
     useDataLossWarning,
 } from '../hooks.mjs';
@@ -36,13 +38,12 @@ async function ProjectSummaryPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global' });
-    const currentUserID = await db.start();
-    const system = await SystemFinder.findSystem(db);
+    const currentUserID = await database.start();
+    const system = await SystemFinder.findSystem(database);
     render();
-    const project = (!creating) ? await ProjectFinder.findProject(db, projectID) : null;
+    const project = (!creating) ? await ProjectFinder.findProject(database, projectID) : null;
     render();
-    const statistics = (!creating) ? await StatisticsFinder.findDailyActivitiesOfProject(db, project) : null;
+    const statistics = (!creating) ? await StatisticsFinder.findDailyActivitiesOfProject(database, project) : null;
     render();
 
     function render() {
@@ -58,15 +59,14 @@ function ProjectSummaryPageSync(props) {
     const availableLanguageCodes = _.get(system, 'settings.input_languages', []);
     const readOnly = !(editing || creating);
     const [ adding, setAdding ] = useState(false);
-    const [ problems, setProblems ] = useState({});
     const draft = useDraftBuffer({
         original: project || {},
-        save: saveProject,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
+    const [ problems, reportProblems ] = useValidation();
     const [ confirmationRef, confirm ] = useConfirmation();
-    useDataLossWarning(route, env, confirm, () => draft.unsaved);
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const handleEditClick = useListener((evt) => {
         route.replace({ editing: true });
@@ -80,26 +80,54 @@ function ProjectSummaryPageSync(props) {
     const handleReturnClick = useListener((evt) => {
         route.push('project-list-page');
     });
-    const handleArchiveClick = useListener(async (evt) => {
-        if (await run(archiveProject)) {
+    const handleArchiveClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('project-summary-confirm-archive'));
+            await ProjectSaver.archiveProject(database, project);
             handleReturnClick();
-        }
+        });
     });
-    const handleRemoveClick = useListener(async (evt) => {
-        if (await run(removeProject)) {
+    const handleRemoveClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('project-summary-confirm-delete'));
+            await ProjectSaver.removeProject(database, project);
             handleReturnClick();
-        }
+        });
     });
-    const handleRestoreClick = useListener(async (evt) => {
-        await run(restoreProject);
+    const handleRestoreClick = useListener((evt) => {
+        run(async () => {
+            await confirm(t('project-summary-confirm-restore'));
+            await ProjectSaver.restoreProject(database, project);
+        });
     });
-    const handleSaveClick = useListener(async (evt) => {
-        if (await draft.save()) {
-            if (creating) {
-                setAdding(true);
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            try {
+                const problems = {};
+                const reservedNames = [ 'global', 'admin', 'public', 'srv' ];
+                const name = draft.get('name');
+                if (!name) {
+                    problems.name = 'validation-required';
+                } else if (_.includes(reservedNames, name)) {
+                    problems.name = 'validation-illegal-project-name';
+                }
+                reportProblems(problems);
+
+                const projectAfter = await ProjectSaver.saveProject(database, draft.current);
+                payloads.dispatch(projectAfter);
+                if (creating) {
+                    setAdding(true);
+                }
+                warnDataLoss(false);
+                route.replace({ editing: undefined, projectID: projectAfter.id });
+            } catch (err) {
+                if (err.statusCode === 409) {
+                    reportProblems({ name: 'validation-duplicate-project-name' });
+                } else {
+                    throw err;
+                }
             }
-            route.replace({ editing: undefined, projectID: draft.current.id });
-        }
+        });
     });
     const [ handleTitleChange, handleNameChange ] = useAutogenID(draft, {
         titleKey: 'details.title',
@@ -123,6 +151,8 @@ function ProjectSummaryPageSync(props) {
         const opts = toggleOption(optsBefore, accessControlOptions, evt.name);
         draft.update('settings.access_control', opts);
     });
+
+    warnDataLoss(draft.changed);
 
     const title = p(draft.get('details.title')) || draft.get('name');
     return (
@@ -173,14 +203,14 @@ function ProjectSummaryPageSync(props) {
                 </div>
             );
         } else {
-            const { unsaved } = draft;
+            const { changed } = draft;
             return (
                 <div key="edit" className="buttons">
                     <PushButton onClick={handleCancelClick}>
                         {t('project-summary-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('project-summary-save')}
                     </PushButton>
                 </div>
@@ -348,58 +378,6 @@ function ProjectSummaryPageSync(props) {
                 </ErrorBoundary>
             </div>
         );
-    }
-
-    async function archiveProject() {
-        await confirm(t('project-summary-confirm-archive'));
-        const changes = { id: project.id, archived: true };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'project' }, changes);
-    }
-
-    async function removeProject() {
-        await confirm(t('project-summary-confirm-delete'));
-        const changes = { id: project.id, deleted: true };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'project' }, changes);
-    }
-
-    async function restoreProject() {
-        await confirm(t('project-summary-confirm-restore'));
-        const changes = { id: project.id, disabled: true, deleted: true };
-        const db = database.use({ schema: 'global' });
-        await db.saveOne({ table: 'project' }, changes);
-    }
-
-    async function saveProject(base, ours) {
-        try {
-            validateProjectInfo(ours);
-
-            const db = database.use({ schema: 'global' });
-            const projectAfter = await db.saveOne({ table: 'project' }, ours);
-            payloads.dispatch(projectAfter);
-            return projectAfter;
-        } catch (err) {
-            if (err.statusCode === 409) {
-                setProblems({ name: 'validation-duplicate-project-name' });
-                err = new Cancellation;
-            }
-            throw err;
-        }
-    }
-
-    function validateProjectInfo(ours) {
-        const name = _.toLower(_.trim(ours.name));
-        const reservedNames = [ 'global', 'admin', 'public', 'srv' ];
-        if (!name) {
-            problems.name = 'validation-required';
-        } else if (_.includes(reservedNames, name)) {
-            problems.name = 'validation-illegal-project-name';
-        }
-        setProblems(problems);
-        if (!_.isEmpty(problems)) {
-            throw new Cancellation;
-        }
     }
 }
 

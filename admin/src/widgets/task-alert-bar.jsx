@@ -15,7 +15,6 @@ async function TaskAlertBar(props) {
     const { t } = env.locale;
     const [ lastErrorTime, setLastErrorTime ] = useState(localStorage.last_error_time);
     const [ show ] = useProgress();
-    const db = database.use({ schema: 'global', by: this });
 
     const handleClick = useListener((evt) => {
         if (selectedTask.failed) {
@@ -27,11 +26,11 @@ async function TaskAlertBar(props) {
     render();
     let selectedTask;
     try {
-        const currentUserID = await db.start();
+        const currentUserID = await database.start();
         const activeStartTime = Moment().subtract(8, 'hour').toISOString();
         const failureStartTime = lastErrorTime || Moment().subtract(7, 'day').toISOString();
-        const activeTask = await TaskFinder.findActiveTask(db, activeStartTime);
-        const failedTask = await TaskFinder.findFailedTask(db, failureStartTime);
+        const activeTask = await TaskFinder.findActiveTask(database, activeStartTime);
+        const failedTask = await TaskFinder.findFailedTask(database, failureStartTime);
         selectedTask = activeTask || failedTask;
     } catch (err) {
         if (err.statusCode !== 401) {

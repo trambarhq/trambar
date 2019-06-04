@@ -3,6 +3,7 @@ import React, { useRef } from 'react';
 import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
+import * as ProjectSaver from 'common/objects/savers/project-saver.mjs';
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
 import * as StatisticsFinder from 'common/objects/finders/statistics-finder.mjs';
@@ -35,15 +36,14 @@ async function ProjectListPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use({ schema: 'global' });
-    const currentUserID = await db.start();
-    const projects = await ProjectFinder.findAllProjects(db);
+    const currentUserID = await database.start();
+    const projects = await ProjectFinder.findAllProjects(database);
     render();
-    const repos = await RepoFinder.findProjectRepos(db, projects);
+    const repos = await RepoFinder.findProjectRepos(database, projects);
     render();
-    const users = await UserFinder.findProjectMembers(db, projects);
+    const users = await UserFinder.findProjectMembers(database, projects);
     render();
-    const statistics = await StatisticsFinder.findDailyActivitiesOfProjects(db, projects);
+    const statistics = await StatisticsFinder.findDailyActivitiesOfProjects(database, projects);
     render();
 
     function render() {
@@ -60,12 +60,11 @@ function ProjectListPageSync(props) {
     const activeProjects = filterProjects(projects);
     const selection = useSelectionBuffer({
         original: _.map(activeProjects, 'id'),
-        save: saveProjectSelection,
         reset: readOnly,
     });
     const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
-    useDataLossWarning(route, env, confirm, () => selection.unsaved);
+    const warnDataLoss = useDataLossWarning(route, env, confirm);
 
     const [ sort, handleSort ] = useSortHandler();
     const handleRowClick = useRowToggle(selection, 'data-project-id');
@@ -78,11 +77,28 @@ function ProjectListPageSync(props) {
     const handleAddClick = useListener((evt) => {
         route.push('project-summary-page', { editing: true, projectID: 'new' });
     });
-    const handleSaveClick = useListener(async (evt) => {
-        if (await run(selection.save)) {
+    const handleSaveClick = useListener((evt) => {
+        run(async () => {
+            const removal = _.filter(projects, (project) => {
+                return selection.removing(project.id);
+            });
+            const addition = _.filter(projects, (project) => {
+                return selection.adding(project.id);
+            });
+            if (removal.length > 0) {
+                await confirm(t('project-list-confirm-archive-$count', removal.length));
+            }
+            if (addition.length > 0) {
+                await confirm(t('project-list-confirm-restore-$count', addition.length));
+            }
+            await ProjectSaver.archiveProjects(database, removal);
+            await ProjectSaver.restoreProjects(database, addition);
+            warnDataLoss(false);
             handleCancelClick();
-        }
+        })
     });
+
+    warnDataLoss(selection.changed);
 
     return (
         <div className="project-list-page">
@@ -111,14 +127,14 @@ function ProjectListPageSync(props) {
                 </div>
             );
         } else {
-            const { unsaved } = selection;
+            const { changed } = selection;
             return (
                 <div className="buttons">
                     <PushButton onClick={handleCancelClick}>
                         {t('project-list-cancel')}
                     </PushButton>
                     {' '}
-                    <PushButton className="emphasis" disabled={!unsaved} onClick={handleSaveClick}>
+                    <PushButton className="emphasis" disabled={!changed} onClick={handleSaveClick}>
                         {t('project-list-save')}
                     </PushButton>
                 </div>
@@ -242,6 +258,7 @@ function ProjectListPageSync(props) {
         } else {
             const props = {
                 users: findUsers(users, project),
+                disabled: selection.shown,
                 project,
                 route,
                 env,
@@ -259,6 +276,7 @@ function ProjectListPageSync(props) {
         } else {
             const props = {
                 repos: findRepos(repos, project),
+                disabled: selection.shown,
                 project,
                 route,
                 env,
@@ -294,6 +312,7 @@ function ProjectListPageSync(props) {
         } else {
             const props = {
                 statistics: _.get(statistics, [ project.id, 'last_month' ]),
+                disabled: selection.shown,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -309,6 +328,7 @@ function ProjectListPageSync(props) {
         } else {
             const props = {
                 statistics: _.get(statistics, [ project.id, 'this_month' ]),
+                disabled: selection.shown,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -324,6 +344,7 @@ function ProjectListPageSync(props) {
         } else {
             const props = {
                 statistics: _.get(statistics, [ project.id, 'to_date' ]),
+                disabled: selection.shown,
                 env,
             };
             return <td><ActivityTooltip {...props} /></td>;
@@ -339,36 +360,11 @@ function ProjectListPageSync(props) {
         } else {
             const props = {
                 time: project.mtime,
+                disabled: selection.shown,
                 env,
             };
             return <td><ModifiedTimeTooltip {...props} /></td>;
         }
-    }
-
-    async function saveProjectSelection() {
-        const changes = [];
-        let remove = 0, add = 0;
-        for (let project of projects) {
-            const columns = { id: project.id };
-            if (selection.removing(project.id)) {
-                columns.archived = true;
-                remove++;
-            } else if (selection.adding(project.id)) {
-                columns.archived = columns.deleted = false;
-                add++;
-            } else {
-                continue;
-            }
-            changes.push(columns);
-        }
-        if (remove) {
-            await confirm(t('project-list-confirm-archive-$count', remove));
-        }
-        if (add) {
-            await confirm(t('project-list-confirm-restore-$count', add));
-        }
-        const db = database.use({ schema: 'global' });
-        await db.save({ table: 'project' }, changes);
     }
 }
 

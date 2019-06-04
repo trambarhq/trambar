@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
-import Relaks, { useProgress, useListener } from 'relaks';
+import Relaks, { useProgress, useListener, useErrorCatcher } from 'relaks';
 import Moment from 'moment';
 import * as HTTPRequest from 'common/transport/http-request.mjs';
 
@@ -17,10 +17,9 @@ async function SignInPage(props) {
     const [ username, setUsername ] = useState('');
     const [ password, setPassowrd ] = useState('');
     const [ submitting, setSubmitting ] = useState(false);
-    const [ problem, setProblem ] = useState();
-    const [ errors, setError ] = useState({});
+    const [ error, run ] = useErrorCatcher();
+    const [ oauthErrors, setOAuthErrors ] = useState({});
     const [ savedCredentials, setSavedCredentials ] = useState(false);
-    const db = database.use({ by: this });
 
     const handleOAuthButtonClick = useListener(async (evt) => {
         evt.preventDefault();
@@ -29,11 +28,11 @@ async function SignInPage(props) {
         try {
             // retrieve authorization object from server
             await openPopUpWindow(url);
-            await db.checkAuthorization();
+            await database.checkAuthorization();
         } catch (err) {
-            const newErrors = _.clone(errors);
+            const newErrors = _.clone(oauthErrors);
             newErrors[serverID] = err;
-            setErrors(newErrors);
+            setOAuthErrors(newErrors);
         }
     });
     const handleUsernameChange = useListener((evt) => {
@@ -44,30 +43,22 @@ async function SignInPage(props) {
         const text = evt.target.value;
         setPassowrd(text);
     });
-    const handleFormSubmit = useListener(async (evt) => {
+    const handleFormSubmit = useListener((evt) => {
         evt.preventDefault();
-        if (!canSubmitForm()) {
+        const valid = !_.trim(username) && !_.trim(password);
+        if (!valid) {
             return;
         }
-        setSubmitting(true);
-        try {
+        run(async () => {
+            setSubmitting(true);
             const credentials = {
                 type: 'password',
                 username,
                 password,
             };
-            await db.authenticate(credentials);
-        } catch (err) {
-            let problem;
-            switch (err.statusCode) {
-                case 401: problem = 'incorrect-username-password'; break;
-                case 403: problem = 'no-support-for-username-password'; break;
-                default: problem = 'unexpected-error';
-            }
-            setProblem(problem);
-        } finally {
+            await database.authenticate(credentials);
             setSubmitting(false);
-        }
+        });
     });
     useEffect(() => {
         setTimeout(() => {
@@ -80,7 +71,7 @@ async function SignInPage(props) {
     }, []);
 
     render();
-    const { system, servers } = await db.beginSession('admin');
+    const { system, servers } = await database.beginSession('admin');
     render();
 
     function render() {
@@ -93,7 +84,6 @@ async function SignInPage(props) {
     }
 
     function renderForm() {
-        const valid = canSubmitForm();
         const title = p(_.get(system, 'details.title'));
         const usernameProps = {
             id: 'username',
@@ -111,24 +101,25 @@ async function SignInPage(props) {
             env,
             onChange: handlePasswordChange,
         };
-        let buttonDisabled = !valid;
+        const valid = !_.trim(username) && !_.trim(password);
+        let disabled = !valid;
         if (savedCredentials) {
             // don't disable the button, since the browser will immediately
             // set the password on user action
-            buttonDisabled = false;
+            disabled = false;
         }
         if (submitting) {
-            buttonDisabled = true;
+            disabled = true;
         }
         return (
             <section>
                 <h2>{t('sign-in-$title', title)}</h2>
                 <form onSubmit={handleFormSubmit}>
-                    {renderProblem()}
+                    {renderError()}
                     <TextField {...usernameProps}>{t('sign-in-username')}</TextField>
                     <TextField {...passwordProps}>{t('sign-in-password')}</TextField>
                     <div className="button-row">
-                        <PushButton disabled={buttonDisabled}>
+                        <PushButton disabled={disabled}>
                             {t('sign-in-submit')}
                         </PushButton>
                     </div>
@@ -137,9 +128,15 @@ async function SignInPage(props) {
         );
     }
 
-    function renderProblem() {
-        if (!problem) {
+    function renderError() {
+        if (!error) {
             return null;
+        }
+        let problem;
+        switch (err.statusCode) {
+            case 401: problem = 'incorrect-username-password'; break;
+            case 403: problem = 'no-support-for-username-password'; break;
+            default: problem = 'unexpected-error';
         }
         return (
             <div className="error">
@@ -175,7 +172,7 @@ async function SignInPage(props) {
             onClick: handleOAuthButtonClick,
             'data-id': server.id,
         };
-        const error = errors[server.id];
+        const error = oauthErrors[server.id];
         let text = name;
         if (error) {
             text = t(`sign-in-error-${error.reason}`);
@@ -189,16 +186,6 @@ async function SignInPage(props) {
                 <span className="label">{text}</span>
             </a>
         );
-    }
-
-    function canSubmitForm() {
-        if (!_.trim(username)) {
-            return false;
-        }
-        if (!_.trim(password)) {
-            return false;
-        }
-        return true;
     }
 }
 

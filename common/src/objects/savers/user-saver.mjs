@@ -1,0 +1,81 @@
+const schema = 'global';
+const table = 'user';
+
+async function saveUsers(db, users) {
+    const usersAfter = await db.save({ schema, table }, users);
+    return usersAfter;
+}
+
+async function saveUser(db, user) {
+    const [ userAfter ] = await saveUsers(db, [ user ]);
+    return userAfter;
+}
+
+async function removeUsers(db, users) {
+    const changes = _.map(users, (user) => {
+        return { id: user.id, deleted: true };
+    });
+    return saveUsers(db, changes);
+}
+
+async function removeUser(db, user) {
+    const [ userAfter ] = await removeUsers(db, [ user ]);
+    return userAfter;
+}
+
+async function disableUsers(db, users) {
+    const changes = _.map(users, (user) => {
+        return { id: user.id, disabled: true };
+    });
+    return saveUsers(db, changes);
+}
+
+async function disableUser(db, user) {
+    const [ userAfter ] = await disableUsers(db, [ user ]);
+    return userAfter;
+}
+
+async function restoreUsers(db, users) {
+    const changes = _.map(users, (user) => {
+        return { id: user.id, deleted: false, disabled: false };
+    });
+    return saveUsers(db, changes);
+}
+
+async function restoreUser(db, user) {
+    const [ userAfter ] = await restoreUsers(db, [ user ]);
+    return userAfter;
+}
+
+async function addToRoleLists(db, users, roleID) {
+    const changes = _.map(users, (user) => {
+        return {
+            id: user.id,
+            role_ids: _.union(user.role_ids, [ roleID ])
+        };
+    });
+    return saveUsers(db, changes);
+}
+
+async function removeFromRoleLists(db, users, roleID) {
+    const changes = _.map(users, (user) => {
+        return {
+            id: user.id,
+            role_ids: _.difference(user.role_ids, [ roleID ])
+        };
+    });
+    return saveUsers(db, changes);
+}
+
+export {
+    saveUsers,
+    saveUser,
+    removeUsers,
+    removeUser,
+    disableUsers,
+    disableUser,
+    restoreUsers,
+    restoreUser,
+    addToRoleLists,
+    removeFromRoleLists,
+};

@@ -1,4 +1,5 @@
 import React from 'react';
+import Cancellation from 'common/errors/cancellation.mjs';
 
 import './unexpected-error.scss';
 
@@ -7,7 +8,7 @@ import './unexpected-error.scss';
  */
 function UnexpectedError(props) {
     const { error } = props;
-    if (!error) {
+    if (!error || error.constructor.name === 'Cancellation') {
         return null;
     }
     return (
