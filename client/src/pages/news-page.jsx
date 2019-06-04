@@ -33,27 +33,26 @@ async function NewsPage(props) {
     }
 
     render();
-    const db = database.use();
-    const currentUserID = await db.start();
-    const currentUser = await UserFinder.findUser(db, currentUserID);
-    const project = await ProjectFinder.findCurrentProject(db);
+    const currentUserID = await database.start();
+    const currentUser = await UserFinder.findUser(database, currentUserID);
+    const project = await ProjectFinder.findCurrentProject(database);
     render();
     let stories, draftStories, pendingStories;
     if (tags) {
-        stories = await StoryFinder.findStoriesWithTags(db, tags, currentUser);
+        stories = await StoryFinder.findStoriesWithTags(database, tags, currentUser);
     } else if (search) {
-        stories = await StoryFinder.findStoriesMatchingText(db, search, env, currentUser);
+        stories = await StoryFinder.findStoriesMatchingText(database, search, env, currentUser);
     } else if (date) {
-        stories = await StoryFinder.findStoriesOnDate(db, date, currentUser);
+        stories = await StoryFinder.findStoriesOnDate(database, date, currentUser);
     } else if (!_.isEmpty(roleIDs)) {
-        stories = await StoryFinder.findStoriesWithRolesInListing(db, 'news', roleIDs, currentUser);
+        stories = await StoryFinder.findStoriesWithRolesInListing(database, 'news', roleIDs, currentUser);
     } else {
-        stories = await StoryFinder.findStoriesInListing(db, 'news', currentUser);
+        stories = await StoryFinder.findStoriesInListing(database, 'news', currentUser);
         render();
-        draftStories = await StoryFinder.findDraftStories(db, currentUser);
+        draftStories = await StoryFinder.findDraftStories(database, currentUser);
         render();
         const limit = env.getRelativeDate(-1, 'date');
-        pendingStories = await StoryFinder.findUnlistedStories(db, currentUser, stories, limit);
+        pendingStories = await StoryFinder.findUnlistedStories(database, currentUser, stories, limit);
     }
     render();
 
@@ -61,10 +60,10 @@ async function NewsPage(props) {
     if (!date) {
         const storyID = highlightStoryID;
         if (storyID) {
-            let allStories = _.concat(stories, draftStories, pendingStories);
+            const allStories = _.concat(stories, draftStories, pendingStories);
             if (!_.find(allStories, { id: storyID })) {
                 try {
-                    let story = await StoryFinder.findStory(db, storyID);
+                    const story = await StoryFinder.findStory(database, storyID);
                     await redirectToStory(route.params.schema, story);
                 } catch (err) {
                 }

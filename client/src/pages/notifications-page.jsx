@@ -21,14 +21,13 @@ async function NotificationsPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use();
-    const currentUserID = await db.start();
-    const currentUser = await UserFinder.findUser(db, currentUserID);
+    const currentUserID = await database.start();
+    const currentUser = await UserFinder.findUser(database, currentUserID);
     let notifications;
     if (date) {
-        notifications = await NotificationFinder.findNotificationsForUserOnDate(db, currentUser, date);
+        notifications = await NotificationFinder.findNotificationsForUserOnDate(database, currentUser, date);
     } else {
-        notifications = await NotificationFinder.findNotificationsForUser(db, currentUser);
+        notifications = await NotificationFinder.findNotificationsForUser(database, currentUser);
     }
     render();
 

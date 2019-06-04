@@ -22,11 +22,10 @@ async function BookmarksPage(props) {
     const [ show ] = useProgress();
 
     render();
-    const db = database.use();
-    const currentUserID = await db.start();
-    const currentUser = await UserFinder.findUser(db, currentUserID)
-    const project = await ProjectFinder.findCurrentProject(db)
-    const bookmarks = await BookmarkFinder.findBookmarksForUser(db, currentUser)
+    const currentUserID = await database.start();
+    const currentUser = await UserFinder.findUser(database, currentUserID)
+    const project = await ProjectFinder.findCurrentProject(database)
+    const bookmarks = await BookmarkFinder.findBookmarksForUser(database, currentUser)
     render();
 
     function render() {

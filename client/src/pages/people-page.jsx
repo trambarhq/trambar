@@ -37,18 +37,17 @@ async function PeoplePage(props) {
     }
 
     render();
-    const db = database.use();
-    const currentUserID = await db.start();
-    const currentUser = await UserFinder.findUser(db, currentUserID);
-    const project = await ProjectFinder.findCurrentProject(db);
-    const members = await UserFinder.findProjectMembers(db, project);
+    const currentUserID = await database.start();
+    const currentUser = await UserFinder.findUser(database, currentUserID);
+    const project = await ProjectFinder.findCurrentProject(database);
+    const members = await UserFinder.findProjectMembers(database, project);
     let selectedUser, visibleUsers;
     if (selectedUserID) {
         // find the selected user
         let user = _.find(members, { id: selectedUserID });
         if (!user) {
             // not on the member list
-            user = await UserFinder.findUser(db, selectedUserID);
+            user = await UserFinder.findUser(database, selectedUserID);
         }
         selectedUser = user;
         visibleUsers = [ user ];
@@ -72,7 +71,7 @@ async function PeoplePage(props) {
     }
 
     const publicOnly = (currentUser.type === 'guest');
-    let dailyActivities = await StatisticsFinder.findDailyActivitiesOfUsers(db, project, members, publicOnly);
+    let dailyActivities = await StatisticsFinder.findDailyActivitiesOfUsers(database, project, members, publicOnly);
     if (!visibleUsers) {
         // find users with stories using stats
         let users;
@@ -93,7 +92,7 @@ async function PeoplePage(props) {
     } else if (selectedUser) {
         // load statistics of selected user if he's not a member
         if (!_.includes(members, selectedUser)) {
-            let selectedUserStats = await StatisticsFinder.findDailyActivitiesOfUser(db, project, selectedUser, publicOnly);
+            let selectedUserStats = await StatisticsFinder.findDailyActivitiesOfUser(database, project, selectedUser, publicOnly);
             dailyActivities = _.clone(dailyActivities);
             dailyActivities[selectedUser.id] = selectedUserStats;
         }
@@ -103,12 +102,12 @@ async function PeoplePage(props) {
     let stories;
     if (search) {
         if (tags) {
-            stories = await StoryFinder.findStoriesWithTags(db, tags, 5);
+            stories = await StoryFinder.findStoriesWithTags(database, tags, 5);
         } else {
-            stories = await StoryFinder.findStoriesMatchingText(db, search, env, 5);
+            stories = await StoryFinder.findStoriesMatchingText(database, search, env, 5);
         }
     } else if (date) {
-        stories = await StoryFinder.findStoriesOnDate(db, date, 5);
+        stories = await StoryFinder.findStoriesOnDate(database, date, 5);
         if (!selectedUser) {
             // we have used stats to narrow down the user list earlier; do
             // it again based on the story list in case we got an incomplete
@@ -116,7 +115,7 @@ async function PeoplePage(props) {
             visibleUsers = null;
         }
     } else {
-        stories = await StoryFinder.findStoriesByUsersInListings(db, 'news', visibleUsers, currentUser, 5, freshListing);
+        stories = await StoryFinder.findStoriesByUsersInListings(database, 'news', visibleUsers, currentUser, 5, freshListing);
     }
     if (!visibleUsers) {
         // now that we have the stories, we can see whom should be shown
@@ -129,14 +128,14 @@ async function PeoplePage(props) {
         // load stories of selected user
         if (search) {
             if (tags) {
-                selectedUserStories = await StoryFinder.findStoriesByUserWithTags(db, selectedUser, tags);
+                selectedUserStories = await StoryFinder.findStoriesByUserWithTags(database, selectedUser, tags);
             } else {
-                selectedUserStories = await StoryFinder.findStoriesByUserMatchingText(db, selectedUser, search, env);
+                selectedUserStories = await StoryFinder.findStoriesByUserMatchingText(database, selectedUser, search, env);
             }
         } else if (date) {
-            selectedUserStories = await StoryFinder.findStoriesByUserOnDate(db, selectedUser, date);
+            selectedUserStories = await StoryFinder.findStoriesByUserOnDate(database, selectedUser, date);
         } else {
-            selectedUserStories = await StoryFinder.findStoriesByUserInListing(db, 'news', selectedUser, currentUser, freshListing);
+            selectedUserStories = await StoryFinder.findStoriesByUserInListing(database, 'news', selectedUser, currentUser, freshListing);
         }
     } else {
         // deal with situation where we're showing stories by someone
@@ -147,7 +146,7 @@ async function PeoplePage(props) {
             const nonMemberUserIDs = _.difference(authorIDs, memberIDs);
             const publicOnly = (currentUser.type === 'guest');
             if (!_.isEmpty(nonMemberUserIDs)) {
-                const users = await UserFinder.findUsers(db, nonMemberUserIDs);
+                const users = await UserFinder.findUsers(database, nonMemberUserIDs);
                 // add non-members
                 if (visibleUsers) {
                     visibleUsers = _.concat(visibleUsers, users);
@@ -155,7 +154,7 @@ async function PeoplePage(props) {
                     visibleUsers = users;
                 }
                 render();
-                const nonMemberStats = await StatisticsFinder.findDailyActivitiesOfUsers(db, project, users, publicOnly);
+                const nonMemberStats = await StatisticsFinder.findDailyActivitiesOfUsers(database, project, users, publicOnly);
                 dailyActivities = _.clone(dailyActivities);
                 _.assign(dailyActivities, nonMemberStats);
             }
@@ -169,7 +168,7 @@ async function PeoplePage(props) {
             const allStories = selectedUserStories;
             if (!_.find(allStories, { id: highlightStoryID })) {
                 try {
-                    let story = await StoryFinder.findStory(db, highlightStoryID);
+                    let story = await StoryFinder.findStory(database, highlightStoryID);
                     await redirectToStory(story);
                 } catch (err) {
                 }

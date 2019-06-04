@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useEffect } from 'react';
-import Relaks, { useProgress, useSaveBuffer, useListener } from 'relaks';
+import Relaks, { useProgress, useListener, useSaveBuffer, useAutoSave } from 'relaks';
 import * as KonamiCode from 'common/utils/konami-code.mjs';
 import * as DeviceFinder from 'common/objects/finders/device-finder.mjs';
 import * as ProjectFinder from 'common/objects/finders/project-finder.mjs';
@@ -8,6 +8,7 @@ import * as ProjectLinkFinder from 'common/objects/finders/project-link-finder.m
 import * as RepoFinder from 'common/objects/finders/repo-finder.mjs';
 import * as SystemFinder from 'common/objects/finders/system-finder.mjs';
 import * as UserFinder from 'common/objects/finders/user-finder.mjs';
+import * as UserSaver from 'common/objects/savers/user-saver.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
@@ -31,24 +32,23 @@ import {
 
 import './settings-page.scss';
 
-const AUTOSAVE_DURATION = 2000;
+const autosave = 2000;
 
 async function SettingsPage(props) {
     const { database } = props;
-    const db = database.use({ by: this });
     const [ show ] = useProgress();
 
     render();
-    const currentUserID = await db.start();
-    const currentUser = await UserFinder.findUser(db, currentUserID);
-    const projectLinks = await ProjectLinkFinder.findActiveLinks(db);
-    const currentProject = await ProjectFinder.findCurrentProject(db);
+    const currentUserID = await database.start();
+    const currentUser = await UserFinder.findUser(database, currentUserID);
+    const projectLinks = await ProjectLinkFinder.findActiveLinks(database);
+    const currentProject = await ProjectFinder.findCurrentProject(database);
     render();
-    const devices = await DeviceFinder.findUserDevices(db, currentUser, 1);
+    const devices = await DeviceFinder.findUserDevices(database, currentUser, 1);
     render();
-    const repos = await RepoFinder.findProjectRepos(db, currentProject);
+    const repos = await RepoFinder.findProjectRepos(database, currentProject);
     render();
-    const system = await SystemFinder.findSystem(db);
+    const system = await SystemFinder.findSystem(database);
     render();
 
     function render() {
@@ -68,29 +68,22 @@ async function SettingsPage(props) {
 function SettingsPageSync(props) {
     const { database, route, env, payloads } = props;
     const { currentUser, currentProject, projectLinks, devices, repos, system } = props;
-    const db = database.use({ schema: 'global', by: this });
     const userDraft = useDraftBuffer({
         original: currentUser || {},
-        autosave: AUTOSAVE_DURATION,
-        save: saveUser,
     });
 
-    const handleKonamiCode = useListener((evt) => {
-        userDraft.update('settings.development.show_panel', true);
+    useAutoSave(userDraft, autosave, () => {
+        const userAfter = UserSaver.saveUser(database, userDraft.current);
+        payloads.dispatch(userAfter);
     });
-
     useEffect(() => {
+        const handleKonamiCode = (evt) => {
+            userDraft.update('settings.development.show_panel', true);
+        };
         KonamiCode.addListener(handleKonamiCode);
         return () => {
             KonamiCode.removeListener(handleKonamiCode);
         };
-    }, []);
-    useEffect(() => {
-        return () => {
-            if (userDraft.changed) {
-                userDraft.save();
-            }
-        }
     }, []);
 
     return (
@@ -219,12 +212,6 @@ function SettingsPageSync(props) {
     function renderLanguagePanel() {
         const props = { env };
         return <LanguagePanel {...props} />;
-    }
-
-    async function saveUser(base, ours) {
-        const userAfter = await db.saveOne({ table: 'user' }, ours);
-        payloads.dispatch(userAfter);
-        return userAfter;
     }
 }
 
