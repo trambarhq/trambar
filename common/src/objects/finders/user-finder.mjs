@@ -1,5 +1,7 @@
 import _ from 'lodash';
 
+const schema = 'global';
+const table = 'user';
 const emptyArray = [];
 
 /**
@@ -12,8 +14,8 @@ const emptyArray = [];
  */
 async function findUser(db, id) {
     return db.findOne({
-        schema: 'global',
-        table: 'user',
+        schema,
+        table,
         criteria: { id },
         required: true
     });
@@ -33,8 +35,8 @@ async function findUsers(db, ids) {
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
-        schema: 'global',
-        table: 'user',
+        schema,
+        table,
         criteria: { id: ids },
     });
 }
@@ -49,8 +51,8 @@ async function findUsers(db, ids) {
  */
 async function findAllUsers(db, minimum) {
     return db.find({
-        schema: 'global',
-        table: 'user',
+        schema,
+        table,
         criteria: {},
         minimum
     });
@@ -85,8 +87,8 @@ async function findProjectMembers(db, projects) {
  */
 async function findExistingUsers(db, minimum) {
     return db.find({
-        schema: 'global',
-        table: 'user',
+        schema,
+        table,
         criteria: { deleted: false },
         minimum
     });
@@ -102,8 +104,8 @@ async function findExistingUsers(db, minimum) {
  */
 async function findActiveUsers(db, minimum) {
     return db.find({
-        schema: 'global',
-        table: 'user',
+        schema,
+        table,
         criteria: {
             deleted: false,
             disabled: false,
@@ -125,8 +127,8 @@ async function findUsersWithRoles(db, roles, minimum) {
     let ids = _.map(roles, 'id');
     ids = _.sortBy(_.uniq(ids));
     return db.find({
-        schema: 'global',
-        table: 'user',
+        schema,
+        table,
         criteria: { role_ids: ids },
         minimum
     });

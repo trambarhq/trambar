@@ -1,5 +1,7 @@
 import _ from 'lodash';
 
+const schema = 'global';
+const table = 'repo';
 const emptyArray = [];
 
 /**
@@ -12,8 +14,8 @@ const emptyArray = [];
  */
 async function findRepo(db, id) {
     return db.findOne({
-        schema: 'global',
-        table: 'repo',
+        schema,
+        table,
         criteria: { id },
         required: true
     });
@@ -29,8 +31,8 @@ async function findRepo(db, id) {
  */
 async function findAllRepos(db, minimum) {
     return db.find({
-        schema: 'global',
-        table: 'repo',
+        schema,
+        table,
         criteria: {},
         minimum
     });
@@ -46,8 +48,8 @@ async function findAllRepos(db, minimum) {
  */
 async function findExistingRepos(db, minimum) {
     return db.find({
-        schema: 'global',
-        table: 'repo',
+        schema,
+        table,
         criteria: {
             deleted: false
         },
@@ -71,8 +73,8 @@ async function findProjectRepos(db, projects) {
         }
         ids = _.sortBy(_.uniq(ids));
         return db.find({
-            schema: 'global',
-            table: 'repo',
+            schema,
+            table,
             criteria: {
                 id: ids,
                 deleted: false
@@ -84,8 +86,8 @@ async function findProjectRepos(db, projects) {
             return emptyArray;
         }
         return db.find({
-            schema: 'global',
-            table: 'repo',
+            schema,
+            table,
             criteria: {
                 id: project.repo_ids,
                 deleted: false

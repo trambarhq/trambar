@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import * as DateUtils from '../../utils/date-utils.mjs';
 
+const table = 'story';
 const emptyArray = [];
 
 /**
@@ -13,7 +14,7 @@ const emptyArray = [];
  */
 async function findStory(db, id) {
     return db.findOne({
-        table: 'story',
+        table,
         criteria: { id },
         required: true,
     });
@@ -33,7 +34,7 @@ async function findStories(db, ids) {
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
-        table: 'story',
+        table,
         criteria: { id: ids },
     });
 }
@@ -53,7 +54,7 @@ async function findViewableStories(db, ids, currentUser) {
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
-        table: 'story',
+        table,
         criteria: {
             id: ids,
             published: true,
@@ -76,7 +77,7 @@ async function findDraftStories(db, user) {
         return emptyArray;
     }
     return db.find({
-        table: 'story',
+        table,
         criteria: {
             published: false,
             user_ids: [ user.id ],
@@ -110,7 +111,7 @@ async function findUnlistedStories(db, user, listedStories, limit) {
     });
     let recentStoryIDs = _.map(recentStories, 'id');
     return db.find({
-        table: 'story',
+        table,
         criteria: {
             exclude: recentStoryIDs,
             user_ids: [ user.id ],
@@ -133,7 +134,7 @@ async function findUnlistedStories(db, user, listedStories, limit) {
  */
 async function findStoriesMatchingText(db, text, locale, currentUser, perUserLimit) {
     return db.find({
-        table: 'story',
+        table,
         criteria: {
             search: {
                 lang: locale.languageCode,
@@ -162,7 +163,7 @@ async function findStoriesMatchingText(db, text, locale, currentUser, perUserLim
  */
 async function findStoriesWithTags(db, tags, currentUser, perUserLimit, minimum) {
     return db.find({
-        table: 'story',
+        table,
         criteria: {
             tags: tags,
             published: true,
@@ -188,7 +189,7 @@ async function findStoriesWithTags(db, tags, currentUser, perUserLimit, minimum)
  */
 async function findStoriesOnDate(db, date, currentUser, perUserLimit, minimum) {
     return db.find({
-        table: 'story',
+        table,
         criteria: {
             time_range: DateUtils.getDayRange(date),
             published: true,
@@ -259,7 +260,7 @@ async function findStoriesInListing(db, type, currentUser, blockIfStale) {
  */
 async function findStoriesByUserMatchingText(db, user, text, locale, currentUser) {
     return db.find({
-        table: 'story',
+        table,
         criteria: {
             user_ids: [ user.id ],
             search: {
@@ -288,7 +289,7 @@ async function findStoriesByUserMatchingText(db, user, text, locale, currentUser
  */
 async function findStoriesByUserWithTags(db, user, tags, currentUser, minimum) {
     return db.find({
-        table: 'story',
+        table,
         criteria: {
             user_ids: [ user.id ],
             tags: tags,
@@ -314,7 +315,7 @@ async function findStoriesByUserWithTags(db, user, tags, currentUser, minimum) {
  */
 async function findStoriesByUserOnDate(db, user, date, currentUser, minimum) {
     return db.find({
-        table: 'story',
+        table,
         criteria: {
             user_ids: [ user.id ],
             time_range: DateUtils.getDayRange(date),

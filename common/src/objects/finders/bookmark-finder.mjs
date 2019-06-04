@@ -1,5 +1,6 @@
 import _ from 'lodash';
 
+const table = 'bookmark';
 const emptyArray = [];
 
 /**
@@ -19,7 +20,7 @@ async function findBookmarksByUser(db, user, stories, minimum) {
         return emptyArray;
     }
     return db.find({
-        table: 'bookmark',
+        table,
         criteria: {
             user_ids: [ user.id ],
             story_ids: storyIds,
@@ -39,7 +40,7 @@ async function findBookmarksByUser(db, user, stories, minimum) {
  */
 async function findBookmarksForUser(db, user, minimum) {
     return db.find({
-        table: 'bookmark',
+        table,
         criteria: {
             target_user_id: user.id,
             hidden: false,

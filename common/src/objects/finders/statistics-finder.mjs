@@ -3,6 +3,8 @@ import Moment from 'moment';
 import { memoizeWeak } from '../../utils/memoize.mjs';
 import * as DateUtils from '../../utils/date-utils.mjs';
 
+const table = 'statistics';
+
 /**
  * Fetch statistics, given certain parameters
  *
@@ -57,7 +59,7 @@ async function findDailyActivitiesOfProject(db, project, publicOnly) {
     // load story-date-range statistics
     let rangeQuery = {
         schema: project.name,
-        table: 'statistics',
+        table,
         criteria: {
             type: 'story-date-range',
             filters: {
@@ -81,7 +83,7 @@ async function findDailyActivitiesOfProject(db, project, publicOnly) {
     });
     let query = {
         schema: project.name,
-        table: 'statistics',
+        table,
         criteria: {
             type: 'daily-activities',
             filters
@@ -152,7 +154,7 @@ async function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
     });
     let rangeQuery = {
         schema: project.name,
-        table: 'statistics',
+        table,
         criteria: { type: 'story-date-range', filters: rangeFilters },
         prefetch: true,
     };
@@ -177,7 +179,7 @@ async function findDailyActivitiesOfUsers(db, project, users, publicOnly) {
     }
     let query = {
         schema: project.name,
-        table: 'statistics',
+        table,
         criteria: { type: 'daily-activities', filters },
         prefetch: true,
     };
@@ -233,7 +235,7 @@ async function findDailyNotificationsOfUsers(db, project, users) {
     });
     let rangeQuery = {
         schema,
-        table: 'statistics',
+        table,
         criteria: { type: 'notification-date-range', filters: rangeFilters }
     };
     let dateRanges = await db.find(rangeQuery);
@@ -256,7 +258,7 @@ async function findDailyNotificationsOfUsers(db, project, users) {
     }
     let query = {
         schema,
-        table: 'statistics',
+        table,
         criteria: { type: 'daily-notifications', filters },
     };
     let dailyNotificationsAllUsers = await db.find(query);
@@ -312,7 +314,7 @@ async function findDailyActivitiesOfRepos(db, project, repos) {
     });
     let rangeQuery = {
         schema,
-        table: 'statistics',
+        table,
         criteria: { type: 'story-date-range', filters: rangeFilters },
     };
     let dateRanges = await db.find(rangeQuery);
@@ -335,7 +337,7 @@ async function findDailyActivitiesOfRepos(db, project, repos) {
     }
     let query = {
         schema,
-        table: 'statistics',
+        table,
         criteria: { type: 'daily-activities', filters },
     };
     let dailyActivitiesAllRepos = await db.find(query);

@@ -1,5 +1,7 @@
 import _ from 'lodash';
 
+const schema = 'global';
+const table = 'task';
 const emptyArray = [];
 
 /**
@@ -11,8 +13,8 @@ const emptyArray = [];
  */
 async function findActiveTask(db, startTime) {
     return db.findOne({
-        schema: 'global',
-        table: 'task',
+        schema,
+        table,
         criteria: {
             etime: null,
             deleted: false,
@@ -25,8 +27,8 @@ async function findActiveTask(db, startTime) {
 
 async function findFailedTask(db, startTime) {
     return db.findOne({
-        schema: 'global',
-        table: 'task',
+        schema,
+        table,
         criteria: {
             etime: null,
             deleted: false,
@@ -51,8 +53,8 @@ async function findServerTasks(db, server, minimum) {
         return emptyArray;
     }
     return db.find({
-        schema: 'global',
-        table: 'task',
+        schema,
+        table,
         criteria: {
             options: {
                 server_id: server.id,

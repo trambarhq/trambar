@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import * as DateUtils from '../../utils/date-utils.mjs';
 
+const table = 'notification';
 const emptyArray = [];
 
 /**
@@ -17,7 +18,7 @@ async function findNotificationsForUser(db, user, minimum) {
         return emptyArray;
     }
     return db.find({
-        table: 'notification',
+        table,
         criteria: {
             target_user_id: user.id,
             limit: 500,
@@ -42,7 +43,7 @@ async function findNotificationsForUserOnDate(db, user, date, minimum) {
         return emptyArray;
     }
     return db.find({
-        table: 'notification',
+        table,
         criteria: {
             target_user_id: user.id,
             time_range: DateUtils.getDayRange(date),
@@ -65,7 +66,7 @@ async function findNotificationsUnseenByUser(db, user, minimum) {
         return emptyArray;
     }
     return db.find({
-        table: 'notification',
+        table,
         criteria: {
             target_user_id: user.id,
             seen: false,

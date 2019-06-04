@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import * as ExternalDataUtils from '../utils/external-data-utils.mjs';
 
+const schema = 'global';
+const table = 'server';
 const emptyArray = [];
 
 /**
@@ -13,8 +15,8 @@ const emptyArray = [];
  */
 async function findServer(db, id) {
     return db.findOne({
-        schema: 'global',
-        table: 'server',
+        schema,
+        table,
         criteria: { id },
         required: true
     });
@@ -30,8 +32,8 @@ async function findServer(db, id) {
  */
 async function findAllServers(db, minimum) {
     return db.find({
-        schema: 'global',
-        table: 'server',
+        schema,
+        table,
         criteria: {},
         minimum
     });
@@ -56,8 +58,8 @@ async function findServersOfRepos(db, repos) {
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
-        schema: 'global',
-        table: 'server',
+        schema,
+        table,
         criteria: { id: ids }
     });
 }

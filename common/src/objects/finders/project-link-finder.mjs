@@ -1,6 +1,9 @@
 import _ from 'lodash';
 import * as ProjectFinder from './project-finder.mjs';
 
+const schema = 'local';
+const table = 'project_link';
+
 /**
  * Find all project links
  *
@@ -10,8 +13,8 @@ import * as ProjectFinder from './project-finder.mjs';
  */
 async function findAllLinks(db) {
     return db.find({
-        schema: 'local',
-        table: 'project_link',
+        schema,
+        table,
         criteria: {},
     });
 }
@@ -25,7 +28,7 @@ async function findAllLinks(db) {
  */
 async function hasUnexpiredSession(db, link) {
     let record = await db.findOne({
-        schema: 'local',
+        schema,
         table: 'session',
         criteria: { key: link.address },
     });
@@ -48,8 +51,8 @@ async function hasUnexpiredSession(db, link) {
  */
 async function findLinksToServer(db, address) {
     return db.find({
-        schema: 'local',
-        table: 'project_link',
+        schema,
+        table,
         criteria: { address },
     });
 }
@@ -109,8 +112,8 @@ async function findProjectLink(db, project) {
     let schema = project.name;
     let key = `${address}/${schema}`;
     return db.findOne({
-        schema: 'local',
-        table: 'project_link',
+        schema,
+        table,
         criteria: { key }
     });
 }

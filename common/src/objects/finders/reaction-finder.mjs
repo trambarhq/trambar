@@ -1,5 +1,6 @@
 import _ from 'lodash';
 
+const table = 'reaction';
 const emptyArray = [];
 
 /**
@@ -20,7 +21,7 @@ async function findReactionsToStories(db, stories, currentUser, minimum) {
         return emptyArray;
     }
     return db.find({
-        table: 'reaction',
+        table,
         criteria: {
             story_id: storyIDs,
             public: (currentUser.type === 'guest') ? true : undefined

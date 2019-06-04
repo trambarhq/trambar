@@ -1,5 +1,7 @@
 import _ from 'lodash';
 
+const schema = 'global';
+const table = 'role';
 const emptyArray = [];
 
 /**
@@ -12,8 +14,8 @@ const emptyArray = [];
  */
 async function findRole(db, id) {
     return db.findOne({
-        schema: 'global',
-        table: 'role',
+        schema,
+        table,
         criteria: { id },
         required: true,
     });
@@ -29,8 +31,8 @@ async function findRole(db, id) {
  */
 async function findAllRoles(db, minimum) {
     return db.find({
-        schema: 'global',
-        table: 'role',
+        schema,
+        table,
         criteria: {},
         minimum
     });
@@ -46,8 +48,8 @@ async function findAllRoles(db, minimum) {
  */
 async function findActiveRoles(db, minimum) {
     return db.find({
-        schema: 'global',
-        table: 'role',
+        schema,
+        table,
         criteria: {
             deleted: false,
             disabled: false,
@@ -72,8 +74,8 @@ async function findRolesOfUsers(db, users) {
     }
     roleIDs = _.sortBy(_.uniq(roleIDs));
     return db.find({
-        schema: 'global',
-        table: 'role',
+        schema,
+        table,
         criteria: {
             id: roleIDs,
             disabled: false,

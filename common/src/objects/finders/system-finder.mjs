@@ -1,5 +1,7 @@
 import _ from 'lodash';
 
+const schema = 'global';
+const table = 'system';
 const emptyArray = [];
 
 /**
@@ -11,8 +13,8 @@ const emptyArray = [];
  */
 async function findSystem(db) {
     let system = await db.findOne({
-        schema: 'global',
-        table: 'system',
+        schema,
+        table,
         criteria: {},
         prefetch: true,
     });

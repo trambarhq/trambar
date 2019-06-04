@@ -1,5 +1,7 @@
 import _ from 'lodash';
 
+const schema = 'global';
+const table = 'device';
 const emptyArray = [];
 
 /**
@@ -16,8 +18,8 @@ async function findUserDevices(db, user, minimum) {
         return emptyArray;
     }
     return db.find({
-        schema: 'global',
-        table: 'device',
+        schema,
+        table,
         criteria: {
             user_id: user.id
         },

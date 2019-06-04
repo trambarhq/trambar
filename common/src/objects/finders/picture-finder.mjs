@@ -1,3 +1,5 @@
+const table = 'picture';
+
 /**
  * Find pictures in collection for given purpose
  *
@@ -9,7 +11,7 @@
  */
 async function findPictures(db, purpose, minimum) {
     return db.find({
-        table: 'picture',
+        table,
         criteria: {
             purpose: purpose,
             deleted: false,

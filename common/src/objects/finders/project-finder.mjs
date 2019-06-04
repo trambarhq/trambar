@@ -1,5 +1,7 @@
 import _ from 'lodash';
 
+const schema = 'global';
+const table = 'project';
 const emptyArray = [];
 
 /**
@@ -12,8 +14,8 @@ const emptyArray = [];
  */
 async function findProject(db, id) {
     return db.findOne({
-        schema: 'global',
-        table: 'project',
+        schema,
+        table,
         criteria: { id },
         required: true
     });
@@ -29,8 +31,8 @@ async function findProject(db, id) {
  */
 async function findProjectByName(db, name) {
     return db.findOne({
-        schema: 'global',
-        table: 'project',
+        schema,
+        table,
         criteria: { name },
         required: true
     });
@@ -46,8 +48,8 @@ async function findProjectByName(db, name) {
  */
 async function findAllProjects(db, minimum) {
     return db.find({
-        schema: 'global',
-        table: 'project',
+        schema,
+        table,
         criteria: {},
         minimum
     });
@@ -62,8 +64,8 @@ async function findAllProjects(db, minimum) {
  */
 async function findCurrentProject(db) {
     return db.findOne({
-        schema: 'global',
-        table: 'project',
+        schema,
+        table,
         criteria: { name: db.context.schema + '' },
         required: true
     });
@@ -79,8 +81,8 @@ async function findCurrentProject(db) {
  */
 async function findActiveProjects(db, minimum) {
     return db.find({
-        schema: 'global',
-        table: 'project',
+        schema,
+        table,
         criteria: {
             archived: false,
             deleted: false,
@@ -105,8 +107,8 @@ async function findProjectsWithMembers(db, users, minimum) {
     }
     ids = _.sortBy(_.uniq(ids));
     return db.find({
-        schema: 'global',
-        table: 'project',
+        schema,
+        table,
         criteria: { user_ids: ids },
         minimum
     });
