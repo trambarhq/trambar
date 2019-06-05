@@ -22,37 +22,26 @@ import './user-view.scss';
  */
 function UserView(props) {
     const { user, roles, stories, dailyActivities, options } = props;
-    const { database, route, env, selectedDate, search, link, onOptionChange } = props;
+    const { database, route, env, selectedDate, search, link } = props;
     const { t, p } = env.locale;
     // always show statistics in double and triple column mode
     const defaultChartType = env.isWiderThan('double-col') ? 'bar' : undefined;
     const defaultChartRange = 'biweekly';
-    const chartType = options.chartType || defaultChartType;
-    const chartRange = options.chartRange || defaultChartRange;
+    const chartType = options.current.chartType || defaultChartType;
+    const chartRange = options.current.chartRange || defaultChartRange;
     const [ openMenu, setOpenMenu ] = useState('');
 
     const handleAction = useListener((evt) => {
         switch (evt.action) {
             case 'chart-type-set':
-                const newOptions = _.clone(options);
-                if (!env.isWiderThan('double-col')) {
-                    if (newOptions.chartType === evt.value) {
-                        newOptions.chartType = null;
-                    } else {
-                        newOptions.chartType = evt.value;
-                    }
+                if (!env.isWiderThan('double-col') && options.current.chartType === evt.value) {
+                    options.assign({ chartType: null });
                 } else {
-                    newOptions.chartType = evt.value;
-                }
-                if (onOptionChange) {
-                    onOptionChange({ user, options: newOptions });
+                    console.log(options.current);
+                    options.assign({ chartType: evt.value });
+                    console.log(options.current);
                 }
                 break;
-        }
-    });
-    const handleOptionChange = useListener((evt) => {
-        if (onOptionChange) {
-            onOptionChange({ user, options: evt.options });
         }
     });
     const handleOptionComplete = useListener((evt) => {
@@ -329,7 +318,6 @@ function UserView(props) {
             options,
             selectedDate,
             env,
-            onChange: handleOptionChange,
             onComplete: handleOptionComplete,
         };
         return <UserViewOptions {...props} />;

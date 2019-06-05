@@ -26,54 +26,35 @@ function UserViewOptions(props) {
     });
     const handlePhoneDialogClose = useListener((evt) => {
         showPhoneNumber(false);
-        if (onComplete) {
-            onComplete({});
-        }
+        done();
     });
     const handleBiweeklyActivitiesClick = useListener((evt) => {
-        const newOptions = {
-            ...options,
-            chartRange: 'biweekly',
-            chartType: options.chartType || 'bar'
-        };
-        if (onChange) {
-            onChange({ options: newOptions });
-        }
-        if (onComplete) {
-            onComplete({});
-        }
+        getChartRange('biweekly');
     });
     const handleMonthlyActivitiesClick = useListener((evt) => {
-        const newOptions = {
-            ...options,
-            chartRange: 'monthly',
-            chartType: options.chartType || 'bar'
-        };
-        if (onChange) {
-            onChange({ options: newOptions });
-        }
-        if (onComplete) {
-            onComplete({});
-        }
+        getChartRange('monthly');
     });
     const handleActivitiesToDateClick = useListener((evt) => {
-        const newOptions = {
-            ...options,
-            chartRange: 'full',
-            chartType: options.chartType || 'bar'
-        };
-        if (onChange) {
-            onChange({ options: newOptions });
-        }
-        if (onComplete) {
-            onComplete({});
-        }
+        getChartRange('full');
     });
     const handleLinkClick = useListener((evt) => {
+        done();
+    });
+
+    function getChartRange(chartRange) {
+        const changes = { chartRange };
+        if (!options.current.chartType) {
+            changes.chartType = 'bar';
+        }
+        options.assign(changes);
+        done();
+    }
+
+    function done() {
         if (onComplete) {
             onComplete({});
         }
-    });
+    }
 
     if (section === 'both') {
         return (
@@ -189,19 +170,20 @@ function UserViewOptions(props) {
             );
         } else {
             const biweekly = (selectedDate) ? 'biweekly' : '14-days';
+            const { chartRange } = options.current;
             const twoWeekProps = {
                 label: t(`option-statistics-${biweekly}`),
-                selected: options.chartRange === 'biweekly' || !options.chartRange,
+                selected: (chartRange === 'biweekly' || !chartRange),
                 onClick: handleBiweeklyActivitiesClick,
             };
             const lastMonthProps = {
                 label: t('option-statistics-monthly'),
-                selected: options.chartRange === 'monthly',
+                selected: (chartRange === 'monthly'),
                 onClick: handleMonthlyActivitiesClick,
             };
             const toDateProps = {
                 label: t('option-statistics-to-date'),
-                selected: options.chartRange === 'full',
+                selected: (chartRange === 'full'),
                 onClick: handleActivitiesToDateClick,
             };
             return (

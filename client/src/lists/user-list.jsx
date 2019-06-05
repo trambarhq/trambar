@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
+import { useListener, useSaveBuffer } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
@@ -17,21 +18,39 @@ function UserList(props) {
     const { database, route, env } = props;
     const { users, roles, listings, stories, dailyActivities, currentUser } = props;
     const { scrollToUserID, selectedDate, link } = props;
-    const [ viewOptions, setViewOptions ] = useState(savedViewOptions);
+    const viewOptions = useSaveBuffer({
+        original: {},
+        preserve: (base, ours) => {
+            const json = JSON.stringify(ours);
+            sessionStorage.user_view_options = json;
+            console.log(sessionStorage.user_view_options);
+        },
+        restore: (base) => {
+            try {
+                const json = sessionStorage.user_view_options;
+                console.log(JSON.parse(json));
+                return JSON.parse(json);
+            } catch (err){
+            }
+        },
+        compare: _.isEqual,
+    });
+    console.log(viewOptions.current);
 
-    const handleUserIdentity = (evt) => {
-        return `user-${evt.item.id}`;
-    };
+    const handleUserIdentity = useListener((evt) => {
+        return getAnchor(evt.item.id);
+    });
     const handleUserRender = (evt) => {
         return renderUser(evt.item, evt.needed, evt.previousHeight, evt.estimatedHeight);
     };
-    const handleUserAnchorChange = (evt) => {
-        reanchorAtUser((evt.item) ? evt.item.id : undefined);
-    };
-    const handleOptionChange = (evt) => {
-        setViewOptions(evt.options);
-        savedViewOptions = setViewOptions;
-    };
+    const handleUserAnchorChange = useListener((evt) => {
+        const params = { scrollToUserID };
+        route.reanchor(params);
+    });
+
+    function getAnchor(userID) {
+        return (userID) ? `user-${userID}` : undefined;
+    }
 
     const smartListProps = {
         items: sortUsers(users, env),
@@ -74,7 +93,6 @@ function UserList(props) {
                 env,
                 selectedDate,
                 link,
-                onOptionChange: handleOptionChange,
             };
             return (
                 <ErrorBoundary env={env}>
@@ -85,15 +103,6 @@ function UserList(props) {
             const height = previousHeight || estimatedHeight || 100;
             return <div className="user-view" style={{ height }} />;
         }
-    }
-
-    function reanchorAtUser(scrollToUserID) {
-        const params = { scrollToUserID };
-        route.reanchor(params);
-    }
-
-    function getAnchor(userID) {
-        return (userID) ? `user-${userID}` : undefined;
     }
 }
 

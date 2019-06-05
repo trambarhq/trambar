@@ -127,7 +127,6 @@ UserViewOptions.propTypes = {
 
     env: PropTypes.instanceOf(Environment).isRequired,
 
-    onChange: PropTypes.func,
     onComplete: PropTypes.func,
 };
 UserView.propTypes = {
@@ -144,6 +143,4 @@ UserView.propTypes = {
     database: PropTypes.instanceOf(Database).isRequired,
     route: PropTypes.instanceOf(Route).isRequired,
     env: PropTypes.instanceOf(Environment).isRequired,
-
-    onOptionChange: PropTypes.func,
 };

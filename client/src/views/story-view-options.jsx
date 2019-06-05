@@ -48,9 +48,7 @@ function StoryViewOptions(props) {
         run(async () => {
             const adding = !options.get('bookmarked');
             options.update('bookmarked', adding);
-            if (onComplete) {
-                onComplete({});
-            }
+            done();
         });
     });
     const handleKeepBookmarkClick = useListener((evt) => {
@@ -60,9 +58,7 @@ function StoryViewOptions(props) {
         run(async () => {
             const hidding = !options.get('hidden');
             options.update('hidden', hidding);
-            if (onComplete) {
-                onComplete({});
-            }
+            done();
             await StorySaver.hideStory(database, story, hidding);
         });
     });
@@ -70,9 +66,7 @@ function StoryViewOptions(props) {
         run(async () => {
             if (!options.get('editable')) {
                 options.update('editable', true);
-                if (onComplete) {
-                    onComplete({});
-                }
+                done();
                 await StorySaver.unpublishStory(database, story);
             }
         });
@@ -81,9 +75,7 @@ function StoryViewOptions(props) {
         run(async () => {
             if (!options.get('removed')) {
                 options.update('removed', true);
-                if (onComplete) {
-                    onComplete({});
-                }
+                done();
                 await StorySaver.removeStory(database, story);
             }
         });
@@ -92,9 +84,7 @@ function StoryViewOptions(props) {
         run(async () => {
             if (!options.get('removed')) {
                 options.update('bumped', true);
-                if (onComplete) {
-                    onComplete({});
-                }
+                done();
                 await StorySaver.bumpStory(database, story);
             }
         });
@@ -106,9 +96,7 @@ function StoryViewOptions(props) {
         run(async () => {
             options.update('recipients', evt.selection);
             selectRecipients(false);
-            if (onComplete) {
-                onComplete({});
-            }
+            done();
         });
     });
     const handleRecipientsCancel = useListener((evt) => {
@@ -125,6 +113,12 @@ function StoryViewOptions(props) {
     const handleIssueCancel = useListener((evt) => {
         enterIssueDetails(false);
     });
+
+    function done() {
+        if (onComplete) {
+            onComplete({});
+        }
+    }
 
     return (
         <div className="story-view-options">
