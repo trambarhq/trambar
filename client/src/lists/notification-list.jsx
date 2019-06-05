@@ -23,7 +23,6 @@ async function NotificationList(props) {
     const { currentUser, notifications } = props;
     const { scrollToNotificationID } = props;
     const { t } = env.locale;
-    const db = database.use({ by: this });
     const [ hiddenNotificationIDs, setHiddenNotificationIDs] = useState([]);
     const [ viewDurations ] = useState({});
     const [ show ]  = useProgress();
@@ -58,10 +57,9 @@ async function NotificationList(props) {
     }, []);
 
     render();
-    const currentUserID = await db.start();
-    const users = await UserFinder.findNotificationTriggerers(db, notifications);
+    const users = await UserFinder.findNotificationTriggerers(database, notifications);
     render();
-    const stories = await StoryFinder.findStoriesOfNotifications(db, notifications, currentUser);
+    const stories = await StoryFinder.findStoriesOfNotifications(database, notifications, currentUser);
     render();
 
     function render() {

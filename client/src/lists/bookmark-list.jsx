@@ -24,7 +24,6 @@ async function BookmarkList(props) {
     const { access, bookmarks, currentUser, project } = props;
     const { highlightStoryID, scrollToStoryID } = props;
     const { t } = env.locale;
-    const db = database.use({ by: this });
     const [ hiddenStoryIDs, setHiddenStoryIDs ] = useState();
     const [ show ] = useProgress();
 
@@ -51,24 +50,23 @@ async function BookmarkList(props) {
     };
 
     render();
-    const currentUserID = await db.start();
-    const repos = await RepoFinder.findProjectRepos(db, project);
-    const stories = await StoryFinder.findStoriesOfBookmarks(db, bookmarks, currentUser)
+    const repos = await RepoFinder.findProjectRepos(database, project);
+    const stories = await StoryFinder.findStoriesOfBookmarks(database, bookmarks, currentUser)
     render();
-    const draftStories = await StoryFinder.findDraftStories(db, currentUser)
+    const draftStories = await StoryFinder.findDraftStories(database, currentUser)
     render();
     const allStories = _.filter(_.concat(draftStories, stories));
-    const authors = await UserFinder.findStoryAuthors(db, allStories);
+    const authors = await UserFinder.findStoryAuthors(database, allStories);
     render();
-    const senders = await UserFinder.findBookmarkSenders(db, bookmarks);
+    const senders = await UserFinder.findBookmarkSenders(database, bookmarks);
     render();
-    const reactions = await ReactionFinder.findReactionsToStories(db, allStories, currentUser);
+    const reactions = await ReactionFinder.findReactionsToStories(database, allStories, currentUser);
     render();
-    const respondents = await UserFinder.findReactionAuthors(db, reactions);
+    const respondents = await UserFinder.findReactionAuthors(database, reactions);
     render();
-    const recommendations = await BookmarkFinder.findBookmarksByUser(db, currentUser);
+    const recommendations = await BookmarkFinder.findBookmarksByUser(database, currentUser);
     render();
-    const recipients = await UserFinder.findBookmarkRecipients(db, recommendations);
+    const recipients = await UserFinder.findBookmarkRecipients(database, recommendations);
     render();
 
     function render() {

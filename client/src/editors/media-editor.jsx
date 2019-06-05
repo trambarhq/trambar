@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
+import { useListener } from 'relaks';
 
 // widgets
 import { MediaButton } from '../widgets/media-button.jsx';
@@ -13,11 +14,12 @@ import './media-editor.scss';
  * Component for adjusting a media resource attached to a story or reaction.
  */
 function MediaEditor(props) {
-    const { env, payloads, resources, resourceIndex, allowEmbedding, allowShifting, children } = props;
+    const { resources, resourceIndex, allowEmbedding, allowShifting } = props;
+    const { env, payloads, children, onChange, onEmbed } = props;
     const { t } = env.locale;
     const resource = _.get(resources, resourceIndex);
 
-    const handleShiftClick = useCallback((evt) => {
+    const handleShiftClick = useListener((evt) => {
         if (resourceIndex < 1) {
             return;
         }
@@ -30,8 +32,8 @@ function MediaEditor(props) {
                 selection: resourceIndex - 1
             });
         }
-    }, [ resource, resources, resourceIndex ]);
-    const handleRemoveClick = useCallback((evt) => {
+    });
+    const handleRemoveClick = useListener((evt) => {
         const resourcesAfter = _.slice(resources);
         resourcesAfter.splice(resourceIndex, 1);
         let newIndex = resourceIndex;
@@ -47,27 +49,27 @@ function MediaEditor(props) {
         if (resource && resource.payload_token) {
             payloads.cancel(resource.payload_token);
         }
-    }, [ payloads, resource, resources, resourceIndex, onChange ]);
-    const handleEmbedClick = useCallback((evt) => {
+    });
+    const handleEmbedClick = useListener((evt) => {
         if (onEmbed) {
             onEmbed({ resource });
         }
-    }, [ resource, onEmbed ])
-    const handleBackwardClick = useCallback((evt) => {
+    });
+    const handleBackwardClick = useListener((evt) => {
         if (resourceIndex > 0) {
             if (onChange) {
                 return onChange({ resources, selection: resourceIndex - 1 });
             }
         }
-    }, [ resourceIndex, onChange ]);
-    const handleForwardClick = useCallback((evt) => {
+    });
+    const handleForwardClick = useListener((evt) => {
         if (resourceIndex < _.size(resources) - 1) {
             if (onChange) {
                 return onChange({ resources, selection: resourceIndex - 1 });
             }
         }
-    }, [ resourceIndex, resources, onChange ]);
-    const handleResourceChange = useCallback((evt) => {
+    });
+    const handleResourceChange = useListener((evt) => {
         const resourcesAfter = _.slice(resources);
         resourcesAfter[resourceIndex] = evt.resource;
         if (onChange) {
@@ -76,7 +78,7 @@ function MediaEditor(props) {
                 selection: resourceIndex
             });
         }
-    }, [ resources, resourceIndex ]);
+    });
 
     if (!resource) {
         let placeholder;

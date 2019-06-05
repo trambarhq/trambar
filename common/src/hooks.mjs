@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { useSaveBuffer, Cancellation } from 'relaks';
+import * as Markdown from 'common/utils/markdown.mjs';
+import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 
 function useLatest(propValue) {
     const [ stateValue, setStateValue ] = useState();
@@ -74,6 +76,14 @@ function useSelectionBuffer(params) {
     };
     selection.removing = function(id) {
         return this.existing(id) && !_.includes(this.current, id);
+    };
+    selection.removal = function() {
+        const ids = _.difference(this.original, this.current);
+        return ids.length;
+    };
+    selection.addition = function() {
+        const ids = _.difference(this.current, this.original);
+        return ids.length;
     };
     return selection;
 }

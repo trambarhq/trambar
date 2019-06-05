@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React, { useState, useEffect } from 'react';
-import { useListener, Cancellation } from 'relaks';
+import { useListener, useErrorCatcher } from 'relaks';
+import * as ProjectLinkSaver from 'common/objects/savers/project-link-saver.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
 
 // widgets
@@ -25,9 +26,9 @@ import './project-panel.scss';
 function ProjectPanel(props) {
     const { database, route, env, userDraft, system, project, projectLinks } = props;
     const { t, p } = env.locale;
-    const db = database.use({ by: this });
     const isMember = UserUtils.isMember(userDraft.current, project);
     const [ wasMember ] = useState(isMember);
+    const [ error, run ] = useErrorCatcher();
     const [ confirmationRef, confirm ] = useConfirmation();
 
     const handleProjectOptionClick = useListener((evt) => {
@@ -57,20 +58,17 @@ function ProjectPanel(props) {
         const projectIDs = _.difference(projectIDsBefore, [ project.id ]);
         userDraft.update('requested_project_ids', projectIDs);
     });
-    const handleSignOutClick = useListener(async (evt) => {
-        try {
+    const handleSignOutClick = useListener((evt) => {
+        run(async () => {
             await confirm(t('project-management-sign-out-are-you-sure'));
 
             const { address } = route.context;
-            await db.endSession();
+            await database.endSession();
+
             // delete links of all projects on server
             const serverLinks = _.filter(projectLinks, { address });
-            await db.remove({ schema: 'local', table: 'project_link' }, serverLinks);
-        } catch (err) {
-            if (!(err instanceof Cancellation)) {
-                throw err;
-            }
-        }
+            await ProjectLinkSaver.removeLinks(database, serverLinks);
+        });
     });
     const handleProjectDelete = useListener(async (evt) => {
         // redirect to start page if the current project was removed

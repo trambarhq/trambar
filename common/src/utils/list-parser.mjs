@@ -94,17 +94,32 @@ function set(tokens, list, key, checked, clearOthers) {
                 if (item.list == list) {
                     // update .checked then .answer of item
                     if (item.key == key) {
-                        item.checked = checked;
-                        updateAnswerText(item);
+                        update(item, checked);
                     } else {
                         if (checked && clearOthers) {
-                            item.checked = false;
-                            updateAnswerText(item);
+                            update(item, false);
                         }
                     }
                 }
             }
         }
+    }
+}
+
+function update(item, checked) {
+    item.checked = checked;
+    if (checked) {
+        let x;
+        if (/[\u0x0400-\u0x04ff]/.test(item.label)) {
+            x = 'х';
+        } else if (/[\u0x0370-\u0x03ff]/.test(item.label)) {
+            x = 'χ';
+        } else {
+            x = 'x';
+        }
+        item.answer = x;
+    } else {
+        item.answer = ' ';
     }
 }
 
@@ -176,26 +191,11 @@ function join(tokens) {
     return lines.join('');
 }
 
-function updateAnswerText(item) {
-    if (item.checked) {
-        let x;
-        if (/[\u0x0400-\u0x04ff]/.test(item.label)) {
-            x = 'х';
-        } else if (/[\u0x0370-\u0x03ff]/.test(item.label)) {
-            x = 'χ';
-        } else {
-            x = 'x';
-        }
-        item.answer = x;
-    } else {
-        item.answer = ' ';
-    }
-}
-
 export {
     extract,
     detect,
     set,
+    update,
     find,
     count,
     join,

@@ -31,7 +31,6 @@ function DevicePanel(props) {
         try {
             await confirm(t('mobile-device-revoke-are-you-sure'));
 
-            const db = database.use({ schema: 'global', by: this });
             await db.removeOne({ table: 'device' }, device);
             await db.endMobileSession(device.session_handle);
         } catch (err) {

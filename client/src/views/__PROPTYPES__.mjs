@@ -61,6 +61,54 @@ ReactionView.propTypes = {
     env: PropTypes.instanceOf(Environment).isRequired,
 };
 
+StoryContents.propTypes = {
+    access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+    story: PropTypes.object.isRequired,
+    authors: PropTypes.arrayOf(PropTypes.object),
+    currentUser: PropTypes.object.isRequired,
+    reactions: PropTypes.arrayOf(PropTypes.object),
+    repo: PropTypes.object,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+StoryView.propTypes = {
+    access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+    highlighting: PropTypes.bool,
+    pending: PropTypes.bool,
+    story: PropTypes.object.isRequired,
+    bookmark: PropTypes.object,
+    highlightReactionID: PropTypes.number,
+    scrollToReactionID: PropTypes.number,
+
+    authors: PropTypes.arrayOf(PropTypes.object),
+    reactions: PropTypes.arrayOf(PropTypes.object),
+    respondents: PropTypes.arrayOf(PropTypes.object),
+    recommendations: PropTypes.arrayOf(PropTypes.object),
+    recipients: PropTypes.arrayOf(PropTypes.object),
+    repos: PropTypes.arrayOf(PropTypes.object),
+    currentUser: PropTypes.object.isRequired,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    payloads: PropTypes.instanceOf(Payloads).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+};
+StoryViewOptions.propTypes = {
+    section: PropTypes.oneOf([ 'main', 'both' ]),
+    access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
+    story: PropTypes.object.isRequired,
+    reactions: PropTypes.arrayOf(PropTypes.object),
+    repos: PropTypes.arrayOf(PropTypes.object),
+    bookmarks: PropTypes.arrayOf(PropTypes.object),
+    currentUser: PropTypes.object.isRequired,
+
+    database: PropTypes.instanceOf(Database).isRequired,
+    route: PropTypes.instanceOf(Route).isRequired,
+    env: PropTypes.instanceOf(Environment).isRequired,
+
+    onComplete: PropTypes.func,
+};
 UserStatistics.propTypes = {
     chartType: PropTypes.oneOf([ 'bar', 'line', 'pie' ]),
     chartRange: PropTypes.oneOf([ 'biweekly', 'monthly', 'full' ]),

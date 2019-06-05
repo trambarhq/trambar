@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import Promise from 'bluebird';
-import React, { useRef, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useImperativeHandle, useEffect } from 'react';
+import { useListener } from 'relaks';
 import * as BlobManager from 'common/transport/blob-manager.mjs';
 import Payload from 'common/transport/payload.mjs';
 import * as ImageCropping from 'common/media/image-cropping.mjs';
@@ -21,20 +22,20 @@ import './image-editor.scss';
 function ImageEditor(props, ref) {
     const { env, resource, previewWidth, previewHeight, disabled, children } = props;
     const { t } = env.locale;
-    const remoteImageURL = useMemo(() => {
+    const remoteURL = useMemo(() => {
         const params = { remote: true, original: true };
         return ResourceUtils.getImageURL(resource, params, env);
     }, [ env, resource ]);
-    const localImageURL = useMemo(() => {
+    const localURL = useMemo(() => {
         const params = { local: true, original: true };
         return ResourceUtils.getImageURL(resource, params, env);
     }, [ env, resource ]);
-    const previewImageURL = useMemo(() => {
+    const previewURL = useMemo(() => {
         const params = { remote: true, width: previewWidth, height: previewHeight };
         return ResourceUtils.getImageURL(resource, params, env);
     }, [ env, resource, previewWidth, previewHeight ])
-    const [ pendingImageURL, setPendingImageURL ] = useState('');
-    const [ loadedImageURL, setLoadedImageURL ] = useState('');
+    const [ pendingURL, setPendingURL ] = useState('');
+    const [ loadedURL, setLoadedURL ] = useState('');
     const imageCropperRef = useRef();
     const [ instance ] = useState({
         focus: function() {
@@ -44,17 +45,16 @@ function ImageEditor(props, ref) {
         }
     });
 
-    useForwardRef(ref, () => instance);
+    useImperativeHandle(ref, () => instance);
 
-    const handleClipRectChange = useCallback((evt) => {
-        resource = _.clone(resource);
-        resource.clip = evt.rect;
+    const handleClipRectChange = useListener((evt) => {
+        const resourceAfter = { ...resource, clip: evt.rect };
         if (onChange) {
-            onChange({ resource });
+            onChange({ resource: resourceAfter });
         }
-    }, [ resource, onChange ]);
-    const handleFullImageLoad = useCallback((evt) => {
-        setLoadedImageURL(evt.target.src);
+    });
+    const handleFullImageLoad = useListener((evt) => {
+        setLoadedURL(evt.target.src);
     });
 
     useEffect(() => {

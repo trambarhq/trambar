@@ -15,6 +15,7 @@ function ReactionList(props) {
     const { database, payloads, route, env } = props;
     const { access, story, reactions, respondents, repo, currentUser } = props;
     const { highlightReactionID, scrollToReactionID } = props;
+    const { onFinish } = props;
     const [ hiddenReactionIDs, setHiddenReactionIDs ] = useState([]);
 
     const handleReactionIdentity = (evt) => {

@@ -81,6 +81,10 @@ class Route {
             return false;
         }
     }
+
+    reanchor(params) {
+        return this.replace(params);
+    }
 };
 
 export {

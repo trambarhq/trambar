@@ -13,7 +13,6 @@ import './user-selection-list.scss';
 
 async function UserSelectionList(props) {
     const { database, route, env, selection, disabled, onSelect } = props;
-    const db = database.use({ by: this });
     const [ show ] = useProgress();
 
     const handleUserClick = useCallback((evt) => {
@@ -25,9 +24,8 @@ async function UserSelectionList(props) {
     });
 
     render();
-    const currentUserID = await db.start();
-    const project = await ProjectFinder.findCurrentProject(db);
-    const users = await UserFinder.findProjectMembers(db, project);
+    const project = await ProjectFinder.findCurrentProject(database);
+    const users = await UserFinder.findProjectMembers(database, project);
     render();
 
     function render() {

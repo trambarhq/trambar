@@ -151,6 +151,10 @@ MultipleUserNames.propTypes = {
 
     env: PropTypes.instanceOf(Environment).isRequired,
 };
+NewItemsAlert.propTypes = {
+    url: PropTypes.string,
+    onClick: PropTypes.func,
+};
 OptionButton.propTypes = {
     label: PropTypes.node,
     id: PropTypes.string,

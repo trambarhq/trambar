@@ -160,7 +160,7 @@ function MediaView(props) {
                         <i className="fa fa-play-circle-o" />
                     </div>
                     <div className="duration">
-                        {DurationIndicator(resource.duration)}
+                        {formatDuration(resource.duration)}
                     </div>
                 </div>
             </div>
@@ -182,7 +182,7 @@ function MediaView(props) {
                         <i className={`fa fa-${action}-circle`} />
                     </div>
                     <div className="duration">
-                        {DurationIndicator(resource.duration)}
+                        {formatDuration(resource.duration)}
                     </div>
                 </div>
             </div>

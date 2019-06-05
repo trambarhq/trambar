@@ -18,6 +18,11 @@ import { ReactionProgress } from '../widgets/reaction-progress.jsx';
 import { Time } from '../widgets/time.jsx';
 import { ReactionViewOptions } from '../views/reaction-view-options.jsx';
 
+// custom hooks
+import {
+    useMarkdownResources
+} from '../hooks.mjs';
+
 import './reaction-view.scss';
 
 /**
@@ -27,58 +32,10 @@ function ReactionView(props) {
     const { reaction, respondent, story, currentUser } = props;
     const { env, route, repo, highlighting, access } = props;
     const { t, p, g } = env.locale;
-    const resources = _.get(reaction, 'details.resources');
-    const unreferencedResources = _.slice(resources);
-    const resourcesReferenced = [];
-    const [ referencedMedia, setReferencedMedia ] = useState('');
     const [ options, setOptions ] = useState({});
-    const [ audioURL, setAudioURL ] = useState('');
+    const resources = _.get(reaction, 'details.resources');
+    const markdownResources = useMarkdownResources(resources);
 
-    const handleReference = useListener((evt) => {
-        const res = Markdown.findReferencedResource(resources, evt.name);
-        if (res) {
-            resourcesReferenced.push(res);
-            _.pull(unreferencedResources, res);
-            const url = ResourceUtils.getMarkdownIconURL(res, evt.forImage, env);
-            return { href: url, title: evt.name };
-        }
-    });
-    const handleMarkdownClick = useListener((evt) => {
-        evt.preventDefault();
-
-        let target = evt.target;
-        if (target.viewportElement) {
-            target = target.viewportElement;
-        }
-        let name;
-        if (target.tagName === 'svg') {
-            let title = target.getElementsByTagName('title')[0];
-            if (title) {
-                name = title.textContent;
-            }
-        } else {
-            name = evt.target.title;
-        }
-        if (name) {
-            let res = Markdown.findReferencedResource(resources, name);
-            if (res) {
-                if (res.type === 'image' || res.type === 'video') {
-                    setReferencedMedia(name);
-                } else if (res.type === 'website') {
-                    window.open(res.url, '_blank');
-                } else if (res.type === 'audio') {
-                    const version = chooseAudioVersion(res);
-                    const selected = ResourceUtils.getAudioURL(res, { version }, env);
-                    setAudioURL((selected === audioURL) ? null : selected);
-                }
-            }
-        } else {
-            openPopUpWindow(target);
-        }
-    });
-    const handleReferencedMediaDialogClose = useListener((evt) => {
-        setReferencedMedia('');
-    });
     const handleOptionsChange = useListener((evt) => {
         const newOptions = evt.options;
         setOptions(newOptions)
@@ -91,9 +48,6 @@ function ReactionView(props) {
         if (newOptions.hideReaction !== options.hideReaction) {
             hideReaction(newOptions.hideReaction);
         }
-    });
-    const handleAudioEnded = useListener((evt) => {
-        setAudioURL('');
     });
 
     const classNames = [ 'reaction-view' ];
@@ -150,13 +104,13 @@ function ReactionView(props) {
                     let langText = p(text);
                     if (markdown) {
                         // parse the Markdown text
-                        let paragraphs = Markdown.render(langText, handleReference);
+                        const paragraphs = Markdown.render(langText, markdownResources.onReference);
                         // if there first paragraph is a P tag, turn it into a SPAN
                         if (paragraphs[0] && paragraphs[0].type === 'p') {
                             paragraphs[0] = <span key={0}>{paragraphs[0].props.children}</span>;
                         }
                         return (
-                            <span className="comment markdown" onClick={handleMarkdownClick}>
+                            <span className="comment markdown" onClick={markdownResources.onClick}>
                                 {name}: {paragraphs}
                             </span>
                         );
@@ -274,6 +228,7 @@ function ReactionView(props) {
     }
 
     function renderAudioPlayer() {
+        const { audioURL, onAudioEnd } = markdownResources;
         if (!audioURL) {
             return null;
         }
@@ -281,17 +236,18 @@ function ReactionView(props) {
             src: audioURL,
             autoPlay: true,
             controls: true,
-            onEnded: handleAudioEnded,
+            onEnded: onAudioEnd,
         };
         return <audio ref={audioPlayerRef} {...audioProps} />;
     }
 
     function renderMedia() {
-        if (_.isEmpty(unreferencedResources)) {
+        const remaining = markdownResources.unreferenced;
+        if (_.isEmpty(remaining)) {
             return null;
         }
         const props = {
-            resources: unreferencedResources,
+            resources: remaining,
             width: env.isWiderThan('double-col') ? 300 : 220,
             env,
         };
@@ -299,21 +255,14 @@ function ReactionView(props) {
     }
 
     function renderReferencedMediaDialog() {
-        const res = Markdown.findReferencedResource(resources, referencedMedia);
-        if (!res) {
-            return null;
-        }
-        const zoomableResources = getZoomableResources(resourcesReferenced);
-        const zoomableIndex = _.indexOf(zoomableResources, res);
-        if (zoomableIndex === -1) {
-            return null;
-        }
+        const { zoomed, zoomable, selected, onClose } = markdownResources;
+        const selectedIndex = _.indexOf(zoomable, selected);
         const dialogProps = {
-            show: !!referencedMedia,
-            resources: zoomableResources,
-            selectedIndex: zoomableIndex,
+            show: zoomed,
+            resources: zoomable,
+            selectedIndex,
             env,
-            onClose: handleReferencedMediaDialogClose,
+            onClose,
         };
         return <MediaDialogBox {...dialogProps} />;
     }
@@ -357,27 +306,6 @@ const getZoomableResources = memoizeWeak(null, function(resources) {
         }
     })
 });
-
-function chooseAudioVersion(res) {
-    return _.first(_.keys(res.versions)) || null;
-}
-
-function openPopUpWindow(target) {
-    let url, options;
-    if (target.tagName === 'A') {
-        url = target.href;
-    } else if (target.tagName === 'IMG') {
-        let src = target.getAttribute('src');
-        let targetRect = target.getBoundingClientRect();
-        let width = target.naturalWidth + 50;
-        let height = target.naturalHeight + 50;
-        let left = targetRect.left + window.screenLeft;
-        let top = targetRect.top + window.screenTop;
-        options = `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`;
-        url = target.src;
-    }
-    window.open(url, '_blank', options);
-}
 
 export {
     ReactionView as default,

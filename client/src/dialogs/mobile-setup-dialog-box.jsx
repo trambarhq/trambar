@@ -23,12 +23,11 @@ async function MobileSetupDialogBox(props) {
     }, []);
 
     render();
-    const db = database.use();
-    const currentUserID = await db.start();
-    const currentUser = await UserFinder.findUser(db, currentUserID);
-    const activationCode = await db.beginMobileSession('client')
+    const currentUserID = await database.start();
+    const currentUser = await UserFinder.findUser(database, currentUserID);
+    const activationCode = await database.beginMobileSession('client')
     render();
-    const devices = await DeviceFinder.findUserDevices(db, currentUser);
+    const devices = await DeviceFinder.findUserDevices(database, currentUser);
     render();
 
     if (_.some(devices, { session_handle: activationCode })) {

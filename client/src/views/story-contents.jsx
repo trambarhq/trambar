@@ -1,551 +1,361 @@
 import _ from 'lodash';
 import Moment from 'moment';
-import React, { PureComponent } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
+import { useListener, useSaveBuffer, useErrorCatcher } from 'relaks';
 import { memoizeWeak } from 'common/utils/memoize.mjs';
-import * as ListParser from 'common/utils/list-parser.mjs';
 import * as Markdown from 'common/utils/markdown.mjs';
 import * as PlainText from 'common/utils/plain-text.mjs';
-import ComponentRefs from 'common/utils/component-refs.mjs';
-import * as ExternalDataUtils from 'common/objects/utils/external-data-utils.mjs';
+import * as StorySaver from 'common/objects/savers/story-saver.mjs';
+import * as StoryUtils from 'common/objects/utils/story-utils.mjs';
 import * as UserUtils from 'common/objects/utils/user-utils.mjs';
+import * as ReactionSaver from 'common/objects/savers/reaction-saver.mjs';
 import * as RepoUtils from 'common/objects/utils/repo-utils.mjs';
 import * as ResourceUtils from 'common/objects/utils/resource-utils.mjs';
 import Payload from 'common/transport/payload.mjs';
 
 // widgets
-import MediaView from '../views/media-view.jsx';
-import MediaDialogBox from '../dialogs/media-dialog-box';
-import AppComponent from '../views/app-component.jsx';
-import AppComponentDialogBox from '../dialogs/app-component-dialog-box';
-import Scrollable from '../widgets/scrollable.jsx';
-import PushButton from '../widgets/push-button.jsx';
+import { MediaView } from '../views/media-view.jsx';
+import { MediaDialogBox } from '../dialogs/media-dialog-box';
+import { AppComponent } from '../views/app-component.jsx';
+import { AppComponentDialogBox } from '../dialogs/app-component-dialog-box';
+import { Scrollable } from '../widgets/scrollable.jsx';
+import { PushButton } from '../widgets/push-button.jsx';
+
+// custom hooks
+import {
+    useMarkdownResources,
+    useDraftBuffer,
+} from '../hooks.mjs';
 
 import './story-contents.scss';
 
 /**
  * Component that renders a story's contents. Used by StoryView.
- *
- * @extends PureComponent
  */
-class StoryContents extends PureComponent {
-    static displayName = 'StoryContents';
+function StoryContents(props) {
+    const { story, authors, reactions, repo, currentUser } = props;
+    const { database, env, access } = props;
+    const { t, p, g } = env.locale;
+    const audioPlayerRef = useRef();
+    const [ selectedComponent, setSelectedComponent ] = useState('');
+    const [ error, run ] = useErrorCatcher();
+    const originalAnswers = useMemo(() => {
+        return StoryUtils.extractUserAnswers(story, env.locale);
+    }, [ story, env.locale ]);
+    const userAnswers = useDraftBuffer({
+        original: originalAnswers,
+    });
+    const resources = _.get(story, 'details.resources');
+    const markdownResources = useMarkdownResources(resources, env);
 
-    constructor(props) {
-        super(props);
-        this.components = ComponentRefs({
-            audioPlayer: HTMLAudioElement,
+    const handleTaskListItemChange = useListener((evt) => {
+        run(async () => {
+            const target = evt.currentTarget;
+            const { name, value, checked } = target;
+            userAnswers.update([ name, value ], checked);
+
+            const storyUpdated = StoryUtils.insertUserAnswers(story, userAnswers.current);
+            const storyAfter = await StorySaver.saveStory(database, storyUpdated);
+            await ReactionSaver.updateTaskStatuses(database, reactions, storyAfter, currentUser, userAnswers.current);
         });
-        this.state = {
-            voteSubmitted: false,
-            selectedComponent: null,
-            showingComponent: false,
-            selectedResourceName: null,
-            showingReferencedMedia: false,
-            audioURL: null,
-        };
-        this.updateUserAnswers(this.state, props);
-    }
+    });
+    const handleSurveyItemChange = useListener((evt) => {
+        const target = evt.currentTarget;
+        const { name, value, checked } = target;
+        userAnswers.update(name, value);
+    });
+    const handleVoteSubmitClick = useListener((evt) => {
+        run(async () => {
+            await ReactionSaver.saveSurveyResults(database, story, currentUser, userAnswers.current);
+        });
+    });
+    const handleComponentSelect = useListener((evt) => {
+        setSelectedComponent(evt.component);
+    });
+    const handleComponentDialogClose = useListener((evt) => {
+        setSelectedComponent(null);
+    });
 
-    /**
-     * Update state when props changes
-     *
-     * @param  {Object} nextProps
-     */
-    componentWillReceiveProps(nextProps) {
-        let { story } = this.props;
-        let nextState = _.clone(this.state);
-        if (nextProps.story !== story) {
-            this.updateUserAnswers(nextState, nextProps);
-        }
-        let changes = _.shallowDiff(nextState, this.state);
-        if (!_.isEmpty(changes)) {
-            this.setState(changes);
-        }
-    }
+    const authorName = UserUtils.getDisplayName(authors ? authors[0] : null, env);
+    const authorGender = UserUtils.getGender(authors ? authors[0] : null);
+    g(authorName, authorGender);
+    const repoName = RepoUtils.getDisplayName(repo, env);
+    const repoAccess = UserUtils.canAccessRepo(currentUser, repo);
 
-    /**
-     * Update the default answers of survey question
-     *
-     * @param  {Object} nextState
-     * @param  {Object} nextProps
-     */
-    updateUserAnswers(nextState, nextProps) {
-        let { env, story } = nextProps;
-        let { p } = env.locale;
-        if (story) {
-            if (story.type === 'survey') {
-                let langText = p(story.details.text);
-                let tokens = ListParser.extract(langText);
-                let answers = nextState.userAnswers;
-                _.each(tokens, (list, listIndex) => {
-                    _.each(list, (item, itemIndex) => {
-                        if (item.checked) {
-                            if (!answers || answers[item.list] === undefined) {
-                                answers = _.decoupleSet(answers, [ item.list ], item.key);
-                            }
-                        }
-                    });
-                });
-                nextState.userAnswers = answers;
-            } else if (story.type === 'task-list') {
-                nextState.userAnswers = null;
-            }
-        }
-    }
+    const userCanVote = (story.type === 'survey') && (access === 'read-write');
+    const userVoted = (reactions) ? getUserVote(reactions, currentUser) : undefined;
 
-    /**
-     * Return true if the current user has already voted
-     *
-     * @return {Boolean|undefined}
-     */
-    hasUserVoted() {
-        let { reactions, currentUser } = this.props;
-        if (reactions === undefined) {
-            return undefined;
-        }
-        let vote = getUserVote(reactions, currentUser);
-        return !!vote;
-    }
+    return (
+        <div className="story-contents">
+            {renderText()}
+            {renderAudioPlayer()}
+            {renderMedia()}
+            {renderReferencedMediaDialog()}
+            {renderAppComponents()}
+            {renderButtons()}
+        </div>
+    );
 
-    /**
-     * Return true of the current user can vote
-     *
-     * @return {Boolean}
-     */
-    canUserVote() {
-        let { access } = this.props;
-        return (access === 'read-write');
-    }
-
-    /**
-     * Clear state.voteSubmitted once vote has been recorded
-     *
-     * @param  {Object} prevProps
-     */
-    componentDidUpdate(prevProps) {
-        let { reactions, currentUser } = this.props;
-        let { voteSubmitted } = this.state;
-        if (prevProps.reactions !== reactions) {
-            if (voteSubmitted) {
-                let vote = getUserVote(reactions, currentUser);
-                if (vote) {
-                    this.setState({ voteSubmitted: false });
-                }
-            }
-        }
-    }
-
-    /**
-     * Render component
-     *
-     * @return {ReactElement}
-     */
-    render() {
-        return (
-            <div className="story-contents">
-                {this.renderText()}
-                {this.renderAudioPlayer()}
-                {this.renderMedia()}
-                {this.renderReferencedMediaDialog()}
-                {this.renderAppComponents()}
-                {this.renderButtons()}
-            </div>
-        );
-    }
-
-    /**
-     * Render text of the story
-     *
-     * @return {ReactElement}
-     */
-    renderText() {
-        let { story } = this.props;
-        let { exported } = story.details;
-        this.resourcesReferenced = [];
+    function renderText() {
+        const { exported } = story.details;
         switch (story.type) {
             case 'post':
-                return this.renderStoryText();
+                return renderStoryText();
             case 'task-list':
-                return this.renderTaskListText();
+                return renderTaskListText();
             case 'survey':
-                return this.renderSurveyText();
+                return renderSurveyText();
             case 'repo':
-                return this.renderRepoText();
+                return renderRepoText();
             case 'member':
-                return this.renderMemberText();
+                return renderMemberText();
             case 'push':
             case 'merge':
-                return this.renderPushText();
+                return renderPushText();
             case 'branch':
             case 'tag':
-                return this.renderBranchText();
+                return renderBranchText();
             case 'issue':
                 if (exported) {
-                    return this.renderStoryText();
+                    return renderStoryText();
                 } else {
-                    return this.renderIssueText();
+                    return renderIssueText();
                 }
             case 'merge-request':
-                return this.renderMergeRequestText();
+                return renderMergeRequestText();
             case 'milestone':
-                return this.renderMilestoneText();
+                return renderMilestoneText();
             case 'wiki':
-                return this.renderWikiText();
+                return renderWikiText();
         }
     }
 
-    /**
-     * Render text for regular post, task list, and survey
-     *
-     * @return {ReactElement|null}
-     */
-    renderStoryText() {
-        let { env, story } = this.props;
-        let { p } = env.locale;
-        let { text, markdown, labels } = story.details;
-        let langText = _.trimEnd(p(text));
+    function renderStoryText() {
+        const { text, markdown, labels } = story.details;
+        const langText = _.trimEnd(p(text));
         let tags;
         if (labels) {
-            tags = this.renderLabels();
+            tags = renderLabels();
         }
         if (!langText && !tags) {
             return null;
         }
+        const classNames = [ 'text', 'story' ];
+        let contents, onClick;
         if (markdown) {
-            return (
-                <div className="text story markdown" onClick={this.handleMarkdownClick}>
-                    {Markdown.render(langText, this.handleReference)}
-                    {tags}
-                </div>
-            );
+            classNames.push('markdown');
+            contents = Markdown.render(langText, markdownResources.onReference);
+            onClick = handleMarkdownClick;
         } else {
-            let className = 'text story plain-text';
-            let emoji = PlainText.findEmoji(langText);
-            let chars = _.replace(langText, /\s+/g, '');
+            classNames.push('plain-text');
+
+            // if all we have are emojis, make them bigger depending on
+            // how many there are
+            const emoji = PlainText.findEmoji(langText);
+            const chars = _.replace(langText, /\s+/g, '');
             if (emoji) {
                 if (_.join(emoji, '') === chars) {
-                    // all we have are emojis--make them bigger depending on
-                    // how many there are
-                    className += ` emoji-${emoji.length}`;
+                    className.join('emoji-${emoji.length}');
                 }
             }
-            return (
-                <div className={className}>
-                    <p>{PlainText.renderEmoji(langText)}</p>
-                    {tags}
-                </div>
-            );
+            contents = <p>{PlainText.renderEmoji(langText)}</p>;
         }
+        return (
+            <div className={classNames.join(' ')} onClick={onClick}>
+                {contents}{tags}
+            </div>
+        );
     }
 
-    /**
-     * Render task list
-     *
-     * @return {ReactElement}
-     */
-    renderTaskListText() {
-        let { env, story, currentUser } = this.props;
-        let { userAnswers } = this.state;
-        let { p } = env.locale;
-        let { text, markdown } = story.details;
+    function renderTaskListText() {
+        const { text, markdown } = story.details;
+        const answers = userAnswers.current;
         let langText = _.trimEnd(p(text));
         if (!langText) {
             return null;
         }
-        let onChange = _.includes(story.user_ids, currentUser.id) ? this.handleTaskListItemChange : null;
-        let onReference = this.handleReference;
+        const classNames = [ 'text', 'task-list' ];
+        let contents, onClick, onChange;
+        if (_.includes(story.user_ids, currentUser.id)) {
+            onChange = handleTaskListItemChange;
+        }
         if (markdown) {
-            let list = Markdown.renderTaskList(langText, userAnswers, onChange, onReference);
-            return (
-                <div className="text task-list markdown" onClick={this.handleMarkdownClick}>
-                    {list}
-                </div>
-            );
+            classNames.push('markdown');
+            contents = Markdown.renderTaskList(langText, answers, onChange, markdownResources.onReference);
+            onClick = markdownResources.onClick;
         } else {
-            let list = PlainText.renderTaskList(langText, userAnswers, onChange);
-            return <div className="text task-list plain-text"><p>{list}</p></div>;
+            classNames.push('plain-text');
+            contents = <p>{PlainText.renderTaskList(langText, answers, onChange)}</p>;
         }
+        return (
+            <div className={classNames.join(' ')} onClick={onClick}>
+                {contents}
+            </div>
+        );
     }
 
-    /**
-     * Render survey choices or results depending whether user has voted
-     *
-     * @return {ReactElement|null}
-     */
-    renderSurveyText() {
-        let { env, story, reactions } = this.props;
-        let { userAnswers } = this.state;
-        let { p } = env.locale;
-        let { text, markdown } = story.details;
-        let langText = _.trimEnd(p(text));
+    function renderSurveyText() {
+        const { text, markdown } = story.details;
+        const answers = userAnswers.current;
+        const langText = _.trimEnd(p(text));
         if (!langText) {
             return null;
         }
-        let onChange = this.handleSurveyItemChange;
-        let onReference = this.handleReference;
-        if (this.canUserVote() && !this.hasUserVoted()) {
-            if (markdown) {
-                let survey = Markdown.renderSurvey(langText, userAnswers, onChange, onReference);
-                return (
-                    <div className="text survey markdown" onClick={this.handleMarkdownClick}>
-                        {survey}
-                    </div>
-                );
+        const showingResult = userVoted || !userCanVote;
+        const voteCounts = (showingResult) ? countVotes(reactions) || {} : undefined;
+        const classNames = [ 'text', 'survey' ];
+        let contents, onClick;
+        if (markdown) {
+            classNames.push('markdown');
+            if (showingResult) {
+                contents = Markdown.renderSurveyResults(langText, voteCounts, markdownResources.onReference);
             } else {
-                let survey = PlainText.renderSurvey(langText, userAnswers, onChange);
-                return <div className="text survey plain-text"><p>{survey}</p></div>;
+                contents = Markdown.renderSurvey(langText, answers, handleSurveyItemChange, markdownResources.onReference);
             }
+            onClick = handleMarkdownClick;
         } else {
-            let voteCounts = countVotes(reactions) || {};
-            if (markdown) {
-                let results = Markdown.renderSurveyResults(langText, voteCounts, onReference);
-                return (
-                    <div className="text survey markdown" onClick={this.handleMarkdownClick}>
-                        {results}
-                    </div>
-                );
+            classNames.push('plain-text');
+            if (showingResult) {
+                contents = PlainText.renderSurveyResults(langText, voteCounts);
             } else {
-                let results = PlainText.renderSurveyResults(langText, voteCounts);
-                return <div className="text survey plain-text"><p>{results}</p></div>;
+                contents = PlainText.renderSurvey(langText, answers, handleSurveyItemChange);
             }
+            contents = <p>{contents}</p>;
         }
+        return (
+            <div className={classNames.join(' ')} onClick={onClick}>
+                {contents}
+            </div>
+        );
     }
 
-    /**
-     * Render text for repo story
-     *
-     * @return {ReactElement}
-     */
-    renderRepoText() {
-        let { env, story, authors, currentUser, repo } = this.props;
-        let { t, p, g } = env.locale;
-        let { action } = story.details;
-        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
-        let gender = UserUtils.getGender(authors ? authors[0] : null);
-        g(name, gender);
-        let repoName = RepoUtils.getDisplayName(repo, env);
-        let url, target;
-        if (UserUtils.canAccessRepo(currentUser, repo)) {
-            url = RepoUtils.getURL(repo);
-            target = repo.type;
-        }
+    function renderRepoText() {
+        const { action } = story.details;
+        const url = (repoAccess) ? RepoUtils.getURL(repo) : undefined;
+        const target = (repoAccess) ? repo.type : undefined;
         return (
             <div className="text repo">
                 <p>
                     <a href={url} target={target}>
-                        {t(`story-$name-${action}-$repo`, name, repoName)}
+                        {t(`story-$name-${action}-$repo`, authorName, repoName)}
                     </a>
                 </p>
             </div>
         );
     }
 
-    /**
-     * Render text for member story
-     *
-     * @return {ReactElement}
-     */
-    renderMemberText() {
-        let { env, story, authors, currentUser, repo } = this.props;
-        let { t, p, g } = env.locale;
-        let { action } = story.details;
-        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
-        let gender = UserUtils.getGender(authors ? authors[0] : null);
-        g(name, gender);
-        let repoName = RepoUtils.getDisplayName(repo, env);
-        let url, target;
-        if (UserUtils.canAccessRepo(currentUser, repo)) {
-            url = RepoUtils.getMembershipPageURL(repo);
-            target = repo.type;
-        }
+    function renderMemberText() {
+        const url = (repoAccess) ? RepoUtils.getMembershipPageURL(repo) : undefined
+        const target = (repoAccess) ? repo.type : undefined;
         return (
             <div className="text member">
                 <p>
                     <a href={url} target={target}>
-                        {t(`story-$name-${action}-$repo`, name, repoName)}
+                        {t(`story-$name-${action}-$repo`, authorName, repoName)}
                     </a>
                 </p>
             </div>
         );
     }
 
-    /**
-     * Render text for issue story
-     *
-     * @return {ReactElement}
-     */
-    renderIssueText() {
-        let { env, story, authors, currentUser, repo } = this.props;
-        let { t, p, g } = env.locale;
-        let { title } = story.details;
-        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
-        let gender = UserUtils.getGender(authors ? authors[0] : null);
-        g(name, gender);
-        let number = RepoUtils.getIssueNumber(repo, story);
-        let url, target;
-        if (UserUtils.canAccessRepo(currentUser, repo)) {
-            url = RepoUtils.getIssueURL(repo, story);
-            target = repo.type;
-        }
+    function renderIssueText() {
+        const { title } = story.details;
+        const number = RepoUtils.getIssueNumber(repo, story);
+        const url = (repoAccess) ? RepoUtils.getIssueURL(repo, story) : undefined;
+        const target = (repoAccess) ? repo.type : undefined;
         return (
             <div className="text issue">
                 <p>
                     <a href={url} target={target}>
-                        {t(`story-$name-opened-issue-$number-$title`, name, number, p(title))}
+                        {t(`story-$name-opened-issue-$number-$title`, authorName, number, p(title))}
                     </a>
                 </p>
-                {this.renderStatus()}
-                {this.renderLabels()}
+                {renderStatus()}
+                {renderLabels()}
             </div>
         );
     }
 
-    /**
-     * Render text for milestone story
-     *
-     * @return {ReactElement}
-     */
-    renderMilestoneText() {
-        let { env, story, authors, repo, currentUser } = this.props;
-        let { t, p, g } = env.locale;
-        let { title } = story.details;
-        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
-        let gender = UserUtils.getGender(authors ? authors[0] : null);
-        g(name, gender);
-        let url, target;
-        if (UserUtils.canAccessRepo(currentUser, repo)) {
-            url = RepoUtils.getMilestoneURL(repo, story);
-            target = repo.type;
-        }
+    function renderMilestoneText() {
+        const { title } = story.details;
+        const url = (repoAccess) ? RepoUtils.getMilestoneURL(repo, story) : undefined;
+        const target = (repoAccess) ? repo.type : undefined;
         return (
             <div className="text milestone">
                 <p>
                     <a href={url} target={target}>
-                        {t(`story-$name-created-$milestone`, name, p(title))}
+                        {t(`story-$name-created-$milestone`, authorName, p(title))}
                     </a>
                 </p>
             </div>
         );
     }
 
-    /**
-     * Render text for merge request story
-     *
-     * @return {ReactElement}
-     */
-    renderMergeRequestText() {
-        let { env, story, authors, repo, currentUser } = this.props;
-        let { t, p, g } = env.locale;
-        let { source_branch: branch1, branch: branch2 } = story.details;
-        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
-        let gender = UserUtils.getGender(authors ? authors[0] : null);
-        g(name, gender);
-        let url, target;
-        if (UserUtils.canAccessRepo(currentUser, repo)) {
-            url = RepoUtils.getMergeRequestURL(repo, story);
-            target = repo.type;
-        }
+    function renderMergeRequestText() {
+        const {
+            source_branch: branch1,
+            branch: branch2
+        } = story.details;
+        const url = (repoAccess) ? RepoUtils.getMergeRequestURL(repo, story) : undefined;
+        const target = (repoAccess) ? repo.type : undefined;
         return (
             <div className="text merge-request">
                 <p>
                     <a href={url} target={target}>
-                        {t(`story-$name-requested-merge-$branch1-into-$branch2`, name, branch1, branch2)}
+                        {t(`story-$name-requested-merge-$branch1-into-$branch2`, authorName, branch1, branch2)}
                     </a>
                 </p>
-                {this.renderStatus()}
-                {this.renderLabels()}
+                {renderStatus()}
+                {renderLabels()}
             </div>
         );
     }
 
-    /**
-     * Render text for wiki story
-     *
-     * @return {ReactElement}
-     */
-    renderWikiText() {
-        let { env, story, authors, currentUser, repo } = this.props;
-        let { t, p, g } = env.locale;
-        let { action, title } = story.details;
-        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
-        let gender = UserUtils.getGender(authors ? authors[0] : null);
-        g(name, gender);
-        title = _.capitalize(title);
-        let url, target;
-        if (UserUtils.canAccessRepo(currentUser, repo)) {
-            if (action !== 'delete') {
-                url = story.details.url;
-                target = repo.type;
-            }
-        }
+    function renderWikiText() {
+        const { action, title, url: wikiURL } = story.details;
+        const deleted = (action === 'delete');
+        const url = (repoAccess && !deleted) ? wikiURL : undefined;
+        const target = (repoAccess && !deleted) ? repo.type : undefined;
         return (
             <div className="text wiki">
                 <p>
                     <a href={url} target={target}>
-                        {t(`story-$name-${action}d-$page`, name, title)}
+                        {t(`story-$name-${action}d-$page`, authorName, _.capitalize(title))}
                     </a>
                 </p>
             </div>
         );
     }
 
-    /**
-     * Render text for push story
-     *
-     * @return {ReactElement}
-     */
-    renderPushText() {
-        let { env, story, authors, currentUser, repo } = this.props;
-        let { t, g } = env.locale;
-        let {
-            comment_ids: commitIDs,
+    function renderPushText() {
+        const {
             branch,
+            comment_ids: commitIDs,
             from_branches: sourceBranches
         } = story.details;
-        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
-        let gender = UserUtils.getGender(authors ? authors[0] : null);
-        g(name, gender);
-        let commits = _.size(commitIDs);
-        let repoName = RepoUtils.getDisplayName(repo, env);
-        let url, target;
-        if (UserUtils.canAccessRepo(currentUser, repo)) {
-            url = RepoUtils.getPushURL(repo, story);
-            target = repo.type;
-        }
+        const commits = _.size(commitIDs);
+        const url = (repoAccess) ? RepoUtils.getPushURL(repo, story) : undefined;
+        const target = (repoAccess) ? repo.type : undefined;
         let text;
         if (story.type === 'push') {
-            text = t(`story-$name-pushed-to-$branch-of-$repo`, name, branch, repoName);
+            text = t(`story-$name-pushed-to-$branch-of-$repo`, authorName, branch, repoName);
         } else if (story.type === 'merge') {
-            text = t(`story-$name-merged-$branches-into-$branch-of-$repo`, name, sourceBranches, branch, repoName);
+            text = t(`story-$name-merged-$branches-into-$branch-of-$repo`, authorName, sourceBranches, branch, repoName);
         }
         return (
             <div className="text push">
                 <p>
                     <a href={url} target={target}>{text}</a>
                 </p>
-                {this.renderChanges()}
+                {renderChanges()}
             </div>
         );
     }
 
-    /**
-     * Render text for branch story
-     *
-     * @return {ReactElement}
-     */
-    renderBranchText() {
-        let { env, story, authors, currentUser, repo } = this.props;
-        let { t, g } = env.locale;
-        let { branch } = story.details;
-        let name = UserUtils.getDisplayName(authors ? authors[0] : null, env);
-        let gender = UserUtils.getGender(authors ? authors[0] : null);
-        g(name, gender);
-        let repoName = RepoUtils.getDisplayName(repo, env);
-        let url, target;
-        if (UserUtils.canAccessRepo(currentUser, repo)) {
-            url = RepoUtils.getBranchURL(repo, story);
-            target = repo.type;
-        }
+    function renderBranchText() {
+        const { branch } = story.details;
+        const url = (repoAccess) ? RepoUtils.getBranchURL(repo, story) : undefined;
+        const target = (repoAccess) ? repo.type : undefined;
         let text;
         if (story.type === 'branch') {
             text = t(`story-$name-created-$branch-in-$repo`, name, branch, repoName);
@@ -557,26 +367,19 @@ class StoryContents extends PureComponent {
                 <p>
                     <a href={url} target={target}>{text}</a>
                 </p>
-                {this.renderChanges()}
+                {renderChanges()}
             </div>
         );
     }
 
-    /**
-     * Render the number of file/lines changed
-     *
-     * @return {ReactElement|null}
-     */
-    renderChanges() {
-        let { env, story } = this.props;
-        let { t } = env.locale;
-        let files = _.get(story, 'details.files');
+    function renderChanges() {
+        const files = _.get(story, 'details.files');
         if (_.isEmpty(files)) {
             return null;
         }
-        let fileChangeTypes = [ 'added', 'deleted', 'modified', 'renamed' ];
-        let fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {
-            let count = files[type];
+        const fileChangeTypes = [ 'added', 'deleted', 'modified', 'renamed' ];
+        const fileChanges = _.transform(fileChangeTypes, (elements, type, i) => {
+            const count = files[type];
             if (count > 0) {
                 elements.push(
                     <li key={i} className={type}>
@@ -585,10 +388,10 @@ class StoryContents extends PureComponent {
                 );
             }
         }, []);
-        let lines = _.get(story, 'details.lines');
-        let lineChangeTypes = [ 'added', 'deleted', 'modified' ];
-        let lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
-            let count = lines[type];
+        const lines = _.get(story, 'details.lines');
+        const lineChangeTypes = [ 'added', 'deleted', 'modified' ];
+        const lineChanges = _.transform(lineChangeTypes, (elements, type, i) => {
+            const count = lines[type];
             if (count > 0) {
                 elements.push(
                     <li key={i} className={type}>
@@ -605,15 +408,8 @@ class StoryContents extends PureComponent {
         );
     }
 
-    /**
-     * Render current status of issue or merge request
-     *
-     * @return {ReactElement}
-     */
-    renderStatus() {
-        let { env, story } = this.props;
-        let { t } = env.locale;
-        let { state } = story.details;
+    function renderStatus() {
+        const { state } = story.details;
         if (!state) {
             return null;
         }
@@ -626,21 +422,12 @@ class StoryContents extends PureComponent {
         );
     }
 
-    /**
-     * Render labels for issue and merge requests
-     *
-     * @return {ReactElement|null}
-     */
-    renderLabels() {
-        let { story, repo } = this.props;
-        let { labels } = story.details;
+    function renderLabels() {
+        const { labels } = story.details;
         if (_.isEmpty(labels)) {
             return null;
         }
-        let tags = _.map(labels, (label, i) => {
-            let style = RepoUtils.getLabelStyle(repo, label);
-            return <span key={i} className="tag" style={style}>{label}</span>;
-        });
+        const tags = _.map(labels, renderLabel);
         // inserting actual spaces between the tags for the sake of copy-and-pasting
         for (let i = 1; i < tags.length; i += 2) {
             tags.splice(i, 0, ' ');
@@ -648,29 +435,21 @@ class StoryContents extends PureComponent {
         return <p className="tags">{tags}</p>;
     }
 
-    /**
-     * Render button for filling survey
-     *
-     * @return {ReactElement|null}
-     */
-    renderButtons() {
-        let { env, story } = this.props;
-        let { voteSubmitted, userAnswers } = this.state;
-        let { t } = env.locale;
-        if (story.type !== 'survey') {
+    function renderLabel(label, i) {
+        const style = RepoUtils.getLabelStyle(repo, label);
+        return <span key={i} className="tag" style={style}>{label}</span>;
+    }
+
+    function renderButtons() {
+        if (!userCanVote || userVoted) {
             return null;
         }
-        if (!this.canUserVote()) {
-            return null;
-        }
-        if (this.hasUserVoted() !== false) {
-            return null;
-        }
-        let submitProps = {
+        const allAnswered = _.every(userAnswers.current);
+        const submitProps = {
             label: t('story-vote-submit'),
-            emphasized: !_.isEmpty(userAnswers),
-            disabled: voteSubmitted || _.isEmpty(userAnswers),
-            onClick: this.handleVoteSubmitClick,
+            emphasized: allAnswered,
+            disabled: !allAnswered,
+            onClick: handleVoteSubmitClick,
         };
         return (
             <div className="buttons">
@@ -679,373 +458,80 @@ class StoryContents extends PureComponent {
         );
     }
 
-    /**
-     * Render audio player for embed audio in markdown text
-     *
-     * @return {ReactElement|null}
-     */
-    renderAudioPlayer() {
-        let { audioURL } = this.state;
-        let { setters } = this.components;
+    function renderAudioPlayer() {
+        const { audioURL, onAudioEnded } = markdownResources;
         if (!audioURL) {
             return null;
         }
-        let audioProps = {
-            ref: setters.audioPlayer,
+        const audioProps = {
             src: audioURL,
             autoPlay: true,
             controls: true,
-            onEnded: this.handleAudioEnded,
+            onEnded: onAudioEnded,
         };
-        return <audio {...audioProps} />;
+        return <audio ref={audioPlayerRef} {...audioProps} />;
     }
 
-    /**
-     * Render attached media
-     *
-     * @return {ReactElement}
-     */
-    renderMedia() {
-        let { env, story } = this.props;
-        let resources = _.get(story, 'details.resources');
-        if (!_.isEmpty(this.resourcesReferenced)) {
-            // exclude the ones that are shown in Markdown
-            resources = _.difference(resources, this.resourcesReferenced);
-        }
-        if (_.isEmpty(resources)) {
+    function renderMedia() {
+        const remaining = markdownResources.unreferenced;
+        if (_.isEmpty(remaining)) {
             return null;
         }
-        let props = {
-            resources,
+        const props = {
+            resources: remaining,
             width: Math.min(512, env.viewportWidth),
             env,
         };
         return <MediaView {...props} />
     }
 
-    /**
-     * Render dialog box showing referenced image at full size
-     *
-     * @return {ReactElement|null}
-     */
-    renderReferencedMediaDialog() {
-        let { env, story } = this.props;
-        let { showingReferencedMedia, selectedResourceName } = this.state;
-        let resources = _.get(story, 'details.resources');
-        let res = Markdown.findReferencedResource(resources, selectedResourceName);
-        if (!res) {
-            return null;
-        }
-        let zoomableResources = getZoomableResources(this.resourcesReferenced);
-        let zoomableIndex = _.indexOf(zoomableResources, res);
-        if (zoomableIndex === -1) {
-            return null;
-        }
-        let dialogProps = {
-            show: showingReferencedMedia,
-            resources: zoomableResources,
-            selectedIndex: zoomableIndex,
+    function renderReferencedMediaDialog() {
+        const { zoomed, zoomable, selected, onClose } = markdownResources;
+        const selectedIndex = _.indexOf(zoomable, selected);
+        const dialogProps = {
+            show: zoomed,
+            resources: zoomable,
+            selectedIndex,
             env,
-            onClose: this.handleReferencedMediaDialogClose,
+            onClose,
         };
         return <MediaDialogBox {...dialogProps} />;
     }
 
-    /**
-     * Render affected app components
-     *
-     * @return {ReactElement}
-     */
-    renderAppComponents() {
-        let { env, story } = this.props;
-        let { t } = env.locale;
-        let components = _.get(story, 'details.components');
+    function renderAppComponents() {
+        const components = _.get(story, 'details.components');
         if (_.isEmpty(components)) {
             return null;
         }
-        components = sortComponents(components, env);
+        const sorted = sortComponents(components, env);
         return (
             <div className="impact">
                 <p className="message">{t('story-push-components-changed')}</p>
                 <Scrollable>
-                {
-                    _.map(components, (component, i) => {
-                        return this.renderAppComponent(component, i);
-                    })
-                }
+                    {_.map(sorted, renderAppComponent)}
                 </Scrollable>
-                {this.renderAppComponentDialog()}
+                {renderAppComponentDialog()}
             </div>
         );
     }
 
-    /**
-     * Render an affected app component
-     *
-     * @return {ReactElement}
-     */
-    renderAppComponent(component, i) {
-        let { env } = this.props;
-        let componentProps = {
+    function renderAppComponent(component, i) {
+        const componentProps = {
             component,
             env,
-            onSelect: this.handleComponentSelect,
+            onSelect: handleComponentSelect,
         };
         return <AppComponent key={i} {...componentProps} />
     }
 
-    /**
-     * Render dialog showing full description of component
-     *
-     * @return {ReactElement}
-     */
-    renderAppComponentDialog() {
-        let { env } = this.props;
-        let { showingComponent, selectedComponent } = this.state;
+    function renderAppComponentDialog() {
         let dialogProps = {
-            show: showingComponent,
+            show: !!selectedComponent,
             component: selectedComponent,
             env,
-            onClose: this.handleComponentDialogClose,
+            onClose: handleComponentDialogClose,
         };
         return <AppComponentDialogBox {...dialogProps} />;
-    }
-
-    /**
-     * Inform parent component that changes were made to story
-     *
-     * @param  {Story} story
-     */
-    triggerChangeEvent(story) {
-        let { onChange } = this.props;
-        if (onChange) {
-            onChange({
-                type: 'change',
-                target: this,
-                story,
-            });
-        }
-    }
-
-    /**
-     * Inform parent component that there's a new reaction to story
-     *
-     * @param  {Story} story
-     */
-    triggerReactionEvent(reaction) {
-        let { onReaction } = this.props;
-        if (onReaction) {
-            onReaction({
-                type: 'reaction',
-                target: this,
-                reaction,
-            });
-        }
-    }
-
-    /**
-     * Called when Markdown text references a resource
-     *
-     * @param  {Object} evt
-     */
-    handleReference = (evt) => {
-        let { env, story } = this.props;
-        let resources = _.get(story, 'details.resources');
-        let res = Markdown.findReferencedResource(resources, evt.name);
-        if (res) {
-            // remember that resource is referenced in Markdown
-            if (!_.includes(this.resourcesReferenced, res)) {
-                this.resourcesReferenced.push(res);
-            }
-            let url = ResourceUtils.getMarkdownIconURL(res, evt.forImage, env);
-            return { href: url, title: evt.name };
-        }
-    }
-
-    /**
-     * Called when user clicks on the text contents
-     *
-     * @param  {Event} evt
-     */
-     handleMarkdownClick = (evt) => {
-         if (evt.target.tagName !== 'INPUT') {
-             evt.preventDefault();
-         }
-
-         let { env, story } = this.props;
-         let { audioURL } = this.state;
-         let resources = _.get(story, 'details.resources');
-         let target = evt.target;
-         if (target.viewportElement) {
-             target = target.viewportElement;
-         }
-         let name;
-         if (target.tagName === 'svg') {
-             let title = target.getElementsByTagName('title')[0];
-             if (title) {
-                 name = title.textContent;
-             }
-         } else {
-             name = evt.target.title;
-         }
-         if (name) {
-             let res = Markdown.findReferencedResource(resources, name);
-             if (res) {
-                 if (res.type === 'image' || res.type === 'video') {
-                     this.setState({ selectedResourceName: name, showingReferencedMedia: true });
-                 } else if (res.type === 'website') {
-                     window.open(res.url, '_blank');
-                 } else if (res.type === 'audio') {
-                     let version = chooseAudioVersion(res);
-                     let selected = ResourceUtils.getAudioURL(res, { version }, env);
-                     audioURL = (selected === audioURL) ? null : selected;
-                     this.setState({ audioURL });
-                 }
-             }
-         } else {
-             if (target.tagName === 'A') {
-                 window.open(target.href, '_blank');
-             } else if (target.tagName === 'IMG') {
-                 let src = target.getAttribute('src');
-                 let targetRect = target.getBoundingClientRect();
-                 let width = target.naturalWidth + 50;
-                 let height = target.naturalHeight + 50;
-                 let left = targetRect.left + window.screenLeft;
-                 let top = targetRect.top + window.screenTop;
-                 window.open(target.src, '_blank', `width=${width},height=${height},left=${left},top=${top}status=no,menubar=no`);
-             }
-         }
-    }
-
-    /**
-     * Called when user clicks on a checkbox in a task list
-     *
-     * @param  {Event} evt
-     */
-    handleTaskListItemChange = (evt) => {
-        let { story, reactions, currentUser } = this.props;
-        let { userAnswers } = this.state;
-        let target = evt.currentTarget;
-        let list = parseInt(target.name);
-        let item = parseInt(target.value);
-        let selected = target.checked;
-
-        // save the answer in state for immediately UI response
-        userAnswers = _.decoupleSet(userAnswers, [ list, item ], selected);
-        this.setState({ userAnswers });
-
-        // update the text of the story
-        story = _.cloneDeep(story);
-        let taskCounts = [];
-        story.details.text = _.mapValues(story.details.text, (langText) => {
-            let tokens = ListParser.extract(langText);
-            ListParser.set(tokens, list, item, selected);
-            let unfinished = ListParser.count(tokens, false);
-            taskCounts.push(unfinished);
-            return ListParser.join(tokens);
-        });
-        story.unfinished_tasks = _.max(taskCounts);
-        this.triggerChangeEvent(story);
-
-        // add or remove reaction
-        let task = { list, item };
-        if (selected) {
-            let reaction = {
-                type: 'task-completion',
-                story_id: story.id,
-                user_id: currentUser.id,
-                published: true,
-                public: true,
-                details: { task },
-            };
-            this.triggerReactionEvent(reaction);
-        } else {
-            // delete the task completion reaction when the task is unselected
-            let reaction = _.find(reactions, (r) => {
-                if (r.type === 'task-completion') {
-                    if (r.user_id === currentUser.id) {
-                        return _.isEqual(r.details.task, task);
-                    }
-                }
-            });
-            if (reaction) {
-                reaction = _.clone(reaction);
-                reaction.deleted = true;
-                this.triggerReactionEvent(reaction);
-            }
-        }
-    }
-
-    /**
-     * Called when user clicks on a radio button in a survey
-     *
-     * @param  {Event} evt
-     */
-    handleSurveyItemChange = (evt) => {
-        let { userAnswers } = this.state;
-        let target = evt.currentTarget;
-        let list = target.name;
-        let item = target.value;
-        userAnswers = _.decoupleSet(userAnswers, [ list ], item);
-        this.setState({ userAnswers });
-    }
-
-    /**
-     * Called when user clicks on the submit button
-     *
-     * @param  {Event} evt
-     */
-    handleVoteSubmitClick = (evt) => {
-        let { story, currentUser } = this.props;
-        let { userAnswers } = this.state;
-        let reaction = {
-            type: 'vote',
-            story_id: story.id,
-            user_id: currentUser.id,
-            published: true,
-            public: true,
-            details: {
-                answers: userAnswers
-            }
-        };
-        this.triggerReactionEvent(reaction);
-        this.setState({ voteSubmitted: true });
-    }
-
-    /**
-     * Called when user clicks on an app component description
-     *
-     * @param  {Object} evt
-     */
-    handleComponentSelect = (evt) => {
-        this.setState({ showingComponent: true, selectedComponent: evt.component });
-    }
-
-    /**
-     * Called when user closes component description dialog
-     *
-     * @param  {Object} evt
-     */
-    handleComponentDialogClose = (evt) => {
-        this.setState({ showingComponent: false });
-    }
-
-    /**
-     * Called when user closes referenced media dialog
-     *
-     * @param  {Object} evt
-     */
-    handleReferencedMediaDialogClose = (evt) => {
-        this.setState({ showingReferencedMedia: false });
-    }
-
-    /**
-     * Called when audio playback ends
-     *
-     * @param  {Event} evt
-     */
-    handleAudioEnded = (evt) => {
-        this.setState({ audioURL: null });
     }
 }
 
@@ -1072,27 +558,6 @@ const getUserVote = memoizeWeak(null, function(reactions, user) {
     }
 });
 
-const getZoomableResources = memoizeWeak(null, function(resources) {
-    return _.filter(resources, (res) => {
-        switch (res.type) {
-            case 'image':
-            case 'video':
-                return true;
-        }
-    });
-});
-
-/**
- * Choose a version of the audio
- *
- * @param  {Object} res
- *
- * @return {String}
- */
-function chooseAudioVersion(res) {
-    return _.first(_.keys(res.versions)) || null;
-}
-
 const sortComponents = memoizeWeak(null, function(components, env) {
     let { p } = env.locale;
     return _.sortBy(components, (component) => {
@@ -1104,22 +569,3 @@ export {
     StoryContents as default,
     StoryContents,
 };
-
-import Environment from 'common/env/environment.mjs';
-
-if (process.env.NODE_ENV !== 'production') {
-    const PropTypes = require('prop-types');
-
-    StoryContents.propTypes = {
-        access: PropTypes.oneOf([ 'read-only', 'read-comment', 'read-write' ]).isRequired,
-        story: PropTypes.object.isRequired,
-        authors: PropTypes.arrayOf(PropTypes.object),
-        currentUser: PropTypes.object.isRequired,
-        reactions: PropTypes.arrayOf(PropTypes.object),
-        repo: PropTypes.object,
-        env: PropTypes.instanceOf(Environment).isRequired,
-
-        onChange: PropTypes.func,
-        onReaction: PropTypes.func,
-    };
-}

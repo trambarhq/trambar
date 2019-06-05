@@ -24,7 +24,6 @@ async function StoryList(props) {
     const { highlightStoryID, scrollToStoryID, highlightReactionID, scrollToReactionID } = props;
     const { t } = env.locale;
     const allStories = _.filter(_.concat(pendingStories, draftStories, stories));
-    const db = database.use({ by: this });
     const [ hiddenStoryIDs, setHiddenStoryIDs ] = useState([]);
     const [ show ] = useProgress();
 
@@ -67,20 +66,19 @@ async function StoryList(props) {
     };
 
     render();
-    const currentUserID = await db.start();
     // load repos first, so "add to issue tracker" option doesn't pop in
     // suddenly in triple-column mode
-    const repos = await RepoFinder.findProjectRepos(db, project);
+    const repos = await RepoFinder.findProjectRepos(database, project);
     render();
-    const authors = await UserFinder.findStoryAuthors(db, allStories);
+    const authors = await UserFinder.findStoryAuthors(database, allStories);
     render();
-    const reactions = await ReactionFinder.findReactionsToStories(db, allStories, currentUser)
+    const reactions = await ReactionFinder.findReactionsToStories(database, allStories, currentUser)
     render();
-    const respondents = await UserFinder.findReactionAuthors(db, reactions);
+    const respondents = await UserFinder.findReactionAuthors(database, reactions);
     render();
-    const recommendations = await BookmarkFinder.findBookmarksByUser(db, currentUser, allStories);
+    const recommendations = await BookmarkFinder.findBookmarksByUser(database, currentUser, allStories);
     render();
-    const recipients = await UserFinder.findBookmarkRecipients(db, recommendations);
+    const recipients = await UserFinder.findBookmarkRecipients(database, recommendations);
     render();
 
     function render() {
