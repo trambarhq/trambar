@@ -283,6 +283,7 @@ export {
     sendChangeNotification,
     sendCleanNotification,
     matchObject,
+    matchScalars,
     externalIdStrings,
     transferProps,
     broadcastLogMessage,
